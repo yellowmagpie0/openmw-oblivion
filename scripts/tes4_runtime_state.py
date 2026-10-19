@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 56
+CURRENT_VERSION = 57
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1459,6 +1459,81 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             start = native_float(start)
             if start < 0: raise RuntimeStateError("Invalid TES4 outgoing retirement clock")
             native_float(start + native_float(retirement["duration"]))
+    def melee_reaction(reaction, actor, strike, clock, require_action):
+        fields = {"contact_id", "kind", "animation_group", "animation_time", "started", "sequence_timing", "retirement"}
+        if version >= 55: fields.add("inactive")
+        if version >= 56: fields.add("pose_snapshot")
+        if version < 54 or not isinstance(reaction, dict) or set(reaction) != fields or strike is not None:
+            raise RuntimeStateError("Invalid or conflicting TES4 melee reaction")
+        identity, kind = reaction["contact_id"], reaction["kind"]
+        values = native_value_states[actor]
+        if (type(identity) is not int or not 0 < identity < next_action or identity in seen_actions
+                or type(kind) is not int or not 0 <= kind <= 2 or actor not in clock_actors
+                or values["process"] != 1 or (require_action and values.get("process_action") != (6, 7, 8)[kind])
+                or type(reaction["started"]) is not bool or native_float(reaction["animation_time"]) < 0):
+            raise RuntimeStateError("Unowned, replaying or mismatched TES4 melee reaction")
+        group = reaction["animation_group"]
+        if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
+            raise RuntimeStateError("Invalid TES4 melee reaction group")
+        timing = reaction["sequence_timing"]
+        if (not isinstance(timing, dict)
+                or set(timing) != {"easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"}
+                or type(timing["easing"]) is not bool):
+            raise RuntimeStateError("Invalid TES4 reaction sequence timing")
+        optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
+        if any(v is None for v in optional) and not all(v is None for v in optional):
+            raise RuntimeStateError("Partial TES4 reaction sequence initialization")
+        for value in optional:
+            if value is not None:
+                native_float(value)
+        for key in ("ease_end", "weighted_time", "output_time"):
+            native_float(timing[key])
+        retirement = reaction["retirement"]
+        if retirement is not None:
+            if (not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}
+                    or native_float(retirement["duration"]) <= 0 or timing["easing"] or timing["offset"] is None):
+                raise RuntimeStateError("Invalid TES4 reaction retirement")
+            start = retirement["start_clock"]
+            if start is not None:
+                start = native_float(start)
+                if start < 0:
+                    raise RuntimeStateError("Invalid TES4 reaction retirement clock")
+                native_float(start + native_float(retirement["duration"]))
+        if version >= 55:
+            inactive = reaction["inactive"]
+            if type(inactive) is not bool or (inactive and (timing["easing"] or timing["offset"] is None
+                    or (retirement is not None and (retirement["start_clock"] is None
+                        or clock < native_float(native_float(retirement["start_clock"])
+                            + native_float(retirement["duration"])))))):
+                raise RuntimeStateError("Invalid or premature inactive TES4 melee reaction")
+        if version >= 56 and reaction["pose_snapshot"] is not None:
+            pose = reaction["pose_snapshot"]
+            if (not isinstance(pose, dict) or set(pose) != {"destination_frame", "tracks"}
+                    or not timing["easing"] or retirement is not None or reaction["inactive"]
+                    or native_float(timing["ease_end"]) <= (native_float(timing["ease_start"])
+                        if timing["ease_start"] is not None else 0)):
+                raise RuntimeStateError("Invalid TES4 reaction pose transition")
+            native_float(pose["destination_frame"])
+            bones = set()
+            for track in check_collection(pose["tracks"], "captured melee pose tracks"):
+                if (not isinstance(track, dict)
+                        or set(track) != {"bone", "translation", "rotation", "scale", "priority"}
+                        or not isinstance(track["bone"], str) or not track["bone"] or "\0" in track["bone"]
+                        or len(track["bone"].encode("utf-8")) > MAX_STRING
+                        or type(track["priority"]) is not int or not 0 <= track["priority"] <= 255):
+                    raise RuntimeStateError("Invalid TES4 captured pose track")
+                bone = "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in track["bone"])
+                if bone in bones:
+                    raise RuntimeStateError("Duplicate TES4 captured pose bone")
+                bones.add(bone)
+                for key, count in (("translation", 3), ("rotation", 4)):
+                    if not isinstance(track[key], list) or len(track[key]) != count:
+                        raise RuntimeStateError("Invalid TES4 captured pose channel")
+                    for value in track[key]: native_float(value)
+                if not any(native_float(v) != 0 for v in track["rotation"]):
+                    raise RuntimeStateError("Zero TES4 captured pose quaternion")
+                native_float(track["scale"])
+        reaction_actors.add(actor)
     for entry in melee_states:
         fields = {"actor", "input", "strike"}
         if version >= 28:
@@ -1467,6 +1542,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             fields.add("reaction")
         if version >= 55:
             fields.add("retiring_sequences")
+        if version >= 57:
+            fields.add("first_person")
         if not isinstance(entry, dict) or set(entry) != fields:
             raise RuntimeStateError("Invalid TES4 melee state")
         actor = entry["actor"]
@@ -1495,80 +1572,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         strike = entry["strike"]
         reaction = entry.get("reaction")
         if reaction is not None:
-            fields = {"contact_id", "kind", "animation_group", "animation_time", "started", "sequence_timing", "retirement"}
-            if version >= 55: fields.add("inactive")
-            if version >= 56: fields.add("pose_snapshot")
-            if version < 54 or not isinstance(reaction, dict) or set(reaction) != fields or strike is not None:
-                raise RuntimeStateError("Invalid or conflicting TES4 melee reaction")
-            identity, kind = reaction["contact_id"], reaction["kind"]
-            values = native_value_states[actor]
-            if (type(identity) is not int or not 0 < identity < next_action or identity in seen_actions
-                    or type(kind) is not int or not 0 <= kind <= 2 or actor not in clock_actors
-                    or values["process"] != 1 or values.get("process_action") != (6, 7, 8)[kind]
-                    or type(reaction["started"]) is not bool or native_float(reaction["animation_time"]) < 0):
-                raise RuntimeStateError("Unowned, replaying or mismatched TES4 melee reaction")
-            group = reaction["animation_group"]
-            if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
-                raise RuntimeStateError("Invalid TES4 melee reaction group")
-            timing = reaction["sequence_timing"]
-            if (not isinstance(timing, dict)
-                    or set(timing) != {"easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"}
-                    or type(timing["easing"]) is not bool):
-                raise RuntimeStateError("Invalid TES4 reaction sequence timing")
-            optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
-            if any(v is None for v in optional) and not all(v is None for v in optional):
-                raise RuntimeStateError("Partial TES4 reaction sequence initialization")
-            for value in optional:
-                if value is not None:
-                    native_float(value)
-            for key in ("ease_end", "weighted_time", "output_time"):
-                native_float(timing[key])
-            retirement = reaction["retirement"]
-            if retirement is not None:
-                if (not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}
-                        or native_float(retirement["duration"]) <= 0 or timing["easing"] or timing["offset"] is None):
-                    raise RuntimeStateError("Invalid TES4 reaction retirement")
-                start = retirement["start_clock"]
-                if start is not None:
-                    start = native_float(start)
-                    if start < 0:
-                        raise RuntimeStateError("Invalid TES4 reaction retirement clock")
-                    native_float(start + native_float(retirement["duration"]))
-            if version >= 55:
-                inactive = reaction["inactive"]
-                if type(inactive) is not bool or (inactive and (timing["easing"] or timing["offset"] is None
-                        or (retirement is not None and (retirement["start_clock"] is None
-                            or clock_values[actor] < native_float(native_float(retirement["start_clock"])
-                                + native_float(retirement["duration"])))))):
-                    raise RuntimeStateError("Invalid or premature inactive TES4 melee reaction")
-            if version >= 56 and reaction["pose_snapshot"] is not None:
-                pose = reaction["pose_snapshot"]
-                if (not isinstance(pose, dict) or set(pose) != {"destination_frame", "tracks"}
-                        or not timing["easing"] or retirement is not None or reaction["inactive"]
-                        or native_float(timing["ease_end"]) <= (native_float(timing["ease_start"])
-                            if timing["ease_start"] is not None else 0)):
-                    raise RuntimeStateError("Invalid TES4 reaction pose transition")
-                native_float(pose["destination_frame"])
-                bones = set()
-                for track in check_collection(pose["tracks"], "captured melee pose tracks"):
-                    if (not isinstance(track, dict)
-                            or set(track) != {"bone", "translation", "rotation", "scale", "priority"}
-                            or not isinstance(track["bone"], str) or not track["bone"] or "\0" in track["bone"]
-                            or len(track["bone"].encode("utf-8")) > MAX_STRING
-                            or type(track["priority"]) is not int or not 0 <= track["priority"] <= 255):
-                        raise RuntimeStateError("Invalid TES4 captured pose track")
-                    bone = "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in track["bone"])
-                    if bone in bones:
-                        raise RuntimeStateError("Duplicate TES4 captured pose bone")
-                    bones.add(bone)
-                    for key, count in (("translation", 3), ("rotation", 4)):
-                        if not isinstance(track[key], list) or len(track[key]) != count:
-                            raise RuntimeStateError("Invalid TES4 captured pose channel")
-                        for value in track[key]: native_float(value)
-                    if not any(native_float(v) != 0 for v in track["rotation"]):
-                        raise RuntimeStateError("Zero TES4 captured pose quaternion")
-                    native_float(track["scale"])
-            reaction_actors.add(actor)
+            melee_reaction(reaction, actor, strike, clock_values.get(actor, 0.), True)
+        first_person = entry.get("first_person")
+        if first_person is not None:
+            if (version < 57 or actor != state["player"]["reference"]
+                    or not isinstance(first_person, dict) or set(first_person) != {"clock", "reaction"}
+                    or actor not in clock_actors or native_value_states[actor]["owner"] != 0
+                    or native_value_states[actor]["process"] != 1):
+                raise RuntimeStateError("Unowned or unsupported TES4 first-person melee state")
+            clock = native_float(first_person["clock"])
+            if clock < 0:
+                raise RuntimeStateError("Invalid TES4 first-person melee clock")
+            mirror = first_person["reaction"]
+            if mirror is not None:
+                melee_reaction(mirror, actor, strike, clock, False)
+                if reaction is not None and any(mirror[k] != reaction[k] for k in ("contact_id", "kind")):
+                    raise RuntimeStateError("Mismatched TES4 body and first-person reaction causes")
         if version >= 55:
             for sequence in check_collection(entry["retiring_sequences"], "retiring melee sequences"):
                 retiring_sequence(sequence, actor)
@@ -2141,6 +2160,33 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if value > 1:
                 raise RuntimeStateError("Invalid TES4 melee boolean")
             return bool(value)
+        def read_melee_reaction():
+            reaction = {"contact_id": reader.unpack("<Q"), "kind": reader.unpack("<B"),
+                        "animation_group": reader.string(), "animation_time": reader.unpack("<f"),
+                        "started": melee_boolean()}
+            timing = {"easing": melee_boolean()}
+            for key in ("offset", "ease_start", "last_input"):
+                timing[key] = reader.unpack("<f") if melee_boolean() else None
+            for key in ("ease_end", "weighted_time", "output_time"):
+                timing[key] = reader.unpack("<f")
+            reaction["sequence_timing"] = timing
+            retirement = None
+            if melee_boolean():
+                retirement = {"duration": reader.unpack("<f"),
+                              "start_clock": reader.unpack("<f") if melee_boolean() else None}
+            reaction["retirement"] = retirement
+            if version >= 55: reaction["inactive"] = melee_boolean()
+            if version >= 56:
+                pose = None
+                if melee_boolean():
+                    pose = {"destination_frame": reader.unpack("<f"), "tracks": []}
+                    for _ in range(reader.count()):
+                        pose["tracks"].append({"bone": reader.string(),
+                            "translation": [reader.unpack("<f") for _ in range(3)],
+                            "rotation": [reader.unpack("<f") for _ in range(4)],
+                            "scale": reader.unpack("<f"), "priority": reader.unpack("<B")})
+                reaction["pose_snapshot"] = pose
+            return reaction
         for _ in range(reader.count()):
             entry = {"actor": reader.string(), "input": {
                 "held_seconds": reader.unpack("<f"), "input_held": melee_boolean(),
@@ -2166,34 +2212,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if version >= 28:
                 entry["ai_intent"] = {"target": reader.string(), "style": reader.string()} if melee_boolean() else None
             if version >= 54:
-                reaction = None
-                if melee_boolean():
-                    reaction = {"contact_id": reader.unpack("<Q"), "kind": reader.unpack("<B"),
-                                "animation_group": reader.string(), "animation_time": reader.unpack("<f"),
-                                "started": melee_boolean()}
-                    timing = {"easing": melee_boolean()}
-                    for key in ("offset", "ease_start", "last_input"):
-                        timing[key] = reader.unpack("<f") if melee_boolean() else None
-                    for key in ("ease_end", "weighted_time", "output_time"):
-                        timing[key] = reader.unpack("<f")
-                    reaction["sequence_timing"] = timing
-                    retirement = None
-                    if melee_boolean():
-                        retirement = {"duration": reader.unpack("<f"),
-                                      "start_clock": reader.unpack("<f") if melee_boolean() else None}
-                    reaction["retirement"] = retirement
-                    if version >= 55: reaction["inactive"] = melee_boolean()
-                    if version >= 56:
-                        pose = None
-                        if melee_boolean():
-                            pose = {"destination_frame": reader.unpack("<f"), "tracks": []}
-                            for _ in range(reader.count()):
-                                pose["tracks"].append({"bone": reader.string(),
-                                    "translation": [reader.unpack("<f") for _ in range(3)],
-                                    "rotation": [reader.unpack("<f") for _ in range(4)],
-                                    "scale": reader.unpack("<f"), "priority": reader.unpack("<B")})
-                        reaction["pose_snapshot"] = pose
-                entry["reaction"] = reaction
+                entry["reaction"] = read_melee_reaction() if melee_boolean() else None
             if version >= 55:
                 entry["retiring_sequences"] = []
                 for _ in range(reader.count()):
@@ -2207,6 +2226,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     sequence["retirement"] = {"duration": reader.unpack("<f"),
                         "start_clock": reader.unpack("<f") if melee_boolean() else None}
                     entry["retiring_sequences"].append(sequence)
+            if version >= 57:
+                first_person = None
+                if melee_boolean():
+                    first_person = {"clock": reader.unpack("<f"),
+                                    "reaction": read_melee_reaction() if melee_boolean() else None}
+                entry["first_person"] = first_person
             result["native_melee_states"].append(entry)
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
@@ -2672,6 +2697,40 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(entry["actor"])
     if version >= 21:
         melee_states = sorted(state.get("native_melee_states", []), key=lambda item: item["actor"])
+        def write_melee_reaction(reaction):
+            writer.pack("<Q", reaction["contact_id"])
+            writer.pack("<B", reaction["kind"])
+            writer.string(reaction["animation_group"])
+            writer.pack("<f", reaction["animation_time"])
+            writer.pack("<B", int(reaction["started"]))
+            timing = reaction["sequence_timing"]
+            writer.pack("<B", int(timing["easing"]))
+            for key in ("offset", "ease_start", "last_input"):
+                value = timing[key]
+                writer.pack("<B", int(value is not None))
+                if value is not None:
+                    writer.pack("<f", value)
+            for key in ("ease_end", "weighted_time", "output_time"):
+                writer.pack("<f", timing[key])
+            retirement = reaction["retirement"]
+            writer.pack("<B", int(retirement is not None))
+            if retirement is not None:
+                writer.pack("<f", retirement["duration"])
+                writer.pack("<B", int(retirement["start_clock"] is not None))
+                if retirement["start_clock"] is not None:
+                    writer.pack("<f", retirement["start_clock"])
+            if version >= 55: writer.pack("<B", int(reaction["inactive"]))
+            if version >= 56:
+                pose = reaction["pose_snapshot"]
+                writer.pack("<B", int(pose is not None))
+                if pose is not None:
+                    writer.pack("<f", pose["destination_frame"])
+                    writer.pack("<I", len(pose["tracks"]))
+                    for track in pose["tracks"]:
+                        writer.string(track["bone"])
+                        for value in (*track["translation"], *track["rotation"], track["scale"]):
+                            writer.pack("<f", value)
+                        writer.pack("<B", track["priority"])
         writer.pack("<I", len(melee_states))
         for entry in melee_states:
             writer.string(entry["actor"])
@@ -2715,40 +2774,7 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 54:
                 reaction = entry["reaction"]
                 writer.pack("<B", int(reaction is not None))
-                if reaction is not None:
-                    writer.pack("<Q", reaction["contact_id"])
-                    writer.pack("<B", reaction["kind"])
-                    writer.string(reaction["animation_group"])
-                    writer.pack("<f", reaction["animation_time"])
-                    writer.pack("<B", int(reaction["started"]))
-                    timing = reaction["sequence_timing"]
-                    writer.pack("<B", int(timing["easing"]))
-                    for key in ("offset", "ease_start", "last_input"):
-                        value = timing[key]
-                        writer.pack("<B", int(value is not None))
-                        if value is not None:
-                            writer.pack("<f", value)
-                    for key in ("ease_end", "weighted_time", "output_time"):
-                        writer.pack("<f", timing[key])
-                    retirement = reaction["retirement"]
-                    writer.pack("<B", int(retirement is not None))
-                    if retirement is not None:
-                        writer.pack("<f", retirement["duration"])
-                        writer.pack("<B", int(retirement["start_clock"] is not None))
-                        if retirement["start_clock"] is not None:
-                            writer.pack("<f", retirement["start_clock"])
-                    if version >= 55: writer.pack("<B", int(reaction["inactive"]))
-                    if version >= 56:
-                        pose = reaction["pose_snapshot"]
-                        writer.pack("<B", int(pose is not None))
-                        if pose is not None:
-                            writer.pack("<f", pose["destination_frame"])
-                            writer.pack("<I", len(pose["tracks"]))
-                            for track in pose["tracks"]:
-                                writer.string(track["bone"])
-                                for value in (*track["translation"], *track["rotation"], track["scale"]):
-                                    writer.pack("<f", value)
-                                writer.pack("<B", track["priority"])
+                if reaction is not None: write_melee_reaction(reaction)
             if version >= 55:
                 writer.pack("<I", len(entry["retiring_sequences"]))
                 for sequence in entry["retiring_sequences"]:
@@ -2766,6 +2792,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<f", retirement["duration"])
                     writer.pack("<B", int(retirement["start_clock"] is not None))
                     if retirement["start_clock"] is not None: writer.pack("<f", retirement["start_clock"])
+            if version >= 57:
+                first_person = entry["first_person"]
+                writer.pack("<B", int(first_person is not None))
+                if first_person is not None:
+                    writer.pack("<f", first_person["clock"])
+                    reaction = first_person["reaction"]
+                    writer.pack("<B", int(reaction is not None))
+                    if reaction is not None: write_melee_reaction(reaction)
     if version >= 23:
         clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
         writer.pack("<I", len(clocks))
@@ -3097,6 +3131,14 @@ def _upgrade_melee_pose_snapshots(state: dict[str, Any]) -> None:
                 reaction["pose_snapshot"] = None
 
 
+def _upgrade_first_person_melee(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 57:
+        for entry in state.get("native_melee_states", []):
+            if entry.get("first_person") is not None:
+                raise RuntimeStateError("Legacy TES4 save cannot carry first-person melee ownership")
+            entry["first_person"] = None
+
+
 def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 49:
         for entry in state.get("native_melee_states", []):
@@ -3115,6 +3157,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_reactions(state)
     _upgrade_melee_retirement(state)
     _upgrade_melee_pose_snapshots(state)
+    _upgrade_first_person_melee(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)
@@ -3193,6 +3236,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_reactions(result)
     _upgrade_melee_retirement(result)
     _upgrade_melee_pose_snapshots(result)
+    _upgrade_first_person_melee(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)
     _upgrade_actor_draw(result)

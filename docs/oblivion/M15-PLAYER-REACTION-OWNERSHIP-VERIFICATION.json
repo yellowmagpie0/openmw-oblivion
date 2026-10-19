@@ -1,0 +1,488 @@
+{
+  "schema_version": 1,
+  "runtime_state_version": 57,
+  "status": "Independent Player mirror storage and synthetic service-frame ownership verified. Normal Player resource generation and view projection remain open; full M15S4 incomplete.",
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "68fb4b957fa435a4bab19531a08fe35c5594f99a",
+    "source_fingerprint": "c84316dceb00917e6b0932f75549f3c53f715710ac5aa288b17987b55986c521"
+  },
+  "tested_source_files": [
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "8fea8b4b4c43806707d2b3cbd605a215d0411744fb5877afe416beb82f954c8e"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.cpp",
+      "sha256": "95444268f8cf6d1b6807f9b697aa819e5242b444a8b92cc8d60bdda9fe5e40d3"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "08d7e069cfe988d51541d0d94d7466dfc7ef7f6901d80ee179a2c87644c4e925"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "38aa39fbb8277becfe9b5f4ea287e2449040021bee342d23f09e936cb30c0949"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "69c04874127b3ffff521ff8bbd003e5ad058021677ecc396965c5c199f725c7d"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "a57380d06baa5fff2f6f52a347b55901ca7991ae77acd59522ac6ef1862f4eb1"
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "7118174736a9eb68d0924b2de81a29ab5f4d711aca92656705878c12e4c428fb"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_player_reaction_views_expected.json",
+      "sha256": "75c91966b5425c24b9a56d619e9433ddb1fd824f86b5c66258f9960006d0a638"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "002e4f6de09c99fac7fa6363de4a4402c34a6cd5a130aaab1ad7322b293b3cc6"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "136151bd1ed3a295a64eae0058888ac6e97aaa96ef8a75ac2c13c2457ca97ee1"
+    }
+  ],
+  "checks": {
+    "normal_engine": {
+      "executed": 1757,
+      "suites": 125,
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-03/verification.json",
+        "sha256": "c880b1c8e91e51009214c7b7e974ab3d04984fd6ce4d31c6d13cbbcad8e05757"
+      }
+    },
+    "sanitized_engine": {
+      "executed": 1757,
+      "suites": 125,
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-03/verification.json",
+        "sha256": "37326bd146bf07a82f878988d17b9d523280dec27f7839660f0d6beb50ad0d89"
+      }
+    },
+    "normal_components": {
+      "executed": 2960,
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-full-components-01/verification.json",
+        "sha256": "f9b8ed16ea1f54527e8a093eae2b307c10c2f18d729607b25982adb6b3c65c6a"
+      }
+    },
+    "sanitized_components": {
+      "executed": 813,
+      "filter": "ESM4*",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-01/verification.json",
+        "sha256": "56e16b993f3cd0a1ec21abbb303fc58ff5c7840c0918d3d5ea7f3dc858ae159c"
+      },
+      "scope": "Completed component result from stopped helper; overall helper false."
+    },
+    "python": {
+      "executed": 333,
+      "log": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/python-full-preflight-02.log",
+        "sha256": "69999fa27123109da327b844f25869fe3a4bc4a5c4cdc3b3d05df80a2422e68e"
+      }
+    },
+    "source_scope": "Component/codec/Python inputs passed before the World-only fixture correction and final engine clock-lease comparison. Final engine profiles share the corrected source fingerprint; component/Python inputs did not change; final lease code is covered by both final engine profiles."
+  },
+  "implemented": [
+    "Schema57 optional first_person {clock,reaction}; per-entry wire after retiring sequences. Legacy promotion adds null and invents no clock. Shared C++/Python reaction wire/JSON implementation; malformed owners, clocks, causes, timing and truncated data rejected.",
+    "Atomic Player-only contact mirror packets require same fresh cause/kind and exact existing mirror clock (or body clock for first initialization). Replays, stale leases (including either view clock changing only zero sign) and unsupported active-mirror replacements rejected before publication.",
+    "Service frames distinguish (view,group), advance each view from its own clock, save/restore offset/fade/retirement independently and permit mirror ownership after body recovery. Body alone controls process action; mirror-only cancel/cleanup preserves body queued input. Persistent mirror clock advances between reactions."
+  ],
+  "independent_original": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "clock_probe": {
+      "contexts": 48,
+      "sample_pairs": 240,
+      "different_output_pairs": 96,
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/verification.json",
+        "sha256": "a57f030b836b7ca949916a9bd9195d12a0d053ce90598243ecdb80c561ba9aea"
+      }
+    },
+    "replacement_probe": {
+      "contexts": 96,
+      "sample_pairs": 480,
+      "prior_absent_controls": 48,
+      "same_slot_crossfades": 32,
+      "different_slot_parallel": 16,
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/verification.json",
+        "sha256": "5230bf29afb53c88e219bea6903d6ddb649ecf8b1be58386aa3d1e56eed0f2dc"
+      }
+    },
+    "root_dispatch_prefix": {
+      "contexts": 72,
+      "observations": {
+        "pose-capture": 48,
+        "direct": 24
+      },
+      "scope": "Original474530 dispatch prefix only, ending at6C5C70 pose-capture or470B20 direct entry. Executes actual660110(true/false) and612220 getters. Does not execute or accept the ensuing pose allocation/activation, file loading, root construction, rendering or gameplay.",
+      "expected_dispatch": {
+        "root_equal_Player_3C_or_5D0": {
+          "entry": "6C5C70",
+          "duration_bits": 1036831949,
+          "frustum_calls": 0
+        },
+        "foreign_root_and_false_frustum": {
+          "entry": "470B20",
+          "frustum_calls": 1
+        }
+      },
+      "boundaries": [
+        "Only BlockIdle slot1 active; each target slot0/3 absent. Supplied empty/preallocated manager and sequences.",
+        "Scene predicates578F60/5790E0 suppliedfalse; frustum suppliedfalse and counted. No interpretation of578F60 as direct camera test.",
+        "Player+3C and+5D0 root pointers are supplied; four accepted earlier live samples independently show FPAnimData.root==Player+5D0. BodyAnimData.root==Player+3C still needs a separate live or constructor check.",
+        "Stops at exact manager-entry EIP; no return/complete activation claim."
+      ],
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/verification.json",
+        "sha256": "d9fb2e80a93992de150a897f1c2a80f77d7661957a512539a3c31bb812e8ca2f"
+      }
+    },
+    "clock_probe_root_qualification": "The clock/replacement probes supplied660110 returning a node distinct from BOTH AnimData roots. Their direct first-person examples are conditional fixture observations, not normal Player activation. Matching Player+3C/+5D0 bypasses frustum INTO pose capture.",
+    "overlap": "Expanded replacement probe includes48 controls reproducing the preceding clock matrix; these are not144 unique contexts.",
+    "boundaries": [
+      "Original Player/proc getters, group resolution, Single cache, playback, action setter,65D790/474BE0 mirror and6CA950 updates execute.",
+      "Same supplied one-bucket cache hash/equality, scene-update471230 boundary, scene predicates, distinct Player node and OS interlocked operations as published player-channel-probe05.",
+      "Empty-controller/preallocated manager/sequence fixtures; no real file loading, rendering, actor completion driver or live Player input.",
+      "Body clock.5; first-person clocks0/.25/.5/2 supplied independently. Relative sample increments0/.025/.05/.1/.125 are passed as float inputs to each actual update."
+    ]
+  },
+  "runtime_regressions": [
+    {
+      "profile": "normal",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/verification.json",
+        "sha256": "54b38fe4f131cbb70ee3dbf7fceb157f36bd6053e6080bd8b201df1f59d5eaaf"
+      },
+      "app": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "d716794cf11308b4916f898ad8daa890014e9e141265f0be9a2ca3f873cdf450"
+      },
+      "save_hashes": [
+        "ebede5340940e0d6bbfcee663da8099eb16b55c00452ef01d8b0200a0b0702fb",
+        "acccc5e2b66a1dee6c2fe12032a324a7711f2079a86ea8fa80963f9fc4d474e3"
+      ],
+      "scope": "Schema56-to57 normal NPC BlockHit regression only; no new Player mirror generated or rendered."
+    },
+    {
+      "profile": "sanitized",
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/verification.json",
+        "sha256": "1704b5f778d66aa7ab095a9193442edc88da475bfb1802d5c734f48dae2465cd"
+      },
+      "app": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "875ba22ca5334aabaad9a723e20d4e2feb2cfc38484b5fa76fdfb7ca6017be79"
+      },
+      "save_hashes": [
+        "e4e2a5769a3b9c5b07019e4324661db3274e70c2df9a8e43781fa1961169f759",
+        "b4b7ac948bac5e2651c48694646a14fbb5de057e9450bc842c1a0526feadeb34"
+      ],
+      "scope": "Schema56-to57 normal NPC BlockHit regression only; no new Player mirror generated or rendered."
+    }
+  ],
+  "sanitizer_engine_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": ""
+  },
+  "leak_coverage": false,
+  "limits": [
+    "No normal Player mirror factory or renderer projection is implemented in this chunk. Explicit synthetic Player packets/frames prove service ownership only.",
+    "Fresh direct first-person activation is the admitted packet domain. Native BlockHit/Recoil can crossfade an old first-person strike; Stagger can leave that strike active in another slot. Outgoing/parallel view ownership and normal replacements remain open.",
+    "Supplied differing clocks prove native offset/rounding behavior, not that real-game clocks diverge. Four earlier paused original live samples had equal body/first-person clocks. Actual independent view scheduling/freeze/geometry/pose capture remain open.",
+    "Own-root fresh activation requires the pose-capture path:72 prefix observations stop at6C5C70 for48 supplied matching-root cases and470B20 for24 foreign-root false-frustum controls. No full own-root activation or renderer acceptance; body root equality toPlayer+3C remains separately unverified live.",
+    "Current CharacterController still projects the existing body path. Camera changes rebuild a single renderer root; dual Player cache/root integration remains open.",
+    "The generated normal runtime recipe retains inherited Player-block/third-person descriptions outside its declared NPC-only scope; those visual conditions were not executed or accepted. See the pinned scope clarification.",
+    "Clock survival through incapacitation, Player bow/strike coexistence and broader view-cache lifetime remain guarded or unverified.",
+    "Runtime courses use staged equipment and public NPC held-block Lua, keyboard/first-person at1FPS; they are not full opponent/input/view/FPS, mastery, effect or directional-power acceptance.",
+    "Previously retained desktop LSan failure remains open; no leak coverage claim."
+  ],
+  "retained_failures": [
+    "Normal-checks01 failed all3 new engine tests: zero Endurance derived zero Player Health, so Health-1 made prepared recipient Dead. GDB debug02 confirmed this. Only the new test fixture was corrected to attributes50 and explicit Health100 check; production rules unchanged.",
+    "Sanitized-checks01 stopped owned CMake process group727049 withSIGTERM before fixture correction;813 completed component tests pass, no overall helper or engine pass.",
+    "Python focused01 fixture physical action owners were unsorted; fixed fixture order and focused02 passed. Full runtime codec module01 found one legacy CURRENT_VERSION promotion missing first_person; fixed before all333 passing tests.",
+    "Root-dispatch fullhelper probe01 faulted at real pose allocation without an allocator fixture. Prefixprobe02 terminates before that allocation; it proves dispatch only. The initial reading of root equality as skipping pose capture was backward and corrected in this receipt.",
+    "GDB attribute-injection preflight stopped with NoSymbol values and supplies no executed acceptance."
+  ],
+  "editable_runtime_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit.json",
+      "sha256": "31af9dcff35cc183881964bb6459f0b5ec1770e657dfe1d5cfed2a1c7a9469ae"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit_continuation.json",
+      "sha256": "448183e031e012776532f18722f44f58feef9be5b29c51cd74d891de239e6b62"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_blockhit_input.json",
+      "sha256": "1794e80b4e89e76320f556cd0824422382c2b9b3baae34a16919203a8d2490d4"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-03/verification.json",
+      "sha256": "c880b1c8e91e51009214c7b7e974ab3d04984fd6ce4d31c6d13cbbcad8e05757"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-03/verification.json",
+      "sha256": "37326bd146bf07a82f878988d17b9d523280dec27f7839660f0d6beb50ad0d89"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-full-components-01/verification.json",
+      "sha256": "f9b8ed16ea1f54527e8a093eae2b307c10c2f18d729607b25982adb6b3c65c6a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-01/verification.json",
+      "sha256": "56e16b993f3cd0a1ec21abbb303fc58ff5c7840c0918d3d5ea7f3dc858ae159c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/python-full-preflight-02.log",
+      "sha256": "69999fa27123109da327b844f25869fe3a4bc4a5c4cdc3b3d05df80a2422e68e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/verification.json",
+      "sha256": "a57f030b836b7ca949916a9bd9195d12a0d053ce90598243ecdb80c561ba9aea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/verification.json",
+      "sha256": "5230bf29afb53c88e219bea6903d6ddb649ecf8b1be58386aa3d1e56eed0f2dc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/verification.json",
+      "sha256": "d9fb2e80a93992de150a897f1c2a80f77d7661957a512539a3c31bb812e8ca2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/probe-02.py",
+      "sha256": "436675205ab002aa495c0e4924156d0fd01cabed301d8c2d56a2fc5e628807ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/corpus02.json",
+      "sha256": "039eab8882972d3383be7151953f868a852307db9a39eaed0371b021393719cc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/verify.py",
+      "sha256": "b8b372a255d62dc93fa9f237d3f1f1ca80c6adb70d1445d6cc284ac20583d94e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/probe-01.py",
+      "sha256": "10a0284c42fbc972c0351e7c49da8bca8f1fb49078e178faff39fa48abc6146d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-scene-review-01/attempt01.json",
+      "sha256": "0ec7c45d3040d2eacdee4223dabaa29d4688aaa27e8073a3dc6e5cd7f735f9f3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-full-components-01/inventory.txt",
+      "sha256": "0f68aadac82fe4bd83692ecf513a64f475d1f6f9c2c05014258193f58c0e6bcb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-full-components-01/tests.xml",
+      "sha256": "41c82b285af38cf47a47c63bff760671b4a9dcee57e5b6e8a125ba0c92a90164"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-full-components-01/source-link.json",
+      "sha256": "83d4a89c81d6d5233fe3c9c3987621cb69a2449e7d110d64b11c75c03131bc0b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-01/verification.json",
+      "sha256": "c47495f6b5c3daac89bd2ffa54ca497868430074b5a5b2c8eca892bbae73dedc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-01/engine.log",
+      "sha256": "9eab3f027705ca3b8fc963dda44e492ed3c4e4707b8af0af0e68fb9094f589bd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-03/engine-inventory.txt",
+      "sha256": "8db53c3ef1901c658006a2a7c925856f8156b8bf90d7e02ef1cc1bee0b27a33b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-normal-checks-03/engine.xml",
+      "sha256": "fc3a1178ca3b4ad661e7c4fc780dbb923b28674e4bc07d4b4051b2e0f67335b7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-03/engine-inventory.txt",
+      "sha256": "8db53c3ef1901c658006a2a7c925856f8156b8bf90d7e02ef1cc1bee0b27a33b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-03/engine.xml",
+      "sha256": "7ef01eed5158f90c1fd60bdcc0e8c3da0fce159d1b6f3be9a0ec2cef390295f0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/interop-normal-01.json",
+      "sha256": "2135a573cb59d7b75b55b8a1acb6899276124e0b8a86c705e694a00868166fbf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/interop-sanitized-01.json",
+      "sha256": "4f55c58a991809893cb6617c8b4d03ff62e0f77c7454d8128edbd0502ebb2e61"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/verification.json",
+      "sha256": "54b38fe4f131cbb70ee3dbf7fceb157f36bd6053e6080bd8b201df1f59d5eaaf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/visual-review.json",
+      "sha256": "51c86c5d708f1db9b8563e7fec25b73eadcead600ae5073d06bf57c1bd4a7ad3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/extra-content-reference-audit.json",
+      "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/binary-pin.json",
+      "sha256": "dd22378ff9c85e8068b1abd986ef450923c39bcb7f4a672a4cfd9ce12e38123e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/preregistered-acceptance.json",
+      "sha256": "22e2990792f6d3910309c5121e6f9504136713d52b9d4cc76be556c8b7897722"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/launcher.py",
+      "sha256": "ca3f72ebb596c5cca85b096cfed9861a20da35c05def9c8b06b85b2b45d4762a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/verify.py",
+      "sha256": "c027d03fcf1091b26675b48acf23debc1c2307b8b686aef424b025b90a0b1292"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/epoch-monitor.py",
+      "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/manifest.json",
+      "sha256": "826f07c2d45ead2fcda570cc4a4e667e2db3773ad45bd2863bda04d6a7c0548e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/continuation.json",
+      "sha256": "98e0678c62479429caa1af5ca6af261d8dbf026d27bc36272d195c424978f48c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/accepted-builds.json",
+      "sha256": "1044df24bb99b176bfb28c63708dabc43fa96681d324e433f85fc8fcd269ac8d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/verification.json",
+      "sha256": "1704b5f778d66aa7ab095a9193442edc88da475bfb1802d5c734f48dae2465cd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/visual-review.json",
+      "sha256": "9162e2b3b9e6fe23a3168f2ab692338c075ec942d4bfe2c5b98c25c22d5e7806"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/extra-content-reference-audit.json",
+      "sha256": "ae18d2c994c70f703d3536c1327176744b3b9ceb9cb1db591902256e62b92044"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/binary-pin.json",
+      "sha256": "c346ba8c38a4d66e47b10a90ddfb18caed6a770eab817312f9602d2ea8639607"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/preregistered-acceptance.json",
+      "sha256": "9db1f02cee6141a3a83c2588ac28d11cfbc9d6de528dffe674b7ccdf818ae05e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/launcher.py",
+      "sha256": "ca3f72ebb596c5cca85b096cfed9861a20da35c05def9c8b06b85b2b45d4762a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/verify.py",
+      "sha256": "c027d03fcf1091b26675b48acf23debc1c2307b8b686aef424b025b90a0b1292"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/epoch-monitor.py",
+      "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/manifest.json",
+      "sha256": "47a60dee6302be98b8ce9e24db2e27ddaf7ad598c469bb7c2a9f306d6e10bf24"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/continuation.json",
+      "sha256": "90711d613f5ccc3c67c31b0b0e84d4ae30f46c885f9489b43b6d08dc8bc6751b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-sanitized-02/accepted-builds.json",
+      "sha256": "75730d4a0e93536939517455f78cbc86b58dc9a31f28cc7535c2ce8f84d6d517"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-service-npc-regression-normal-02/scope-clarification.json",
+      "sha256": "0a736e5dcc89e09dbd9056b8fcf814e73bd969c5f0ebd18feaefac09ee8a6ed7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/probe-01.py",
+      "sha256": "0f53fad2b777911303637c176d516c3b4a8116d1ae4a4a4cb4e82ea0ce97e931"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/corpus01.json",
+      "sha256": "04966e68aa50ec85c3fc6a7ad2b03e4e0322b81ea19263df72494d84c3020de5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/verify.py",
+      "sha256": "d60b8b70711ba79bd86fdfca414ce5c90e51e31f1c8c3e331924b949559946ab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/verify-interop.py",
+      "sha256": "88e88918d2d1a4d88707f83b9337ca0d3777056fef8d98ee531fe3b427fdc382"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/syntax-03/verification.json",
+      "sha256": "e5dabadbcb247e95b0b6d533cbf17e98df0667af8cabde59a4944b2f5e33c6c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/syntax-04/verification.json",
+      "sha256": "ebcf40b690481b417ecdc2ab66eabcb26708cfcacf78e3fea996eef7f80302d0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/syntax-preflight-04.py",
+      "sha256": "681eceaae542dc2c5fef9b819a0fecd3f2554fe801f280adbcab10809f3cf55b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/engine-fixture-debug-02.log",
+      "sha256": "f4aac19ab9123d9b8ac58d4250863931856bfc75684ecc771f284fccb1de6255"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/fixture-health-debug-preflight.log",
+      "sha256": "9b2d1298594f8e243e71037c817ef7f2283830ab5926e646a07a8500e4ccbc0d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/probe-01.py",
+      "sha256": "b40f395f2c7235be121087d3d6034f01c61e10240dd8efd94af6c1d5f7ee386e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/corpus01.json",
+      "sha256": "647ca3503f224f132f0adb6ae618f2a986fd708ed0984b69a9e4a51ec4a4c330"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/verify.py",
+      "sha256": "9500bba90b0820004c2917149a4a4bef47053cf5474265ed2b69c63224f0eafb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-mirror-replacement-review-01/scope-before-probe.json",
+      "sha256": "39a52d2b529c8fd5b0d7ac8e649c5fad7b273ec02451866534cf9f7eb9053175"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-service-sanitized-checks-03/engine-sanitizer-environment.json",
+      "sha256": "899c7060e6017d53d25ead6c5385e911a093f2b9e994d5bbc4957f0f6ef5cb93"
+    }
+  ],
+  "post_check_expectation_scope_clarification": {
+    "path": "scripts/data/oblivion_compat/m15_native_player_reaction_views_expected.json",
+    "before_sha256": "5b610076cbf28ef4e6962455cd33311db90bb5130ed4ebf4d28173c577a7b6dc",
+    "after_sha256": "75c91966b5425c24b9a56d619e9433ddb1fd824f86b5c66258f9960006d0a638",
+    "unchanged_numeric_cases_sha256": "1d7584998f9cc0a7418e7f40338961dc595bcbe006a941b55fb688242c2171ad",
+    "scope": "After completed checks, only explanatory oracle-manifest metadata was clarified: supplied node is distinct from both roots, old-strike dumps are representative BlockHit only. All cases/numeric expectations and every executable/component/Python test input remain unchanged. Tested dirty fingerprint precedes this documentation-only clarification.",
+    "before_copy": {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-clocks-review-01/expected-before-scope-clarification.json",
+      "sha256": "5b610076cbf28ef4e6962455cd33311db90bb5130ed4ebf4d28173c577a7b6dc"
+    }
+  }
+}

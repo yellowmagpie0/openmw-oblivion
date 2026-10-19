@@ -2247,6 +2247,8 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_power_melee_phases(migrated)
         state_io._upgrade_melee_reactions(migrated)
         state_io._upgrade_melee_retirement(migrated)
+        state_io._upgrade_melee_pose_snapshots(migrated)
+        state_io._upgrade_first_person_melee(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
@@ -3129,6 +3131,107 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         for cut in range(len(payload)):
             with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
                 state_io.decode_payload(payload[:cut])
+
+
+    def first_person_melee_state(self):
+        state = self.reaction_state()
+        state["physical_action_owners"].sort(key=lambda item: item["id"])
+        for upgrade in (state_io._upgrade_melee_retirement, state_io._upgrade_melee_pose_snapshots,
+                        state_io._upgrade_first_person_melee):
+            upgrade(state)
+        state["schema_version"] = 57
+        player = state["player"]["reference"]
+        next(value for value in state["native_actor_values"] if value["actor"] == player)["process_action"] = 6
+        state["native_animation_clocks"] = [{"actor": player, "clock": .5}]
+        melee = state["native_melee_states"][0]
+        melee["actor"] = player
+        # Original Player activation + first update: body fades, FP is direct.
+        # Equal resource aliases must still retain independent view timings.
+        body = melee["reaction"]
+        body["sequence_timing"].update(easing=True, offset=-.5, ease_start=.5, last_input=0.,
+                                       ease_end=struct.unpack("<f", struct.pack("<f", .6))[0])
+        mirror = copy.deepcopy(body)
+        mirror["sequence_timing"].update(easing=False, offset=-.25, ease_start=0., ease_end=.25)
+        melee["first_person"] = {"clock": .25, "reaction": mirror}
+        return state
+
+    def test_first_person57_preserves_independent_timing_and_retirement_after_body_recovery(self):
+        for phase in ("active", "retiring", "body-recovered", "inactive", "clock-only", "signed-zero"):
+            with self.subTest(phase=phase):
+                state = self.first_person_melee_state()
+                melee = state["native_melee_states"][0]
+                first = melee["first_person"]
+                if phase in ("retiring", "inactive"):
+                    first["reaction"].update(started=True, animation_time=.125,
+                        retirement={"duration": .125, "start_clock": .25})
+                    first["reaction"]["sequence_timing"].update(last_input=.125, weighted_time=.125, output_time=.125)
+                if phase == "inactive":
+                    first["clock"] = .375
+                    first["reaction"]["inactive"] = True
+                if phase == "body-recovered":
+                    melee["reaction"] = None
+                    next(value for value in state["native_actor_values"]
+                         if value["actor"] == melee["actor"])["process_action"] = -1
+                if phase in ("clock-only", "signed-zero"):
+                    first["reaction"] = None
+                if phase == "signed-zero":
+                    first["clock"] = -0.
+                payload = state_io.encode_payload(state)
+                loaded = state_io.decode_payload(payload)
+                self.assertEqual(state_io.encode_payload(loaded), payload)
+                self.assertEqual(loaded["native_melee_states"], state["native_melee_states"])
+                self.assertEqual(loaded["physical_actions"], state["physical_actions"])
+                self.assertEqual(loaded["physical_action_owners"], state["physical_action_owners"])
+                if phase == "signed-zero":
+                    self.assertEqual(struct.pack("<f", loaded["native_melee_states"][0]["first_person"]["clock"]),
+                                     b"\0\0\0\x80")
+
+    def test_first_person57_rejects_replay_mismatched_cause_owner_and_premature_deactivation(self):
+        def first(s): return s["native_melee_states"][0]["first_person"]
+        def values(s):
+            return next(value for value in s["native_actor_values"]
+                        if value["actor"] == s["player"]["reference"])
+        mutations = [lambda s: first(s).update(clock=-1.),
+                     lambda s: first(s).update(clock=float("nan")),
+                     lambda s: first(s).update(clock=float("inf")),
+                     lambda s: first(s)["reaction"].update(contact_id=2),
+                     lambda s: first(s)["reaction"].update(contact_id=7),
+                     lambda s: first(s)["reaction"].update(kind=1),
+                     lambda s: first(s)["reaction"].update(started=1),
+                     lambda s: s["native_animation_clocks"].clear(),
+                     lambda s: s["native_melee_states"][0].update(actor=s["native_actor_values"][0]["actor"]),
+                     lambda s: values(s).update(process=0, process_action=None),
+                     lambda s: first(s)["reaction"].update(inactive=True,
+                         retirement={"duration": .125, "start_clock": .25}),
+                     lambda s: s["native_melee_states"][0].pop("first_person")]
+        for index, mutation in enumerate(mutations):
+            with self.subTest(index=index):
+                state = self.first_person_melee_state()
+                mutation(state)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.first_person_melee_state()
+        payload = state_io.encode_payload(state)
+        for cut in range(len(payload)):
+            with self.subTest(cut=cut), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(payload[:cut])
+
+    def test_first_person57_legacy_promotion_adds_no_clock_or_mirror(self):
+        state = self.reaction_state()
+        state_io._upgrade_melee_retirement(state)
+        state_io._upgrade_melee_pose_snapshots(state)
+        state["schema_version"] = 56
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertNotIn("first_person", loaded["native_melee_states"][0])
+        state_io._upgrade_first_person_melee(loaded)
+        loaded["schema_version"] = 57
+        promoted = state_io.decode_payload(state_io.encode_payload(loaded))
+        self.assertIsNone(promoted["native_melee_states"][0]["first_person"])
+        self.assertEqual(promoted["native_melee_states"][0]["reaction"], state["native_melee_states"][0]["reaction"])
+        self.assertEqual(promoted["native_animation_clocks"], state["native_animation_clocks"])
+        corrupt = self.first_person_melee_state()
+        corrupt["schema_version"] = 56
+        with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_first_person_melee(corrupt)
 
 
 class SaveEnvelopeAdmissionTests(unittest.TestCase):

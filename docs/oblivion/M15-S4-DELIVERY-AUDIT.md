@@ -8089,3 +8089,78 @@ source, actual executables, exact checks, independent native evidence, editable
 manifests, save/reload assertions, images and retained failed attempts. This is
 bounded held-NPC reaction acceptance, not the complete opponent/input/view/FPS
 course. **M15S4 remains incomplete.**
+
+
+### Player mirror clock and service ownership checkpoint (schema 57)
+
+Schema 57 stores an optional Player `first_person` clock and owned reaction
+separately from the body. Legacy promotion adds `null`, without inventing a
+mirror or its clock. Both codecs share their existing reaction wire/JSON helpers;
+strict owner/cause/timing validation, truncated payload rejection and signed-zero
+storage cover the added field. The clock survives ordinary mirror cleanup.
+
+Contact preparation can atomically publish a fresh direct mirror with the body's
+consumed cause. Frame preparation distinguishes `(view, group)` metadata, anchors
+and updates each view from its own clock, and retains a mirror after body
+recovery. Only the body owns the process action. Mirror-only cancellation and
+inactive cleanup preserve queued body input and process action. Prepared contact
+and frame leases compare both clock bit patterns, rejecting a `-0.0` to `+0.0`
+change as well as a mirror increment hidden by a coarse unchanged body clock.
+Unsupported old-mirror replacement and strike/bow coexistence stay guarded.
+
+Independent original instructions execute Player BlockHit/Recoil/Stagger helpers,
+body playback, process assignment, `65D790`/`474BE0` mirroring and `6CA950` updates.
+The initial 48 supplied-cache contexts produce 240 sample pairs, 96 with different
+body/first-person output bits. Four independently supplied first-person clocks
+are exercised across both camera bytes and x87 precision words. This establishes
+offset and rounding behavior, not divergence of real-game clocks; the earlier
+four paused live samples had equal clocks. An expanded 96-context probe includes
+48 repeated controls, 32 same-slot BlockHit/Recoil crossfades from an old
+first-person strike, and 16 Stagger cases retaining that strike in another slot.
+The empty-controller/cache/scene boundaries remain explicit.
+
+
+The direct first-person clock/replacement observations use a supplied `660110`
+return distinct from both AnimData roots. A separate **72-case dispatch-prefix**
+probe executes actual `660110(true/false)` and `612220`: equality with supplied
+Player `+3C` or `+5D0` roots bypasses frustum testing **into `6C5C70` pose capture**
+(48 cases); foreign roots with false frustum enter direct `470B20` activation
+(24 cases). It stops at those manager entries and does not accept the subsequent
+allocation/activation. The initial interpretation that matching roots skipped
+capture was backward. The retained full-helper attempt reached pose allocation
+and faulted on the absent allocator fixture. Four earlier accepted live samples
+confirm first-person AnimData root equals Player `+5D0`; body equality to `+3C`
+is still a separate live/constructor check. Normal Player mirror activation
+therefore remains unimplemented, including its required owned-root captured
+pose. The narrower direct packet/service tests do not close that gate.
+
+
+All **1,757 engine tests/125 suites** pass normally and with ASan/UBSan at final
+fingerprint `c84316dceb00917e6b0932f75549f3c53f715710ac5aa288b17987b55986c521`. Unchanged codec/component/Python inputs
+also pass **2,960 full normal components, 813 selected sanitizer components and
+333 Python tests**. Six C++/Python phases reproduce identical binary bytes and
+C++ JSON-to-Python encoding, including body-gone/mirror-active, retirement and
+negative zero. The initial World fixtures gave Player zero Endurance and hence
+zero derived Health: the one-point contact correctly became lethal and rejected
+reaction start. Only the fixture attributes and explicit Health precondition were
+corrected. A stopped sanitizer build retains its completed component pass but
+is not an overall pass. Leak detection remains disabled; the prior desktop LSan
+failure is still open.
+
+Fresh final-app normal and instrumented NPC BlockHit regressions each perform an
+actual keyboard contact, save its 64-track pose in schema 57, then load that exact
+output in another process and recover to held action 6. RNG, consumed-contact
+ledger, observed Health damage bits, equipment and other settled AV channels
+survive without impact replay. All first-person fields remain `null`; all four
+captures were directly inspected and loaded additional references independently
+audited against the original master. These are schema-migration/existing-NPC
+regressions, not runtime acceptance of new Player mirror rendering.
+
+[M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json](M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json)
+pins the source, exact test inventories, native probes, editable expectations,
+actual executables and runtime checks. Normal Player descriptor generation,
+separate persistent renderer roots/caches, prior first-person outgoing/parallel
+layers and actual view scheduling remain open. `CharacterController` still
+projects the existing body path. Broader reaction replacements, Multiple RNG
+ordering, mastery/effects/directional powers and the full opponent/input/view/FPS
+course remain open. **M15S4 remains incomplete.**

@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 56;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 57;
 
     struct RuntimeContentIdentity
     {
@@ -612,6 +612,15 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeRetiringMeleeSequence&, const RuntimeRetiringMeleeSequence&) = default;
     };
+    struct RuntimeFirstPersonMeleeState
+    {
+        // The Player mirror owns its clock even between reactions. Its direct
+        // activation need not share the body's fade or sequence timing.
+        float mClock = 0;
+        std::optional<RuntimeMeleeReaction> mReaction = std::nullopt;
+        void validate() const;
+        friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
+    };
     struct RuntimeMeleeState
     {
         RuntimeMeleeInput mInput;
@@ -622,6 +631,9 @@ namespace ESM4
         std::optional<RuntimeMeleeReaction> mReaction = std::nullopt;
         // v55: detached slots still contribute poses through manager retirement.
         std::vector<RuntimeRetiringMeleeSequence> mRetiringSequences = {};
+        // v57: separate Player first-person ownership; legacy saves have no
+        // invented mirror or clock. The body alone owns the process action.
+        std::optional<RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

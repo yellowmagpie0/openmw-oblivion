@@ -51,6 +51,7 @@ namespace MWMechanics
         std::optional<std::array<float, 2>> mReactionKeys;
         float mRetirementDuration = 0;
         std::uint8_t mBlendFrames = 0;
+        bool mFirstPerson = false;
         float rendererTime(float time) const;
         void validate() const;
     };
@@ -249,6 +250,8 @@ namespace MWMechanics
         std::optional<ESM4::RuntimeMeleeReaction> mVictimReaction{};
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mAttackerRetiringSequence{};
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mVictimRetiringSequence{};
+        std::optional<ESM4::RuntimeFirstPersonMeleeState> mAttackerFirstPerson{};
+        std::optional<ESM4::RuntimeFirstPersonMeleeState> mVictimFirstPerson{};
     };
 
     struct OblivionPassiveEffectIdentity

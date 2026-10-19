@@ -1886,6 +1886,9 @@ namespace MWMechanics
         }
         if (const auto* state = service->findMeleeState(actor); state && state->mReaction)
             service->cancelMeleeReaction(state->mReaction->mContactId, actor);
+        if (const auto* state = service->findMeleeState(actor);
+            state && state->mFirstPerson && state->mFirstPerson->mReaction)
+            service->cancelMeleeReaction(state->mFirstPerson->mReaction->mContactId, actor);
         service->clearRetiringMeleeSequences(actor);
         const auto reactionGroup = std::exchange(mOblivionReactionGroup, {});
         mOblivionRenderedReaction = 0;

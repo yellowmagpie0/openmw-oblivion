@@ -4249,3 +4249,149 @@ TEST(ESM4RuntimeState, Reaction56PreservesCapturedLocalPoseAndRejectsInvalidOwne
     reaction.mPoseSnapshot->mTracks.clear();
     EXPECT_NO_THROW(state.serializeBinary()); // A sequence can have no transform-controlled blocks.
 }
+
+namespace
+{
+    ESM4::RuntimeState firstPersonReactionState()
+    {
+        auto state = reactionState();
+        state.mVersion = 57;
+        const auto actor = state.mReferences.front().mKey;
+        const auto player = state.mPlayer.mReference;
+        ESM4::RuntimeActorValues values;
+        values.mActor = player;
+        values.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mProcess = ESM4::ActorValueProcess::Active;
+        values.mProcessAction = 6;
+        state.mNativeActorValues.push_back(values);
+        state.mNativeActorLife.push_back({player, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        auto node = state.mNativeMeleeStates.extract(actor);
+        node.key() = player;
+        state.mNativeMeleeStates.insert(std::move(node));
+        state.mNativeAnimationClocks.clear();
+        state.mNativeAnimationClocks.emplace(player, .5f);
+        auto& melee = state.mNativeMeleeStates.at(player);
+        auto& body = *melee.mReaction;
+        // Full original Player activation + first update. Same alias in both
+        // views, but body state2 fades and first-person state1 starts directly.
+        body.mSequenceTiming = {true, -.5f, .5f, 0.f, .6f, 0.f, 0.f};
+        auto mirror = body;
+        mirror.mSequenceTiming = {false, -.25f, 0.f, 0.f, .25f, 0.f, 0.f};
+        melee.mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{.25f, std::move(mirror)};
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, Reaction57PreservesIndependentViewsThroughBodyRecoveryAndMirrorRetirement)
+{
+    for (unsigned phase = 0; phase < 6; ++phase)
+    {
+        auto state = firstPersonReactionState();
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        auto& first = *melee.mFirstPerson;
+        if (phase == 1 || phase == 3)
+        {
+            first.mReaction->mStarted = true;
+            first.mReaction->mAnimationTime = .125f;
+            first.mReaction->mRetirement = ESM4::RuntimeReactionRetirement{.125f, .25f};
+            auto& timing = first.mReaction->mSequenceTiming;
+            timing.mLastInput = timing.mWeightedTime = timing.mOutputTime = .125f;
+        }
+        if (phase == 2)
+        {
+            melee.mReaction.reset();
+            state.mNativeActorValues.back().mProcessAction = -1;
+        }
+        if (phase == 3)
+        {
+            first.mClock = .375f;
+            first.mReaction->mInactive = true;
+        }
+        if (phase >= 4) first.mReaction.reset();
+        if (phase == 5) first.mClock = -0.f;
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates) << phase;
+        EXPECT_EQ(loaded.mNativeAnimationClocks, state.mNativeAnimationClocks) << phase;
+        EXPECT_EQ(loaded.mPhysicalActions.mNext, state.mPhysicalActions.mNext);
+        EXPECT_EQ(loaded.mPhysicalActions.mPending, state.mPhysicalActions.mPending);
+        EXPECT_EQ(loaded.mPhysicalActionOwners, state.mPhysicalActionOwners);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        if (phase == 5)
+        {
+            EXPECT_TRUE(std::signbit(loaded.mNativeMeleeStates.at(state.mPlayer.mReference).mFirstPerson->mClock));
+            EXPECT_NE(loaded.canonicalJson().find("\"first_person\":{\"clock\":-0.0,\"reaction\":null}"),
+                std::string::npos);
+        }
+        std::string wire;
+        constexpr char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+        RecordProperty("reaction57_hex_" + std::to_string(phase), wire);
+        RecordProperty("reaction57_json_" + std::to_string(phase), state.canonicalJson());
+    }
+}
+
+TEST(ESM4RuntimeState, Reaction57RejectsForeignOwnersReplayConflictsAndPrematureMirrorDeactivation)
+{
+    const auto valid = firstPersonReactionState();
+    const auto actor = valid.mPlayer.mReference;
+    const auto reject = [&](auto mutate) {
+        auto state = valid;
+        mutate(state);
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    };
+    for (const float clock : {-1.f, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+        reject([&](auto& state) { state.mNativeMeleeStates.at(actor).mFirstPerson->mClock = clock; });
+    reject([&](auto& s) { s.mVersion = 56; });
+    reject([&](auto& s) { s.mNativeAnimationClocks.clear(); });
+    reject([&](auto& s) { s.mNativeActorValues.back().mProcess = ESM4::ActorValueProcess::Low; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mFirstPerson->mReaction->mContactId = 2; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mFirstPerson->mReaction->mContactId = 7; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mFirstPerson->mReaction->mKind = ESM4::MeleeReactionKind::Recoil; });
+    reject([&](auto& s) { s.mNativeMeleeStates.at(actor).mFirstPerson->mReaction->mSequenceTiming.mOffset.reset(); });
+    reject([&](auto& s) {
+        auto& reaction = *s.mNativeMeleeStates.at(actor).mFirstPerson->mReaction;
+        reaction.mRetirement = ESM4::RuntimeReactionRetirement{.125f, .25f};
+        reaction.mInactive = true;
+    });
+    reject([&](auto& s) {
+        const auto npc = s.mReferences.front().mKey;
+        auto node = s.mNativeMeleeStates.extract(actor);
+        node.key() = npc;
+        s.mNativeMeleeStates.insert(std::move(node));
+        s.mNativeAnimationClocks.emplace(npc, .5f);
+    });
+    auto absent = valid;
+    absent.mNativeMeleeStates.at(actor).mFirstPerson.reset();
+    const auto bytes = valid.serializeBinary();
+    const auto noMirror = absent.serializeBinary();
+    const auto field = std::mismatch(bytes.begin(), bytes.end(), noMirror.begin(), noMirror.end()).first - bytes.begin();
+    ASSERT_LT(field + 15, bytes.size());
+    for (const std::size_t index : {std::size_t(field), std::size_t(field + 5), std::size_t(field + 14)})
+    {
+        auto bad = bytes;
+        bad[index] = index == std::size_t(field + 14) ? 3 : 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error) << index;
+    }
+    for (std::size_t cut = 0; cut < bytes.size(); ++cut)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(std::vector(bytes.begin(), bytes.begin() + cut)),
+            std::runtime_error) << cut;
+}
+
+TEST(ESM4RuntimeState, Reaction57DoesNotInventFirstPersonStateWhenPromotingLegacy)
+{
+    auto legacy = reactionState();
+    legacy.mVersion = 56;
+    const auto bytes = legacy.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_FALSE(loaded.mNativeMeleeStates.begin()->second.mFirstPerson);
+    EXPECT_EQ(loaded.canonicalJson().find("first_person"), std::string::npos);
+    loaded.mVersion = 57;
+    const auto promoted = ESM4::RuntimeState::deserializeBinary(loaded.serializeBinary());
+    EXPECT_FALSE(promoted.mNativeMeleeStates.begin()->second.mFirstPerson);
+    EXPECT_EQ(promoted.mNativeMeleeStates.begin()->second.mReaction, legacy.mNativeMeleeStates.begin()->second.mReaction);
+    EXPECT_EQ(promoted.mNativeAnimationClocks, legacy.mNativeAnimationClocks);
+    EXPECT_NE(promoted.canonicalJson().find("\"first_person\":null"), std::string::npos);
+}

@@ -1,0 +1,988 @@
+{
+  "schema_version": 1,
+  "scope": "Conditional original Player helper observations with supplied660110 returning a node distinct from BOTH AnimData roots, false scene/frustum boundaries and empty controllers. Body has active prior channels; first-person has no prior layer. These fixture conditions admit direct first-person activation. Matching Player-owned roots instead enter pose capture, as recorded in M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json. Not normal Player activation, real-game clock production or runtime acceptance.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "axes": {
+    "helpers": [
+      "block",
+      "recoil",
+      "stagger"
+    ],
+    "camera_byte588": [
+      0,
+      1
+    ],
+    "x87_control_word": [
+      639,
+      895
+    ],
+    "body_clock": 0.5,
+    "first_clock": [
+      0,
+      0.25,
+      0.5,
+      2
+    ]
+  },
+  "cases": [
+    {
+      "first_clock": 0.0,
+      "before_update": {
+        "body": {
+          "state": 2,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        },
+        "first_person": {
+          "state": 1,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 0
+          }
+        },
+        "old_body_strike": {
+          "state": 3,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 1056964608,
+            "weighted_time": 1056964608,
+            "output_time": 1056964608,
+            "offset": 2147483648,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 2147483648,
+              "ease_start": 0,
+              "ease_end": 0
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1056964608,
+              "weighted_time": 1056964608,
+              "output_time": 1056964608,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.025,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054720,
+              "weighted_time": 1020054720,
+              "output_time": 1020054720,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054733,
+              "weighted_time": 1020054733,
+              "output_time": 1020054733,
+              "offset": 2147483648,
+              "ease_start": 0,
+              "ease_end": 0
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057384038,
+              "weighted_time": 1057384038,
+              "output_time": 1057384038,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.05,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443341,
+              "weighted_time": 1028443341,
+              "output_time": 1028443341,
+              "offset": 2147483648,
+              "ease_start": 1020054733,
+              "ease_end": 0
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.1,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831952,
+              "weighted_time": 1036831952,
+              "output_time": 1036831952,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831949,
+              "weighted_time": 1036831949,
+              "output_time": 1036831949,
+              "offset": 2147483648,
+              "ease_start": 1028443341,
+              "ease_end": 0
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.125,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3204448256,
+              "ease_start": 1036831952,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 2147483648,
+              "ease_start": 1036831949,
+              "ease_end": 0
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        }
+      ]
+    },
+    {
+      "first_clock": 0.25,
+      "before_update": {
+        "body": {
+          "state": 2,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        },
+        "first_person": {
+          "state": 1,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 0
+          }
+        },
+        "old_body_strike": {
+          "state": 3,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 1056964608,
+            "weighted_time": 1056964608,
+            "output_time": 1056964608,
+            "offset": 2147483648,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3196059648,
+              "ease_start": 0,
+              "ease_end": 1048576000
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1056964608,
+              "weighted_time": 1056964608,
+              "output_time": 1056964608,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.025,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054720,
+              "weighted_time": 1020054720,
+              "output_time": 1020054720,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054736,
+              "weighted_time": 1020054736,
+              "output_time": 1020054736,
+              "offset": 3196059648,
+              "ease_start": 0,
+              "ease_end": 1048576000
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057384038,
+              "weighted_time": 1057384038,
+              "output_time": 1057384038,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.05,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3196059648,
+              "ease_start": 1020054736,
+              "ease_end": 1048576000
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.1,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831952,
+              "weighted_time": 1036831952,
+              "output_time": 1036831952,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831948,
+              "weighted_time": 1036831948,
+              "output_time": 1036831948,
+              "offset": 3196059648,
+              "ease_start": 1028443344,
+              "ease_end": 1048576000
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.125,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3204448256,
+              "ease_start": 1036831952,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3196059648,
+              "ease_start": 1036831948,
+              "ease_end": 1048576000
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        }
+      ]
+    },
+    {
+      "first_clock": 0.5,
+      "before_update": {
+        "body": {
+          "state": 2,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        },
+        "first_person": {
+          "state": 1,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 0
+          }
+        },
+        "old_body_strike": {
+          "state": 3,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 1056964608,
+            "weighted_time": 1056964608,
+            "output_time": 1056964608,
+            "offset": 2147483648,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3204448256,
+              "ease_start": 0,
+              "ease_end": 1056964608
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1056964608,
+              "weighted_time": 1056964608,
+              "output_time": 1056964608,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.025,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054720,
+              "weighted_time": 1020054720,
+              "output_time": 1020054720,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054720,
+              "weighted_time": 1020054720,
+              "output_time": 1020054720,
+              "offset": 3204448256,
+              "ease_start": 0,
+              "ease_end": 1056964608
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057384038,
+              "weighted_time": 1057384038,
+              "output_time": 1057384038,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.05,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3204448256,
+              "ease_start": 1020054720,
+              "ease_end": 1056964608
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.1,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831952,
+              "weighted_time": 1036831952,
+              "output_time": 1036831952,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831952,
+              "weighted_time": 1036831952,
+              "output_time": 1036831952,
+              "offset": 3204448256,
+              "ease_start": 1028443344,
+              "ease_end": 1056964608
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.125,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3204448256,
+              "ease_start": 1036831952,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3204448256,
+              "ease_start": 1036831952,
+              "ease_end": 1056964608
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        }
+      ]
+    },
+    {
+      "first_clock": 2.0,
+      "before_update": {
+        "body": {
+          "state": 2,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        },
+        "first_person": {
+          "state": 1,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 4286578687,
+            "weighted_time": 0,
+            "output_time": 0,
+            "offset": 4286578687,
+            "ease_start": 4286578687,
+            "ease_end": 0
+          }
+        },
+        "old_body_strike": {
+          "state": 3,
+          "float_bits": {
+            "frequency": 1065353216,
+            "last_input": 1056964608,
+            "weighted_time": 1056964608,
+            "output_time": 1056964608,
+            "offset": 2147483648,
+            "ease_start": 4286578687,
+            "ease_end": 1036831949
+          }
+        }
+      },
+      "samples": [
+        {
+          "elapsed": 0.0,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 0,
+              "weighted_time": 0,
+              "output_time": 0,
+              "offset": 3221225472,
+              "ease_start": 0,
+              "ease_end": 1073741824
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1056964608,
+              "weighted_time": 1056964608,
+              "output_time": 1056964608,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.025,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054720,
+              "weighted_time": 1020054720,
+              "output_time": 1020054720,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1020054784,
+              "weighted_time": 1020054784,
+              "output_time": 1020054784,
+              "offset": 3221225472,
+              "ease_start": 0,
+              "ease_end": 1073741824
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057384038,
+              "weighted_time": 1057384038,
+              "output_time": 1057384038,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.05,
+          "body": {
+            "state": 2,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443344,
+              "weighted_time": 1028443344,
+              "output_time": 1028443344,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1028443328,
+              "weighted_time": 1028443328,
+              "output_time": 1028443328,
+              "offset": 3221225472,
+              "ease_start": 1020054784,
+              "ease_end": 1073741824
+            }
+          },
+          "old_body_strike": {
+            "state": 3,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 2147483648,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.1,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831952,
+              "weighted_time": 1036831952,
+              "output_time": 1036831952,
+              "offset": 3204448256,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1036831936,
+              "weighted_time": 1036831936,
+              "output_time": 1036831936,
+              "offset": 3221225472,
+              "ease_start": 1028443328,
+              "ease_end": 1073741824
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        },
+        {
+          "elapsed": 0.125,
+          "body": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3204448256,
+              "ease_start": 1036831952,
+              "ease_end": 1058642330
+            }
+          },
+          "first_person": {
+            "state": 1,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1040187392,
+              "weighted_time": 1040187392,
+              "output_time": 1040187392,
+              "offset": 3221225472,
+              "ease_start": 1036831936,
+              "ease_end": 1073741824
+            }
+          },
+          "old_body_strike": {
+            "state": 0,
+            "float_bits": {
+              "frequency": 1065353216,
+              "last_input": 1057803469,
+              "weighted_time": 1057803469,
+              "output_time": 1057803469,
+              "offset": 0,
+              "ease_start": 1056964608,
+              "ease_end": 1058642330
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "representative_case": {
+    "helper": "block",
+    "camera_byte588": 0,
+    "x87_control_word": 639,
+    "old_body_strike_dumps": "BlockHit reference only; not an expectation for Recoil/Stagger old-channel retirement."
+  },
+  "incoming_comparison_scope": "Incoming body/first-person timing samples agree across all helper/camera/precision axes. The retained old_body_strike snapshots describe only the representative BlockHit path."
+}

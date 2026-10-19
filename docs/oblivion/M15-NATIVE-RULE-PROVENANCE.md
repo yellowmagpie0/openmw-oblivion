@@ -16505,3 +16505,47 @@ numerical/RNG/impact replay. The receipt keeps these runtime observations separa
 from arithmetic, synthetic manager fixtures and semantic loader inspection. Player
 view ownership, broader reaction replacement, Multiple RNG ordering, mastery,
 effects and full M15S4 acceptance remain open.
+
+
+### Independent Player reaction clocks and prior first-person slot observations
+
+[M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json](M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json)
+records the hash-pinned original Player helper/playback/action/mirror/update
+paths for schema-57 mirror storage and service tests. The 48 initial contexts
+use body clock .5 and independently supplied first-person clocks 0/.25/.5/2;
+240 paired updates include 96 different output-bit pairs. Incoming body state 2
+can coexist with direct first-person state 1 under the declared supplied scene
+and cache fixtures. These are separate offsets/rounding expectations, not proof
+that live game view clocks diverge or that first-person activation is always direct.
+
+The expanded 96 contexts repeat 48 controls and add a real activated first-person
+old strike in slot 3. BlockHit/Recoil replace it with incoming state 2 and old
+state 3 (32 cases); Stagger enters slot 0 directly and retains slot 3 active
+(16 cases). Current fresh-mirror packets admit only direct activation; this
+probe identifies required outgoing/parallel ownership for future normal Player
+integration. Camera routing executes, while scene predicates/update, supplied
+cache hashing and empty/preallocated controllers retain their stated boundaries.
+No actual file loading, view scheduling, rendered original-game motion or
+complete Player cache lifetime is claimed.
+
+
+The direct first-person clock/replacement observations use a supplied `660110`
+return distinct from both AnimData roots. A separate **72-case dispatch-prefix**
+probe executes actual `660110(true/false)` and `612220`: equality with supplied
+Player `+3C` or `+5D0` roots bypasses frustum testing **into `6C5C70` pose capture**
+(48 cases); foreign roots with false frustum enter direct `470B20` activation
+(24 cases). It stops at those manager entries and does not accept the subsequent
+allocation/activation. The initial interpretation that matching roots skipped
+capture was backward. The retained full-helper attempt reached pose allocation
+and faulted on the absent allocator fixture. Four earlier accepted live samples
+confirm first-person AnimData root equals Player `+5D0`; body equality to `+3C`
+is still a separate live/constructor check. Normal Player mirror activation
+therefore remains unimplemented, including its required owned-root captured
+pose. The narrower direct packet/service tests do not close that gate.
+
+
+Six schema phases agree exactly between C++ and Python, and final normal/SAN
+service frames reproduce the immutable incoming timing bits. Actual runtime
+regressions cover existing held-NPC BlockHit and schema-56-to-57 promotion with
+no invented first-person state. New Player mirror projection and full M15S4
+acceptance remain open.
