@@ -56,6 +56,29 @@ Prioritize complete live contact branches and their reaction integration over
 additional isolated arithmetic coverage. The rejection sites above provide
 concrete next integration points; preserve S2 native-rule provenance.
 
+The [block reaction instruction verification](M15-BLOCK-REACTION-INSTRUCTION-VERIFICATION.json)
+adds 10,392 independently executed original-instruction cases at revision
+`ba2c82618dc01f5dcd622b1961c1a52f1e434106`. These establish expectations for
+the remaining live reaction integration; they do not close its runtime gate.
+Native BlockHit, BlockAttack, Recoil and Stagger are separate groups. Accepted
+BlockHit requests action6; accepted BlockAttack requests action2; Recoil
+requests action7. A requested BlockAttack may resolve to BlockHit instead.
+The native setter really writes the selected action and sequence pointer in
+the bounded NPC High-process probe, and replacing blocking action6 with
+Recoil resets animation channel1. The Player first-person notification remains
+an inspected path, not a dynamically verified renderer handoff.
+
+Zero absorption still calls the native block handler. With the recorded cost
+fixtures, an empty-handed defender below Apprentice Block receives a Fatigue
+debit20 even when absorption and raw damage are zero. BaseBlock25+ skips that
+debit. The separate counterattack chance uses Expert HandToHand for empty
+hands, or Expert Block plus a shield when equipment is present; its inclusive
+threshold accepts draw0 even at chance0. These are distinct from the earlier
+low-Hand zero-absorption recoil roll. Health/Fatigue application precedes the
+later contact-tail reaction routing in the inspected caller. Keep the existing
+ReactionOnly and Expert/Master guards until the complete action, input,
+resource/RNG, audio and saved-sequence consequences are implemented together.
+
 The same 49 selected cases pass under ASan/UBSan in
 `S4/current-melee-engine-sanitized-01`, with exact inventory agreement and zero
 failures/skips. ASan leak checking is disabled; UBSan halts on errors. Source

@@ -1,0 +1,360 @@
+{
+  "status": "Independent native instruction expectations established; production reaction integration and full M15S4 remain incomplete",
+  "source_revision": "ba2c82618dc01f5dcd622b1961c1a52f1e434106",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "method": "Unicorn execution of hash-identified original executable instructions; every probe hashes the image before address use. Expectations do not import production C++.",
+  "new_instruction_cases": 10392,
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false,
+  "probes": [
+    {
+      "id": "block_hit_helper",
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/block-hit-helper-probe-03.py",
+      "script_sha256": "d4f235d7ca01aed4af5b25db2dca7790ced7f5c803f990f81c6dc80e5c118313",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/block-hit-helper-verification.json",
+      "report_sha256": "da2a2d42a6dce73caea702111986c5100a17c8869562baaf5cbaeb6d2a66567c",
+      "passed": true,
+      "cases": 7200,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "9ce240e9ee8d9cc9e5f9bb8a6d25763c541d3facf3047305f13f566be3acfbec",
+      "actual_paths": [
+        "Full5F4E10",
+        "Actual High action reader628200; other process tiers6F7030 return -1",
+        "Actual actor+18C 5E0EC0 and process+36C High/MiddleHigh64B090 byte+11D or Low/MiddleLow6F7070 zero",
+        "Actual51AA00 basegroup extraction; native channel table B102E8 and B106FC"
+      ],
+      "boundaries": [
+        "Animation getter4D8370 supplied; resolver5E5690 supplied listed IDs.",
+        "Playback477B60, sequence lookup4706E0, action setter5EFFD0 and virtual+3A4 notification captured.",
+        "No actual playback, controller interruption, sequence lifetime, resource mutation or runtime acceptance."
+      ],
+      "observation": "Requested base28 accepts only28. Requested29 accepts29 or fallback28. Accepted28 requests action6; accepted29 requests action2. No reset on failure. High action8 suppresses animation lookup; nonzero byte+11D suppresses playback. Low/MiddleLow byte gates return zero; all non-High action readers ignore+1F4.",
+      "full_runtime_reaction_acceptance": false
+    },
+    {
+      "id": "no_item_block_caller",
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/no-item-caller-probe-04.py",
+      "script_sha256": "93f34032391256b8f9e3853bc3f349dcb6c8af877e2e8814bd03f453ee3897ba",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/no-item-caller-verification.json",
+      "report_sha256": "b0599ebab11a76ff2606847d38612df317c78be36bc9487c1c6f404d9cbe0a63",
+      "passed": true,
+      "cases": 768,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "b6e998fb3bfbd813e99a2ddb2390463197ec0f1a4662f69fb9a2e540ce5a2687",
+      "actual_paths": [
+        "Full5F5B70 through return5F5D04",
+        "Actual High equipped-entry readers64B2D0/64B240 with null cached entries",
+        "Actual56A300 mastery thresholds and547590 Fatigue cost"
+      ],
+      "boundaries": [
+        "Base/current Block getters supplied independently. Native cost globals supplied from the explicitly listed fixture, not winning live GMST reads.",
+        "Defender virtual+39C skill-use invocation and5E07D0 Fatigue sink captured. No actual experience/resource mutation.",
+        "No item installed, no wear/drop/reset call allowed. Debug global disabled. Projectile threshold fixture0.5; supplied fractions0 or0.25 do not trigger608DA0."
+      ],
+      "observation": "No item still invokes defender skill-use+39C(15,0,0). BaseBlock below25 requests Fatigue-20 even for zero absorbed fraction and zero raw damage; baseBlock25+ skips Fatigue. With this fixture the debit is20+absorbedFraction; currentBlock0/100 does not change it. No item wear, drop or block withdrawal.",
+      "full_runtime_reaction_acceptance": false
+    },
+    {
+      "id": "counterattack_roll",
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/counter-decision-probe.py",
+      "script_sha256": "b46e0da0344f42e700b9d49c65e2198e35b59705d24b46189cbe494f7266e3c5",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/counter-decision-verification.json",
+      "report_sha256": "862b624eae04235549a86fe4a61256c90a9ee6fe4533d8d744c6c91c19213309",
+      "passed": true,
+      "cases": 1920,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "27b17f10d285656faa681ed0a4d27c4d9b76022f5416fb98fa5f9be1039e438e",
+      "actual_paths": [
+        "Full5F3C30",
+        "Actual56A300 mastery conversion and signed remainder/threshold branch"
+      ],
+      "boundaries": [
+        "Process equipment queries+EC/+F8 and actor base-skill getter5F1910 supplied.",
+        "RNG47DF80 supplied nonnegative selected draws; no real RNG state advancement.",
+        "Threshold B37238 set to listed fixtures; no winning-record or live-setting claim.",
+        "No caller tail, actual animation, damage, disarm or runtime acceptance."
+      ],
+      "observation": "Weapon/shield-equipped branch uses baseBlock and requires a shield. Empty hands use baseHandToHand. Expert75+ consumes exactly one draw; result is signed draw modulo100 <= configured chance. Zero chance still accepts draw0. Caller supplies this result to5F4E10, whose successful base29 resolution requests action2.",
+      "full_runtime_reaction_acceptance": false
+    },
+    {
+      "id": "reaction_action_write",
+      "script": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-action-write-probe.py",
+      "script_sha256": "adfb370feeaca1e30d6e7e17f861a7e24da463d523e0390557e117c5de9a3a79",
+      "report": "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/reaction-action-write-verification.json",
+      "report_sha256": "30b777aaa1a302ac2a7efb1f4eb1f596c0878c50ac1713e8e5993898d599a422",
+      "passed": true,
+      "cases": 504,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "bd45dc3bc202fce55ca49cb213cae2998b9d57745fd5cd98f7980387934f1d92",
+      "actual_paths": [
+        "Full5F4E10 or5F4F00",
+        "Full5EFFD0 with actual High action reader628200 and writer628220",
+        "Actual51AA00 and51AC70 group readers; actual18C process-byte gate; native group table",
+        "Actual NPC virtual+3A4 no-op60CF60; actual null weapon-entry reader in old-action3 branch"
+      ],
+      "boundaries": [
+        "Animation getter, selected group resolver, playback and sequence getter supplied.",
+        "Animation-channel reset470FC0 captured. Selected sequence points to supplied group metadata.",
+        "NPC High process only, no bow/action5, null equipped weapon entry; no actual renderer/effect/input/clock.",
+        "Fixture process action/sequence storage is genuinely changed by native628220; this is not an original-game process or engine runtime course."
+      ],
+      "observation": "Accepted block/counter/recoil writes action6/2/7 and supplied sequence pointer into High process. Native setter resets channel1 when replacing action6 with recoil7; accepted BlockHit6 and BlockAttack2 do not reset it. Failed recoil resolution resets channel3 but preserves process action and sequence; failed block/counter preserves both without reset. Action8 or nonzero process byte11D preserves state.",
+      "full_runtime_reaction_acceptance": false
+    }
+  ],
+  "editable_case_manifests": {
+    "block_hit_helper": {
+      "player": [
+        false,
+        true
+      ],
+      "process_vtables": [
+        "absent",
+        "0xa71814",
+        "0xa72684",
+        "0xa72d64",
+        "0xa720a4"
+      ],
+      "action_fixture": [
+        -1,
+        2,
+        6,
+        7,
+        8
+      ],
+      "animation_present": [
+        false,
+        true
+      ],
+      "process_byte_11d": [
+        0,
+        1,
+        255
+      ],
+      "counter_requested": [
+        false,
+        true
+      ],
+      "resolved_group": [
+        28,
+        284,
+        29,
+        285,
+        30,
+        65535
+      ],
+      "x87_control_word": [
+        "0x27f",
+        "0x37f"
+      ]
+    },
+    "no_item_block_caller": {
+      "player": [
+        false,
+        true
+      ],
+      "base_block": [
+        0,
+        24,
+        25,
+        49,
+        50,
+        74,
+        75,
+        100
+      ],
+      "current_block": [
+        0,
+        100
+      ],
+      "raw_damage": [
+        0,
+        1,
+        100
+      ],
+      "absorbed_fraction": [
+        0,
+        0.25
+      ],
+      "projectile": [
+        false,
+        true
+      ],
+      "x87_control_word": [
+        "0x27f",
+        "0x37f"
+      ],
+      "mastery_thresholds": [
+        25,
+        50,
+        75,
+        100
+      ],
+      "cost_global_fixtures": {
+        "0xb36ff0": 0,
+        "0xb36ff8": 1,
+        "0xb37000": 20,
+        "0xb37008": 0
+      },
+      "projectile_threshold_fixture": 0.5,
+      "equipment_entries": "null cached weapon and shield entries"
+    },
+    "counterattack_roll": {
+      "weapon": [
+        false,
+        true
+      ],
+      "shield": [
+        false,
+        true
+      ],
+      "base_block": [
+        0,
+        74,
+        75,
+        100
+      ],
+      "base_hand_to_hand": [
+        0,
+        74,
+        75,
+        100
+      ],
+      "chance": [
+        0,
+        25,
+        100
+      ],
+      "draw": [
+        0,
+        24,
+        25,
+        26,
+        99
+      ],
+      "x87_control_word": [
+        "0x27f",
+        "0x37f"
+      ],
+      "mastery_thresholds": [
+        25,
+        50,
+        75,
+        100
+      ]
+    },
+    "reaction_action_write": {
+      "helper": [
+        "block",
+        "counter",
+        "recoil"
+      ],
+      "old_action": [
+        -1,
+        2,
+        3,
+        6,
+        7,
+        8
+      ],
+      "process_byte_11d": [
+        0,
+        1
+      ],
+      "resolved_group": [
+        28,
+        284,
+        29,
+        285,
+        30,
+        286,
+        31
+      ],
+      "x87_control_word": [
+        "0x27f",
+        "0x37f"
+      ],
+      "owner": "NPC High process",
+      "equipped_weapon_entry": "null",
+      "initial_sequence_pointer": "sentinel0x12345678",
+      "actual_writer": "628220 stores signed16 action at+1F4 and sequence pointer at+1F8"
+    }
+  },
+  "group_table_observations": [
+    {
+      "base_group": 27,
+      "name": "BlockIdle",
+      "channel": 1
+    },
+    {
+      "base_group": 28,
+      "name": "BlockHit",
+      "channel": 3
+    },
+    {
+      "base_group": 29,
+      "name": "BlockAttack",
+      "channel": 3
+    },
+    {
+      "base_group": 30,
+      "name": "Recoil",
+      "channel": 3
+    },
+    {
+      "base_group": 31,
+      "name": "Stagger",
+      "channel": 0
+    }
+  ],
+  "dispatch_observations": {
+    "actor_vtables": {
+      "Character": "0xa6fc9c",
+      "Player": "0xa73a0c",
+      "Creature": "0xa710f4"
+    },
+    "actor_plus_18c": "5E0EC0 dispatches process+36C or returns0 for absent process",
+    "process_plus_36c": {
+      "High/MiddleHigh": "64B090 returns unsigned byte+11D",
+      "Low/MiddleLow": "6F7070 returns0"
+    },
+    "process_plus_2d0": {
+      "High": "628200 reads signed16+1F4",
+      "MiddleHigh/MiddleLow/Low": "6F7030 returns-1"
+    },
+    "actor_plus_3a4": {
+      "NPC/Creature": "60CF60 ret8 (no-op)",
+      "Player": "65D790 attempts first-person sequence linkage then available-group playback fallback; inspected only here"
+    }
+  },
+  "inspected_caller_order_not_dynamic_acceptance": [
+    "Contact5FF87E..5FF914 selects zero absorption for active unarmed defender against weapon/projectile, then invokes attacker+3B4=5F5B70 with defender argument.",
+    "Health/Fatigue sink at6001DB precedes the later5FFEDF reaction decision. A later branch around victim reaction is not evidence of immunity to previously committed damage.",
+    "Positive absorption or unarmed defender HandToHand rank at least Journeyman routes to600528. Low-Hand zero absorption follows a distinct Block mastery recoil-roll path.",
+    "600528 calls defender5F3C30 for non-projectiles, defender5F4E10 with its result, defender5FC2B0 when that result is false, and attacker5F4F00 for non-projectiles or successful disarm. This ordering still needs a complete caller execution/production transaction.",
+    "5F4E10 accepted BlockAttack requests action2, which must receive its actual attack/contact semantics rather than being represented as a generic stagger timer."
+  ],
+  "retained_failures": [
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/block-hit-helper-probe.py",
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/block-hit-helper-probe-02.py"
+      ],
+      "reason": "Harness initially treated MiddleHigh action query as High. Actual MiddleHigh reader6F7030 returns-1. Corrected03 executes actual dispatch; earlier attempts are not accepted."
+    },
+    {
+      "paths": [
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/no-item-caller-probe.py",
+        "build/oblivion-compat/m15/S4/native-unarmed-block-recoil-review-01/no-item-caller-probe-02.py"
+      ],
+      "reason": "Harness incorrectly expected configured cost20 for nonzero fraction as well as zero. Actual nonzero control0.25 requests20.25. Corrected03 passes;04 corrects report spelling of actual weapon-entry target64B240 without changing cases/corpus."
+    }
+  ],
+  "remaining_work": [
+    "Implement persistent ownership and native sequence timing for BlockHit, Recoil, Stagger and BlockAttack with interruption and fresh-process restoration.",
+    "Compose action cancellation, block posture, resource changes, RNG, inventory/drop/effect consequences and sound once in the owned contact transaction.",
+    "Do not remove ReactionOnly or Expert/Master guards merely because the isolated chance helpers pass.",
+    "Complete normal-input recovery and in-action save/quit/restart courses in both build profiles and required input/view/FPS matrix; finish all other S4 audit requirements."
+  ]
+}
