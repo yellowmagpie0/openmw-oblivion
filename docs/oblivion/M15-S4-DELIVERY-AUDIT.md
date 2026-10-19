@@ -6942,3 +6942,105 @@ equipment, mastery procs, effects/reactions and the remaining input/view/FPS and
 in-action restart matrix. These observations do not implement the shield's
 physical drop or establish live original-game behavior. **Full M15S4 remains
 incomplete.**
+
+### Authored shield attachments and native shield BlockIdle
+
+The selected-shield course exposed an actual renderer gap: a worn shield had
+no visible forearm attachment, and the controller chose the sword's blocking
+animation. Native shield presentation now follows two independently verified
+rules. Rigid shield models use their exact `Prn` parent, with the parsed NIF's
+content identity checked against the actual scene template. Named-parent lookup
+is case-sensitive and searches self before children. The model is cloned and
+attached with its complete authored local transform; TES3 `BoneOffset`
+extraction and Left-parent mirroring do not apply. Invalid/missing parent data
+or a mismatched template rejects attachment with a diagnostic, without borrowing
+the actor root. Player shields are included in first-person body parts, and the
+legacy carried-part route no longer creates another armor model at Torch.
+
+Original479140, actual6FF9C0/452A60 extra lookup and36 cases prove exact `Prn`
+lookup, optional-object precedence, wrong-type rejection without fallback and
+resolved-parent attachment requests. Actual NiNode70AC00/7073F0 executes five
+case-sensitive self/child/null/duplicate-name observations without boundary
+stubs. The whole parent-selection probe retains explicit RTTI, OS, node resolver,
+AttachChild and final-update sinks; it is not a native live-game run.
+
+Full5E5690 with actual51A9B0 encoding executes280 profiles. The actual worn-entry
+getter64B2D0/484E80/41DF10 makes groups27/28 use prefix0 whenever a worn shield
+exists, independently of the right weapon family and force-hand flag. Adjacent
+26/29 and attack32 retain their family. Production held shield blocks now use
+unprefixed`blockidle`; ordinary attack groups are unchanged. The BlockHit family
+is independently observed here but hit-reaction playback is still separate work.
+
+A raw master ARMO/BMDT/model inventory finds206 shield records and34 unique
+models across ground/male/female roles. Existing generic NIF parsing confirms
+all34 are unskinned Oblivion-format models with one authored `Prn`, naming a node
+present in both stock male and first-person skeletons. Twenty-nine models are
+in the default runtime mesh archive; five are statically checked from the
+installed Shivering Isles mesh archive, which the six-archive course does not
+register. That distinction is not a claim of expansion runtime acceptance.
+IronShield root0 is named Shield, its `Prn` extra is record2 naming
+`Bip01 L ForearmTwist`; the skeletons themselves have no Shield bone.
+Master/archive/model hashes and editable probes are committed as metadata;
+extracted assets and original disassembly stay ignored.
+
+Four owned renderer cases cover exact/optional parents, malformed data and
+source identity, native C-string boundaries, one owned model clone, a nontrivial
+parent/local transform, hidden/case-colliding parent names and PartHolder removal.
+The additional Left/BoneOffset regression fails against the preceding engine
+library: generic SceneUtil attachment inserts a mirror/offset wrapper. It passes
+with direct native clone/attach. Initial engine01 compilation failures omit the
+test's animation.hpp declaration; those attempts remain intact. Intermediate02
+checks pass1719/125 before the transform regression and are superseded.
+Final normal/ASan/UBSan engine03 checks pass **1720 cases /125 suites**, without
+failures/skips. Leak checks are disabled. C++/CMake source hashes and the same
+tested dirty fingerprint are recorded in the probe. Components are unchanged
+and their suites are not rerun for this engine-only change.
+
+Final normal03 and ASan/UBSan01 runtime courses each complete two distinct
+process epochs with terminal launcher exit0. The actual first output is the
+second input, with save hashes, PIDs/start ticks and executable identities
+recorded. Normal binary SHA256 is
+`06a5eeef02308f7091e41a8228dcfc92d86e3ab2315ddecbe2f6c6e8142c9e1f`;
+instrumented binary SHA256 is
+`bedd94d667d78219af1ba4579196c3fbb324d134aac706fab65f4f8a98d0b02f`.
+Both use the tested dirty fingerprint
+`2c0a09abf6d5df17ca8728d5501f731a2449068616cb41a5ee6d1e5eef2e7e23`
+on parent `ef97e9b346`. The sanitizer manifests retain ASan-first preload,
+`detect_leaks=0:halt_on_error=1` and UBSan halt/stacktrace options.
+
+An editable stage preparer adds only a copy of the existing stock NPC shield to
+the Player inventory. Its output reproduces the tested staged save byte for
+byte. Ordinary keyboard input draws the sword, makes one contact against the
+NPC's public-Lua held block, then holds/releases Player block in first and third
+person, returns to first person and saves. The view toggle is R/channel30;
+ordered assemblies and two distinct block/release pairs are checked. All nine
+actor-value arrays and full inventory multisets are checked. NPC health damage
+is observed as bits1053978584 within the preregistered nonlethal bound, then
+preserved exactly; this course does not freeze an independent health magnitude.
+Only Player sword condition changes to bits1113476301; NPC sword stays55.875,
+and both shields stay condition1/equipped. Combat RNG505908858 advances by the
+four independently observed selection draws to773150046, with no fresh-process
+replay. Next action3, empty pending/owner state and unchanged dynamic serial1
+are verified. Three successful sound requests and mixer output are retained;
+quantitative PCM identification is outside this course.
+
+All eight final captures are directly reviewed: Player first-person shield,
+actual third-person raised shield without a duplicate Torch model, released
+first-person Player sword with the NPC shield, and the fresh-process dungeon
+with NPC shield. The instrumented continuation focuses before waiting for the
+NPC block and allows90 seconds for cold scene readiness; its final capture
+contains the world. Readiness is distinguished from saved mechanics acceptance.
+Prior normal01 opened inventory with Tab and fails visual acceptance. Corrected
+normal02 first epoch completes, but its orchestrator is deliberately stopped
+before continuation after discovering the generic attachment transform issue.
+Both attempts remain diagnostic evidence; final acceptance uses normal03 and
+sanitized01 with the direct clone implementation.
+
+`M15-SHIELD-PRESENTATION-PROBE.json` records the editable instruction/content
+probes, baseline failure, final checks, actual process epochs and runtime
+verification. Canonical first/continuation/acceptance JSON files are source.
+This closes the previously rejected stock shield attachment and standing
+BlockIdle presentation in the bounded first/third-person keyboard1FPS course.
+It does not implement shield break/drop, ordinary inventory equipping, BlockHit
+or other hit reactions, directional/mastery procs, effects, gamepad/FPS or the
+remaining in-action restart/combined-course matrix. **Full M15S4 is incomplete.**

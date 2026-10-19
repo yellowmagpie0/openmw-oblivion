@@ -19,6 +19,8 @@
 
 #include "character.hpp"
 
+#include <components/esm4/loadarmo.hpp>
+
 #include "../mwsound/nativeaudioutils.hpp"
 #include <components/esm4/loadsoun.hpp>
 #include <components/esm4/physicalcombat.hpp>
@@ -1781,12 +1783,27 @@ namespace MWMechanics
         MWWorld::Ptr weapon;
         const bool creature = mPtr.getType() == ESM::REC_CREA4;
         std::string family = "handtohand";
+        bool shield = false;
         ESM::FormKey weaponBase;
         float speed = 1;
         int weaponType = ESM::Weapon::HandToHand;
         if (cls.hasInventoryStore(mPtr))
         {
             auto& inventory = cls.getInventoryStore(mPtr);
+            const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            if (left != inventory.end() && left->getType() == ESM::REC_ARMO)
+            {
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                    world->getStore(), left->getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                const auto* armor = form ? world->getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                if (!armor || !(armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+                {
+                    interrupt();
+                    return false;
+                }
+                shield = true;
+            }
             auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             if (equipped != inventory.end())
             {
@@ -1825,7 +1842,8 @@ namespace MWMechanics
         if (equipmentChanged)
             mAnimation->showWeapons(true);
         const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
-        const std::string blockGroup = family + "blockidle";
+        // Original5E5690 forces prefix0 for worn-shield groups27/28.
+        const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
         if (equipmentChanged || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
             releaseBlock();
         bool blockAccepted = false;

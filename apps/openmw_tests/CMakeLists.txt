@@ -43,6 +43,7 @@ file(GLOB UNITTEST_SRC_FILES
     mwrender/testphysicalpose.cpp
     mwrender/testoblivionarrowgeometry.cpp
     mwrender/testobliviondropplacement.cpp
+    mwrender/testoblivionattachment.cpp
     mwrender/testpreparedobjects.cpp
     mwrender/testruntimeviewer.cpp
 

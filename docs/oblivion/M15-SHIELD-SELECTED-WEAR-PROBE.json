@@ -939,5 +939,10 @@
     "Remaining normal-input/view/FPS, in-action restarts, combined required course and authority audit."
   ],
   "full_M15S4_acceptance": false,
-  "post_test_changes": "Evidence documentation and canonical scenario manifests only. The two recorded C++ file hashes match both passing engine builds; canonical normal manifests match the actual successful runtime inputs."
+  "post_test_changes": "Evidence documentation and canonical scenario manifests only. The two recorded C++ file hashes match both passing engine builds; canonical normal manifests match the actual successful runtime inputs.",
+  "shield_presentation_followup": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-SHIELD-PRESENTATION-PROBE.json",
+    "scope": "Follow-up corrects the previously rejected shield attachment/defensive presentation in NPC and Player first/third person. Previous captures/results remain historical. Shield break/drop and fullS4 stay open."
+  }
 }

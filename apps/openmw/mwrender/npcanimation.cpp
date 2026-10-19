@@ -1,4 +1,5 @@
 #include "npcanimation.hpp"
+#include "oblivionattachment.hpp"
 
 #include <osg/Depth>
 #include <osg/Material>
@@ -688,7 +689,9 @@ namespace MWRender
                         }
                     }
                 }
-                osg::ref_ptr<osg::Node> node = attach(path, bone, {}, false, attitude);
+                osg::ref_ptr<osg::Node> node = bone.empty()
+                    ? attachOblivionRigidPart(*mResourceSystem, path, *mObjectRoot)
+                    : attach(path, bone, {}, false, attitude);
                 isolateTes4ActorGeometry(*node);
                 if (!texture.empty())
                     overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
@@ -709,7 +712,7 @@ namespace MWRender
         {
             const auto visibleInView = [&](std::uint32_t slots) {
                 return mViewMode != VM_FirstPerson
-                    || (slots & (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_Hands)) != 0;
+                    || (slots & (ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_Hands | ESM4::Armor::TES4_Shield)) != 0;
             };
             MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
             for (auto iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
@@ -726,8 +729,12 @@ namespace MWRender
                     const std::uint32_t slots = armor->mArmorFlags & 0xffffu;
                     if (visibleInView(slots) && (slots == 0 || (slots & ~covered) != 0))
                     {
-                        attachPart(oblivionEquipmentModel(*armor, female),
-                            slots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair) ? "Bip01 Head" : "Bip01");
+                        const auto bone = (slots & ESM4::Armor::TES4_Shield) ? std::string_view{}
+                            : (slots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair)) ? "Bip01 Head" : "Bip01";
+                        const auto node = attachPart(oblivionEquipmentModel(*armor, female), bone);
+                        if (node && (slots & ESM4::Armor::TES4_Shield))
+                            Log(Debug::Info) << "M15 carried shield attached: ref=" << mPtr.getCellRef().getRefId()
+                                             << " view=" << (mViewMode == VM_FirstPerson ? "first" : "third");
                         covered |= slots;
                     }
                 }
@@ -1369,6 +1376,14 @@ namespace MWRender
         mShowCarriedLeft = show;
         const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
         MWWorld::ConstContainerStoreIterator iter = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
+            && iter != inv.end() && iter->getType() == ESM::Armor::sRecordId)
+        {
+            // Native worn shields belong to the authored body-part binding.
+            // Do not create a second TES3 carried part at the Torch bone.
+            removeIndividualPart(ESM::PRT_Shield);
+            return;
+        }
         if (show && iter != inv.end())
         {
             osg::Vec4f glowColor = iter->getClass().getEnchantmentColor(*iter);

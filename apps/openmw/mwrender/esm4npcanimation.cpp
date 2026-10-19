@@ -1,4 +1,5 @@
 #include "esm4npcanimation.hpp"
+#include "oblivionattachment.hpp"
 
 #include <array>
 #include <cmath>
@@ -961,9 +962,26 @@ namespace MWRender
             const VFS::Path::Normalized normalized(item.mModel);
             if (!attachedModels.emplace(normalized.value()).second)
                 continue;
-            insertPart(item.mModel, (item.mSlots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair))
-                    ? "Bip01 Head"
-                    : std::string_view{});
+            if (item.mSlots & ESM4::Armor::TES4_Shield)
+            {
+                const auto path = Misc::ResourceHelpers::correctMeshPath(normalized);
+                try
+                {
+                    auto node = attachOblivionRigidPart(*mResourceSystem, path, *mObjectRoot);
+                    isolateTes4ActorGeometry(*node);
+                    mParts.emplace_back(std::make_unique<PartHolder>(std::move(node)));
+                    Log(Debug::Info) << "M15 carried shield attached: ref=" << mPtr.getCellRef().getRefId()
+                                     << " model=" << path;
+                }
+                catch (const std::exception& e)
+                {
+                    Log(Debug::Warning) << "Unable to attach ESM4 carried shield " << path << ": " << e.what();
+                }
+            }
+            else
+                insertPart(item.mModel, (item.mSlots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair))
+                        ? "Bip01 Head"
+                        : std::string_view{});
             covered |= item.mSlots;
         }
 
