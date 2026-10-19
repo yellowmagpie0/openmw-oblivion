@@ -7233,3 +7233,85 @@ normal-input break/drop/pickup/restart still require integration. The ordinary
 NPC shield-drop policy guard remains until that pipeline is complete. Full
 M15S4 remains incomplete, including the other mastery/effect/reaction and
 input/view/FPS/in-action restart/combined gates.
+
+### Exact carried-shield scene and forearm capture
+
+`ESM4NpcAnimation` now binds a rendered shield to the exact live projected
+carried-left inventory instance. Native equipment entries retain their ARMO
+identity while assembling parts. Attachment uses the same NIF/template
+identity check as the established rigid Prn path and records its 16-byte source
+hash. The body-part holder/count remains shared with the existing actor
+assembly; weapon sheathing has its independent lifetime.
+
+Read-only capture returns both the shield's authored attachment scene and the
+native `Bip01 L ForearmTwist` drop anchor. Exact native-string skeleton search
+is independent of the folded animation map and of model Prn or Weapon. The
+validator checks item/slot/count/kind, winning native model, source identity,
+scene nodes, placement and both transforms. Capture selects the original NIF
+root record inside the loader wrapper and requires a live weak inventory storage
+identity; pointer equality alone cannot detect replacement with address reuse. Equipment refresh retires the
+binding before detaching parts. Inventory replacement and animation destruction
+retire old captures, while showWeapons/sheathing preserves the shield binding.
+No new source debit, contact or world-reference publication occurs here.
+
+A supplementary sixteen-case original `469330` carried-model selector probe
+executes both sex inputs, both empty-role cases and cached/sentinel string
+length handling with actual TESModel getters. It confirms female-to-male
+fallback only: an empty male MODL remains empty even when female MOD3 exists.
+The pre-existing generic renderer also falls back male-to-female and to the
+compatibility mModel field. This scene-binding change preserves that policy;
+the newly verified native fallback discrepancy remains explicit follow-up.
+
+Normal and ASan/UBSan engine `native-shield-binding-{normal,sanitized}-04`
+each pass the full unfiltered 1,726 tests / 125 suites, with no failures or skips.
+Both identify parent `f87e3df4b0729942236e5c3babb9039356b9f8b8` and tested dirty
+source fingerprint `ffec5721879a2f53a3380c917b8e58a8d208764caf1fafc99229f215f85c4e05`.
+The six source hashes are pinned in the probe manifest; only evidence documents
+change after checks. Sanitizers halt on errors, with leak detection disabled.
+Existing unrelated build warnings remain recorded; this is not a warning-free
+build claim.
+
+The owned actor fixture serializes a real TES4 NIF with a Custom Socket Prn,
+sets its carried model to a different path from the projected/world model, and
+includes native forearm, folded-case and Weapon skeleton nodes. It observes
+attachment world translation (111,22,33) and independent native forearm
+translation (103,20,30). Hash/count/placement/anchor-name changes, equipment
+refresh, copied inventory replacement and destruction invalidate captures;
+NUL-suffixed bone names use original C-string comparison. The same fixture
+checks preservation across weapon visibility changes. The extended NIF builder
+preserves every existing weapon fixture when its optional Prn argument is empty.
+An isolated build of that exact builder also passes the existing generic
+NIF/Bullet parser with nonempty carried/reference definitions. These are owned
+scene/parser checks, not original physics or stock NPC drop acceptance.
+
+Two pre-test build pairs are retained as deliberate cancellations after source
+review: first for exact native NUL-terminated anchor-name validation, then for
+a pointer into the temporary value returned by CellRef.getRefId(). The latter
+now retains a local RefId through its variant lookup. Each owned build tree and
+helper is confirmed terminal; interrupted attempts provide no test acceptance.
+The full normal03 run additionally fails the new binding case: it captures the
+loader wrapper rather than the original NIF root, and accepts copied inventory
+replacement when its allocator reuses the source item address. The source-root
+record lookup and weak storage token fix those production defects; the original
+attachment expectation (111,22,33) is retained. The corresponding sanitizer build
+is stopped after that failure establishes the required correction. A standalone
+ResourceSystem/VFS run of the exact generated NIF plus production attachment/root
+helper now verifies original record0 at expected socket-plus-root (11,2,3),
+distinct from its wrapper. Missing/duplicate source-root mappings also have
+explicit engine coverage.
+`M15-SHIELD-SCENE-BINDING-PROBE.json` records the source/check receipts and the
+existing original-instruction anchor/presentation/model-selection provenance.
+
+The original owner NPC sex getter `519D20` additionally passes 3,072 direct
+flag/type cases with no game-function hooks: NPC type23 reads base+28 lowbit;
+other form types return -1. The forty world-model selector cases are rerun with
+that actual getter, leaving owner resolution as their declared boundary. The
+future factory must guard the resolved owner's native base flag, rather than
+querying the dropper's rendered actor sex.
+
+The ordinary NPC shield-drop guard remains. The production factory must still
+select the world model by resolved reference owner, capture the native drop
+placement, publish the compound inventory/contact/serial/world transition and
+integrate loose ARMO physical save/load. Normal-input stock NPC break/drop,
+pickup and fresh-process courses remain required, as do the other full M15S4
+mastery/effect/reaction/input/view/FPS/in-action restart and combined gates.

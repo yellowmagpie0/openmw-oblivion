@@ -11,6 +11,13 @@ namespace Resource { class ResourceSystem; class SceneManager; }
 
 namespace MWRender
 {
+    // Exact native-string search, independent of the folded animation map.
+    osg::ref_ptr<osg::Node> findOblivionSkeletonNode(osg::Node& skeleton, std::string_view name);
+
+    // The loader may wrap the native model root. Resolve the unique record
+    // instantiated from the original NIF root, preserving its authored pose.
+    osg::ref_ptr<osg::Node> findOblivionModelRoot(const Nif::FileView& file, osg::Node& instance);
+
     // Original479140: exact Prn extra, optional object before model root.
     // A present extra of the wrong type does not fall back to the model.
     std::string oblivionRigidAttachmentParent(const Nif::FileView& file,

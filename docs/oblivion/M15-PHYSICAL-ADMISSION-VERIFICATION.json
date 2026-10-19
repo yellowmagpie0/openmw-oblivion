@@ -12101,5 +12101,12 @@
     "scope": "Atomic admission foundation for NPC shield drops: exact carried-left projected shield debit and shared typed WEAP/ARMO cell/registry/render/physics/contact publication. Requests borrow live caller references. Current ordinary NPC shield-drop policy guard stays in place until production carried binding, factory and physical persistence integration are complete.",
     "runtime_acceptance": false,
     "full_M15S4_acceptance": false
+  },
+  "native_shield_scene_binding": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-SHIELD-SCENE-BINDING-PROBE.json",
+    "scope": "Exact live carried-left native shield scene binding and read-only capture of attachment plus independent native forearm anchor. This prepares production NPC drops; ordinary NPC shield-drop guard remains in place.",
+    "runtime_acceptance": false,
+    "full_M15S4_acceptance": false
   }
 }

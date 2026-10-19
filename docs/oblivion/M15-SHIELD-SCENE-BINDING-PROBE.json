@@ -1,0 +1,988 @@
+{
+  "schema_version": 1,
+  "retained_normal03": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-shield-binding-normal-03/verification.json",
+      "sha256": "35c528c05ee63a0636652780e0639b9b664e191469ebc8328f5f8c0ba2aa01cb"
+    },
+    "verification": {
+      "schema_version": 1,
+      "passed": false,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 361.644
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.316
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-binding-normal-03/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 1,
+          "seconds": 28.889
+        }
+      ],
+      "results": {},
+      "source_before": {
+        "head": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+        "source_fingerprint": "a1624bbbf74a3979bfae3f949cf835d57fdf8487655c03f4146ceb0f20df1ae5"
+      },
+      "error": "engine.log: command exited 1"
+    },
+    "xml_receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-shield-binding-normal-03/engine.xml",
+      "sha256": "1b8f9e7ae1f5ad748c8dc9c934b311cd5656302a76d992ccdbc8300efc3a2d42"
+    },
+    "failed_cases": [
+      {
+        "suite": "OblivionWorldTest",
+        "name": "NativeCarriedShieldBindsExactLeftInstanceAndIndependentForearmAnchor",
+        "failures": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25324\nExpected equality of these values:\n  pose->mAttachment.mScene.getWorldMatrix().getTrans()\n    Which is: 24-byte object <00-00 00-00 00-80 5B-40 00-00 00-00 00-00 34-40 00-00 00-00 00-00 3E-40>\n  osg::Vec3(111,22,33)\n    Which is: 12-byte object <00-00 DE-42 00-00 B0-41 00-00 04-42>\n",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25350\nValue of: animation.isCurrentCarriedShieldPose(*retained)\n  Actual: true\nExpected: false\n",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/apps/openmw_tests/mwworld/testoblivionworld.cpp:25351\nValue of: animation.captureCarriedShieldPose(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft))\n  Actual: true\nExpected: false\n"
+        ]
+      }
+    ]
+  },
+  "native_owner_model_oracle": {
+    "owner_getter": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/owner-sex-report.json",
+        "sha256": "304225025a5a355691cb0b019718edd5e69edd46d6c8f85b97708bad7117fb39"
+      },
+      "report": {
+        "passed": true,
+        "cases": 3072,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "path": "Full original519D20 getter, no game function hooks",
+        "observation": "NPC type23 reads base+28 lowbit only; other form types returnFFFFFFFF. It does not call actor traits, dropper or template resolution.",
+        "boundaries": [
+          "Synthetic base-form type and flags are inputs. Model loading/runtime acceptance are outside this getter."
+        ]
+      },
+      "editable_probe": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nm=json.loads((out.parent/'native-shield-retention-oracle-01/original-exe.json').read_text());data=Path(m['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==m['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0,0x1000);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x10000)\nfor _,va,raw,size in m['sections']:u.mem_write(va,data[raw:raw+size])\ndef w(a,v):u.mem_write(a,struct.pack('<I',v))\ndef ri(a):return struct.unpack('<I',u.mem_read(a,4))[0]\ndef ret(value):\n sp=u.reg_read(UC_X86_REG_ESP);u.reg_write(UC_X86_REG_EAX,value);u.reg_write(UC_X86_REG_EIP,ri(sp));u.reg_write(UC_X86_REG_ESP,sp+4)\narmor,reference,npc,stack,end=0x2001000,0x2002000,0x2003000,0x200e000,0x2000000\nw(armor,0xa441bc);w(armor+0x64,0xa3b7a8)\ncases=0\nfor formtype,lowbyte,high in itertools.product((0,0x14,0x23,0x2d),range(256),(0,0x100,0xffffff00)):\n u.mem_write(npc+4,bytes([formtype]));w(npc+0x28,high|lowbyte);w(stack,end)\n u.reg_write(UC_X86_REG_ESP,stack);u.reg_write(UC_X86_REG_ECX,npc)\n u.emu_start(0x519d20,end,count=100)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+4\n expected=lowbyte&1 if formtype==0x23 else 0xffffffff\n assert u.reg_read(UC_X86_REG_EAX)==expected\n cases+=1\nreport=dict(passed=True,cases=cases,executable_sha256=m['sha256'],path='Full original519D20 getter, no game function hooks',observation='NPC type23 reads base+28 lowbit only; other form types returnFFFFFFFF. It does not call actor traits, dropper or template resolution.',boundaries=['Synthetic base-form type and flags are inputs. Model loading/runtime acceptance are outside this getter.'])\n(out/'owner-sex-report.json').write_text(json.dumps(report,indent=2)+'\\n');print('Original owner sex getter:',cases,'passed')\n"
+    },
+    "world_selector": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/world-model-report.json",
+        "sha256": "e829f44f0eef96ddc5c549c992197ec400b925d9bdfe898fc0d59dc820002793"
+      },
+      "report": {
+        "passed": true,
+        "cases": 40,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "actual_paths": [
+          "4693E0 model selection",
+          "actual MSVC RTTI dynamic cast 9832E6 from ARMO primary vtable A441BC, biped component offset64",
+          "4692E0 gender fallback and TESModel virtual getter",
+          "Actual full519D20 owner NPC flag getter"
+        ],
+        "instruction_mapping": {
+          "MODL": "ARMO+6C, carried male",
+          "MOD2": "ARMO+9C, world male",
+          "MOD3": "ARMO+84, carried female",
+          "MOD4": "ARMO+B4, world female",
+          "proof": "Original ARMO loader4B4D90 compares subrecord tags and calls TESModel setters at these exact offsets."
+        },
+        "boundaries": [
+          "4DB6B0 resolved owner is supplied (owner inheritance is audited separately in M15-NATIVE-RULE-PROVENANCE.md): null, nonNPC, maleNPC, femaleNPC. This harness does not prove its internal resolution.",
+          "Model loading, geometry/physics and runtime acceptance are outside the executed selector."
+        ],
+        "observation": "No-reference, null owner and nonNPC owner choose male MOD2. Female NPC owner chooses MOD4 unless its string is empty, then MOD2. Carried MODL/MOD3 are distinct fixture paths and never selected here.",
+        "rows": [
+          {
+            "kind": "no-reference",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": []
+          },
+          {
+            "kind": "no-reference",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": []
+          },
+          {
+            "kind": "null-base",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "null-base",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "armor-base",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "male",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-female.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": false,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-female.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": false,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "world-male.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": false,
+            "selected": "world-female.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": true,
+            "empty_female": false,
+            "sentinel_length": true,
+            "selected": "world-female.nif",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": false,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          },
+          {
+            "kind": "female",
+            "empty_male": true,
+            "empty_female": true,
+            "sentinel_length": true,
+            "selected": "",
+            "boundaries": [
+              "resolved-base"
+            ]
+          }
+        ]
+      },
+      "editable_probe": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nm=json.loads((out.parent/'native-shield-retention-oracle-01/original-exe.json').read_text());data=Path(m['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==m['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0,0x1000);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x10000)\nfor _,va,raw,size in m['sections']:u.mem_write(va,data[raw:raw+size])\ndef w(a,v):u.mem_write(a,struct.pack('<I',v))\ndef ri(a):return struct.unpack('<I',u.mem_read(a,4))[0]\ndef ret(value):\n sp=u.reg_read(UC_X86_REG_ESP);u.reg_write(UC_X86_REG_EAX,value);u.reg_write(UC_X86_REG_EIP,ri(sp));u.reg_write(UC_X86_REG_ESP,sp+4)\narmor,reference,npc,stack,end=0x2001000,0x2002000,0x2003000,0x200e000,0x2000000\nw(armor,0xa441bc);w(armor+0x64,0xa3b7a8)\nseen=[]\ndef hook(uc,ip,size,_):\n if ip==0x4db6b0:\n  assert uc.reg_read(UC_X86_REG_ECX)==reference;seen.append('resolved-base');ret(npc if kind!='null-base' else 0)\nu.hook_add(UC_HOOK_CODE,hook)\nrows=[]\nfor kind,empty_male,empty_female,long_length in itertools.product(('no-reference','null-base','armor-base','male','female'),(False,True),(False,True),(False,True)):\n paths={0x6c:'carried-male.nif',0x84:'carried-female.nif',0x9c:'' if empty_male else 'world-male.nif',0xb4:'' if empty_female else 'world-female.nif'}\n for i,(offset,path) in enumerate(paths.items()):\n  address=0x2004000+i*0x100;u.mem_write(address,path.encode()+b'\\0');w(armor+offset,0xa3c24c);w(armor+offset+4,address);u.mem_write(armor+offset+8,struct.pack('<H',0xffff if long_length else len(path)))\n u.mem_write(npc+4,bytes([0x14 if kind=='armor-base' else 0x23]));w(npc+0x28,int(kind=='female'));w(stack,end);w(stack+4,armor);w(stack+8,0 if kind=='no-reference' else reference)\n seen=[];u.reg_write(UC_X86_REG_ESP,stack);u.reg_write(UC_X86_REG_EBP,0)\n try:u.emu_start(0x4693e0,end,count=10000)\n except Exception:print('fault',kind,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+4\n result=u.reg_read(UC_X86_REG_EAX);actual=bytes(u.mem_read(result,100)).split(b'\\0')[0].decode() if result else None\n expected=paths[0xb4] if kind=='female' and not empty_female else paths[0x9c]\n assert actual==expected,(kind,empty_male,empty_female,long_length,actual,expected)\n rows.append(dict(kind=kind,empty_male=empty_male,empty_female=empty_female,sentinel_length=long_length,selected=actual,boundaries=seen))\nreport=dict(passed=True,cases=len(rows),executable_sha256=m['sha256'],actual_paths=['4693E0 model selection','actual MSVC RTTI dynamic cast 9832E6 from ARMO primary vtable A441BC, biped component offset64','4692E0 gender fallback and TESModel virtual getter','Actual full519D20 owner NPC flag getter'],instruction_mapping=dict(MODL='ARMO+6C, carried male',MOD2='ARMO+9C, world male',MOD3='ARMO+84, carried female',MOD4='ARMO+B4, world female',proof='Original ARMO loader4B4D90 compares subrecord tags and calls TESModel setters at these exact offsets.'),boundaries=['4DB6B0 resolved owner is supplied (owner inheritance is audited separately in M15-NATIVE-RULE-PROVENANCE.md): null, nonNPC, maleNPC, femaleNPC. This harness does not prove its internal resolution.','Model loading, geometry/physics and runtime acceptance are outside the executed selector.'],observation='No-reference, null owner and nonNPC owner choose male MOD2. Female NPC owner chooses MOD4 unless its string is empty, then MOD2. Carried MODL/MOD3 are distinct fixture paths and never selected here.',rows=rows)\n(out/'world-model-report.json').write_text(json.dumps(report,indent=2)+'\\n');print('Original world model selector:',len(rows),'passed')\n"
+    }
+  },
+  "carried_model_oracle": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/carried-model-report.json",
+      "sha256": "17d35ccaaa627d2c1609bec9bc214854671d0a0225152760a0166a5c87f27b27"
+    },
+    "report": {
+      "passed": true,
+      "cases": 16,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "actual_paths": [
+        "Original469330 carried model selector including cached/sentinel-length string handling and TESModel virtual getter"
+      ],
+      "boundaries": [
+        "Synthetic TESBipedModelForm with distinct maleMODL/femaleMOD3 strings and declared input sex.",
+        "This isolated selector does not execute actor sex resolution, model loading or runtime."
+      ],
+      "observation": "Female MOD3 falls back to maleMODL only if its string is empty. MaleMODL empty remains empty even when femaleMOD3 exists. Current generic renderer additionally falls back male-to-female and compatibilitymModel; that pre-existing broader fallback remains to be corrected/integrated separately.",
+      "rows": [
+        {
+          "female": false,
+          "empty_male": false,
+          "empty_female": false,
+          "sentinel_length": false,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": false,
+          "empty_male": false,
+          "empty_female": false,
+          "sentinel_length": true,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": false,
+          "empty_male": false,
+          "empty_female": true,
+          "sentinel_length": false,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": false,
+          "empty_male": false,
+          "empty_female": true,
+          "sentinel_length": true,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": false,
+          "empty_male": true,
+          "empty_female": false,
+          "sentinel_length": false,
+          "selected": ""
+        },
+        {
+          "female": false,
+          "empty_male": true,
+          "empty_female": false,
+          "sentinel_length": true,
+          "selected": ""
+        },
+        {
+          "female": false,
+          "empty_male": true,
+          "empty_female": true,
+          "sentinel_length": false,
+          "selected": ""
+        },
+        {
+          "female": false,
+          "empty_male": true,
+          "empty_female": true,
+          "sentinel_length": true,
+          "selected": ""
+        },
+        {
+          "female": true,
+          "empty_male": false,
+          "empty_female": false,
+          "sentinel_length": false,
+          "selected": "carried-female.nif"
+        },
+        {
+          "female": true,
+          "empty_male": false,
+          "empty_female": false,
+          "sentinel_length": true,
+          "selected": "carried-female.nif"
+        },
+        {
+          "female": true,
+          "empty_male": false,
+          "empty_female": true,
+          "sentinel_length": false,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": true,
+          "empty_male": false,
+          "empty_female": true,
+          "sentinel_length": true,
+          "selected": "carried-male.nif"
+        },
+        {
+          "female": true,
+          "empty_male": true,
+          "empty_female": false,
+          "sentinel_length": false,
+          "selected": "carried-female.nif"
+        },
+        {
+          "female": true,
+          "empty_male": true,
+          "empty_female": false,
+          "sentinel_length": true,
+          "selected": "carried-female.nif"
+        },
+        {
+          "female": true,
+          "empty_male": true,
+          "empty_female": true,
+          "sentinel_length": false,
+          "selected": ""
+        },
+        {
+          "female": true,
+          "empty_male": true,
+          "empty_female": true,
+          "sentinel_length": true,
+          "selected": ""
+        }
+      ]
+    },
+    "editable_probe": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nm=json.loads((out.parent/'native-shield-retention-oracle-01/original-exe.json').read_text());data=Path(m['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==m['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0,0x1000);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x10000)\nfor _,va,raw,size in m['sections']:u.mem_write(va,data[raw:raw+size])\ndef w(a,v):u.mem_write(a,struct.pack('<I',v))\ndef ri(a):return struct.unpack('<I',u.mem_read(a,4))[0]\ndef ret(value):\n sp=u.reg_read(UC_X86_REG_ESP);u.reg_write(UC_X86_REG_EAX,value);u.reg_write(UC_X86_REG_EIP,ri(sp));u.reg_write(UC_X86_REG_ESP,sp+4)\narmor,reference,npc,stack,end=0x2001000,0x2002000,0x2003000,0x200e000,0x2000000\nw(armor,0xa441bc);w(armor+0x64,0xa3b7a8)\nrows=[]\nfor female,empty_male,empty_female,sentinel in itertools.product((False,True),repeat=4):\n paths={0x6c:'' if empty_male else 'carried-male.nif',0x84:'' if empty_female else 'carried-female.nif'}\n for i,(offset,path) in enumerate(paths.items()):\n  address=0x2004000+i*0x100;u.mem_write(address,path.encode()+b'\\0');w(armor+offset,0xa3c24c);w(armor+offset+4,address);u.mem_write(armor+offset+8,struct.pack('<H',0xffff if sentinel else len(path)))\n w(stack,end);w(stack+4,int(female));u.reg_write(UC_X86_REG_ESP,stack);u.reg_write(UC_X86_REG_ECX,armor+0x64)\n u.emu_start(0x469330,end,count=10000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+8\n result=u.reg_read(UC_X86_REG_EAX);actual=bytes(u.mem_read(result,100)).split(b'\\0')[0].decode() if result else None\n expected=paths[0x84] if female and not empty_female else paths[0x6c]\n assert actual==expected,(female,empty_male,empty_female,sentinel,actual,expected)\n rows.append(dict(female=female,empty_male=empty_male,empty_female=empty_female,sentinel_length=sentinel,selected=actual))\nreport=dict(passed=True,cases=len(rows),executable_sha256=m['sha256'],actual_paths=['Original469330 carried model selector including cached/sentinel-length string handling and TESModel virtual getter'],boundaries=['Synthetic TESBipedModelForm with distinct maleMODL/femaleMOD3 strings and declared input sex.','This isolated selector does not execute actor sex resolution, model loading or runtime.'],observation='Female MOD3 falls back to maleMODL only if its string is empty. MaleMODL empty remains empty even when femaleMOD3 exists. Current generic renderer additionally falls back male-to-female and compatibilitymModel; that pre-existing broader fallback remains to be corrected/integrated separately.',rows=rows)\n(out/'carried-model-report.json').write_text(json.dumps(report,indent=2)+'\\n');print('Original carried model selector:',len(rows),'passed')\n"
+  },
+  "scope": "Exact live carried-left native shield scene binding and read-only capture of attachment plus independent native forearm anchor. This prepares production NPC drops; ordinary NPC shield-drop guard remains in place.",
+  "source_parent_commit": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+  "source_sha256": {
+    "apps/openmw/mwrender/esm4npcanimation.cpp": "593e6263a7d55884ef3f1b39ce50204756214f239a49a9a83bd3cfced5351a33",
+    "apps/openmw/mwrender/esm4npcanimation.hpp": "b640bbbd242638899e93a537671b90f6f147456da29438b726b9b03631e07648",
+    "apps/openmw/mwrender/oblivionattachment.cpp": "b3cb7dae77dfe6c5ea35fc412cff71538b50a3d506d6c421487005f04f69d088",
+    "apps/openmw/mwrender/oblivionattachment.hpp": "e5d4f2b5a8572ca9579b7314c7ce0f06c2b95965d974c6c4ce8f5f9dc47b717c",
+    "apps/openmw_tests/mwrender/testoblivionattachment.cpp": "4ed7744d5a7feecc8b0b4c89a2079337630235933d72997d3bcf78accca74058",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "804069bf0838cb292ff8381798d26788beea02517dfdc0450600af9321c95c75"
+  },
+  "checks": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-normal-04/verification.json",
+        "sha256": "c66edb904f9881e0bba4f5cd8a09620df29f5842268846eda3b89b33369e5bb9"
+      },
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 382.068
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-binding-normal-04/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 26.64
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1726,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9807bd524d4bffd6486fe4683037f8e756627113cf430b7c65760a315bcf12de",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "802567d988e529b5997ea14df5cd405ce83660d5ed4833e241a9a29bfbeceb81",
+            "inventory_sha256": "51ee12aa7ded0d153ac2aecfc385c3b7af7480fbc78d1b62707b5951a3e7b844",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+          "source_fingerprint": "ffec5721879a2f53a3380c917b8e58a8d208764caf1fafc99229f215f85c4e05"
+        },
+        "source_after": {
+          "head": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+          "source_fingerprint": "ffec5721879a2f53a3380c917b8e58a8d208764caf1fafc99229f215f85c4e05"
+        }
+      },
+      "suites": 125
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-sanitized-04/verification.json",
+        "sha256": "cbf1eb9d10bf6573b8df37832295b5e6f2b95afdf99d27df64ad12d984f2c286"
+      },
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 605.873
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-binding-sanitized-04/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 156.035
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1726,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "605418c590917c83b39b280365d49e4902db199bc61a1fa5467b20cbc310ebef",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "038806a56c8bad2527ad2c685b614ab81459927ca38de6edbddf6c671037d62c",
+            "inventory_sha256": "51ee12aa7ded0d153ac2aecfc385c3b7af7480fbc78d1b62707b5951a3e7b844",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+          "source_fingerprint": "ffec5721879a2f53a3380c917b8e58a8d208764caf1fafc99229f215f85c4e05"
+        },
+        "source_after": {
+          "head": "f87e3df4b0729942236e5c3babb9039356b9f8b8",
+          "source_fingerprint": "ffec5721879a2f53a3380c917b8e58a8d208764caf1fafc99229f215f85c4e05"
+        }
+      },
+      "suites": 125
+    }
+  },
+  "native_provenance": [
+    {
+      "path": "docs/oblivion/M15-SHIELD-DROP-ANCHOR-PROBE.json",
+      "sha256": "04c1ab3837efa0ecb5bc7cf51cd14f3f09f998c0653a03d44de7f03691c726cb"
+    },
+    {
+      "path": "docs/oblivion/M15-SHIELD-PRESENTATION-PROBE.json",
+      "sha256": "bed51732b9d7ec1611bf222022e164d57f3d9aa1b6de5d8629b0bfc05aa8e414"
+    },
+    {
+      "path": "docs/oblivion/M15-SHIELD-ADMISSION-PROBE.json",
+      "sha256": "485532717955a871638c9f2d45d059b89b7684e8c21ba511e3c01134648d0820"
+    }
+  ],
+  "source_root_integration": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/scene-probe-report.json",
+      "sha256": "3647bf3e9859ec17ca26d0577aea94bcad5542b03ccc754e6e9b61679fe56ba7"
+    },
+    "report": {
+      "passed": true,
+      "command": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/normal",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-binding-oracle-01"
+      ],
+      "returncode": 0,
+      "stdout": "actual NIF root=Shield record=0 position=11,2,3 distinct_from_wrapper=1\n",
+      "binary_sha256": "656a9b7f05049995ca24d76fcb14b8a7b54df27faf43afe9e4582ed41354e90d",
+      "source_sha256": "059795d3e79f0ba5b948a4514cba158b87daa53081dd4f5f4af2703c98b3a9b2",
+      "helper_sha256": "b3cb7dae77dfe6c5ea35fc412cff71538b50a3d506d6c421487005f04f69d088",
+      "scope": "Actual ResourceSystem/VFS serialized owned NIF, real template instantiation and production attachment/source-root helper. Authored root is record0, distinct from loader wrapper, at immutable expected socket-plus-root position11,2,3. No runtime or independent original physics acceptance."
+    },
+    "editable_probe": "#include <apps/openmw/mwrender/oblivionattachment.hpp>\n#include <components/resource/resourcesystem.hpp>\n#include <components/resource/scenemanager.hpp>\n#include <components/resource/niffilemanager.hpp>\n#include <components/nif/niffile.hpp>\n#include <components/vfs/manager.hpp>\n#include <components/vfs/filesystemarchive.hpp>\n#include <osg/MatrixTransform>\n#include <iostream>\nint main(int argc,char** argv)\n{\n    if(argc!=2) return 2;\n    VFS::Manager vfs;\n    vfs.addArchive(std::make_unique<VFS::FileSystemArchive>(argv[1])); vfs.buildIndex();\n    Resource::ResourceSystem resources(&vfs,0.,nullptr);\n    const VFS::Path::Normalized model(\"owned-shield.nif\");\n    const auto file=resources.getNifFileManager()->get(model);\n    const auto source=resources.getSceneManager()->getTemplate(model);\n    osg::ref_ptr<osg::Group> skeleton=new osg::Group;\n    osg::ref_ptr<osg::MatrixTransform> socket=new osg::MatrixTransform;\n    socket->setName(\"Custom Socket\"); socket->setMatrix(osg::Matrix::translate(10,0,0));\n    skeleton->addChild(socket);\n    const auto instance=MWRender::attachOblivionRigidPart(*file,source,*resources.getSceneManager(),*skeleton);\n    const auto root=MWRender::findOblivionModelRoot(*file,*instance);\n    const auto position=root->getWorldMatrices(skeleton).at(0).getTrans();\n    unsigned int record=~0u;\n    if(!root->getUserValue(\"recordIndex\",record)||record!=0||root==instance||position!=osg::Vec3(11,2,3)) return 1;\n    std::cout<<\"actual NIF root=\"<<root->getName()<<\" record=\"<<record<<\" position=\"<<position.x()<<','<<position.y()<<','<<position.z()<<\" distinct_from_wrapper=1\\n\";\n}\n",
+    "editable_build": "from pathlib import Path\nimport subprocess,shlex,sys\nroot=Path.cwd();p=Path(__file__).resolve().parent;mode=sys.argv[1];config=root/('build/m15-sanitize' if mode=='sanitized' else 'build');cwd=config/'apps/components_tests'\nargs=shlex.split((cwd/'CMakeFiles/components-tests.dir/link.txt').read_text());libs=[s for s in args if s.endswith('.a') or '.so' in s or s.startswith('-l') or s.startswith('-L') or s=='-pthread' or s.startswith('-Wl,-rpath,')]\nflags=[]\nfor line in (cwd/'CMakeFiles/components-tests.dir/flags.make').read_text().splitlines():\n if line.startswith(('CXX_DEFINES =','CXX_FLAGS =','CXX_INCLUDES =')):flags+=shlex.split(line.split('=',1)[1])\ncmd=['c++',*flags,str(p/'scene-probe.cpp'),str(root/'apps/openmw/mwrender/oblivionattachment.cpp'),'-o',str(p/mode),*libs]\n(p/(mode+'-build-command.txt')).write_text(shlex.join(cmd)+'\\n');r=subprocess.run(cmd,cwd=cwd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True);(p/(mode+'-build.log')).write_text(r.stdout);print(mode,'build',r.returncode);raise SystemExit(r.returncode)\n"
+  },
+  "owned_case": "NativeCarriedShieldBindsExactLeftInstanceAndIndependentForearmAnchor",
+  "assertions": [
+    "Actual native Armor plus projected left-slot inventory, ResourceSystem/VFS, owned serialized NIF and real ESM4NpcAnimation.",
+    "Carried model differs from projected/world model. Authored Prn Custom Socket differs from exact native Bip01 L ForearmTwist and Weapon/folded-case decoys.",
+    "Exact item, instantiated source hash, attachment world pose and independent forearm world pose match expected values.",
+    "Source root uses original NIF record identity inside the loader wrapper; missing and duplicate root mapping reject. Weak inventory storage identity rejects address reuse after replacement.",
+    "Wrong item, hash, quantity, actor placement, case-sensitive anchor rename, refresh, inventory replacement and destruction retire the capture. NUL suffix obeys native C-string comparison.",
+    "Sheathing/showWeapons preserves the shield binding; refresh retires it before detaching parts. Right slot remains empty."
+  ],
+  "fixture": {
+    "editable_builder": "#include <array>\n#include <string>\n#include <string_view>\n#include <cstdint>\n#include <iostream>\n    std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1,\n        bool rotatedRoot = false, bool scabbard = false, std::string_view rootName = \"Owned weapon\",\n        std::string_view parent = {})\n    {\n        const auto bytes = [](const auto& value) {\n            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));\n        };\n        const auto string = [&](std::string_view value) {\n            return bytes(std::uint32_t(value.size())) + std::string(value);\n        };\n        std::string data = \"Gamebryo File Format, Version 20.0.0.5\\n\";\n        data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})\n            + bytes(std::uint32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0) + !parent.empty()))\n            + bytes(std::uint32_t{0}) + std::string(3, '\\0');\n        data += bytes(std::uint16_t(5 + !parent.empty()));\n        for (const auto type : {\"NiNode\", \"bhkCollisionObject\", \"bhkRigidBody\", \"bhkSphereShape\", \"BSXFlags\"})\n            data += string(type);\n        if (!parent.empty()) data += string(\"NiStringExtraData\");\n        if (childTarget) data += bytes(std::uint16_t{0});\n        for (std::uint16_t i = 0; i < 5; ++i) data += bytes(i);\n        if (scabbard) data += bytes(std::uint16_t{0}) + bytes(std::uint16_t{0});\n        if (!parent.empty()) data += bytes(std::uint16_t{5});\n        data += bytes(std::uint32_t{0}); // No groups.\n        // NiNode / NiAVObject / NiObjectNET.\n        data += string(rootName) + bytes(std::uint32_t(1 + !parent.empty()))\n            + bytes(std::int32_t(childTarget ? 5 : 4));\n        if (!parent.empty()) data += bytes(std::int32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0)));\n        data += bytes(std::int32_t{-1})\n            + bytes(std::uint16_t{14});\n        const std::array<float, 13> rootTransform = rotatedRoot\n            ? std::array<float, 13>{1,2,3, 0,1,0,-1,0,0,0,0,1, 1}\n            : std::array<float, 13>{1,2,3, 1,0,0,0,1,0,0,0,1, 1};\n        for (const float value : rootTransform)\n            data += bytes(value);\n        data += bytes(std::uint32_t{0}) + bytes(std::int32_t(childTarget ? -1 : 1)); // Properties/collision.\n        data += bytes(std::uint32_t(unsigned(childTarget) + unsigned(scabbard)));\n        if (scabbard) data += bytes(std::int32_t(childTarget ? 6 : 5));\n        if (childTarget) data += bytes(std::int32_t{1});\n        data += bytes(std::uint32_t{0}); // Effects.\n        if (childTarget)\n        {\n            data += string(\"Physical child\") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})\n                + bytes(std::uint16_t{14});\n            for (const float value : {3.f,4.f,5.f, 0.f,1.f,0.f,-1.f,0.f,0.f,0.f,0.f,1.f, 1.f})\n                data += bytes(value);\n            data += bytes(std::uint32_t{0}) + bytes(std::int32_t{2})\n                + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0});\n        }\n        data += bytes(std::int32_t(childTarget ? 1 : 0)) + bytes(collisionFlags)\n            + bytes(std::int32_t(childTarget ? 3 : 2));\n        // bhkRigidBody: shape, world filter/info, entity info, rigid info.\n        data += bytes(std::int32_t(childTarget ? 4 : 3)) + std::string(4, '\\0') + std::string(20, '\\0')\n            + std::string(4, '\\0') + std::string(20, '\\0');\n        for (const float value : {0.f,0.f,0.f,0.f, 0.f,0.f,0.f,1.f, // Translation/XYZW rotation.\n                 0.f,0.f,0.f,0.f, 0.f,0.f,0.f,0.f, // Velocities.\n                 1.f,0.f,0.f,0.f, 0.f,1.f,0.f,0.f, 0.f,0.f,1.f,0.f, // Padded inertia.\n                 0.f,0.f,0.f,0.f, 2.f,0.f,0.f,.5f,.1f,100.f,50.f,.01f})\n            data += bytes(value);\n        data += bytes(std::uint8_t{1}) + std::string(3, '\\0') + std::string(12, '\\0')\n            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0}); // Constraints/body flags.\n        data += bytes(std::uint32_t{0}) + bytes(radius); // Sphere material/radius.\n        data += string(\"BSX\") + bytes(std::uint32_t{2}); // Native Havok-enable metadata.\n        if (scabbard)\n            for (unsigned part = 0; part < 2; ++part)\n            {\n                data += string(part ? \"Scb:0\" : \"Scb\") + bytes(std::uint32_t{0}) + bytes(std::int32_t{-1})\n                    + bytes(std::uint16_t{14});\n                for (const float value : {0.f,0.f,0.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f})\n                    data += bytes(value);\n                data += bytes(std::uint32_t{0}) + bytes(std::int32_t{-1}) + bytes(std::uint32_t(part ? 0 : 1));\n                if (!part) data += bytes(std::int32_t(childTarget ? 7 : 6));\n                data += bytes(std::uint32_t{0});\n            }\n        if (!parent.empty()) data += string(\"Prn\") + string(parent);\n        data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0}); // Root.\n        return data;\n    }\nint main() { const auto data = nativeCarriedWeaponNif(.5f,false,1,false,false,\"Shield\",\"Custom Socket\"); std::cout.write(data.data(),data.size()); }\n",
+    "nif_sha256": "8ab2227b57f63e8b1a9006bc53c8f0b94b8322d51473282e9045d2499efbf0f2",
+    "parser_capability": "Existing private generic NIF/Bullet probe accepts the exact owned NIF: one carried body, one normalized reference body, reference root0 and 16-byte source hash. This checks fixture structure, not original physics equivalence."
+  },
+  "retained_attempts": [
+    "Normal01 and sanitizer01 owned build trees stopped before tests after review identified C-string anchor-name handling missing NUL termination.",
+    "Normal02 and sanitizer02 owned build trees stopped before tests after review identified a pointer into temporary CellRef.getRefId() return value. Preserve local RefId lifetime before getIf.",
+    "Normal03 full1725 execution fails the new binding case: capture selects loader wrapper rather than original NIF root, and pointer equality admits replacement inventory address reuse. Resolve the unique source root record and require weak ContainerStore storage identity. Original attachment pose expectation is retained.",
+    "Sanitizer03 owned build tree stopped after normal03 established required changes; helper confirmed terminal exit-15. No acceptance for interrupted builds."
+  ],
+  "cancellations": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/cancel-normal-01.json",
+        "sha256": "5d428da42df5af13a689e37907e2d2c551ec0378b0fbecb663e8d680be8d1769"
+      },
+      "record": {
+        "reason": "Pre-test source review identifies exact native C-string bone-name validation missing NUL termination handling. Stop owned build trees before correcting and adding regression coverage.",
+        "run_checks_pid": 536319,
+        "signaled_pids": [
+          536589,
+          536588,
+          536602,
+          536601,
+          536539,
+          536338,
+          536335,
+          536333,
+          536332
+        ]
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/cancel-sanitized-01.json",
+        "sha256": "692c09efaa9bffe5cf3e066e68404f9943de8cbd6b15792f08f12d1888a41a7d"
+      },
+      "record": {
+        "reason": "Pre-test source review identifies exact native C-string bone-name validation missing NUL termination handling. Stop owned build trees before correcting and adding regression coverage.",
+        "run_checks_pid": 536435,
+        "signaled_pids": [
+          536562,
+          536559,
+          536593,
+          536592,
+          536624,
+          536623,
+          536554,
+          536454,
+          536451,
+          536449,
+          536448
+        ]
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/cancel-normal-02.json",
+        "sha256": "4877803797fce1c0f84d3a21398cbd348f605771630d06a76e21a205345aeda6"
+      },
+      "record": {
+        "reason": "Read-only review catches pointer obtained from temporary CellRef.getRefId() result; preserve owned RefId before variant lookup. Stop owned builds before correction.",
+        "run_checks_pid": 536656,
+        "signaled_pids": [
+          536916,
+          536828,
+          536832,
+          536830,
+          536821,
+          536675,
+          536672,
+          536670,
+          536669
+        ]
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/cancel-sanitized-02.json",
+        "sha256": "167144b6a29f0a3ad81a0607264656cd66a064b8f78ed99646333f2e3b1796cd"
+      },
+      "record": {
+        "reason": "Read-only review catches pointer obtained from temporary CellRef.getRefId() result; preserve owned RefId before variant lookup. Stop owned builds before correction.",
+        "run_checks_pid": 536737,
+        "signaled_pids": [
+          536841,
+          536838,
+          536851,
+          536850,
+          536915,
+          536914,
+          536834,
+          536757,
+          536754,
+          536752,
+          536751
+        ]
+      }
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-binding-oracle-01/cancel-sanitized-03.json",
+        "sha256": "3ef962e977303ded6259fa7be4db0c42db8e029f23f8e0e8dbc182637957b47d"
+      },
+      "record": {
+        "reason": "Normal03 full run fails new shield binding case: attachment transform expectation and replacement inventory address reuse. Stop owned sanitizer tree before required diagnosis/correction.",
+        "run_checks_pid": 537058,
+        "signaled_pids": [
+          537518,
+          537516,
+          537512,
+          537437,
+          537434,
+          537072,
+          537071
+        ]
+      }
+    }
+  ],
+  "limits": [
+    "Owned renderer fixture is not normal-input stock NPC shield-drop acceptance.",
+    "Existing male/female carried-model choice policy is preserved; this change does not establish every model fallback rule.",
+    "Ground/world model choice follows resolved owner in the original, as separately recorded by shield-admission evidence; this capture returns carried scene identity only.",
+    "No NPC drop factory/persistence activation, new runtime-state wire payload or new end-to-end course in this chunk."
+  ],
+  "remaining": [
+    "Production shield factory using independently selected world model, exact forearm drop placement and guarded source hash/owner/contact/serial publication.",
+    "Native loose Armor physical capture/load/synchronization, break/drop/pickup/fresh-process normal and sanitizer courses.",
+    "Other full M15S4 mastery/effect/reaction/input/view/FPS/in-action restart/combined acceptance gates."
+  ],
+  "post_test_changes": "Evidence documents only; six pinned source hashes unchanged.",
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}

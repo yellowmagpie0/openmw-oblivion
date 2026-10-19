@@ -49,6 +49,18 @@
 
 namespace MWRender
 {
+    template <class Record>
+    static std::string_view chooseTes4EquipmentModel(const Record* rec, bool isFemale)
+    {
+        if (isFemale && !rec->mModelFemale.empty())
+            return rec->mModelFemale.getOriginal();
+        if (!rec->mModelMale.empty())
+            return rec->mModelMale.getOriginal();
+        if (!rec->mModelFemale.empty())
+            return rec->mModelFemale.getOriginal();
+        return rec->mModel.getOriginal();
+    }
+
     ESM4NpcAnimation::ESM4NpcAnimation(
         const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
         : Animation(ptr, std::move(parentNode), resourceSystem)
@@ -95,6 +107,14 @@ namespace MWRender
 
     void ESM4NpcAnimation::refreshEquipment()
     {
+        mShieldBindingIdentity.reset();
+        mCarriedShieldStorageIdentity.reset();
+        mCarriedShield = {};
+        mCarriedShieldNode = nullptr;
+        mShieldDropAnchor = nullptr;
+        mCarriedShieldModel = VFS::Path::Normalized();
+        mCarriedShieldRecordModel.clear();
+        mCarriedShieldSourceHash.clear();
         mParts.clear();
         mNodeMap.clear();
         mNodeMapCreated = false;
@@ -222,6 +242,57 @@ namespace MWRender
         {
             return false;
         }
+    }
+
+    std::optional<ESM4NpcAnimation::CarriedShieldPose> ESM4NpcAnimation::captureCarriedShieldPose(
+        const MWWorld::ConstPtr& item) const
+    {
+        if (!mShieldBindingIdentity || mCarriedShieldStorageIdentity.expired() || item.isEmpty() || item != mCarriedShield
+            || !mCarriedShieldNode || !mShieldDropAnchor || mCarriedShieldSourceHash.size() != 16)
+            return std::nullopt;
+        auto* placement = mPtr.getRefData().getBaseNode();
+        if (!placement) return std::nullopt;
+        auto attached = OblivionAttachedWeaponPose::capture(*placement, *mCarriedShieldNode);
+        auto anchor = OblivionAttachedWeaponPose::capture(*placement, *mShieldDropAnchor);
+        if (!attached || !anchor) return std::nullopt;
+        CarriedShieldPose result{{item, mCarriedShieldModel, mCarriedShieldSourceHash,
+            std::move(*attached), mShieldBindingIdentity}, std::move(*anchor)};
+        if (!isCurrentCarriedShieldPose(result)) return std::nullopt;
+        return result;
+    }
+
+    bool ESM4NpcAnimation::isCurrentCarriedShieldPose(const CarriedShieldPose& pose) const noexcept
+    {
+        try
+        {
+            const auto& attached = pose.mAttachment;
+            const auto identity = attached.mBindingIdentity.lock();
+            if (!identity || identity != mShieldBindingIdentity || mCarriedShieldStorageIdentity.expired()
+                || attached.mItem.isEmpty()
+                || attached.mItem != mCarriedShield || attached.mModel != mCarriedShieldModel
+                || attached.mSourceHash.size() != 16 || attached.mSourceHash != mCarriedShieldSourceHash
+                || attached.mScene.getAttachedNode() != mCarriedShieldNode.get()
+                || attached.mScene.getPlacementNode() != mPtr.getRefData().getBaseNode()
+                || pose.mDropAnchor.getAttachedNode() != mShieldDropAnchor.get()
+                || !mShieldDropAnchor || std::string_view(mShieldDropAnchor->getName()).substr(
+                    0, mShieldDropAnchor->getName().find('\0')) != "Bip01 L ForearmTwist"
+                || pose.mDropAnchor.getPlacementNode() != attached.mScene.getPlacementNode())
+                return false;
+            const MWWorld::InventoryStore& inventory = mPtr.getClass().getInventoryStore(mPtr);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            if (equipped == inventory.end() || *equipped != attached.mItem
+                || equipped->getType() != ESM::REC_ARMO || equipped->getCellRef().getCount() != 1
+                || equipped->get<ESM::Armor>()->mBase->mData.mType != ESM::Armor::Shield)
+                return false;
+            const auto refId = equipped->getCellRef().getRefId();
+            const auto* id = refId.getIf<ESM::FormId>();
+            if (!id) return false;
+            const auto* armor = MWBase::Environment::get().getESMStore()->get<ESM4::Armor>().search(*id);
+            return armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)
+                && chooseTes4EquipmentModel(armor, MWClass::ESM4Npc::isFemale(mPtr)) == mCarriedShieldRecordModel
+                && attached.mScene.matchesCurrentScene() && pose.mDropAnchor.matchesCurrentScene();
+        }
+        catch (...) { return false; }
     }
 
     std::optional<ESM4NpcAnimation::CarriedWeaponBody> ESM4NpcAnimation::captureCarriedWeaponBody(
@@ -903,18 +974,6 @@ namespace MWRender
         return applyTes4Ragdoll(mPtr.getCellRef().getRagdollPose(), getNodeMap(), mObjectRoot);
     }
 
-    template <class Record>
-    static std::string_view chooseTes4EquipmentModel(const Record* rec, bool isFemale)
-    {
-        if (isFemale && !rec->mModelFemale.empty())
-            return rec->mModelFemale.getOriginal();
-        if (!rec->mModelMale.empty())
-            return rec->mModelMale.getOriginal();
-        if (!rec->mModelFemale.empty())
-            return rec->mModelFemale.getOriginal();
-        return rec->mModel.getOriginal();
-    }
-
     void ESM4NpcAnimation::updatePartsTES4(const ESM4::Npc& traits)
     {
         const ESM4::Race* race = MWClass::ESM4Npc::getRace(mPtr);
@@ -926,6 +985,7 @@ namespace MWRender
         {
             std::string_view mModel;
             std::uint32_t mSlots = 0;
+            const ESM4::Armor* mArmor = nullptr;
         };
         std::vector<Equipment> equipment;
         const auto runtimeEquipment
@@ -937,7 +997,7 @@ namespace MWRender
             for (const auto& [id, slots] : *runtimeEquipment)
             {
                 if (const ESM4::Armor* armor = store.get<ESM4::Armor>().search(id))
-                    equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), slots });
+                    equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), slots, armor });
                 else if (const ESM4::Clothing* clothing = store.get<ESM4::Clothing>().search(id))
                     equipment.push_back({ chooseTes4EquipmentModel(clothing, isFemale), slots });
             }
@@ -945,7 +1005,7 @@ namespace MWRender
         else
         {
             for (const ESM4::Armor* armor : MWClass::ESM4Npc::getEquippedArmor(mPtr))
-                equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), armor->mArmorFlags & 0xffffu });
+                equipment.push_back({ chooseTes4EquipmentModel(armor, isFemale), armor->mArmorFlags & 0xffffu, armor });
             for (const ESM4::Clothing* clothing : MWClass::ESM4Npc::getEquippedClothing(mPtr))
                 equipment.push_back(
                     { chooseTes4EquipmentModel(clothing, isFemale), clothing->mClothingFlags & 0xffffu });
@@ -967,9 +1027,29 @@ namespace MWRender
                 const auto path = Misc::ResourceHelpers::correctMeshPath(normalized);
                 try
                 {
-                    auto node = attachOblivionRigidPart(*mResourceSystem, path, *mObjectRoot);
+                    const auto file = mResourceSystem->getNifFileManager()->get(path);
+                    const auto model = mResourceSystem->getSceneManager()->getTemplate(path);
+                    auto node = attachOblivionRigidPart(*file, model,
+                        *mResourceSystem->getSceneManager(), *mObjectRoot);
                     isolateTes4ActorGeometry(*node);
-                    mParts.emplace_back(std::make_unique<PartHolder>(std::move(node)));
+                    mParts.emplace_back(std::make_unique<PartHolder>(node));
+                    // Bind only the exact live left-slot instance represented by
+                    // this native record. Body/outfit entries are not an inventory authority.
+                    auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
+                    const auto shield = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                    if (item.mArmor && shield != inventory.end() && shield->getType() == ESM::REC_ARMO
+                        && shield->getCellRef().getRefId() == ESM::RefId(item.mArmor->mId)
+                        && shield->get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield)
+                    {
+                        mCarriedShield = *shield;
+                        mCarriedShieldNode = findOblivionModelRoot(*file, *node);
+                        mCarriedShieldStorageIdentity = inventory.prepareStorageIdentity();
+                        mShieldDropAnchor = findOblivionSkeletonNode(*mObjectRoot, "Bip01 L ForearmTwist");
+                        mCarriedShieldModel = path;
+                        mCarriedShieldRecordModel = item.mModel;
+                        mCarriedShieldSourceHash = file->mHash;
+                        mShieldBindingIdentity = std::make_shared<const char>(0);
+                    }
                     Log(Debug::Info) << "M15 carried shield attached: ref=" << mPtr.getCellRef().getRefId()
                                      << " model=" << path;
                 }

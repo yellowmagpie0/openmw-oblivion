@@ -171,4 +171,24 @@ namespace
         EXPECT_EQ(model->getNumParents(), 0u);
         MWRender::PartHolder holder(instance);
     }
+    TEST(OblivionAttachmentTest, NativeRootUsesUniqueSourceRecordInsideTheLoaderWrapper)
+    {
+        AttachmentFixture f;
+        f.mRoot.mRecordIndex = 0;
+        osg::ref_ptr<osg::Group> wrapper = new osg::Group;
+        osg::ref_ptr<osg::MatrixTransform> root = new osg::MatrixTransform;
+        root->setName("Shield"); root->setUserValue("recordIndex",0u);
+        root->setMatrix(osg::Matrix::translate(1,2,3)); wrapper->addChild(root);
+        EXPECT_EQ(MWRender::findOblivionModelRoot(Nif::FileView(f.mFile),*wrapper),root);
+        root->setUserValue("recordIndex",1u);
+        EXPECT_THROW(MWRender::findOblivionModelRoot(Nif::FileView(f.mFile),*wrapper),std::invalid_argument);
+        root->setUserValue("recordIndex",0u);
+        osg::ref_ptr<osg::MatrixTransform> duplicate = new osg::MatrixTransform;
+        duplicate->setUserValue("recordIndex",0u); wrapper->addChild(duplicate);
+        EXPECT_THROW(MWRender::findOblivionModelRoot(Nif::FileView(f.mFile),*wrapper),std::invalid_argument);
+        wrapper->removeChild(duplicate);
+        f.mFile.mRoots.clear();
+        EXPECT_THROW(MWRender::findOblivionModelRoot(Nif::FileView(f.mFile),*wrapper),std::invalid_argument);
+    }
+
 }

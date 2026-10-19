@@ -61,6 +61,40 @@ namespace MWRender
         };
     }
 
+    osg::ref_ptr<osg::Node> findOblivionSkeletonNode(osg::Node& skeleton, std::string_view name)
+    {
+        ParentVisitor visitor(name);
+        skeleton.accept(visitor);
+        return visitor.mFound;
+    }
+
+    osg::ref_ptr<osg::Node> findOblivionModelRoot(const Nif::FileView& file, osg::Node& instance)
+    {
+        if (file.numRoots() != 1 || !file.getRoot(0))
+            throw std::invalid_argument("native model requires one source root");
+        struct RootVisitor : osg::NodeVisitor
+        {
+            explicit RootVisitor(unsigned int record)
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mRecord(record)
+            { setNodeMaskOverride(~0u); }
+            void apply(osg::Node& node) override
+            {
+                unsigned int record = 0;
+                if (node.getUserValue("recordIndex", record) && record == mRecord)
+                {
+                    if (mFound) throw std::invalid_argument("native model root record is duplicated");
+                    mFound = &node;
+                }
+                traverse(node);
+            }
+            unsigned int mRecord;
+            osg::ref_ptr<osg::Node> mFound;
+        } visitor(file.getRoot(0)->mRecordIndex);
+        instance.accept(visitor);
+        if (!visitor.mFound) throw std::invalid_argument("native model root record is absent");
+        return visitor.mFound;
+    }
+
     std::string oblivionRigidAttachmentParent(const Nif::FileView& file,
         std::string_view templateHash, const Nif::NiObjectNET* overrideObject)
     {

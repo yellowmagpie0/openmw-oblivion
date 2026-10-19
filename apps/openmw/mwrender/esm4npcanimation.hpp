@@ -37,6 +37,15 @@ namespace MWRender
         std::optional<CarriedWeaponPose> captureCarriedWeaponPose(const MWWorld::ConstPtr& item) const;
         bool isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept;
 
+        struct CarriedShieldPose
+        {
+            CarriedWeaponPose mAttachment;
+            // Native process index7: independent of the mesh's Prn parent.
+            OblivionAttachedWeaponPose mDropAnchor;
+        };
+        std::optional<CarriedShieldPose> captureCarriedShieldPose(const MWWorld::ConstPtr& item) const;
+        bool isCurrentCarriedShieldPose(const CarriedShieldPose& pose) const noexcept;
+
         struct CarriedWeaponBody
         {
             CarriedWeaponPose mPose;
@@ -97,6 +106,14 @@ namespace MWRender
         std::string mCarriedWeaponRecordModel;
         std::string mCarriedWeaponSourceHash;
         std::shared_ptr<const char> mWeaponBindingIdentity;
+        MWWorld::ConstPtr mCarriedShield;
+        osg::ref_ptr<osg::Node> mCarriedShieldNode;
+        osg::ref_ptr<osg::Node> mShieldDropAnchor;
+        VFS::Path::Normalized mCarriedShieldModel;
+        std::string mCarriedShieldRecordModel;
+        std::string mCarriedShieldSourceHash;
+        std::shared_ptr<const char> mShieldBindingIdentity;
+        std::weak_ptr<const char> mCarriedShieldStorageIdentity;
         bool mShowWeapon = false;
         std::vector<Tes4FaceMorph> mFaceMorphs;
         float mFaceAnimationTime = 0.f;

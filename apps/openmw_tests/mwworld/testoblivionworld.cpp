@@ -12300,7 +12300,8 @@ namespace
     // Test-owned TES4 NIF: one named node, collision object, rigid body and
     // sphere. Explicit bytes exercise the actual resource/parser path.
     std::string nativeCarriedWeaponNif(float radius, bool childTarget = false, std::uint16_t collisionFlags = 1,
-        bool rotatedRoot = false, bool scabbard = false, std::string_view rootName = "Owned weapon")
+        bool rotatedRoot = false, bool scabbard = false, std::string_view rootName = "Owned weapon",
+        std::string_view parent = {})
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -12310,18 +12311,22 @@ namespace
         };
         std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
         data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
-            + bytes(std::uint32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0)))
+            + bytes(std::uint32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0) + !parent.empty()))
             + bytes(std::uint32_t{0}) + std::string(3, '\0');
-        data += bytes(std::uint16_t{5});
+        data += bytes(std::uint16_t(5 + !parent.empty()));
         for (const auto type : {"NiNode", "bhkCollisionObject", "bhkRigidBody", "bhkSphereShape", "BSXFlags"})
             data += string(type);
+        if (!parent.empty()) data += string("NiStringExtraData");
         if (childTarget) data += bytes(std::uint16_t{0});
         for (std::uint16_t i = 0; i < 5; ++i) data += bytes(i);
         if (scabbard) data += bytes(std::uint16_t{0}) + bytes(std::uint16_t{0});
+        if (!parent.empty()) data += bytes(std::uint16_t{5});
         data += bytes(std::uint32_t{0}); // No groups.
         // NiNode / NiAVObject / NiObjectNET.
-        data += string(rootName) + bytes(std::uint32_t{1})
-            + bytes(std::int32_t(childTarget ? 5 : 4)) + bytes(std::int32_t{-1})
+        data += string(rootName) + bytes(std::uint32_t(1 + !parent.empty()))
+            + bytes(std::int32_t(childTarget ? 5 : 4));
+        if (!parent.empty()) data += bytes(std::int32_t((childTarget ? 6 : 5) + (scabbard ? 2 : 0)));
+        data += bytes(std::int32_t{-1})
             + bytes(std::uint16_t{14});
         const std::array<float, 13> rootTransform = rotatedRoot
             ? std::array<float, 13>{1,2,3, 0,1,0,-1,0,0,0,0,1, 1}
@@ -12367,6 +12372,7 @@ namespace
                 if (!part) data += bytes(std::int32_t(childTarget ? 7 : 6));
                 data += bytes(std::uint32_t{0});
             }
+        if (!parent.empty()) data += string("Prn") + string(parent);
         data += bytes(std::uint32_t{1}) + bytes(std::int32_t{0}); // Root.
         return data;
     }
@@ -25256,4 +25262,99 @@ TEST(OblivionWorldTest, PreparedShieldRemovalRejectsStaleOrWrongKindsAndPreserve
     EXPECT_EQ(currentRight.getCellRef().getCount(),1);
     EXPECT_EQ(currentRight.getCellRef().getNativeItemCondition(),60);
     EXPECT_TRUE(removal->notify()); EXPECT_FALSE(removal->notify());
+}
+
+
+TEST(OblivionWorldTest, NativeCarriedShieldBindsExactLeftInstanceAndIndependentForearmAnchor)
+{
+    NativeWorldFixture fixture;
+    const auto actor = addNativeNpc(fixture,0x900);
+    auto& store = fixture.mWorld.getStore();
+    auto npc = *actor.get<ESM4::Npc>()->mBase;
+    npc.mModel = "owned-shield-skeleton.osgt";
+    store.getWritable<ESM4::Npc>().insertStatic(npc,npc.mFormKey);
+    const auto key = ESM::FormKey::content("headless.esm",0x941);
+    ESM4::Armor armor{}; armor.mId = {0x941,0}; armor.mArmorFlags = ESM4::Armor::TES4_Shield;
+    armor.mData.health = 100; armor.mModelMale = "owned-carried-shield.nif";
+    armor.mModelMaleWorld = "different-world-shield.nif";
+    store.getWritable<ESM4::Armor>().insertStatic(armor,key);
+    ESM::Armor shared; shared.blank(); shared.mId = ESM::RefId(armor.mId);
+    shared.mData.mType = ESM::Armor::Shield; shared.mData.mHealth = 100;
+    shared.mModel = "different-world-shield.nif"; store.insertStatic(shared);
+    MWClass::Armor::registerSelf();
+    osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+    for (const auto& [name,offset] : std::array<std::pair<const char*,float>,4>{{
+        {"Custom Socket",10}, {"Bip01 L ForearmTwist",3}, {"bip01 l forearmtwist",20}, {"Weapon",30}}})
+    {
+        osg::ref_ptr<osgAnimation::Bone> bone = new osgAnimation::Bone;
+        bone->setName(name); bone->setDataVariance(osg::Object::DYNAMIC);
+        bone->setMatrix(osg::Matrix::translate(offset,0,0)); skeleton->addChild(bone);
+    }
+    std::filesystem::create_directories(fixture.mDirectory / "meshes");
+    ASSERT_TRUE(osgDB::writeNodeFile(*skeleton,
+        (fixture.mDirectory / "meshes/owned-shield-skeleton.osgt").string()));
+    {
+        std::ofstream stream(fixture.mDirectory / "meshes/owned-carried-shield.nif",std::ios::binary);
+        const auto data = nativeCarriedWeaponNif(.5f,false,1,false,false,"Shield","Custom Socket");
+        stream.write(data.data(),data.size()); ASSERT_TRUE(stream);
+    }
+    fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory));
+    fixture.mVfs.buildIndex();
+    auto* scene = fixture.mResources.getSceneManager();
+    scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+    auto defines = Shader::getDefaultDefines();
+    for (const auto& [name,value] : SceneUtil::ShadowManager::getShadowsDisabledDefines()) defines[name] = value;
+    osg::ref_ptr<SceneUtil::LightManager> lights
+        = new SceneUtil::LightManager(SceneUtil::LightSettings{}, &fixture.mResources);
+    for (const auto& [name,value] : lights->getLightDefines()) defines[name] = value;
+    scene->getShaderManager().setGlobalDefines(defines);
+    ESM4::RuntimeInventoryItem saved;
+    saved.mBase = key; saved.mCount = 1; saved.mCondition = 50; saved.mEquippedSlots = ESM4::Armor::TES4_Shield;
+    installEquipmentInventory(fixture,actor,{saved});
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
+    placement->setPosition({100,20,30}); actor.getRefData().setBaseNode(placement);
+    std::optional<MWRender::ESM4NpcAnimation::CarriedShieldPose> retained;
+    {
+        MWRender::ESM4NpcAnimation animation(actor,placement,&fixture.mResources);
+        auto pose = animation.captureCarriedShieldPose(item); ASSERT_TRUE(pose);
+        EXPECT_EQ(pose->mAttachment.mModel,VFS::Path::Normalized("meshes/owned-carried-shield.nif"));
+        EXPECT_EQ(pose->mAttachment.mSourceHash.size(),16u);
+        EXPECT_EQ(pose->mAttachment.mScene.getAttachedNode()->getName(),"Shield");
+        EXPECT_EQ(pose->mAttachment.mScene.getWorldMatrix().getTrans(),osg::Vec3(111,22,33));
+        EXPECT_EQ(pose->mDropAnchor.getWorldMatrix().getTrans(),osg::Vec3(103,20,30));
+        EXPECT_EQ(pose->mDropAnchor.getAttachedNode()->getName(),"Bip01 L ForearmTwist");
+        EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        auto* anchor = const_cast<osg::Node*>(pose->mDropAnchor.getAttachedNode());
+        anchor->setName(std::string("Bip01 L ForearmTwist") + std::string("\0suffix",7));
+        EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        anchor->setName("bip01 l forearmtwist");
+        EXPECT_FALSE(animation.isCurrentCarriedShieldPose(*pose));
+        anchor->setName("Bip01 L ForearmTwist");
+        EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        EXPECT_FALSE(animation.captureCarriedShieldPose(actor));
+        EXPECT_FALSE(animation.captureCarriedShieldPose({}));
+        EXPECT_FALSE(animation.captureCarriedWeaponPose(item));
+        auto changed = *pose; changed.mAttachment.mSourceHash[0] ^= 1;
+        EXPECT_FALSE(animation.isCurrentCarriedShieldPose(changed));
+        item.getCellRef().setCount(2); EXPECT_FALSE(animation.isCurrentCarriedShieldPose(*pose));
+        item.getCellRef().setCount(1);
+        placement->setPosition({101,20,30}); EXPECT_FALSE(animation.isCurrentCarriedShieldPose(*pose));
+        placement->setPosition({100,20,30}); EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        animation.showWeapons(true); EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        animation.showWeapons(false); EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*pose));
+        animation.refreshEquipment(); EXPECT_FALSE(animation.isCurrentCarriedShieldPose(*pose));
+        retained = animation.captureCarriedShieldPose(item); ASSERT_TRUE(retained);
+        EXPECT_TRUE(animation.isCurrentCarriedShieldPose(*retained));
+        MWWorld::InventoryStore copy(inventory); inventory = copy;
+        EXPECT_FALSE(animation.isCurrentCarriedShieldPose(*retained));
+        EXPECT_FALSE(animation.captureCarriedShieldPose(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft)));
+        animation.refreshEquipment();
+        retained = animation.captureCarriedShieldPose(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft));
+        ASSERT_TRUE(retained);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),inventory.end());
+    }
+    EXPECT_TRUE(retained->mAttachment.mBindingIdentity.expired());
+    EXPECT_FALSE(retained->mAttachment.mScene.matchesCurrentScene());
 }
