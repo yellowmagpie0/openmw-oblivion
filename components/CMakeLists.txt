@@ -210,6 +210,7 @@ add_component_dir (esmterrain
     )
 
 add_component_dir (esm4
+    bipedmodel
     aiconditions
     aipackagedata
     aiselection

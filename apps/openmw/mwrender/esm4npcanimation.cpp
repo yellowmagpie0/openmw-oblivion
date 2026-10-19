@@ -21,6 +21,7 @@
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/facegen.hpp>
+#include <components/esm4/bipedmodel.hpp>
 
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/osguservalues.hpp>
@@ -52,13 +53,7 @@ namespace MWRender
     template <class Record>
     static std::string_view chooseTes4EquipmentModel(const Record* rec, bool isFemale)
     {
-        if (isFemale && !rec->mModelFemale.empty())
-            return rec->mModelFemale.getOriginal();
-        if (!rec->mModelMale.empty())
-            return rec->mModelMale.getOriginal();
-        if (!rec->mModelFemale.empty())
-            return rec->mModelFemale.getOriginal();
-        return rec->mModel.getOriginal();
+        return ESM4::bipedModelForSex(rec->mModelMale, rec->mModelFemale, isFemale).getOriginal();
     }
 
     ESM4NpcAnimation::ESM4NpcAnimation(

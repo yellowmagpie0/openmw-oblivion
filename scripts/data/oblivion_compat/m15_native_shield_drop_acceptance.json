@@ -1,0 +1,123 @@
+{
+  "scope": "Normal-input Player unarmed strike against NPC public block control; near-broken carried-left IronShield reaches zero, publishes one owner-selected world body, preserves right sword, then actual fresh-process load/resave. First-person keyboard1FPS bounded branch; full M15S4 remains open.",
+  "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+  "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+  "staged_source_sha256": "4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb",
+  "fixture_changes": {
+    "npc_sword_condition": 55.875,
+    "npc_shield_condition": 9.999999747378752e-05,
+    "npc_shield_equipped_slots": 8192,
+    "npc_intent": "public self.controls.block while CarriedLeft exists; AI disabled; right sword stays equipped; no damage/contact injection"
+  },
+  "expected": {
+    "attacker": "dynamic:player:0000000000000001",
+    "victim": "content:oblivion.esm:01fc43",
+    "weapon": "content:oblivion.esm:0352c1",
+    "health_damage_bits": 1065809137,
+    "fatigue_damage_bits": 1067615414,
+    "block_fraction": 0.25,
+    "block_fatigue": 0,
+    "attacker_fatigue_debit": 7,
+    "victim_posture_at_contact": -1,
+    "victim_posture_at_save": -1,
+    "npc_source_weapon_count": 0,
+    "dropped_weapon_condition": 0,
+    "dynamic_reference": "dynamic:native-reference:0000000000000001",
+    "dynamic_serial": 2,
+    "action_next": 3,
+    "combat_rng": 505908858,
+    "sound_edids": [
+      "PHYDamageFlesh",
+      "WPNHitHand"
+    ],
+    "dropper": "content:oblivion.esm:01fc43",
+    "owner": null,
+    "world_model": "meshes/armor/iron/shield.nif",
+    "right_sword": {
+      "base": "content:oblivion.esm:090615",
+      "count": 1,
+      "condition": 55.875,
+      "charge": -1.0,
+      "equipped_slots": 65536,
+      "hotkey": -1,
+      "owner": "null",
+      "remaining_usage_time": -1.0,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null
+    },
+    "world_asset_hash": "f76af90c081974c7cab30aa7b1403e30",
+    "body_record": 5,
+    "node_record": 0
+  },
+  "oracle_report_sha256": "e87f6d05b7cad1e641c59b865299775d89d66c458ca39862f9e01258ca3f32b0",
+  "sink_report_sha256": "8885d9262583b4122f0a81e6f067427f5bbf17544591eb6c9fbb1510e35508a8",
+  "placement": {
+    "maximum_planar_distance_from_actor": 128,
+    "maximum_absolute_height_difference": 128,
+    "require_finite_position_rotation": true
+  },
+  "physical_continuation": "Preserve exact serialized independent reference/cache/body state through loader; live physics may advance. Require one finite body and dropped reference in each output, no duplicate allocation/resources/contact on restart. Native reference/cache separation applies; no absolute reference/body equality asserted.",
+  "limits": "NPC control intent is authored through existing public Actor control API; not full autonomous defensive AI. No exact native fade timing or uninterrupted real-content trajectory equivalence. Captured PCM retained; two identical sound IDs cannot prove separate voices when same stock variant is selected.",
+  "preregistered_before_this_course": true,
+  "second_max_linear_speed": 1,
+  "continuation_policy": "Exact first output is second input. Identical Lua content is retained across epochs;300wall seconds settling before final save. Corrects normal01 content-removal fixture failure before this new course.",
+  "physics_gate": "Both outputs require the admitted body and original identity/extras/resources. Placement bounds128 and cached-body agreement.01 apply; second linear speed<=1. Root reference may differ from cached local under native masked callback policy. Normal01 below-floor failure is retained; no whole S4 acceptance.",
+  "shield_template": "build/oblivion-compat/m15/S4/native-shield-attachment-runtime-normal-03/staged-input.omwsave",
+  "shield_template_sha256": "049e6bae211aa082bf345db613325b804e08fe1a62f9e2245b07c74c210d502d",
+  "body_position_bounds": {
+    "maximum_planar_distance_from_saved_victim": 256,
+    "minimum_height_difference_from_saved_victim": -64,
+    "maximum_height_difference_from_saved_victim": 192
+  },
+  "sanitizer_environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "ALSOFT_CONF": "{output}/config/alsoft.conf",
+    "ALSOFT_DRIVERS": "wave",
+    "ALSOFT_LOGLEVEL": "3",
+    "ALSOFT_LOGFILE": "{output}/openal.log",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "normal_evidence": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01",
+  "sanitized_evidence": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-sanitized-02",
+  "remaining_gates": "Pickup/dropper-list caller cleanup and remaining fullS4 mastery, selected shield wear-to-zero, reactions, effects, interruption, input/view/FPS and in-action restart/combined acceptance remain open.",
+  "pickup": {
+    "staging": {
+      "source": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave",
+      "source_sha256": "6652488ea49b2889a8f05f95045c13b853f3816666b26a7b4afdd3bdd0ab09f3",
+      "staged_sha256": "34afa1a2494d640798a899f931c777ce157478db23cbcfc37ec0c0d3c8db9bcc",
+      "only_changed_path": "player.position",
+      "before": [
+        672.0,
+        -40.0,
+        -109.68915557861328,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "after": [
+        585.80615234375,
+        28.275888442993164,
+        -108.28837585449219,
+        1.0267834663391113,
+        0.0,
+        1.5707963705062866
+      ],
+      "camera_height": 124,
+      "aim_body_position": [
+        665.80615234375,
+        28.275888442993164,
+        -116.54217529296875
+      ],
+      "acceptance_action": "normal Space/activate through SDL input; no take API, console, inventory or contact injection"
+    },
+    "collection_verified": true,
+    "native_dropper_cleanup_accepted": false,
+    "retained_failed_aiming_attempt": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01/pickup",
+    "passed_collection_course": "build/oblivion-compat/m15/S4/native-shield-npc-break-runtime-normal-01/pickup-02",
+    "policy": "Use fresh second output copy; change only player position/aim, rounded to native float. Initial R view toggle missed shield; corrected course omits R. Actual normal Space activation collects one broken shield; native dropped-list cleanup remains open."
+  }
+}

@@ -27,6 +27,44 @@ namespace MWWorld
         }
     }
 
+    ESM::FormId oblivionBipedReferenceOwner(World& world, const ConstPtr& reference)
+    {
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion || reference.isEmpty()
+            || (reference.getType() != ESM::REC_ARMO4 && reference.getType() != ESM::REC_CLOT4)
+            || !reference.getCellRef().getNativeReference())
+            throw std::invalid_argument("native reference owner requires a TES4 REFR");
+        const auto& store = world.getStore();
+        const auto ownerId = [&](const ESM::RefId& owner) -> ESM::FormId {
+            if (owner.empty()) return {};
+            const auto* id = owner.getIf<ESM::FormId>();
+            if (!id || !store.hasEsm4ContentRecord(owner))
+                throw std::invalid_argument("native reference owner is unresolved");
+            return *id;
+        };
+        std::array<ESM::FormId,3> owners{};
+        owners[0] = ownerId(reference.getCellRef().getOwner());
+        const auto* placed = reference.getCellRef().getNativeReference();
+        if (owners[0].isZeroOrUnset() && !placed->mDoor.destDoor.isZeroOrUnset())
+        {
+            const auto destination = world.getWorldModel().getPtr(placed->mDoor.destDoor);
+            if (!destination.isEmpty())
+                owners[1] = ownerId(destination.getCellRef().getOwner());
+            else if (const auto* base = store.get<ESM4::Reference>().search(placed->mDoor.destDoor))
+                owners[1] = ownerId(ESM::RefId(base->mOwner));
+            else
+                throw std::invalid_argument("native teleport ownership destination is unresolved");
+        }
+        if (owners[0].isZeroOrUnset() && owners[1].isZeroOrUnset() && reference.isInCell())
+        {
+            const auto* cell = store.get<ESM4::Cell>().search(reference.getCell()->getCell()->getId());
+            if (!cell) throw std::invalid_argument("native reference ownership cell is unresolved");
+            owners[2] = ownerId(ESM::RefId(cell->mOwner));
+        }
+        const auto layer = ESM4::ownershipOwnerLayer(ESM4::OwnershipReferenceKind::Other,
+            {!owners[0].isZeroOrUnset(), !owners[1].isZeroOrUnset(), !owners[2].isZeroOrUnset()});
+        return layer ? owners[*layer] : ESM::FormId{};
+    }
+
     bool oblivionActorHasCellOwnershipClaim(World& world, const Ptr& actor, const CellStore& target)
     {
         if (world.getGameProfile() != ESM::GameProfile::Oblivion || actor.isEmpty()

@@ -263,7 +263,8 @@ namespace ESM4
         }
     }
 
-    ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers)
+    std::optional<std::size_t> ownershipOwnerLayer(
+        OwnershipReferenceKind kind, const std::array<bool, 3>& present)
     {
         std::size_t ownerLayers;
         switch (kind)
@@ -275,13 +276,17 @@ namespace ESM4
             case OwnershipReferenceKind::Activator: ownerLayers = 2; break;
             default: throw std::invalid_argument("invalid native ownership reference kind");
         }
-        ResolvedOwnership result;
         for (std::size_t i = 0; i < ownerLayers; ++i)
-            if (!layers[i].mOwner.isNull())
-            {
-                result.mOwner = layers[i].mOwner;
-                break;
-            }
+            if (present[i]) return i;
+        return std::nullopt;
+    }
+
+    ResolvedOwnership resolveOwnership(OwnershipReferenceKind kind, const std::array<OwnershipLayer, 3>& layers)
+    {
+        ResolvedOwnership result;
+        if (const auto layer = ownershipOwnerLayer(kind,
+                {!layers[0].mOwner.isNull(), !layers[1].mOwner.isNull(), !layers[2].mOwner.isNull()}))
+            result.mOwner = layers[*layer].mOwner;
         for (const auto& layer : layers)
             if (layer.mRank != -1)
             {

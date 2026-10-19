@@ -15,6 +15,11 @@
 #include <components/esm4/dropplacement.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadarmo.hpp>
+#include <components/esm4/bipedmodel.hpp>
+#include <components/esm4/crimerules.hpp>
+#include "../mwclass/esm4base.hpp"
+#include <variant>
 #include <components/esm4/loadcell.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadglob.hpp>
@@ -32,13 +37,86 @@
 
 namespace MWWorld
 {
+    namespace
+    {
+        const void* looseEquipmentBase(const ConstPtr& ptr)
+        {
+            if (ptr.isEmpty()) return nullptr;
+            if (ptr.getType() == ESM::REC_WEAP4) return ptr.get<ESM4::Weapon>()->mBase;
+            if (ptr.getType() == ESM::REC_ARMO4)
+            {
+                const auto* armor = ptr.get<ESM4::Armor>()->mBase;
+                if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield)) return armor;
+            }
+            return nullptr;
+        }
+
+        std::optional<ESM::FormKey> looseEquipmentBaseKey(const ESMStore& store, const ConstPtr& ptr)
+        {
+            if (!looseEquipmentBase(ptr)) return std::nullopt;
+            if (ptr.getType() == ESM::REC_WEAP4)
+            {
+                const auto* base = ptr.get<ESM4::Weapon>()->mBase;
+                return store.get<ESM4::Weapon>().search(base->mId) == base
+                    ? store.get<ESM4::Weapon>().findFormKey(base->mId) : std::nullopt;
+            }
+            const auto* base = ptr.get<ESM4::Armor>()->mBase;
+            return store.get<ESM4::Armor>().search(base->mId) == base
+                ? store.get<ESM4::Armor>().findFormKey(base->mId) : std::nullopt;
+        }
+    }
+
     void World::validateOblivionLooseWeaponState(const ESM4::RuntimeState& state) const
     {
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        std::map<ESM::FormKey,const ESM4::RuntimeReferenceState*> references;
+        for (const auto& reference : state.mReferences) references.emplace(reference.mKey,&reference);
         for (const auto& [key, snapshot] : state.mNativeLooseWeapons)
         {
-            const auto* base = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
-            if (!base || Misc::ResourceHelpers::correctMeshPath(base->mModel.getNormalized()).value() != snapshot.mModel)
-                throw std::runtime_error("native loose weapon snapshot does not match its winning WEAP/model");
+            const auto* weapon = mStore.get<ESM4::Weapon>().search(snapshot.mBase);
+            const auto* armor = mStore.get<ESM4::Armor>().search(snapshot.mBase);
+            if (weapon && armor) throw std::runtime_error("loose equipment base has ambiguous native types");
+            const ESM::Path* selected = nullptr;
+            if (weapon) selected = &weapon->mModel;
+            else if (armor && (armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+            {
+                const auto found = references.find(key);
+                if (found == references.end() || found->second->mBase != snapshot.mBase)
+                    throw std::runtime_error("loose shield snapshot has no matching native reference");
+                const auto& reference = *found->second;
+                std::array<ESM4::OwnershipLayer,3> layers{};
+                layers[0].mOwner = reference.mOwner.value_or(ESM::FormKey{});
+                if (const auto* placed = mStore.get<ESM4::Reference>().search(key);
+                    layers[0].mOwner.isNull() && placed && !placed->mDoor.destDoor.isZeroOrUnset())
+                {
+                    const auto* destination = mStore.get<ESM4::Reference>().search(placed->mDoor.destDoor);
+                    if (!destination) throw std::runtime_error("loose shield teleport destination is unresolved");
+                    if (const auto saved = references.find(destination->mFormKey); saved != references.end())
+                        layers[1].mOwner = saved->second->mOwner.value_or(ESM::FormKey{});
+                    else layers[1].mOwner = resolver.toFormKey(destination->mOwner);
+                }
+                if (layers[0].mOwner.isNull() && layers[1].mOwner.isNull())
+                {
+                    const auto* cell = mStore.get<ESM4::Cell>().search(reference.mCell);
+                    if (!cell) throw std::runtime_error("loose shield CELL owner is unresolved");
+                    layers[2].mOwner = resolver.toFormKey(cell->mOwner);
+                }
+                const auto owner = ESM4::resolveOwnership(ESM4::OwnershipReferenceKind::Other,layers).mOwner;
+                if (!owner.isNull())
+                {
+                    const auto ownerId = resolver.toFormId(owner);
+                    if (!ownerId || !mStore.hasEsm4ContentRecord(ESM::RefId(*ownerId)))
+                        throw std::runtime_error("loose shield owner is unresolved");
+                }
+                const auto* npc = mStore.get<ESM4::Npc>().search(owner);
+                selected = &ESM4::bipedModelForSex(armor->mModelMaleWorld,armor->mModelFemaleWorld,
+                    npc && (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female));
+            }
+            if (!selected || selected->empty()
+                || MWClass::ESM4Impl::isMarkerModel(selected->getNormalized().value())
+                || MWClass::ESM4Impl::isLodModel(selected->getNormalized().value())
+                || Misc::ResourceHelpers::correctMeshPath(selected->getNormalized()).value() != snapshot.mModel)
+                throw std::runtime_error("native loose equipment snapshot does not match its winning base/world model");
         }
     }
 
@@ -58,14 +136,13 @@ namespace MWWorld
                 state.mNativeLooseWeapons.erase(key);
                 continue;
             }
-            if (ptr.getType() != ESM::REC_WEAP4 || !ptr.isInCell() || key.isNull()
+            if (!looseEquipmentBase(ptr) || !ptr.isInCell() || key.isNull()
                 || !ptr.getCellRef().getNativeReference()
                 || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr)
                 throw std::logic_error("native loose weapon save has no live registered WEAP reference");
-            const auto* base = ptr.get<ESM4::Weapon>()->mBase;
-            const auto baseKey = mStore.get<ESM4::Weapon>().findFormKey(base->mId);
+            const auto baseKey = looseEquipmentBaseKey(mStore,ptr);
             const auto model = ptr.getClass().getCorrectedModel(ptr);
-            if (!baseKey || mStore.get<ESM4::Weapon>().search(base->mId) != base || model.empty())
+            if (!baseKey || model.empty())
                 throw std::runtime_error("native loose weapon save cannot resolve its winning base/model");
             const auto file = mResourceSystem->getNifFileManager()->get(model);
             const auto definition = NifBullet::loadWeaponReferenceRagdollDefinition(*file);
@@ -78,7 +155,7 @@ namespace MWWorld
     bool World::restoreOblivionLooseWeaponScene(const Ptr& ptr, MWRender::Objects& objects,
         MWPhysics::PhysicsSystem& physics, const VFS::Path::Normalized& model, const osg::Quat& rotation) const
     {
-        if (mGameProfile != ESM::GameProfile::Oblivion || ptr.isEmpty() || ptr.getType() != ESM::REC_WEAP4)
+        if (mGameProfile != ESM::GameProfile::Oblivion || !looseEquipmentBase(ptr))
             return false;
         const auto key = ptr.getCellRef().getFormKey();
         const auto retained = mOblivionLooseWeaponStates;
@@ -94,11 +171,9 @@ namespace MWWorld
             || ptr.getRefData().getBaseNode() || key.isNull()
             || mWorldModel.getPtr(ptr.getCellRef().getRefNum()) != ptr)
             throw std::invalid_argument("native loose weapon load requires its current registered reference and physics");
-        const auto* base = ptr.get<ESM4::Weapon>()->mBase;
-        if (!base) throw std::invalid_argument("native loose weapon load has no winning base");
-        const auto baseId = base->mId;
-        const auto baseKey = mStore.get<ESM4::Weapon>().findFormKey(baseId);
-        if (!baseKey || mStore.get<ESM4::Weapon>().search(baseId) != base
+        const auto* base = looseEquipmentBase(ptr);
+        const auto baseKey = looseEquipmentBaseKey(mStore,ptr);
+        if (!baseKey
             || model.empty() || ptr.getClass().getCorrectedModel(ptr) != model)
             throw std::invalid_argument("native loose weapon load cannot resolve its winning base/model");
         const auto position = ptr.getRefData().getPosition();
@@ -119,7 +194,7 @@ namespace MWWorld
                 && mOblivionLooseWeaponStates == retained && mPhysics.get() == &physics
                 && mWorldModel.getPtrRegistryRevision() == revision
                 && referenceValid()
-                && mStore.get<ESM4::Weapon>().search(baseId) == base
+                && looseEquipmentBase(ptr) == base && looseEquipmentBaseKey(mStore,ptr) == baseKey
                 && ptr.getClass().getCorrectedModel(ptr) == model;
         };
         const auto file = mResourceSystem->getNifFileManager()->get(model);
@@ -192,7 +267,7 @@ namespace MWWorld
         // publishing a prefix of a frame. Capture waits for physics workers.
         for (const auto& ptr : owners)
         {
-            if (ptr.isEmpty() || !ptr.isInCell() || ptr.getType() != ESM::REC_WEAP4
+            if (!looseEquipmentBase(ptr) || !ptr.isInCell()
                 || !ptr.getCellRef().getNativeReference()
                 || world.getWorldModel().getPtr(ptr.getCellRef().getRefNum()) != ptr)
                 throw std::logic_error("loose weapon pose has no live native world reference");
@@ -296,6 +371,52 @@ namespace MWWorld
             std::uint32_t mEnchantmentPoints;
             std::shared_ptr<InventoryStore::PreparedEquippedWeaponRemoval> mRemoval;
             std::unique_ptr<World::PreparedOblivionEquipmentNotification> mNotification;
+            const ESM4::Armor* mArmor = nullptr;
+            std::optional<MWRender::ESM4NpcAnimation::CarriedShieldPose> mShieldPose{};
+            std::string mWorldModel{}, mMaleWorldModel{}, mFemaleWorldModel{};
+            ESM::FormId mWorldOwner{};
+            const ESM4::Npc* mWorldNpcOwner = nullptr;
+            const ESM4::Faction* mWorldFactionOwner = nullptr;
+            std::uint32_t mWorldOwnerFlags = 0;
+
+            bool destinationBaseCurrent(const Ptr& reference) const
+            {
+                return mArmor ? reference.getType() == ESM::REC_ARMO4
+                        && reference.get<ESM4::Armor>()->mBase == mArmor
+                    : reference.getType() == ESM::REC_WEAP4
+                        && reference.get<ESM4::Weapon>()->mBase == mWeapon;
+            }
+
+            bool baseCurrent(const ESMStore& store) const
+            {
+                if (!mArmor)
+                    return store.get<ESM4::Weapon>().search(mWeaponId) == mWeapon
+                        && mWeapon->mModel.getOriginal() == mWeaponModel && mWeapon->mFlags == mWeaponFlags
+                        && mWeapon->mData.type == mWeaponType && mWeapon->mData.health == mWeaponHealth
+                        && mWeapon->mEnchantment == mEnchantment && mWeapon->mEnchantmentPoints == mEnchantmentPoints;
+                // New dropped REFRs have no teleport. Direct/CELL owner fields
+                // are guarded by current(); retain both roles and raw NPC sex
+                // so final validation requires no model/path allocation.
+                const auto* owner = store.get<ESM4::Npc>().search(ESM::RefId(mWorldOwner));
+                return store.get<ESM4::Armor>().search(mWeaponId) == mArmor
+                    && mArmor->mFlags == mWeaponFlags && mArmor->mArmorFlags == mWeaponType
+                    && mArmor->mData.health == mWeaponHealth && mArmor->mEnchantment == mEnchantment
+                    && mArmor->mEnchantmentPoints == mEnchantmentPoints
+                    && mArmor->mModelMaleWorld.getOriginal() == mMaleWorldModel
+                    && mArmor->mModelFemaleWorld.getOriginal() == mFemaleWorldModel
+                    && owner == mWorldNpcOwner && (!owner || owner->mBaseConfig.tes4.flags == mWorldOwnerFlags)
+                    && store.get<ESM4::Faction>().search(ESM::RefId(mWorldOwner)) == mWorldFactionOwner;
+            }
+
+            bool carriedCurrent(const ESMStore& store) const
+            {
+                if (!mShieldPose) return mAnimation->isCurrentCarriedWeaponDrop(mCarried, store);
+                const auto placement = MWRender::resolveOblivionNpcDropPlacement(mActor, store);
+                return placement && mAnimation->isCurrentCarriedShieldPose(*mShieldPose)
+                    && mCarried.mBody.mDefinition
+                    && mCarried.mBody.mDefinition->mSourceHash == mShieldPose->mAttachment.mSourceHash
+                    && mCarried.mAnchor.matchesCurrentScene(*placement);
+            }
         };
         World* mWorld;
         MWPhysics::PhysicsSystem* mPhysics;
@@ -322,12 +443,14 @@ namespace MWWorld
                 const auto& destination = mAdmission->references()[index].getCellRef();
                 const auto* placed = destination.getNativeReference();
                 const auto* expected = e.mDestination.getNativeReference();
-                if (mAdmission->references()[index].get<ESM4::Weapon>()->mBase != e.mWeapon
+                if (!e.destinationBaseCurrent(mAdmission->references()[index])
+                    || mAdmission->references()[index].getCell() != e.mCell
                     || !placed || placed->mId != expected->mId || placed->mFormKey != expected->mFormKey
                     || placed->mBaseObj != expected->mBaseObj || placed->mBaseKey != expected->mBaseKey
                     || placed->mParent != expected->mParent || placed->mParentKey != expected->mParentKey
                     || placed->mFlags != expected->mFlags || placed->mOwner != expected->mOwner
                     || placed->mGlobal != expected->mGlobal || placed->mFactionRank != expected->mFactionRank
+                    || placed->mDoor.destDoor != expected->mDoor.destDoor
                     || !sameFloat(placed->mScale, expected->mScale)
                     || !sameFloat(destination.getNativeItemCondition(), e.mDestination.getNativeItemCondition())
                     || !sameFloat(destination.getEnchantmentCharge(), e.mDestination.getEnchantmentCharge())
@@ -342,7 +465,7 @@ namespace MWWorld
                     || mWorld->getWorldModel().getPtr(e.mActor.getCellRef().getRefNum()) != e.mActor
                     || e.mActor.get<ESM4::Npc>()->mBase != e.mNpc
                     || store.get<ESM4::Npc>().search(e.mNpcId) != e.mNpc
-                    || store.get<ESM4::Weapon>().search(e.mWeaponId) != e.mWeapon
+                    || !e.baseCurrent(store)
                     || store.get<ESM4::Cell>().search(e.mCellId) != e.mCellBase
                     || e.mCellBase->mOwner != e.mCellOwner || e.mCellBase->mOwnershipRank != e.mCellRank
                     || store.get<ESM4::Npc>().search(ESM::RefId(e.mCellOwner)) != e.mCellNpcOwner
@@ -361,11 +484,7 @@ namespace MWWorld
                     || !sameFloat(source.getEnchantmentCharge(), e.mSource.getEnchantmentCharge())
                     || !source.hasNativeItemScale(e.mSource.getNativeItemScale())
                     || e.mActor.getCellRef().getNativeDropRelations() != e.mActorBefore.getNativeDropRelations()
-                    || e.mWeapon->mModel.getOriginal() != e.mWeaponModel || e.mWeapon->mFlags != e.mWeaponFlags
-                    || e.mWeapon->mData.type != e.mWeaponType || e.mWeapon->mData.health != e.mWeaponHealth
-                    || e.mWeapon->mEnchantment != e.mEnchantment
-                    || e.mWeapon->mEnchantmentPoints != e.mEnchantmentPoints
-                    || !e.mAnimation->isCurrentCarriedWeaponDrop(e.mCarried, store)) return false;
+                    || !e.carriedCurrent(store)) return false;
                 for (std::size_t i = 0; i < e.mFactions.size(); ++i)
                     if (e.mNpc->mFactions[i].faction != e.mFactions[i].first
                         || e.mNpc->mFactions[i].rank != e.mFactions[i].second) return false;
@@ -421,7 +540,8 @@ namespace MWWorld
         data->mWorld = &world; data->mPhysics = &physics;
         data->mKeys = world.prepareOblivionDynamicReferenceKeys(drops.size());
         data->mEntries.reserve(drops.size());
-        std::vector<LiveCellRef<ESM4::Weapon>> references;
+        using Reference = std::variant<LiveCellRef<ESM4::Weapon>, LiveCellRef<ESM4::Armor>>;
+        std::vector<Reference> references;
         std::vector<std::vector<btTransform>> poses;
         std::vector<osg::Quat> rotations;
         references.reserve(drops.size()); poses.reserve(drops.size()); rotations.reserve(drops.size());
@@ -439,26 +559,55 @@ namespace MWWorld
                 || !actors.insert(actor).second || request.mAnimation.getPtr() != actor)
                 throw std::invalid_argument("weapon drop requires distinct admitted native NPCs and their animations");
             auto& inventory = actor.getClass().getInventoryStore(actor);
-            const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
-            if (item.isEmpty() || item.getType() != ESM::REC_WEAP || right == inventory.end() || *right != item)
-                throw std::invalid_argument("weapon drop requires the exact carried-right weapon");
+            const bool shield = !item.isEmpty() && item.getType() == ESM::REC_ARMO
+                && item.get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield;
+            const int slot = shield ? InventoryStore::Slot_CarriedLeft : InventoryStore::Slot_CarriedRight;
+            const auto equipped = inventory.getSlot(slot);
+            if (item.isEmpty() || (!shield && item.getType() != ESM::REC_WEAP)
+                || equipped == inventory.end() || *equipped != item)
+                throw std::invalid_argument("equipment drop requires the exact carried weapon or shield");
             const auto id = OblivionProfileServices::nativeItemId(store, item.getCellRef().getRefId());
-            const auto* weapon = store.get<ESM4::Weapon>().search(id);
-            const auto baseKey = store.get<ESM4::Weapon>().findFormKey(id);
+            const auto* weapon = shield ? nullptr : store.get<ESM4::Weapon>().search(id);
+            const auto* armor = shield ? store.get<ESM4::Armor>().search(id) : nullptr;
+            const auto baseKey = shield ? store.get<ESM4::Armor>().findFormKey(id)
+                : store.get<ESM4::Weapon>().findFormKey(id);
             const auto* npc = actor.get<ESM4::Npc>()->mBase;
             const auto* cell = store.get<ESM4::Cell>().search(actor.getCell()->getCell()->getId());
             const auto cellKey = store.get<ESM4::Cell>().findFormKey(actor.getCell()->getCell()->getId());
-            auto carried = request.mAnimation.captureCarriedWeaponDrop(item, store);
-            if (!weapon || !baseKey || !baseKey->isContent() || !npc || !cell || !cellKey
+            std::optional<MWRender::ESM4NpcAnimation::CarriedWeaponDrop> carried;
+            std::optional<MWRender::ESM4NpcAnimation::CarriedShieldPose> shieldPose;
+            if (shield)
+            {
+                shieldPose = request.mAnimation.captureCarriedShieldPose(item);
+                const auto placement = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+                if (shieldPose && placement)
+                {
+                    const auto anchor = MWRender::OblivionDroppedWeaponPose::capture(shieldPose->mDropAnchor,*placement);
+                    const auto file = MWBase::Environment::get().getResourceSystem()->getNifFileManager()->get(
+                        shieldPose->mAttachment.mModel);
+                    if (anchor && file->mPath == shieldPose->mAttachment.mModel
+                        && file->mHash == shieldPose->mAttachment.mSourceHash)
+                    {
+                        auto definition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+                            NifBullet::loadActorRagdollDefinition(*file));
+                        if (!definition->mBodies.empty())
+                            carried.emplace(MWRender::ESM4NpcAnimation::CarriedWeaponDrop{
+                                {shieldPose->mAttachment,std::move(definition)},*anchor,{}});
+                    }
+                }
+            }
+            else carried = request.mAnimation.captureCarriedWeaponDrop(item, store);
+            if ((!weapon && !armor) || (armor && !(armor->mArmorFlags & ESM4::Armor::TES4_Shield))
+                || !baseKey || !baseKey->isContent() || !npc || !cell || !cellKey
                 || !cellKey->isContent() || !carried || !carried->mBody.mDefinition)
-                throw std::invalid_argument("weapon drop cannot resolve its winning records or bound carried NIF");
-            auto removal = std::shared_ptr<InventoryStore::PreparedEquippedWeaponRemoval>(inventory.prepareEquippedWeaponRemoval());
+                throw std::invalid_argument("equipment drop cannot resolve its winning records or bound carried NIF");
+            auto removal = std::shared_ptr<InventoryStore::PreparedEquippedWeaponRemoval>(inventory.prepareEquippedWeaponRemoval(slot));
             if (!removal || !removal->isValid())
                 throw std::invalid_argument("weapon drop cannot prepare its exact source debit");
             auto notification = world.prepareOblivionEquipmentNotification([removal] { removal->notify(); });
             const CellRef& source = item.getCellRef();
             ESM4::Reference placed{};
-            placed.mFormKey = data->mKeys->keys()[i]; placed.mBaseObj = weapon->mId; placed.mBaseKey = *baseKey;
+            placed.mFormKey = data->mKeys->keys()[i]; placed.mBaseObj = armor ? armor->mId : weapon->mId; placed.mBaseKey = *baseKey;
             placed.mParent = cell->mId; placed.mParentKey = *cellKey;
             placed.mPos = carried->mAnchor.getDropPlacement().mPosition;
             placed.mScale = ESM4::droppedReferenceScale(source.getNativeItemScale());
@@ -472,24 +621,50 @@ namespace MWWorld
             if (placed.mFactionRank == -1) placed.mFactionRank.reset();
             if (placed.mOwner.isZeroOrUnset() && !cell->mOwner.isZeroOrUnset()
                 && !oblivionActorHasCellOwnershipClaim(world, actor, *actor.getCell())) placed.mOwner = npc->mId;
-            references.emplace_back(placed, weapon);
-            auto& reference = references.back();
+            if (armor) references.emplace_back(LiveCellRef<ESM4::Armor>(placed,armor));
+            else references.emplace_back(LiveCellRef<ESM4::Weapon>(placed,weapon));
+            CellRef& reference = std::visit([](auto& value) -> CellRef& { return value.mRef; },references.back());
             auto condition = request.mConditionAfterWear ? request.mConditionAfterWear : source.getNativeItemCondition();
             if (!condition && source.getCharge() >= 0)
                 condition = static_cast<float>(double(source.getCharge()) + source.getChargeIntRemainder());
-            if (condition) reference.mRef.setNativeItemCondition(*condition);
-            reference.mRef.setEnchantmentCharge(source.getEnchantmentCharge());
+            if (condition) reference.setNativeItemCondition(*condition);
+            reference.setEnchantmentCharge(source.getEnchantmentCharge());
+            ESM::FormId worldOwner;
+            const ESM4::Npc* worldNpcOwner = nullptr;
+            std::string worldModel, rawWorldModel;
+            if (armor)
+            {
+                const Ptr preview(std::get_if<LiveCellRef<ESM4::Armor>>(&references.back()),actor.getCell());
+                worldOwner = oblivionBipedReferenceOwner(world,preview);
+                worldNpcOwner = store.get<ESM4::Npc>().search(ESM::RefId(worldOwner));
+                const bool female = worldNpcOwner && (worldNpcOwner->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female);
+                rawWorldModel = ESM4::bipedModelForSex(armor->mModelMaleWorld,armor->mModelFemaleWorld,female).getOriginal();
+                worldModel = preview.getClass().getCorrectedModel(preview);
+                if (worldModel.empty()) throw std::invalid_argument("shield drop has no native world model");
+                const auto file = MWBase::Environment::get().getResourceSystem()->getNifFileManager()->get(
+                    VFS::Path::Normalized(worldModel));
+                carried->mReferenceDefinition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+                    NifBullet::loadWeaponReferenceRagdollDefinition(*file));
+                if (carried->mReferenceDefinition->mBodies.empty() || !carried->mReferenceDefinition->mReferenceRoot
+                    || carried->mReferenceDefinition->mSourceHash != file->mHash)
+                    throw std::invalid_argument("shield drop has no identified native world body");
+            }
+            else
+            {
+                worldModel = carried->mBody.mPose.mModel.value();
+                rawWorldModel = weapon->mModel.getOriginal();
+            }
             CellRef sourceAfter = source;
             if (request.mConditionAfterWear) sourceAfter.setNativeItemCondition(*request.mConditionAfterWear);
             CellRef actorAfter = actor.getCellRef();
-            if (!(weapon->mFlags & 0x400))
+            if (!((armor ? armor->mFlags : weapon->mFlags) & 0x400))
             {
                 auto relations = actorAfter.getNativeDropRelations();
                 if (!relations.mItems) relations.mItems.emplace();
                 relations.mItems->insert(relations.mItems->begin(), placed.mFormKey);
                 actorAfter.setNativeDropRelations(std::move(relations));
                 ESM4::DropRelations dropped; dropped.mDropper = actor.getCellRef().getFormKey();
-                reference.mRef.setNativeDropRelations(std::move(dropped));
+                reference.setNativeDropRelations(std::move(dropped));
             }
             rotations.push_back(Misc::Convert::makeOsgQuat(placed.mPos));
             const osg::Matrixf root = osg::Matrixf::rotate(rotations.back()) * osg::Matrixf::translate(placed.mPos.asVec3());
@@ -504,12 +679,23 @@ namespace MWWorld
             poses.push_back(NifBullet::ragdollBodyWorldPoses(scaled, bones));
             PreparedEquippedWeaponDrops::Data::Entry entry{
                 actor, item, actor.getCell(), &request.mAnimation, std::move(*carried), source, std::move(sourceAfter),
-                actor.getCellRef(), std::move(actorAfter), reference.mRef, request.mConditionAfterWear.has_value(), npc, weapon, cell,
+                actor.getCellRef(), std::move(actorAfter), reference, request.mConditionAfterWear.has_value(), npc, weapon, cell,
                 store.get<ESM4::Npc>().search(ESM::RefId(cell->mOwner)),
                 store.get<ESM4::Faction>().search(ESM::RefId(cell->mOwner)), global, placed.mGlobal, cell->mOwner, cell->mOwnershipRank,
-                {}, weapon->mModel.getOriginal(), ESM::RefId(npc->mId), ESM::RefId(weapon->mId), cell->mId,
-                source.getRefId(), actor.getRefData().isEnabled(), weapon->mFlags, weapon->mData.type, weapon->mData.health,
-                weapon->mEnchantment, weapon->mEnchantmentPoints, std::move(removal), std::move(notification)};
+                {}, std::move(rawWorldModel), ESM::RefId(npc->mId), ESM::RefId(placed.mBaseObj), cell->mId,
+                source.getRefId(), actor.getRefData().isEnabled(), armor ? armor->mFlags : weapon->mFlags,
+                armor ? armor->mArmorFlags : weapon->mData.type, armor ? armor->mData.health : weapon->mData.health,
+                armor ? armor->mEnchantment : weapon->mEnchantment,
+                armor ? armor->mEnchantmentPoints : weapon->mEnchantmentPoints, std::move(removal), std::move(notification)};
+            entry.mArmor = armor; entry.mShieldPose = std::move(shieldPose); entry.mWorldModel = std::move(worldModel);
+            entry.mWorldOwner = worldOwner; entry.mWorldNpcOwner = worldNpcOwner;
+            entry.mWorldFactionOwner = store.get<ESM4::Faction>().search(ESM::RefId(worldOwner));
+            entry.mWorldOwnerFlags = worldNpcOwner ? worldNpcOwner->mBaseConfig.tes4.flags : 0;
+            if (armor)
+            {
+                entry.mMaleWorldModel = armor->mModelMaleWorld.getOriginal();
+                entry.mFemaleWorldModel = armor->mModelFemaleWorld.getOriginal();
+            }
             for (const auto& faction : npc->mFactions) entry.mFactions.emplace_back(faction.faction, faction.rank);
             data->mEntries.push_back(std::move(entry));
         }
@@ -517,7 +703,10 @@ namespace MWWorld
         for (std::size_t i = 0; i < drops.size(); ++i)
         {
             const auto& e = data->mEntries[i];
-            admissions.push_back({*e.mCell, references[i], objects, physics, std::string(e.mCarried.mBody.mPose.mModel.value()),
+            const auto borrowed = std::visit([](const auto& value) -> WorldModel::LooseEquipmentReference {
+                return std::cref(value);
+            },references[i]);
+            admissions.push_back({*e.mCell, borrowed, objects, physics, e.mWorldModel,
                 rotations[i], MWRender::Mask_Object, *e.mCarried.mReferenceDefinition,
                 NifBullet::RagdollNativeLengthScale, poses[i],
                 MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,

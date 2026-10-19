@@ -102,6 +102,7 @@
 #include <limits>
 #include <stdexcept>
 #include <sstream>
+#include <iomanip>
 
 #include <components/esm/records.hpp>
 #include <components/esm3/esmreader.hpp>
@@ -21998,28 +21999,58 @@ namespace
         MWPhysics::PhysicsSystem* mPhysics;
         std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
         explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1,
-            bool rotatedRoot = false, bool scabbard = false)
+            bool rotatedRoot = false, bool scabbard = false, bool shield = false)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
             const auto draft = addNativeNpc(*this, 0x900);
             mActor = draft.getCell()->moveTo(draft, mResident.getCell());
             auto npc = *mActor.get<ESM4::Npc>()->mBase;
-            npc.mModel = "factory-skeleton.osgt";
+            const char* skeletonModel=shield ? "factory-shield-skeleton.osgt" : "factory-skeleton.osgt";
+            npc.mModel = skeletonModel;
             store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
             auto weapon = *mResident.get<ESM4::Weapon>()->mBase;
             weapon.mModel = "factory-weapon.nif";
+            if (shield) weapon.mData.type=0;
             store.getWritable<ESM4::Weapon>().insertStatic(weapon, ESM::FormKey::content("headless.esm",0x940));
             MWClass::Weapon::registerSelf();
             ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(weapon.mId);
-            shared.mData.mType = ESM::Weapon::MarksmanBow; shared.mData.mHealth = 100;
+            shared.mData.mType = shield ? ESM::Weapon::LongBladeOneHand : ESM::Weapon::MarksmanBow;
+            shared.mData.mHealth = 100;
             shared.mModel = "factory-weapon.nif"; store.insertStatic(shared);
+            if (shield)
+            {
+                ESM4::Armor armor{}; armor.mId={0x941,0}; armor.mArmorFlags=ESM4::Armor::TES4_Shield;
+                armor.mData.health=100; armor.mEnchantment=weapon.mEnchantment;
+                armor.mEnchantmentPoints=weapon.mEnchantmentPoints;
+                armor.mModelMale="factory-carried-shield.nif";
+                armor.mModelMaleWorld="factory-world-shield.nif";
+                armor.mModelFemaleWorld="factory-female-world-shield.nif";
+                store.getWritable<ESM4::Armor>().insertStatic(armor,ESM::FormKey::content("headless.esm",0x941));
+                ESM::Armor projection; projection.blank(); projection.mId=ESM::RefId(armor.mId);
+                projection.mData.mType=ESM::Armor::Shield; projection.mData.mHealth=100;
+                projection.mModel="factory-world-shield.nif"; projection.mEnchant=ESM::RefId(armor.mEnchantment);
+                store.insertStatic(projection); MWClass::Armor::registerSelf();
+                MWClass::ESM4Takeable<ESM4::Armor>::registerSelf();
+                auto owner=npc; owner.mId={0x980,0}; owner.mFormKey=ESM::FormKey::content("headless.esm",0x980);
+                owner.mEditorId="FactoryWorldModelOwner";
+                owner.mBaseConfig.tes4.flags |= ESM4::Npc::TES4_Female;
+                store.getWritable<ESM4::Npc>().insertStatic(owner,owner.mFormKey);
+            }
             std::filesystem::create_directories(mDirectory / "meshes");
             osg::ref_ptr<osg::Group> skeleton = new osg::Group;
             osg::ref_ptr<osgAnimation::Bone> bone = new osgAnimation::Bone;
             bone->setName("weapon"); bone->setDataVariance(osg::Object::DYNAMIC);
             bone->setMatrix(osg::Matrixf::translate(3,-4,5)); skeleton->addChild(bone);
-            if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes/factory-skeleton.osgt").string()))
+            if (shield)
+                for (const auto& [name,translation] : std::array<std::pair<const char*,osg::Vec3f>,2>{{
+                    {"Bip01 L ForearmTwist",{-6,7,8}}, {"Custom Socket",{10,11,12}}}})
+                {
+                    osg::ref_ptr<osgAnimation::Bone> anchor=new osgAnimation::Bone;
+                    anchor->setName(name); anchor->setDataVariance(osg::Object::DYNAMIC);
+                    anchor->setMatrix(osg::Matrix::translate(translation)); skeleton->addChild(anchor);
+                }
+            if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes" / skeletonModel).string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
                 const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags, rotatedRoot, scabbard);
@@ -22027,6 +22058,17 @@ namespace
                 file.write(bytes.data(), bytes.size());
                 if (!file) throw std::runtime_error("cannot write owned factory weapon NIF");
             }
+            if (shield)
+                for (unsigned role=0;role<3;++role)
+                {
+                    const std::array<const char*,3> names{"factory-carried-shield.nif",
+                        "factory-world-shield.nif","factory-female-world-shield.nif"};
+                    const auto bytes=nativeCarriedWeaponNif(.5f+.25f*role,false,1,role!=0,false,"Shield",
+                        role==0 ? "Custom Socket" : "");
+                    std::ofstream file(mDirectory/"meshes"/names[role],std::ios::binary);
+                    file.write(bytes.data(),bytes.size());
+                    if (!file) throw std::runtime_error("cannot write owned factory shield NIF");
+                }
             mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(mDirectory)); mVfs.buildIndex();
             auto* scene = mResources.getSceneManager();
             scene->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
@@ -22039,9 +22081,16 @@ namespace
             item.mBase = ESM::FormKey::content("headless.esm",0x940); item.mCount = 1;
             item.mCondition = 50; item.mCharge = 7.25f; item.mExtraScale = 2.f;
             item.mEquippedSlots = ESM4::InventorySlotWeapon;
-            installEquipmentInventory(*this,mActor,{item});
+            if (shield)
+            {
+                auto left=item; left.mBase=ESM::FormKey::content("headless.esm",0x941);
+                left.mEquippedSlots=ESM4::Armor::TES4_Shield;
+                installEquipmentInventory(*this,mActor,{item,left});
+            }
+            else installEquipmentInventory(*this,mActor,{item});
             auto& inventory = mActor.getClass().getInventoryStore(mActor);
-            mItem = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            mItem = *inventory.getSlot(shield ? MWWorld::InventoryStore::Slot_CarriedLeft
+                : MWWorld::InventoryStore::Slot_CarriedRight);
             auto position = mActor.getRefData().getPosition();
             position.pos[0]=100; position.pos[1]=20; position.pos[2]=30;
             mActor.getRefData().setPosition(position);
@@ -24616,10 +24665,12 @@ TEST(OblivionWorldTest, NativeLooseWeaponSnapshotsRestoreOwnedModelBodyAndScabba
 
 TEST(OblivionWorldTest, NativeLooseWeaponLoadRollsBackRejectedOrReentrantScenePublication)
 {
-    for (int outcome = 0; outcome < 5; ++outcome)
+    for (bool shield : {false,true})
+      for (int outcome = 0; outcome < 5; ++outcome)
     {
         SCOPED_TRACE(outcome);
-        NativeWeaponFactoryFixture fixture(false, 1, false, true);
+        SCOPED_TRACE(shield);
+        NativeWeaponFactoryFixture fixture(false, 1, false, true, shield);
         auto& world = fixture.mWorld;
         auto plan = fixture.prepare(); const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
         const auto key = reference.getCellRef().getFormKey();
@@ -24931,11 +24982,14 @@ TEST(OblivionWorldTest, BlockingRetainedShieldBreakProjectsRemovalBeforeArmorSel
             };
             const auto action = world.beginOblivionPhysicalAction(attacker);
             const auto before = snapshot().serializeBinary();
-            // Ordinary NPC shield drops require future ARMO world admission.
-            // They must remain rejected without publishing wear or resources.
+            // Read-only resolution can describe an ordinary NPC drop. Actual
+            // publication still requires the complete render/body factory.
             shield.mFlags = 0;
             store.getWritable<ESM4::Armor>().insertStatic(shield, shieldKey);
-            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false));
+            const auto dropped = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
+            ASSERT_TRUE(dropped); ASSERT_EQ(dropped->mVictimConditionChanges.size(),1u);
+            EXPECT_EQ(dropped->mVictimConditionChanges[0].mBreakDisposition,
+                MWMechanics::OblivionWeaponBreakDisposition::Drop);
             EXPECT_EQ(snapshot().serializeBinary(), before);
             shield.mFlags = ESM4::Rec_Persistent;
             store.getWritable<ESM4::Armor>().insertStatic(shield, shieldKey);
@@ -25357,4 +25411,272 @@ TEST(OblivionWorldTest, NativeCarriedShieldBindsExactLeftInstanceAndIndependentF
     }
     EXPECT_TRUE(retained->mAttachment.mBindingIdentity.expired());
     EXPECT_FALSE(retained->mAttachment.mScene.matchesCurrentScene());
+}
+
+TEST(OblivionWorldTest, NativeBipedWorldModelUsesResolvedOwnerAndSeparateRolesWithoutActorInitialization)
+{
+    NativeWorldFixture fixture;
+    const auto resident = installNativeLooseItemCapture(fixture);
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    const auto male = addNativeNpc(fixture,0xa20,100,0xa10);
+    const auto female = addNativeNpc(fixture,0xa21,100,0xa11);
+    const ESM::FormId maleId{0xa10,0}, femaleId{0xa11,0};
+    auto femaleBase = *female.get<ESM4::Npc>()->mBase;
+    femaleBase.mBaseConfig.tes4.flags |= ESM4::Npc::TES4_Female;
+    store.getWritable<ESM4::Npc>().insertStatic(femaleBase,femaleBase.mFormKey);
+    ESM4::Faction faction{}; faction.mId = {0xa12,0};
+    store.getWritable<ESM4::Faction>().insertStatic(faction,ESM::FormKey::content("headless.esm",0xa12));
+    const auto key = ESM::FormKey::content("headless.esm",0xa30);
+    ESM4::Armor armor{}; armor.mId = {0xa30,0}; armor.mArmorFlags = ESM4::Armor::TES4_Shield;
+    armor.mModel = "wrong-compatibility.nif";
+    armor.mModelMale = "carried-male.nif"; armor.mModelFemale = "carried-female.nif";
+    armor.mModelMaleWorld = "world-male.nif"; armor.mModelFemaleWorld = "world-female.nif";
+    store.getWritable<ESM4::Armor>().insertStatic(armor,key);
+    MWClass::ESM4Takeable<ESM4::Armor>::registerSelf();
+    auto placed = *resident.getCellRef().getNativeReference();
+    placed.mId = {0xa40,0}; placed.mFormKey = ESM::FormKey::content("headless.esm",0xa40);
+    placed.mBaseObj = armor.mId; placed.mBaseKey = key;
+    MWWorld::LiveCellRef<ESM4::Armor> live(placed,store.get<ESM4::Armor>().search(armor.mId));
+    MWWorld::Ptr item(resident.getCell()->insert(&live),resident.getCell());
+    const auto model = [&] { return item.getClass().getModel(item).value(); };
+    EXPECT_EQ(model(),"world-male.nif");
+    item.getCellRef().setOwner(ESM::RefId(femaleId));
+    ESM4::DropRelations relations; relations.mDropper = male.getCellRef().getFormKey();
+    item.getCellRef().setNativeDropRelations(relations);
+    EXPECT_EQ(model(),"world-female.nif"); // Dropper sex is not the reference owner sex.
+    item.getCellRef().setOwner(ESM::RefId(maleId)); EXPECT_EQ(model(),"world-male.nif");
+    auto cell = *store.get<ESM4::Cell>().search(resident.getCell()->getCell()->getId());
+    cell.mOwner = femaleId; store.getWritable<ESM4::Cell>().insertStatic(cell,cell.mFormKey);
+    item.getCellRef().setOwner({}); EXPECT_EQ(model(),"world-female.nif");
+    item.getCellRef().setOwner(ESM::RefId(faction.mId)); EXPECT_EQ(model(),"world-male.nif");
+
+    // Teleport inherits only the destination's direct owner, never its cell owner.
+    ESM4::Cell destinationCell = cell; destinationCell.mId = ESM::RefId(ESM::FormId{0xa02,0});
+    destinationCell.mFormKey = ESM::FormKey::content("headless.esm",0xa02); destinationCell.mOwner = maleId;
+    destinationCell.mEditorId = "NativeOwnerDestinationCell";
+    store.getWritable<ESM4::Cell>().insertStatic(destinationCell,destinationCell.mFormKey);
+    auto destination = *resident.getCellRef().getNativeReference();
+    destination.mId = {0xa41,0}; destination.mFormKey = ESM::FormKey::content("headless.esm",0xa41);
+    destination.mParent = destinationCell.mId; destination.mParentKey = destinationCell.mFormKey;
+    destination.mOwner = {};
+    store.getWritable<ESM4::Reference>().insertStatic(destination,destination.mFormKey);
+    placed.mId = {0xa42,0}; placed.mFormKey = ESM::FormKey::content("headless.esm",0xa42);
+    placed.mDoor.destDoor = destination.mId;
+    MWWorld::LiveCellRef<ESM4::Armor> teleport(placed,store.get<ESM4::Armor>().search(armor.mId));
+    MWWorld::Ptr inherited(resident.getCell()->insert(&teleport),resident.getCell());
+    EXPECT_EQ(inherited.getClass().getModel(inherited).value(),"world-female.nif");
+    destination.mOwner = maleId;
+    store.getWritable<ESM4::Reference>().insertStatic(destination,destination.mFormKey);
+    EXPECT_EQ(inherited.getClass().getModel(inherited).value(),"world-male.nif");
+    MWWorld::LiveCellRef<ESM4::Weapon> residentDestination(destination,resident.get<ESM4::Weapon>()->mBase);
+    auto& targetCell = world.getWorldModel().getCell(destinationCell.mId);
+    MWWorld::Ptr loaded(targetCell.insert(&residentDestination),&targetCell);
+    world.getWorldModel().registerPtr(loaded);
+    loaded.getCellRef().setOwner(ESM::RefId(femaleId));
+    EXPECT_EQ(inherited.getClass().getModel(inherited).value(),"world-female.nif");
+
+    // Native female-to-male-only fallback and the existing marker filter.
+    item.getCellRef().setOwner(ESM::RefId(femaleId));
+    armor.mModelFemaleWorld.clear(); store.getWritable<ESM4::Armor>().insertStatic(armor,key);
+    EXPECT_EQ(model(),"world-male.nif");
+    armor.mModelMaleWorld.clear(); armor.mModelFemaleWorld = "world-female.nif";
+    store.getWritable<ESM4::Armor>().insertStatic(armor,key);
+    item.getCellRef().setOwner(ESM::RefId(maleId)); EXPECT_TRUE(model().empty());
+    item.getCellRef().setOwner(ESM::RefId(femaleId)); EXPECT_EQ(model(),"world-female.nif");
+    armor.mModelMaleWorld = "marker/owned.nif";
+    store.getWritable<ESM4::Armor>().insertStatic(armor,key);
+    item.getCellRef().setOwner(ESM::RefId(maleId)); EXPECT_TRUE(model().empty());
+    EXPECT_EQ(male.getRefData().getCustomData(),nullptr);
+    EXPECT_EQ(female.getRefData().getCustomData(),nullptr);
+}
+
+TEST(OblivionWorldTest, NativeShieldFactoryUsesForearmAndOwnerWorldBodyAndPreservesRightWeapon)
+{
+    NativeWeaponFactoryFixture fixture(false,1,false,false,true);
+    auto& world=fixture.mWorld;
+    auto& inventory=fixture.mActor.getClass().getInventoryStore(fixture.mActor);
+    const auto right=*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    fixture.mItem.getCellRef().setOwner(ESM::RefId(ESM::FormId{0x980,0}));
+    const auto carried=fixture.mAnimation->captureCarriedShieldPose(fixture.mItem); ASSERT_TRUE(carried);
+    EXPECT_EQ(carried->mAttachment.mScene.getWorldMatrix().getTrans(),osg::Vec3(111,33,45));
+    const auto before=world.captureOblivionRuntimeState().mNextDynamicSerial;
+    auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+    ASSERT_EQ(plan->references().size(),1u);
+    const auto reference=plan->references().front();
+    EXPECT_EQ(reference.getType(),ESM::REC_ARMO4);
+    EXPECT_EQ(reference.getClass().getCorrectedModel(reference),VFS::Path::Normalized("meshes/factory-female-world-shield.nif"));
+    EXPECT_EQ(fixture.mItem.getCellRef().getCount(),1);
+    EXPECT_EQ(plan->commit(),reference);
+    EXPECT_EQ(reference.getCellRef().getPosition().asVec3(),osg::Vec3f(94,27,38));
+    EXPECT_EQ(reference.getCellRef().getNativeItemCondition(),0.f);
+    EXPECT_EQ(reference.getCellRef().getEnchantmentCharge(),7.25f);
+    EXPECT_EQ(reference.getCellRef().getScale(),2.f);
+    EXPECT_EQ(reference.getCellRef().getNativeDropRelations().mDropper,fixture.mActor.getCellRef().getFormKey());
+    EXPECT_EQ(fixture.mItem.getCellRef().getCount(),0);
+    EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft),inventory.end());
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),right);
+    EXPECT_EQ(right.getCellRef().getNativeItemCondition(),50.f); EXPECT_EQ(right.getCellRef().getCount(),1);
+    const auto state=world.captureOblivionRuntimeState();
+    const auto key=reference.getCellRef().getFormKey();
+    ASSERT_TRUE(state.mNativeLooseWeapons.contains(key));
+    const auto& physical=state.mNativeLooseWeapons.at(key);
+    EXPECT_EQ(physical.mBase,ESM::FormKey::content("headless.esm",0x941));
+    EXPECT_EQ(physical.mModel,"meshes/factory-female-world-shield.nif");
+    const auto file=fixture.mResources.getNifFileManager()->get(VFS::Path::Normalized(physical.mModel));
+    std::ostringstream expectedHash; expectedHash << std::hex << std::setfill('0');
+    for (unsigned char byte : file->mHash) expectedHash << std::setw(2) << unsigned(byte);
+    EXPECT_EQ(physical.mAssetHash,expectedHash.str()); EXPECT_NE(file->mHash,carried->mAttachment.mSourceHash);
+    EXPECT_EQ(state.mNextDynamicSerial,before+1);
+    EXPECT_TRUE(plan->commit().isEmpty());
+    EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+}
+
+TEST(OblivionWorldTest, NativeShieldFactoryRejectsWorldRoleOwnerSourceAndSceneChangesWithoutPublication)
+{
+    for (unsigned outcome=0;outcome<6;++outcome)
+    {
+        SCOPED_TRACE(outcome);
+        NativeWeaponFactoryFixture fixture(false,1,false,false,true);
+        fixture.mItem.getCellRef().setOwner(ESM::RefId(ESM::FormId{0x980,0}));
+        const auto before=fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial;
+        auto plan=fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        fixture.mRoot->mAfterInsert=[&] {
+            auto& store=fixture.mWorld.getStore();
+            if (outcome==0) fixture.mItem.getCellRef().setNativeItemScale(1.f);
+            if (outcome==1) fixture.mAnimation->refreshEquipment();
+            if (outcome==2)
+            {
+                auto owner=*store.get<ESM4::Npc>().search(ESM::FormId{0x980,0});
+                owner.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_Female;
+                store.getWritable<ESM4::Npc>().insertStatic(owner,owner.mFormKey);
+            }
+            if (outcome==3)
+            {
+                auto armor=*store.get<ESM4::Armor>().search(ESM::FormId{0x941,0});
+                armor.mModelFemaleWorld="factory-world-shield.nif";
+                store.getWritable<ESM4::Armor>().insertStatic(armor,ESM::FormKey::content("headless.esm",0x941));
+            }
+            if (outcome==4) plan->references()[0].getCellRef().setNativeItemCondition(1.f);
+        };
+        if (outcome==5) fixture.mRoot->mFailure=CompoundWeaponSceneRoot::Failure::InsertThrow;
+        EXPECT_ANY_THROW(plan->commit());
+        EXPECT_EQ(fixture.mItem.getCellRef().getCount(),1);
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(),50.f);
+        EXPECT_EQ(fixture.mWorld.captureOblivionRuntimeState().mNextDynamicSerial,before);
+        EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+        EXPECT_EQ(fixture.mRoot->getNumChildren(),0u);
+        EXPECT_TRUE(fixture.mActor.getCellRef().getNativeDropRelations().empty());
+        EXPECT_TRUE(fixture.mWorld.dispatchOblivionEquipmentNotifications());
+    }
+}
+
+TEST(OblivionWorldTest, NativeLooseShieldSnapshotReadmitsOwnerWorldBodyAndPackedVelocityWithoutReplay)
+{
+    NativeWeaponFactoryFixture fixture(false,1,false,false,true);
+    auto& world=fixture.mWorld;
+    fixture.mItem.getCellRef().setOwner(ESM::RefId(ESM::FormId{0x980,0}));
+    auto plan=fixture.prepare(); const auto reference=plan->commit(); ASSERT_FALSE(reference.isEmpty());
+    const auto key=reference.getCellRef().getFormKey();
+    auto velocities=fixture.mPhysics->captureLooseObjectPackedVelocities(reference);
+    velocities.front().mVelocities.mLinear={2,-1,0,-0.f};
+    velocities.front().mVelocities.mAngular={0,0,.25f,.125f};
+    fixture.mPhysics->restoreLooseObject(reference,fixture.mPhysics->captureLooseObject(reference),velocities);
+    osg::ref_ptr<osg::Stats> stats=new osg::Stats("native shield readmission");
+    fixture.mPhysics->stepSimulation(.05f,false,osg::Timer::instance()->tick(),1,*stats);
+    MWWorld::synchronizeLooseWeaponPoses(world,*fixture.mPhysics);
+    world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
+    const auto saved=world.captureOblivionRuntimeState();
+    ASSERT_TRUE(saved.mNativeLooseWeapons.contains(key));
+    const auto& physical=saved.mNativeLooseWeapons.at(key);
+    EXPECT_EQ(physical.mModel,"meshes/factory-female-world-shield.nif");
+    ASSERT_TRUE(physical.mBody.mNativePackedVelocity); ASSERT_TRUE(physical.mRootLocal);
+    const auto oldBinding=fixture.mPhysics->captureLooseObjectSceneBinding(reference); ASSERT_TRUE(oldBinding);
+    readNativeSnapshot(fixture,ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    EXPECT_THROW(world.applyOblivionRuntimeState(),std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(),saved.serializeBinary());
+    detachNativeLooseWeaponForReadmission(fixture,reference);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto loaded=world.getWorldModel().getDynamicNativePtr(key); ASSERT_FALSE(loaded.isEmpty());
+    ASSERT_EQ(loaded.getType(),ESM::REC_ARMO4);
+    EXPECT_EQ(loaded.getClass().getCorrectedModel(loaded),VFS::Path::Normalized(physical.mModel));
+    ASSERT_TRUE(world.restoreOblivionLooseWeaponScene(loaded,*fixture.mObjects,*fixture.mPhysics,
+        loaded.getClass().getCorrectedModel(loaded),Misc::Convert::makeOsgQuat(loaded.getRefData().getPosition())));
+    EXPECT_FALSE(oldBinding->isValidFor(loaded,true));
+    EXPECT_TRUE(fixture.mPhysics->hasLooseObject(loaded)); EXPECT_EQ(fixture.mPhysics->getObject(loaded),nullptr);
+    const auto after=world.captureOblivionRuntimeState();
+    EXPECT_EQ(after.mNativeLooseWeapons,saved.mNativeLooseWeapons);
+    EXPECT_EQ(after.mPhysicalActions,saved.mPhysicalActions); EXPECT_EQ(after.mCombatRngState,saved.mCombatRngState);
+    EXPECT_EQ(after.mNextDynamicSerial,saved.mNextDynamicSerial);
+    EXPECT_EQ(loaded.getCellRef().getNativeItemCondition(),0.f);
+    EXPECT_EQ(loaded.getCellRef().getEnchantmentCharge(),7.25f);
+    EXPECT_EQ(loaded.getCellRef().getOwner(),ESM::RefId(ESM::FormId{0x980,0}));
+    fixture.mPhysics->stepSimulation(.05f,false,osg::Timer::instance()->tick(),2,*stats);
+    MWWorld::synchronizeLooseWeaponPoses(world,*fixture.mPhysics);
+    EXPECT_NE(world.captureOblivionRuntimeState().mNativeLooseWeapons.at(key).mBody.mPosition,
+        physical.mBody.mPosition);
+}
+
+TEST(OblivionWorldTest, BlockingNpcShieldBreakPublishesOneContactDropAndPostureOrRollsBackEverything)
+{
+    for (bool reject : {false,true})
+    {
+        SCOPED_TRACE(reject);
+        NativeWeaponFactoryFixture fixture(false,1,false,false,true);
+        auto& world=fixture.mWorld; auto& store=world.getStore();
+        const auto attacker=prepareNativeDropContactActors(fixture), victim=fixture.mActor;
+        const auto placed=*attacker.getCellRef().getNativeActor();
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(placed,placed.mFormKey);
+        auto position=victim.getRefData().getPosition(); position.pos[1]+=10;
+        attacker.getRefData().setPosition(position);
+        configureNativeDefensiveBreakRules(fixture,victim);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim,27,ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script,15));
+        fixture.mItem.getCellRef().setNativeItemCondition(.0001f);
+        auto& service=*world.getOblivionCombatService();
+        const auto key=victim.getCellRef().getFormKey(); ASSERT_TRUE(service.beginBlocking(key));
+        const auto action=world.beginOblivionPhysicalAction(attacker);
+        const auto before=world.captureOblivionRuntimeState();
+        const float fatigue=service.getNonPlayerValue(victim,10), attackingFatigue=service.getNonPlayerValue(attacker,10);
+        const auto resolved=MWMechanics::resolveOblivionOrdinaryUnarmedContact(world,attacker,victim,0,false);
+        ASSERT_TRUE(resolved); ASSERT_TRUE(resolved->mBlockAccepted);
+        // Same independent blocking profile as retained shields: fraction .5,
+        // health7.5, fatigue3.75 and novice Block debit20.5.
+        EXPECT_EQ(resolved->mHealth,7.5f); EXPECT_EQ(resolved->mFatigue,3.75f);
+        EXPECT_EQ(resolved->mBlockFatigueDebit,20.5f); EXPECT_FALSE(resolved->mBlockSounds);
+        ASSERT_EQ(resolved->mVictimConditionChanges.size(),1u);
+        EXPECT_EQ(resolved->mVictimConditionChanges[0].mBreakDisposition,
+            MWMechanics::OblivionWeaponBreakDisposition::Drop);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(),before.serializeBinary());
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-7,-resolved->mHealth,-resolved->mFatigue,
+            -resolved->mBlockFatigueDebit,resolved->mVictimConditionChanges,resolved->mRandomTransition};
+        const std::array<MWWorld::EquippedWeaponDrop,1> drops{{{victim,fixture.mItem,*fixture.mAnimation,0.f}}};
+        auto plan=world.prepareOblivionPhysicalContactWithWeaponDrops(action,attacker,victim,deltas,
+            *fixture.mObjects,*fixture.mPhysics,drops); ASSERT_TRUE(plan); ASSERT_TRUE(plan->isValid());
+        if (reject)
+        {
+            fixture.mRoot->mFailure=CompoundWeaponSceneRoot::Failure::InsertThrow;
+            EXPECT_THROW(plan->commit(),std::exception);
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(),before.serializeBinary());
+            EXPECT_EQ(service.getProcessAction(key),6); EXPECT_EQ(fixture.mItem.getCellRef().getCount(),1);
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty()); EXPECT_EQ(fixture.mRoot->getNumChildren(),0u);
+        }
+        else
+        {
+            ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+            EXPECT_EQ(service.getProcessAction(key),-1); EXPECT_EQ(service.getNonPlayerValue(victim,8),92.5f);
+            EXPECT_EQ(service.getNonPlayerValue(victim,10),fatigue-20.5f-3.75f);
+            EXPECT_EQ(service.getNonPlayerValue(attacker,10),attackingFatigue-7);
+            const auto dropped=world.getWorldModel().getDynamicNativePtr(
+                ESM::FormKey::dynamic("native-reference",before.mNextDynamicSerial)); ASSERT_FALSE(dropped.isEmpty());
+            EXPECT_EQ(dropped.getType(),ESM::REC_ARMO4); EXPECT_TRUE(fixture.mPhysics->hasLooseObject(dropped));
+            EXPECT_EQ(fixture.mItem.getCellRef().getCount(),0); EXPECT_TRUE(service.isActionConsumed(action));
+            const auto& inventory=victim.getClass().getInventoryStore(victim);
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft),inventory.end());
+            EXPECT_NE(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight),inventory.end());
+            const auto after=world.captureOblivionRuntimeState(); EXPECT_EQ(after.mNextDynamicSerial,before.mNextDynamicSerial+1);
+            EXPECT_EQ(after.mNativeLooseWeapons.size(),1u);
+            ASSERT_TRUE(world.dispatchOblivionEquipmentNotifications());
+            EXPECT_EQ(service.getProcessAction(key),-1);
+        }
+    }
 }

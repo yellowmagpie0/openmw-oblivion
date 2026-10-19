@@ -840,8 +840,6 @@ namespace MWMechanics
                     {
                         change.mBreakDisposition = shield ? shieldBreakDisposition(world, service, victim, *shield)
                             : weaponBreakDisposition(world, service, victim, *weapon);
-                        if (shield && change.mBreakDisposition == OblivionWeaponBreakDisposition::Drop)
-                            return std::nullopt; // ARMO scene/body admission must precede NPC shield drops.
                         if (change.mBreakDisposition == OblivionWeaponBreakDisposition::None)
                             return std::nullopt; // Undrawn broken-blocking-item state is not admitted here.
                         // Original5FF914 re-reads the carried weapon after

@@ -17,6 +17,11 @@
 
 #include "classmodel.hpp"
 
+#include <optional>
+#include <type_traits>
+
+namespace ESM4 { struct Armor; struct Clothing; }
+
 namespace MWClass
 {
 
@@ -27,6 +32,9 @@ namespace MWClass
         void insertObjectPhysics(const MWWorld::Ptr& ptr, const std::string& model, const osg::Quat& rotation,
             MWPhysics::PhysicsSystem& physics);
         MWGui::ToolTipInfo getToolTipInfo(std::string_view name, int count);
+
+        std::optional<VFS::Path::NormalizedView> nativeBipedWorldModel(const MWWorld::ConstPtr& ptr,
+            const ESM::Path& male, const ESM::Path& female);
 
         // We don't handle ESM4 player stats yet, so for resolving levelled object we use an arbitrary number.
         constexpr int sDefaultLevel = 5;
@@ -108,7 +116,13 @@ namespace MWClass
 
         VFS::Path::NormalizedView getModel(const MWWorld::ConstPtr& ptr) const override
         {
-            const VFS::Path::NormalizedView model = getClassModel<Record>(ptr);
+            VFS::Path::NormalizedView model = getClassModel<Record>(ptr);
+            if constexpr (std::is_same_v<Record, ESM4::Armor> || std::is_same_v<Record, ESM4::Clothing>)
+            {
+                const auto* base = ptr.get<Record>()->mBase;
+                if (auto selected = ESM4Impl::nativeBipedWorldModel(ptr, base->mModelMaleWorld, base->mModelFemaleWorld))
+                    model = *selected;
+            }
 
             // TODO: There should be a better way to hide markers
             if (ESM4Impl::isMarkerModel(model.value()) || ESM4Impl::isLodModel(model.value()))

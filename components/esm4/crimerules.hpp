@@ -5,6 +5,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstddef>
 #include <span>
 #include <optional>
 
@@ -20,6 +21,10 @@ namespace ESM4
     ActorFactionCrimePolicy actorFactionCrimePolicy(std::span<const std::uint8_t> factionFlags);
 
     enum class OwnershipReferenceKind { Other, Actor, Furniture, Door, Activator };
+    // Return the first present owner layer under the same native inheritance
+    // rule used by resolveOwnership; identity adapters can retain native IDs.
+    std::optional<std::size_t> ownershipOwnerLayer(
+        OwnershipReferenceKind kind, const std::array<bool, 3>& present);
     struct OwnershipLayer
     {
         ESM::FormKey mOwner;

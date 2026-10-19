@@ -39,14 +39,14 @@ namespace MWWorld
         Ptr commit(const WorldModel::LooseWeaponPublicationHooks& hooks = {});
     };
 
-    // Only actual equipped native ACHR/NPC WEAP instances with a currently bound
-    // carried NIF can be prepared. Explicit render context permits owned-asset
+    // Actual equipped native ACHR/NPC weapons and carried-left shields require
+    // a currently bound carried NIF and an identified native world body. Explicit render context permits owned-asset
     // integration tests; physics must be the supplied World's current owner.
     std::unique_ptr<PreparedEquippedWeaponDrops> prepareEquippedWeaponDrops(
         World& world, MWRender::Objects& objects, MWPhysics::PhysicsSystem& physics,
         std::span<const EquippedWeaponDrop> drops);
 
-    // After physics workers finish, publish loose native weapon root poses to
+    // After physics workers finish, publish loose native equipment root poses to
     // their reference and placement node. Cell crossings use World's normal
     // ownership migration without feeding the pose back into the rigid body.
     void synchronizeLooseWeaponPoses(World& world, MWPhysics::PhysicsSystem& physics);
