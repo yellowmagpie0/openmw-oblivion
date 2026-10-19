@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "source_parent_commit": "6f161a2631a9ef9407b9c14cd3e1e69f9845ae26",
+  "scope": "Independent original instruction evidence for shield break/drop anchor selection. No production change or original-game runtime acceptance.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "probes": {
+    "cache": {
+      "report": {
+        "passed": true,
+        "cases": 96,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "dc71510fb06885257cd9db8856ff3bb03215b2040f657abb9094c5e4662cf82f",
+        "actual_paths": [
+          "Full6541A0 cache refresh, all animation/raw-root and Player/NPC paths",
+          "Actual64B1B0 shield getter and477EC0 index getter"
+        ],
+        "boundaries": [
+          "Player animation query65D750 supplied.",
+          "Controller name lookup and6F94A0 resolver return supplied unique pointers or null; requested original string bytes captured.",
+          "Weapon visibility helper480770 captured.",
+          "Fixture hierarchy/controller and process weapon-entry data; no live original-game scene, drop, render or physics."
+        ],
+        "observation": "Shield cache source is exact Bip01 L ForearmTwist, requested against raw root even when animation data is present. NPC stores process+104; Player alternate stores B3BA8C. Actual shield getter reads cached+104 without an index and index7 when present. Anchor is independent of weapon type and is not model-root Shield or Weapon."
+      },
+      "editable_probe": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nloader=Path('build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/wear-probe.py').read_text().split('actor,vt,process,')[0]\nn={'__file__':str(out/'cache-probe.py')};exec(loader,n);u=n['u'];w=n['w'];ri=n['ri'];ret=n['ret'];m=n['m']\nprocess,entry,base,animation,rawroot,playeranim,controller,vt,index,stack,end=range(0x2001000,0x200c000,0x1000)\n# Names remain original immutable pointers and literal bytes.\ndef cstring(a):\n value=bytearray()\n while a:\n  b=bytes(u.mem_read(a,1));a+=1\n  if b==b'\\0':break\n  value.extend(b)\n return value.decode('ascii')\nassert cstring(ri(0xb0656c))=='Bip01 L ForearmTwist'\nrequests=[];maintenance=[]\ndef result(root,name):\n return 0 if missing or not root else 0x200d000+((root>>12)&15)*64+names.index(name)*4\nnames=[cstring(ri(0xb06550+i*4)) for i in range(9)]\nassert names[7]=='Bip01 L ForearmTwist'\ndef hook(uc,ip,size,_):\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x65d750:\n  assert ri(sp+4)==1;ret(playeranim if is_player else 0,4)\n elif ip in (0x6f94a0,0x2000800):\n  root=ri(sp+4) if ip==0x6f94a0 else uc.reg_read(UC_X86_REG_ECX)\n  name=cstring(ri(sp+(8 if ip==0x6f94a0 else 4)))\n  requests.append(dict(root=root,name=name,path='named-resolver' if ip==0x6f94a0 else 'controller-virtual'))\n  ret(result(root,name),0 if ip==0x6f94a0 else 4)\n elif ip==0x480770:maintenance.append(ri(sp+4));ret()\nu.hook_add(UC_HOOK_CODE,hook)\nw(process+0xe4,entry);w(entry+8,base);w(animation+0x7c,controller);w(controller,vt);w(vt+0x4c,0x2000800)\nrows=[]\nfor has_animation,has_root,is_player,weapon_type,missing in itertools.product((False,True),(False,True),(False,True),range(6),(False,True)):\n a=animation if has_animation else 0;b=rawroot if has_root else 0\n w(playeranim+0x98,a);w(playeranim+4,b);u.mem_write(base+0x90,bytes([weapon_type]));w(0xb333c4,0x200d800)\n for i in range(6):w(process+0xfc+i*4,0x200ee00+i*4)\n requests=[];maintenance=[];w(stack,end);w(stack+4,a);w(stack+8,b)\n for reg,value in ((UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,process),(UC_X86_REG_EBX,0x11223344),(UC_X86_REG_ESI,0x22334455),(UC_X86_REG_EDI,0x33445566)):u.reg_write(reg,value)\n u.emu_start(0x6541a0,end,count=5000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+12\n assert [u.reg_read(r) for r in (UC_X86_REG_EBX,UC_X86_REG_ESI,UC_X86_REG_EDI)]==[0x11223344,0x22334455,0x33445566]\n shield_requests=[r for r in requests if r['name']==names[7]]\n if a or b:\n  assert shield_requests==[dict(root=b,name=names[7],path='named-resolver')],shield_requests\n  expected=result(b,names[7]);destination=0xb3ba8c if is_player else process+0x104\n  assert ri(destination)==expected\n else:\n  assert not shield_requests;destination=process+0x104;expected=0x200ee08\n  assert ri(destination)==expected\n if not is_player:\n  # Actual process+120: cached +104 without node index; index7 otherwise.\n  for use_index in (False,True):\n   for i in range(9):w(index+8+i*8,0x200f000+i*4)\n   w(stack,end);w(stack+4,index if use_index else 0);u.reg_write(UC_X86_REG_ESP,stack);u.reg_write(UC_X86_REG_ECX,process)\n   u.emu_start(0x64b1b0,end,count=1000)\n   assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+8\n   assert u.reg_read(UC_X86_REG_EAX)==(0x200f000+7*4 if use_index else expected)\n rows.append(dict(animation_present=has_animation,root_present=has_root,player_branch=is_player,weapon_type=weapon_type,resolver_missing=missing,requests=shield_requests,destination=destination,anchor=expected))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'cache-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=m['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),actual_paths=['Full6541A0 cache refresh, all animation/raw-root and Player/NPC paths','Actual64B1B0 shield getter and477EC0 index getter'],boundaries=['Player animation query65D750 supplied.','Controller name lookup and6F94A0 resolver return supplied unique pointers or null; requested original string bytes captured.','Weapon visibility helper480770 captured.','Fixture hierarchy/controller and process weapon-entry data; no live original-game scene, drop, render or physics.'],observation='Shield cache source is exact Bip01 L ForearmTwist, requested against raw root even when animation data is present. NPC stores process+104; Player alternate stores B3BA8C. Actual shield getter reads cached+104 without an index and index7 when present. Anchor is independent of weapon type and is not model-root Shield or Weapon.')\n(out/'cache-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+      "report_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-drop-anchor-audit-01/cache-report.json",
+        "sha256": "0ca17195613aa4daa889423a38673ea38e2437869d28e357529c7553dc7f5192"
+      },
+      "corpus_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-drop-anchor-audit-01/cache-corpus.json",
+        "sha256": "dc71510fb06885257cd9db8856ff3bb03215b2040f657abb9094c5e4662cf82f"
+      }
+    },
+    "break-anchor": {
+      "report": {
+        "passed": true,
+        "cases": 1152,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "38500fcc00bb084640b897dc621756ba7c3281f0c0b9821ff208b5553f5384f3",
+        "actual_paths": [
+          "Full Player65FF10/NPC5F3870 wear, including actual worn-shield getter and retention predicate",
+          "Actual actor+168 Player6600B0/Character4349A0, process+120 getter64B1B0 and index477EC0",
+          "Actual711440 node rotation conversion"
+        ],
+        "boundaries": [
+          "Max health/current condition/base skill/GMST readers and condition writer supplied as in prior wear probe.",
+          "Distinct cached node and index7 node are supplied identity rotations with positions11,12,13 and21,22,23.",
+          "Unequip5F2E70/drop5FC440 and notification4DC000 are captured requests; no original-game inventory/reference/render/physics mutation."
+        ],
+        "observation": "Ordinary NPC broken shield drop uses process+104 node when Character+104 node-index is null, and node-index7 when present. Full requests pass the selected node world translation and identity-derived rotation. Player/flag400 retention and low-process/unworn gates remain unchanged."
+      },
+      "editable_probe": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent;m=json.loads((out/'original-exe.json').read_text());data=Path(m['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==m['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x10000)\nfor _,va,raw,size in m['sections']:u.mem_write(va,data[raw:raw+size])\ndef w(a,v):u.mem_write(a,struct.pack('<I',v&0xffffffff))\ndef ri(a):return struct.unpack('<I',u.mem_read(a,4))[0]\ndef fl(a,v):u.mem_write(a,struct.pack('<f',v))\ndef rf(a):return struct.unpack('<f',u.mem_read(a,4))[0]\ndef ret(value=0,n=0):\n sp=u.reg_read(UC_X86_REG_ESP);pc=ri(sp);u.reg_write(UC_X86_REG_EAX,value);u.reg_write(UC_X86_REG_ESP,sp+4+n);u.reg_write(UC_X86_REG_EIP,pc)\nactor,vt,process,pvt,item,extra,armor,health,node,stack,end=0x2001000,0x2002000,0x2003000,0x2003500,0x2004000,0x2004600,0x2005000,0x2005300,0x2007000,0x200e000,0x2000000\nw(item,0x2004500);w(0x2004500,extra);w(0x2004504,0);w(item+8,armor);w(armor,0xa441bc);u.mem_write(armor+4,b'\\x14');u.mem_write(armor+0x68,struct.pack('<H',0x2000))\nassert ri(0xa441bc+0x78)==0x4d7030\nw(health,0x2005200);w(0x2005200+0x10,0x2000710)\nu.mem_write(0x2000730,b'\\xd9\\x05'+struct.pack('<I',0x2006510)+b'\\xc3')\nu.mem_write(0x2000740,b'\\xd9\\x05'+struct.pack('<I',0x2006520)+b'\\xc2\\x04\\x00');fl(0x2006520,5)\nfor a,val in zip((0xb3a4f8,0xb3a500,0xb3a508,0xb3a510),(25,50,75,100)):w(a,val)\nw(0xbaabe0,0);u.mem_write(0xb3b908,b'\\0');u.mem_write(0xb3bb06,b'\\0')\nsettings={0xb374f0:1.5,0xb374f8:1.5,0xb37508:.5,0xb37500:.5}\nfor i in range(9):fl(node+0x64+i*4,1 if i in (0,4,8) else 0)\nfor i,x in enumerate((11,12,13)):fl(node+0x88+i*4,x)\nevents=[];writes=[];quest_calls=0;shield_calls=0;refreshes=0\n\ndef hook(uc,ip,size,_):\n global quest_calls,shield_calls,refreshes\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x9832e6:ret(health)\n elif ip==0x2000710:ret(300)\n elif ip==0x41e810:uc.reg_write(UC_X86_REG_EIP,0x2000730)\n elif ip==0x41e6f0:ret()\n elif ip==0x488830:writes.append(ri(sp+4));ret(n=16)\n elif ip==0x5ead00:\n  assert ri(sp+4)==(18 if heavy else 27);uc.reg_write(UC_X86_REG_EIP,0x2000740)\n elif ip==0x403c00:fl(0x2006530,settings[uc.reg_read(UC_X86_REG_ECX)]);ret(0x2006530)\n elif ip==0x60e260:refreshes+=1\n elif ip==0x4d7030:quest_calls+=1 # Actual ARMO vtable+78 implementation executes.\n elif ip==0x64b2d0:shield_calls+=1 # Actual +F8 ->484E80 ->41DF10 worn checks execute.\n elif ip==0x2000770:ret(0) # actor+168 query mode; process+120 actual cached-node reader executes.\n elif ip==0x5f2e70:\n  args=[ri(sp+4+i*4) for i in range(6)];assert args==[armor,1,extra,0,1,0]\n  events.append({'kind':'unequip','args':args});u.mem_write(extra+0xb,b'\\0');ret(n=24)\n elif ip==0x5fc440:\n  args=[ri(sp+4+i*4) for i in range(5)];assert args[:3]==[armor,extra,1],args\n  position=[rf(args[3]+i*4) for i in range(3)];rotation=[rf(args[4]+i*4) for i in range(3)]\n  assert position==([21.,22.,23.] if indexed else [11.,12.,13.]);assert all(x==0 for x in rotation)\n  events.append({'kind':'drop','base':args[0],'extra':args[1],'count':args[2],'position':position,'rotation':rotation});u.mem_write(extra+0xb,b'\\0');ret(0x2006000,20)\n elif ip==0x4dc000:events.append({'kind':'notification','args':[ri(sp+4),ri(sp+8)]});ret()\nu.hook_add(UC_HOOK_CODE,hook)\nrows=[]\nfor kind,quest,active,worn,drawn,current,heavy,cw,indexed in itertools.product(('player','npc'),(False,True),(False,True),(False,True),(False,True),(0.,1.125,10.),(False,True),(0x7f,0x27f,0x37f),(False,True)):\n actualvt=0xa73a0c if kind=='player' else 0xa6fc9c\n u.mem_write(vt,bytes(u.mem_read(actualvt,0x600)));w(actor+0x104,0x2008000 if indexed else 0);w(actor+0x5c8,0);u.mem_write(actor+0x588,b'\\0');w(0x2008000+8+7*8,0x2009000);w(actor,vt);w(actor+0x58,process);w(process,0xa71814 if active else 0xa720a4);w(process+0xf0,item);w(process+0x104,node);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,bytes([0x10 if worn else 0]));w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,.25);w(stack+12,0)\n events=[];writes=[];quest_calls=shield_calls=refreshes=0\n for i in range(9):fl(0x2009000+0x64+i*4,1 if i in (0,4,8) else 0)\n for i,x in enumerate((21,22,23)):fl(0x2009000+0x88+i*4,x)\n for reg,v in ((UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,actor),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)):u.reg_write(reg,v)\n try:u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n except Exception:print(kind,quest,active,worn,drawn,current,heavy,cw,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n broken=current<2;eligible=broken and active and worn\n expected='unequip' if kind=='player' or quest else 'drop'\n assert len(writes)==1 and refreshes==1 and bool(u.reg_read(UC_X86_REG_EAX)&255)==broken\n assert [e['kind'] for e in events]==([expected]+(['notification'] if expected=='drop' else []) if eligible else []),events\n rows.append(dict(indexed=indexed,actor=kind,flags=0x400 if quest else 0,active=active,worn=worn,weapon_out=drawn,current=current,heavy=heavy,cw=cw,condition_bits=writes[0],events=events,quest_getter_calls=quest_calls,shield_getter_calls=shield_calls))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'break-anchor-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=m['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),actual_paths=['Full Player65FF10/NPC5F3870 wear, including actual worn-shield getter and retention predicate','Actual actor+168 Player6600B0/Character4349A0, process+120 getter64B1B0 and index477EC0','Actual711440 node rotation conversion'],boundaries=['Max health/current condition/base skill/GMST readers and condition writer supplied as in prior wear probe.','Distinct cached node and index7 node are supplied identity rotations with positions11,12,13 and21,22,23.','Unequip5F2E70/drop5FC440 and notification4DC000 are captured requests; no original-game inventory/reference/render/physics mutation.'],observation='Ordinary NPC broken shield drop uses process+104 node when Character+104 node-index is null, and node-index7 when present. Full requests pass the selected node world translation and identity-derived rotation. Player/flag400 retention and low-process/unworn gates remain unchanged.')\n(out/'break-anchor-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+      "report_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-drop-anchor-audit-01/break-anchor-report.json",
+        "sha256": "64b50fba500884e574fd7dc1d931acf464547e67e0a420957075dd31d50bb9ac"
+      },
+      "corpus_receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-drop-anchor-audit-01/break-anchor-corpus.json",
+        "sha256": "38500fcc00bb084640b897dc621756ba7c3281f0c0b9821ff208b5553f5384f3"
+      }
+    }
+  },
+  "loader_dependency": "cache-probe.py executes only the loader/setup prefix before actor,vt,process in wear-probe.py, published in M15-SHIELD-SELECTED-WEAR-PROBE.json editable_original_probes. break-anchor-probe.py contains its own identical section loader. Supply hash-verified original-exe.json section metadata using scripts/inspect_pe.py.",
+  "original_metadata": {
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+    "image_base": 4194304,
+    "sections": [
+      [
+        ".text",
+        4198400,
+        1024,
+        6450688
+      ],
+      [
+        ".rdata",
+        10649600,
+        6451712,
+        891392
+      ],
+      [
+        ".data",
+        11542528,
+        7343104,
+        199680
+      ],
+      [
+        ".tls",
+        12238848,
+        7542784,
+        512
+      ],
+      [
+        ".rsrc",
+        12242944,
+        7543296,
+        6144
+      ],
+      [
+        ".bind",
+        12251136,
+        7549440,
+        349184
+      ]
+    ],
+    "default_style_rtti_refs": [
+      [
+        "0x6b930c",
+        "0xaba10c",
+        "0000000000000000000000003c7eb00014a1ab0000000000"
+      ],
+      [
+        "0x6b9338",
+        "0xaba138",
+        "443cab00a43aab00000000003c7eb0000300000000000000"
+      ]
+    ]
+  },
+  "retained_failures": [
+    "cache-attempt01/02 used an incorrect synthetic node-index layout. Actual477EC0 reads index+8+slot*8; corrected03 supplies the full stride. Both failed scripts/logs remain private. No native rule or production behavior was changed to accommodate them."
+  ],
+  "interpretation": [
+    "The attachment parent Prn and native shield drop anchor coincide for stock shields because both name Bip01 L ForearmTwist. The anchor itself comes from the native node table/cache, independently of model Prn or root name.",
+    "Full refresh6541A0 requests that literal against raw skeleton root, even on animation/controller lookup paths. Its resolved pointer populates NPC process+104 or Player alternate global B3BA8C.",
+    "Actual NPC break caller uses actor+168 Character4349A0 then process+12064B1B0: cached process+104 without a node-index, index7 with one. It passes selected anchor world translation and rotation-converted values to the drop request.",
+    "Player/flag400 broken shields request retention by unequip; ordinary active worn NPC shields request drop. Neither weapon-out nor right weapon family substitutes for the worn-shield gate."
+  ],
+  "not_established": [
+    "Live original-game scene/controller resolution, full native dropped-reference construction and physics.",
+    "Missing-anchor drop fallback and nonidentity native rotation matrix coverage in this new break harness.",
+    "Production shield retain/drop transaction, world ARMO admission and normal-input break/save/restart acceptance."
+  ],
+  "full_M15S4_acceptance": false,
+  "runtime_acceptance": false
+}

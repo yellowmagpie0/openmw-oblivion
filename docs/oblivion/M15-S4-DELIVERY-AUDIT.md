@@ -7044,3 +7044,22 @@ BlockIdle presentation in the bounded first/third-person keyboard1FPS course.
 It does not implement shield break/drop, ordinary inventory equipping, BlockHit
 or other hit reactions, directional/mastery procs, effects, gamepad/FPS or the
 remaining in-action restart/combined-course matrix. **Full M15S4 is incomplete.**
+
+### Native shield break/drop anchor follow-up
+
+`M15-SHIELD-DROP-ANCHOR-PROBE.json` records96 full6541A0 cache-refresh
+profiles and1152 full Player65FF10/NPC5F3870 wear/break profiles, all against
+the pinned original executable. Both independent instruction probes pass.
+The cache writer requests exact `Bip01 L ForearmTwist` from the raw skeleton
+root. NPC process+104 stores that resolved node; actual64B1B0 selects it when
+Character4349A0 supplies no node-index, or reads index7 through actual477EC0.
+The full NPC break path distinguishes supplied cached/index nodes by their
+world translations and passes the chosen transform to the captured drop call.
+The stock shield model root named Shield is not this anchor.
+
+Two cache harness attempts initially supplied an incorrect node-index layout;
+they fail assertions and remain retained. Corrected03 uses the actual
+index+8+slot*8 layout. Named scene resolution and mutation/drop constructors
+remain declared boundaries; identity node rotations are used in this harness.
+This adds independent evidence for the upcoming production transaction, without
+claiming ARMO drop, live original-game or full M15S4 acceptance.
