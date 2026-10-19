@@ -1064,7 +1064,7 @@
           "Synthetic one-bucket hash/equality/cache lists; scene-update471230 captured.",
           "View578F60=false/debug5790E0=false/ancestry47F7B0=false, Player scene-node660110 supplied distinct node; this is supplied scene domain, not real first/third-person rendering.",
           "Actual47DF80/9859DD initialized RNG, only98C0F5 supplies TLS.",
-          "Actual filename strrchr/strcmp matcher470C40 executes; provided resource paths, not file loader behavior.",
+          "Actual filename strrchr/ASCII case-insensitive comparison matcher470C40 executes; provided resource paths, not file loader behavior.",
           "Actual native sequence manager primitives with empty controllers/preallocated managers; OS atomicrefcount supplied."
         ],
         "retained_failure": {

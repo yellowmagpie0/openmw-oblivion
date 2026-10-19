@@ -16403,3 +16403,32 @@ contact, RNG draw or Health change. Full desktop-engine leak checking remains
 failed on the existing window subset; targeted ESM4/pose leak checks pass. See the
 receipt for exact selections, sanitizer settings, runtime limits and remaining
 Player/view/channel work. This checkpoint does not close M15S4.
+
+## Authored sequence name, cache construction and original order (2026-10-19)
+
+`M15-NATIVE-SEQUENCE-CACHE-VERIFICATION.json` records independent original
+`474070` insertion/clone/registration and `436DA0`/`51B490` classification.
+The 192 insertion contexts use actual NiNode, target-manager and object-palette
+constructors, a supplied valid derived pointer map, and actual native collection
+operations. Single promotes only on the second eligible insertion; duplicates
+remain in insertion order. The separate 288 classification contexts retain
+native CRT matching and metadata construction. Parsed names, zero-track
+sequences and Start/End keys are supplied inputs; allocator, CRT thread/sync,
+registration and OS import boundaries are declared in the receipt.
+
+A separate read-only original-game census observes actual file-loaded body and
+first-person caches in an isolated base-only prefix. Existing Multiple order
+matches the installed archive list, including nonalphabetical attack variants.
+Drawing lazily adds six groups and seven registered sequences to each view.
+Clock equality is observed at four paused normal-input samples, not inferred for
+all sequence lifecycles. All private inputs are restored and the original/master/
+archive/pristine hashes remain unchanged. Failed view-switch and analyzer
+assumptions are preserved. This census supplies no fork contact acceptance.
+
+The shared loader preserves the raw internal name alongside its existing resource
+alias, with focused normal and ASan/UBSan copy/retention coverage. No native group
+parser or normal reaction factory is added yet. The earlier cached-reaction
+receipt's CRT `strcmp` label is corrected to ASCII case-insensitive comparison;
+its exact-case observations are unchanged. Proprietary bytes, extracted assets,
+images and bulky corpora remain ignored; the editable fixture records axes and
+selected original expectations. M15S4 remains open.

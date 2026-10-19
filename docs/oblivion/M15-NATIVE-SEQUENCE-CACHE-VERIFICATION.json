@@ -1,0 +1,599 @@
+{
+  "status": "Authored sequence names retained; bounded native cache/classification and original live census verified. Normal reaction factory and M15S4 incomplete.",
+  "runtime_acceptance": false,
+  "original_live_observation": true,
+  "full_M15S4_acceptance": false,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "implementation": "ControllerSequenceMetadata retains exact authored mSequenceName independently of mGroup renderer/resource alias; copy/equality preserve it. Removes incorrect filename-only gameplay classification comment. No resource choice/RNG/contact behavior changes.",
+  "tested_source": {
+    "head": "1961703d5032cf9cd13d18b5b1690ebeeafbbd16",
+    "source_fingerprint": "00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8"
+  },
+  "source_sha256": {
+    "components/sceneutil/keyframe.hpp": "f81fafc0b818760927af3509e795038ba4c20f09d2cf4ca1398d2645d76c8018",
+    "components/nifosg/nifloader.cpp": "652b5889b9a5632784aa77086f54851b84b644476464c3436c6ea0cf7fdc6508",
+    "apps/components_tests/nifosg/testnifloader.cpp": "02ce65a012a70c7f28db64aa80800fa62134312b7d19cffab988b3be4fdce8b1"
+  },
+  "editable_expected": {
+    "path": "scripts/data/oblivion_compat/m15_native_sequence_cache_expected.json",
+    "sha256": "04ec07141f0ff7cfdf496ab1db784b52b26daafe92c534d278c3015d43f3fe32"
+  },
+  "checks": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-name-checks-01/verification.json",
+      "sha256": "24fffaf9b0c4fd3115edc257e49f470134c534f39e59930486e1d0cf4af5e5a7",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 58.618
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=ESM4NativeAnimationMetadata.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sequence-name-checks-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.064
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 1,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4NativeAnimationMetadata.*",
+            "binary_sha256": "e0ffe215b89a1573330d224a43197da13aa8ab33a2e591425dc9fbac2170c512",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "c10800220b625592b34099dec4b208708b9ee298417d2506bd1b4db65a3ddc96",
+            "inventory_sha256": "3e4493241e342da2f43712a7e96b765989e129018f5d9b414ccdea8fddd092e8",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "1961703d5032cf9cd13d18b5b1690ebeeafbbd16",
+          "source_fingerprint": "00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8"
+        },
+        "source_after": {
+          "head": "1961703d5032cf9cd13d18b5b1690ebeeafbbd16",
+          "source_fingerprint": "00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-name-sanitized-checks-01/verification.json",
+      "sha256": "c7f5d861d5a7b828ea6d4f9a5cb27757f3fcfd720af94a6561ef5496037bd356",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "3"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 111.152
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4NativeAnimationMetadata.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sequence-name-sanitized-checks-01/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 0.266
+          }
+        ],
+        "results": {
+          "sanitize": {
+            "executed": 1,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4NativeAnimationMetadata.*",
+            "binary_sha256": "64c861836df4c48668e31bbc6f278b7c2ad4599f5b25b8e28024c2d9e3721355",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "d35ad6ba5c7f503a3170a327a07880f2e8c61aebb5abd8a0627cbc0d996b41bc",
+            "inventory_sha256": "7ff766f38eed4ec76f8ea57988edb405b55121c513f1515311889f46f9ce1689",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "1961703d5032cf9cd13d18b5b1690ebeeafbbd16",
+          "source_fingerprint": "00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8"
+        },
+        "source_after": {
+          "head": "1961703d5032cf9cd13d18b5b1690ebeeafbbd16",
+          "source_fingerprint": "00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8"
+        }
+      }
+    }
+  ],
+  "native_insertion": {
+    "passed": true,
+    "contexts": 192,
+    "insertions": 576,
+    "precision_words": [
+      639,
+      895
+    ],
+    "table_multiple_flags": {
+      "0": false,
+      "20": true,
+      "27": false,
+      "28": true,
+      "29": true,
+      "30": true,
+      "31": true,
+      "33": false
+    },
+    "explicit_index_selection_checked_in_probe": true,
+    "insertion_rng_calls": 0,
+    "repeat_corpus_identical": true,
+    "scope": "Provided parsed group metadata and source filenames, actual native insertion/promotion/clone/registration/selection. Actual NiNode and target-manager/object-palette constructors. A valid one-bucket derived NiTPointerMap is supplied with original vtable; its actual hash/equality/allocator/list routines execute. No real file loading, original-game cache census or winning-resource order claim.",
+    "boundaries": [
+      "401F00 checked zeroed bump allocation;401F20 validated ownership/duplicate free without address reuse",
+      "981FB4 CRT exit registration, no exit callback execution",
+      "Supplied single-thread Interlocked increment/decrement update memory; critical sections are no-ops; thread ID1"
+    ],
+    "artifacts": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-class-identities.json",
+        "sha256": "35632f01200f40603af4a880be832aafde163f36a8023d37f2dd158f420aa361"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/node-class-identity.json",
+        "sha256": "e5c8fce48dc3d03a0af67de105f4bd7bcb5efd6fdaea0aa1e7612f9d13aa7c5f"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-insertion-probe-03.py",
+        "sha256": "82895738187f284f2b5439043b9d8f2f5b7de25826c4d1ea579990c60b81120b"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-insertion-result03.json",
+        "sha256": "ad2343a72edbbfaca22ca5910561e1680a131ab73d50255917abae03c6fae852"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-insertion-probe-04.py",
+        "sha256": "65c8266036e95fbf09e71f1c4b8faca94b22eced0d2bec447c1f2deb788c7673"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-insertion-result04.json",
+        "sha256": "0a71e83fd05894e149f019031f6dc097263a538991b90243d6773e347d73ae2b"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-matrix-probe-05.py",
+        "sha256": "428b570e9bc91e01c13da3576d8ed5b4dddadec97ad27086c3d0cc6240a272e1"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-matrix-corpus05.json",
+        "sha256": "6e2962c14b2738bb468af96a94287290c5b32f67588fd4be8dfae7ee56765cc2"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-matrix-probe-06.py",
+        "sha256": "0e5cd0bc8c4bf07d979835185b1722edfeaaa38ebe07a229e8947057631b453f"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-matrix-corpus06.json",
+        "sha256": "6e2962c14b2738bb468af96a94287290c5b32f67588fd4be8dfae7ee56765cc2"
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/verify-cache.py",
+        "sha256": "f0b57c24d4ff6309e63bf18cb1a09020e55c8334a200738500b0107d58e89c91"
+      }
+    ],
+    "retained_attempts": [
+      {
+        "path": "cache-insertion-attempt01.json",
+        "reason": "Wrong primitive cache class:470810 constructs NiTListBase, not the needed map. Actual virtual pure-call failed; no native cache failure claim."
+      },
+      {
+        "path": "cache-insertion-attempt02.json",
+        "reason": "Default manager had no AVObject palette, so register-with-binding hit a null virtual object. Corrected03 uses actual NiNode70B780 and target-manager6C5610, which constructs object palette6C5360."
+      }
+    ]
+  },
+  "native_classifier": {
+    "passed": true,
+    "contexts": 288,
+    "unique_inputs_paired_across_precision": 144,
+    "actual_paths": [
+      "436DA0",
+      "51B490",
+      "6C7FB0",
+      "6D7450",
+      "98BFBE",
+      "original CRT case-insensitive matching/sprintf"
+    ],
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "boundaries": [
+      "Checked401F00 allocator/401F20 free, no reuse;981FB4 exit-callback registration.",
+      "IAT Interlocked operations update actual words; single-thread critical sections no-op, threadid1.",
+      "CRT98C0F5 returns thread struct initialized by actual98BFBE;98C9D3/98C8FB balanced single-thread CRT locks.",
+      "Identified GetModuleHandleA/GetProcAddress optional module/symbol unavailable.",
+      "Supplied parsed sequence names, zero controlled blocks, Start0/End1 keys; no file loading or original gameplay."
+    ],
+    "observations": [
+      "First underscore truncates the internal name; mixed ASCII case remains accepted.",
+      "Filename movement/family prefixes produce packed movement*4096+family*256+group.",
+      "Movement0/1/2/3 empty/Sneak/Swim/Fly; family0..5 empty/HandToHand/OneHand/TwoHand/Staff/Bow.",
+      "All three groups BlockHit28/Recoil30/Stagger31 retain frame0/1 exactly; wrapper renames sequence to full path and clears root-name field."
+    ],
+    "retained_failures": [
+      "07 used RTTI getter6D7440 as factory;08 omitted native CRT thread initialization. Neither is a native mechanics failure."
+    ],
+    "artifacts_sha256": {
+      "group-classification-probe-09.py": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1",
+      "group-classification-result09.json": "5bab1672490939d528014f32fd83b65187d69c5f1a2dce8bb69f79656856d8e9",
+      "group-classification-matrix-10.py": "f4cead374bb5071c65861164a3baabe0b33bbb5facca02ad864773dc232b8eeb",
+      "group-classification-corpus10.json": "e1e80eec5419ffd2ec29711352e15c3a0706f3e685c2251fa0d7817b3de8c167",
+      "group-classification-output10.log": "1774cd7ba6109efdd70ef296ed861db4c841f7e3be5e280d2e32c7abcf9a5e78",
+      "group-classification-stderr10.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "classification-os-imports.json": "98be7a16264e4d258992eb4b4bba913ad9b380b71ec6d4b760cce560d2dc31c2",
+      "textkey-class-identities.json": "2584a24310e3a508206874f9cc5ee5b85eca64e6f5dd77129083f550bc4d4c9f",
+      "native-group-frame-inputs.json": "582fabd4747ba0dcc6e044fc66b177edcd7afc58b6a7de1a3865dba587e0d041",
+      "original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "verify-classification.py": "d6e1929e5961546de941d8d2ade26f6e56078542f7b1921c286bbb805f9e6ad5"
+    }
+  },
+  "original_live": {
+    "passed": true,
+    "scope": "Read-only original-game cache census, normal camera and draw inputs; not fork gameplay acceptance or universal loader-order proof.",
+    "accepted_samples": [
+      "firstperson-idle-01",
+      "thirdperson-idle-02",
+      "thirdperson-drawn-01",
+      "firstperson-drawn-01"
+    ],
+    "clock_pairs": [
+      {
+        "phase": "firstperson-idle-01",
+        "camera": 0,
+        "body": 32.67802047729492,
+        "firstperson": 32.67802047729492
+      },
+      {
+        "phase": "thirdperson-idle-02",
+        "camera": 1,
+        "body": 42.46498489379883,
+        "firstperson": 42.46498489379883
+      },
+      {
+        "phase": "thirdperson-drawn-01",
+        "camera": 1,
+        "body": 46.465965270996094,
+        "firstperson": 46.465965270996094
+      },
+      {
+        "phase": "firstperson-drawn-01",
+        "camera": 0,
+        "body": 50.47995376586914,
+        "firstperson": 50.47995376586914
+      }
+    ],
+    "initial_cache_entries": 555,
+    "initial_registered_sequences": 579,
+    "drawn_cache_entries": 567,
+    "drawn_registered_sequences": 593,
+    "lazy_draw_additions_per_view": {
+      "groups": 6,
+      "registered_sequences": 7,
+      "new_keys": [
+        4374,
+        278,
+        279,
+        280,
+        281,
+        282
+      ]
+    },
+    "multiple_collections_matching_archive_listing_order": 16,
+    "retained_failed_view_switch": {
+      "sample": "thirdperson-idle-01",
+      "reason": "0.6 second R press left camera byte0; corrected0.1 second tap verified byte1",
+      "failed_mechanics_assertions": false
+    },
+    "restored_inputs": {
+      "game_epoch_dead": true,
+      "restored": {
+        "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+        "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+        "quicksave": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+        "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+      },
+      "source_unchanged": true
+    },
+    "retained_analysis_failure": "analyze-01-fixed-count-failed.py incorrectly assumed drawn caches had initial counts; actual samples show6newkeys and7registered sequences perview. Corrected analysis preserves that source and all original samples.",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "base_meshes_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "boundaries": "No injected code, function calls, contacts or memory writes. Read-only GDB attach/read/detach; live64-byte function hashes checked before fixed-address data reads.",
+    "limitations": [
+      "One original game process and one base-only installed asset set. Cache order matches archive list for this run; loose resources, overrides and other load orders remain unverified.",
+      "Exact equality of both clocks observed only at four paused idle samples across normal view and draw changes; no arbitrary lifecycle equality claim.",
+      "No attacks, block consequences or damage measured."
+    ],
+    "artifacts_sha256": {
+      "census.py": "9938a94dce6b9ed1f606707df9a08d1b5c8ebc2a8c5f971ec156c340b9083f9c",
+      "run-census.py": "b91358270947aebaee567ef373ac33afaa64dbd49a7f25f665a57fb561336a3f",
+      "inputs.json": "6d798c6243fbdff21c257ef8e9dfb5ff163bc33e475ec55e5024717a7b5f4705",
+      "function-identities.json": "7ec7e0fa44bdcb275eef92744bd3357282eba2c1f825b6d7f75799ff8702ef31",
+      "input-log.jsonl": "c69b26f26c23b1d05433dd2ecb40997aa4ab3411345ecc9b4447949eee4a8981",
+      "game-process-epoch.json": "7dcf916923681ff15020599a30df0fbca107989a622027290865459269bad4b0",
+      "owned-steam-epoch.json": "1a4c0090ff0e91db1f3f93a7fdd29e737df4f8cf044cee98246180d86e274a02",
+      "cleanup-inputs.json": "c3910aa894c49384cd749c877fbda88b67beaa1589ae57a4788238419042fed6",
+      "steam-shutdown.json": "7adfce8b85163863fc2bee244f3174c1740469016210bf5b4379626fd41b9a61",
+      "game-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "steam-exit.json": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a",
+      "analyze.py": "0b414ec60080e1af3cd8b3f86cb559ce8c772849bd75a077e1c0e6c1445ac14c",
+      "analyze-01-fixed-count-failed.py": "c98f5f9b738119456b93f086e72c27a1a29a15b172fbbd7cfefe423fbda581cc",
+      "content-after.json": "b7dba2690e0c077be1cb7d7b0ee0acbd253a6b39427222ec136025960efe8a51",
+      "console.png": "65e6fe8b4d04b57bbf576e156a2c935ca9df2e9cc29e4461ca4bd4c52e31f977",
+      "thirdperson-short-tap.png": "85c38b87d87cd5ec482bc5bc6e2bba6693487f263fab4f705e608ad30289457f",
+      "thirdperson-drawn.png": "04ecfd702608de053381ba8dcef07e3deb3303fa907057e9a6c24c625c25b757",
+      "firstperson-drawn.png": "d4177a82f6de6a98566a484fdfc54dd74c3c3dfeece99b1a468efdb8f38b9320",
+      "firstperson-idle-01-sample.json": "674d4c4f78b970a7f186ad0ddc2697d8e11119d1abb4f7ffe7a9d08ab39c5199",
+      "thirdperson-idle-02-sample.json": "2253a25e612b2bf5506339639788032ac8e6a19395fa0951f3ef688b65aec359",
+      "thirdperson-drawn-01-sample.json": "c1596c4e82a8bf5958ea811b15771779eeee045f2acd0ef3eece27828372ca92",
+      "firstperson-drawn-01-sample.json": "8634b3d239ed88d166aa57fef311fdaefdd824700dbbe348421297196b7eaad7",
+      "firstperson-idle-01-gdb.log": "9c514c2c355d96d37d5a7eae9a08d760176badabe9842ebffea3c00468694256",
+      "thirdperson-idle-02-gdb.log": "06d4f6c6488680e01935d96f48fbf090b98b23ea439a4b72d1ca257cad8b00f7",
+      "thirdperson-drawn-01-gdb.log": "299566aa8c3fbe7d970e648b6d115404b7322269dfabf15c06c98ec4c089fb6b",
+      "firstperson-drawn-01-gdb.log": "79c29c386181fb0d22e6f264b9f49bb6ba4913bdcbe7ed7867f8b6b4120f6b39",
+      "thirdperson-idle-01-sample.json": "a8e9e8ae29bf9da6d54aa9dd4fe648bd6ea85ce214a08b941e2a59cbd4f8eb5f"
+    },
+    "archive_listing_sha256": "01b7a40ab5c7e9b07230709c29b8fe4f3867699221090cf0f24b611a4d6265a7"
+  },
+  "selected_original_multiple_collections": [
+    {
+      "view": "body",
+      "key": 532,
+      "collection": "Multiple",
+      "resources": [
+        "onehandattackleft.kf",
+        "onehandattackleft_chop.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 533,
+      "collection": "Multiple",
+      "resources": [
+        "onehandattackright_chop.kf",
+        "onehandattackright.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 542,
+      "collection": "Multiple",
+      "resources": [
+        "onehandrecoil_01.kf",
+        "onehandrecoil_02.kf",
+        "onehandrecoil_03.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 276,
+      "collection": "Multiple",
+      "resources": [
+        "handtohandattackleft_hook.kf",
+        "handtohandattackleft.kf",
+        "handtohandattackleft_jab.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 277,
+      "collection": "Multiple",
+      "resources": [
+        "handtohandattackright_jab.kf",
+        "handtohandattackright.kf",
+        "handtohandattackright_hook.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 788,
+      "collection": "Multiple",
+      "resources": [
+        "twohandattackleft_chop.kf",
+        "twohandattackleft.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 789,
+      "collection": "Multiple",
+      "resources": [
+        "twohandattackright_chop.kf",
+        "twohandattackright.kf"
+      ]
+    },
+    {
+      "view": "body",
+      "key": 798,
+      "collection": "Multiple",
+      "resources": [
+        "twohandrecoil_01.kf",
+        "twohandrecoil_02.kf",
+        "twohandrecoil_03.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 532,
+      "collection": "Multiple",
+      "resources": [
+        "onehandattackleft.kf",
+        "onehandattackleft_chop.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 533,
+      "collection": "Multiple",
+      "resources": [
+        "onehandattackright_chop.kf",
+        "onehandattackright.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 542,
+      "collection": "Multiple",
+      "resources": [
+        "onehandrecoil_01.kf",
+        "onehandrecoil_02.kf",
+        "onehandrecoil_03.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 276,
+      "collection": "Multiple",
+      "resources": [
+        "handtohandattackleft_hook.kf",
+        "handtohandattackleft.kf",
+        "handtohandattackleft_jab.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 277,
+      "collection": "Multiple",
+      "resources": [
+        "handtohandattackright_jab.kf",
+        "handtohandattackright.kf",
+        "handtohandattackright_hook.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 788,
+      "collection": "Multiple",
+      "resources": [
+        "twohandattackleft_chop.kf",
+        "twohandattackleft.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 789,
+      "collection": "Multiple",
+      "resources": [
+        "twohandattackright_chop.kf",
+        "twohandattackright.kf"
+      ]
+    },
+    {
+      "view": "firstperson",
+      "key": 798,
+      "collection": "Multiple",
+      "resources": [
+        "twohandrecoil_01.kf",
+        "twohandrecoil_02.kf",
+        "twohandrecoil_03.kf"
+      ]
+    }
+  ],
+  "report_pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/cache-verification.json",
+      "sha256": "2b977ff8e35a395d242c6fa8abf99627a86537421e3d37c9b4571a579b341c3a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/classification-verification.json",
+      "sha256": "e3d89c98de93ab4dce17ccd7977b059a33a9b0bd23c75db30ccacb3ae7d6280d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-original-live-01/verification.json",
+      "sha256": "8a5281c9ae2cefa1e6d49eaa5433cdef8e420398bc39dcd575862ed482df5595"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-name-checks-01/verification.json",
+      "sha256": "24fffaf9b0c4fd3115edc257e49f470134c534f39e59930486e1d0cf4af5e5a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-name-sanitized-checks-01/verification.json",
+      "sha256": "c7f5d861d5a7b828ea6d4f9a5cb27757f3fcfd720af94a6561ef5496037bd356"
+    }
+  ],
+  "limits": [
+    "One focused metadata test per normal/sanitized component build; no full component/engine suite or new fork runtime course in this chunk. Sanitizer helper disables leak checking.",
+    "Native insertion uses supplied parsed metadata, zero-track sequences and a valid supplied derived map. Original live census is a separate actual file-loaded observation. Neither alone specifies arbitrary loose/override enumeration.",
+    "Only provided BlockHit/Recoil/Stagger classifier domain is established by288 cases; no complete TESAnimGroup parser is implemented.",
+    "Both native clocks match at four paused idle/draw/view samples; no claim for arbitrary state resets or view changes during reactions.",
+    "Normal contact adapters still generate no reaction descriptors. Player view ownership, Stagger resident attack and general replacement remain open."
+  ],
+  "correction": "Native CRT98262D performs ASCII case-insensitive comparison, not strcmp. Earlier exact-case basename observations remain valid; the old receipt label is corrected.",
+  "retained_failures": [
+    "Cache01 wrong map constructor;02 manager missing target palette. Corrected03 constructs actual NiNode and target manager.",
+    "Classifier07 used RTTI getter instead of factory;08 omitted native CRT thread initialization;09 corrected;10 matrix reuses corrected native setup.",
+    "Cache06 exactly replays05 after an escaping concern; same SHA, not additional unique evidence and05 was not malformed.",
+    "Original long R press did not switch view; retained sample has camera0. Short tap accepted only after byte1 and screenshot.",
+    "First live analyzer wrongly assumed fixed drawn cache counts; retained failed analyzer and corrected result report lazy additions."
+  ]
+}

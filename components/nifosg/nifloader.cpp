@@ -494,16 +494,15 @@ namespace NifOsg
                 {
                     const Nif::NiControllerSequence& embedded = *timeline.mSequence;
                     std::string group = Misc::StringUtils::lowerCase(embedded.mName);
-                    // Oblivion actor animation files contain one controller sequence per
-                    // KF, but their internal names are implementation labels (for
-                    // example "IdleK") rather than the gameplay animation group.  The
-                    // filename is the authoritative group name used by records and
-                    // scripts.  Embedded sequences in NIF models keep their explicit
-                    // names and can still contain multiple independent groups.
+                    // Use the filename stem as the shared renderer's KF resource
+                    // alias. Native gameplay classification also needs the authored
+                    // sequence name (for example Recoil_01), retained separately.
+                    // Embedded NIF sequences keep their explicit renderer names.
                     if (nif.getFilename().extension() == VFS::Path::ExtensionView("kf"))
                         group = std::string(nif.getFilename().stem());
                     SceneUtil::ControllerSequenceMetadata metadata;
                     metadata.mGroup = group;
+                    metadata.mSequenceName = embedded.mName;
                     metadata.mAccumRootName = embedded.mAccumRootName;
                     metadata.mStartTime = embedded.mStartTime;
                     metadata.mStopTime = embedded.mStopTime;

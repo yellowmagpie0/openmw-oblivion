@@ -7934,3 +7934,51 @@ Normal contact adapters still generate no reaction or snapshot descriptors.
 Player body/first-person ownership, general reaction replacement, Stagger's
 resident attack channel and the full normal-input matrix remain open.
 **M15S4 is still incomplete.**
+
+## Authored sequence identity and native cache census (2026-10-19)
+
+The KF loader now retains the authored `NiControllerSequence` name separately
+from its renderer alias. The original loader truncates the first underscore
+suffix from this name to classify the gameplay group, then renames the sequence
+to its resource path. Treating every filename stem as the gameplay group would
+split variants such as `Recoil_01` into unrelated groups. The new field preserves
+case and suffixes verbatim and survives independent holder copies; the existing
+renderer alias continues to select the resource.
+
+Original executable execution verifies **192 cache insertion contexts / 576
+insertions**, including promotion from Single to Multiple, insertion order,
+duplicate names and shared/distinct metadata. Insertion draws no RNG. The second
+eligible resource promotes the collection; the native table flag alone does not
+make its first resource Multiple. A separate **288 classifier contexts** cover
+BlockHit/Recoil/Stagger, four movement prefixes, six weapon-family prefixes,
+mixed case, underscore suffixes and both precision words. Native family codes
+2/4/5 mean OneHand/Staff/Bow. Original CRT `98262D` compares ASCII case
+insensitively; the earlier cached-reaction receipt's `strcmp` label is corrected.
+
+A fresh isolated original-game process supplies four accepted read-only cache
+samples: first/third-person idle, then third/first-person drawn unarmed idle.
+Both animation clocks match exactly at each paused sample and advance between
+them. Initial body/first-person caches contain **278/277 groups and 290/289
+registered sequences**. Drawing adds **six groups and seven registered sequences
+per view**. Existing resource order stays intact; all 16 initial Multiple
+collections agree with this installed archive's listing order. In particular,
+HandToHand AttackLeft is `hook`, base, `jab`, which is not alphabetical. These
+observations do not establish arbitrary loose-file or override ordering.
+
+The original game and owned Steam both exit with code 0. Exact private inputs
+are restored; source prefix, pristine saves, executable, master and meshes archive
+hashes remain unchanged. A long R press that left the view unchanged and the
+first analyzer's incorrect fixed-cache-count assertion are retained. The accepted
+view switch uses a short tap, verified by the live camera byte and direct image
+review. No attack, injected contact, memory write or damage measurement occurs.
+
+The focused `ESM4NativeAnimationMetadata.*` test passes once in each normal and
+ASan/UBSan component build, with exact inventories, no failures/skips and tested
+source fingerprint `00a72a6b8149d3676552e258479b977c75e6df7aad46b9512401a4a0d7d9d2d8`.
+This is focused loader validation; no new full engine run or fork gameplay
+acceptance is claimed, and the sanitizer helper disables leak checking.
+`M15-NATIVE-SEQUENCE-CACHE-VERIFICATION.json` pins source, checks, original
+instruction reports, live observations, boundaries and retained failed attempts.
+The editable cache fixture records input axes and selected original orders.
+Normal contact descriptor generation and the remaining view/channel work are
+still open. **M15S4 remains incomplete.**

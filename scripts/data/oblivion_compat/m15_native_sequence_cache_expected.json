@@ -1,0 +1,304 @@
+{
+  "scope": "Editable inputs and bounded original expectations; no production classifier, normal contact or universal override ordering claim.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "classification": {
+    "internal_groups": {
+      "BlockHit": 28,
+      "Recoil": 30,
+      "Stagger": 31
+    },
+    "movement_prefixes": [
+      "",
+      "Sneak",
+      "Swim",
+      "Fly"
+    ],
+    "family_prefixes": [
+      "",
+      "HandToHand",
+      "OneHand",
+      "TwoHand",
+      "Staff",
+      "Bow"
+    ],
+    "internal_suffix": "_01_extra",
+    "case_modes": [
+      "original",
+      "swap ASCII case in internal name and full filename"
+    ],
+    "precision_words": [
+      639,
+      895
+    ],
+    "filename_template": "meshes\\characters\\_male\\{movement}{family}{group}_01.kf",
+    "text_keys": [
+      [
+        0,
+        "start"
+      ],
+      [
+        1,
+        "end"
+      ]
+    ],
+    "expected_code": "movement_index * 4096 + family_index * 256 + group_id",
+    "expected_frames": [
+      0,
+      1
+    ],
+    "expected_rename": "exact supplied full filename",
+    "expected_root_after": null
+  },
+  "insertion": {
+    "base_groups": [
+      0,
+      20,
+      27,
+      28,
+      29,
+      30,
+      31,
+      33
+    ],
+    "prefixes": [
+      1,
+      5
+    ],
+    "metadata_identity": [
+      "shared",
+      "distinct"
+    ],
+    "insertion_orders": [
+      [
+        0,
+        1,
+        2
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "precision_words": [
+      639,
+      895
+    ],
+    "multiple_enabled_groups": [
+      20,
+      28,
+      29,
+      30,
+      31
+    ],
+    "expected": "First insertion Single. Second eligible insertion promotes to Multiple, preserves first item and appends; third appends. Duplicate filenames remain. Ineligible groups stay Single: distinct metadata replaces, shared metadata retains first. No insertion RNG draws."
+  },
+  "original_live": {
+    "protocol": [
+      "Verify pinned executable/master/meshes hashes. Clone restored private prefix; verify private ini/plugins/saves resolve inside clone, back up exact bytes, verify pristine67d927ca...",
+      "Start an owned Steam on private Xvfb, then launch original on separate private Xvfb using cloned prefix; record process PID/start ticks/prefix/display.",
+      "Use Continue/Yes to enter world, F9 to reload pristine, then grave to pause. Read-only debugger verifies live function hashes and snapshots both caches.",
+      "Close console, tap R0.1sec, reopen console and verify camera byte1 before accepting third-person sample.",
+      "Close console, tap F0.1sec, wait for draw, reopen and inspect both caches. Then repeat short R tap and inspect first-person drawn.",
+      "No F5, function calls, injected contacts, memory writes or attack inputs. Quit qqq; require wrapper0 and debugger detached. Restore exact cloned inputs, verify source/pristine unchanged, shutdown only epoch-identified owned Steam, require wrapper0."
+    ],
+    "expected_camera_bytes": [
+      0,
+      1,
+      1,
+      0
+    ],
+    "initial_counts": {
+      "body": [
+        278,
+        290
+      ],
+      "firstperson": [
+        277,
+        289
+      ]
+    },
+    "drawn_counts": {
+      "body": [
+        284,
+        297
+      ],
+      "firstperson": [
+        283,
+        296
+      ]
+    },
+    "count_fields": [
+      "cache groups",
+      "registered sequences"
+    ],
+    "drawn_new_keys": [
+      4374,
+      278,
+      279,
+      280,
+      281,
+      282
+    ],
+    "expected": "Existing resource names/order unchanged; body/first-person clocks exactly equal at each accepted paused sample and strictly advance between samples.",
+    "multiple_collections": [
+      {
+        "view": "body",
+        "key": 532,
+        "collection": "Multiple",
+        "resources": [
+          "onehandattackleft.kf",
+          "onehandattackleft_chop.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 533,
+        "collection": "Multiple",
+        "resources": [
+          "onehandattackright_chop.kf",
+          "onehandattackright.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 542,
+        "collection": "Multiple",
+        "resources": [
+          "onehandrecoil_01.kf",
+          "onehandrecoil_02.kf",
+          "onehandrecoil_03.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 276,
+        "collection": "Multiple",
+        "resources": [
+          "handtohandattackleft_hook.kf",
+          "handtohandattackleft.kf",
+          "handtohandattackleft_jab.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 277,
+        "collection": "Multiple",
+        "resources": [
+          "handtohandattackright_jab.kf",
+          "handtohandattackright.kf",
+          "handtohandattackright_hook.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 788,
+        "collection": "Multiple",
+        "resources": [
+          "twohandattackleft_chop.kf",
+          "twohandattackleft.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 789,
+        "collection": "Multiple",
+        "resources": [
+          "twohandattackright_chop.kf",
+          "twohandattackright.kf"
+        ]
+      },
+      {
+        "view": "body",
+        "key": 798,
+        "collection": "Multiple",
+        "resources": [
+          "twohandrecoil_01.kf",
+          "twohandrecoil_02.kf",
+          "twohandrecoil_03.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 532,
+        "collection": "Multiple",
+        "resources": [
+          "onehandattackleft.kf",
+          "onehandattackleft_chop.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 533,
+        "collection": "Multiple",
+        "resources": [
+          "onehandattackright_chop.kf",
+          "onehandattackright.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 542,
+        "collection": "Multiple",
+        "resources": [
+          "onehandrecoil_01.kf",
+          "onehandrecoil_02.kf",
+          "onehandrecoil_03.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 276,
+        "collection": "Multiple",
+        "resources": [
+          "handtohandattackleft_hook.kf",
+          "handtohandattackleft.kf",
+          "handtohandattackleft_jab.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 277,
+        "collection": "Multiple",
+        "resources": [
+          "handtohandattackright_jab.kf",
+          "handtohandattackright.kf",
+          "handtohandattackright_hook.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 788,
+        "collection": "Multiple",
+        "resources": [
+          "twohandattackleft_chop.kf",
+          "twohandattackleft.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 789,
+        "collection": "Multiple",
+        "resources": [
+          "twohandattackright_chop.kf",
+          "twohandattackright.kf"
+        ]
+      },
+      {
+        "view": "firstperson",
+        "key": 798,
+        "collection": "Multiple",
+        "resources": [
+          "twohandrecoil_01.kf",
+          "twohandrecoil_02.kf",
+          "twohandrecoil_03.kf"
+        ]
+      }
+    ]
+  }
+}

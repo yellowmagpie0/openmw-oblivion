@@ -981,7 +981,7 @@ namespace
             {12.f, "End"}, {10.5f, " Hit\r\nSound: RawName "}};
         auto sequence = std::make_unique<Nif::NiControllerSequence>();
         sequence->mRecordType = Nif::RC_NiControllerSequence;
-        sequence->mName = "InternalLabel";
+        sequence->mName = "AttackLeft_Hook";
         sequence->mAccumRootName = " AuthoredRoot ";
         sequence->mStartTime = 10;
         sequence->mStopTime = 12;
@@ -1021,6 +1021,7 @@ namespace
         ASSERT_EQ(holder->mControllerSequences.size(), 1);
         const auto& original = holder->mControllerSequences.front();
         EXPECT_EQ(original.mGroup, "handtohandattackleft");
+        EXPECT_EQ(original.mSequenceName, "AttackLeft_Hook");
         EXPECT_EQ(original.mAccumRootName, " AuthoredRoot ");
         EXPECT_EQ(original.mStartTime, 10);
         EXPECT_EQ(original.mStopTime, 12);
@@ -1043,6 +1044,8 @@ namespace
         osg::ref_ptr<SceneUtil::KeyframeHolder> copied
             = new SceneUtil::KeyframeHolder(*holder, osg::CopyOp::SHALLOW_COPY);
         EXPECT_EQ(copied->mControllerSequences, holder->mControllerSequences);
+        copied->mControllerSequences[0].mSequenceName = "Recoil_01";
+        EXPECT_EQ(original.mSequenceName, "AttackLeft_Hook");
         copied->mControllerSequences[0].mAccumRootName = "OtherRoot";
         EXPECT_EQ(holder->mControllerSequences[0].mAccumRootName, " AuthoredRoot ");
         copied->mControllerSequences[0].mTextKeys[0].second = "changed";

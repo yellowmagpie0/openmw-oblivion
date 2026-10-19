@@ -66,6 +66,9 @@ namespace SceneUtil
     struct ControllerSequenceMetadata
     {
         std::string mGroup;
+        // Authored NiControllerSequence name, before resource aliases or native
+        // group suffix handling. A KF filename need not name the same group.
+        std::string mSequenceName;
         // Authored sequence root name, retained verbatim for native scene binding.
         std::string mAccumRootName;
         float mStartTime = 0;
