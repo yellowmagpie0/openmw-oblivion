@@ -1,0 +1,943 @@
+{
+  "schema_version": 1,
+  "scope": "Correct the selected-shield condition writer to honor original attacker action6/base Block below Journeyman, while preserving selection/RNG/material and earlier block wear. Original shield break requests and post-break caller behavior independently characterized; actual shield break/drop publication remains open. Bounded normal/instrumented contact and completed-contact fresh-process continuation. Full M15S4 incomplete.",
+  "source_parent_commit": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+  "tested_dirty_source_fingerprint": "e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b",
+  "source_sha256": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "82c1df43664a18b7ba342af922899fa1783ce43608124a0d7ad589246a0c4224",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "d456e4e74e9b4a381a079e7dbbf3bbf23702b916818d6d8314afed815197c963"
+  },
+  "oracle_reports": {
+    "rtti-vtables": {
+      "report": {
+        "passed": true,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "method": "MSVC RTTI primary vtable: exact TypeDescriptor, zero-offset CompleteObjectLocator, locator reference followed by executable slot0. WEAP crosscheck against prior primary vtable.",
+        "rows": [
+          {
+            "class": "TESObjectARMO",
+            "type_descriptor": "0xb03778",
+            "vtable": "0xa441bc",
+            "first": "0x60d0a0",
+            "quest_virtual_78": "0x4d7030",
+            "locator": "0xabb050"
+          },
+          {
+            "class": "TESObjectWEAP",
+            "type_descriptor": "0xb036fc",
+            "vtable": "0xa45354",
+            "first": "0x60d0a0",
+            "quest_virtual_78": "0x4d7030",
+            "locator": "0xabbc74"
+          }
+        ]
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/rtti-vtables.json",
+        "sha256": "aa616a1149ab3d64aae8562f671df706da6a5aa146a9d03c3060b9777244d5ce"
+      }
+    },
+    "wear": {
+      "report": {
+        "passed": true,
+        "cases": 576,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "89f7adb7969c3cec526eb145bc9a73d6020c84a6e96938b7f8d9f1fa28c9946d",
+        "actual_paths": [
+          "Full Player65FF10 or NPC5F3870 wear/break branch",
+          "ARMO primary RTTI vtable A441BC, actual4D7030 retention getter",
+          "Actual64B2D0/484E80/41DF10 worn shield-entry readers",
+          "Actual468FF0 slot13,60E260 cache invalidation and711440 node rotation conversion"
+        ],
+        "boundaries": [
+          "Max-health RTTI component/current extra-health/base skill and GMST storage readers supplied.",
+          "Reference bookkeeping/condition writer captured; no actual native inventory mutation.",
+          "Actor+168 query mode supplied0; actual process+120 reads supplied cached node with identity rotation and position11,12,13.",
+          "Unequip5F2E70/drop5FC440 calls captured; their boundary effect clears supplied ExtraWornLeft flag for later-read experiments. Drop notification4DC000 captured.",
+          "No native dropped-reference construction, physics, rendering or original-game process."
+        ],
+        "observation": "Broken worn shields on active processes request Player/flag400 retention or ordinary NPC drop. Actual worn-entry getter, not weapon-out byte, gates armor branch. Low process or absent worn flag keeps no equipment consequence. Nonzero remaining condition keeps equipment."
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/wear-report.json",
+        "sha256": "04202129f18c91038afe7758ceadfb1da0770b8b863f3ec77681baf2691d2616"
+      },
+      "corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/wear-corpus.json",
+        "sha256": "89f7adb7969c3cec526eb145bc9a73d6020c84a6e96938b7f8d9f1fa28c9946d"
+      }
+    },
+    "caller": {
+      "report": {
+        "passed": true,
+        "cases": 3456,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "641559f0adef90b7fc70d178f5d6e9eee2730a3ddc541a94b26cc75a2db80043",
+        "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+        "observation": "Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.",
+        "rows_file": "caller-corpus.json"
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-report.json",
+        "sha256": "fefff56f6aa6d0aab846a075a9540a525fbe209bf7bb59e448b37da46a0507b1"
+      },
+      "corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-corpus.json",
+        "sha256": "641559f0adef90b7fc70d178f5d6e9eee2730a3ddc541a94b26cc75a2db80043"
+      }
+    },
+    "condition": {
+      "report": {
+        "passed": true,
+        "cases": 12,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "2896799cac37d22c22bbd425f1160d9e44284ffaeced2e0f750dc3c2b45ebf8f",
+        "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+        "observation": "Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock5. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.",
+        "rows_file": "condition-corpus.json"
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/condition-report.json",
+        "sha256": "04941243d0425e3d57b2acd54f0e80de18cab3e313522ddc2e30e986082fef81"
+      },
+      "corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/condition-corpus.json",
+        "sha256": "2896799cac37d22c22bbd425f1160d9e44284ffaeced2e0f750dc3c2b45ebf8f"
+      }
+    },
+    "threshold": {
+      "report": {
+        "passed": true,
+        "cases": 12,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "59b761f57d69a1b9bbdb1d37f1e7940d0d83ae464ea949b56e22229523facf02",
+        "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies24/25/49/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+        "observation": "Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock below50. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.",
+        "rows_file": "threshold-corpus.json"
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/threshold-report.json",
+        "sha256": "1949e51266d1310e9e542ba33824c2c87e1149e384f1a754728aaca3faf066f6"
+      },
+      "corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/threshold-corpus.json",
+        "sha256": "59b761f57d69a1b9bbdb1d37f1e7940d0d83ae464ea949b56e22229523facf02"
+      }
+    },
+    "runtime-selection": {
+      "report": {
+        "passed": true,
+        "cases": 12,
+        "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "c3e10a193413855484aee5dd171b38fa7721fef6c8490ce22e6cc0f0e4e094ce",
+        "scope": "Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.",
+        "observation": "Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock5. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.",
+        "rows_file": "runtime-selection-corpus.json"
+      },
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-selection-report.json",
+        "sha256": "f19886343de48a1012dc3e7cda70c425d804b8e07c2a22f5a2757769d36c2c22"
+      },
+      "corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-selection-corpus.json",
+        "sha256": "c3e10a193413855484aee5dd171b38fa7721fef6c8490ce22e6cc0f0e4e094ce"
+      }
+    }
+  },
+  "editable_original_probes": {
+    "rtti-vtables.py": "from pathlib import Path\nimport struct,json,hashlib\np=Path(__file__).parent;m=json.loads((p/'original-exe.json').read_text());d=Path(m['path']).read_bytes();assert hashlib.sha256(d).hexdigest()==m['sha256']\ndef va(off):\n for _,v,r,n in m['sections']:\n  if r<=off<r+n:return v+off-r\n raise ValueError(hex(off))\ndef off(a):\n for _,v,r,n in m['sections']:\n  if v<=a<v+n:return r+a-v\n raise ValueError(hex(a))\ndef word(a):return struct.unpack_from('<I',d,off(a))[0]\nrows=[]\nfor name in ['TESObjectARMO','TESObjectWEAP']:\n token=('.?AV'+name+'@@\\0').encode();i=d.index(token);td=va(i-8);matches=[]\n for j in range(0,len(d)-20,4):\n  if struct.unpack_from('<I',d,j+12)[0]!=td:continue\n  sig,base,ctor=struct.unpack_from('<III',d,j)\n  if sig!=0 or base!=0 or ctor!=0:continue\n  col=va(j)\n  needle=struct.pack('<I',col);k=0\n  while (k:=d.find(needle,k))>=0:\n   if k%4==0:\n    vt=va(k+4)\n    try:\n     first=word(vt);quest=word(vt+0x78)\n     if 0x401000<=first<0xa20000:matches.append({'vtable':hex(vt),'first':hex(first),'quest_virtual_78':hex(quest),'locator':hex(col)})\n    except ValueError:pass\n   k+=1\n assert len(matches)==1,(name,matches)\n rows.append({'class':name,'type_descriptor':hex(td),**matches[0]})\nassert rows[1]['vtable']=='0xa45354' and all(x['quest_virtual_78']=='0x4d7030' for x in rows)\nr={'passed':True,'executable_sha256':m['sha256'],'method':'MSVC RTTI primary vtable: exact TypeDescriptor, zero-offset CompleteObjectLocator, locator reference followed by executable slot0. WEAP crosscheck against prior primary vtable.','rows':rows};(p/'rtti-vtables.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "wear-probe.py": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent;m=json.loads((out/'original-exe.json').read_text());data=Path(m['path']).read_bytes();assert hashlib.sha256(data).hexdigest()==m['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x10000)\nfor _,va,raw,size in m['sections']:u.mem_write(va,data[raw:raw+size])\ndef w(a,v):u.mem_write(a,struct.pack('<I',v&0xffffffff))\ndef ri(a):return struct.unpack('<I',u.mem_read(a,4))[0]\ndef fl(a,v):u.mem_write(a,struct.pack('<f',v))\ndef rf(a):return struct.unpack('<f',u.mem_read(a,4))[0]\ndef ret(value=0,n=0):\n sp=u.reg_read(UC_X86_REG_ESP);pc=ri(sp);u.reg_write(UC_X86_REG_EAX,value);u.reg_write(UC_X86_REG_ESP,sp+4+n);u.reg_write(UC_X86_REG_EIP,pc)\nactor,vt,process,pvt,item,extra,armor,health,node,stack,end=0x2001000,0x2002000,0x2003000,0x2003500,0x2004000,0x2004600,0x2005000,0x2005300,0x2007000,0x200e000,0x2000000\nw(item,0x2004500);w(0x2004500,extra);w(0x2004504,0);w(item+8,armor);w(armor,0xa441bc);u.mem_write(armor+4,b'\\x14');u.mem_write(armor+0x68,struct.pack('<H',0x2000))\nassert ri(0xa441bc+0x78)==0x4d7030\nw(health,0x2005200);w(0x2005200+0x10,0x2000710)\nu.mem_write(0x2000730,b'\\xd9\\x05'+struct.pack('<I',0x2006510)+b'\\xc3')\nu.mem_write(0x2000740,b'\\xd9\\x05'+struct.pack('<I',0x2006520)+b'\\xc2\\x04\\x00');fl(0x2006520,5)\nfor a,val in zip((0xb3a4f8,0xb3a500,0xb3a508,0xb3a510),(25,50,75,100)):w(a,val)\nw(0xbaabe0,0);u.mem_write(0xb3b908,b'\\0');u.mem_write(0xb3bb06,b'\\0')\nsettings={0xb374f0:1.5,0xb374f8:1.5,0xb37508:.5,0xb37500:.5}\nfor i in range(9):fl(node+0x64+i*4,1 if i in (0,4,8) else 0)\nfor i,x in enumerate((11,12,13)):fl(node+0x88+i*4,x)\nevents=[];writes=[];quest_calls=0;shield_calls=0;refreshes=0\n\ndef hook(uc,ip,size,_):\n global quest_calls,shield_calls,refreshes\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x9832e6:ret(health)\n elif ip==0x2000710:ret(300)\n elif ip==0x41e810:uc.reg_write(UC_X86_REG_EIP,0x2000730)\n elif ip==0x41e6f0:ret()\n elif ip==0x488830:writes.append(ri(sp+4));ret(n=16)\n elif ip==0x5ead00:\n  assert ri(sp+4)==(18 if heavy else 27);uc.reg_write(UC_X86_REG_EIP,0x2000740)\n elif ip==0x403c00:fl(0x2006530,settings[uc.reg_read(UC_X86_REG_ECX)]);ret(0x2006530)\n elif ip==0x60e260:refreshes+=1\n elif ip==0x4d7030:quest_calls+=1 # Actual ARMO vtable+78 implementation executes.\n elif ip==0x64b2d0:shield_calls+=1 # Actual +F8 ->484E80 ->41DF10 worn checks execute.\n elif ip==0x2000770:ret(0) # actor+168 query mode; process+120 actual cached-node reader executes.\n elif ip==0x5f2e70:\n  args=[ri(sp+4+i*4) for i in range(6)];assert args==[armor,1,extra,0,1,0]\n  events.append({'kind':'unequip','args':args});u.mem_write(extra+0xb,b'\\0');ret(n=24)\n elif ip==0x5fc440:\n  args=[ri(sp+4+i*4) for i in range(5)];assert args[:3]==[armor,extra,1],args\n  position=[rf(args[3]+i*4) for i in range(3)];rotation=[rf(args[4]+i*4) for i in range(3)]\n  assert position==[11.,12.,13.];assert all(x==0 for x in rotation)\n  events.append({'kind':'drop','base':args[0],'extra':args[1],'count':args[2],'position':position,'rotation':rotation});u.mem_write(extra+0xb,b'\\0');ret(0x2006000,20)\n elif ip==0x4dc000:events.append({'kind':'notification','args':[ri(sp+4),ri(sp+8)]});ret()\nu.hook_add(UC_HOOK_CODE,hook)\nrows=[]\nfor kind,quest,active,worn,drawn,current,heavy,cw in itertools.product(('player','npc'),(False,True),(False,True),(False,True),(False,True),(0.,1.125,10.),(False,True),(0x7f,0x27f,0x37f)):\n actualvt=0xa73a0c if kind=='player' else 0xa6fc9c\n u.mem_write(vt,bytes(u.mem_read(actualvt,0x600)));w(vt+0x168,0x2000770);w(actor,vt);w(actor+0x58,process);w(process,0xa71814 if active else 0xa720a4);w(process+0xf0,item);w(process+0x104,node);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,bytes([0x10 if worn else 0]));w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,.25);w(stack+12,0)\n events=[];writes=[];quest_calls=shield_calls=refreshes=0\n for reg,v in ((UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,actor),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)):u.reg_write(reg,v)\n try:u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n except Exception:print(kind,quest,active,worn,drawn,current,heavy,cw,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n broken=current<2;eligible=broken and active and worn\n expected='unequip' if kind=='player' or quest else 'drop'\n assert len(writes)==1 and refreshes==1 and bool(u.reg_read(UC_X86_REG_EAX)&255)==broken\n assert [e['kind'] for e in events]==([expected]+(['notification'] if expected=='drop' else []) if eligible else []),events\n rows.append(dict(actor=kind,flags=0x400 if quest else 0,active=active,worn=worn,weapon_out=drawn,current=current,heavy=heavy,cw=cw,condition_bits=writes[0],events=events,quest_getter_calls=quest_calls,shield_getter_calls=shield_calls))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'wear-corpus.json').write_bytes(blob)\nr={'passed':True,'cases':len(rows),'executable_sha256':m['sha256'],'corpus_sha256':hashlib.sha256(blob).hexdigest(),'actual_paths':['Full Player65FF10 or NPC5F3870 wear/break branch','ARMO primary RTTI vtable A441BC, actual4D7030 retention getter','Actual64B2D0/484E80/41DF10 worn shield-entry readers','Actual468FF0 slot13,60E260 cache invalidation and711440 node rotation conversion'],'boundaries':['Max-health RTTI component/current extra-health/base skill and GMST storage readers supplied.','Reference bookkeeping/condition writer captured; no actual native inventory mutation.','Actor+168 query mode supplied0; actual process+120 reads supplied cached node with identity rotation and position11,12,13.','Unequip5F2E70/drop5FC440 calls captured; their boundary effect clears supplied ExtraWornLeft flag for later-read experiments. Drop notification4DC000 captured.','No native dropped-reference construction, physics, rendering or original-game process.'],'observation':'Broken worn shields on active processes request Player/flag400 retention or ordinary NPC drop. Actual worn-entry getter, not weapon-out byte, gates armor branch. Low process or absent worn flag keeps no equipment consequence. Nonzero remaining condition keeps equipment.'}\n(out/'wear-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "caller-probe.py": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nn={'__file__':str(out/'wear-probe.py')}\ns=(out/'wear-probe.py').read_text().split('\\nrows=[]')[0].replace('u.hook_add(UC_HOOK_CODE,hook)','handle=u.hook_add(UC_HOOK_CODE,hook)')\nexec(s,n)\nu,w,ri,fl,rf,ret=(n[k] for k in ('u','w','ri','fl','rf','ret'))\nu.hook_del(n['handle']);original=n['hook']\nactor,vt,process,item,extra,armor,stack,end=(n[k] for k in ('actor','vt','process','item','extra','armor','stack','end'))\nattacker,attackbase,vbase,tls,manager=0x2008000,0x2009000,0x2009800,0x200a000,0x200b000\nw(actor+0x1c,vbase);u.mem_write(vbase+4,b'\\x23');w(attacker,0xa6fc9c);w(attacker+0x1c,vbase);w(attacker+0x58,0x200c800);w(0x200c800,0x200c900);w(0x200c900+0xec,0x2000790);w(0x200c900+0x2c0,0x20007a0);w(0x200c900+0x2d0,0x20007b0)\nu.mem_write(0x20007c0,b'\\xd9\\x05'+struct.pack('<I',0x2006550)+b'\\xc2\\x04\\x00')\nu.mem_map(0,0x1000);w(0,0);w(0xb3c0f0,manager);w(0xb3c20c,0);w(0xb16304,100)\nu.mem_write(0xb069c3,b'\\0');u.mem_write(0xb333b8,b'\\0')\nfor a,v in zip((0xb36ec8,0xb36eb8,0xb36ec0,0xb36ed0,0xb36ed8),(10,25,15,10,10)):w(a,v)\nphase='';sounds=[];draws=0;lookups=[];edids=[]\ndef hook(uc,ip,size,unused):\n global draws,selected\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x488830:\n  original(uc,ip,size,unused);fl(0x2006510,struct.unpack('<f',struct.pack('<I',n['writes'][-1]))[0])\n elif phase=='caller' and ip==0x401f00:\n  size=ri(sp+4);assert size in (8,12);ret(0x200c200 if size==8 else 0x200c100)\n elif phase=='caller' and ip==0x41e860:ret(1)\n elif phase=='caller' and ip==0x5ffc20:selected=ri(sp+0) if False else uc.reg_read(UC_X86_REG_EAX)\n elif phase=='caller' and ip==0x41e6f0:ret(0x200c000)\n elif ip==0x98c0f5:ret(tls)\n elif ip==0x47df80:draws+=1\n elif ip==0x486790:\n  slot=ri(sp+4);assert ri(sp+8)==1\n  equipped=bool(bytes(u.mem_read(extra+0xb,1))[0]&0x18)\n  lookups.append([slot,equipped]);ret(item if slot==13 and equipped else 0,8)\n elif phase=='caller' and ip==0x6af880:sounds.append([ri(sp+4+i*4) for i in range(9)]);ret()\n elif ip in (0x484470,0x401f20):ret()\n elif ip==0x20007b0:ret(attacker_action)\n elif ip==0x5ead00 and uc.reg_read(UC_X86_REG_ECX)==attacker:\n  assert ri(sp+4)==15;uc.reg_write(UC_X86_REG_EIP,0x20007c0)\n elif phase=='dispatcher' and ip in (0x2000790,0x20007a0):ret(0,4 if ip==0x2000790 else 0)\n elif phase=='dispatcher' and ip==0x447490:\n  a=ri(sp+4);b=bytearray()\n  while u.mem_read(a,1)!=b'\\0':b.extend(u.mem_read(a,1));a+=1\n  edids.append(b.decode());ret(0,4)\n else:original(uc,ip,size,unused)\nu.hook_add(UC_HOOK_CODE,hook)\nfrom collections import deque\ntrace=deque(maxlen=20)\ndef record(uc,ip,size,_):\n if ip<0x400000:raise RuntimeError('invalid target '+str(list(trace)))\n trace.append(hex(ip))\nu.hook_add(UC_HOOK_CODE,record)\ndef registers(cw,**kw):\n values={UC_X86_REG_FPCW:cw,UC_X86_REG_FPTAG:0xffff,UC_X86_REG_FPSW:0}\n values.update({globals()['UC_X86_REG_'+k]:v for k,v in kw.items()})\n for reg,v in values.items():u.reg_write(reg,v)\nrows=[]\nfor kind,quest,drawn,current,heavy,cw,seed,weapon,attacker_action,attacker_block in itertools.product(('player','npc'),(False,True),(False,True),(1.125,10.),(False,True),(0x7f,0x27f,0x37f),(0,1,0x15a4),(-1,0,2),(0,6),(5,50)):\n fl(0x2006550,attacker_block);n['heavy']=heavy;n['events']=[];n['writes']=[];n['quest_calls']=n['shield_calls']=n['refreshes']=0\n u.mem_write(vt,bytes(u.mem_read(0xa73a0c if kind=='player' else 0xa6fc9c,0x600)));w(vt+0x168,0x2000770);w(actor,vt);w(actor+0x58,process);w(process,0xa71814);w(process+0xf0,item);w(process+0x104,n['node']);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,b'\\x10');w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n phase='wear';fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,.25);w(stack+12,0);registers(cw,ESP=stack,ECX=actor)\n u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n first_condition=n['writes'][0];broken=first_condition==0\n phase='caller';sounds=[];draws=0;lookups=[];selected=0;u.mem_write(stack,bytes(0x100));w(stack+0x2c,attackbase if weapon>=0 else 0);u.mem_write(attackbase+0x90,bytes([max(0,weapon)]));fl(stack+0x18,2);fl(stack+0x30,.125);fl(stack+0x34,.125);fl(stack+0x38,.1);w(tls+0x14,seed)\n registers(cw,ESP=stack,ESI=actor,EDI=attacker)\n try:u.emu_start(0x5ff914,0x5ffd69,count=15000)\n except Exception:print('FAIL',kind,quest,drawn,current,heavy,cw,seed,weapon,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==0x5ffd69 and u.reg_read(UC_X86_REG_ESP)==stack\n assert len(sounds)==1,(sounds,n['events'])\n args=sounds[0];assert args[4]==weapon&0xffffffff\n assert args[5]==0xffffffff and args[6]==(0xffffffff if broken else int(heavy)),args\n assert (draws==7 and selected==0) if broken else 1<=draws<=7,(draws,lookups,selected)\n assert len(n['writes'])==1+int(bool(selected) and attacker_action==6 and attacker_block<50),n['writes']\n assert len(n['events'])==(0 if not broken else 1 if kind=='player' or quest else 2)\n # Execute actual dispatcher prefix for exactly the caller's captured request.\n # Original source/victim base/position getters execute. Source process weapon and position flags getters supplied zero.\n phase='dispatcher';edids=[];dsp=stack-0x1000;w(dsp,end)\n for i,a in enumerate(args):w(dsp+4+i*4,a)\n registers(cw,ESP=dsp)\n try:u.emu_start(0x6af880,0x6afd28,count=10000)\n except Exception:print('DISPATCH',list(trace),hex(u.reg_read(UC_X86_REG_EIP)),args);raise\n assert u.reg_read(UC_X86_REG_EIP)==0x6afd28 and u.reg_read(UC_X86_REG_ESP)==dsp-52\n expected=([] if broken else ['WPNBlockShieldHeavy' if heavy else 'WPNBlockShieldLight'])+['PHYDamageFlesh']+[('WPNHitHand' if weapon==-1 else ('WPNHitBlade' if weapon==0 else 'WPNHitBlunt')+('Flesh' if broken else ''))]\n assert edids==expected,(edids,expected)\n rows.append(dict(actor=kind,quest=quest,weapon_out=drawn,current=current,heavy=heavy,cw=cw,seed=seed,attacker_weapon_type=weapon,first_condition_bits=first_condition,condition_writes=n['writes'].copy(),equipment_events=n['events'].copy(),attacker_action=attacker_action,attacker_base_block=attacker_block,selected_entry=selected,armor_selection_draws=draws,next_rng=ri(tls+0x14),equipped_slot_lookups=lookups.copy(),sound_arguments=args,sound_edids=edids.copy()))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'caller-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=n['m']['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.',observation='Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.',rows_file='caller-corpus.json')\n(out/'caller-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "condition-probe.py": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nn={'__file__':str(out/'wear-probe.py')}\ns=(out/'wear-probe.py').read_text().split('\\nrows=[]')[0].replace('u.hook_add(UC_HOOK_CODE,hook)','handle=u.hook_add(UC_HOOK_CODE,hook)')\nexec(s,n)\nu,w,ri,fl,rf,ret=(n[k] for k in ('u','w','ri','fl','rf','ret'))\nu.hook_del(n['handle']);original=n['hook']\nactor,vt,process,item,extra,armor,stack,end=(n[k] for k in ('actor','vt','process','item','extra','armor','stack','end'))\nattacker,attackbase,vbase,tls,manager=0x2008000,0x2009000,0x2009800,0x200a000,0x200b000\nw(actor+0x1c,vbase);u.mem_write(vbase+4,b'\\x23');w(attacker,0xa6fc9c);w(attacker+0x1c,vbase);w(attacker+0x58,0x200c800);w(0x200c800,0x200c900);w(0x200c900+0xec,0x2000790);w(0x200c900+0x2c0,0x20007a0);w(0x200c900+0x2d0,0x20007b0)\nu.mem_write(0x20007c0,b'\\xd9\\x05'+struct.pack('<I',0x2006550)+b'\\xc2\\x04\\x00')\nu.mem_map(0,0x1000);w(0,0);w(0xb3c0f0,manager);w(0xb3c20c,0);w(0xb16304,100)\nu.mem_write(0xb069c3,b'\\0');u.mem_write(0xb333b8,b'\\0')\nfor a,v in zip((0xb36ec8,0xb36eb8,0xb36ec0,0xb36ed0,0xb36ed8),(10,25,15,10,10)):w(a,v)\nphase='';sounds=[];draws=0;lookups=[];edids=[]\ndef hook(uc,ip,size,unused):\n global draws,selected\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x488830:\n  original(uc,ip,size,unused);fl(0x2006510,struct.unpack('<f',struct.pack('<I',n['writes'][-1]))[0])\n elif phase=='caller' and ip==0x401f00:\n  size=ri(sp+4);assert size in (8,12);ret(0x200c200 if size==8 else 0x200c100)\n elif phase=='caller' and ip==0x41e860:ret(1)\n elif phase=='caller' and ip==0x5ffc20:selected=ri(sp+0) if False else uc.reg_read(UC_X86_REG_EAX)\n elif phase=='caller' and ip==0x41e6f0:ret(0x200c000)\n elif ip==0x98c0f5:ret(tls)\n elif ip==0x47df80:draws+=1\n elif ip==0x486790:\n  slot=ri(sp+4);assert ri(sp+8)==1\n  equipped=bool(bytes(u.mem_read(extra+0xb,1))[0]&0x18)\n  lookups.append([slot,equipped]);ret(item if slot==13 and equipped else 0,8)\n elif phase=='caller' and ip==0x6af880:sounds.append([ri(sp+4+i*4) for i in range(9)]);ret()\n elif ip in (0x484470,0x401f20):ret()\n elif ip==0x20007b0:ret(attacker_action)\n elif ip==0x5ead00 and uc.reg_read(UC_X86_REG_ECX)==attacker:\n  assert ri(sp+4)==15;uc.reg_write(UC_X86_REG_EIP,0x20007c0)\n elif phase=='dispatcher' and ip in (0x2000790,0x20007a0):ret(0,4 if ip==0x2000790 else 0)\n elif phase=='dispatcher' and ip==0x447490:\n  a=ri(sp+4);b=bytearray()\n  while u.mem_read(a,1)!=b'\\0':b.extend(u.mem_read(a,1));a+=1\n  edids.append(b.decode());ret(0,4)\n else:original(uc,ip,size,unused)\nu.hook_add(UC_HOOK_CODE,hook)\nfrom collections import deque\ntrace=deque(maxlen=20)\ndef record(uc,ip,size,_):\n if ip<0x400000:raise RuntimeError('invalid target '+str(list(trace)))\n trace.append(hex(ip))\nu.hook_add(UC_HOOK_CODE,record)\ndef registers(cw,**kw):\n values={UC_X86_REG_FPCW:cw,UC_X86_REG_FPTAG:0xffff,UC_X86_REG_FPSW:0}\n values.update({globals()['UC_X86_REG_'+k]:v for k,v in kw.items()})\n for reg,v in values.items():u.reg_write(reg,v)\nrows=[]\nfor kind,quest,drawn,current,heavy,cw,seed,weapon,attacker_action,attacker_block in itertools.product(('npc',),(False,),(False,),(100.125,),(True,),(0x7f,0x27f,0x37f),(0,),(0,),(0,6),(5,50)):\n fl(0x2006550,attacker_block);n['heavy']=heavy;n['events']=[];n['writes']=[];n['quest_calls']=n['shield_calls']=n['refreshes']=0\n u.mem_write(vt,bytes(u.mem_read(0xa73a0c if kind=='player' else 0xa6fc9c,0x600)));w(vt+0x168,0x2000770);w(actor,vt);w(actor+0x58,process);w(process,0xa71814);w(process+0xf0,item);w(process+0x104,n['node']);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,b'\\x10');w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n phase='wear';fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,7.5);w(stack+12,0);registers(cw,ESP=stack,ECX=actor)\n u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n first_condition=n['writes'][0];broken=first_condition==0\n phase='caller';sounds=[];draws=0;lookups=[];selected=0;u.mem_write(stack,bytes(0x100));w(stack+0x2c,attackbase if weapon>=0 else 0);u.mem_write(attackbase+0x90,bytes([max(0,weapon)]));fl(stack+0x18,2);fl(stack+0x30,.5);fl(stack+0x34,45);fl(stack+0x38,.25);w(tls+0x14,seed)\n registers(cw,ESP=stack,ESI=actor,EDI=attacker)\n try:u.emu_start(0x5ff914,0x5ffd69,count=15000)\n except Exception:print('FAIL',kind,quest,drawn,current,heavy,cw,seed,weapon,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==0x5ffd69 and u.reg_read(UC_X86_REG_ESP)==stack\n assert len(sounds)==1,(sounds,n['events'])\n args=sounds[0];assert args[4]==weapon&0xffffffff\n assert args[5]==0xffffffff and args[6]==(0xffffffff if broken else int(heavy)),args\n assert (draws==7 and selected==0) if broken else 1<=draws<=7,(draws,lookups,selected)\n assert len(n['writes'])==1+int(bool(selected) and attacker_action==6 and attacker_block<50),n['writes']\n assert n['writes'][-1]==(1113358336 if attacker_action==6 and attacker_block<50 else 1118945280),n['writes']\n assert len(n['events'])==(0 if not broken else 1 if kind=='player' or quest else 2)\n # Execute actual dispatcher prefix for exactly the caller's captured request.\n # Original source/victim base/position getters execute. Source process weapon and position flags getters supplied zero.\n phase='dispatcher';edids=[];dsp=stack-0x1000;w(dsp,end)\n for i,a in enumerate(args):w(dsp+4+i*4,a)\n registers(cw,ESP=dsp)\n try:u.emu_start(0x6af880,0x6afd28,count=10000)\n except Exception:print('DISPATCH',list(trace),hex(u.reg_read(UC_X86_REG_EIP)),args);raise\n assert u.reg_read(UC_X86_REG_EIP)==0x6afd28 and u.reg_read(UC_X86_REG_ESP)==dsp-52\n expected=([] if broken else ['WPNBlockShieldHeavy' if heavy else 'WPNBlockShieldLight'])+['PHYDamageFlesh']+[('WPNHitHand' if weapon==-1 else ('WPNHitBlade' if weapon==0 else 'WPNHitBlunt')+('Flesh' if broken else ''))]\n assert edids==expected,(edids,expected)\n rows.append(dict(actor=kind,quest=quest,weapon_out=drawn,current=current,heavy=heavy,cw=cw,seed=seed,attacker_weapon_type=weapon,first_condition_bits=first_condition,condition_writes=n['writes'].copy(),equipment_events=n['events'].copy(),attacker_action=attacker_action,attacker_base_block=attacker_block,selected_entry=selected,armor_selection_draws=draws,next_rng=ri(tls+0x14),equipped_slot_lookups=lookups.copy(),sound_arguments=args,sound_edids=edids.copy()))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'condition-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=n['m']['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.',observation='Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock5. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.',rows_file='condition-corpus.json')\n(out/'condition-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "threshold-probe.py": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nn={'__file__':str(out/'wear-probe.py')}\ns=(out/'wear-probe.py').read_text().split('\\nrows=[]')[0].replace('u.hook_add(UC_HOOK_CODE,hook)','handle=u.hook_add(UC_HOOK_CODE,hook)')\nexec(s,n)\nu,w,ri,fl,rf,ret=(n[k] for k in ('u','w','ri','fl','rf','ret'))\nu.hook_del(n['handle']);original=n['hook']\nactor,vt,process,item,extra,armor,stack,end=(n[k] for k in ('actor','vt','process','item','extra','armor','stack','end'))\nattacker,attackbase,vbase,tls,manager=0x2008000,0x2009000,0x2009800,0x200a000,0x200b000\nw(actor+0x1c,vbase);u.mem_write(vbase+4,b'\\x23');w(attacker,0xa6fc9c);w(attacker+0x1c,vbase);w(attacker+0x58,0x200c800);w(0x200c800,0x200c900);w(0x200c900+0xec,0x2000790);w(0x200c900+0x2c0,0x20007a0);w(0x200c900+0x2d0,0x20007b0)\nu.mem_write(0x20007c0,b'\\xd9\\x05'+struct.pack('<I',0x2006550)+b'\\xc2\\x04\\x00')\nu.mem_map(0,0x1000);w(0,0);w(0xb3c0f0,manager);w(0xb3c20c,0);w(0xb16304,100)\nu.mem_write(0xb069c3,b'\\0');u.mem_write(0xb333b8,b'\\0')\nfor a,v in zip((0xb36ec8,0xb36eb8,0xb36ec0,0xb36ed0,0xb36ed8),(10,25,15,10,10)):w(a,v)\nphase='';sounds=[];draws=0;lookups=[];edids=[]\ndef hook(uc,ip,size,unused):\n global draws,selected\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x488830:\n  original(uc,ip,size,unused);fl(0x2006510,struct.unpack('<f',struct.pack('<I',n['writes'][-1]))[0])\n elif phase=='caller' and ip==0x401f00:\n  size=ri(sp+4);assert size in (8,12);ret(0x200c200 if size==8 else 0x200c100)\n elif phase=='caller' and ip==0x41e860:ret(1)\n elif phase=='caller' and ip==0x5ffc20:selected=ri(sp+0) if False else uc.reg_read(UC_X86_REG_EAX)\n elif phase=='caller' and ip==0x41e6f0:ret(0x200c000)\n elif ip==0x98c0f5:ret(tls)\n elif ip==0x47df80:draws+=1\n elif ip==0x486790:\n  slot=ri(sp+4);assert ri(sp+8)==1\n  equipped=bool(bytes(u.mem_read(extra+0xb,1))[0]&0x18)\n  lookups.append([slot,equipped]);ret(item if slot==13 and equipped else 0,8)\n elif phase=='caller' and ip==0x6af880:sounds.append([ri(sp+4+i*4) for i in range(9)]);ret()\n elif ip in (0x484470,0x401f20):ret()\n elif ip==0x20007b0:ret(attacker_action)\n elif ip==0x5ead00 and uc.reg_read(UC_X86_REG_ECX)==attacker:\n  assert ri(sp+4)==15;uc.reg_write(UC_X86_REG_EIP,0x20007c0)\n elif phase=='dispatcher' and ip in (0x2000790,0x20007a0):ret(0,4 if ip==0x2000790 else 0)\n elif phase=='dispatcher' and ip==0x447490:\n  a=ri(sp+4);b=bytearray()\n  while u.mem_read(a,1)!=b'\\0':b.extend(u.mem_read(a,1));a+=1\n  edids.append(b.decode());ret(0,4)\n else:original(uc,ip,size,unused)\nu.hook_add(UC_HOOK_CODE,hook)\nfrom collections import deque\ntrace=deque(maxlen=20)\ndef record(uc,ip,size,_):\n if ip<0x400000:raise RuntimeError('invalid target '+str(list(trace)))\n trace.append(hex(ip))\nu.hook_add(UC_HOOK_CODE,record)\ndef registers(cw,**kw):\n values={UC_X86_REG_FPCW:cw,UC_X86_REG_FPTAG:0xffff,UC_X86_REG_FPSW:0}\n values.update({globals()['UC_X86_REG_'+k]:v for k,v in kw.items()})\n for reg,v in values.items():u.reg_write(reg,v)\nrows=[]\nfor kind,quest,drawn,current,heavy,cw,seed,weapon,attacker_action,attacker_block in itertools.product(('npc',),(False,),(False,),(100.125,),(True,),(0x7f,0x27f,0x37f),(0,),(0,),(6,),(24,25,49,50)):\n fl(0x2006550,attacker_block);n['heavy']=heavy;n['events']=[];n['writes']=[];n['quest_calls']=n['shield_calls']=n['refreshes']=0\n u.mem_write(vt,bytes(u.mem_read(0xa73a0c if kind=='player' else 0xa6fc9c,0x600)));w(vt+0x168,0x2000770);w(actor,vt);w(actor+0x58,process);w(process,0xa71814);w(process+0xf0,item);w(process+0x104,n['node']);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,b'\\x10');w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n phase='wear';fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,7.5);w(stack+12,0);registers(cw,ESP=stack,ECX=actor)\n u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n first_condition=n['writes'][0];broken=first_condition==0\n phase='caller';sounds=[];draws=0;lookups=[];selected=0;u.mem_write(stack,bytes(0x100));w(stack+0x2c,attackbase if weapon>=0 else 0);u.mem_write(attackbase+0x90,bytes([max(0,weapon)]));fl(stack+0x18,2);fl(stack+0x30,.5);fl(stack+0x34,45);fl(stack+0x38,.25);w(tls+0x14,seed)\n registers(cw,ESP=stack,ESI=actor,EDI=attacker)\n try:u.emu_start(0x5ff914,0x5ffd69,count=15000)\n except Exception:print('FAIL',kind,quest,drawn,current,heavy,cw,seed,weapon,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==0x5ffd69 and u.reg_read(UC_X86_REG_ESP)==stack\n assert len(sounds)==1,(sounds,n['events'])\n args=sounds[0];assert args[4]==weapon&0xffffffff\n assert args[5]==0xffffffff and args[6]==(0xffffffff if broken else int(heavy)),args\n assert (draws==7 and selected==0) if broken else 1<=draws<=7,(draws,lookups,selected)\n assert len(n['writes'])==1+int(bool(selected) and attacker_action==6 and attacker_block<50),n['writes']\n assert n['writes'][-1]==(1113358336 if attacker_action==6 and attacker_block<50 else 1118945280),n['writes']\n assert len(n['events'])==(0 if not broken else 1 if kind=='player' or quest else 2)\n # Execute actual dispatcher prefix for exactly the caller's captured request.\n # Original source/victim base/position getters execute. Source process weapon and position flags getters supplied zero.\n phase='dispatcher';edids=[];dsp=stack-0x1000;w(dsp,end)\n for i,a in enumerate(args):w(dsp+4+i*4,a)\n registers(cw,ESP=dsp)\n try:u.emu_start(0x6af880,0x6afd28,count=10000)\n except Exception:print('DISPATCH',list(trace),hex(u.reg_read(UC_X86_REG_EIP)),args);raise\n assert u.reg_read(UC_X86_REG_EIP)==0x6afd28 and u.reg_read(UC_X86_REG_ESP)==dsp-52\n expected=([] if broken else ['WPNBlockShieldHeavy' if heavy else 'WPNBlockShieldLight'])+['PHYDamageFlesh']+[('WPNHitHand' if weapon==-1 else ('WPNHitBlade' if weapon==0 else 'WPNHitBlunt')+('Flesh' if broken else ''))]\n assert edids==expected,(edids,expected)\n rows.append(dict(actor=kind,quest=quest,weapon_out=drawn,current=current,heavy=heavy,cw=cw,seed=seed,attacker_weapon_type=weapon,first_condition_bits=first_condition,condition_writes=n['writes'].copy(),equipment_events=n['events'].copy(),attacker_action=attacker_action,attacker_base_block=attacker_block,selected_entry=selected,armor_selection_draws=draws,next_rng=ri(tls+0x14),equipped_slot_lookups=lookups.copy(),sound_arguments=args,sound_edids=edids.copy()))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'threshold-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=n['m']['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies24/25/49/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.',observation='Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock below50. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.',rows_file='threshold-corpus.json')\n(out/'threshold-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "runtime-selection-probe.py": "from pathlib import Path\nimport hashlib,itertools,json,struct\nfrom unicorn import UC_HOOK_CODE\nfrom unicorn.x86_const import *\nout=Path(__file__).resolve().parent\nn={'__file__':str(out/'wear-probe.py')}\ns=(out/'wear-probe.py').read_text().split('\\nrows=[]')[0].replace('u.hook_add(UC_HOOK_CODE,hook)','handle=u.hook_add(UC_HOOK_CODE,hook)')\nexec(s,n)\nu,w,ri,fl,rf,ret=(n[k] for k in ('u','w','ri','fl','rf','ret'))\nu.hook_del(n['handle']);original=n['hook']\nactor,vt,process,item,extra,armor,stack,end=(n[k] for k in ('actor','vt','process','item','extra','armor','stack','end'))\nattacker,attackbase,vbase,tls,manager=0x2008000,0x2009000,0x2009800,0x200a000,0x200b000\nw(actor+0x1c,vbase);u.mem_write(vbase+4,b'\\x23');w(attacker,0xa6fc9c);w(attacker+0x1c,vbase);w(attacker+0x58,0x200c800);w(0x200c800,0x200c900);w(0x200c900+0xec,0x2000790);w(0x200c900+0x2c0,0x20007a0);w(0x200c900+0x2d0,0x20007b0)\nu.mem_write(0x20007c0,b'\\xd9\\x05'+struct.pack('<I',0x2006550)+b'\\xc2\\x04\\x00')\nu.mem_map(0,0x1000);w(0,0);w(0xb3c0f0,manager);w(0xb3c20c,0);w(0xb16304,100)\nu.mem_write(0xb069c3,b'\\0');u.mem_write(0xb333b8,b'\\0')\nfor a,v in zip((0xb36ec8,0xb36eb8,0xb36ec0,0xb36ed0,0xb36ed8),(10,25,15,10,10)):w(a,v)\nphase='';sounds=[];draws=0;lookups=[];edids=[]\ndef hook(uc,ip,size,unused):\n global draws,selected\n sp=uc.reg_read(UC_X86_REG_ESP)\n if ip==0x488830:\n  original(uc,ip,size,unused);fl(0x2006510,struct.unpack('<f',struct.pack('<I',n['writes'][-1]))[0])\n elif phase=='caller' and ip==0x401f00:\n  size=ri(sp+4);assert size in (8,12);ret(0x200c200 if size==8 else 0x200c100)\n elif phase=='caller' and ip==0x41e860:ret(1)\n elif phase=='caller' and ip==0x5ffc20:selected=ri(sp+0) if False else uc.reg_read(UC_X86_REG_EAX)\n elif phase=='caller' and ip==0x41e6f0:ret(0x200c000)\n elif ip==0x98c0f5:ret(tls)\n elif ip==0x47df80:draws+=1\n elif ip==0x486790:\n  slot=ri(sp+4);assert ri(sp+8)==1\n  equipped=bool(bytes(u.mem_read(extra+0xb,1))[0]&0x18)\n  lookups.append([slot,equipped]);ret(item if slot==13 and equipped else 0,8)\n elif phase=='caller' and ip==0x6af880:sounds.append([ri(sp+4+i*4) for i in range(9)]);ret()\n elif ip in (0x484470,0x401f20):ret()\n elif ip==0x20007b0:ret(attacker_action)\n elif ip==0x5ead00 and uc.reg_read(UC_X86_REG_ECX)==attacker:\n  assert ri(sp+4)==15;uc.reg_write(UC_X86_REG_EIP,0x20007c0)\n elif phase=='dispatcher' and ip in (0x2000790,0x20007a0):ret(0,4 if ip==0x2000790 else 0)\n elif phase=='dispatcher' and ip==0x447490:\n  a=ri(sp+4);b=bytearray()\n  while u.mem_read(a,1)!=b'\\0':b.extend(u.mem_read(a,1));a+=1\n  edids.append(b.decode());ret(0,4)\n else:original(uc,ip,size,unused)\nu.hook_add(UC_HOOK_CODE,hook)\nfrom collections import deque\ntrace=deque(maxlen=20)\ndef record(uc,ip,size,_):\n if ip<0x400000:raise RuntimeError('invalid target '+str(list(trace)))\n trace.append(hex(ip))\nu.hook_add(UC_HOOK_CODE,record)\ndef registers(cw,**kw):\n values={UC_X86_REG_FPCW:cw,UC_X86_REG_FPTAG:0xffff,UC_X86_REG_FPSW:0}\n values.update({globals()['UC_X86_REG_'+k]:v for k,v in kw.items()})\n for reg,v in values.items():u.reg_write(reg,v)\nrows=[]\nfor kind,quest,drawn,current,heavy,cw,seed,weapon,attacker_action,attacker_block in itertools.product(('npc',),(False,),(False,),(100.125,),(True,),(0x7f,0x27f,0x37f),(505908858,),(0,),(0,6),(5,50)):\n fl(0x2006550,attacker_block);n['heavy']=heavy;n['events']=[];n['writes']=[];n['quest_calls']=n['shield_calls']=n['refreshes']=0\n u.mem_write(vt,bytes(u.mem_read(0xa73a0c if kind=='player' else 0xa6fc9c,0x600)));w(vt+0x168,0x2000770);w(actor,vt);w(actor+0x58,process);w(process,0xa71814);w(process+0xf0,item);w(process+0x104,n['node']);u.mem_write(process+0x115,bytes([drawn]));u.mem_write(extra+0xb,b'\\x10');w(armor+8,0x400 if quest else 0);u.mem_write(armor+0x6a,bytes([0x80 if heavy else 0]));w(0xb333c4,actor if kind=='player' else 0)\n phase='wear';fl(0x2006510,current);w(stack,end);w(stack+4,item);fl(stack+8,7.5);w(stack+12,0);registers(cw,ESP=stack,ECX=actor)\n u.emu_start(0x65ff10 if kind=='player' else 0x5f3870,end,count=10000)\n assert u.reg_read(UC_X86_REG_EIP)==end and u.reg_read(UC_X86_REG_ESP)==stack+16\n first_condition=n['writes'][0];broken=first_condition==0\n phase='caller';sounds=[];draws=0;lookups=[];selected=0;u.mem_write(stack,bytes(0x100));w(stack+0x2c,attackbase if weapon>=0 else 0);u.mem_write(attackbase+0x90,bytes([max(0,weapon)]));fl(stack+0x18,2);fl(stack+0x30,.5);fl(stack+0x34,45);fl(stack+0x38,.25);w(tls+0x14,seed)\n registers(cw,ESP=stack,ESI=actor,EDI=attacker)\n try:u.emu_start(0x5ff914,0x5ffd69,count=15000)\n except Exception:print('FAIL',kind,quest,drawn,current,heavy,cw,seed,weapon,hex(u.reg_read(UC_X86_REG_EIP)));raise\n assert u.reg_read(UC_X86_REG_EIP)==0x5ffd69 and u.reg_read(UC_X86_REG_ESP)==stack\n assert len(sounds)==1,(sounds,n['events'])\n args=sounds[0];assert args[4]==weapon&0xffffffff\n assert args[5]==0xffffffff and args[6]==(0xffffffff if broken else int(heavy)),args\n assert (draws==7 and selected==0) if broken else 1<=draws<=7,(draws,lookups,selected)\n assert len(n['writes'])==1+int(bool(selected) and attacker_action==6 and attacker_block<50),n['writes']\n assert n['writes'][-1]==(1113358336 if attacker_action==6 and attacker_block<50 else 1118945280),n['writes']\n assert len(n['events'])==(0 if not broken else 1 if kind=='player' or quest else 2)\n # Execute actual dispatcher prefix for exactly the caller's captured request.\n # Original source/victim base/position getters execute. Source process weapon and position flags getters supplied zero.\n phase='dispatcher';edids=[];dsp=stack-0x1000;w(dsp,end)\n for i,a in enumerate(args):w(dsp+4+i*4,a)\n registers(cw,ESP=dsp)\n try:u.emu_start(0x6af880,0x6afd28,count=10000)\n except Exception:print('DISPATCH',list(trace),hex(u.reg_read(UC_X86_REG_EIP)),args);raise\n assert u.reg_read(UC_X86_REG_EIP)==0x6afd28 and u.reg_read(UC_X86_REG_ESP)==dsp-52\n expected=([] if broken else ['WPNBlockShieldHeavy' if heavy else 'WPNBlockShieldLight'])+['PHYDamageFlesh']+[('WPNHitHand' if weapon==-1 else ('WPNHitBlade' if weapon==0 else 'WPNHitBlunt')+('Flesh' if broken else ''))]\n assert edids==expected,(edids,expected)\n rows.append(dict(actor=kind,quest=quest,weapon_out=drawn,current=current,heavy=heavy,cw=cw,seed=seed,attacker_weapon_type=weapon,first_condition_bits=first_condition,condition_writes=n['writes'].copy(),equipment_events=n['events'].copy(),attacker_action=attacker_action,attacker_base_block=attacker_block,selected_entry=selected,armor_selection_draws=draws,next_rng=ri(tls+0x14),equipped_slot_lookups=lookups.copy(),sound_arguments=args,sound_edids=edids.copy()))\nblob=json.dumps(rows,separators=(',',':')).encode();(out/'runtime-selection-corpus.json').write_bytes(blob)\nr=dict(passed=True,cases=len(rows),executable_sha256=n['m']['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Concatenated full Player65FF10/NPC5F3870 shield wear, actual contiguous contact caller5FF914..5FFD69 with full5E5A00/47DF80/9859DD armor selection, then actual6AF880..6AFD28 for captured sound arguments. Same wear-reader/write/drop boundary sinks as wear-probe.py; writer updates supplied current health and unequip/drop clears supplied worn flag. Body equipment lookup486790 supplies no body armor; actual process+F8 supplies shield. Allocator401F00 supplies12/8-byte blocks and41E860 supplies count1; actual484420/446CB0 constructs the selected shield entry; inventory bookkeeping/TLS, attacker action getter supplies0/6 and base Block getter supplies5/50; actual5E5670/5F23B0 gates execute; source process weapon/position flags getters zero, and absent SOUN lookup supplied. No actual inventory mutation, dropped reference, playback, physics or original-game process.',observation='Exact regression profile:100.125 minus blocking wear7.5*1.5=88.875 bits1118945280; later raw armor wear45 with fraction.5 produces55.125 bits1113358336 only for action6 and baseBlock5. Broken shield removes early shield sound, all seven later selection draws fail, and general Flesh/weapon-Flesh sound replaces shield layer. Surviving shield retains early shield sound; later selection can select it without duplicating sound; selected shield only receives further wear when attacker action6 and base Block below Journeyman. Drawn byte irrelevant.',rows_file='runtime-selection-corpus.json')\n(out/'runtime-selection-report.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r,indent=2))\n",
+    "prepare-runtime.py": "from pathlib import Path\nimport copy,hashlib,json,sys,shutil\nroot=Path.cwd();sys.path.insert(0,str(root/'scripts'));import tes4_runtime_state as r\nold=root/'build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02';source=old/'staged-input.omwsave';s=r.load_save(source);target='content:oblivion.esm:01fc43';shield='content:oblivion.esm:0352c1'\nnext(i for i in s['player']['inventory'] if i['base']=='content:oblivion.esm:090615')['equipped_slots']=65536\nref=next(v for v in s['references'] if v['key']==target);weapon=next(i for i in ref['inventory'] if i['base']=='content:oblivion.esm:090615');weapon['condition']=55.875\nitem=copy.deepcopy(weapon);item.update(base=shield,condition=1.,equipped_slots=0x2000);ref['inventory'].append(item)\nv=next(v for v in s['native_actor_values'] if v['actor']==target);v['values'][15][0]=50.\nassert not any(b['base']==ref['base'] for b in s['native_actor_bases']);s['native_actor_bases'].append(dict(base=ref['base'],kind=0,values=[[15,0,50]]))\nassert s['combat_rng_state']==505908858 and s['physical_actions']['next']==2\nfor instrumented in (False,True):\n name='native-shield-selected-wear-runtime-'+('sanitized-01' if instrumented else 'normal-02');base=root/'build/oblivion-compat/m15/S4'/name;base.mkdir(exist_ok=False)\n def dump(n,d):(base/n).write_text(json.dumps(d,indent=2)+'\\n')\n r.write_save(source,base/'staged-input.omwsave',s)\n first=json.loads((old/'manifest.json').read_text());second=json.loads((old/'continuation.json').read_text())\n for phase,m in [('first',first),('second',second)]:\n  m['name']=name+'-'+phase;m['timeout_seconds']=1200\n  for f in m['files']:\n   if f['path'].endswith('m15_npc_defensive_block.lua'):f['content']=f['content'].replace('EQUIPMENT_SLOT.CarriedRight','EQUIPMENT_SLOT.CarriedLeft')\n  for a in m['actions']:\n   if a['type']=='screenshot':a['name']='shield-selected-wear-'+phase+'.png'\n   if phase=='second' and a['type']=='sleep':a['seconds']=30\n  if instrumented:m['environment'].update(LD_PRELOAD='/usr/lib64/libasan.so.8.0.0',ASAN_OPTIONS='detect_leaks=0:halt_on_error=1',UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1')\n  m['forbidden_log']=list(dict.fromkeys(m['forbidden_log']+['ERROR: AddressSanitizer','runtime error:','M15 NPC defensive block intent released after empty carried slot:']))\n  if phase=='second':\n   m['forbidden_log']=[x for x in m['forbidden_log'] if x!='M15 block begin:']\n   m['expected_log']+=['M15 NPC defensive block intent admitted:','M15 block begin: actor=content:oblivion.esm:01fc43 group=onehandblockidle']\n  if phase=='first':\n   m['actions']=[a for a in m['actions'] if not (a['type']=='wait_log' and 'intent released' in a.get('pattern',''))]\n   for a in m['actions']:\n    if a.get('value')=='u':a['value']='u'\n    if a['type']=='wait_log':a['pattern']=a['pattern'].replace('handtohandattackleft','onehandattack').replace('id=2 fatigue_cost=7','id=2 fatigue_cost=7.8')\n   m['expected_log']=['Applied TES4 runtime state:',\"Writing saved game 'Quicksave'\",'M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 fatigue_cost=7.8','victim=content:oblivion.esm:01fc43 victim_action=6','block_fatigue=0','sound=WPNBlockShieldHeavy played=1','sound=PHYDamageFlesh played=1','sound=WPNHitBlade played=1']\n  dump('manifest.json' if phase=='first' else 'continuation.json',m)\n binary='build/m15-sanitize/openmw' if instrumented else 'build/openmw'\n monitor=(old/'epoch-monitor.py').read_text().replace(\"build/openmw\",binary);(base/'epoch-monitor.py').write_text(monitor)\n launcher=(old/'launcher.py').read_text().replace(old.name,name).replace('build/openmw',binary)\n launcher=launcher.replace(\"native-loose-compound-sweep-normal-01\",'native-shield-selected-wear-'+('sanitized' if instrumented else 'normal')+'-02')\n (base/'launcher.py').write_text(launcher)\n dump('preregistered-acceptance.json',dict(continuation_posture='Public NPC Lua intentionally re-establishes held block on fresh load. A block-begin log is required; no new attack, contact, impact sound or combat RNG selection is admitted.',scope='Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.',source=str(source.relative_to(root)),source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),staged_sha256=hashlib.sha256((base/'staged-input.omwsave').read_bytes()).hexdigest(),expected=dict(shield=shield,shield_condition=1.,npc_weapon_condition=55.875,player_weapon_condition_bits=1113476301,combat_rng=[505908858,773150046],armor_selection_draws=4,action_next=3,next_dynamic_serial=1,victim_posture=6,health='One nonlethal NPC Health decrease between0 and2; persists bitwise in continuation. Exact native damage magnitude outside this wear-gate course.',all_other_AV_channels='unchanged complete actor arrays after actual fatigue regeneration',no_replay=True),fixture_changes='Equip prior Player sword; restore NPC sword55.875; add stock IronShield condition1 equipped left; shared NPC base Block override50 and matching actor base channel. No injected contact/outcome. NPC controls.block follows left slot; AI disabled as in source.'))\n print(name)\n",
+    "verify-runtime.py": "from pathlib import Path\nimport copy,hashlib,json,re,struct,sys\nroot=Path.cwd();sys.path.insert(0,str(root/'scripts'));import tes4_runtime_state as r\np=Path(sys.argv[1]).resolve();recipe=json.loads((p/'preregistered-acceptance.json').read_text());source=r.load_save(p/'staged-input.omwsave');sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();bits=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\nassert sha(p/'staged-input.omwsave')==recipe['staged_sha256'] and sha(root/recipe['source'])==recipe['source_sha256']\npaths=[p/ph/'userdata/saves/M15Review/Quicksave.omwsave' for ph in ('first','second')];states=[r.load_save(x) for x in paths];target='content:oblivion.esm:01fc43';player='dynamic:player:0000000000000001';sword='content:oblivion.esm:090615';shield=recipe['expected']['shield'];expected={x['actor']:copy.deepcopy(x['values']) for x in source['native_actor_values']}\nhealth=next(x for x in states[0]['native_actor_values'] if x['actor']==target)['values'][8][3];assert -2<health<0;assert expected[target][8][3] in (None,0);expected[target][8][3]=health\noriginal={v['key']:v for v in source['references']};ordered=lambda items:sorted(json.dumps(i,sort_keys=True) for i in items);audit=json.loads((p/'extra-content-reference-audit.json').read_text());assert audit['passed']\nexpected_player=copy.deepcopy(source['player']['inventory']);next(i for i in expected_player if i['base']==sword)['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected']['player_weapon_condition_bits']))[0]\nfor index,s in enumerate(states):\n assert s['schema_version']==r.CURRENT_VERSION and {x['actor']:x['values'] for x in s['native_actor_values']}==expected\n assert next(x for x in s['native_actor_values'] if x['actor']==target)['process_action']==6\n assert ordered(s['player']['inventory'])==ordered(expected_player)\n assert s['native_actor_bases']==source['native_actor_bases']\n for k in ('native_actor_life','next_death_event','pending_death_events','native_death_counts','native_combat_engagements'):assert s[k]==source[k],k\n assert s['physical_actions']=={'next':3,'pending':[]} and s['physical_action_owners']==[]\n assert s['combat_rng_state']==773150046 and s['next_dynamic_serial']==1 and s['native_loose_weapons']==[]\n refs={v['key']:v for v in s['references']};assert not original.keys()-refs.keys();assert not [k for k in refs.keys()-original.keys() if k.startswith('dynamic:')]\n for k,old in original.items():assert ordered(refs[k]['inventory'])==ordered(old['inventory']),k\n assert next(i for i in refs[target]['inventory'] if i['base']==shield)['condition']==1.\n extras=sorted((k,v['base'],v['cell']) for k,v in refs.items() if k not in original)\n assert len(extras)==audit['counts'][index]['count'] and hashlib.sha256(json.dumps(extras,separators=(',',':')).encode()).hexdigest()==audit['counts'][index]['identity_base_cell_sha256']\n assert all(m['strike'] is None for m in s['native_melee_states'])\nlogs=[(p/ph/'process.log').read_text() for ph in ('first','second')];hits=[x for x in logs[0].splitlines() if 'M15 melee hit committed:' in x];assert len(hits)==1\nassert 'id=2 fatigue_cost=7.8 before=140 after=132.2' in hits[0] and 'victim='+target+' victim_action=6' in hits[0] and 'block_fatigue=0' in hits[0]\nfor ed in ('WPNBlockShieldHeavy','PHYDamageFlesh','WPNHitBlade'):assert len(re.findall(r'M15 melee hit sound requested:.*sound='+ed+r' played=1',logs[0]))==1\nassert not any(x in logs[1] for x in ('M15 melee hit committed:','M15 melee selection:','M15 melee hit sound requested:'))\nfor log in logs:assert not any(x in log for x in ('ERROR: AddressSanitizer','runtime error:','Error in frame','onFrame failed','M15 NPC defensive block intent released after empty carried slot:'))\nepochs=[json.loads((p/ph/'process-epoch.json').read_text()) for ph in ('first','second')];assert epochs[0]['pid']!=epochs[1]['pid'] and epochs[0]['start_ticks']<epochs[1]['start_ticks']\nfor ph,e in zip(('first','second'),epochs):\n assert not Path('/proc',str(e['pid'])).exists() and sha(e['command'][0])==e['executable_sha256']\n receipt=json.loads((p/ph/'launcher.json').read_text());assert receipt['scenario_returncode']==0 and receipt['monitor_returncode']==0\nassert sha(p/'first/input-pristine.omwsave')==sha(p/'staged-input.omwsave') and sha(p/'second/input-pristine.omwsave')==sha(paths[0])\nreport=dict(passed=True,scope=recipe['scope'],epochs=epochs,source_sha256=sha(p/'staged-input.omwsave'),save_sha256=[sha(x) for x in paths],actor_arrays=len(expected),observed_health_damage_bits=bits(-health),health_scope='Preregistered nonlethal range and exact continuation preservation; not an independently frozen magnitude.',shield_condition=1.,shield_equipped=True,npc_weapon_condition=55.875,player_weapon_condition_bits=recipe['expected']['player_weapon_condition_bits'],combat_rng=773150046,original_expected_draws=4,action_next=3,visual_review='pending',audio_scope='Three successful engine requests plus retained mixer output; no quantitative PCM identification claim.',full_M15S4_acceptance=False)\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n",
+    "audit-stock-shield.py": "from pathlib import Path\nimport hashlib,json,struct,zlib\nout=Path(__file__).resolve().parent;master=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');d=master.read_bytes();h=hashlib.sha256(d).hexdigest();assert h=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nrecords=[]\ndef walk(a,b):\n while a<b:\n  tag=d[a:a+4];size=struct.unpack_from('<I',d,a+4)[0]\n  if tag==b'GRUP':walk(a+20,a+size);a+=size;continue\n  flags,fid=struct.unpack_from('<II',d,a+8)\n  if tag==b'ARMO' and fid==0x352c1:\n   body=d[a+20:a+20+size]\n   if flags&0x40000:\n    n=struct.unpack_from('<I',body)[0];body=zlib.decompress(body[4:]);assert len(body)==n\n   fields={};i=0\n   while i<len(body):\n    st=body[i:i+4];n=struct.unpack_from('<H',body,i+4)[0];i+=6;assert st!=b'XXXX';fields[st]=body[i:i+n];i+=n\n   assert i==len(body)\n   rating,value,health,weight=struct.unpack('<H I I f',fields[b'DATA']);mask,flags=struct.unpack('<H H',fields[b'BMDT'])\n   records.append(dict(form='content:oblivion.esm:0352c1',editor_id=fields[b'EDID'].rstrip(b'\\0').decode(),name=fields[b'FULL'].rstrip(b'\\0').decode(),model=fields[b'MODL'].rstrip(b'\\0').decode(),armor_raw=rating,value=value,health=health,weight=weight,body_mask=mask,general_flags=flags,record_sha256=hashlib.sha256(d[a:a+20+size]).hexdigest()))\n  a+=20+size\n assert a==b\nwalk(0,len(d));assert len(records)==1;r=records[0];assert (r['editor_id'],r['armor_raw'],r['health'],r['body_mask'],r['general_flags'])==('IronShield',1200,225,0x2000,0x80)\nreport=dict(passed=True,master_sha256=h,records=records,scope='Independent raw original master ARMO/BMDT/DATA/model audit for staged shield. No archive model, original-game inventory, physics or renderer acceptance.')\n(out/'stock-shield-report.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n"
+  },
+  "stock_shield_audit": {
+    "passed": true,
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "records": [
+      {
+        "form": "content:oblivion.esm:0352c1",
+        "editor_id": "IronShield",
+        "name": "Iron Shield",
+        "model": "Armor\\Iron\\Shield.NIF",
+        "armor_raw": 1200,
+        "value": 45,
+        "health": 225,
+        "weight": 12.0,
+        "body_mask": 8192,
+        "general_flags": 128,
+        "record_sha256": "bc896fc80861924a3f36901692c65c6305399dfadee91534efa3f4e3f182e0cc"
+      }
+    ],
+    "scope": "Independent raw original master ARMO/BMDT/DATA/model audit for staged shield. No archive model, original-game inventory, physics or renderer acceptance."
+  },
+  "checks": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-normal-02/verification.json",
+        "sha256": "a5e6984e61d32167ab6f9c030b53c3825febf3e4ceacff2fab1bfd0bdf46548a"
+      },
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 279.367
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.265
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-normal-02/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 26.741
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1716,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "6b112ebb710dacdcae92c0a4d955bf5344abc67a415c9420a7d5f52262bf6ab9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "6c56f9d5c5b62d81d817b84bd0c053d13154be09658fe9084fac025189caf8cc",
+            "inventory_sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+          "source_fingerprint": "e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b"
+        },
+        "source_after": {
+          "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+          "source_fingerprint": "e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b"
+        }
+      }
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-sanitized-02/verification.json",
+        "sha256": "6b412bfe5d725c718debe7b0ac84521fbb6082e2d44a8375ff89419758255a68"
+      },
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "3"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 398.665
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.516
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-sanitized-02/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 162.555
+          }
+        ],
+        "results": {
+          "engine": {
+            "executed": 1716,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "4b1682422e66a1c61d512cf007076bed52d86f0e4f86e8bea972ffe0105fa4cd",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "19b4ca203f1ec3b0bbeb31138fa580b7d0dbd7cfc7019a79a33d96aa246531aa",
+            "inventory_sha256": "91df5a78c72104f65e3bc607d846815ddcf7ce66b395aea908eacf816e652da4",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+          "source_fingerprint": "e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b"
+        },
+        "source_after": {
+          "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+          "source_fingerprint": "e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b"
+        }
+      }
+    }
+  },
+  "retained_failed_checks": {
+    "normal": {
+      "schema_version": 1,
+      "passed": false,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 341.755
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.265
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-normal-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 1,
+          "seconds": 30.0
+        }
+      ],
+      "results": {},
+      "source_before": {
+        "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+        "source_fingerprint": "d170922ca6e0c7f326ff922ddd6971a8526e9d8f9039eab67e2fc657efc249d8"
+      },
+      "error": "engine.log: command exited 1"
+    },
+    "sanitized": {
+      "schema_version": 1,
+      "passed": false,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 480.68
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.516
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-sanitized-01/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 1,
+          "seconds": 157.252
+        }
+      ],
+      "results": {},
+      "source_before": {
+        "head": "dd1728f39d7572f18b7ce5a9523b17007498bed2",
+        "source_fingerprint": "d170922ca6e0c7f326ff922ddd6971a8526e9d8f9039eab67e2fc657efc249d8"
+      },
+      "error": "engine.log: command exited 1"
+    }
+  },
+  "failed_check_explanation": "Each complete1716-case inventory failed only the expanded matrix. Both NPCs shared base800, so victim SetAV50 changed attacker base50 too. Separate attacker base812 corrects the fixture; production gate unchanged.",
+  "runtime": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/verification.json",
+        "sha256": "97eca45fe250cb0d2b197567fb77776550b7726c65d10687d1aac57f87e32caf"
+      },
+      "verification": {
+        "passed": true,
+        "scope": "Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.",
+        "epochs": [
+          {
+            "pid": 494974,
+            "start_ticks": 11266942,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "bd43d69689f287414148c86be96d92a381e37e9ff901327f9a7fdbf55650c03a"
+          },
+          {
+            "pid": 495065,
+            "start_ticks": 11278633,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "bd43d69689f287414148c86be96d92a381e37e9ff901327f9a7fdbf55650c03a"
+          }
+        ],
+        "source_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+        "save_sha256": [
+          "7433067634da55ab8432c72df6cc98da634b27803c65f11b2cf28cdedc8c6f1f",
+          "bdedae8d875662135b305eec57dc7de7c974cfa83b7c05826758edaca0dd6c53"
+        ],
+        "actor_arrays": 9,
+        "observed_health_damage_bits": 1053978584,
+        "health_scope": "Preregistered nonlethal range and exact continuation preservation; not an independently frozen magnitude.",
+        "shield_condition": 1.0,
+        "shield_equipped": true,
+        "npc_weapon_condition": 55.875,
+        "player_weapon_condition_bits": 1113476301,
+        "combat_rng": 773150046,
+        "original_expected_draws": 4,
+        "action_next": 3,
+        "visual_review": "pending",
+        "audio_scope": "Three successful engine requests plus retained mixer output; no quantitative PCM identification claim.",
+        "full_M15S4_acceptance": false
+      },
+      "visual_review": {
+        "directly_reviewed": true,
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/first/shield-selected-wear-first.png",
+            "sha256": "82e55695a41e80ded658a9a183b236cfdda7ffbb9d186b6608ae4e456204a01e",
+            "observation": "Named Valen Dreth in dungeon, Player drawn sword and NPC sword-block pose visible. No carried Iron Shield visible on NPC left forearm."
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/second/shield-selected-wear-second.png",
+            "sha256": "1d2f2a7baaa5324b44ced2c83f77763cc40f5c6ca4403120d8d76dc19c6716c7",
+            "observation": "Named Valen Dreth in dungeon, Player drawn sword and NPC sword-block pose visible. No carried Iron Shield visible on NPC left forearm."
+          }
+        ],
+        "mechanics_course_verification": true,
+        "shield_visual_acceptance": false,
+        "scope": "Both actual course captures directly viewed. Exact condition/RNG/restart mechanics pass separately; shield rendering/appropriate shield-block presentation remain unaccepted."
+      },
+      "recipe": {
+        "scope": "Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.",
+        "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+        "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+        "staged_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+        "expected": {
+          "shield": "content:oblivion.esm:0352c1",
+          "shield_condition": 1.0,
+          "npc_weapon_condition": 55.875,
+          "player_weapon_condition_bits": 1113476301,
+          "combat_rng": [
+            505908858,
+            773150046
+          ],
+          "armor_selection_draws": 4,
+          "action_next": 3,
+          "next_dynamic_serial": 1,
+          "victim_posture": 6,
+          "health": "One nonlethal NPC Health decrease between0 and2; persists bitwise in continuation. Exact native damage magnitude outside this wear-gate course.",
+          "all_other_AV_channels": "unchanged complete actor arrays after actual fatigue regeneration",
+          "no_replay": true
+        },
+        "fixture_changes": "Equip prior Player sword; restore NPC sword55.875; add stock IronShield condition1 equipped left; shared NPC base Block override50 and matching actor base channel. No injected contact/outcome. NPC controls.block follows left slot; AI disabled as in source.",
+        "continuation_posture": "Public NPC Lua intentionally re-establishes held block on fresh load. A block-begin log is required; no new attack, contact, impact sound or combat RNG selection is admitted."
+      },
+      "input_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+      "editable_launcher": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path('/home/maciek/openmw-oblivion/openmw-oblivion');base=root/'build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02';phase=sys.argv[1];assert phase in ('first','second');out=base/phase;out.mkdir(parents=True,exist_ok=False)\nmanifest=str(base/('manifest.json' if phase=='first' else 'continuation.json'))\nif True:\n source=base/'staged-input.omwsave'\n if phase=='second':\n  pristine=hashlib.sha256((base/'first/input-pristine.omwsave').read_bytes()).hexdigest()\n  changed=[candidate for candidate in (base/'first/userdata/saves').glob('*/*.omwsave') if hashlib.sha256(candidate.read_bytes()).hexdigest()!=pristine]\n  assert len(changed)==1,changed\n  source=changed[0]\n slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True);shutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',manifest,'--output',str(out),'--variable','openmw='+str(root/'build/openmw'),'--variable','resources='+str(root/'build/resources'),'--variable','stationary_fixture='+str(root/'build/oblivion-compat/m15/S4/native-stationary-matrix-seed0-cap60-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nassert json.loads((root/'build/oblivion-compat/m15/S4/native-shield-selected-wear-normal-02/verification.json').read_text())['passed']\nsha=hashlib.sha256((root/'build/openmw').read_bytes()).hexdigest()\nassert sha==json.loads((base/'binary-pin.json').read_text())['sha256'], 'runtime binary differs from reviewed build'\nwith (out/'launcher.log').open('w') as log:\n p=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'epoch-monitor.py'),str(out)],cwd=root,capture_output=True,text=True)\n (out/'epoch-monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=p.wait(timeout=600)\n(out/'launcher.json').write_text(json.dumps({'command':cmd,'scenario_runner_pid':p.pid,'scenario_returncode':code,'monitor_returncode':monitor.returncode,'binary_sha256_before_launch':sha},indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256((root/'build/openmw').read_bytes()).hexdigest()==sha\nprint(json.dumps({'phase':phase,'passed':True,'epoch':json.loads((out/'process-epoch.json').read_text())},indent=2))\n",
+      "editable_epoch_monitor": "from pathlib import Path\nimport time,json,sys,os,hashlib\nout=Path(sys.argv[1]).resolve();config=out/'config';deadline=time.monotonic()+120\nbinary=Path('/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw').resolve()\nwhile time.monotonic()<deadline:\n found=[]\n for p in Path('/proc').glob('[0-9]*'):\n  try:\n   if Path(os.readlink(p/'exe')).resolve()!=binary:continue\n   args=(p/'cmdline').read_bytes().split(b'\\0')\n   if str(config).encode() not in args or args[0]!=str(binary).encode():continue\n   stat=(p/'stat').read_text();fields=stat[stat.rfind(')')+2:].split()\n   found.append({'pid':int(p.name),'start_ticks':int(fields[19]),'clock_ticks_per_second':os.sysconf('SC_CLK_TCK'),'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'command':[a.decode() for a in args if a],'executable_sha256':hashlib.sha256(binary.read_bytes()).hexdigest()})\n  except (FileNotFoundError,PermissionError,ProcessLookupError):continue\n if found:\n  assert len(found)==1,found\n  out.mkdir(parents=True,exist_ok=True);(out/'process-epoch.json').write_text(json.dumps(found[0],indent=2)+'\\n');print(json.dumps(found[0],indent=2));break\n time.sleep(.1)\nelse:raise RuntimeError('matching OpenMW process did not appear')\n",
+      "editable_verifier": "from pathlib import Path\nimport copy,hashlib,json,re,struct,sys\nroot=Path.cwd();sys.path.insert(0,str(root/'scripts'));import tes4_runtime_state as r\np=Path(sys.argv[1]).resolve();recipe=json.loads((p/'preregistered-acceptance.json').read_text());source=r.load_save(p/'staged-input.omwsave');sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();bits=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\nassert sha(p/'staged-input.omwsave')==recipe['staged_sha256'] and sha(root/recipe['source'])==recipe['source_sha256']\npaths=[p/ph/'userdata/saves/M15Review/Quicksave.omwsave' for ph in ('first','second')];states=[r.load_save(x) for x in paths];target='content:oblivion.esm:01fc43';player='dynamic:player:0000000000000001';sword='content:oblivion.esm:090615';shield=recipe['expected']['shield'];expected={x['actor']:copy.deepcopy(x['values']) for x in source['native_actor_values']}\nhealth=next(x for x in states[0]['native_actor_values'] if x['actor']==target)['values'][8][3];assert -2<health<0;assert expected[target][8][3] in (None,0);expected[target][8][3]=health\noriginal={v['key']:v for v in source['references']};ordered=lambda items:sorted(json.dumps(i,sort_keys=True) for i in items);audit=json.loads((p/'extra-content-reference-audit.json').read_text());assert audit['passed']\nexpected_player=copy.deepcopy(source['player']['inventory']);next(i for i in expected_player if i['base']==sword)['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected']['player_weapon_condition_bits']))[0]\nfor index,s in enumerate(states):\n assert s['schema_version']==r.CURRENT_VERSION and {x['actor']:x['values'] for x in s['native_actor_values']}==expected\n assert next(x for x in s['native_actor_values'] if x['actor']==target)['process_action']==6\n assert ordered(s['player']['inventory'])==ordered(expected_player)\n assert s['native_actor_bases']==source['native_actor_bases']\n for k in ('native_actor_life','next_death_event','pending_death_events','native_death_counts','native_combat_engagements'):assert s[k]==source[k],k\n assert s['physical_actions']=={'next':3,'pending':[]} and s['physical_action_owners']==[]\n assert s['combat_rng_state']==773150046 and s['next_dynamic_serial']==1 and s['native_loose_weapons']==[]\n refs={v['key']:v for v in s['references']};assert not original.keys()-refs.keys();assert not [k for k in refs.keys()-original.keys() if k.startswith('dynamic:')]\n for k,old in original.items():assert ordered(refs[k]['inventory'])==ordered(old['inventory']),k\n assert next(i for i in refs[target]['inventory'] if i['base']==shield)['condition']==1.\n extras=sorted((k,v['base'],v['cell']) for k,v in refs.items() if k not in original)\n assert len(extras)==audit['counts'][index]['count'] and hashlib.sha256(json.dumps(extras,separators=(',',':')).encode()).hexdigest()==audit['counts'][index]['identity_base_cell_sha256']\n assert all(m['strike'] is None for m in s['native_melee_states'])\nlogs=[(p/ph/'process.log').read_text() for ph in ('first','second')];hits=[x for x in logs[0].splitlines() if 'M15 melee hit committed:' in x];assert len(hits)==1\nassert 'id=2 fatigue_cost=7.8 before=140 after=132.2' in hits[0] and 'victim='+target+' victim_action=6' in hits[0] and 'block_fatigue=0' in hits[0]\nfor ed in ('WPNBlockShieldHeavy','PHYDamageFlesh','WPNHitBlade'):assert len(re.findall(r'M15 melee hit sound requested:.*sound='+ed+r' played=1',logs[0]))==1\nassert not any(x in logs[1] for x in ('M15 melee hit committed:','M15 melee selection:','M15 melee hit sound requested:'))\nfor log in logs:assert not any(x in log for x in ('ERROR: AddressSanitizer','runtime error:','Error in frame','onFrame failed','M15 NPC defensive block intent released after empty carried slot:'))\nepochs=[json.loads((p/ph/'process-epoch.json').read_text()) for ph in ('first','second')];assert epochs[0]['pid']!=epochs[1]['pid'] and epochs[0]['start_ticks']<epochs[1]['start_ticks']\nfor ph,e in zip(('first','second'),epochs):\n assert not Path('/proc',str(e['pid'])).exists() and sha(e['command'][0])==e['executable_sha256']\n receipt=json.loads((p/ph/'launcher.json').read_text());assert receipt['scenario_returncode']==0 and receipt['monitor_returncode']==0\nassert sha(p/'first/input-pristine.omwsave')==sha(p/'staged-input.omwsave') and sha(p/'second/input-pristine.omwsave')==sha(paths[0])\nreport=dict(passed=True,scope=recipe['scope'],epochs=epochs,source_sha256=sha(p/'staged-input.omwsave'),save_sha256=[sha(x) for x in paths],actor_arrays=len(expected),observed_health_damage_bits=bits(-health),health_scope='Preregistered nonlethal range and exact continuation preservation; not an independently frozen magnitude.',shield_condition=1.,shield_equipped=True,npc_weapon_condition=55.875,player_weapon_condition_bits=recipe['expected']['player_weapon_condition_bits'],combat_rng=773150046,original_expected_draws=4,action_next=3,visual_review='pending',audio_scope='Three successful engine requests plus retained mixer output; no quantitative PCM identification claim.',full_M15S4_acceptance=False)\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n",
+      "content_reference_audit": {
+        "passed": true,
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "counts": [
+          {
+            "count": 2997,
+            "identity_base_cell_sha256": "28299538406f312b3db46dea744072562f652adb7db110fa2321904fb210c759"
+          },
+          {
+            "count": 4234,
+            "identity_base_cell_sha256": "59afff4ffc23d15a51221e723918f1d189335c202a6476b3d8c45236679b5d0c"
+          }
+        ],
+        "persistent_exterior_references": [
+          {
+            "phase": "first",
+            "reference": "content:oblivion.esm:054fe3",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49940.359375,
+              71301.6328125,
+              968.0
+            ]
+          },
+          {
+            "phase": "first",
+            "reference": "content:oblivion.esm:054fe5",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49756.6953125,
+              72590.3828125,
+              1478.694580078125
+            ]
+          },
+          {
+            "phase": "first",
+            "reference": "content:oblivion.esm:054fe6",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              50100.5078125,
+              72846.6953125,
+              1694.3038330078125
+            ]
+          },
+          {
+            "phase": "first",
+            "reference": "content:oblivion.esm:055001",
+            "base": "content:oblivion.esm:000034",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49477.35546875,
+              71223.046875,
+              967.42919921875
+            ]
+          },
+          {
+            "phase": "second",
+            "reference": "content:oblivion.esm:054fe3",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49940.359375,
+              71301.6328125,
+              968.0
+            ]
+          },
+          {
+            "phase": "second",
+            "reference": "content:oblivion.esm:054fe5",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49756.6953125,
+              72590.3828125,
+              1478.694580078125
+            ]
+          },
+          {
+            "phase": "second",
+            "reference": "content:oblivion.esm:054fe6",
+            "base": "content:oblivion.esm:00003b",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              50100.5078125,
+              72846.6953125,
+              1694.3038330078125
+            ]
+          },
+          {
+            "phase": "second",
+            "reference": "content:oblivion.esm:055001",
+            "base": "content:oblivion.esm:000034",
+            "world": "content:oblivion.esm:009f18",
+            "persistent_storage_cell": "content:oblivion.esm:009f19",
+            "saved_physical_cell": "content:oblivion.esm:00d312",
+            "coordinates": [
+              12,
+              17
+            ],
+            "unchanged_master_position": [
+              49477.35546875,
+              71223.046875,
+              967.42919921875
+            ]
+          }
+        ],
+        "expectation_correction": "Original auditor assumed exterior mismatches were REFR markers. Older source also adds persistent ACHR actors; all other original-world/position/CELL-coordinate guards remain unchanged. Failed auditor retained.",
+        "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both the original REFR/ACHR/ACRE and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. No dropped dynamic reference is expected in this body-armor course. No unchanged whole-world cache-size claim."
+      },
+      "manifests": {
+        "manifest.json": {
+          "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/manifest.json",
+          "sha256": "d7ef2dbd390d453dccd02188cf43108e64abb0a980d24e8fd959c203be3d3e23"
+        },
+        "continuation.json": {
+          "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-02/continuation.json",
+          "sha256": "a42f2ba25fdf4e2ec55bc6701f7001e7f895e5014b6c961170a17361371ec49f"
+        }
+      }
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/verification.json",
+        "sha256": "64709453aa5abd2536ad08981ccd7cb841d76c5ba5aee156e1016927b178cd84"
+      },
+      "verification": {
+        "passed": true,
+        "scope": "Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.",
+        "epochs": [
+          {
+            "pid": 495134,
+            "start_ticks": 11287545,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "d00c3dee7af2dfc334791a05470d96189e1716b72c07daad8846c7d111c821a8"
+          },
+          {
+            "pid": 495268,
+            "start_ticks": 11315262,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "d00c3dee7af2dfc334791a05470d96189e1716b72c07daad8846c7d111c821a8"
+          }
+        ],
+        "source_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+        "save_sha256": [
+          "2ada066e31a854291cbc91ceeefc34888c5e009405dbf4a8a3f2bd15c44e8674",
+          "9205e66896e320104e1caa7bc605eae85f9d6b3f121724844276a6fcb1adb8d1"
+        ],
+        "actor_arrays": 9,
+        "observed_health_damage_bits": 1053978584,
+        "health_scope": "Preregistered nonlethal range and exact continuation preservation; not an independently frozen magnitude.",
+        "shield_condition": 1.0,
+        "shield_equipped": true,
+        "npc_weapon_condition": 55.875,
+        "player_weapon_condition_bits": 1113476301,
+        "combat_rng": 773150046,
+        "original_expected_draws": 4,
+        "action_next": 3,
+        "visual_review": "pending",
+        "audio_scope": "Three successful engine requests plus retained mixer output; no quantitative PCM identification claim.",
+        "full_M15S4_acceptance": false
+      },
+      "visual_review": {
+        "directly_reviewed": true,
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/first/shield-selected-wear-first.png",
+            "sha256": "7d332008cf46026441aff4a47925069437618fadc8e5b837d84cd4235df73f04",
+            "observation": "Named Valen Dreth, dungeon, Player sword and NPC sword-block pose visible. No carried shield visible on NPC left forearm."
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/second/shield-selected-wear-second.png",
+            "sha256": "80ffd0035a17e09186e507c31170d5f2081e6ff3064fe825d3e1c22a2da87579",
+            "observation": "Foreground Player sword, HUD and Valen Dreth label visible; world/NPC geometry not visible in capture. Cold rendering/readiness not accepted."
+          }
+        ],
+        "mechanics_course_verification": true,
+        "shield_visual_acceptance": false,
+        "continuation_world_visual_acceptance": false,
+        "scope": "Both actual captures directly viewed. Exact condition/RNG/restart mechanics pass separately. Shield rendering/appropriate blocking presentation remain unaccepted; second capture also fails scene visibility. No successful visual restart claim."
+      },
+      "recipe": {
+        "scope": "Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.",
+        "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+        "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+        "staged_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+        "expected": {
+          "shield": "content:oblivion.esm:0352c1",
+          "shield_condition": 1.0,
+          "npc_weapon_condition": 55.875,
+          "player_weapon_condition_bits": 1113476301,
+          "combat_rng": [
+            505908858,
+            773150046
+          ],
+          "armor_selection_draws": 4,
+          "action_next": 3,
+          "next_dynamic_serial": 1,
+          "victim_posture": 6,
+          "health": "One nonlethal NPC Health decrease between0 and2; persists bitwise in continuation. Exact native damage magnitude outside this wear-gate course.",
+          "all_other_AV_channels": "unchanged complete actor arrays after actual fatigue regeneration",
+          "no_replay": true
+        },
+        "fixture_changes": "Equip prior Player sword; restore NPC sword55.875; add stock IronShield condition1 equipped left; shared NPC base Block override50 and matching actor base channel. No injected contact/outcome. NPC controls.block follows left slot; AI disabled as in source.",
+        "continuation_posture": "Public NPC Lua intentionally re-establishes held block on fresh load. A block-begin log is required; no new attack, contact, impact sound or combat RNG selection is admitted."
+      },
+      "input_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+      "editable_launcher": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path('/home/maciek/openmw-oblivion/openmw-oblivion');base=root/'build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01';phase=sys.argv[1];assert phase in ('first','second');out=base/phase;out.mkdir(parents=True,exist_ok=False)\nmanifest=str(base/('manifest.json' if phase=='first' else 'continuation.json'))\nif True:\n source=base/'staged-input.omwsave'\n if phase=='second':\n  pristine=hashlib.sha256((base/'first/input-pristine.omwsave').read_bytes()).hexdigest()\n  changed=[candidate for candidate in (base/'first/userdata/saves').glob('*/*.omwsave') if hashlib.sha256(candidate.read_bytes()).hexdigest()!=pristine]\n  assert len(changed)==1,changed\n  source=changed[0]\n slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True);shutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',manifest,'--output',str(out),'--variable','openmw='+str(root/'build/m15-sanitize/openmw'),'--variable','resources='+str(root/'build/resources'),'--variable','stationary_fixture='+str(root/'build/oblivion-compat/m15/S4/native-stationary-matrix-seed0-cap60-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nassert json.loads((root/'build/oblivion-compat/m15/S4/native-shield-selected-wear-sanitized-02/verification.json').read_text())['passed']\nsha=hashlib.sha256((root/'build/m15-sanitize/openmw').read_bytes()).hexdigest()\nassert sha==json.loads((base/'binary-pin.json').read_text())['sha256'], 'runtime binary differs from reviewed build'\nwith (out/'launcher.log').open('w') as log:\n p=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'epoch-monitor.py'),str(out)],cwd=root,capture_output=True,text=True)\n (out/'epoch-monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=p.wait(timeout=600)\n(out/'launcher.json').write_text(json.dumps({'command':cmd,'scenario_runner_pid':p.pid,'scenario_returncode':code,'monitor_returncode':monitor.returncode,'binary_sha256_before_launch':sha},indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256((root/'build/m15-sanitize/openmw').read_bytes()).hexdigest()==sha\nprint(json.dumps({'phase':phase,'passed':True,'epoch':json.loads((out/'process-epoch.json').read_text())},indent=2))\n",
+      "editable_epoch_monitor": "from pathlib import Path\nimport time,json,sys,os,hashlib\nout=Path(sys.argv[1]).resolve();config=out/'config';deadline=time.monotonic()+120\nbinary=Path('/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw').resolve()\nwhile time.monotonic()<deadline:\n found=[]\n for p in Path('/proc').glob('[0-9]*'):\n  try:\n   if Path(os.readlink(p/'exe')).resolve()!=binary:continue\n   args=(p/'cmdline').read_bytes().split(b'\\0')\n   if str(config).encode() not in args or args[0]!=str(binary).encode():continue\n   stat=(p/'stat').read_text();fields=stat[stat.rfind(')')+2:].split()\n   found.append({'pid':int(p.name),'start_ticks':int(fields[19]),'clock_ticks_per_second':os.sysconf('SC_CLK_TCK'),'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'command':[a.decode() for a in args if a],'executable_sha256':hashlib.sha256(binary.read_bytes()).hexdigest()})\n  except (FileNotFoundError,PermissionError,ProcessLookupError):continue\n if found:\n  assert len(found)==1,found\n  out.mkdir(parents=True,exist_ok=True);(out/'process-epoch.json').write_text(json.dumps(found[0],indent=2)+'\\n');print(json.dumps(found[0],indent=2));break\n time.sleep(.1)\nelse:raise RuntimeError('matching OpenMW process did not appear')\n",
+      "editable_verifier": "from pathlib import Path\nimport copy,hashlib,json,re,struct,sys\nroot=Path.cwd();sys.path.insert(0,str(root/'scripts'));import tes4_runtime_state as r\np=Path(sys.argv[1]).resolve();recipe=json.loads((p/'preregistered-acceptance.json').read_text());source=r.load_save(p/'staged-input.omwsave');sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest();bits=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\nassert sha(p/'staged-input.omwsave')==recipe['staged_sha256'] and sha(root/recipe['source'])==recipe['source_sha256']\npaths=[p/ph/'userdata/saves/M15Review/Quicksave.omwsave' for ph in ('first','second')];states=[r.load_save(x) for x in paths];target='content:oblivion.esm:01fc43';player='dynamic:player:0000000000000001';sword='content:oblivion.esm:090615';shield=recipe['expected']['shield'];expected={x['actor']:copy.deepcopy(x['values']) for x in source['native_actor_values']}\nhealth=next(x for x in states[0]['native_actor_values'] if x['actor']==target)['values'][8][3];assert -2<health<0;assert expected[target][8][3] in (None,0);expected[target][8][3]=health\noriginal={v['key']:v for v in source['references']};ordered=lambda items:sorted(json.dumps(i,sort_keys=True) for i in items);audit=json.loads((p/'extra-content-reference-audit.json').read_text());assert audit['passed']\nexpected_player=copy.deepcopy(source['player']['inventory']);next(i for i in expected_player if i['base']==sword)['condition']=struct.unpack('<f',struct.pack('<I',recipe['expected']['player_weapon_condition_bits']))[0]\nfor index,s in enumerate(states):\n assert s['schema_version']==r.CURRENT_VERSION and {x['actor']:x['values'] for x in s['native_actor_values']}==expected\n assert next(x for x in s['native_actor_values'] if x['actor']==target)['process_action']==6\n assert ordered(s['player']['inventory'])==ordered(expected_player)\n assert s['native_actor_bases']==source['native_actor_bases']\n for k in ('native_actor_life','next_death_event','pending_death_events','native_death_counts','native_combat_engagements'):assert s[k]==source[k],k\n assert s['physical_actions']=={'next':3,'pending':[]} and s['physical_action_owners']==[]\n assert s['combat_rng_state']==773150046 and s['next_dynamic_serial']==1 and s['native_loose_weapons']==[]\n refs={v['key']:v for v in s['references']};assert not original.keys()-refs.keys();assert not [k for k in refs.keys()-original.keys() if k.startswith('dynamic:')]\n for k,old in original.items():assert ordered(refs[k]['inventory'])==ordered(old['inventory']),k\n assert next(i for i in refs[target]['inventory'] if i['base']==shield)['condition']==1.\n extras=sorted((k,v['base'],v['cell']) for k,v in refs.items() if k not in original)\n assert len(extras)==audit['counts'][index]['count'] and hashlib.sha256(json.dumps(extras,separators=(',',':')).encode()).hexdigest()==audit['counts'][index]['identity_base_cell_sha256']\n assert all(m['strike'] is None for m in s['native_melee_states'])\nlogs=[(p/ph/'process.log').read_text() for ph in ('first','second')];hits=[x for x in logs[0].splitlines() if 'M15 melee hit committed:' in x];assert len(hits)==1\nassert 'id=2 fatigue_cost=7.8 before=140 after=132.2' in hits[0] and 'victim='+target+' victim_action=6' in hits[0] and 'block_fatigue=0' in hits[0]\nfor ed in ('WPNBlockShieldHeavy','PHYDamageFlesh','WPNHitBlade'):assert len(re.findall(r'M15 melee hit sound requested:.*sound='+ed+r' played=1',logs[0]))==1\nassert not any(x in logs[1] for x in ('M15 melee hit committed:','M15 melee selection:','M15 melee hit sound requested:'))\nfor log in logs:assert not any(x in log for x in ('ERROR: AddressSanitizer','runtime error:','Error in frame','onFrame failed','M15 NPC defensive block intent released after empty carried slot:'))\nepochs=[json.loads((p/ph/'process-epoch.json').read_text()) for ph in ('first','second')];assert epochs[0]['pid']!=epochs[1]['pid'] and epochs[0]['start_ticks']<epochs[1]['start_ticks']\nfor ph,e in zip(('first','second'),epochs):\n assert not Path('/proc',str(e['pid'])).exists() and sha(e['command'][0])==e['executable_sha256']\n receipt=json.loads((p/ph/'launcher.json').read_text());assert receipt['scenario_returncode']==0 and receipt['monitor_returncode']==0\nassert sha(p/'first/input-pristine.omwsave')==sha(p/'staged-input.omwsave') and sha(p/'second/input-pristine.omwsave')==sha(paths[0])\nreport=dict(passed=True,scope=recipe['scope'],epochs=epochs,source_sha256=sha(p/'staged-input.omwsave'),save_sha256=[sha(x) for x in paths],actor_arrays=len(expected),observed_health_damage_bits=bits(-health),health_scope='Preregistered nonlethal range and exact continuation preservation; not an independently frozen magnitude.',shield_condition=1.,shield_equipped=True,npc_weapon_condition=55.875,player_weapon_condition_bits=recipe['expected']['player_weapon_condition_bits'],combat_rng=773150046,original_expected_draws=4,action_next=3,visual_review='pending',audio_scope='Three successful engine requests plus retained mixer output; no quantitative PCM identification claim.',full_M15S4_acceptance=False)\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n",
+      "content_reference_audit": {
+        "passed": true,
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "counts": [
+          {
+            "count": 1076,
+            "identity_base_cell_sha256": "ec0ad1fd709e695092bcb234286d8735101fa99bcd44dc1d8aea3148bbce3ea0"
+          },
+          {
+            "count": 1076,
+            "identity_base_cell_sha256": "ec0ad1fd709e695092bcb234286d8735101fa99bcd44dc1d8aea3148bbce3ea0"
+          }
+        ],
+        "persistent_exterior_references": [],
+        "expectation_correction": "Original auditor assumed exterior mismatches were REFR markers. Older source also adds persistent ACHR actors; all other original-world/position/CELL-coordinate guards remain unchanged. Failed auditor retained.",
+        "scope": "Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both the original REFR/ACHR/ACRE and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. No dropped dynamic reference is expected in this body-armor course. No unchanged whole-world cache-size claim."
+      },
+      "manifests": {
+        "manifest.json": {
+          "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/manifest.json",
+          "sha256": "a21337ed0d4cb8b923005b80792cb062d3bc863ff5f8a599534f38d53a66d7bb"
+        },
+        "continuation.json": {
+          "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-sanitized-01/continuation.json",
+          "sha256": "6abb858f8c1cacec346a6672d8194632f2ee49e9e4e7247784c4392e268d33e7"
+        }
+      }
+    }
+  },
+  "retained_local_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed01.py",
+      "sha256": "48130bdccd5da771fcb9e3136e53929534e50512d587e87c6b18686a181291ea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed02.py",
+      "sha256": "714011899b4358aa8588d8af2d8315ad99255a5c70f0dbf4080f9d0e1c24d7d5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed03.py",
+      "sha256": "74bdb1c8c51b1d9bcd5f5ae8bfefe923a8d21310d4deea551cddbc94868c1a24"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed04.py",
+      "sha256": "46d82d7716c25cf5e40ef5ca74acee9095c0370ae346af5ba08a4145d6930811"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed05.py",
+      "sha256": "4881578b429b94dc77a5852813dcbd0faea2952a5ac84e3ee57c64d0bb241429"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-probe-failed06.py",
+      "sha256": "e98446aca9e0a5156aa95f4c91acd5fb489bf3c718b6f1e574ecf41ac37d91cf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/prepare-runtime-failed01.py",
+      "sha256": "21cada929b7f8b2f6678cd4cbc78b1c57a66fd6e30dc4ae14ec66036ee62b529"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt01.log",
+      "sha256": "578289c6833eaa06d0f6aab73af562a2a4e677bacb1336d493d0492586cf0af4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt02.log",
+      "sha256": "c6bb9af969e7596edb663896b8a729ccfc3a427230f53b05de4b4e55bab57ebf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt03.log",
+      "sha256": "1a10509895698316042158ccbe83e2de2e8ef742f4f0e7ef9e001b4918f6a253"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt04.log",
+      "sha256": "d638facab541f16438a1a475805f31d22e2824abe0e07e61de00823b91ef7e45"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt05.log",
+      "sha256": "b26fc3504b40ac3c6112e00af3c8139070c8671104101e7fd58a7cf54896a1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt06.log",
+      "sha256": "cdda4f5588b7cae726bad8cd97d16a51f48f5110e72edab5734770642cd378f7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/caller-attempt07.log",
+      "sha256": "fefff56f6aa6d0aab846a075a9540a525fbe209bf7bb59e448b37da46a0507b1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/condition-attempt01.log",
+      "sha256": "04941243d0425e3d57b2acd54f0e80de18cab3e313522ddc2e30e986082fef81"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-attempt01.log",
+      "sha256": "56d96f50ccc6a87ca646bc43223e32a77d7831d8a52afa14e69b108df927794b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-attempt02.log",
+      "sha256": "4f8ba6f5fdfe24a4819e21d3f6959c66c039c1b95d7ef94c94cc6ccbe985fff1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-attempt03.log",
+      "sha256": "2c32cdab2e73605903e5d70b25ca6b8e239c2cbf61e37146dbc073d06696b93c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/runtime-selection-attempt01.log",
+      "sha256": "f19886343de48a1012dc3e7cda70c425d804b8e07c2a22f5a2757769d36c2c22"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/threshold-attempt01.log",
+      "sha256": "1949e51266d1310e9e542ba33824c2c87e1149e384f1a754728aaca3faf066f6"
+    }
+  ],
+  "retained_runtime_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-shield-selected-wear-runtime-normal-01",
+    "reason": "Game processes exited0 and saved, but inherited dropped-weapon continuation scenario wrongly forbids re-establishing NPC held block. Repeat permits required NPC block-begin while retaining all no-contact/selection/impact replay gates. Original scenario/results unchanged."
+  },
+  "original_probe_limits": [
+    "Hash-identified x86 instruction execution; no live original-game process.",
+    "Actual condition/inventory/drop construction and playback are captured boundaries, with supplied fixture state effects.",
+    "Selected shield allocator/count/TLS/body-slot readers and sound lookup supplied; original selection and constructor/append path execute.",
+    "Exact regression wear profile/thresholds are separate from the runtime bounded Health property."
+  ],
+  "remaining": [
+    "Carried-shield rendering and appropriate shield blocking animation are not visually accepted; captures lack a shield on the NPC left forearm.",
+    "Actual shield break retained-slot and NPC physical drop transactions, renderer/binding/physics/save admission.",
+    "Initially broken weapon/shield, directional/mastery defensive procs, on-hit effects, complete reactions/recovery.",
+    "Remaining normal-input/view/FPS, in-action restarts, combined required course and authority audit."
+  ],
+  "full_M15S4_acceptance": false,
+  "post_test_changes": "Evidence documentation and canonical scenario manifests only. The two recorded C++ file hashes match both passing engine builds; canonical normal manifests match the actual successful runtime inputs."
+}

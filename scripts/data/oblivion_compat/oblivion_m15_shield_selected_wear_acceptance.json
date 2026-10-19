@@ -1,0 +1,25 @@
+{
+  "scope": "Staged Player blade strike against public Lua NPC shield block, baseBlock50. Exact no-second-shield-wear and four original armor-selection draws, completed-contact fresh-process continuation. First-person keyboard1FPS only. Not shield break/drop, full S4 or quantitative audio acceptance.",
+  "source": "build/oblivion-compat/m15/S4/native-defensive-npc-break-runtime-normal-02/staged-input.omwsave",
+  "source_sha256": "6e7f3c5e929ceec3a81bc54ace47112020120a5fd12b353b697c3be3bdbf5736",
+  "staged_sha256": "9c985f692a3ffed53cbba4b76e22e80bed8268d592e1a8741332c384717bc22b",
+  "expected": {
+    "shield": "content:oblivion.esm:0352c1",
+    "shield_condition": 1.0,
+    "npc_weapon_condition": 55.875,
+    "player_weapon_condition_bits": 1113476301,
+    "combat_rng": [
+      505908858,
+      773150046
+    ],
+    "armor_selection_draws": 4,
+    "action_next": 3,
+    "next_dynamic_serial": 1,
+    "victim_posture": 6,
+    "health": "One nonlethal NPC Health decrease between0 and2; persists bitwise in continuation. Exact native damage magnitude outside this wear-gate course.",
+    "all_other_AV_channels": "unchanged complete actor arrays after actual fatigue regeneration",
+    "no_replay": true
+  },
+  "fixture_changes": "Equip prior Player sword; restore NPC sword55.875; add stock IronShield condition1 equipped left; shared NPC base Block override50 and matching actor base channel. No injected contact/outcome. NPC controls.block follows left slot; AI disabled as in source.",
+  "continuation_posture": "Public NPC Lua intentionally re-establishes held block on fresh load. A block-begin log is required; no new attack, contact, impact sound or combat RNG selection is admitted."
+}

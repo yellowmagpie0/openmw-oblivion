@@ -12,7 +12,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Spell-free, unarmed Creature ordinary strikes now reach the same contact owner through stationary AI and stock handtohand KFs. Spell-free Creature victims now accept bounded ordinary contacts and timed force; defensive/effect branches, armed sources and the complete input/view matrix remain open. Trace and verify every admitted actor route. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions, initially broken equipment and shield/armor breaks remain rejected. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert/Master defensive procs, zero-absorption unarmed weapon-block reactions, initially broken equipment and shield breaks remain rejected. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
@@ -191,9 +191,13 @@ The stored body-armor wear follows original5FFB96 float stores on an accepted
 equipped block: store its remaining portion, subtract that stored value, clamp
 negative results, and suppress this wear at complete absorption. An unarmed
 block preserves the original wear. This is not replaced by one algebraically
-simplified multiplication. If the selected body-armor item is the same shield
-already worn by blocking, prepare its second wear from the first stored
-condition, then publish one final condition with the original instance guards.
+simplified multiplication. If the selected armor item is the same shield
+already worn by blocking, the later caller additionally requires the attacker's
+action6 and base Block below Journeyman before a second wear. When admitted,
+prepare it from the first stored condition and publish one final condition with
+the original instance guards. The shield-selected-wear follow-up below corrects
+the earlier unconditional admission; the old concatenated oracle omitted this
+caller gate.
 Resources, both participants' conditions, RNG and action ownership still commit
 through the existing atomic transaction. No schema change is needed.
 
@@ -6840,3 +6844,101 @@ and completed-contact restarts. Shield and initially broken weapon policies,
 mastery/effects/reactions, full input/view/FPS and in-action restarts, and the
 combined named-target/block/miss/wall/stagger course remain open.
 **Full M15S4 is incomplete.**
+
+### Selected-shield armor wear uses the attacker's posture and base mastery
+
+The original caller's ordinary armor-selection path has an additional shield
+branch that the earlier concatenated wear oracle did not include. At5FFC3D it
+queries the attacker inEDI through5E5670, requiring native action6. It then
+queries that attacker's base Block through5F23B0 and bypasses the selected
+shield's further condition write at Journeyman or higher. This does not bypass
+armor selection, consume fewer draws, change the selected material, or undo
+any earlier blocking-item wear. Production now preserves those distinctions.
+
+The prior paragraph describing unconditional ordered double shield wear is
+superseded by this caller gate. The old equipped-block-oracle-03 concatenated
+individual formulas and wear functions; it did not execute5FFC3D..5FFC54.
+Its arithmetic remains evidence for the branch where a second write is admitted.
+
+Original SHA256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+A576-case full shield wear probe executes actual ARMO RTTI vtableA441BC,
+retention getter4D7030, worn-entry getters64B2D0/484E80/41DF10,
+slot13 membership468FF0, armor-cache invalidation60E260, and drop-node rotation
+conversion711440. The active process and worn bits gate shield consequences;
+the weapon-out byte does not. Player/flag400 requests unequip retention;
+ordinary NPC requests a drop. Condition/inventory mutation and drop construction
+are boundary sinks, not original-game acceptance. The old body-armor probe's
+supplied +F8 stub represented shield presence despite its `drawn` variable name;
+its body conclusions stand, while that shield-control label is superseded.
+
+A3456-case concatenation runs full shield wear, contiguous5FF914..5FFD69 with
+full5E5A00/47DF80/9859DD selection, then the actual6AF880 sound selector prefix.
+Clearing the supplied worn flag at captured unequip/drop sinks removes the early
+shield sound and makes all seven later selection draws fail in the shield-only
+fixture. General Flesh/weapon-Flesh sounds then replace the shield layer.
+The surviving shield keeps its earlier sound, while the later selected entry
+passes the attacker gate independently. Allocations, item count, inventory
+lookups, actor AV getters and absent sound records are explicit boundaries.
+Separate exact and adjacent-threshold cases cover base Block24/25/49/50 and
+all three x87 words. Condition100.125 minus blocking wear7.5*1.5 is88.875
+(bits1118945280); the gated extra wear produces55.125 (1113358336).
+
+The owned engine matrix now uses independent NPC bases and distinguishes idle
+attacker, blocking Novice attacker, and blocking Journeyman attacker across its
+existing unarmed/weapon, shield/weapon and defender mastery profiles. It retains
+prepare immutability, stale condition rejection, atomic condition/resource/RNG
+publication, consumed-action rejection and binary restore. Initial full checks
+fail only this matrix because its original two NPCs shared base800: victim SetAV
+also changed the attacker's authoritative base. Those attempts are retained;
+the fixture correction gives the attacker base812 without changing the gate.
+
+Final full engine checks pass1716 cases/124 suites normally and under
+ASan/UBSan, without failures/skips; leak checks are disabled. Both use parent
+dd1728f39d and dirty source fingerprint
+`e64d69111875315c29b1d28b58b4b71863a42825e0ac756d9e3c653a2a22ec9b`.
+The unchanged component suites are not rerun for this engine-only change.
+
+The actual normal/instrumented course stages stock IronShield0352C1 at
+condition1 on Valen Dreth with a declared shared-base Block50 override and
+matching actor channel; public NPC Lua disables AI and holds block while the
+left slot exists. Player equips the prior sword and performs one keyboard
+ordinary strike. No outcome/contact is injected. Raw master ARMO audit freezes
+health225, armor1200 hundredths, shield mask2000 and heavy flag80, with record
+and master hashes. Shield condition stays1 and equipped, NPC sword stays55.875,
+Player sword becomes55.57500076293945, and original selection consumes four draws
+505908858->773150046. All nine full actor-value arrays and full prior inventory
+multisets are checked, with only the declared Player sword and one nonlethal
+NPC Health decrease. The damage magnitude is observed, not independently frozen
+by this particular course. Fatigue regenerates before saving; action-next3,
+empty pending/owner lists, no loose body and unchanged dynamic serial1 persist.
+
+Exact first-save bytes enter a distinct process in both builds. NPC Lua
+re-establishes its held block after loading, but no attack/contact/selection or
+impact sound replays. The earlier normal-01 continuation wrongly inherited a
+no-block-start rule from the dropped-weapon course; both games exited0 and saved,
+but the scenario correctly rejected that contradictory expectation. Its
+manifests/results remain unchanged. Repeated normal-02 and sanitized-01 courses
+require the intended held posture while retaining every contact anti-replay gate.
+Three successful shield/Flesh/Blade sound requests and mixed output are retained;
+no quantitative PCM identification is claimed.
+
+Visual review is explicitly incomplete. Normal first/fresh captures and the
+instrumented first capture show the named NPC in a sword-block pose, with no
+visible Iron Shield on its left forearm. The instrumented continuation capture
+shows only the foreground sword/HUD/target label, without scene geometry. These
+are not accepted shield-rendering or instrumented visual-restart results.
+Renderer shield binding, correct defensive presentation and cold-frame readiness
+remain work for full S4. Mechanical checks are recorded separately.
+
+Editable original probes, retained attempts, exact check receipts and runtime
+recipes are in`M15-SHIELD-SELECTED-WEAR-PROBE.json`; canonical first/continuation/
+acceptance manifests are committed source. This is first-person keyboard1FPS,
+authored NPC block control and completed-contact restarts, not the complete
+input/view/FPS or in-action restart matrix.
+
+Full shield break/drop publication remains open, together with initially broken
+equipment, mastery procs, effects/reactions and the remaining input/view/FPS and
+in-action restart matrix. These observations do not implement the shield's
+physical drop or establish live original-game behavior. **Full M15S4 remains
+incomplete.**

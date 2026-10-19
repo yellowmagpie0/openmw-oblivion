@@ -12076,5 +12076,11 @@
     "evidence": "docs/oblivion/M15-NATIVE-SOUND-DIRECTORY-PROBE.json",
     "scope": "Native SOUN directory selection honors path component boundaries. Actual further contact against previously broken equipped body armor plus completed-contact fresh-process continuation, normally and under ASan/UBSan. Full M15S4 remains incomplete.",
     "full_M15S4_acceptance": false
+  },
+  "native_shield_selected_wear": {
+    "passed": true,
+    "evidence": "docs/oblivion/M15-SHIELD-SELECTED-WEAR-PROBE.json",
+    "scope": "Correct the selected-shield condition writer to honor original attacker action6/base Block below Journeyman, while preserving selection/RNG/material and earlier block wear. Original shield break requests and post-break caller behavior independently characterized; actual shield break/drop publication remains open. Bounded normal/instrumented contact and completed-contact fresh-process continuation. Full M15S4 incomplete.",
+    "full_M15S4_acceptance": false
   }
 }

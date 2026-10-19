@@ -677,7 +677,7 @@ namespace MWMechanics
         };
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
-            OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
+            OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, float incoming,
             float absorbedFraction, std::span<const ESM4::GameSetting* const> settings,
             std::span<const OblivionPhysicalConditionChange> prior = {}, std::optional<float> adjustedWear = {});
 
@@ -896,7 +896,7 @@ namespace MWMechanics
         // retaining Health damage; they still enter the ordinary armor path.
         if (incoming.mFatigue <= 0)
         {
-            auto prepared = prepareOrdinaryArmorWear(world, *service, victim, incoming.mHealth,
+            auto prepared = prepareOrdinaryArmorWear(world, *service, attacker, victim, incoming.mHealth,
                 armor.mAbsorbedFraction, settings, block->mConditions,
                 block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
                     ESM4::armorWear(incoming.mHealth, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
@@ -922,7 +922,7 @@ namespace MWMechanics
     {
 
         std::optional<PreparedArmorWear> prepareOrdinaryArmorWear(MWBase::World& world,
-            OblivionCombatService& service, const MWWorld::Ptr& victim, float incoming,
+            OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim, float incoming,
             float absorbedFraction, std::span<const ESM4::GameSetting* const> settings,
             std::span<const OblivionPhysicalConditionChange> prior, std::optional<float> adjustedWear)
         {
@@ -983,6 +983,19 @@ namespace MWMechanics
                 return result; // All seven failed draws still belong to this contact.
             const auto& candidate = candidates[static_cast<unsigned>(*selected.mSlot)];
             result.mHitArmorClass = (candidate.mBase->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0;
+            if (candidate.mBase->mArmorFlags & ESM4::Armor::TES4_Shield)
+            {
+                // Original5FFC3D queries the attacker (EDI), after selection.
+                // The selected material and consumed draws still apply when
+                // its posture/mastery gate bypasses this second shield wear.
+                if (!oblivionBlockingPosture(world, attacker))
+                    return result;
+                const auto block = attacker == world.getPlayerPtr() ? service.getPlayerBaseValue(15)
+                    : service.getNonPlayerBaseValue(attacker.getCellRef().getFormKey(), 15, world.getStore());
+                if (ESM4::combatMastery(block, ESM4::buildCombatMasterySettings(settings))
+                    >= ESM4::CombatMastery::Journeyman)
+                    return result;
+            }
             if (player && world.getGodModeState())
                 return result; // Original65FF10 suppresses condition after selection has consumed its draws.
             const auto& ref = candidate.mItem.getCellRef();
@@ -1078,7 +1091,7 @@ namespace MWMechanics
             : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
         const auto damage = ESM4::physicalContactDamage({incoming, 0}, block->mRemaining,
             normalizedDifficulty, ESM4::buildDifficultyDamageMultiplier(settings), role);
-        auto wear = prepareOrdinaryArmorWear(world, *service, victim, incoming, armor.mAbsorbedFraction, settings,
+        auto wear = prepareOrdinaryArmorWear(world, *service, attacker, victim, incoming, armor.mAbsorbedFraction, settings,
             block->mConditions, block->mAccepted ? std::optional<float>{ESM4::blockedArmorWear(
                 ESM4::armorWear(incoming, armor.mAbsorbedFraction, ESM4::buildDurabilitySettings(settings)),
                 block->mFraction, block->mUnarmed)} : std::nullopt);

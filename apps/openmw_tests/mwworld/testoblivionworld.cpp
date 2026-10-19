@@ -246,7 +246,8 @@ namespace
         MWLua::SelfObject& self() { return mData; }
     };
 
-    MWWorld::Ptr addNativeNpc(NativeWorldFixture& fixture, std::uint32_t referenceId, std::uint32_t health = 100)
+    MWWorld::Ptr addNativeNpc(NativeWorldFixture& fixture, std::uint32_t referenceId,
+        std::uint32_t health = 100, std::uint32_t baseId = 0x800)
     {
         auto& store = fixture.mWorld.getStore();
         ESM4::Race race{};
@@ -254,8 +255,10 @@ namespace
         race.mAttribMale = {40, 40, 40, 40, 40, 40, 40, 40};
         race.mAttribFemale = race.mAttribMale;
         store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0x810));
-        const auto base = ESM::FormKey::content("headless.esm", 0x800);
-        auto npc = *store.search<ESM4::Npc>(base);
+        const auto base = ESM::FormKey::content("headless.esm", baseId);
+        auto npc = *store.search<ESM4::Npc>(ESM::FormKey::content("headless.esm", 0x800));
+        npc.mId = {baseId, 0};
+        npc.mFormKey = base;
         npc.mRace = race.mId;
         npc.mData.health = health;
         npc.mData.attribs.strength = 37;
@@ -265,7 +268,7 @@ namespace
         ESM4::ActorCharacter reference{};
         reference.mId = {referenceId, 0};
         reference.mFormKey = ESM::FormKey::content("headless.esm", referenceId);
-        reference.mBaseObj = ESM::FormId{0x800, 0};
+        reference.mBaseObj = npc.mId;
         reference.mBaseKey = base;
         store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
         MWWorld::LiveCellRef<ESM4::Npc> live(reference, store.search<ESM4::Npc>(base));
@@ -8877,7 +8880,9 @@ namespace
         auto& world = fixture.mWorld;
         auto& store = world.getStore();
         MWClass::Armor::registerSelf();
-        const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+        // SetAV changes a shared base record. Separate bases let this matrix
+        // distinguish attacker Block mastery from the defender's mastery.
+        const auto attacker = addNativeNpc(fixture, 0x801, 100, 0x812), victim = addNativeNpc(fixture, 0x802);
         ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
         auto& service = *world.getOblivionCombatService();
         const auto key = victim.getCellRef().getFormKey();
@@ -8919,112 +8924,119 @@ namespace
             state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
             return state.serializeBinary();
         };
-        for (bool weaponAttack : {false, true})
-            for (bool hasShield : {false, true})
-                for (int blockSkill : {0, 24, 25, 49, 50, 74, 75, 100})
-                {
-                    SCOPED_TRACE(::testing::Message() << weaponAttack << ',' << hasShield << ',' << blockSkill);
-                    service.restore(initial, store);
-                    ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 15, ESM4::ActorValueCommand::Set,
-                        ESM4::ActorValueCommandSource::Script, blockSkill));
-                    service.setProcessAction(key, 6);
-                    ESM4::RuntimeInventoryItem weapon; weapon.mBase = swordKey; weapon.mCount = 1;
-                    weapon.mCondition = 100.125f; weapon.mEquippedSlots = ESM4::InventorySlotWeapon;
-                    ESM4::RuntimeInventoryItem armor = weapon; armor.mBase = shieldKey;
-                    armor.mEquippedSlots = ESM4::Armor::TES4_Shield;
-                    installEquipmentInventory(fixture, attacker, weaponAttack ? std::vector{weapon} : std::vector<ESM4::RuntimeInventoryItem>{});
-                    installEquipmentInventory(fixture, victim, hasShield ? std::vector{weapon, armor} : std::vector{weapon});
-                    auto& inventory = victim.getClass().getInventoryStore(victim);
-                    const auto item = *inventory.getSlot(hasShield ? MWWorld::InventoryStore::Slot_CarriedLeft
-                        : MWWorld::InventoryStore::Slot_CarriedRight);
-                    const auto source = weaponAttack ? *attacker.getClass().getInventoryStore(attacker).getSlot(
-                        MWWorld::InventoryStore::Slot_CarriedRight) : MWWorld::Ptr{};
-                    const auto action = world.beginOblivionPhysicalAction(attacker);
-                    const auto before = snapshot();
-                    if (blockSkill >= 75)
+        for (const auto& [attackerAction, attackerBlock] : {std::pair{0, 5}, {6, 5}, {6, 50}})
+            for (bool weaponAttack : {false, true})
+                for (bool hasShield : {false, true})
+                    for (int blockSkill : {0, 24, 25, 49, 50, 74, 75, 100})
                     {
+                        SCOPED_TRACE(::testing::Message() << attackerAction << ',' << attackerBlock << ','
+                            << weaponAttack << ',' << hasShield << ',' << blockSkill);
+                        service.restore(initial, store);
+                        ASSERT_TRUE(world.executeOblivionActorValueCommand(attacker, 15, ESM4::ActorValueCommand::Set,
+                            ESM4::ActorValueCommandSource::Script, attackerBlock));
+                        service.setProcessAction(attacker.getCellRef().getFormKey(), attackerAction);
+                        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 15, ESM4::ActorValueCommand::Set,
+                            ESM4::ActorValueCommandSource::Script, blockSkill));
+                        service.setProcessAction(key, 6);
+                        ESM4::RuntimeInventoryItem weapon; weapon.mBase = swordKey; weapon.mCount = 1;
+                        weapon.mCondition = 100.125f; weapon.mEquippedSlots = ESM4::InventorySlotWeapon;
+                        ESM4::RuntimeInventoryItem armor = weapon; armor.mBase = shieldKey;
+                        armor.mEquippedSlots = ESM4::Armor::TES4_Shield;
+                        installEquipmentInventory(fixture, attacker, weaponAttack ? std::vector{weapon} : std::vector<ESM4::RuntimeInventoryItem>{});
+                        installEquipmentInventory(fixture, victim, hasShield ? std::vector{weapon, armor} : std::vector{weapon});
+                        auto& inventory = victim.getClass().getInventoryStore(victim);
+                        const auto item = *inventory.getSlot(hasShield ? MWWorld::InventoryStore::Slot_CarriedLeft
+                            : MWWorld::InventoryStore::Slot_CarriedRight);
+                        const auto source = weaponAttack ? *attacker.getClass().getInventoryStore(attacker).getSlot(
+                            MWWorld::InventoryStore::Slot_CarriedRight) : MWWorld::Ptr{};
+                        const auto action = world.beginOblivionPhysicalAction(attacker);
+                        const auto before = snapshot();
+                        if (blockSkill >= 75)
+                        {
+                            if (weaponAttack)
+                                EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
+                            else
+                                EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false));
+                            EXPECT_EQ(snapshot(), before);
+                            EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
+                            continue; // Proc publication remains explicitly unsupported, never silently omitted.
+                        }
+                        float health, fatigue = 0, debit, fraction;
+                        std::vector<MWMechanics::OblivionPhysicalConditionChange> conditions;
+                        std::optional<MWMechanics::OblivionCombatRandomTransition> random;
                         if (weaponAttack)
-                            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
+                        {
+                            const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+                            ASSERT_TRUE(prepared);
+                            EXPECT_TRUE(prepared->mBlockAccepted);
+                            EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
+                            ASSERT_TRUE(prepared->mBlockSounds);
+                            EXPECT_EQ(*prepared->mBlockSounds, hasShield
+                                ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
+                                    weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
+                                : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
+                                    "WPNBlockBlade", ""}));
+                            health = prepared->mHealth; debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
+                            conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;
+                        }
                         else
-                            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false));
+                        {
+                            const auto prepared = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
+                            ASSERT_TRUE(prepared);
+                            EXPECT_TRUE(prepared->mBlockAccepted);
+                            EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
+                            ASSERT_TRUE(prepared->mBlockSounds);
+                            EXPECT_EQ(*prepared->mBlockSounds, hasShield
+                                ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
+                                    weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
+                                : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
+                                    "WPNBlockBlade", ""}));
+                            health = prepared->mHealth; fatigue = prepared->mFatigue;
+                            debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
+                            conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;
+                        }
                         EXPECT_EQ(snapshot(), before);
                         EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
-                        continue; // Proc publication remains explicitly unsupported, never silently omitted.
+                        EXPECT_EQ(fraction, hasShield ? .5f : .25f);
+                        EXPECT_EQ(health, hasShield ? 7.5f : 11.25f);
+                        EXPECT_EQ(fatigue, weaponAttack ? 0.f : hasShield ? 3.75f : 5.625f);
+                        EXPECT_EQ(debit, blockSkill < 25 ? hasShield ? 20.5f : 20.25f : 0.f);
+                        const bool secondShieldWear = weaponAttack && hasShield && attackerAction == 6 && attackerBlock < 50;
+                        const bool changes = blockSkill < 50 || secondShieldWear;
+                        ASSERT_EQ(conditions.size(), changes ? 1u : 0u);
+                        if (changes)
+                        {
+                            EXPECT_EQ(conditions.front().mItem, item);
+                            EXPECT_EQ(conditions.front().mExpectedNativeCondition, 100.125f);
+                            // Original shield caller gates the second write by
+                            // attacker posture/base Block, not victim mastery.
+                            const auto bits = hasShield ? secondShieldWear ? blockSkill < 50 ? 1113358336u : 1115996160u
+                                : 1118945280u : 1119928320u;
+                            EXPECT_EQ(std::bit_cast<std::uint32_t>(conditions.front().mCondition), bits);
+                        }
+                        EXPECT_EQ(random.has_value(), weaponAttack);
+                        if (random)
+                        {
+                            EXPECT_EQ(random->mDraws, hasShield ? 6u : 7u);
+                            EXPECT_EQ(random->mNextState, hasShield ? 773150046u : 548247209u);
+                        }
+                        MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -health, -fatigue, -debit, conditions, random};
+                        if (changes)
+                        {
+                            auto stale = deltas; stale.mConditionChanges[0].mExpectedNativeCondition = 100.25f;
+                            EXPECT_THROW(world.commitOblivionPhysicalContact(action, attacker, victim, stale), std::invalid_argument);
+                            EXPECT_EQ(snapshot(), before); EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
+                        }
+                        const float victimFatigue = service.getNonPlayerValue(victim, 10);
+                        ASSERT_TRUE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+                        EXPECT_EQ(service.getNonPlayerValue(victim, 10), victimFatigue - debit - fatigue);
+                        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), changes ? conditions.front().mCondition : 100.125f);
+                        const auto committed = snapshot();
+                        EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+                        service.restore(ESM4::RuntimeState::deserializeBinary(committed), store);
+                        EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
+                        EXPECT_EQ(snapshot(), committed);
                     }
-                    float health, fatigue = 0, debit, fraction;
-                    std::vector<MWMechanics::OblivionPhysicalConditionChange> conditions;
-                    std::optional<MWMechanics::OblivionCombatRandomTransition> random;
-                    if (weaponAttack)
-                    {
-                        const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
-                        ASSERT_TRUE(prepared);
-                        EXPECT_TRUE(prepared->mBlockAccepted);
-                        EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
-                        ASSERT_TRUE(prepared->mBlockSounds);
-                        EXPECT_EQ(*prepared->mBlockSounds, hasShield
-                            ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
-                                weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
-                            : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
-                                "WPNBlockBlade", ""}));
-                        health = prepared->mHealth; debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
-                        conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;
-                    }
-                    else
-                    {
-                        const auto prepared = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
-                        ASSERT_TRUE(prepared);
-                        EXPECT_TRUE(prepared->mBlockAccepted);
-                        EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
-                        ASSERT_TRUE(prepared->mBlockSounds);
-                        EXPECT_EQ(*prepared->mBlockSounds, hasShield
-                            ? (std::array<std::string_view, 3>{"WPNBlockShieldHeavy", "PHYDamageFlesh",
-                                weaponAttack ? "WPNHitBlade" : "WPNHitHand"})
-                            : (std::array<std::string_view, 3>{weaponAttack ? "WPNBlockBlade" : "WPNBlockHand",
-                                "WPNBlockBlade", ""}));
-                        health = prepared->mHealth; fatigue = prepared->mFatigue;
-                        debit = prepared->mBlockFatigueDebit; fraction = prepared->mBlockAbsorbedFraction;
-                        conditions = prepared->mVictimConditionChanges; random = prepared->mRandomTransition;
-                    }
-                    EXPECT_EQ(snapshot(), before);
-                    EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
-                    EXPECT_EQ(fraction, hasShield ? .5f : .25f);
-                    EXPECT_EQ(health, hasShield ? 7.5f : 11.25f);
-                    EXPECT_EQ(fatigue, weaponAttack ? 0.f : hasShield ? 3.75f : 5.625f);
-                    EXPECT_EQ(debit, blockSkill < 25 ? hasShield ? 20.5f : 20.25f : 0.f);
-                    const bool changes = blockSkill < 50 || (weaponAttack && hasShield);
-                    ASSERT_EQ(conditions.size(), changes ? 1u : 0u);
-                    if (changes)
-                    {
-                        EXPECT_EQ(conditions.front().mItem, item);
-                        EXPECT_EQ(conditions.front().mExpectedNativeCondition, 100.125f);
-                        // Original S4/equipped-block-oracle-03, both x87 words.
-                        const auto bits = hasShield ? weaponAttack ? blockSkill < 50 ? 1113358336u : 1115996160u
-                            : 1118945280u : 1119928320u;
-                        EXPECT_EQ(std::bit_cast<std::uint32_t>(conditions.front().mCondition), bits);
-                    }
-                    EXPECT_EQ(random.has_value(), weaponAttack);
-                    if (random)
-                    {
-                        EXPECT_EQ(random->mDraws, hasShield ? 6u : 7u);
-                        EXPECT_EQ(random->mNextState, hasShield ? 773150046u : 548247209u);
-                    }
-                    MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -health, -fatigue, -debit, conditions, random};
-                    if (changes)
-                    {
-                        auto stale = deltas; stale.mConditionChanges[0].mExpectedNativeCondition = 100.25f;
-                        EXPECT_THROW(world.commitOblivionPhysicalContact(action, attacker, victim, stale), std::invalid_argument);
-                        EXPECT_EQ(snapshot(), before); EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
-                    }
-                    const float victimFatigue = service.getNonPlayerValue(victim, 10);
-                    ASSERT_TRUE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
-                    EXPECT_EQ(service.getNonPlayerValue(victim, 10), victimFatigue - debit - fatigue);
-                    EXPECT_EQ(item.getCellRef().getNativeItemCondition(), changes ? conditions.front().mCondition : 100.125f);
-                    const auto committed = snapshot();
-                    EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
-                    service.restore(ESM4::RuntimeState::deserializeBinary(committed), store);
-                    EXPECT_FALSE(world.commitOblivionPhysicalContact(action, attacker, victim, deltas));
-                    EXPECT_EQ(snapshot(), committed);
-                }
         ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 15, ESM4::ActorValueCommand::Set,
             ESM4::ActorValueCommandSource::Script, 50));
         auto& inventory = victim.getClass().getInventoryStore(victim);
