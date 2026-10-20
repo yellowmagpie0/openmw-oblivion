@@ -27273,3 +27273,116 @@ TEST(OblivionWorldTest, PlayerSameCachedReactionRecapturesBothViewsAtomicallyAcr
         EXPECT_EQ(state->mFirstPerson->mReaction->mPoseSnapshot, request.mVictimFirstPerson->mReaction->mPoseSnapshot);
     }
 }
+TEST(OblivionWorldTest, PlayerCapturedReactionRestartsAfterEitherViewFinishesIndependently)
+{
+    // Original complete helpers admit absent/same-cached owners independently
+    // in both views (192 supplied-cache contexts). Owned-root capture is
+    // separately checked by the original474530 state/pose matrix.
+    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil})
+    for (bool bodyGone : {false, true})
+    for (unsigned phase = 0; phase < 4; ++phase)
+    {
+        SCOPED_TRACE(::testing::Message() << unsigned(kind) << ',' << bodyGone << ',' << phase);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        const std::string group = kind == ESM4::MeleeReactionKind::BlockHit
+            ? "handtohandblockhit" : "handtohandrecoil";
+        auto seed = fixture.snapshot();
+        seed.mNativeMeleeStates.at(actor).mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{2.f, {}};
+        service.restore(seed, world.getStore());
+        const auto captured = [&](std::uint64_t id, float translation) {
+            auto request = fixture.request(id, kind, group);
+            for (unsigned view = 0; view < 2; ++view)
+            {
+                auto& reaction = view ? *request.mVictimFirstPerson->mReaction : *request.mVictimReaction;
+                reaction.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+                    {{"Pelvis", {view ? -translation : translation, 2, 3}, {1, 0, 0, 0}, 1, 9}}};
+                reaction.mSequenceTiming.mEasing = true;
+                reaction.mSequenceTiming.mEaseEnd = .1f;
+            }
+            return request;
+        };
+        const auto oldId = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(oldId, fixture.mAttacker, fixture.mPlayer,
+            captured(oldId, 11)));
+        seed = fixture.snapshot();
+        auto& old = seed.mNativeMeleeStates.at(actor);
+        auto& surviving = bodyGone ? *old.mFirstPerson->mReaction : *old.mReaction;
+        if (phase != 0)
+        {
+            // Surviving native direct easing2, steady1 and retiring3.
+            seed.mNativeAnimationClocks.at(actor) += .25f;
+            old.mFirstPerson->mClock += .25f;
+            const float clock = bodyGone ? old.mFirstPerson->mClock : seed.mNativeAnimationClocks.at(actor);
+            surviving.mPoseSnapshot.reset();
+            surviving.mStarted = true;
+            surviving.mAnimationTime = .25f;
+            surviving.mSequenceTiming = {phase == 1, .25f - clock, clock - .25f, .25f,
+                clock + .75f, .25f, .25f};
+            if (phase == 3) surviving.mRetirement = ESM4::RuntimeReactionRetirement{.4f, clock};
+        }
+        auto& finished = bodyGone ? *old.mReaction : *old.mFirstPerson->mReaction;
+        finished.mPoseSnapshot.reset();
+        finished.mSequenceTiming = {false, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f};
+        finished.mInactive = true;
+        service.restore(ESM4::RuntimeState::deserializeBinary(seed.serializeBinary()), world.getStore());
+        EXPECT_EQ(service.recoverInactiveMeleeReaction(actor, false), bodyGone);
+        const auto* state = service.findMeleeState(actor);
+        ASSERT_TRUE(state); ASSERT_TRUE(state->mFirstPerson);
+        EXPECT_EQ(state->mReaction.has_value(), !bodyGone);
+        EXPECT_EQ(state->mFirstPerson->mReaction.has_value(), bodyGone);
+        EXPECT_EQ(service.getProcessAction(actor), bodyGone ? -1 : kind == ESM4::MeleeReactionKind::BlockHit ? 6 : 7);
+        const float bodyClock = service.animationClock(actor);
+        const float firstClock = state->mFirstPerson->mClock;
+        const auto id = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        const auto request = captured(id, 91);
+        const auto before = fixture.snapshot();
+        const auto beforeBytes = before.serializeBinary();
+        const auto reject = [&](auto mutate) {
+            auto bad = request; mutate(bad);
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, bad),
+                std::exception);
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), beforeBytes);
+        };
+        reject([](auto& r) { r.mVictimFirstPerson.reset(); });
+        reject([](auto& r) { r.mVictimReaction->mPoseSnapshot.reset(); });
+        reject([](auto& r) { r.mVictimFirstPerson->mReaction->mPoseSnapshot.reset(); });
+        reject([](auto& r) { r.mVictimFirstPerson->mClock += .25f; });
+        if (bodyGone)
+            reject([](auto& r) { r.mVictimFirstPerson->mReaction->mAnimationGroup = "differentrecoil"; });
+        else
+            reject([](auto& r) { r.mVictimReaction->mAnimationGroup = "differentrecoil"; });
+        auto prepared = world.prepareOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, request);
+        ASSERT_TRUE(prepared);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), beforeBytes);
+        ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+        state = service.findMeleeState(actor);
+        EXPECT_EQ(state->mReaction, request.mVictimReaction);
+        EXPECT_EQ(state->mFirstPerson, request.mVictimFirstPerson);
+        EXPECT_TRUE(state->mRetiringSequences.empty()); EXPECT_FALSE(state->mStrike);
+        EXPECT_EQ(service.animationClock(actor), bodyClock);
+        EXPECT_EQ(state->mFirstPerson->mClock, firstClock);
+        EXPECT_TRUE(service.isActionConsumed(oldId)); EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_EQ(service.getPlayerValue(8), 98);
+        const auto after = fixture.snapshot();
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+        EXPECT_EQ(after.mPhysicalActions.mNext, before.mPhysicalActions.mNext);
+        EXPECT_TRUE(after.mPhysicalActions.mPending.empty()); EXPECT_TRUE(after.mPhysicalActionOwners.empty());
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, request));
+        std::array<MWMechanics::OblivionMeleeSequenceMetadata, 2> sources{{
+            {group, 1, 0, 2, 0, 2, std::array<float, 2>{0, 2}, .1f},
+            {group, 1, 0, 2, 0, 2, std::array<float, 2>{0, 2}, .1f}}};
+        sources[1].mFirstPerson = true;
+        auto frame = service.prepareMeleeReactionFrame(actor, 0, sources);
+        ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+        state = service.findMeleeState(actor);
+        EXPECT_EQ(state->mReaction->mSequenceTiming.mEaseStart, bodyClock);
+        EXPECT_EQ(state->mFirstPerson->mReaction->mSequenceTiming.mEaseStart, firstClock);
+        EXPECT_EQ(state->mReaction->mPoseSnapshot, request.mVictimReaction->mPoseSnapshot);
+        EXPECT_EQ(state->mFirstPerson->mReaction->mPoseSnapshot, request.mVictimFirstPerson->mReaction->mPoseSnapshot);
+    }
+}

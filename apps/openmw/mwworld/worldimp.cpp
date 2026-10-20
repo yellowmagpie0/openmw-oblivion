@@ -2726,14 +2726,14 @@ namespace MWWorld
                 if (previous && previous->mReaction)
                 {
                     const auto& body = *previous->mReaction;
-                    if (body.mKind != ESM4::MeleeReactionKind::BlockHit || body.mAnimationGroup != group
-                        || !previous->mFirstPerson || !previous->mFirstPerson->mReaction) return false;
+                    if (body.mKind != ESM4::MeleeReactionKind::BlockHit || body.mAnimationGroup != group) return false;
+                }
+                if (previous && previous->mFirstPerson && previous->mFirstPerson->mReaction)
+                {
                     const auto& mirror = *previous->mFirstPerson->mReaction;
-                    if (mirror.mContactId != body.mContactId || mirror.mKind != body.mKind
+                    if (mirror.mKind != ESM4::MeleeReactionKind::BlockHit
                         || mirror.mAnimationGroup != firstGroup) return false;
                 }
-                else if (previous && previous->mFirstPerson && previous->mFirstPerson->mReaction)
-                    return false;
                 const auto firstMetadata = MWMechanics::captureOblivionMeleeSequenceMetadata(*first, firstGroup, true);
                 const auto* firstSource = first->getControllerSequenceMetadata(firstGroup);
                 if (!firstSource || firstSource->mWeight != 1) return false;
@@ -2754,7 +2754,10 @@ namespace MWWorld
                 Log(Debug::Verbose) << "M15 Player first-person block resource selected: actor=" << key.serialize()
                                     << " cause=" << id << " native_group=" << *selected << " group=" << firstGroup
                                     << " previous_cause=" << (previous && previous->mReaction
-                                            ? previous->mReaction->mContactId : 0);
+                                            ? previous->mReaction->mContactId : 0)
+                                    << " previous_first_cause=" << (previous && previous->mFirstPerson
+                                            && previous->mFirstPerson->mReaction
+                                            ? previous->mFirstPerson->mReaction->mContactId : 0);
                 return true;
             }
             if (previous && std::any_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),

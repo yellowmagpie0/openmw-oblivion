@@ -1,0 +1,1428 @@
+{
+  "schema_version": 1,
+  "runtime_state_version": 57,
+  "full_M15S4_acceptance": false,
+  "status": "Player same-cached captured activation accepts independent completed views; exact authored-clip normal contact/save/restart matrix verified. Audio and settled first-person pose criteria plus broader M15S4 remain open.",
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "276464919d7bab62ab14fba460af9de87b612153539b0c3b4c63ba429996b421"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "7a2717f9d32c3137aa2cd52ed6429dd669f2fe965720dc7cc581debb37cc1071"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "2e9184ed9a6a00b7ff132ee311b1577ee0eeb9f5548fbc00f83f576aa4424d47"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_asymmetric_block_opponent_fixture.json",
+      "sha256": "4d51c5de894d852c2842d507933937106e0830fcf47a3a9c719a51eccb89d8ad"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_player_asymmetric_owners_probe.json",
+      "sha256": "01c420817eaceb7c0c8caf97643d3b9c9f29f0b074b412577ae8359bfef1e4ee"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_reaction_duration_fixture.json",
+      "sha256": "4012387f8ce329fd3004923968708d48fa77be8ef17419b3d09966b861b99d15"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_player_asymmetric_blockhit_views.json",
+      "sha256": "56343c14e6e9fe18fcb5504721546579a2b782f4fc65ab9739f1d3c11f7785fd"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_player_asymmetric_blockhit_views_continuation.json",
+      "sha256": "dd5a638ec5130867f4d9b1a7a1e284132829f80b13829dd6c94b492c94b0494c"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_player_asymmetric_blockhit_views_third.json",
+      "sha256": "676491ae65d65e704d498be1ca5d1ba119f08cd0eafd32c901701f62ac057e22"
+    },
+    {
+      "path": "scripts/tes4_m15_reaction_duration_fixture.py",
+      "sha256": "49a74d1eff578440e9cfaf3016808725ec188e9a01b4eddcfb97232105ed21d3"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_reaction_duration_fixture.py",
+      "sha256": "75eb7a991698803a5bfa42c3b4b3d9b16bc9c6a7f70c823b261d49b22fb57ae5"
+    }
+  ],
+  "engine_checks": {
+    "normal": {
+      "source": {
+        "head": "ead4d076b678b51d0a68b6df071dd766d5ae7b18",
+        "source_fingerprint": "a6d4ba27d0cade59962c8c34b2e2b260c9831fcc66cae2a490ae23da692ddce4"
+      },
+      "result": {
+        "executed": 1767,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "26c647970dd75580a0e1cf83557183dc4c32cb29973ed3338e9c0745cf910b91",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "4c94b7a6b2b7fe56ab543ed2794c7aa967f81c00d3ac6b71bf3a160d50dba186",
+        "inventory_sha256": "8aa8b1c9b7b1f2a249434c2df776d1473161e3f884aac787f7cddfa83d5a9552",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-normal-02/verification.json",
+          "sha256": "4ad626cd8a75c855d3aa9b2fd44fb31ca7a0134ecfe0b4f30b67788c7ad0bb12"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-normal-02/engine.xml",
+          "sha256": "4c94b7a6b2b7fe56ab543ed2794c7aa967f81c00d3ac6b71bf3a160d50dba186"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-normal-02/engine-inventory.txt",
+          "sha256": "8aa8b1c9b7b1f2a249434c2df776d1473161e3f884aac787f7cddfa83d5a9552"
+        }
+      ]
+    },
+    "sanitized": {
+      "source": {
+        "head": "ead4d076b678b51d0a68b6df071dd766d5ae7b18",
+        "source_fingerprint": "a6d4ba27d0cade59962c8c34b2e2b260c9831fcc66cae2a490ae23da692ddce4"
+      },
+      "result": {
+        "executed": 1767,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2b9d093b469d58547e8e8999a8e8418211397b2c8284164edb8d23236d63fc98",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "052080537f63a52b679c5c5c07b700a4fa31709858497eb241af631b19f314cc",
+        "inventory_sha256": "8aa8b1c9b7b1f2a249434c2df776d1473161e3f884aac787f7cddfa83d5a9552",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-sanitized-02/verification.json",
+          "sha256": "f5a60be2a6f1ffabe756ba8e4e85929829405ed4b1cfb98df9e3604ba82c5258"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-sanitized-02/engine.xml",
+          "sha256": "052080537f63a52b679c5c5c07b700a4fa31709858497eb241af631b19f314cc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-sanitized-02/engine-inventory.txt",
+          "sha256": "8aa8b1c9b7b1f2a249434c2df776d1473161e3f884aac787f7cddfa83d5a9552"
+        }
+      ],
+      "actual_environment": {
+        "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-sanitized-02/engine-sanitizer-environment.json",
+        "sha256": "4ff6ccd4771fafa022c24fdeaa85afc37646eb7f47b6569a073a76748eb1d13e"
+      }
+    }
+  },
+  "python": {
+    "executed": 341,
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-normal-02/verification.json",
+      "sha256": "4ad626cd8a75c855d3aa9b2fd44fb31ca7a0134ecfe0b4f30b67788c7ad0bb12"
+    }
+  },
+  "native_result": {
+    "passed": true,
+    "total_contexts": 576,
+    "same_cached_or_absent_per_view_contexts": 192,
+    "missing_first_cache_contexts": 288,
+    "distinct_first_slot_crossfades": 96,
+    "corpus_sha256": "88b28dc5c60fe75dce41d8d79eac8ba2d6cb954d4961063be30aae8c2c1fe7dc",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual original Player BlockHit/Recoil helpers, active-view selection, body activation/process assignment and65D790/474BE0 mirroring with independent supplied per-view old slots. Foreign roots choose direct activation; owned-root captured-pose behavior is the separate288-context original474530 proof. Heap-free empty-controller sequences, supplied cache hash/equality, false scene predicates and scene-update boundaries; no actual game input or production runtime acceptance.",
+    "findings": [
+      "With both caches present, absent/same-cached owners in either view independently start/reset their target and body assigns6/7.",
+      "Missing FP cache in third person preserves prior FP slot/sequence while starting body. In first person missing cache prevents selection; BlockHit preserves owners while Recoil resets both channel3 slots without changing prior process action.",
+      "Independent causes under a missing mirror are required for general missing-resource support; existing paired snapshot validation must not simply be removed without full owner/restore integration."
+    ]
+  },
+  "native_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/verification.json",
+      "sha256": "41c6f2e6adc5efff7aa26d267433f4debed505a251a04ca502eae37d1ec16938"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/tested-source-files.json",
+      "sha256": "2d7524944726f08a162507113d958f7607be661f9646f8cfbb3f7c8f5870ff06"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/probe-01.py",
+      "sha256": "9a2018032078d9434b7af5df8846e255bc9d7fc4c2a81264a7067f36738fe8f8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/verify.py",
+      "sha256": "b8e0f61aa137f324af7cc05b7f8a9c94c421c840c31577bc2b43f07f4aeb7225"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/corpus01.json",
+      "sha256": "88b28dc5c60fe75dce41d8d79eac8ba2d6cb954d4961063be30aae8c2c1fe7dc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/asset-readback-01/main.cpp",
+      "sha256": "1c27d50a85dff9c12052292e1694f6bdd9d47649772820e09151cd740c833425"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/asset-readback-01/run.py",
+      "sha256": "0b6001c7011f631f749e7a51f50a33a2fd48d6aa1cb8980dced6573d5dc07462"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/asset-readback-01/verification.json",
+      "sha256": "e22efac6075941817260fea30beb8066b9fbf0dc9338e324a6175c81f460468d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/asset-readback-01/body-output.txt",
+      "sha256": "4e2cdb119c9d6eef2b8b79dd0887388c6456600a0734263096ce36902c3c08b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/asset-readback-01/first-output.txt",
+      "sha256": "da84bcffc171e697fea5d60c182cf3e41e77246ce5bc305a6a3e165f4fe99ac4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/runtime-fixture-branch-failure01.json",
+      "sha256": "0bf71d1fcfdbc466676e5c6bb46afed68ef6fdea9cd530dc0ae535b250e8cc49"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/runtime-matrix-stopped-for-fixture-correction.json",
+      "sha256": "f39e26812273c659046590edddc809fec58f107a620f4791f3cd692c79bb616e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/prepare-runtime02.py",
+      "sha256": "80389fc692b67fd6ce1c8332591ef10bf7e0b5f14f6566efde03df74eaec48d7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/run-runtime-matrix02.py",
+      "sha256": "c2c325e35feaddffbc3a2acbc82986313642568b2517e1e72c7453ef30621e64"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/verify-runtime.py",
+      "sha256": "dec8919261f6c149a7391b56e8e6ef1ae194954657439687d1df874d6709737e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/follow-runtime.py",
+      "sha256": "2255c70b35735ebd523060f5f6ad70907d17c02388c718c2040ff9ffb6e4583c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/watch-runtime-audio02.py",
+      "sha256": "7b7b51c03a03641997cef6d34dfc0feb2f86e01a69fbe2696cc1e11a63375ead"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/watch-sanitizer02.py",
+      "sha256": "d348910c456b2846f460c995b4347123a43a24a77be95fc439ac6c4ed14f2d4d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/close-chunk.py",
+      "sha256": "e766664c5604a3f8900db6946ae36e37960763d95a48df7ee160db29c2c4a059"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/audio-diagnostic-normal-first-long-third02.py",
+      "sha256": "37411c6ac3b4da4691f427640307be1a90be97341afb3af6a8d6538bc3d87d42"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/audio-diagnostic-sanitized-body-long-first02.py",
+      "sha256": "f9d5f1007dc7b3f34ba7c4e30e3e972ddf28ed34b31e85dc18e68be5aad8d982"
+    }
+  ],
+  "owned_pose_source": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cached-review-01/native-verification03.json",
+    "sha256": "33d87e3469bad28d89d5c250d463753f6a294dc1db15d10094b1828eab673517"
+  },
+  "assets": [
+    {
+      "long_view": "body",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/assets.json",
+          "sha256": "e0ad663376e67a0dbead81fc015839948e03d5e1cd1196c7bcf12c19b604e14e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/M15CachedBlockOpponent.esp",
+          "sha256": "e982270ebe3b2adbfa0bc83e9aeea019ebca3706d1e8836073258bfa843b60f1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/M15CachedBlockOpponent.json",
+          "sha256": "39e08259b4421f7be9d1d935c0d415f1a72837c5851344de71cf7a0269b0a884"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/M15FatigueExpenditure.esp",
+          "sha256": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/M15StationaryOpponent.esp",
+          "sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/meshes/characters/_male/onehandblockhit.kf",
+          "sha256": "df308444b87f7491256c090dee1bc756a1a2c55dd55a087d3856fe77e4a8d9a0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/reaction-duration.json",
+          "sha256": "6e658fc736f9d28ced3fa89136288ba798cef66f21cb1d40f485bf973c74843c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/staged-input.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/staged-input.staging.json",
+          "sha256": "a25078f4319dce1b851635151958bbf3a6814b40ef5832b7e0a009b51179c580"
+        }
+      ]
+    },
+    {
+      "long_view": "first",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/assets.json",
+          "sha256": "c2e346cda73b3ed2fc9303dbc088699593fc92eec17ad3e18a7384f7c401eda8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/M15CachedBlockOpponent.esp",
+          "sha256": "e982270ebe3b2adbfa0bc83e9aeea019ebca3706d1e8836073258bfa843b60f1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/M15CachedBlockOpponent.json",
+          "sha256": "39e08259b4421f7be9d1d935c0d415f1a72837c5851344de71cf7a0269b0a884"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/M15FatigueExpenditure.esp",
+          "sha256": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/M15StationaryOpponent.esp",
+          "sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/meshes/characters/_1stperson/onehandblockhit.kf",
+          "sha256": "0b7b337edd215a9d1831c04e5912ac4d4ffc67e855aaad8c30584980716719c0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/fixture/reaction-duration.json",
+          "sha256": "70398fce09c5eaf3e0d4c52042c6e77467cee5d9dd4e4b1b5d947efdbfaa2a88"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/staged-input.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/first-long/staged-input.staging.json",
+          "sha256": "a25078f4319dce1b851635151958bbf3a6814b40ef5832b7e0a009b51179c580"
+        }
+      ]
+    }
+  ],
+  "runtime": [
+    {
+      "profile": "normal",
+      "long_view": "body",
+      "input_view": "first",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": true,
+      "previous_view_causes": [
+        2,
+        0
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/verification.json",
+          "sha256": "5114e79a9ab1b107aa2ba608b40304fa0ad0b515f621baf697e4e89f1e71bf2b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/visual-review.json",
+          "sha256": "aa1ca259d8e36fff507bfbd24ff24a40eb68f9378912bdf4137aab3c5e1c6dc1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/manifest.json",
+          "sha256": "56343c14e6e9fe18fcb5504721546579a2b782f4fc65ab9739f1d3c11f7785fd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/continuation.json",
+          "sha256": "dd5a638ec5130867f4d9b1a7a1e284132829f80b13829dd6c94b492c94b0494c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/launcher.py",
+          "sha256": "25c034e0e371b0f10cc6638f9341bc4e99c711001bf8f6ac20c26582dc2536f0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/binary-pin.json",
+          "sha256": "07b3ab09df77ff36dbc18e0fda74e41dce271e3efafaa0b3d28df294a6d72856"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/accepted-builds.json",
+          "sha256": "e1c3da5900b5e10cfd1497b68808875a6ae8739385a2975b6bad39414633e53d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/preregistered-acceptance.json",
+          "sha256": "721ee367e0080acce7f9c0bf8df5d2297bd2f749dca51d7a1086b485307076b3"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/launcher.json",
+          "sha256": "336142b1737815e1a54522e87b1978438f3fe4878294b63d0aae7286688543d4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/scenario.json",
+          "sha256": "32fc012fdd65899d29b1eb7350a8289dd6f163e3f89930d7ed511d382a2f4a78"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/process-epoch.json",
+          "sha256": "038436bf6d8e6cfa89c1af434c4764cc6bb423a679a6cb9607ab27361727f475"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/actual-engine-environment.json",
+          "sha256": "b8b7003b60badd35d9f8b61f4a9d4e271b24b52dca81b71339330c9d30e329b8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/process.log",
+          "sha256": "54f525cd8222db0ad71a1c9d3e67e143ff8dee50be5dae656d2283be8ae0a803"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/m15-events.jsonl",
+          "sha256": "c94300860f33491b3aa0776a890c5e69c742cdbf2b352984481ecdd5baf31b41"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "23e57079566b4571cec67c597c2bdb9fde408abf61a9c54dd4a6bb0a40028e73"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/audio-verification-2.json",
+          "sha256": "d955c223b9dfd4287a91e6e93af23cc58b123487b0b60ae41605e09b272d58b6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/launcher.json",
+          "sha256": "c7a1b02654a14db631e725c34d725609e65be0989c468eb054165fee2aefab9d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/scenario.json",
+          "sha256": "32011b55ba72ae8a4c05a1cff20a6b13a76e7ed314f95dcf6bbab5b30ef0089c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/process-epoch.json",
+          "sha256": "3b6395e7df16fd433066ff202fb513b2ab82069de6e187286507b1c7b9b4f5ea"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/actual-engine-environment.json",
+          "sha256": "5dbe717638752ca2bb825b55119bc56cd9de0fce2ab53bf915bff60891c673cf"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/process.log",
+          "sha256": "6f8872e47999687606344c7f0d8dc29bd98fc1439a6a49059b6855f276b27540"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/m15-events.jsonl",
+          "sha256": "f7da1b6a59b06064367eb890bf9dc27206d0d7792577e43a8996d5c190434fd7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/input-pristine.omwsave",
+          "sha256": "23e57079566b4571cec67c597c2bdb9fde408abf61a9c54dd4a6bb0a40028e73"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "2204c92905cefe13d37dea1d37a129fb0cc0b7ffd7bd85a3d36d743123d9b11d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/second/audio-verification-0.json",
+          "sha256": "34b0dd8f8cdd8deb13733efd23f8e0ba8aee301dced24affbc67ee21bbb48364"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "body",
+      "input_view": "third",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": true,
+      "previous_view_causes": [
+        2,
+        0
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/verification.json",
+          "sha256": "537daf527e91761b6994b9ef46c5511d5bf2744713f05850a3e2de8166e88e87"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/visual-review.json",
+          "sha256": "26e74546554eca61d9a29c2a270b8d5a562ebe68488be3c2f3e9dc713905eb7f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/manifest.json",
+          "sha256": "676491ae65d65e704d498be1ca5d1ba119f08cd0eafd32c901701f62ac057e22"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/continuation.json",
+          "sha256": "dd5a638ec5130867f4d9b1a7a1e284132829f80b13829dd6c94b492c94b0494c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/launcher.py",
+          "sha256": "25c034e0e371b0f10cc6638f9341bc4e99c711001bf8f6ac20c26582dc2536f0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/binary-pin.json",
+          "sha256": "07b3ab09df77ff36dbc18e0fda74e41dce271e3efafaa0b3d28df294a6d72856"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/accepted-builds.json",
+          "sha256": "e1c3da5900b5e10cfd1497b68808875a6ae8739385a2975b6bad39414633e53d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/preregistered-acceptance.json",
+          "sha256": "bdbb7cac52739f2d63beda74488963fc78cea81e3bd07b080ac71ff79557690c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/launcher.json",
+          "sha256": "6c13f44c7a21d2d04d296a6007c33b707b8b7544beb515ecf4b6d25f2af8bdf2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/scenario.json",
+          "sha256": "ef59f36358d202b6ec868d201eea7bea0edda3d673921d9867783a162b8c7f52"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/process-epoch.json",
+          "sha256": "86ef9bc80ed322bf95f8db5ea2ec6fd48667830b353ef1647b71c8a269e8549d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/actual-engine-environment.json",
+          "sha256": "671b4a0b980ed11365047fff75459f84b4213d840bb4f3100484e16cdfe85a63"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/process.log",
+          "sha256": "bea369bb05ceae47dcad971b356519e2f122abb84f657ed7add9bf0004fb368c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/m15-events.jsonl",
+          "sha256": "e7f281c878eeb0d99c7eba9f8e5f1512909b8ae806005c5a344662bd740618e8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "99f18017cbed2c184c6020b24ed96cecf06827970922200bc12bfed317b2dd4e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/audio-verification-2.json",
+          "sha256": "8c17c608f34d41676520a63231110ad85d0afbcf228eb5ce3f32bc030b96bef8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/launcher.json",
+          "sha256": "75e30c9572bbf0afd24fda8355c5f139536d328a415b83f9c90168457900282e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/scenario.json",
+          "sha256": "9c9fb2e8d501effbec85dd30da9c8bcc2ff428616e733c067ed73f429bc28628"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/process-epoch.json",
+          "sha256": "af1106567ee1f105676444c58b0b126699a021423ac45f1f24b616110fa35863"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/actual-engine-environment.json",
+          "sha256": "136c35cfb23aee6afa6e1146f460dba6462e43b7a859792d850a579b0543cca4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/process.log",
+          "sha256": "c645e42115c3453d5ed0911607afb83f49cbbaed91291f503e16330d8cba650b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/m15-events.jsonl",
+          "sha256": "81eaba3a2ef802a92e3fc9e582a141d5776125c673ef8dc5f1e02dac34fa1681"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/input-pristine.omwsave",
+          "sha256": "99f18017cbed2c184c6020b24ed96cecf06827970922200bc12bfed317b2dd4e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "d8afad441d13a2d2ee4293ffa628dc39656670ef1f381204e328e673701f8fa1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/second/audio-verification-0.json",
+          "sha256": "9e2938279337759482355f643f97e89cacd3aa0de7dc1e2bbf0f91bff730ef41"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "first",
+      "input_view": "first",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": true,
+      "previous_view_causes": [
+        0,
+        2
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/verification.json",
+          "sha256": "503d72bc56a4afa4d7eb5b46cd74c7465191868c5160f3c409a2d01d4a68951a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/extra-content-reference-audit.json",
+          "sha256": "b0c83ce70377046597ae0c158d2bc58347e43574f334e42788df8a7ca7b85308"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/visual-review.json",
+          "sha256": "275042bdd507573c87ed19b4eae8a2832b139e36d5a29666443de3f7e3b210ea"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/manifest.json",
+          "sha256": "56343c14e6e9fe18fcb5504721546579a2b782f4fc65ab9739f1d3c11f7785fd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/continuation.json",
+          "sha256": "dd5a638ec5130867f4d9b1a7a1e284132829f80b13829dd6c94b492c94b0494c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/launcher.py",
+          "sha256": "367689dd70390a5293146c08f4d931ed116e2f88fd07b0c6294788e57391bc94"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/binary-pin.json",
+          "sha256": "07b3ab09df77ff36dbc18e0fda74e41dce271e3efafaa0b3d28df294a6d72856"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/accepted-builds.json",
+          "sha256": "e1c3da5900b5e10cfd1497b68808875a6ae8739385a2975b6bad39414633e53d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/preregistered-acceptance.json",
+          "sha256": "f5ff497909827d3187f50cccfe8000f29e199ef89481a199cd0b281eed211720"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/launcher.json",
+          "sha256": "21175098a8e3a8f86b35a3c708fa0c32c78f1d576c798430ac66afa7403f97fd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/scenario.json",
+          "sha256": "e1325791be6899e0abeaa25bfe0d50e5b2148867ba41b936daddde7472a1f8ba"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/process-epoch.json",
+          "sha256": "dce93be25379f36f857c772c146615603045785c129ee3e932f8e5fdc170b796"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/actual-engine-environment.json",
+          "sha256": "e46167afb41974369e872ffe12c60c664cd3e036b0516018233bed9155d38bcc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/process.log",
+          "sha256": "54d10daff153bd68552927f9f7b65f03235cbcd8f520e7bf18d2a958c30b457b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/m15-events.jsonl",
+          "sha256": "352573724e1b01b7a27e8fc6a86f5452ae3884f5ccf189d9121fe38205303f52"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "94d7c90f7cb866eb629a8abc6a4cf705cac6dac5597cb1213d76dae5f74d9a27"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/audio-verification-2.json",
+          "sha256": "1b64d780ac829eb173546f851cbc7fc2739d6afceb41fa1f04448188d808cef6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/launcher.json",
+          "sha256": "640f10435b35b92aa9d50eef74de1452bf6a26b9b45b23be0338affe008bd965"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/scenario.json",
+          "sha256": "5142b6e63ea4a784cb26a6bf1e7bb7dc660b6fd87aa8361dfa1b2915b7700a46"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/process-epoch.json",
+          "sha256": "1a63a18a82e8ac6918195c23df3dded49511fb931d073dcd41eadb4054506955"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/actual-engine-environment.json",
+          "sha256": "f519c178cb8c407d76d680e81c615d0b8130e596adab305a146f5a1a71146b83"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/process.log",
+          "sha256": "496931ddcbae894facb2dbf09e0203209d970814f516d32d96af1f970527fade"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/m15-events.jsonl",
+          "sha256": "84273a775007faaddea78fd092b5f10b022904bfd5e3c66ff78a00e9db465924"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/input-pristine.omwsave",
+          "sha256": "94d7c90f7cb866eb629a8abc6a4cf705cac6dac5597cb1213d76dae5f74d9a27"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "cd61d9502ab2ae8b9cffc21fda47a1354c031c7c3d67183e6ed838fdb105bb25"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/second/audio-verification-0.json",
+          "sha256": "32e97917548ed8440d97038081427a5c509b2c6687d577d3f76d6c68430b43da"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "first",
+      "input_view": "third",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": false,
+      "previous_view_causes": [
+        0,
+        2
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/verification.json",
+          "sha256": "0727dd6b1f11ba3425f4f0c865ec8caea47c4f03e65cb38c348848a007a22499"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/extra-content-reference-audit.json",
+          "sha256": "5b54f6bc38bcbcba7857ad0867774db3d0657a752fb20497a4c4648846f0aab0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/visual-review.json",
+          "sha256": "fc83ce7d355099ac2d3ed444be8d8a102fbb0757c7b6ff0d0b76d07c40582834"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/manifest.json",
+          "sha256": "676491ae65d65e704d498be1ca5d1ba119f08cd0eafd32c901701f62ac057e22"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/continuation.json",
+          "sha256": "dd5a638ec5130867f4d9b1a7a1e284132829f80b13829dd6c94b492c94b0494c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/launcher.py",
+          "sha256": "367689dd70390a5293146c08f4d931ed116e2f88fd07b0c6294788e57391bc94"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/binary-pin.json",
+          "sha256": "07b3ab09df77ff36dbc18e0fda74e41dce271e3efafaa0b3d28df294a6d72856"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/accepted-builds.json",
+          "sha256": "e1c3da5900b5e10cfd1497b68808875a6ae8739385a2975b6bad39414633e53d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/preregistered-acceptance.json",
+          "sha256": "e8578a8d0768545d8b7bcb8b477643ecf02e3f26f1cb664481f2489ba5b63ec3"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/launcher.json",
+          "sha256": "73c4be4686d614e5ce104abb23a2690d5b0c07a294f127c2a48b39781e37013a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/scenario.json",
+          "sha256": "61d556b8605f218d9373bdae534a74a17bc76a121b03c537a4c9f06d2bad90f4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/process-epoch.json",
+          "sha256": "055052cb0ec7921cfa331e0f0e0fb78b9a755f2c0a54bb4346f4435a6f6764a6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/actual-engine-environment.json",
+          "sha256": "ac4ce808e51ac4f05efa8d55b8703440b4b3cc3bdde94d3df5cd9714293a67a7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/process.log",
+          "sha256": "b9555825b8fa6d5386a1d282b16251a3d5e25837956f26b6fc757e2482c22d8c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/m15-events.jsonl",
+          "sha256": "65bc935b9f693ad99cc9a418237d5701f2828644fe644327525664897324dd36"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "61e79fd17b02b973ff85802035e50884de3092aa2a493a28d1274ba17a230350"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/audio-verification-2.json",
+          "sha256": "cad3c1d722b68a43210932da6a32ab9b2ab8d1ac053375144a1c4de42dd5acb5"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/launcher.json",
+          "sha256": "3030567634d03584dd473dd108f6e92b609a2c1d9514ec8400d3990504bf6203"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/scenario.json",
+          "sha256": "5d0daaf8bc8100d365971275131976f48d2b9df8fa37ffbb04016eb07c98073a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/process-epoch.json",
+          "sha256": "32708ecf8468c465b325967d81a5e007d8716f87fc4cbb7eeadefae679096f6a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/actual-engine-environment.json",
+          "sha256": "bcd0b3d63b281ccffcfe32d9963e7f224ac69f2d9b9f1a779a8a99c569313bfd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/process.log",
+          "sha256": "d6888c83972e8e23ab7ca25900491d92c6b173f568b9c54dbabebdd8b0b22699"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/m15-events.jsonl",
+          "sha256": "247abaa8afd6c0b9a01fc22d12f635ed70400c112944f256ddb3b97b286a1071"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/input-pristine.omwsave",
+          "sha256": "61e79fd17b02b973ff85802035e50884de3092aa2a493a28d1274ba17a230350"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "c076e9418915fffe7f7b291d509dc0906d84e7eef0ae205ba4a39f101a177646"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/second/audio-verification-0.json",
+          "sha256": "224f0e5d54058538ef2a4fc7d9f8d64a538bce1f99eafb8de3da83d049b3f814"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "body",
+      "input_view": "first",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": false,
+      "previous_view_causes": [
+        2,
+        0
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/verification.json",
+          "sha256": "bc986b6f236347e64c035557963575506a919fd0c85c724feabc7acab84eb69f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/extra-content-reference-audit.json",
+          "sha256": "bcc96a2a154bc7c9ac8d43add8bcacdc3a8f6c90e73cc54d3bb9da9586280c4f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/visual-review.json",
+          "sha256": "504b55f4f287702995935594cb77bf92db76bb3a8b6abbf9f0a163ae3f7cb695"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/manifest.json",
+          "sha256": "d89dd82987e734da3ca973f407e960d6e483154fea5745b48f1a9ab8a6daf72a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/continuation.json",
+          "sha256": "f9d054e33cc74af1256af5a873ef801cc89f0a999b1820f9edc42d4fc30e952c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/launcher.py",
+          "sha256": "25c034e0e371b0f10cc6638f9341bc4e99c711001bf8f6ac20c26582dc2536f0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/binary-pin.json",
+          "sha256": "ef50941d9f562e750d21f9f9514cb9c7e4c64f3b538b71abc7ec7837927cb47d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/accepted-builds.json",
+          "sha256": "f4eb9b6b4107e2aa5f1cd788a2529fea2bc0a4aa2207be849bcaa9926698338b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/preregistered-acceptance.json",
+          "sha256": "29751dd95c7d145a8dea7bb10815a1da63255f399c0ef09daddcabb023e63377"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/launcher.json",
+          "sha256": "9039b1f3a2baa057d8c8fea4f720c321abef75262155e87f527c0745bfc42567"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/scenario.json",
+          "sha256": "27f0f3760d822ea6ed5937113964d7035eece1b5a5fef4f1c02545de83809de7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/process-epoch.json",
+          "sha256": "228f49ea38fb95a52a7ad8ed3e639632be9b6eb2fe63bd718889f5ec21248e2a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/actual-engine-environment.json",
+          "sha256": "d4ff7d3ff0472f648ae2b2de7d8e9e61f977584d87659ff14db07a201231d8f1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/process.log",
+          "sha256": "6ebb7847bbd34101f760c30c0781369457f3dd6033d4e1e3b5d3f4d8225c32c6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/m15-events.jsonl",
+          "sha256": "9b952f362117c483434fec359b1cb592b275acb75d3b0863b768ddb10589cb24"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "8ffa0853312ab614aa2ac1c9da7ba12a89a5451e05311a788026c56714326c39"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/audio-verification-2.json",
+          "sha256": "f20036ea756e2b62b7fcc00b041bd0637bdb2129d54a755e769bbf94359fa9c4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/launcher.json",
+          "sha256": "b146413bdb3e1296e45f9a74c016b3679fc22947cd9240ad3d94a851bea1015e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/scenario.json",
+          "sha256": "00164761a43e702a1a56583c61cccfbc58ee7d1cc4133266c04ede97e3e39bdd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/process-epoch.json",
+          "sha256": "f80f011f567f5f774a49a209790420ffc8935ee54848cceba168abc9fca1ab88"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/actual-engine-environment.json",
+          "sha256": "d6a6e35d3896f4cc5a5af2c701c89ef53beb7f976ef2d771e3a2ac646e06fa7b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/process.log",
+          "sha256": "0fbde64af894887b0174625f3e64774b355f95858957b6c18aa451f7deb7d083"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/m15-events.jsonl",
+          "sha256": "1700836c2ff640a5694d8ba2b02da069831f11e624a8e1b928ae20dd20abc46d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/input-pristine.omwsave",
+          "sha256": "8ffa0853312ab614aa2ac1c9da7ba12a89a5451e05311a788026c56714326c39"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "294dbe7625b3dafd4ccbefb9303b0e0af6960301c09f725bbd6b870b2912930b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/second/audio-verification-0.json",
+          "sha256": "430bb66db62b6c4b87dfd1ea14db7d4a7db43d862f6994e8d57d6419dfb58c47"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "body",
+      "input_view": "third",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": true,
+      "previous_view_causes": [
+        2,
+        0
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/verification.json",
+          "sha256": "2002ac3901f2e3b5701abdbcc69f69fc70bad49cca60e30f7bfe2410377e9a5b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/extra-content-reference-audit.json",
+          "sha256": "ba946df702d1cf838d66321855d78d85efa71895db1996ee864862f9c25da6c5"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/visual-review.json",
+          "sha256": "c8edb346380702cc206358fad76031d4406ac19febd08ea0f3f17d1fa0b0bc40"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/manifest.json",
+          "sha256": "0c0adbe3abc09f3aa668258c0500cb6eaa790448a5186ee18c2e90532b4c08d6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/continuation.json",
+          "sha256": "f9d054e33cc74af1256af5a873ef801cc89f0a999b1820f9edc42d4fc30e952c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/launcher.py",
+          "sha256": "25c034e0e371b0f10cc6638f9341bc4e99c711001bf8f6ac20c26582dc2536f0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/binary-pin.json",
+          "sha256": "ef50941d9f562e750d21f9f9514cb9c7e4c64f3b538b71abc7ec7837927cb47d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/accepted-builds.json",
+          "sha256": "f4eb9b6b4107e2aa5f1cd788a2529fea2bc0a4aa2207be849bcaa9926698338b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/preregistered-acceptance.json",
+          "sha256": "4ca13fab71480ea0b1a8720cd9743a9e050d60fdb5f41069957a4d46f7e60c5c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/launcher.json",
+          "sha256": "f89f78a27bbb0e64b6e3a43c5cca5395cc192c2809dc13a6b5ece40734e26ebd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/scenario.json",
+          "sha256": "cc3e7dc906da18da35eb74292a4aa0db0638847190aca0b42d5abd8973909eb2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/process-epoch.json",
+          "sha256": "320f00bc7c6df89095fcdd3873b0a6074d8ece9e60cc82ede3756103cacebe3c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/actual-engine-environment.json",
+          "sha256": "9f2f8074594bb22e371cfe7111553eb0517dfb5d72b7310951f01ee2df75591b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/process.log",
+          "sha256": "06bce4c34ff73005cfa10a7525c8f7e8767e528786077b1c0005633b9ca22589"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/m15-events.jsonl",
+          "sha256": "e0889054a7b36bbc44d0a298061a641ee0a93a88ee231dcd0bb427e6f6e4f565"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "fb6fd7be96700a72910011290d8c26469d9e8b8915243d886bb0b41163a0a47a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/audio-verification-2.json",
+          "sha256": "df2f4d9d2e15996c835bdae96aafae9eb9109cf04bf45a2980915f38fe6013f8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/launcher.json",
+          "sha256": "69e7e1564ece1f454cafbf174cb63b4e9dc5da51b0058acac1946cb67df9f34f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/scenario.json",
+          "sha256": "fce77be241bc263cedd200e9f42789197e2f24a2db836a1df71299e4cdd9fa25"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/process-epoch.json",
+          "sha256": "dacdada0458d5720ee0b7ed97aa41bc444c89046c4628bb9c61c8b7285b83bbd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/actual-engine-environment.json",
+          "sha256": "c24b7ce2d0257f75f6a6879527d3651e6e2483ec5b675743c456c163d6fc2ac9"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/process.log",
+          "sha256": "ad20f2a5dba6112745d594b5236667ddae32c83ad5ab88aef84cf01eee19641d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/m15-events.jsonl",
+          "sha256": "da7c419df5da9974127d7569189cccd20ba1823c49ec11d277418dbd5746b215"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/input-pristine.omwsave",
+          "sha256": "fb6fd7be96700a72910011290d8c26469d9e8b8915243d886bb0b41163a0a47a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "827cf262832f9b087dfd8069531b859262775bfd734ed26464bb29d124a1a939"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/second/audio-verification-0.json",
+          "sha256": "11aefb96bdc13ad38dd1e6e91a6316df2def899f1b72030f979bd7a7265f465c"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "first",
+      "input_view": "first",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": false,
+      "full_course_passed": false,
+      "previous_view_causes": [
+        0,
+        2
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/verification.json",
+          "sha256": "87aab799a855793897bf93eecabdb0f818d0eb8008e92bfb8f1d1859cb98a3dc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/extra-content-reference-audit.json",
+          "sha256": "b4820ccc594436df706c2dcf2463d307616fd93577b64328d45653d6f9d68567"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/visual-review.json",
+          "sha256": "67cb276a46130e4368a18b8f0dd60b44dc03a73ad488dc5f056a0d3b3851ff75"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/manifest.json",
+          "sha256": "d89dd82987e734da3ca973f407e960d6e483154fea5745b48f1a9ab8a6daf72a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/continuation.json",
+          "sha256": "f9d054e33cc74af1256af5a873ef801cc89f0a999b1820f9edc42d4fc30e952c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/launcher.py",
+          "sha256": "367689dd70390a5293146c08f4d931ed116e2f88fd07b0c6294788e57391bc94"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/binary-pin.json",
+          "sha256": "ef50941d9f562e750d21f9f9514cb9c7e4c64f3b538b71abc7ec7837927cb47d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/accepted-builds.json",
+          "sha256": "f4eb9b6b4107e2aa5f1cd788a2529fea2bc0a4aa2207be849bcaa9926698338b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/preregistered-acceptance.json",
+          "sha256": "44638bb9c7260e0bc17b788b1fda70d332b3e6d1560de00a1f2bc44833ab2fe6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/launcher.json",
+          "sha256": "46150495ed38826929c4a36fa5a1461cefa3a434e86e0436b4b11e139361620b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/scenario.json",
+          "sha256": "9c9a6840f4ef4ed539fa395e8c4098b36f21e431882ac2c8ddbe368a44957d3e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/process-epoch.json",
+          "sha256": "507bc780d9185bd09a654f2fac08a9e932bf9294f8b72ad261f813ad9c44638e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/actual-engine-environment.json",
+          "sha256": "261a3935d1f5a08982e8ee7ae8ba2c7f627f46bbfcd1951c173db1c25655ea4d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/process.log",
+          "sha256": "1f406c1ee4d094b7816a4b3c23e745252505f9fb85319446d6d52446cf2d7e0f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/m15-events.jsonl",
+          "sha256": "58ccb89c8051d6bb405e495b4b5f3798502cb0b98ccd7e8a06880eac4b753ab2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "c7a17776e5dbbc613f362d10e59a530ed81e3a33c0069dc5984ab80f9630e56e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/audio-verification-2.json",
+          "sha256": "11ec2353a972e23aef084e0e8bc79ff1ef41cdb99f7134d0758cace7252ac6b8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/launcher.json",
+          "sha256": "a98107ab2bd98d30c2da8728a23e26d51536291a8019ee03ffed3026ff0f7a55"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/scenario.json",
+          "sha256": "0f302a3b6e3159d8cd142d3a5cd34571b96da271cb80cbe6a344d1b66af2a758"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/process-epoch.json",
+          "sha256": "4fc93e8792da327e51fa9d6ec96ced532dcd72dcbf8536e1ce1bca6e51364d8c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/actual-engine-environment.json",
+          "sha256": "f6c7739805a4a57aad777bda56764a1c432e63b1cd50b0da6eaa6118f73f4905"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/process.log",
+          "sha256": "17337d3164fc8dc92d0111d10a6d7e32fde55ec4bc8de341e0204eb1f4d22dac"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/m15-events.jsonl",
+          "sha256": "735c10ff15a433269c3750d726fc06a71994be7ceadca6df6a537299ad1c21fd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/input-pristine.omwsave",
+          "sha256": "c7a17776e5dbbc613f362d10e59a530ed81e3a33c0069dc5984ab80f9630e56e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "24f7d1c4668e00a35d21b104807777aea6a40d20044ac4c5610cf7ee44358877"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/second/audio-verification-0.json",
+          "sha256": "8abb8c46d83b0cc12e7e31032e2f67bc7f8492aa0220ccee8b08530a520bf804"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "first",
+      "input_view": "third",
+      "runtime_state_passed": true,
+      "visual_ready_pose_observed": true,
+      "full_course_passed": true,
+      "previous_view_causes": [
+        0,
+        2
+      ],
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/verification.json",
+          "sha256": "2d9271f7686fb7f99d69a273f6ed430cd1c7ebc1ec11c1c7cf3187f175c55402"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/extra-content-reference-audit.json",
+          "sha256": "e979e38bc8d39dfc17118312989093b9a9f2bfc7c201dfe30e193838ce41fb02"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/visual-review.json",
+          "sha256": "44820d02abf9a5ff95afdfd161c5508794028d2a8e650193c18005da47b93901"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/manifest.json",
+          "sha256": "0c0adbe3abc09f3aa668258c0500cb6eaa790448a5186ee18c2e90532b4c08d6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/continuation.json",
+          "sha256": "f9d054e33cc74af1256af5a873ef801cc89f0a999b1820f9edc42d4fc30e952c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/launcher.py",
+          "sha256": "367689dd70390a5293146c08f4d931ed116e2f88fd07b0c6294788e57391bc94"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/epoch-monitor.py",
+          "sha256": "8df7d9e7bc40f24c220a60108d881958a024ae10599b6aa2d40f8f63fe60777b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/binary-pin.json",
+          "sha256": "ef50941d9f562e750d21f9f9514cb9c7e4c64f3b538b71abc7ec7837927cb47d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/accepted-builds.json",
+          "sha256": "f4eb9b6b4107e2aa5f1cd788a2529fea2bc0a4aa2207be849bcaa9926698338b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/preregistered-acceptance.json",
+          "sha256": "dd2b688527e26e6df163ee2b15577256af9f73ea2b003d2fb7a57974a68b5d84"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/audio-analysis-preregistered.json",
+          "sha256": "dcb63e3a19f200a188c8f3a96bb8391fa61b15f2b062e7aa62199decdd69da9b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/analyse-block-audio.py",
+          "sha256": "e006e8b8637ca8c3df3f484b0e2b2e1628fb113aa321c2e74788fdc973c2a50e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/launcher.json",
+          "sha256": "74a2be6c075109816e9127f4c55b9f5fed85c58865ebcb81dd2ade5b40327079"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/scenario.json",
+          "sha256": "4a2b8f6bce0edc7a9608ddf23372132da26cb96c76a4c7c0d6194edbdb50158e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/process-epoch.json",
+          "sha256": "b4c2ea5eab8c73e8d0835e6c88c0ceba0d4bc12383e06979b462f23fd439eb07"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/actual-engine-environment.json",
+          "sha256": "f6e65f84825f7eabc41a31f0c72695f4bf1a4a12be127c06b21e66702cecce5b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/process.log",
+          "sha256": "d233185355a83d3d4578c4b05e4cfb3b1f2bfc2af4587535727d41d3d124a0a4"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/m15-events.jsonl",
+          "sha256": "b83ca281ca16d0178471f87b4f5b3619e4a8893f11bcaee0b2b906b0d69dbe0e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/input-pristine.omwsave",
+          "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "2286f35013c7bad64cf0880ac9a2020f69dc552a54d0f214cd8a4ed90b8e270c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/audio-verification-2.json",
+          "sha256": "32cc8b21ae04b896a69da271001f9f08096e8ec35ed6e981aeb49b0b6a12d6ac"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/launcher.json",
+          "sha256": "0c5b01f192047b631b8dcad17d65055c5bc07b4bfeb88d586ac7badecfbecef2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/scenario.json",
+          "sha256": "fc9707db99b987f96cf0e187e9440794965ac115157d74beebeaadc6e4207bee"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/process-epoch.json",
+          "sha256": "9df9bbf50acfbed194aedff0a862ea4a12bbd2ac2079f6f904dabe14064fcb50"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/actual-engine-environment.json",
+          "sha256": "cfedef999aef9e3639c37f00cbd338fa1b41bb576524533b2b18a2fb83dc6998"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/process.log",
+          "sha256": "b95d7e65aaf16621a245487cee976339c4face05af2303ce491df428bddf6a70"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/m15-events.jsonl",
+          "sha256": "d004eb9ca7aed978125ce9af4ad85ebfe9d966403c900e4c98d093a9ba54f4d2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/input-pristine.omwsave",
+          "sha256": "2286f35013c7bad64cf0880ac9a2020f69dc552a54d0f214cd8a4ed90b8e270c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+          "sha256": "917250455b9a7c40674eee62864a9892f8dfd4c1db9bc27ffa550855e8bacaf5"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/second/audio-verification-0.json",
+          "sha256": "bdcedf902f72895471d77d875dae74de2686769e1f7eb8488cd2e3ba19832148"
+        }
+      ]
+    }
+  ],
+  "retained_audio_diagnostics": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/delayed-pair-audio-diagnostic.json",
+      "sha256": "9d8323844d38c318dfcd433781c7e2a25c40c3e3885f7768be1fe586b56a8fdb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/delayed-pair-audio-diagnostic.json",
+      "sha256": "552e5c17e553f85758f9b39eeff741effb58b79462063cb8d53e505921f12a58"
+    }
+  ],
+  "source_provenance": "Identical normal/sanitizer final source fingerprints cover all C++ plus final fixture writers, recipes, tests and public manifests. No source change after either final check, except this documentation receipt/audit.",
+  "sanitizer_scope": "All1767 engine tests in both profiles, actual ASAN_OPTIONS=detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1. No leak coverage. Unchanged component tests are the prior PC24 checkpoint, not repeated here.",
+  "limitations": [
+    "Normal Recoil/Stagger/BlockAttack generation, distinct/parallel owners and independent native FP strikes remain open.",
+    "General missing-resource Player behavior needs active-view selection and independent causal ownership. Original first-person Recoil failure resets both channel3 slots; BlockHit preserves them. This change does not close that domain.",
+    "Authored one-view4-second holds preserve all transform tracks; they exercise the new branch without injected hits/damage/conditions/Fatigue/RNG or playback owners. Original-game normal asymmetric-clock/contact acceptance remains outside the instruction fixture.",
+    "Configured cap60 is not measured60FPS. Full input/FPS/cancellation/in-flight restart, creatures/mastery/effects/directional powers and clean held-block skin remain open.",
+    "Sanitizer first-long/first-person recovery frame still shows raised sword after owner cleanup. Settled first-person pose remains unverified for that course.",
+    "Unchanged PCM criterion can fail on two audible stock voices separated by20ms. Diagnostics do not retroactively change acceptance."
+  ]
+}

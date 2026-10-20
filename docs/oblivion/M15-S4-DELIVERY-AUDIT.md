@@ -8612,3 +8612,101 @@ This closes the identified Health arithmetic discrepancy, not complete native
 cost/wear/mastery arithmetic, full original contact dispatch or full M15S4.
 All other unresolved implementation and view/input/FPS/cancellation/restart
 requirements above remain open.
+
+## Independent Player reaction completion and replacement
+
+The Player BlockHit factory and captured reaction transaction now accept either
+old view having completed independently. A surviving owner must still match the
+new kind/group in its view, and both incoming owned-root captured poses are
+required. No strike, detached outgoing layer or distinct-resource replacement
+is silently omitted. Each view retains its own clock; only the body owns the
+process action. Runtime schema remains57 and paired incoming causes remain
+validated. First-person inactive cleanup now emits a passive diagnostic, and
+the factory records both previous causes.
+
+A new World test covers **16 contexts**: BlockHit/Recoil, either view completed,
+and surviving captured5/direct easing2/steady1/retiring3 states. Supplied inactive
+state is removed through the real cleanup method. Atomic preparation/rejection,
+new independent pose snapshots/clocks, binary restore, replay rejection and
+resource/RNG invariants are checked before zero-duration frame anchoring.
+This is service-state verification, distinct from the normal-input courses.
+
+The independent original-helper probe executes **576 contexts**, including
+**192** absent/same-cached per-view cases,96 distinct first-person crossfades
+and288 missing-first-cache cases. Both camera bytes, three x87 words and four
+first-person clocks are supplied. Original complete BlockHit/Recoil helpers
+admit absent/same-cached old owners independently when both caches contain the
+key. These supplied foreign roots use direct activation; the separate earlier
+288-context owned-root probe establishes captured-pose reset. Empty controller,
+cache hash/equality and scene boundaries are explicit. No original normal-input
+asymmetric-clock/contact acceptance is claimed.
+
+The missing-cache cases expose additional work: selection consults the active
+view. In first person, missing cache prevents selection; BlockHit preserves old
+owners while Recoil resets both channel3 slots without changing prior action.
+In third person the body can start while the first-person owner remains.
+General missing-resource integration therefore needs active-view selection and
+independent causal ownership; removing current paired validation alone would
+be wrong. That domain and distinct/parallel owners remain open.
+
+The editable fixture extends only controller StopTime and End text-key time
+in one stock KF from0.3 to4 seconds. All transform tracks, priorities and other
+bytes are preserved. The actual NIF reader reinspects both variants. The
+reviewed two-record opponent overlay changes weapon speed to0.5; NPC/style,
+script local layout, damage, weight and other weapon fields stay intact.
+Canonical idle input and zero-regeneration plugin remain hash-identical.
+Structural writing, NIF readback, script execution/world-reference audits and
+normal runtime are recorded as separate layers. No script injects contacts,
+Health/Fatigue/condition/RNG writes or playback owners.
+
+Final normal and ASan/UBSan suites pass **1,767 engine tests/125 suites**, with
+exact inventory/XML agreement and no failures/skips. All **341 Python tests**
+pass, including three byte-preservation/invalid-input fixture tests. Final
+fingerprint: `a6d4ba27d0cade59962c8c34b2e2b260c9831fcc66cae2a490ae23da692ddce4`
+(parent `ead4d076b6`). Every final source file matches the checked fingerprint;
+only this receipt/audit follows those checks. Actual sanitizer test/runtime
+options are recorded; leak detection is disabled and no leak coverage is claimed.
+Unchanged components use the preceding PC24 checkpoint rather than a repeated run.
+
+**Eight** normal/sanitizer × long-body/long-first × first/third-person courses
+pass strict normal-contact, exact-resource, save/restart and original-master
+reference audits. The second production contact observes old causes **[2,0]**
+or **[0,2]**, then publishes fresh64/66-track poses with cause3. Fresh processes
+load the exact saved output, recover unheld action-1, clear both owners and
+advance the retained first-person clock without replay. HealthDamage stays
+**-1.9427038431167603**, Fatigue/weapon conditions keep the prior exact expected
+bits, RNG remains505908858 and next action4 has no pending owner. Actual saved
+NPC playback speed0.5, loaded overlay fingerprint and unchanged fixture hashes
+are rechecked. Configured cap60 is not measured60FPS acceptance.
+
+Six courses pass the unchanged two/zero PCM-cluster criterion; normal
+first-long/third-person and sanitizer body-long/first-person match only one of
+two required first-phase clusters. All continuations match zero. Four played
+native block requests occur before restart and none after. Both failed PCM
+reports remain failed. Diagnostic sums of two identical stock voices separated
+by20ms match the unmatched impacts at0.99881/0.99877 correlation; this does not
+retroactively alter the single-wave criterion or establish coincident voice count.
+
+All16 images were directly reviewed and show the intended cameras. Seven
+continuations show ready poses. The sanitizer first-long/first-person
+continuation still shows a raised sword/forearm after its saved owners cleared;
+a settled-frame observation is needed before claiming ready-pose acceptance.
+Static frames do not establish original motion/camera parity, and the held-block
+skin issue remains open. Full course acceptance is separated from state audits.
+
+The first speed2 fixture produced four correctly failed branch attempts:
+both old owners were still present at contact3. Its normal launch/save/restart
+phases completed0, but the required asymmetric branch was absent. Only the
+owned queued orchestration/audio parents were stopped before launching that
+fixture under sanitizer; build/tests continued and passed. Corrected fresh
+courses use speed0.5 and explicitly wait for old-view cleanup. Continuations
+wait for actual first-person cleanup before saving. Original attempts and
+criteria remain retained.
+
+[`M15-PLAYER-ASYMMETRIC-OWNERS-VERIFICATION.json`](M15-PLAYER-ASYMMETRIC-OWNERS-VERIFICATION.json)
+pins the source, instruction probes, authored inputs/readbacks, checks, actual
+executables/epochs, full matrix, images and retained failures. M15S4 remains
+incomplete: general missing resources, normal remaining reaction factories,
+distinct/parallel owners, native FP strikes, mastery/effects/creatures and
+directional powers, audio/settled-pose criteria and the full input/FPS/cancellation/
+in-flight restart matrix still require delivery.

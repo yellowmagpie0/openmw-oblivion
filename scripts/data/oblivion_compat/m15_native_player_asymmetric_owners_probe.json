@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent original Player BlockHit/Recoil reset with absent/same-cached per-view owners; record camera-dependent missing-FP-cache behavior before general missing-resource integration.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "helpers": {
+    "block": 6245904,
+    "recoil": 6246144
+  },
+  "body_old_owner": [
+    false,
+    true
+  ],
+  "first_old_owner": [
+    "absent",
+    "same",
+    "different"
+  ],
+  "first_cache_present": [
+    false,
+    true
+  ],
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "camera_bytes": [
+    0,
+    1
+  ],
+  "body_clock": 0.5,
+  "first_clocks": [
+    0.0,
+    0.25,
+    0.5,
+    2.0
+  ],
+  "expected_contexts": 576,
+  "same_cached_or_absent_cases": 192,
+  "scope": "Original helpers with supplied one-bucket caches and direct foreign roots, empty-controller sequences and declared scene boundaries. Separate owned-root pose proof covers actual474530 captured reset. Not original normal-input or new production acceptance.",
+  "native_report": {
+    "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-review-01/verification.json",
+    "sha256": "41c6f2e6adc5efff7aa26d267433f4debed505a251a04ca502eae37d1ec16938"
+  },
+  "missing_resource_findings": [
+    "Missing FP cache in third person preserves prior FP slot/sequence while starting body. In first person missing cache prevents selection; BlockHit preserves owners while Recoil resets both channel3 slots without changing prior process action.",
+    "Independent causes under a missing mirror are required for general missing-resource support; existing paired snapshot validation must not simply be removed without full owner/restore integration."
+  ],
+  "production_scope": "Player same-cached captured activation when either old view has completed. Both incoming views required. General missing resources, distinct/parallel layers, normal Recoil generation and full M15S4 remain open."
+}
