@@ -365,6 +365,8 @@ namespace MWRender
         std::unique_ptr<SceneUtil::ShadowManager> mShadowManager;
         osg::ref_ptr<PostProcessor> mPostProcessor;
         osg::ref_ptr<NpcAnimation> mPlayerAnimation;
+        osg::ref_ptr<NpcAnimation> mPlayerFirstPersonAnimation;
+        osg::ref_ptr<osg::Group> mPlayerBodyNode, mPlayerFirstPersonNode;
         osg::ref_ptr<SceneUtil::PositionAttitudeTransform> mPlayerNode;
         std::unique_ptr<Camera> mCamera;
         osg::ref_ptr<Debug::DebugDrawer> mDebugDraw;

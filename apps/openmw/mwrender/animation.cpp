@@ -578,13 +578,54 @@ namespace MWRender
         mLightListCallback = new SceneUtil::LightListCallback;
     }
 
+    namespace
+    {
+        struct ViewCullCallback : osg::NodeCallback
+        {
+            bool mVisible = true;
+            void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
+            {
+                if (mVisible) traverse(node, visitor);
+            }
+        };
+    }
+
+    void Animation::setPresentationVisible(bool visible)
+    {
+        if (!mPresentationCullCallback)
+        {
+            mPresentationCullCallback = new ViewCullCallback;
+            mInsert->addCullCallback(mPresentationCullCallback);
+        }
+        static_cast<ViewCullCallback*>(mPresentationCullCallback.get())->mVisible = visible;
+    }
+
     Animation::~Animation()
     {
+        if (mPlaybackPeer) mPlaybackPeer->mPlaybackPrimary = nullptr;
+        if (mPresentationCullCallback) mInsert->removeCullCallback(mPresentationCullCallback);
         removeFromSceneImpl();
+    }
+
+    void Animation::setPlaybackPeer(Animation* peer)
+    {
+        if (peer == mPlaybackPeer.get()) return;
+        if (peer && (mPlaybackPrimary || peer == this || peer->mPlaybackPrimary || peer->mPlaybackPeer
+                || peer->mPtr != mPtr || !mStates.empty() || !peer->mStates.empty()
+                || !mObjectRoot || !peer->mObjectRoot || peer->mObjectRoot == mObjectRoot))
+            throw std::invalid_argument("animation views require distinct roots and one playback primary");
+        if (mPlaybackPeer) mPlaybackPeer->mPlaybackPrimary = nullptr;
+        mPlaybackPeer = peer;
+        if (peer)
+        {
+            peer->mPlaybackPrimary = this;
+            peer->mPassivePlayback = true;
+        }
     }
 
     void Animation::setActive(int active)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setActive(active);
         if (mSkeleton)
             mSkeleton->setActive(static_cast<SceneUtil::Skeleton::ActiveType>(active));
     }
@@ -1179,7 +1220,7 @@ namespace MWRender
 
         try
         {
-            if (mTextKeyListener != nullptr)
+            if (!mPassivePlayback && mTextKeyListener != nullptr)
                 mTextKeyListener->handleTextKey(groupname, key, map);
         }
         catch (std::exception& e)
@@ -1190,8 +1231,12 @@ namespace MWRender
 
     void Animation::play(std::string_view groupname, const AnimPriority& priority, int blendMask, bool autodisable,
         float speedmult, std::string_view start, std::string_view stop, float startpoint, uint32_t loops,
-        bool loopfallback)
+        bool loopfallback, PlaybackScope scope)
     {
+        if (mPlaybackPeer && scope == PlaybackScope::AllViews
+            && (groupname.empty() || mPlaybackPeer->hasAnimation(groupname)))
+            mPlaybackPeer->play(groupname, priority, blendMask, autodisable, speedmult,
+                start, stop, startpoint, loops, loopfallback, PlaybackScope::ThisView);
         if (!mObjectRoot)
             return;
 
@@ -1665,6 +1710,7 @@ namespace MWRender
 
     void Animation::adjustSpeedMult(const std::string& groupname, float speedmult)
     {
+        if (mPlaybackPeer) mPlaybackPeer->adjustSpeedMult(groupname, speedmult);
         AnimStateMap::iterator state(mStates.find(groupname));
         if (state != mStates.end())
             state->second.mSpeedMult = speedmult;
@@ -1722,8 +1768,10 @@ namespace MWRender
         return iter->second.getTime();
     }
 
-    void Animation::disable(std::string_view groupname)
+    void Animation::disable(std::string_view groupname, PlaybackScope scope)
     {
+        if (mPlaybackPeer && scope == PlaybackScope::AllViews)
+            mPlaybackPeer->disable(groupname, PlaybackScope::ThisView);
         AnimStateMap::iterator iter = mStates.find(groupname);
         if (iter != mStates.end())
         {
@@ -1801,7 +1849,7 @@ namespace MWRender
         position += off - osg::componentMultiply(mAccumCtrl->getTranslation(oldtime), mAccumulate);
     }
 
-    bool Animation::setAnimationFrameTime(std::string_view groupname, float time)
+    bool Animation::setAnimationFrameTime(std::string_view groupname, float time, PlaybackScope scope)
     {
         if (!std::isfinite(time))
             throw std::invalid_argument("animation frame time must be finite");
@@ -1811,6 +1859,19 @@ namespace MWRender
         auto& state = found->second;
         if (state.mLoopCount != 0 || time < state.getTime() || time > state.mStopTime)
             throw std::invalid_argument("animation frame time requires a monotonic nonlooping track");
+        if (mPlaybackPeer && scope == PlaybackScope::AllViews)
+        {
+            // This is an ordinary playback command, not native view timing.
+            // Each peer clamps to its own authored interval. Native owners
+            // publish separate ThisView targets from their independent clocks.
+            const auto other = mPlaybackPeer->mStates.find(groupname);
+            if (other != mPlaybackPeer->mStates.end())
+            {
+                const auto& target = other->second;
+                mPlaybackPeer->setAnimationFrameTime(groupname,
+                    std::clamp(time, target.getTime(), target.mStopTime), PlaybackScope::ThisView);
+            }
+        }
         state.mFrameTime = time;
         return true;
     }
@@ -2043,6 +2104,7 @@ namespace MWRender
 
     osg::Vec3f Animation::runAnimation(float duration)
     {
+        if (mPlaybackPeer) mPlaybackPeer->runAnimation(duration);
         if (mPhysicalPose && !mPhysicalAnimatedTargets)
         {
             updateEffects();
@@ -2868,6 +2930,7 @@ namespace MWRender
 
     void Animation::setLoopingEnabled(std::string_view groupname, bool enabled)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setLoopingEnabled(groupname, enabled);
         AnimStateMap::iterator state(mStates.find(groupname));
         if (state != mStates.end())
             state->second.mLoopingEnabled = enabled;
@@ -3305,6 +3368,7 @@ namespace MWRender
 
     void Animation::setAlpha(float alpha)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setAlpha(alpha);
         if (alpha == mAlpha || !mObjectRoot)
             return;
         mAlpha = alpha;
@@ -3331,6 +3395,7 @@ namespace MWRender
 
     void Animation::setLightEffect(float effect)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setLightEffect(effect);
         if (effect == 0)
         {
             if (mGlowLight)
@@ -3434,6 +3499,7 @@ namespace MWRender
     {
         if (mNativeScene && (mNativeScene->mUpdating || mNativeScene->mPrePhysicsInProgress))
             throw std::logic_error("native scene cannot detach during its update");
+        if (mPlaybackPeer) mPlaybackPeer->removeFromScene();
         removeFromSceneImpl();
     }
 
@@ -3478,6 +3544,7 @@ namespace MWRender
 
     void Animation::animationEnded(AnimState& state) const
     {
+        if (mPassivePlayback) return;
         MWBase::Environment::get().getLuaManager()->animationEnded(
             mPtr, state.mGroupname, state.getTime(), state.getCompletion(), state.mStartKey, state.mStopKey);
     }

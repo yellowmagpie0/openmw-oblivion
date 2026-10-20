@@ -1563,7 +1563,7 @@ namespace MWMechanics
             const auto old = std::exchange(mOblivionReactionGroup, {});
             mOblivionRenderedReaction = 0;
             mOblivionPoseSnapshot.reset();
-            if (!old.empty()) mAnimation->disable(old);
+            if (!old.empty()) mAnimation->disable(old, MWRender::Animation::PlaybackScope::ThisView);
         }
         if (!reaction || reaction->mInactive) return false;
         if (mOblivionRenderedReaction == reaction->mContactId
@@ -1578,11 +1578,11 @@ namespace MWMechanics
         const std::string oldStrike = mOblivionRenderedStrike ? mCurrentWeapon : std::string{};
         mOblivionRenderedStrike = 0;
         mCurrentWeapon.clear();
-        if (!oldStrike.empty()) mAnimation->disable(oldStrike);
+        if (!oldStrike.empty()) mAnimation->disable(oldStrike, MWRender::Animation::PlaybackScope::ThisView);
         if (reaction->mKind != ESM4::MeleeReactionKind::BlockHit)
         {
             const auto block = std::exchange(mOblivionBlockGroup, {});
-            if (!block.empty()) mAnimation->disable(block);
+            if (!block.empty()) mAnimation->disable(block, MWRender::Animation::PlaybackScope::ThisView);
         }
         mOblivionRenderedReaction = reaction->mContactId;
         mOblivionReactionGroup = reaction->mAnimationGroup;
@@ -1591,8 +1591,12 @@ namespace MWMechanics
         const float fraction = (std::max(start, reaction->mAnimationTime) - start) / (stop - start);
         // Distinct shared priority keeps BlockIdle resident during BlockHit.
         // Native per-bone priorities determine the projected pose.
-        playBlendedAnimation(mOblivionReactionGroup, Priority_Hit, MWRender::BlendMask_All,
-            false, 0.f, "start", "stop", fraction, 0);
+        if (mAnimation->getPlaybackPeer())
+            mAnimation->play(mOblivionReactionGroup, Priority_Hit, MWRender::BlendMask_All,
+                false, 0.f, "start", "stop", fraction, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+        else
+            playBlendedAnimation(mOblivionReactionGroup, Priority_Hit, MWRender::BlendMask_All,
+                false, 0.f, "start", "stop", fraction, 0);
         Log(Debug::Verbose) << "M15 reaction bind: actor=" << actor.serialize()
                             << " cause=" << reaction->mContactId << " group=" << reaction->mAnimationGroup
                             << " pose_tracks=" << (reaction->mPoseSnapshot ? reaction->mPoseSnapshot->mTracks.size() : 0);
@@ -1667,12 +1671,13 @@ namespace MWMechanics
             throw std::invalid_argument("native melee sequence projection could not bind");
         mOblivionMeleeProjection = true;
         if (next.mReaction && !next.mReaction->mInactive
-            && !mAnimation->setAnimationFrameTime(next.mReaction->mAnimationGroup, next.mReaction->mAnimationTime))
+            && !mAnimation->setAnimationFrameTime(next.mReaction->mAnimationGroup, next.mReaction->mAnimationTime,
+                MWRender::Animation::PlaybackScope::ThisView))
             throw std::invalid_argument("native reaction event track is missing");
         const bool inactive = next.mReaction && next.mReaction->mInactive;
         if (!service->commitMeleeReactionFrame(*prepared))
             throw std::invalid_argument("native reaction frame lost actor ownership");
-        if (inactive && !mOblivionReactionGroup.empty()) mAnimation->disable(mOblivionReactionGroup);
+        if (inactive && !mOblivionReactionGroup.empty()) mAnimation->disable(mOblivionReactionGroup, MWRender::Animation::PlaybackScope::ThisView);
         return true;
     }
 
@@ -1906,7 +1911,7 @@ namespace MWMechanics
         // disable can emit an animation-end observer.
         if (!strikeGroup.empty())
             mAnimation->disable(strikeGroup);
-        if (!reactionGroup.empty()) mAnimation->disable(reactionGroup);
+        if (!reactionGroup.empty()) mAnimation->disable(reactionGroup, MWRender::Animation::PlaybackScope::ThisView);
         if (!blockGroup.empty())
         {
             Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << blockGroup;

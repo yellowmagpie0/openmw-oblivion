@@ -149,14 +149,14 @@ namespace
         { bindNativeReactionRoot(sequences); }
         void replaceBoundRoot(osg::Group* root) { mObjectRoot = root; }
         osg::ref_ptr<SceneUtil::KeyframeHolder> addNativeSource(
-            std::string group, osg::ref_ptr<NativeTrack> track, std::uint8_t priority)
+            std::string group, osg::ref_ptr<NativeTrack> track, std::uint8_t priority, float stop = 10)
         {
             osg::ref_ptr<SceneUtil::KeyframeHolder> holder = new SceneUtil::KeyframeHolder;
             holder->mTextKeys.emplace(0.f, group + ": start");
-            holder->mTextKeys.emplace(10.f, group + ": stop");
+            holder->mTextKeys.emplace(stop, group + ": stop");
             SceneUtil::ControllerSequenceMetadata sequence;
             sequence.mGroup = group;
-            sequence.mTimelineStop = sequence.mStopTime = 10;
+            sequence.mTimelineStop = sequence.mStopTime = stop;
             sequence.mTransformPriorities.emplace_back(mBone->getName(), priority);
             holder->mControllerSequences.push_back(std::move(sequence));
             holder->mKeyframeControllers.emplace(mBone->getName(), track);
@@ -1565,5 +1565,174 @@ namespace
             for (unsigned c = 0; c < 3; ++c)
                 EXPECT_NEAR(actual(r, c), expected(r, c), 1e-7f);
         EXPECT_EQ(std::bit_cast<std::uint32_t>(snapshot->mTracks.front().mRotation[0]), 0x3f3504f3u);
+    }
+}
+
+namespace
+{
+    struct PlaybackPeerView
+    {
+        osg::ref_ptr<osg::Group> mParent = new osg::Group;
+        osg::ref_ptr<SceneUtil::Skeleton> mRoot = new SceneUtil::Skeleton;
+        osg::ref_ptr<NifOsg::MatrixTransform> mBone = new NifOsg::MatrixTransform;
+        osg::ref_ptr<TestAnimation> mAnimation;
+        PlaybackPeerView()
+        {
+            mRoot->setUserValue(Misc::OsgUserValues::sFileHash, std::string("physical-pose-test"));
+            mBone->setName("Pelvis"); mBone->setUserValue("recordIndex", 8u);
+            mBone->setRotation(osg::Quat()); mBone->setScale(1);
+            mRoot->addChild(mBone);
+            mAnimation = new TestAnimation(mParent, mRoot, mBone);
+            mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        }
+    };
+
+    struct PlaybackKeys : MWRender::Animation::TextKeyListener
+    {
+        unsigned mCalls = 0;
+        void handleTextKey(std::string_view, SceneUtil::TextKeyMap::ConstIterator,
+            const SceneUtil::TextKeyMap&) override { ++mCalls; }
+    };
+
+    TEST_F(PhysicalPoseAnimationTest, PlaybackPeerKeepsOwnResourcesAndSuppressesDuplicateKeyAndEndEvents)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        EXPECT_THROW(peer.mAnimation->setPlaybackPeer(mAnimation.get()), std::invalid_argument);
+        auto bodyTrack = nativeTrack({1, 2, 3}), firstTrack = nativeTrack({11, 12, 13});
+        bodyTrack->mVelocity = {1, 0, 0}; firstTrack->mVelocity = {0, 4, 0};
+        auto body = mAnimation->addNativeSource("walk", bodyTrack, 9);
+        auto first = peer.mAnimation->addNativeSource("walk", firstTrack, 9);
+        body->mTextKeys.emplace(.1f, "foot: contact"); first->mTextKeys.emplace(.1f, "foot: contact");
+        PlaybackKeys bodyKeys, firstKeys;
+        mAnimation->setTextKeyListener(&bodyKeys); peer.mAnimation->setTextKeyListener(&firstKeys);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        mAnimation->play("walk", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 1, "start", "stop", 0, 0);
+        EXPECT_EQ(bodyKeys.mCalls, 1u); EXPECT_EQ(firstKeys.mCalls, 0u);
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(mAnimation->nativePlayingSequenceLayers({})));
+        ASSERT_TRUE(peer.mAnimation->setNativeSequenceLayers(peer.mAnimation->nativePlayingSequenceLayers({})));
+        mAnimation->runAnimation(.25f);
+        mRoot->accept(mVisitor); peer.mRoot->accept(mVisitor);
+        EXPECT_EQ(mAnimation->getCurrentTime("walk"), .25f);
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("walk"), .25f);
+        EXPECT_EQ(bodyKeys.mCalls, 2u); EXPECT_EQ(firstKeys.mCalls, 0u);
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation, osg::Vec3f(1.25f, 2, 3));
+        EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation, osg::Vec3f(11, 13, 13));
+        // No Lua manager is installed in this fixture. A passive disable must
+        // not dispatch an animation-end event into the gameplay environment.
+        peer.mAnimation->disable("walk");
+        EXPECT_TRUE(mAnimation->isPlaying("walk"));
+        EXPECT_FALSE(peer.mAnimation->isPlaying("walk"));
+        EXPECT_EQ(firstKeys.mCalls, 0u);
+        mAnimation->setTextKeyListener(nullptr); peer.mAnimation->setTextKeyListener(nullptr);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, ViewScopedPlaybackAndNativeLayersDoNotOverwritePeerOwnership)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        mAnimation->addNativeSource("reaction", nativeTrack({1, 2, 3}), 9);
+        peer.mAnimation->addNativeSource("reaction", nativeTrack({11, 12, 13}), 9);
+        peer.mAnimation->play("reaction", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 0, "start", "stop", 0, 0);
+        mAnimation->play("reaction", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 0, "start", "stop", 0, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+        ASSERT_TRUE(peer.mAnimation->setAnimationFrameTime("reaction", .125f));
+        ASSERT_TRUE(mAnimation->setAnimationFrameTime("reaction", .25f,
+            MWRender::Animation::PlaybackScope::ThisView));
+        const std::array<MWRender::Animation::NativeSequenceLayer, 1> firstLayers{{
+            {"reaction", MWRender::BlendMask_All, .125f, 1, 1}}};
+        ASSERT_TRUE(peer.mAnimation->setNativeSequenceLayers(firstLayers));
+        const auto builds = peer.mAnimation->mControllerBuilds;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers({}));
+        mAnimation->runAnimation(0); peer.mRoot->accept(mVisitor);
+        EXPECT_EQ(mAnimation->getCurrentTime("reaction"), .25f);
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("reaction"), .125f);
+        EXPECT_EQ(peer.mAnimation->mControllerBuilds, builds);
+        EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation, osg::Vec3f(11, 12, 13));
+        EXPECT_EQ(mAnimation->getObjectRoot(), mRoot.get());
+        EXPECT_EQ(peer.mAnimation->getObjectRoot(), peer.mRoot.get());
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, HiddenPeerContinuesUpdateTraversalWithoutRootOrControllerReplacement)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        const auto* bodyRoot = mAnimation->getObjectRoot();
+        const auto* firstRoot = peer.mAnimation->getObjectRoot();
+        const auto builds = peer.mAnimation->mControllerBuilds;
+        // A cull-only visibility switch leaves every normal update reachable.
+        for (unsigned frame = 1; frame <= 8; ++frame)
+        {
+            const bool firstVisible = frame % 2 == 0;
+            mAnimation->setPresentationVisible(!firstVisible);
+            peer.mAnimation->setPresentationVisible(firstVisible);
+            EXPECT_NE(mParent->getNodeMask(), 0u); EXPECT_NE(peer.mParent->getNodeMask(), 0u);
+            struct CountNodes : osg::NodeVisitor
+            {
+                unsigned mCount = 0;
+                CountNodes() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+                void apply(osg::Node& node) override { ++mCount; traverse(node); }
+            } bodyCull, firstCull;
+            mParent->getCullCallback()->run(mParent, &bodyCull);
+            peer.mParent->getCullCallback()->run(peer.mParent, &firstCull);
+            EXPECT_EQ(bodyCull.mCount > 0, !firstVisible);
+            EXPECT_EQ(firstCull.mCount > 0, firstVisible);
+            mFrameStamp->setFrameNumber(frame); mVisitor.setTraversalNumber(frame);
+            mParent->accept(mVisitor); peer.mParent->accept(mVisitor);
+            EXPECT_EQ(mAnimation->mWriter->mWrites, frame);
+            EXPECT_EQ(peer.mAnimation->mWriter->mWrites, frame);
+            EXPECT_EQ(mAnimation->getObjectRoot(), bodyRoot);
+            EXPECT_EQ(peer.mAnimation->getObjectRoot(), firstRoot);
+            EXPECT_EQ(peer.mAnimation->mControllerBuilds, builds);
+        }
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, OrdinaryFrameCommandsUsePeerBoundsWhileNativeTargetsStayViewScoped)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        mAnimation->addNativeSource("strike", nativeTrack({1, 2, 3}), 9);
+        peer.mAnimation->addNativeSource("strike", nativeTrack({11, 12, 13}), 9, 1);
+        mAnimation->play("strike", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 0, "start", "stop", 0, 0);
+        ASSERT_TRUE(mAnimation->setAnimationFrameTime("strike", 1.5f));
+        mAnimation->runAnimation(0);
+        EXPECT_EQ(mAnimation->getCurrentTime("strike"), 1.5f);
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("strike"), 1.f);
+        EXPECT_FALSE(peer.mAnimation->isPlaying("strike"));
+        ASSERT_TRUE(mAnimation->setAnimationFrameTime("strike", 2,
+            MWRender::Animation::PlaybackScope::ThisView));
+        mAnimation->runAnimation(0);
+        EXPECT_EQ(mAnimation->getCurrentTime("strike"), 2);
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("strike"), 1);
+        EXPECT_THROW(mAnimation->setAnimationFrameTime("strike", -1), std::invalid_argument);
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("strike"), 1);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, MissingPeerResourceDoesNotEraseItsIndependentSamePriorityState)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        mAnimation->addNativeSource("walk", nativeTrack({1, 2, 3}), 9);
+        peer.mAnimation->addNativeSource("hands-idle", nativeTrack({11, 12, 13}), 9);
+        peer.mAnimation->play("hands-idle", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 1, "start", "stop", 0, 0);
+        peer.mAnimation->runAnimation(.25f);
+        const auto builds = peer.mAnimation->mControllerBuilds;
+        mAnimation->play("walk", MWRender::AnimPriority{1}, MWRender::BlendMask_All,
+            false, 1, "start", "stop", 0, 0);
+        EXPECT_TRUE(mAnimation->isPlaying("walk"));
+        EXPECT_TRUE(peer.mAnimation->isPlaying("hands-idle"));
+        EXPECT_FALSE(peer.mAnimation->isPlaying("walk"));
+        EXPECT_EQ(peer.mAnimation->getCurrentTime("hands-idle"), .25f);
+        EXPECT_EQ(peer.mAnimation->mControllerBuilds, builds);
     }
 }

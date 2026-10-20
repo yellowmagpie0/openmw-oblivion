@@ -91,7 +91,7 @@ namespace MWRender
         float getCameraDistance() const { return mCameraDistance; }
         void setPreferredCameraDistance(float v) { mPreferredCameraDistance = v; }
 
-        void setAnimation(NpcAnimation* anim);
+        void setAnimation(NpcAnimation* anim, NpcAnimation* firstPerson = nullptr);
 
         osg::Vec3d getTrackedPosition() const { return mTrackedPosition; }
         const osg::Vec3d& getPosition() const { return mPosition; }
@@ -123,6 +123,7 @@ namespace MWRender
         osg::ref_ptr<osg::Camera> mCamera;
 
         NpcAnimation* mAnimation;
+        NpcAnimation* mFirstPersonAnimation = nullptr;
 
         // Always 'true' if mMode == `FirstPerson`. Also it is 'true' in `Vanity` or `Preview` modes if
         // the camera should return to `FirstPerson` view after it.

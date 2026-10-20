@@ -323,7 +323,7 @@ namespace MWRender
 
     void Camera::setSneakOffset(float offset)
     {
-        mAnimation->setFirstPersonOffset(osg::Vec3f(0, 0, -offset));
+        (mFirstPersonAnimation ? mFirstPersonAnimation : mAnimation)->setFirstPersonOffset(osg::Vec3f(0, 0, -offset));
     }
 
     void Camera::setYaw(float angle, bool force)
@@ -351,9 +351,10 @@ namespace MWRender
         mPosition = pos;
     }
 
-    void Camera::setAnimation(NpcAnimation* anim)
+    void Camera::setAnimation(NpcAnimation* anim, NpcAnimation* firstPerson)
     {
         mAnimation = anim;
+        mFirstPersonAnimation = firstPerson;
         mProcessViewChange = true;
     }
 
@@ -361,20 +362,26 @@ namespace MWRender
     {
         if (mTrackingPtr.isEmpty())
             return;
+        if (mFirstPersonAnimation)
+        {
+            mAnimation->setPresentationVisible(mMode != Mode::FirstPerson);
+            mFirstPersonAnimation->setPresentationVisible(mMode == Mode::FirstPerson);
+        }
         if (mMode == Mode::FirstPerson)
         {
-            mAnimation->setViewMode(NpcAnimation::VM_FirstPerson);
-            mTrackingNode = mAnimation->getNode("Camera");
+            auto* view = mFirstPersonAnimation ? mFirstPersonAnimation : mAnimation;
+            if (!mFirstPersonAnimation) view->setViewMode(NpcAnimation::VM_FirstPerson);
+            mTrackingNode = view->getNode("Camera");
             if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
-                if (const osg::Node* nativeCamera = mAnimation->getNode("Camera01"))
+                if (const osg::Node* nativeCamera = view->getNode("Camera01"))
                     mTrackingNode = nativeCamera;
             if (!mTrackingNode)
-                mTrackingNode = mAnimation->getNode("Head");
+                mTrackingNode = view->getNode("Head");
             mHeightScale = 1.f;
         }
         else
         {
-            mAnimation->setViewMode(NpcAnimation::VM_Normal);
+            if (!mFirstPersonAnimation) mAnimation->setViewMode(NpcAnimation::VM_Normal);
             SceneUtil::PositionAttitudeTransform* transform = mTrackingPtr.getRefData().getBaseNode();
             mTrackingNode = transform;
             if (transform)

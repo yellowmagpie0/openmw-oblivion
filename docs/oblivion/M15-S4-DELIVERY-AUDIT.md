@@ -8244,3 +8244,92 @@ assertion, venv-path failure and excluded vanity-camera observation are retained
 records this continuation. It supplies live root identities and full manager
 pose activation beyond the preceding dispatch-prefix proof. It does not supply
 normal Player reaction rendering or new normal-input gameplay acceptance.
+
+### Persistent Player body and first-person renderer roots
+
+The TES4 Player now owns a normal body animation and a separate passive
+first-person animation throughout each loaded world. World animation lookup
+continues to return the body. Camera switches select visibility and tracking
+without rebuilding either skeleton. Private insertion groups use cull-only
+visibility, so hidden roots still receive update traversal. During replacement,
+unpublished groups have zero masks; the old pair stays alive until both new
+roots are ready and the camera is rebound. Morrowind retains the single-root
+construction and view-change path.
+
+Ordinary playback and equipment presentation commands reach the peer's own
+resource catalog. The peer cannot send duplicate text-key or Lua animation-end
+notifications, equipment sounds, equipment world notifications or blink-timer
+RNG draws. Missing peer groups preserve its existing same-priority state.
+Native sequence layers and explicitly view-scoped event targets remain local.
+Ordinary frame targets clamp to the peer's own authored interval: this is
+command mirroring, not acceptance of independent native first-person strike
+timing. The body retains normal race proportions across POV changes; the eye
+pivot uses race height independently of the current camera mode.
+
+Five renderer tests cover distinct resources/poses, passive event suppression,
+view-local native ownership, hidden update traversal and stable roots/controllers,
+independent frame bounds and missing peer resources. Fresh normal and ASan/UBSan
+engine checks each pass **1,764 tests in 125 suites**, with exact inventory/XML
+agreement and no failures or skips. Their tested source fingerprint is
+`cf666d8a1e0ac41b3a0a6f08bcf410965ccfbd6831f221dd9db6903445a091cd`
+(parent `5ae581273e`). ASan disables leak detection and halts on errors; UBSan
+halts with stack traces. This supplies no leak coverage.
+
+The runtime course uses normal draw, turn, short right step, two miss strikes,
+sheathe, held block/release and camera input, then F5/F9/F5 and a fresh process
+loading the actual output. Read-only GDB samples identify both roots, private
+parents, cull visibility, camera tracking pointers, resource holders and selected
+bone transforms. Each observed profile supplies 11 samples before process exit
+and 2 in the fresh process. Roots stay stable across POV/input changes within a
+world segment; F9 replaces both roots. The hidden body pose changes on the
+first-person draw, and the hidden first-person pose changes on third-person
+sheathe. The first-person idle's own metadata has 66 raw transform blocks; the
+body's metadata has 73 raw blocks, with 64 bound controllers. These are distinct
+counts. The observer never calls or writes into the inferior. Additional layout
+metadata is loaded only into GDB. Observer pauses preclude exact FPS or original
+hidden-bone scheduling claims.
+
+The editable public sources are
+`oblivion_m15_native_player_paired_views.json` and
+`oblivion_m15_native_player_paired_views_continuation.json` under
+`scripts/data/oblivion_compat/`. They take `miss_fixture`, the existing generated
+`M15PlayerRemoveItemOpponent.esp` fixture from the declarative
+`m15_player_remove_item_fixture.json`. Stage a private copy of the pinned input
+at `OUTPUT/userdata/saves/M15Review/Quicksave.omwsave`; never load a historical
+input slot directly. Copy the first process's actual output into the second
+private slot. The public course is additionally run without GDB or memory/copy
+barriers, with the same selected state/audio outcomes.
+
+Root-course saves preserve all native actor-value channels and original
+inventories, after admitting only three schema migration defaults:
+`ownership_rank:null`, `ownership_global:"null"`, `extra_scale:null`. Final
+combat RNG remains 415139642, next action is 4 with no pending owners, and no new
+Player reaction/first-person native state is claimed. Exact save/live hashes
+connect the real F9 load and fresh-process continuation. Actual output PCM
+matches two stock hand swishes in the first process and none in continuation.
+The separate NPC shield-hit regression preserves the single HealthDamage
+`-0.4110095500946045`, RNG 773150046 and next action 3, saves an active 64-track
+BlockHit pose, and finishes recovery after fresh-process load without replaying
+the contact. Added cached references are independently checked against the
+hash-pinned original master; whole-world cache counts are not fixed outcomes.
+The normal Morrowind startup/render/quicksave smoke test retains no TES4 save
+markers. Its terrain-facing screenshot supplies no character-pose acceptance.
+
+Image review also finds a large skin polygon during first-person held block.
+A separately linked diagnostic copy using single-root construction reproduces
+it; the paired-root feature is not required. That control is current-code
+counterfactual evidence, not an original-game oracle. Clean held-block rendering
+remains open. The initial diagnostic failed before world construction because
+its directory lacked default data files; the corrected fresh attempt is kept
+separately. The first sanitizer observer attempt exceeded its first-capture
+180-second deadline during loading/readiness and was stopped; the fresh attempt
+uses a 600-second external observation window with unchanged gameplay assertions.
+Earlier observer/type-layout failures and pre-final courses remain retained.
+
+[M15-PLAYER-PAIRED-ROOTS-VERIFICATION.json](M15-PLAYER-PAIRED-ROOTS-VERIFICATION.json)
+pins the source, binaries, test inventories, manifests and runtime reports.
+Independent native first-person strike timing, normal Player reaction generation
+and dual projection, outgoing/crossfade/parallel view layers, complete original
+hidden-view scheduling, mastery/effects, directional attacks and the full
+opponent/input/view/FPS/cancellation and in-flight restart courses remain open.
+**M15S4 remains incomplete.**

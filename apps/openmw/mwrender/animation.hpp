@@ -241,6 +241,13 @@ namespace MWRender
         typedef std::map<std::string, AnimState, std::less<>> AnimStateMap;
         AnimStateMap mStates;
 
+        // A Player's other view has its own resources, controllers and clocks.
+        // Only ordinary playback commands follow; native layers remain local.
+        osg::ref_ptr<Animation> mPlaybackPeer;
+        Animation* mPlaybackPrimary = nullptr;
+        bool mPassivePlayback = false;
+        osg::ref_ptr<osg::NodeCallback> mPresentationCullCallback;
+
         typedef std::vector<std::shared_ptr<AnimSource>> AnimSourceList;
         AnimSourceList mAnimSources;
         std::shared_ptr<AnimSource> nativeSequenceSource(std::string_view group);
@@ -519,9 +526,16 @@ namespace MWRender
          * \param loopFallback Allow looping an animation that has no loop keys, i.e. fall back to use
          *                     the "start" and "stop" keys for looping?
          */
+        enum class PlaybackScope { AllViews, ThisView };
+        void setPlaybackPeer(Animation* peer);
+        Animation* getPlaybackPeer() const { return mPlaybackPeer.get(); }
+        bool isPassivePlayback() const { return mPassivePlayback; }
+        // Requires a private insertion group, as used for paired Player roots.
+        void setPresentationVisible(bool visible);
+
         void play(std::string_view groupname, const AnimPriority& priority, int blendMask, bool autodisable,
             float speedmult, std::string_view start, std::string_view stop, float startpoint, uint32_t loops,
-            bool loopfallback = false);
+            bool loopfallback = false, PlaybackScope scope = PlaybackScope::AllViews);
 
         /** Adjust the speed multiplier of an already playing animation.
          */
@@ -572,7 +586,8 @@ namespace MWRender
         // Supply one monotonic, absolute renderer-track time for the next
         // runAnimation call. Text keys and root motion still traverse normally.
         // Missing groups return false; invalid times or looping groups throw.
-        bool setAnimationFrameTime(std::string_view groupname, float time);
+        bool setAnimationFrameTime(std::string_view groupname, float time,
+            PlaybackScope scope = PlaybackScope::AllViews);
 
         // Project explicit native sequence samples, in occupied-slot order.
         // Uses each winning KF's per-node priority and node blend settings.
@@ -588,7 +603,7 @@ namespace MWRender
         /** Disables the specified animation group;
          * \param groupname Animation group to disable.
          */
-        void disable(std::string_view groupname);
+        void disable(std::string_view groupname, PlaybackScope scope = PlaybackScope::AllViews);
 
         /** Retrieves the velocity (in units per second) that the animation will move. */
         float getVelocity(std::string_view groupname) const;
@@ -737,7 +752,11 @@ namespace MWRender
             std::span<const std::string_view> prefixes) const;
 
         bool getPlayScriptedOnly() const { return mPlayScriptedOnly; }
-        void setPlayScriptedOnly(bool playScriptedOnly) { mPlayScriptedOnly = playScriptedOnly; }
+        void setPlayScriptedOnly(bool playScriptedOnly)
+        {
+            mPlayScriptedOnly = playScriptedOnly;
+            if (mPlaybackPeer) mPlaybackPeer->setPlayScriptedOnly(playScriptedOnly);
+        }
 
         virtual bool useShieldAnimations() const { return false; }
         virtual bool getWeaponsShown() const { return false; }

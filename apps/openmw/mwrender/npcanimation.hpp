@@ -33,6 +33,8 @@ namespace MWRender
     {
     public:
         void equipmentChanged() override;
+        void itemAdded(const MWWorld::ConstPtr& item, int count) override;
+        void itemRemoved(const MWWorld::ConstPtr& item, int count) override;
 
     public:
         typedef std::map<ESM::PartReferenceType, std::string> PartBoneMap;
@@ -134,7 +136,7 @@ namespace MWRender
          */
         NpcAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
             Resource::ResourceSystem* resourceSystem, bool disableSounds = false, ViewMode viewMode = VM_Normal,
-            float firstPersonFieldOfView = 55.f);
+            float firstPersonFieldOfView = 55.f, bool passivePlayback = false);
         virtual ~NpcAnimation();
         void removeFromScene() override;
 
@@ -150,7 +152,7 @@ namespace MWRender
 
         /// A relative factor (0-1) that decides if and how much the skeleton should be pitched
         /// to indicate the facing orientation of the character.
-        void setPitchFactor(float factor) override { mPitchFactor = factor; }
+        void setPitchFactor(float factor) override;
 
         bool getWeaponsShown() const override { return mShowWeapons; }
         void showWeapons(bool showWeapon) override;

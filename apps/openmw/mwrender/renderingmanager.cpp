@@ -759,6 +759,8 @@ namespace MWRender
         std::vector<osg::ref_ptr<Animation>> animations;
         mObjects->collectNativeSceneAnimations(animations);
         if (mPlayerAnimation && mPlayerAnimation->hasNativeScene()) animations.push_back(mPlayerAnimation);
+        if (mPlayerFirstPersonAnimation && mPlayerFirstPersonAnimation->hasNativeScene())
+            animations.push_back(mPlayerFirstPersonAnimation);
         if (animations.empty()) return;
         if (!dynamic_cast<SceneUtil::PostPhysicsUpdateVisitor*>(mViewer->getUpdateVisitor())
             || !mViewer->getFrameStamp())
@@ -1233,10 +1235,55 @@ namespace MWRender
 
     void RenderingManager::renderPlayer(const MWWorld::Ptr& player)
     {
-        mPlayerAnimation = new NpcAnimation(player, player.getRefData().getBaseNode(), mResourceSystem, 0,
-            NpcAnimation::VM_Normal, mFirstPersonFieldOfView);
+        // Resource loading can render loading-screen frames. Keep the previous
+        // camera/animation pair alive until both replacement views are ready.
+        const auto previous = mPlayerAnimation;
+        osg::ref_ptr<NpcAnimation> body, firstPerson;
+        osg::ref_ptr<osg::Group> bodyNode, firstPersonNode;
+        struct PendingViews
+        {
+            osg::Group& mParent;
+            osg::ref_ptr<osg::Group>& mBody;
+            osg::ref_ptr<osg::Group>& mFirst;
+            bool mCommitted = false;
+            ~PendingViews()
+            {
+                if (mCommitted) return;
+                if (mBody) mParent.removeChild(mBody);
+                if (mFirst) mParent.removeChild(mFirst);
+            }
+        } pending{*mPlayerNode, bodyNode, firstPersonNode};
+        if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
+        {
+            bodyNode = new osg::Group;
+            bodyNode->setName("Oblivion Player body view");
+            firstPersonNode = new osg::Group;
+            firstPersonNode->setName("Oblivion Player first-person view");
+            // Unpublished roots must not update or draw during resource loads.
+            bodyNode->setNodeMask(0); firstPersonNode->setNodeMask(0);
+            mPlayerNode->addChild(bodyNode);
+            mPlayerNode->addChild(firstPersonNode);
+            body = new NpcAnimation(player, bodyNode, mResourceSystem, false,
+                NpcAnimation::VM_Normal, mFirstPersonFieldOfView);
+            firstPerson = new NpcAnimation(player, firstPersonNode, mResourceSystem, true,
+                NpcAnimation::VM_FirstPerson, mFirstPersonFieldOfView, true);
+            body->setPlaybackPeer(firstPerson);
+            const bool first = mCamera->getMode() == Camera::Mode::FirstPerson;
+            body->setPresentationVisible(!first); firstPerson->setPresentationVisible(first);
+        }
+        else
+            body = new NpcAnimation(player, player.getRefData().getBaseNode(), mResourceSystem, false,
+                NpcAnimation::VM_Normal, mFirstPersonFieldOfView);
 
-        mCamera->setAnimation(mPlayerAnimation.get());
+        if (previous) previous->removeFromScene();
+        if (mPlayerBodyNode) mPlayerNode->removeChild(mPlayerBodyNode);
+        if (mPlayerFirstPersonNode) mPlayerNode->removeChild(mPlayerFirstPersonNode);
+        mPlayerAnimation = body; mPlayerFirstPersonAnimation = firstPerson;
+        mPlayerBodyNode = bodyNode; mPlayerFirstPersonNode = firstPersonNode;
+        if (bodyNode) bodyNode->setNodeMask(~0u);
+        if (firstPersonNode) firstPersonNode->setNodeMask(~0u);
+        pending.mCommitted = true;
+        mCamera->setAnimation(mPlayerAnimation.get(), mPlayerFirstPersonAnimation.get());
         mCamera->attachTo(player);
     }
 
@@ -1253,7 +1300,7 @@ namespace MWRender
             if (mCamera->getTrackingPtr() == ptr)
             {
                 mCamera->attachTo(ptr);
-                mCamera->setAnimation(anim);
+                mCamera->setAnimation(anim, anim == mPlayerAnimation.get() ? mPlayerFirstPersonAnimation.get() : nullptr);
             }
         }
     }

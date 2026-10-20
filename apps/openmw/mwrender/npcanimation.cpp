@@ -128,7 +128,7 @@ namespace MWRender
         void resetBlinkTimer();
 
     public:
-        HeadAnimationTime(const MWWorld::Ptr& reference);
+        HeadAnimationTime(const MWWorld::Ptr& reference, bool enabled = true);
 
         void updatePtr(const MWWorld::Ptr& updated);
 
@@ -146,16 +146,17 @@ namespace MWRender
 
     // --------------------------------------------------------------------------------------------------------------
 
-    HeadAnimationTime::HeadAnimationTime(const MWWorld::Ptr& reference)
+    HeadAnimationTime::HeadAnimationTime(const MWWorld::Ptr& reference, bool enabled)
         : mReference(reference)
         , mTalkStart(0)
         , mTalkStop(0)
         , mBlinkStart(0)
         , mBlinkStop(0)
-        , mEnabled(true)
+        , mBlinkTimer(0)
+        , mEnabled(enabled)
         , mValue(0)
     {
-        resetBlinkTimer();
+        if (enabled) resetBlinkTimer();
     }
 
     void HeadAnimationTime::updatePtr(const MWWorld::Ptr& updated)
@@ -288,20 +289,22 @@ namespace MWRender
     }
 
     NpcAnimation::NpcAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
-        Resource::ResourceSystem* resourceSystem, bool disableSounds, ViewMode viewMode, float firstPersonFieldOfView)
+        Resource::ResourceSystem* resourceSystem, bool disableSounds, ViewMode viewMode, float firstPersonFieldOfView,
+        bool passivePlayback)
         : ActorAnimation(ptr, std::move(parentNode), resourceSystem)
         , mViewMode(viewMode)
         , mShowWeapons(false)
         , mShowCarriedLeft(true)
         , mNpcType(getNpcType(ptr))
         , mFirstPersonFieldOfView(firstPersonFieldOfView)
-        , mSoundsDisabled(disableSounds)
+        , mSoundsDisabled(disableSounds || passivePlayback)
         , mAccurateAiming(false)
         , mAimingFactor(0.f)
     {
         mNpc = mPtr.get<ESM::NPC>()->mBase;
 
-        mHeadAnimationTime = std::make_shared<HeadAnimationTime>(mPtr);
+        mPassivePlayback = passivePlayback;
+        mHeadAnimationTime = std::make_shared<HeadAnimationTime>(mPtr, !passivePlayback);
         mWeaponAnimationTime = std::make_shared<WeaponAnimationTime>(this);
 
         for (size_t i = 0; i < ESM::PRT_Count; i++)
@@ -457,11 +460,12 @@ namespace MWRender
 
     void NpcAnimation::rebuild()
     {
+        if (auto* peer = dynamic_cast<NpcAnimation*>(getPlaybackPeer())) peer->rebuild();
         mScabbard.reset();
         mHolsteredShield.reset();
         updateNpcBase();
 
-        MWBase::Environment::get().getMechanicsManager()->forceStateUpdate(mPtr);
+        if (!mPassivePlayback) MWBase::Environment::get().getMechanicsManager()->forceStateUpdate(mPtr);
     }
 
     int NpcAnimation::getSlot(const osg::NodePath& path) const
@@ -1029,7 +1033,10 @@ namespace MWRender
         mOblivionFirstPersonFollow = result->mFollow;
         osg::Vec3f scale(std::abs(mPtr.getCellRef().getScale()),
             std::abs(mPtr.getCellRef().getScale()), std::abs(mPtr.getCellRef().getScale()));
-        mPtr.getClass().adjustScale(mPtr, scale, true);
+        // This root remains first-person even while the camera shows the body.
+        // Its hand proportions depend on race height, never race weight or POV.
+        const auto* race = MWBase::Environment::get().getESMStore()->get<ESM::Race>().find(mNpc->mRace);
+        scale *= mNpc->isMale() ? race->mData.mMaleHeight : race->mData.mFemaleHeight;
         osg::Vec3d origin(position.pos[0], position.pos[1], position.pos[2] + mOblivionFirstPersonHeight);
         // Keep a relative transform so OSG retains the view matrix and actor
         // state inheritance. Cancel the existing actor placement before giving
@@ -1307,6 +1314,7 @@ namespace MWRender
 
     void NpcAnimation::showWeapons(bool showWeapon)
     {
+        if (mPlaybackPeer) mPlaybackPeer->showWeapons(showWeapon);
         detachOblivionArrow();
         mShowWeapons = showWeapon;
         mAmmunition.reset();
@@ -1336,7 +1344,7 @@ namespace MWRender
         {
             removeIndividualPart(ESM::PRT_Weapon);
             // If we remove/hide weapon from player, we should reset attack animation as well
-            if (mPtr == MWMechanics::getPlayer())
+            if (!mPassivePlayback && mPtr == MWMechanics::getPlayer())
                 mPtr.getClass().getCreatureStats(mPtr).setAttackingOrSpell(false);
         }
 
@@ -1373,6 +1381,7 @@ namespace MWRender
 
     void NpcAnimation::showCarriedLeft(bool show)
     {
+        if (mPlaybackPeer) mPlaybackPeer->showCarriedLeft(show);
         mShowCarriedLeft = show;
         const MWWorld::InventoryStore& inv = mPtr.getClass().getInventoryStore(mPtr);
         MWWorld::ConstContainerStoreIterator iter = inv.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
@@ -1413,6 +1422,7 @@ namespace MWRender
 
     void NpcAnimation::attachArrow()
     {
+        if (mPlaybackPeer) mPlaybackPeer->attachArrow();
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
         {
             attachOblivionArrow();
@@ -1435,6 +1445,7 @@ namespace MWRender
 
     void NpcAnimation::detachArrow()
     {
+        if (mPlaybackPeer) mPlaybackPeer->detachArrow();
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion)
         {
             detachOblivionArrow();
@@ -1492,16 +1503,18 @@ namespace MWRender
 
     void NpcAnimation::enableHeadAnimation(bool enable)
     {
-        mHeadAnimationTime->setEnabled(enable);
+        mHeadAnimationTime->setEnabled(enable && !mPassivePlayback);
     }
 
     void NpcAnimation::setWeaponGroup(const std::string& group, bool relativeDuration)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setWeaponGroup(group, relativeDuration);
         mWeaponAnimationTime->setGroup(group, relativeDuration);
     }
 
     void NpcAnimation::equipmentChanged()
     {
+        if (auto* peer = dynamic_cast<NpcAnimation*>(getPlaybackPeer())) peer->equipmentChanged();
         if (Settings::game().mShieldSheathing)
         {
             int weaptype = ESM::Weapon::None;
@@ -1513,8 +1526,9 @@ namespace MWRender
         if (MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion
             && mPtr == MWMechanics::getPlayer())
         {
-            static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
-                ->oblivionPlayerEquipmentChanged();
+            if (!mPassivePlayback)
+                static_cast<MWWorld::World*>(static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()))
+                    ->oblivionPlayerEquipmentChanged();
             mOblivionParts.clear();
             mNodeMap.clear();
             mNodeMapCreated = false;
@@ -1522,6 +1536,18 @@ namespace MWRender
             updateOblivionPlayerParts();
             refreshAnimationBindings();
         }
+    }
+
+    void NpcAnimation::itemAdded(const MWWorld::ConstPtr& item, int count)
+    {
+        if (auto* peer = dynamic_cast<NpcAnimation*>(getPlaybackPeer())) peer->itemAdded(item, count);
+        ActorAnimation::itemAdded(item, count);
+    }
+
+    void NpcAnimation::itemRemoved(const MWWorld::ConstPtr& item, int count)
+    {
+        if (auto* peer = dynamic_cast<NpcAnimation*>(getPlaybackPeer())) peer->itemRemoved(item, count);
+        ActorAnimation::itemRemoved(item, count);
     }
 
     void NpcAnimation::setVampire(bool vampire)
@@ -1537,6 +1563,12 @@ namespace MWRender
         }
     }
 
+    void NpcAnimation::setPitchFactor(float factor)
+    {
+        mPitchFactor = factor;
+        if (mPlaybackPeer) mPlaybackPeer->setPitchFactor(factor);
+    }
+
     void NpcAnimation::setFirstPersonOffset(const osg::Vec3f& offset)
     {
         mFirstPersonOffset = offset;
@@ -1544,6 +1576,7 @@ namespace MWRender
 
     void NpcAnimation::updatePtr(const MWWorld::Ptr& updated)
     {
+        if (mPlaybackPeer) mPlaybackPeer->updatePtr(updated);
         Animation::updatePtr(updated);
         mHeadAnimationTime->updatePtr(updated);
     }
@@ -1686,6 +1719,7 @@ namespace MWRender
 
     void NpcAnimation::setAccurateAiming(bool enabled)
     {
+        if (mPlaybackPeer) mPlaybackPeer->setAccurateAiming(enabled);
         mAccurateAiming = enabled;
     }
 
