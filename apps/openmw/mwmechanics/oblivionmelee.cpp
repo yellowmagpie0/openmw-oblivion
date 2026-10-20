@@ -487,9 +487,9 @@ namespace MWMechanics
                     ESM4::buildKnockbackSettings(settings), ESM4::buildPhysicalCombatSettings(settings)};
             }
         }
-        const bool npcBlockHit = blockAccepted && !contact->isEmpty()
-            && *contact != world.getPlayerPtr() && contact->getType() == ESM::REC_NPC_4;
-        auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, deltas, npcBlockHit);
+        const bool blockHit = blockAccepted && !contact->isEmpty()
+            && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4);
+        auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, deltas, blockHit);
         if (!prepared || !prepared->commit())
             return std::nullopt;
         return result;

@@ -255,6 +255,7 @@ namespace MWRender
         std::vector<std::shared_ptr<AnimSource>> mNativeSequenceSources;
         std::vector<std::shared_ptr<NativeSequenceFrame>> mNativeSequenceFrames;
         ActiveControllersVector mNativeSequenceControllers;
+        bool setNativeSequenceLayersImpl(std::span<const NativeSequenceLayer> layers, bool apply);
         void releaseNativeSequenceLayers() noexcept;
 
         std::unordered_set<std::string> mSupportedAnimations;
@@ -596,6 +597,9 @@ namespace MWRender
         // Missing/ambiguous sources return false without replacing the plan.
         // Malformed frames throw. Empty input releases the projection.
         bool setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers);
+        // Validate both view plans before changing either published projection.
+        bool setNativeSequenceLayersForViews(std::span<const NativeSequenceLayer> body,
+            std::span<const NativeSequenceLayer> firstPerson);
         std::vector<NativeSequenceLayer> nativePlayingSequenceLayers(std::span<const std::string_view> excluded);
         std::optional<ESM4::RuntimeMeleePoseSnapshot> captureNativeSequencePose(
             std::string_view group, float destinationFrame);

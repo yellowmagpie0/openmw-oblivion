@@ -515,6 +515,11 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
             raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
+        if action_type == "wait_log" and "poll_interval_seconds" in action:
+            interval = action["poll_interval_seconds"]
+            if (isinstance(interval, bool) or not isinstance(interval, (int, float))
+                    or not math.isfinite(interval) or not 0 < interval <= 1):
+                raise ValueError(f"Scenario action {index} wait_log poll_interval_seconds must be in (0, 1]")
         if action_type == "m14_console":
             _validate_m14_console_commands(action.get("commands"))
         if action_type == "m14_checkpoint" and "save_name" in action and (
@@ -1349,17 +1354,19 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
     if action_type == "wait_log":
         pattern = re.compile(str(action["pattern"]), re.MULTILINE)
         timeout = float(action.get("timeout_seconds", 30))
+        interval = float(action.get("poll_interval_seconds", 0.1))
         log_path = output / str(action.get("path", "process.log"))
         matched = False
         while time.monotonic() - started < timeout:
             if log_path.is_file() and pattern.search(log_path.read_text(encoding="utf-8", errors="replace")):
                 matched = True
                 break
-            time.sleep(0.1)
+            time.sleep(interval)
         return {
             "type": action_type,
             "pattern": pattern.pattern,
             "path": str(log_path),
+            "poll_interval_seconds": interval,
             "passed": matched,
             "duration_seconds": round(time.monotonic() - started, 6),
         }

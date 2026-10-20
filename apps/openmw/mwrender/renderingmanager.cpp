@@ -1267,6 +1267,10 @@ namespace MWRender
                 NpcAnimation::VM_Normal, mFirstPersonFieldOfView);
             firstPerson = new NpcAnimation(player, firstPersonNode, mResourceSystem, true,
                 NpcAnimation::VM_FirstPerson, mFirstPersonFieldOfView, true);
+            // Resolve the authored reaction inventories while these roots are
+            // unpublished, rather than making the first contact load them.
+            body->getNativeReactionCatalog();
+            firstPerson->getNativeReactionCatalog();
             body->setPlaybackPeer(firstPerson);
             const bool first = mCamera->getMode() == Camera::Mode::FirstPerson;
             body->setPresentationVisible(!first); firstPerson->setPresentationVisible(first);

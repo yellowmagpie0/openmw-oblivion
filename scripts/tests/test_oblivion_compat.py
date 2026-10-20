@@ -29,6 +29,30 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_log_polling_interval_rejects_invalid_values_before_launch(self):
+        manifest = {"schema_version": 1, "name": "log-wait", "command": ["openmw"], "actions": []}
+        for value in (0, -0.005, 1.01, float("nan"), float("inf"), True, "0.005"):
+            manifest["actions"] = [{"type": "wait_log", "pattern": "ready", "poll_interval_seconds": value}]
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "poll_interval_seconds"):
+                MODULE.validate_scenario_manifest(manifest)
+
+    def test_log_wait_uses_requested_interval_until_real_match(self):
+        for interval in (None, 0.005):
+            with self.subTest(interval=interval), tempfile.TemporaryDirectory() as directory:
+                output = Path(directory)
+                log = output / "process.log"
+                log.write_text("not yet\n")
+                action = {"type": "wait_log", "pattern": "reaction committed", "timeout_seconds": 10}
+                if interval is not None:
+                    action["poll_interval_seconds"] = interval
+                def publish_after_poll(seconds):
+                    log.write_text("reaction committed\n")
+                with mock.patch.object(MODULE.time, "sleep", side_effect=publish_after_poll) as sleep:
+                    result = MODULE._run_action(action, environment={}, output=output)
+                self.assertTrue(result["passed"])
+                sleep.assert_called_once_with(0.1 if interval is None else interval)
+                self.assertEqual(result["poll_interval_seconds"], 0.1 if interval is None else interval)
+
     def test_offscreen_scenario_rejects_incompatible_backends_and_actions(self):
         base = {"schema_version": 1, "name": "offscreen", "command": ["openmw"],
                 "sdl_offscreen_input": True, "actions": []}

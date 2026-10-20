@@ -460,10 +460,10 @@ namespace MWWorld
         };
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContact(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool npcBlockHit = false);
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false);
         // Ordinary intact drawn NPC blocking. Missing native animation suppresses the
         // animation request; unsupported live bindings reject before contact.
-        bool prepareOblivionNpcBlockHitReaction(std::uint64_t id, const Ptr& victim,
+        bool prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
             MWMechanics::OblivionPhysicalContactDeltas& deltas);
         // Explicit owned render/animation context, also used by synthetic asset tests.
         // Requests must exactly match the Drop dispositions in the contact.
@@ -1048,7 +1048,7 @@ namespace MWWorld
     private:
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool npcBlockHit = false);
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false);
     };
 }
 

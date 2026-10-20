@@ -8333,3 +8333,108 @@ and dual projection, outgoing/crossfade/parallel view layers, complete original
 hidden-view scheduling, mastery/effects, directional attacks and the full
 opponent/input/view/FPS/cancellation and in-flight restart courses remain open.
 **M15S4 remains incomplete.**
+
+## Fresh Player BlockHit in both owned views
+
+Ordinary blocked contacts now prepare fresh Player BlockHit owners for both the
+body and first-person roots. Each owner captures its own pose, retains its own
+sequence metadata and blend span, and advances on its own animation clock. The
+body controls process action; first-person events remain passive. Prepared
+contact leases retain both renderer roots. Layer publication validates both
+view plans before updating either view; rejection tests cover invalid frame
+times, missing resources and unbound poses while preserving previous frames and
+controllers. This does not claim atomic recovery from allocation failure.
+
+The factory admits living drawn-weapon Player contacts with fresh owners,
+unit-weight Single resources and no active strike, reaction or retiring owner.
+It keeps the NPC factory route. The body selects the reviewed native fallback;
+the first-person cache must contain that exact resolved key. General missing
+resources and Multiple selection are outside this accepted domain. Catalogs
+are warmed while the new roots remain private to avoid a first-contact load
+hitch. This is resource preparation, not proof of original constructor or
+hidden-view scheduling parity. Runtime schema remains **57**.
+
+The independent original-executable selector check executes actual `5E5690`
+with the Player vtable and `65D720` active-view/override lookup, common cache
+methods and captured body/first-person cache topology. It records **7,168
+observations**, **3,584 unique contexts**, **1,792 drawn-unforced production
+selector comparisons**, and **7,168 fallback comparisons**. Worn-right/left
+queries are typed entry boundaries; inventory traversal, file loading and
+actual gameplay are not executed. The optional override fixture uses the same
+declared cache as the selected view. The image SHA is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+Original `65D790` mirrors the resolved body key directly for Single resources,
+without another first-person family fallback or RNG draw.
+
+Normal and ASan/UBSan engine checks each pass **1,765 tests in 125 suites**, with
+exact inventory/XML agreement, no failures or skips. All **335 Python tests**
+pass, including configured log-poll validation and real file polling. Tested
+engine/harness fingerprint:
+`775607e1047593ac5f139f718a632681ea2db969ea2eb82f193f8d8877311902`
+(parent `279c6d12c3`). The later declarative camera-course correction changes
+only its POV ordering and passive camera observer. Reconstructing the build-time
+Git diff with only that manifest restored in a temporary index reproduces the
+exact checked fingerprint; the actual index remains unchanged. This verifies
+that the engine/harness sources did not drift. A subsequent 335-test Python
+run also passes. ASan disables leak detection and halts on errors; UBSan halts
+with stack traces. Actual engine environments are recorded. No leak coverage.
+
+The public `oblivion_m15_native_player_blockhit_views*.json` sources use the
+existing declarative stationary opponent fixture. Normal B block and Space
+activation produce one real opponent contact. At the first actual save both
+captured poses remain active: **64 body tracks and 66 first-person tracks**.
+The fresh process loads that exact output, rebinds both poses, recovers action
+**-1** with block input unheld, removes both owners and advances the surviving
+first-person clock. No replayed contact, factory selection or sound request is
+allowed. Normal and sanitizer courses cover first-person and third-person
+contact. Third-person is verified by passive camera-mode observation and direct
+image review; its continuation screenshot also shows third-person. This does
+not establish a general camera-restoration guarantee.
+
+Exact selected consequences are Player HealthDamage **-0.9841405749320984**,
+Player/opponent sword conditions **55.84976577758789 / 55.70000076293945**,
+combat RNG **505908858** and next action **3**, without pending owners. First
+Fatigue Damage permits only the preregistered real regeneration ranges; the
+remaining channels are exact, and continuation Fatigue fully recovers. Original
+reference inventories are preserved apart from the two declared sword-condition
+writes and the three migration defaults. Newly cached references are checked
+against original master identity/base/CELL, including persistent exterior
+storage mapped to physical coordinates. No fixed whole-world cache-size claim.
+
+Actual PCM matches a stock blade-block waveform in **one temporal cluster** at
+contact and **none** after restart, using the inherited 0.75 normalized
+correlation threshold. Logs independently show two legitimate played
+`WPNBlockBlade` requests at contact and none in continuation. Correlation alone
+does not establish coincident voice count or amplitude. The shared NPC shield
+BlockHit regression also passes both profiles: active 64-track pose,
+HealthDamage **-0.4110095500946045**, RNG **773150046**, next action **3**, no
+Player first-person native state, and fresh-process action6 recovery without
+replay. Images receive direct review; static images do not prove interpolation
+or original-game visual parity. Clean first-person held-block skin rendering
+remains open.
+
+Failed attempts are retained. The initial factory incorrectly used the
+NPC-only draw-state persistence helper for Player and rejected contact; the
+corrected factory reads the authoritative live Player draw state. Earlier
+1-FPS courses saved after the captured-pose fade had ended; both reactions were
+present, but strict active-pose acceptance failed. The corrected 60-FPS course
+polls the committed-contact log every 5ms and requests F5 immediately. Initial
+third-person courses requested POV during held BlockIdle; the queued view
+change left actual images in first-person. Their semantic results are retained,
+but they do not count as third-person evidence. The corrected course switches
+before blocking and requires a passive third-person observation. The sanitizer NPC regression also needed the immediate-save correction. A
+preflight inspection caught a retry waiting on telemetry without enabling its
+event stream; that owned process was stopped before contact and the corrected
+fresh retry enables the stream explicitly. Final manifest comparison also
+caught an extra queued POV action in the sanitizer third-person preparation;
+its semantic/camera results are retained, and a fresh exact-public-manifest
+course replaces it. No failed expectation was relaxed.
+
+[M15-PLAYER-BLOCKHIT-VIEWS-VERIFICATION.json](M15-PLAYER-BLOCKHIT-VIEWS-VERIFICATION.json)
+pins source/manifests, binaries, exact check reports, independent selector scope,
+process epochs, actual save/live chains, audio, image review and NPC regression.
+Cached/state2/3/5 replacements, outgoing/crossfade/parallel layers, independent
+native first-person strikes, normal Recoil/Stagger/BlockAttack factories,
+creature reactions, mastery/effects, directional powers and the full
+opponent/input/view/FPS/cancellation and in-flight restart matrix remain open.
+**M15S4 remains incomplete.**

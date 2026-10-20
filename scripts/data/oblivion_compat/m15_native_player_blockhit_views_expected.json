@@ -1,0 +1,105 @@
+{
+  "scope": "Normal held Player B block against one production stationary NPC sword contact after Space activation. Fresh body/FP captured-pose BlockHit in actual saved output; fresh-process unheld-input recovery. No active/cached Player replacement, Recoil/Stagger/BlockAttack factory, independent native FP strike or full S4 acceptance.",
+  "source": "build/oblivion-compat/m15/S4/equipped-block-runtime-normal-02/staged-input.omwsave",
+  "source_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+  "source_schema": 46,
+  "expected": {
+    "contact": 2,
+    "body_pose_tracks": 64,
+    "first_person_pose_tracks": 66,
+    "active_pose_at_first_save": true,
+    "completed_both_after_restart": true,
+    "combat_rng": 505908858,
+    "action_next": 3,
+    "player_health_debit_bits": 1065087139,
+    "player_weapon_condition_bits": 1113548329,
+    "opponent_weapon_condition_bits": 1113509069,
+    "first_player_fatigue_damage_range": [
+      -20.0251,
+      0
+    ],
+    "first_opponent_fatigue_damage_range": [
+      -7.8001,
+      0
+    ],
+    "second_fatigue_recovered": true,
+    "hits": 1,
+    "replayed_hits_after_restart": 0,
+    "inventory_migration_defaults": {
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null
+    }
+  },
+  "configured_framerate_cap": 60,
+  "capture_phase": "First save requires both active captured-pose owners; first-person and body are restored from that actual output in a fresh process.",
+  "selector_evidence": {
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "observations": 7168,
+    "drawn_unforced_cpp_comparisons": 1792,
+    "fallback_comparisons": 7168,
+    "scope": "Full actual5E5690 with PlayerA73A0C vtable:65D720 active-view/override AnimData getter, process movement/draw getters, common51A9B0 and470D20/cache methods. Captured body/first-person cache topology. Typed worn-entry boundaries only; no file loading or gameplay.",
+    "drawn_unforced_families_by_weapon_None_0_to_5": [
+      1,
+      2,
+      3,
+      2,
+      3,
+      4,
+      5
+    ],
+    "shield_family": 0,
+    "movement_masks": [
+      0,
+      1024,
+      2048,
+      3072,
+      8192,
+      9216,
+      10240,
+      11264
+    ],
+    "movement_families": [
+      0,
+      1,
+      2,
+      2,
+      3,
+      3,
+      2,
+      2
+    ],
+    "base_group": 28,
+    "first_person_mirror": "Body-resolved key must exist directly in the FP catalog; Single incoming resources only."
+  },
+  "audio": {
+    "assets": [
+      {
+        "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+        "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+        "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+        "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+      }
+    ],
+    "minimum_normalized_correlation": 0.75,
+    "positive_clusters_required": 1,
+    "baseline_clusters_required": 0,
+    "analysis_rate": 12000,
+    "scope": "Same 0.75 stock-wave correlation criterion used for previous swish acceptance; expect one block cluster before restart and none after. Two native voices overlap inside one temporal cluster.",
+    "declaration_timing": "Before final 60FPS Player BlockHit course launches; inherited unchanged stock-block PCM criterion.",
+    "expected_requests": [
+      "WPNBlockBlade",
+      "WPNBlockBlade"
+    ],
+    "inherited_rule": {
+      "path": "build/oblivion-compat/m15/S4/block-sound-runtime-normal-01/preregistered-acceptance.json",
+      "sha256": "fe0f90c1ad2194f930c0ad603405b50075afe35d80b014d7bba379214f5bd954"
+    }
+  }
+}

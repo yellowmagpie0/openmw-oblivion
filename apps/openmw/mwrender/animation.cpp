@@ -1973,6 +1973,21 @@ namespace MWRender
 
     bool Animation::setNativeSequenceLayers(std::span<const NativeSequenceLayer> layers)
     {
+        return setNativeSequenceLayersImpl(layers, true);
+    }
+
+    bool Animation::setNativeSequenceLayersForViews(std::span<const NativeSequenceLayer> body,
+        std::span<const NativeSequenceLayer> firstPerson)
+    {
+        if (!mPlaybackPeer) return false;
+        if (!setNativeSequenceLayersImpl(body, false)
+            || !mPlaybackPeer->setNativeSequenceLayersImpl(firstPerson, false)) return false;
+        return setNativeSequenceLayersImpl(body, true)
+            && mPlaybackPeer->setNativeSequenceLayersImpl(firstPerson, true);
+    }
+
+    bool Animation::setNativeSequenceLayersImpl(std::span<const NativeSequenceLayer> layers, bool apply)
+    {
         if (layers.size() > 255)
             throw std::invalid_argument("too many native sequence layers");
         std::vector<std::shared_ptr<AnimSource>> sources;
@@ -2018,6 +2033,7 @@ namespace MWRender
                 && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot;
         if (same)
         {
+            if (!apply) return true;
             for (std::size_t i = 0; i < layers.size(); ++i)
             {
                 auto& frame = *mNativeSequenceFrames[i];
@@ -2094,6 +2110,7 @@ namespace MWRender
             controllers.emplace_back(node, new NativeSequenceController(std::move(nodeTracks), threshold, highest));
         }
         std::vector<NativeSequenceLayer> prepared(layers.begin(), layers.end());
+        if (!apply) return true;
         mNativeSequenceLayers.swap(prepared);
         mNativeSequenceSources.swap(sources);
         mNativeSequenceFrames.swap(frames);

@@ -1735,4 +1735,50 @@ namespace
         EXPECT_EQ(peer.mAnimation->getCurrentTime("hands-idle"), .25f);
         EXPECT_EQ(peer.mAnimation->mControllerBuilds, builds);
     }
+
+    TEST_F(PhysicalPoseAnimationTest, PairedNativePlansRejectEitherInvalidViewBeforeChangingPublishedFrames)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        auto bodyTrack = nativeTrack({1, 2, 3}), firstTrack = nativeTrack({11, 12, 13});
+        bodyTrack->mVelocity = firstTrack->mVelocity = {1, 0, 0};
+        mAnimation->addNativeSource("reaction", bodyTrack, 9);
+        peer.mAnimation->addNativeSource("reaction", firstTrack, 9);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        using Layer = MWRender::Animation::NativeSequenceLayer;
+        std::array<Layer, 1> body{{{"reaction", MWRender::BlendMask_All, .125f, 1, 1}}};
+        std::array<Layer, 1> first{{{"reaction", MWRender::BlendMask_All, .25f, 1, 1}}};
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(body, first));
+        const auto bodyBuilds = mAnimation->mControllerBuilds;
+        const auto firstBuilds = peer.mAnimation->mControllerBuilds;
+        const auto checkPublished = [&](float bodyTime, float firstTime) {
+            mAnimation->runAnimation(0);
+            mRoot->accept(mVisitor); peer.mRoot->accept(mVisitor);
+            EXPECT_EQ(mBone->getControllerTransform().mTranslation, osg::Vec3f(1 + bodyTime, 2, 3));
+            EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation, osg::Vec3f(11 + firstTime, 12, 13));
+            EXPECT_EQ(mAnimation->mControllerBuilds, bodyBuilds);
+            EXPECT_EQ(peer.mAnimation->mControllerBuilds, firstBuilds);
+        };
+        checkPublished(.125f, .25f);
+        body[0].mTime = .5f;
+        first[0].mTime = 11;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayersForViews(body, first), std::invalid_argument);
+        checkPublished(.125f, .25f);
+        first[0].mTime = .75f;
+        first[0].mGroup = "missing";
+        EXPECT_FALSE(mAnimation->setNativeSequenceLayersForViews(body, first));
+        checkPublished(.125f, .25f);
+        first[0].mGroup = "reaction";
+        first[0].mPoseSnapshot = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(
+            ESM4::RuntimeMeleePoseSnapshot{0, {{"unbound bone", {0, 0, 0}, {1, 0, 0, 0}, 1, 9}}});
+        EXPECT_FALSE(mAnimation->setNativeSequenceLayersForViews(body, first));
+        checkPublished(.125f, .25f);
+        first[0].mPoseSnapshot.reset();
+        body[0].mTime = -1;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayersForViews(body, first), std::invalid_argument);
+        checkPublished(.125f, .25f);
+        body[0].mTime = .5f;
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(body, first));
+        checkPublished(.5f, .75f);
+    }
 }
