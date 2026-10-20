@@ -5704,3 +5704,60 @@ TEST(ESM4PhysicalCombat, BlockHealthRejectsMalformedInputs)
     }
     EXPECT_THROW(ESM4::blockedHealthDamage(5, std::nextafter(1.f, 2.f)), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeSequenceVariantSelectionMatchesOriginalCollectionAndCrtPaths)
+{
+    using Kind = ESM4::NativeSequenceCollection;
+    struct Golden
+    {
+        Kind mKind;
+        std::uint32_t mCount;
+        std::uint8_t mRequested;
+        std::uint32_t mState;
+        ESM4::NativeSequenceSelection mExpected;
+    };
+    // Original471710/470BF0 + actual initialized47DF80/9859DD.
+    // Supplied CRT thread storage and ordered list; see the editable probe.
+    const std::array cases{
+        Golden{Kind::Single, 1, 255, 0u, {0, 0u, 0}},
+        Golden{Kind::Single, 1, 128, 1u, {0, 1u, 0}},
+        Golden{Kind::Single, 1, 0, 4294967295u, {0, 4294967295u, 0}},
+        Golden{Kind::Multiple, 1, 255, 0u, {0, 2531011u, 1}},
+        Golden{Kind::Multiple, 1, 0, 1u, {0, 1u, 0}},
+        Golden{Kind::Multiple, 3, 255, 0u, {2, 2531011u, 1}},
+        Golden{Kind::Multiple, 3, 255, 1u, {2, 2745024u, 1}},
+        Golden{Kind::Multiple, 3, 0, 1u, {0, 1u, 0}},
+        Golden{Kind::Multiple, 3, 1, 1u, {1, 1u, 0}},
+        Golden{Kind::Multiple, 3, 2, 1u, {2, 1u, 0}},
+        Golden{Kind::Multiple, 3, 3, 1u, {2, 2745024u, 1}},
+        Golden{Kind::Multiple, 3, 127, 305419896u, {2, 3018423131u, 1}},
+        Golden{Kind::Multiple, 3, 128, 305419896u, {2, 3018423131u, 1}},
+        Golden{Kind::Multiple, 3, 254, 4294967295u, {2, 2316998u, 1}},
+        Golden{Kind::Multiple, 3, 255, 4294967295u, {2, 2316998u, 1}},
+        Golden{Kind::Multiple, 127, 126, 1u, {126, 1u, 0}},
+        Golden{Kind::Multiple, 127, 127, 1u, {41, 2745024u, 1}},
+        Golden{Kind::Multiple, 128, 127, 1u, {127, 1u, 0}},
+        Golden{Kind::Multiple, 129, 128, 1u, {41, 2745024u, 1}},
+        Golden{Kind::Multiple, 256, 127, 1u, {127, 1u, 0}},
+        Golden{Kind::Multiple, 256, 128, 1u, {41, 2745024u, 1}},
+        Golden{Kind::Multiple, 256, 254, 1u, {41, 2745024u, 1}},
+        Golden{Kind::Multiple, 256, 255, 1u, {41, 2745024u, 1}},
+    };
+    for (const auto& test : cases)
+    {
+        SCOPED_TRACE(test.mCount);
+        SCOPED_TRACE(unsigned(test.mRequested));
+        EXPECT_EQ(ESM4::selectNativeSequenceVariant(test.mKind, test.mCount, test.mRequested, test.mState),
+            test.mExpected);
+    }
+}
+
+TEST(ESM4PhysicalCombat, NativeSequenceVariantSelectionRejectsUnsupportedCollections)
+{
+    using Kind = ESM4::NativeSequenceCollection;
+    for (const auto kind : {Kind::Single, Kind::Multiple})
+        for (const std::uint32_t count : {0u, 0x80000000u, 0xffffffffu})
+            EXPECT_THROW(ESM4::selectNativeSequenceVariant(kind, count, 255, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectNativeSequenceVariant(Kind::Single, 2, 0, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::selectNativeSequenceVariant(static_cast<Kind>(2), 1, 0, 1), std::invalid_argument);
+}

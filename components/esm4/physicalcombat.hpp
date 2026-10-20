@@ -702,6 +702,21 @@ namespace ESM4
     // Percentile callers use mValue % 100, preserving the native modulo bias.
     CombatRandomDraw combatRandomDraw(std::uint32_t state) noexcept;
 
+    enum class NativeSequenceCollection : std::uint8_t { Single, Multiple };
+    struct NativeSequenceSelection
+    {
+        std::uint32_t mIndex;
+        std::uint32_t mNextState;
+        unsigned mDraws;
+        friend bool operator==(const NativeSequenceSelection&, const NativeSequenceSelection&) = default;
+    };
+    // Original471710/470BF0. Single ignores the requested byte. Multiple
+    // interprets it as signed: negative or out-of-range requests draw once,
+    // then use unsigned remainder. Selection does not exclude the last item.
+    // The caller owns collection identity/order and atomically commits RNG.
+    NativeSequenceSelection selectNativeSequenceVariant(NativeSequenceCollection collection,
+        std::uint32_t count, std::uint8_t requested, std::uint32_t randomState);
+
     enum class ArmorWearSlot { Head, Hair, UpperBody, LowerBody, Hands, Feet, Shield };
     struct ArmorWearSelectionSettings
     {

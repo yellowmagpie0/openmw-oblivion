@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Immutable sequence collection selection primitive; normal contact Recoil integration remains open.",
+  "implementation": "Select Single/Multiple using explicit collection identity, size, requested byte and CRT state. Return selected index, next state and exact draw count without mutation. Single requires one entry. Multiple supports nonempty counts throughINT_MAX; malformed kinds/counts reject.",
+  "tested_source": {
+    "head": "0da16dfbcc71894ba89341ad1743162685504a90",
+    "source_fingerprint": "dbf0fefdc843a5981f617fd5ef749cbf28890e41a4da61a028a576132d0d9de8"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "be8d808f072ff091e166c2656ad92aa3d31e34061f11ff862174a95444740734"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "ffca0a809851926d6fd260cb0ca30068a46a2a76f42684d186e5c61c2ebf5535"
+    },
+    {
+      "path": "apps/components_tests/esm4/physicalcombat.cpp",
+      "sha256": "df90b4b49ed188deedcfcb35e3adfb04bce019d6f7cdfaaa0af06dae1fef33a0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_sequence_variant_probe.json",
+      "sha256": "48d4c1e023a0d84d4a4c43d14c9f3da8c6d8d50d6a8c627d028968649a2b972e"
+    }
+  ],
+  "native_variant": {
+    "passed": true,
+    "cases": 38400,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "cec490ed97c28d03c3fbb5c5187f93ab84cc49193a0c590309ffc64e6d8a145e",
+    "paths": [
+      "Full Single471710 and Multiple470BF0 selectors",
+      "Actual47DF80 with initialized stream and actual CRT9859DD state update"
+    ],
+    "boundaries": [
+      "Only CRT thread-context98C0F5 returns supplied per-case storage.",
+      "Supplied valid ordered list entries and count; no resource loading, actor dispatch, animation activation or runtime acceptance."
+    ],
+    "findings": [
+      "Single returns its only entry with no draw, ignoring request.",
+      "Multiple consumes one draw when request low byte is255, signed-negative128..254, or a nonnegative index outside count; otherwise uses that index with no draw.",
+      "Random selection is unsigned CRTdraw modulo count, with no previous-variant exclusion.",
+      "Explicit byte127 is valid for count128; byte128 chooses randomly even when count256."
+    ],
+    "full_M15S4_acceptance": false
+  },
+  "independent_cpp_comparison": {
+    "passed": true,
+    "contexts": 38400,
+    "method": "Standalone C++ compare links the production physicalcombat.cpp and compares every independently emitted original row. Compiler C++20/O2, function/data sections and linker garbage collection.",
+    "log": {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-compare.log",
+      "sha256": "ec76bae74bbcdce5e60a866658228730933df8b4456d58a0ad2ecb55e7087442"
+    }
+  },
+  "checks": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-variant-normal-01/verification.json",
+      "sha256": "a7997240320c2602e9d49072888294f5b21d831dfece82c0179469a16b0bf555",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "6"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 131.332
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.114
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sequence-variant-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.293
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2965,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c2826b1e95cf3c307891c84d61a4a31c10883e77f43312d48cb1b9ef0d89507a",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "ff40f7000fbec783e2dc5d41681f607c163c231ddea30dd1952fc632a143d186",
+            "inventory_sha256": "5be83e5824a918261b5cc28e0fc02e2507cc7017e700b17c74aa7ae4d727ba4b",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "0da16dfbcc71894ba89341ad1743162685504a90",
+          "source_fingerprint": "dbf0fefdc843a5981f617fd5ef749cbf28890e41a4da61a028a576132d0d9de8"
+        },
+        "source_after": {
+          "head": "0da16dfbcc71894ba89341ad1743162685504a90",
+          "source_fingerprint": "dbf0fefdc843a5981f617fd5ef749cbf28890e41a4da61a028a576132d0d9de8"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-sequence-variant-sanitized-01/verification.json",
+      "sha256": "b701dc885d3b630483f5e82880da3b107809ec8168e29e99a709f01cf9f4ce28",
+      "report": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "6"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 245.338
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.416
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-sequence-variant-sanitized-01/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 31.966
+          }
+        ],
+        "results": {
+          "sanitize": {
+            "executed": 818,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "d43e0cb006849edfcdd1deb368ee1515247dc2d6a83c40325431e6e6283c36f9",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "476269a64716bfb473e564060b9f90d7aa746a6a9244a11d2ed81d29975fd19d",
+            "inventory_sha256": "3de5a61a9492dccfe160b57524887c7500ea4a2b774a7633a63caededc876962",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "0da16dfbcc71894ba89341ad1743162685504a90",
+          "source_fingerprint": "dbf0fefdc843a5981f617fd5ef749cbf28890e41a4da61a028a576132d0d9de8"
+        },
+        "source_after": {
+          "head": "0da16dfbcc71894ba89341ad1743162685504a90",
+          "source_fingerprint": "dbf0fefdc843a5981f617fd5ef749cbf28890e41a4da61a028a576132d0d9de8"
+        }
+      }
+    }
+  ],
+  "native_contact_dispatch": {
+    "passed": true,
+    "cases": 960,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "00ef65f00eb9a3f699dde7ed1c7bb7a72c47372517ef301f0ccab2b55163ed34",
+    "path": "Actual5FFEDF through5FFF52 or60056A, including600528 block branch",
+    "boundaries": [
+      "Prior contact computes stored absorbed fraction, defender-unarmed byte74 and projectile pointer24; supplied fixtures at this slice entry.",
+      "Mastery5F23B0 supplied rank. Counter5F3C30, disarm5FC2B0 and reaction helper calls captured as boundaries. No body/FP selection, actual drop, damage or runtime acceptance."
+    ],
+    "findings": [
+      "Positive absorbed fraction always enters defender BlockHit/BlockAttack branch. Zero fraction enters only for unarmed defender with HandToHand Journeyman+; otherwise no BlockHit.",
+      "Projectile forces no counter choice. Nonprojectile uses counter decision.",
+      "When counter false, defender disarm helper runs; nonprojectile always requests attacker Recoil irrespective disarm result. Projectile requests Recoil only when disarm succeeds.",
+      "Thus currently admitted nonprojectile below-Expert positive blocks require both defender BlockHit and attacker Recoil."
+    ],
+    "full_M15S4_acceptance": false
+  },
+  "native_drawn_reaction_families": {
+    "passed": true,
+    "cases": 168,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "7e24e5be81d698976b72724ae00f4b70470bc0598a563451cae45b77bf6df084",
+    "weapon_prefixes": [
+      2,
+      3,
+      2,
+      3,
+      4,
+      5
+    ],
+    "scope": "Full original5E5690 selector and actual51A9B0 encoding; actual64B2D0/484E80/41DF10 shield-worn getter and64AD30 weapon-out byte getter execute. Actor animation-data and+27C/+334, process movement flags/current-weapon readers supplied. Explicit weapon entries supplied for supported types. Actual animation lookup470D20 records encoded group, no playback/model/runtime.",
+    "observation": "Within the supplied standing/drawn context, shield overrides BlockHit28 family to0. Recoil30 and Stagger31 retain weapon family independently of shield; force-hand requests use family1. Other movement/draw states are not sampled here."
+  },
+  "caller_rng_observation": "Previously preserved full NPC helper matrix independently shows TWO Multiple draws: discarded group preflight and actual playback selection. Player additionally routes preflight by active camera and matches the body resource basename in FP; missing matches may consume another draw. The primitive represents one operation, not a whole caller.",
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-probe.py",
+      "sha256": "e99962bf299e9e708622e8ab9b29379118d2d12551d55bf9830e8241e8434d44"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-corpus.json",
+      "sha256": "cec490ed97c28d03c3fbb5c5187f93ab84cc49193a0c590309ffc64e6d8a145e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-verification.json",
+      "sha256": "5d7be6ff39c11767ae45866b6462afe7968a8a010889dba31fa73fa0eaa16ff6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-compare.cpp",
+      "sha256": "2a550ea75dd2813f73e5b36a9d07fe80a7a38080eb286f76c06f8e500e89892c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-compare.tsv",
+      "sha256": "fb4feb07ff1b4d7f20879b4f1c9a09d376989774fac6b3b8dfa67473194533b8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-compare",
+      "sha256": "33a416e527fc86217ef67b4057c1655fd205712bc34d32599d868053de1aa86e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/variant-compare.log",
+      "sha256": "ec76bae74bbcdce5e60a866658228730933df8b4456d58a0ad2ecb55e7087442"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/dispatch-probe.py",
+      "sha256": "e0f63e945c609dd0d64500a1352d1f43f4bc3985610002400cd5b73f4fa40132"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/dispatch-corpus.json",
+      "sha256": "00ef65f00eb9a3f699dde7ed1c7bb7a72c47372517ef301f0ccab2b55163ed34"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/dispatch-verification.json",
+      "sha256": "d97d0809ebb5b1a8e3488535b13086ed438ce49e2bf1e9651c53fb03b1f41e05"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/reaction-family-probe.py",
+      "sha256": "580e08f10419d8bf3ac11c410228f13ea601a50395417fc537b5ba9520b9afeb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/reaction-family-corpus.json",
+      "sha256": "7e24e5be81d698976b72724ae00f4b70470bc0598a563451cae45b77bf6df084"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/reaction-family-verification.json",
+      "sha256": "dd49a2b837495c7c61cf24479b4b4ab658d6d12d30bfad346cc8861f1d6e60ac"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/direct-call-candidates.json",
+      "sha256": "d2f91c8563f790732c49808bc11f5e29ee0696ada43a94550d9181139ecfcc30"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-reaction-dispatch-review-01/close-variant.py",
+      "sha256": "8cd839a6217ed7898f3af777d81d1aa6e6e556ef29c374095e0072d5ac726706"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/wear-probe.py",
+      "sha256": "5a7ec865f4d8b143dc27678729b7121a22b5a264cb1742a27e74f383036afa8f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/caller-verification.json",
+      "sha256": "14ee67686154550fd1ec824481df34759fdec2e678aeb1b0f564952dba775ab4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-probe-11.py",
+      "sha256": "803172d62c6cbee325bdd661756b159c3067670fc0ee21827aaa639065547b1d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/actor-channel-corpus11.json",
+      "sha256": "1be7b2f8ac816e9679e9875decf7fd94bc38751c0b84a98f7199a2f7b4692ba6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/player-verification.json",
+      "sha256": "c5431c361ef165bbcfba2ccdaa90e1242049a218b43e398853dddc232db7ff8e"
+    }
+  ],
+  "limitations": [
+    "No engine build or new normal-input runtime course for this unused primitive. The separate preceding settled-capture commit has its own eight actual continuations.",
+    "Full component inventory2965 normal and selected ESM4* sanitizer818 match XML, with zero failures/skips. Sanitizer leak checking is disabled; UBSan halts. Existing23 compiler warnings in each log are retained.",
+    "Original variant oracle supplies valid ordered collection lists and CRT thread storage; selectors and initialized CRT state update execute. The960 contact dispatcher and168 family probes have separately declared actor/resource boundaries, not real-game observations.",
+    "Native dispatched attacker Recoil remains absent from the normal contact adapter. Normal Recoil/Stagger/BlockAttack factories, Player distinct/parallel owners and FP strikes, mastery/effects/creatures/powers, audio and full input/FPS/cancellation/restart acceptance remain open."
+  ]
+}

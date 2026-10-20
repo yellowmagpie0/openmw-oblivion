@@ -1381,6 +1381,25 @@ namespace ESM4
         return {next, static_cast<std::uint16_t>((next >> 16) & 0x7fff)};
     }
 
+    NativeSequenceSelection selectNativeSequenceVariant(NativeSequenceCollection collection,
+        std::uint32_t count, std::uint8_t requested, std::uint32_t randomState)
+    {
+        if (count == 0 || count > std::numeric_limits<std::int32_t>::max())
+            throw std::invalid_argument("unsupported native sequence collection size");
+        if (collection == NativeSequenceCollection::Single)
+        {
+            if (count != 1)
+                throw std::invalid_argument("native single sequence collection requires one item");
+            return {0, randomState, 0};
+        }
+        if (collection != NativeSequenceCollection::Multiple)
+            throw std::invalid_argument("invalid native sequence collection kind");
+        if (requested < 128 && requested < count)
+            return {requested, randomState, 0};
+        const auto draw = combatRandomDraw(randomState);
+        return {draw.mValue % count, draw.mNextState, 1};
+    }
+
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
     {
         for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,

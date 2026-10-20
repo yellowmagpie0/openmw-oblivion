@@ -8741,3 +8741,45 @@ images. The two historical positive-contact PCM failures retain their original
 failed status. Static recovery images do not establish original motion/camera
 parity or close the separate held-block skin issue. The broad M15S4 gaps listed
 above remain open.
+
+### Native sequence variant selection and contact reaction dispatch
+
+The immutable `selectNativeSequenceVariant` helper now models original Single
+and Multiple collections using explicit collection identity, requested byte and
+CRT state. It returns the index, next state and draw count without consuming
+live RNG. Single ignores the request and draws nothing. Multiple uses an
+in-range nonnegative signed-byte index directly; negative or out-of-range
+requests consume one draw and select by unsigned remainder. A one-item Multiple
+collection still draws. Malformed kinds/counts reject; counts above INT_MAX
+remain outside this helper's supported domain.
+
+The hash-identified original selectors and actual initialized CRT update pass
+38,400 cases across all request bytes, ten collection/count contexts, five
+seeds and three x87 control words. Only CRT thread storage is supplied. A
+standalone production-C++ comparison matches every emitted row. Two new unit
+tests retain 23 original goldens and reject malformed collections. Full normal
+component checks pass 2,965 tests; selected ESM4* sanitizer checks pass 818 tests
+in 64 suites. Inventories match XML with no failures or skips. Existing compiler
+warnings remain; sanitizer leak detection is disabled and UBSan halts.
+
+A separate 960-case original contact-dispatch probe establishes that positive
+absorbed fraction requests defender BlockHit/BlockAttack. With no counter,
+nonprojectile contacts also request attacker Recoil regardless of the disarm
+helper's result. At zero fraction, this block-reaction branch requires an
+unarmed defender with Journeyman-or-higher HandToHand. Supplied mastery,
+counter/disarm results and reaction-call boundaries are explicit; this probe
+establishes dispatch rather than actual drops or rendered playback. Another
+168 drawn/standing selector cases confirm that shields override BlockHit family,
+while Recoil and Stagger retain the weapon family.
+
+The preserved full NPC helper matrix shows two Multiple draws: group preflight
+and playback. The second selects the played resource. Player preflight uses its
+active camera cache; later first-person matching uses resource basenames and
+can require another draw. The new primitive represents one collection operation;
+it must not substitute for that complete caller order.
+
+[`M15-SEQUENCE-VARIANT-VERIFICATION.json`](M15-SEQUENCE-VARIANT-VERIFICATION.json)
+pins source, checks, probes and comparison evidence. This chunk does not wire
+normal contacts to Recoil and has no new engine/runtime acceptance. That wiring
+must join both selection draws to the existing atomic contact RNG transaction
+and preserve interrupted sequence ownership. Full M15S4 remains incomplete.
