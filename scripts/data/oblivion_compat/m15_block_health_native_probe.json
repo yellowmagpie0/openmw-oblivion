@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "purpose": "Reproduce original blocked-contact Health PC24 arithmetic; actual control word observed at5FF8F3 and5FF914 for two normal original Player blocks.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "control_word": 127,
+  "native_slice": [
+    6289651,
+    6289684
+  ],
+  "stack_input_offsets": [
+    24,
+    48
+  ],
+  "stack_output_offset": 24,
+  "observed_inputs": [
+    [
+      1075908930,
+      1020054732,
+      1075645037
+    ],
+    [
+      1075363718,
+      1020054732,
+      1075113456
+    ]
+  ],
+  "composed_inputs": [
+    [
+      1065040190,
+      1019094836
+    ],
+    [
+      1065431859,
+      1020054732
+    ]
+  ],
+  "edge_damage_bits": [
+    0,
+    2147483648,
+    1,
+    8388607,
+    8388608,
+    1065353216,
+    1084227584,
+    2139095039
+  ],
+  "edge_fraction_bits": [
+    0,
+    2147483648,
+    1,
+    855638016,
+    864026624,
+    1048576000,
+    1056964608,
+    1065353215,
+    1065353216
+  ],
+  "seed": 6289651,
+  "generated_pairs": 1024,
+  "expected_cases": 1100,
+  "live_evidence": "build/oblivion-compat/m15/S4/block-health-fpu-original-live-01",
+  "scope": "Prescribed arithmetic and independently recorded original contacts; no full normal contact factory/mastery/view/input/restart acceptance claim."
+}

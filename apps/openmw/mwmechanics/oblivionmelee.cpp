@@ -854,7 +854,7 @@ namespace MWMechanics
                 result.mFraction, !item.isEmpty(), ESM4::buildBlockCostSettings(settings),
                 ESM4::buildCombatMasterySettings(settings));
             result.mDebit = costs.mFatigueDebit;
-            result.mRemaining = static_cast<float>(double(remaining) * (1.0 - result.mFraction));
+            result.mRemaining = ESM4::blockedHealthDamage(remaining, result.mFraction);
             if (costs.mBlockingItemWear > 0 && !(player && world.getGodModeState()))
             {
                 const double current = itemCondition;

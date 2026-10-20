@@ -8554,3 +8554,61 @@ distinct/parallel Player layers, independent native FP strikes, creature and
 mastery/effect branches, directional powers, actual block-Health precision,
 the failed sanitizer audio criterion, clean held-block rendering and the complete view/input/FPS/cancellation and
 in-flight restart matrix remain open.
+
+## Original blocked-contact Health precision
+
+The formerly open block-Health control-word question is resolved for the
+observed original normal Player-block path. A separate cloned prefix loaded the
+pristine save, established equipment/placement/combat through logged console
+setup and held normal mouse block against Dreth's ordinary attacks. Read-only
+GDB observations at `5FF8F3` and `5FF914` recorded **007F** for two actual Player
+blocked contacts, with actual Player/attacker identity and input/output bits.
+The second live Health store distinguishes precision: PC24 gives1075113456,
+while027F/037F give1075113455. Both actual outputs exactly match independent
+execution of the original instructions. No damage/contact calls or resource/CW
+writes were injected. Software breakpoint machinery is explicitly declared.
+The game and owned Steam wrapper exited0, the pristine save hash was retained,
+and all private inputs were restored with source-prefix hashes unchanged.
+
+`blockedHealthDamage` now rounds both subtraction and multiplication to24
+significant bits with extended exponent range, using the existing exact binary
+arithmetic primitives before the final float store. Both armed and unarmed
+ordinary block preparation call it. Invalid supported-domain inputs are
+rejected. The editable native probe regenerates **1,100 exact expected rows**,
+including both live contacts, composed two-contact inputs, boundary floats and
+seeded finite pairs. A standalone run reproduces the committed corpus byte for
+byte; a mismatched-image negative control produces no output directory.
+
+Normal components pass **2,963 / 280 suites**; the sanitizer ESM4 component
+selection passes **816 / 64 suites**. Both engine profiles pass **1,766 / 125
+suites**, with exact inventories/XML and no failures or skips. The tested C++
+fingerprint is `b483577b82cc48029c6a125ddb85790b14875f5abe40127dba393b1a0762f127`
+(parent `37758da630`). After both helpers terminated, only the standalone
+Python/JSON probe and expectation metadata changed; final Python checks pass
+**338 tests**. ASan leak detection is disabled; this is not leak coverage.
+The first environment monitor incorrectly expected engine options for the
+component selection and failed before retaining a snapshot. Its failure is
+preserved. Component options are the helper's configured values; actual engine
+ASan/UBSan options have a separate successful live-process capture.
+
+Fresh normal/sanitizer × first/third-person two-contact courses now require
+only cumulative Player HealthDamage **-1.9427038431167603** (bits3220744837).
+The wider alternative is removed from the public expectation. All four strict
+state/restart audits pass, including unchanged Fatigue/condition expectations,
+inventories, RNG505908858, next action4, paired reaction replacement and fresh
+unheld recovery without replay. All four fresh courses pass the original two/zero PCM criterion, with
+four played native block requests before restart and none after. All eight
+actual images were directly reviewed for the intended guard/ready camera
+frames; interpolation and the held-block skin issue remain outside that
+acceptance. These outcomes are recorded separately per course. The earlier failed sanitizer PCM criterion is
+retained; a diagnostic matches its two stock02 impacts separated by20ms, which
+does not retroactively change its original failed criterion.
+
+The evidence receipt is
+[`M15-BLOCK-HEALTH-PRECISION-VERIFICATION.json`](M15-BLOCK-HEALTH-PRECISION-VERIFICATION.json).
+Reproduce the arithmetic corpus with the Unicorn environment and
+`scripts/tes4_m15_block_health_oracle.py ORIGINAL_EXE NEW_EVIDENCE_DIRECTORY`.
+This closes the identified Health arithmetic discrepancy, not complete native
+cost/wear/mastery arithmetic, full original contact dispatch or full M15S4.
+All other unresolved implementation and view/input/FPS/cancellation/restart
+requirements above remain open.

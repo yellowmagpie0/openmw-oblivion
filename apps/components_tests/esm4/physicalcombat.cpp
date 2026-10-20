@@ -5679,3 +5679,28 @@ TEST(ESM4NativeAnimationCatalog, NpcBlockHitPrefixesMatchOriginalActorSelector)
     invalid.mWeaponDrawn115 = true;
     EXPECT_THROW(ESM4::nativeNpcBlockHitGroup(invalid), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, BlockHealthMatchesOriginalPc24StoresIncludingLiveContacts)
+{
+    struct Row { std::uint32_t damage, fraction, expected; };
+    constexpr Row rows[]{
+#include "blockhealth_expected.inc"
+    };
+    for (const auto& row : rows)
+    {
+        SCOPED_TRACE(::testing::Message() << row.damage << '/' << row.fraction);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::blockedHealthDamage(
+            std::bit_cast<float>(row.damage), std::bit_cast<float>(row.fraction))), row.expected);
+    }
+}
+
+TEST(ESM4PhysicalCombat, BlockHealthRejectsMalformedInputs)
+{
+    for (float bad : {-1.f, std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::blockedHealthDamage(bad, .5f), std::invalid_argument);
+        EXPECT_THROW(ESM4::blockedHealthDamage(5, bad), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::blockedHealthDamage(5, std::nextafter(1.f, 2.f)), std::invalid_argument);
+}

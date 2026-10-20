@@ -510,6 +510,9 @@ namespace ESM4
         float damage, float absorbedFraction, bool hasBlockingItem,
         const BlockCostSettings& settings, const CombatMasterySettings& mastery);
     void validateBlockCostSettings(const BlockCostSettings& settings);
+    // Original5FF8F3 rounds subtraction and multiplication to x87 PC24
+    // before publishing the binary32 remaining Health damage.
+    float blockedHealthDamage(float damage, float absorbedFraction);
     // Native accepted block adjusts the previously stored body-armor wear.
     // Preserve the intermediate remainder store; an unarmed block leaves it
     // unchanged, while complete equipped absorption suppresses this wear.

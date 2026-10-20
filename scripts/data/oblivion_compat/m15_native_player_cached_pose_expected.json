@@ -41,7 +41,6 @@
     "body_pose_tracks": 64,
     "first_person_pose_tracks": 66,
     "player_health_damage_bits": [
-      3220744836,
       3220744837
     ],
     "player_fatigue_damage_bits": 3256889694,
@@ -56,7 +55,11 @@
       2,
       0
     ],
-    "numeric_precision_gate": "Block Health-store actual control word remains unobserved; allow only the independently executed native PC24/wider alternatives. No identified original-runtime Health precision acceptance.",
+    "numeric_precision_gate": "Two actual original normal Player blocks directly observe007F at5FF8F3/5FF914. Require only the independently executed PC24 composed fixture result; no wider alternative or tolerance. Full M15S4 remains incomplete.",
     "audio_scope": "Two temporal stock-wave clusters in this slow-rendering course; configured cap60 is not measured60FPS. Each real contact has two native played requests. Threshold0.75 inherited unchanged."
+  },
+  "block_health_precision_evidence": {
+    "path": "build/oblivion-compat/m15/S4/block-health-fpu-original-live-01/verification.json",
+    "sha256": "273b163c4583b7a9d1eb4c35731e673ed16e1ee70374f8d2e3cedb50adebba60"
   }
 }

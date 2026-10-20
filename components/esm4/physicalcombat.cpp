@@ -1320,6 +1320,17 @@ namespace ESM4
         return result;
     }
 
+    float blockedHealthDamage(float damage, float absorbedFraction)
+    {
+        nonnegative(damage);
+        nonnegative(absorbedFraction);
+        if (absorbedFraction > 1)
+            throw std::invalid_argument("invalid native block absorbed fraction");
+        if (absorbedFraction == 0)
+            return damage;
+        return rounded(multiplySingle(damage, addSingle(1.0, -double(absorbedFraction))));
+    }
+
     float blockedArmorWear(float wear, float absorbedFraction, bool unarmedBlock)
     {
         nonnegative(wear);
