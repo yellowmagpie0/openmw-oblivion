@@ -489,9 +489,21 @@ namespace MWMechanics
         }
         const bool blockHit = blockAccepted && !contact->isEmpty()
             && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4);
-        auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, deltas, blockHit);
+        // The verified nonprojectile, positive-absorption branch requests
+        // Recoil on an intact NPC attacker too. Projected broken equipment,
+        // Player strike/FP replacement and zero-absorption unarmed reactions
+        // need their separate resource/ownership paths.
+        const bool attackerRecoil = blockHit && result.mBlockAbsorbedFraction > 0
+            && attacker.getType() == ESM::REC_NPC_4 && attacker != world.getPlayerPtr()
+            && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                return change.mOwner == attacker
+                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+            });
+        auto prepared = nativeWorld->prepareOblivionPhysicalContact(
+            actionId, attacker, *contact, deltas, blockHit, attackerRecoil);
         if (!prepared || !prepared->commit())
             return std::nullopt;
+        result.mRandomDraws = prepared->randomDraws();
         return result;
     }
 

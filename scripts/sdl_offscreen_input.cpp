@@ -4,6 +4,7 @@
 // Opt in with LD_PRELOAD and OPENMW_SDL_INPUT pointing to an append-only file.
 // Lines: <sequence starting at 1> <down|up> <SDL scancode>, or <sequence> quit.
 // Also: <sequence> focus, or <sequence> text <hex-encoded printable ASCII>.
+// Relative mouse input: <sequence> motion <signed x delta> <signed y delta>.
 // Complete lines are consumed only after SDL's existing event queue is empty.
 // The helper supplies input events; it has no engine or game-state interface.
 
@@ -87,6 +88,18 @@ namespace
                         return fail(event, "text must be printable ASCII");
                     event.text.text[i / 2] = static_cast<char>(high * 16 + low);
                 }
+            }
+            else if (operation == "motion")
+            {
+                Sint32 x = 0, y = 0;
+                if (!(fields >> x >> y) || (fields >> extra))
+                    return fail(event, "invalid relative mouse motion");
+                event.type = SDL_MOUSEMOTION;
+                event.motion.timestamp = SDL_GetTicks();
+                event.motion.windowID = 1;
+                event.motion.state = SDL_GetMouseState(&event.motion.x, &event.motion.y);
+                event.motion.xrel = x;
+                event.motion.yrel = y;
             }
             else
             {

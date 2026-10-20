@@ -27386,3 +27386,117 @@ TEST(OblivionWorldTest, PlayerCapturedReactionRestartsAfterEitherViewFinishesInd
         EXPECT_EQ(state->mFirstPerson->mReaction->mPoseSnapshot, request.mVictimFirstPerson->mReaction->mPoseSnapshot);
     }
 }
+
+TEST(OblivionWorldTest, PairedBlockAndRecoilPublishTheAggregateRandomTransitionOnce)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+    const auto other = addNativeNpc(fixture, 0x803), otherVictim = addNativeNpc(fixture, 0x804);
+    for (const auto& actor : {attacker, victim, other, otherVictim})
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+    auto& service = *world.getOblivionCombatService();
+    const auto a = attacker.getCellRef().getFormKey(), v = victim.getCellRef().getFormKey();
+    for (const auto& actor : {attacker, victim, other, otherVictim})
+        service.initializeConstructedActorProcess(actor.getCellRef().getFormKey());
+    const auto id = service.beginMeleeStrike(a, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+    ASSERT_TRUE(service.bindMeleePlayback(id, a));
+    MWMechanics::OblivionPhysicalContactDeltas deltas{-1, -2, 0, 0};
+    deltas.mAttackerReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Recoil, "handtohandrecoil"};
+    deltas.mVictimReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"};
+    deltas.mRandomTransition = service.prepareCombatRandom(2);
+    ASSERT_EQ(deltas.mRandomTransition->mNextState, 3357800067u);
+    const auto health = service.getNonPlayerValue(victim, 8), fatigue = service.getNonPlayerValue(attacker, 10);
+    auto stale = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+    ASSERT_TRUE(stale);
+    EXPECT_EQ(stale->randomDraws(), 2u);
+    EXPECT_EQ(service.combatRandomState(), 1u);
+    EXPECT_TRUE(service.findMeleeState(a)->mStrike);
+    EXPECT_FALSE(service.findMeleeState(v));
+
+    // Another actor's contact changes only the shared stream. The prepared
+    // block/recoil must not publish an obsolete selection or consume its ID.
+    const auto foreign = world.beginOblivionPhysicalAction(other);
+    MWMechanics::OblivionPhysicalContactDeltas advance{};
+    advance.mRandomTransition = service.prepareCombatRandom(1);
+    ASSERT_TRUE(world.commitOblivionPhysicalContact(foreign, other, otherVictim, advance));
+    ASSERT_EQ(service.combatRandomState(), 2745024u);
+    EXPECT_FALSE(stale->isValid());
+    EXPECT_FALSE(stale->commit());
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
+    EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue);
+    EXPECT_TRUE(service.isActionPending(id, a));
+    EXPECT_TRUE(service.findMeleeState(a)->mStrike);
+
+    deltas.mRandomTransition = service.prepareCombatRandom(2);
+    ASSERT_EQ(deltas.mRandomTransition->mNextState, 415139642u);
+    auto prepared = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+    ASSERT_TRUE(prepared);
+    EXPECT_EQ(prepared->randomDraws(), 2u);
+    ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(service.combatRandomState(), 415139642u);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 2);
+    EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue - 1);
+    EXPECT_FALSE(service.findMeleeState(a)->mStrike);
+    ASSERT_TRUE(service.findMeleeState(a)->mReaction);
+    ASSERT_TRUE(service.findMeleeState(v)->mReaction);
+    EXPECT_EQ(service.findMeleeState(a)->mReaction->mContactId, id);
+    EXPECT_EQ(service.findMeleeState(v)->mReaction->mContactId, id);
+    EXPECT_EQ(service.getProcessAction(a), 7);
+    EXPECT_EQ(service.getProcessAction(v), 6);
+    EXPECT_FALSE(prepared->commit());
+    EXPECT_EQ(service.combatRandomState(), 415139642u);
+}
+
+TEST(OblivionWorldTest, NpcRecoilDoesNotSelectFromEquipmentScheduledForWithdrawal)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    MWClass::Weapon::registerSelf();
+    const auto attacker = addNativeNpc(fixture, 0x801), victim = addNativeNpc(fixture, 0x802);
+    ASSERT_TRUE(world.activateOblivionActor(attacker));
+    ASSERT_TRUE(world.activateOblivionActor(victim));
+    auto& service = *world.getOblivionCombatService();
+    const auto a = attacker.getCellRef().getFormKey();
+    service.initializeConstructedActorProcess(a);
+    service.initializeConstructedActorProcess(victim.getCellRef().getFormKey());
+    ESM4::Weapon native{};
+    native.mId = {0x940, 0}; native.mFlags = 0x400; native.mData.health = 100;
+    native.mData.speed = native.mData.reach = 1;
+    const auto base = ESM::FormKey::content("headless.esm", 0x940);
+    store.getWritable<ESM4::Weapon>().insertStatic(native, base);
+    ESM::Weapon projected; projected.blank(); projected.mId = ESM::RefId(native.mId);
+    projected.mData.mHealth = 100; store.insertStatic(projected);
+    ESM4::RuntimeInventoryItem carried; carried.mBase = base; carried.mCount = 1;
+    carried.mCondition = 1.f; carried.mEquippedSlots = ESM4::InventorySlotWeapon;
+    const auto plan = MWWorld::OblivionProfileServices::prepareActorInventory(
+        store, ESM::FormKeyResolver({"headless.esm"}), {carried});
+    auto staged = MWWorld::OblivionProfileServices::stageActorInventory(plan);
+    auto& inventory = attacker.getClass().getInventoryStore(attacker);
+    inventory.swapPreparedContents(*staged);
+    const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    const auto id = world.beginOblivionPhysicalAction(attacker);
+    MWMechanics::OblivionPhysicalContactDeltas deltas{0, -2, 0, 0};
+    auto change = MWMechanics::captureOblivionPhysicalConditionChange(attacker, item, 0);
+    change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+    deltas.mConditionChanges.push_back(change);
+    deltas.mRandomTransition = service.prepareCombatRandom(2);
+    const float health = service.getNonPlayerValue(victim, 8);
+    EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, deltas, true, true));
+    EXPECT_TRUE(service.isActionPending(id, a));
+    EXPECT_EQ(service.combatRandomState(), 1u);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
+    EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 1.f);
+    EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), item);
+    // The withdrawal transaction itself remains valid; the rejected addition
+    // was a Recoil selection from the old equipped weapon.
+    auto withdrawal = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+    ASSERT_TRUE(withdrawal);
+    EXPECT_EQ(withdrawal->randomDraws(), 2u);
+    ASSERT_TRUE(withdrawal->commit());
+    EXPECT_EQ(service.combatRandomState(), 3357800067u);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 2);
+    EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+    EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0.f);
+}

@@ -9,6 +9,31 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_relative_mouse_motion_uses_signed_sdl_delta_protocol(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send = mock.Mock()
+        for x, y in [(-31, 80), (0, 0), (-(2 ** 31), 2 ** 31 - 1)]:
+            action = {"type": "mouse_move", "x": x, "y": y}
+            replay.validate({"sdl_offscreen_input": True, "actions": [action]})
+            control.action(action)
+            control.send.assert_called_with("motion", f"{x} {y}")
+
+    def test_relative_mouse_motion_rejects_malformed_deltas_before_delivery(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send = mock.Mock()
+        for value in [None, True, 1.0, "1", "1\n2 quit", float("nan"), float("inf"),
+                      -(2 ** 31) - 1, 2 ** 31]:
+            for axis in ("x", "y"):
+                action = {"type": "mouse_move", "x": 0, "y": 0, axis: value}
+                with self.subTest(action=action):
+                    with self.assertRaises(ValueError):
+                        replay.validate({"sdl_offscreen_input": True, "actions": [action]})
+                    with self.assertRaises(ValueError):
+                        control.action(action)
+        control.send.assert_not_called()
+
     def test_key_map_and_rejection_of_chords_or_raw_codes(self):
         for name, code in [("a", 4), ("z", 29), ("1", 30), ("9", 38), ("0", 39),
                            ("F5", 62), ("F12", 69), ("Return", 40), ("grave", 53),

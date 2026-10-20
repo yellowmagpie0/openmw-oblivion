@@ -46,6 +46,14 @@ int main() {
                           << " " << static_cast<int>(e.window.event) << std::endl;
                 continue;
             }
+            if (line == "motion") {
+                const auto* keys = SDL_GetKeyboardState(nullptr);
+                std::cout << "motion " << result << " " << e.type << " " << e.motion.windowID
+                          << " " << e.motion.which << " " << e.motion.state
+                          << " " << e.motion.xrel << " " << e.motion.yrel
+                          << " " << static_cast<int>(keys[SDL_SCANCODE_A]) << std::endl;
+                continue;
+            }
             const auto* keys = SDL_GetKeyboardState(&count);
             std::cout << result << " " << e.type << " " << e.key.keysym.scancode
                       << " " << e.key.keysym.sym << " " << e.key.keysym.mod
@@ -141,6 +149,28 @@ int main() {
         self.assertEqual(self.command(process, "text"), "text 1 771 tai")
         self.assertEqual(self.command(process, "window"), "window 1 512 1 12")
         self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_relative_motion_preserves_native_queue_and_held_keys(self):
+        process = self.launch()
+        self.append("1 down 4\n2 motion -31 80\n3 motion 0 -2147483648\n4 up 4\n")
+        self.assertEqual(self.event(process)[1:4], [768, 4, 97])
+        self.assertEqual(self.command(process, "push"), "pushed")
+        self.assertEqual(self.event(process)[1], 32768)
+        self.assertEqual(self.command(process, "motion"), "motion 1 1024 1 0 0 -31 80 1")
+        self.assertEqual(self.command(process, "motion"), "motion 1 1024 1 0 0 0 -2147483648 1")
+        self.assertEqual(self.event(process)[5], 0)
+        self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_malformed_relative_motion_is_not_delivered(self):
+        for index, arguments in enumerate(["0", "0 1 extra", "2147483648 0", "0 -2147483649",
+                                            "1.5 0", "nan 0"]):
+            with self.subTest(arguments=arguments):
+                self.input = self.root / f"{self._testMethodName}-{index}.txt"
+                self.input.write_text("")
+                process = self.launch()
+                self.append(f"1 motion {arguments}\n")
+                self.assertEqual(self.event(process)[1], 256)
+                self.assertFalse(Path(str(self.input) + ".delivered").exists())
 
     def test_text_rejects_controls_and_does_not_deliver_them(self):
         process = self.launch()

@@ -2640,16 +2640,27 @@ namespace MWWorld
     bool World::prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
         MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {
-        if (!mOblivionCombat || victim.isEmpty()) return false;
-        const bool player = victim == getPlayerPtr();
-        if ((!player && victim.getType() != ESM::REC_NPC_4)
-            || deltas.mVictimReaction || deltas.mVictimRetiringSequence || deltas.mVictimFirstPerson)
+        return prepareOblivionContactReaction(id, victim, ESM4::MeleeReactionKind::BlockHit, false, deltas);
+    }
+
+    bool World::prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
+        ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        auto& requested = attacking ? deltas.mAttackerReaction : deltas.mVictimReaction;
+        auto& retiring = attacking ? deltas.mAttackerRetiringSequence : deltas.mVictimRetiringSequence;
+        auto& firstPerson = attacking ? deltas.mAttackerFirstPerson : deltas.mVictimFirstPerson;
+        if (kind != ESM4::MeleeReactionKind::BlockHit && kind != ESM4::MeleeReactionKind::Recoil) return false;
+        if (!mOblivionCombat || actor.isEmpty()) return false;
+        const bool player = actor == getPlayerPtr();
+        if ((!player && actor.getType() != ESM::REC_NPC_4)
+            || (player && kind != ESM4::MeleeReactionKind::BlockHit)
+            || requested || retiring || firstPerson)
             return false;
-        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(victim));
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
         // Native group resolution can fail without suppressing the numerical
         // block consequence. A rendererless world has no live AnimData.
         if (!animation) return true;
-        const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const auto* values = mOblivionCombat->findActorValues(key);
         const auto* life = mOblivionCombat->findActorLife(key);
         if (!values || !life) return false;
@@ -2662,10 +2673,10 @@ namespace MWWorld
             // non-player native actors. Player uses the same live draw state
             // as its input/controller path after contact authority validation.
             const bool weaponDrawn = player
-                ? victim.getClass().getCreatureStats(victim).getDrawState() == MWMechanics::DrawState::Weapon
-                : captureOblivionActorDrawState(victim) == ESM4::ActorDrawState::Weapon;
+                ? actor.getClass().getCreatureStats(actor).getDrawState() == MWMechanics::DrawState::Weapon
+                : captureOblivionActorDrawState(actor) == ESM4::ActorDrawState::Weapon;
             if (!weaponDrawn) return false;
-            auto& inventory = victim.getClass().getInventoryStore(victim);
+            auto& inventory = actor.getClass().getInventoryStore(actor);
             ESM4::NativeNpcBlockHitGroupInput groupInput;
             groupInput.mWeaponDrawn115 = true;
             const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
@@ -2679,32 +2690,55 @@ namespace MWWorld
             }
             // Original5E57CA overrides only BlockIdle/BlockHit for a shield.
             if (const auto left = inventory.getSlot(InventoryStore::Slot_CarriedLeft);
-                left != inventory.end() && left->getType() == ESM::REC_ARMO)
+                kind == ESM4::MeleeReactionKind::BlockHit && left != inventory.end() && left->getType() == ESM::REC_ARMO)
                 groupInput.mShield = true;
-            groupInput.mMovementFlags = static_cast<std::uint16_t>((isSwimming(victim) ? 0x800 : 0)
-                | (isFlying(victim) ? 0x2000 : 0)
-                | (victim.getClass().getCreatureStats(victim).getStance(MWMechanics::CreatureStats::Stance_Sneak) ? 0x400 : 0));
+            groupInput.mMovementFlags = static_cast<std::uint16_t>((isSwimming(actor) ? 0x800 : 0)
+                | (isFlying(actor) ? 0x2000 : 0)
+                | (actor.getClass().getCreatureStats(actor).getStance(MWMechanics::CreatureStats::Stance_Sneak) ? 0x400 : 0));
             const auto& catalog = animation->getNativeReactionCatalog();
             std::vector<std::uint16_t> available;
             for (const auto& entry : catalog) available.push_back(entry.mNativeGroup);
             const auto selected = ESM4::resolveNativeReactionSequenceGroup(
-                ESM4::nativeNpcBlockHitGroup(groupInput), available);
+                static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00)
+                    | (kind == ESM4::MeleeReactionKind::BlockHit ? 28 : 30)), available);
             if (!selected) return true;
             const auto entry = std::find_if(catalog.begin(), catalog.end(), [&](const auto& candidate) {
                 return candidate.mNativeGroup == *selected;
             });
-            // Installed ordinary BlockHit collections are Single. Multiple
-            // selection must precede armor-wear RNG in the shared transaction;
-            // that broader RNG adapter is not admitted by this path yet.
-            if (entry == catalog.end() || entry->mGroups.size() != 1) return false;
-            const std::string group = entry->mGroups.front();
-            Log(Debug::Verbose) << (player ? "M15 Player block resource selected: actor="
-                                          : "M15 NPC block resource selected: actor=") << key.serialize()
-                                << " cause=" << id << " native_group=" << *selected << " group=" << group;
+            if (entry == catalog.end() || entry->mGroups.empty()
+                || entry->mGroups.size() > std::numeric_limits<std::int32_t>::max()) return false;
+            // Keep Player and BlockHit on their established Single path.
+            // Recoil's static catalog has native insertion order: a second
+            // resource promotes the freshly constructed cache to Multiple.
+            if (kind == ESM4::MeleeReactionKind::BlockHit && entry->mGroups.size() != 1) return false;
+            auto random = deltas.mRandomTransition;
+            const auto randomState = random ? random->mNextState : mOblivionCombat->combatRandomState();
+            const auto collection = entry->mGroups.size() == 1 ? ESM4::NativeSequenceCollection::Single
+                : ESM4::NativeSequenceCollection::Multiple;
+            const auto count = static_cast<std::uint32_t>(entry->mGroups.size());
+            // Actual5E5690/470D20 samples the collection during preflight;
+            // 477B60/476260 samples it again for playback. The first index is
+            // discarded, but both draws follow this contact's armor-wear RNG.
+            const auto preflight = ESM4::selectNativeSequenceVariant(collection, count, 255, randomState);
+            const auto playback = ESM4::selectNativeSequenceVariant(collection, count, 255, preflight.mNextState);
+            const auto extraDraws = preflight.mDraws + playback.mDraws;
+            if (extraDraws)
+            {
+                const auto draws = (random ? random->mDraws : 0) + extraDraws;
+                random = mOblivionCombat->prepareCombatRandom(draws);
+                if (random->mNextState != playback.mNextState) return false;
+            }
+            const std::string group = entry->mGroups[playback.mIndex];
+            Log(Debug::Verbose) << (kind == ESM4::MeleeReactionKind::Recoil
+                    ? "M15 NPC recoil resource selected: actor="
+                    : player ? "M15 Player block resource selected: actor=" : "M15 NPC block resource selected: actor=")
+                                << key.serialize() << " cause=" << id << " native_group=" << *selected
+                                << " group=" << group << " selection_draws=" << extraDraws
+                                << " variant=" << playback.mIndex;
             const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(*animation, group, true);
             const auto* source = animation->getControllerSequenceMetadata(group);
             if (!source || source->mWeight != 1) return false;
-            ESM4::RuntimeMeleeReaction reaction{id, ESM4::MeleeReactionKind::BlockHit, group};
+            ESM4::RuntimeMeleeReaction reaction{id, kind, group};
             const auto* previous = mOblivionCombat->findMeleeState(key);
             if (player)
             {
@@ -2749,8 +2783,8 @@ namespace MWWorld
                 reaction.validate(); mirror.validate();
                 const float firstClock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
                     : mOblivionCombat->animationClock(key);
-                deltas.mVictimFirstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, std::move(mirror)};
-                deltas.mVictimReaction = std::move(reaction);
+                firstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, std::move(mirror)};
+                requested = std::move(reaction);
                 Log(Debug::Verbose) << "M15 Player first-person block resource selected: actor=" << key.serialize()
                                     << " cause=" << id << " native_group=" << *selected << " group=" << firstGroup
                                     << " previous_cause=" << (previous && previous->mReaction
@@ -2769,7 +2803,8 @@ namespace MWWorld
                 // Original same-cached clamp restart owns one object and no
                 // outgoing duplicate, even when its previous use is retiring.
                 reaction.validate();
-                deltas.mVictimReaction = std::move(reaction);
+                requested = std::move(reaction);
+                deltas.mRandomTransition = random;
                 return true;
             }
             std::optional<ESM4::RuntimeRetiringMeleeSequence> outgoing;
@@ -2812,13 +2847,14 @@ namespace MWWorld
                 reaction.mSequenceTiming.mEaseEnd = duration;
             }
             reaction.validate();
-            deltas.mVictimReaction = std::move(reaction);
-            deltas.mVictimRetiringSequence = std::move(outgoing);
+            requested = std::move(reaction);
+            retiring = std::move(outgoing);
+            deltas.mRandomTransition = random;
             return true;
         }
         catch (const std::exception& error)
         {
-            Log(Debug::Verbose) << "M15 block reaction preparation rejected: actor=" << key.serialize()
+            Log(Debug::Verbose) << "M15 contact reaction preparation rejected: actor=" << key.serialize()
                                 << " reason=" << error.what();
             return false;
         }
@@ -2847,6 +2883,7 @@ namespace MWWorld
         MWPhysics::PhysicsSystem* mPhysics;
         Scene* mScene;
         bool mGodMode;
+        unsigned mRandomDraws = 0;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
@@ -2857,6 +2894,11 @@ namespace MWWorld
     World::PreparedOblivionPhysicalContact::PreparedOblivionPhysicalContact(std::unique_ptr<Data> data)
         : mData(std::move(data)) {}
     World::PreparedOblivionPhysicalContact::~PreparedOblivionPhysicalContact() = default;
+
+    unsigned World::PreparedOblivionPhysicalContact::randomDraws() const noexcept
+    {
+        return mData ? mData->mRandomDraws : 0;
+    }
 
     bool World::PreparedOblivionPhysicalContact::isValid() const noexcept
     {
@@ -2895,9 +2937,9 @@ namespace MWWorld
 
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit)
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
     {
-        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas, blockHit);
+        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas, blockHit, attackerRecoil);
         if (!contact) return nullptr;
         std::vector<EquippedWeaponDrop> drops;
         for (const auto& change : deltas.mConditionChanges)
@@ -2941,7 +2983,7 @@ namespace MWWorld
 
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactResources(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit)
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
     {
         if (!mOblivionCombat || attacker.isEmpty())
             return nullptr;
@@ -2954,6 +2996,11 @@ namespace MWWorld
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
             return nullptr;
+        if (attackerRecoil && (!blockHit || player || attacker.getType() != ESM::REC_NPC_4
+                || std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                    return change.mOwner == attacker
+                        && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
+                }))) return nullptr;
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
@@ -2969,12 +3016,15 @@ namespace MWWorld
             }))
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
-            if (preparedDeltas.mVictimReaction)
-            {
-                contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
-                    essential, recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
-                if (!contact) return nullptr;
-            }
+        }
+        if (attackerRecoil && contact->victimRemainsAlive()
+            && !prepareOblivionContactReaction(id, attacker, ESM4::MeleeReactionKind::Recoil, true, preparedDeltas))
+            return nullptr;
+        if (preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction)
+        {
+            contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
+                essential, recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+            if (!contact) return nullptr;
         }
         auto data = std::make_unique<PreparedOblivionPhysicalContact::Data>();
         data->mWorld = this;
@@ -2985,6 +3035,7 @@ namespace MWWorld
         data->mPhysics = mPhysics.get();
         data->mScene = mWorldScene.get();
         data->mGodMode = getGodModeState();
+        data->mRandomDraws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws : 0;
         data->mContact = std::move(contact);
         for (const auto& [owner, requested] : std::array<std::pair<Ptr, bool>, 2>{{
                  {attacker, preparedDeltas.mAttackerReaction.has_value()},

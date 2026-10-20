@@ -63,6 +63,7 @@ namespace ESM
 namespace ESM4
 {
     enum class ActorDrawState : std::uint8_t;
+    enum class MeleeReactionKind : std::uint8_t;
     struct RuntimeInventoryItem;
     struct RuntimeReferenceState;
     struct RuntimeLooseWeapon;
@@ -455,12 +456,15 @@ namespace MWWorld
             PreparedOblivionPhysicalContact& operator=(const PreparedOblivionPhysicalContact&) = delete;
             // Revalidate the selected World simulation after external admission.
             bool isValid() const noexcept;
+            unsigned randomDraws() const noexcept;
             // Scene admission may throw before any contact resources publish.
             bool commit();
         };
+        // Attacker Recoil currently requires an intact NPC on a blocked contact.
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContact(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false);
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
+            bool attackerRecoil = false);
         // Ordinary intact drawn NPC blocking. Missing native animation suppresses the
         // animation request; unsupported live bindings reject before contact.
         bool prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
@@ -1046,9 +1050,12 @@ namespace MWWorld
 
         void setActorActive(const MWWorld::Ptr& ptr, bool value) override;
     private:
+        bool prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
+            ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false);
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
+            bool attackerRecoil = false);
     };
 }
 

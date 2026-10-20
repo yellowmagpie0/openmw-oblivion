@@ -8783,3 +8783,81 @@ pins source, checks, probes and comparison evidence. This chunk does not wire
 normal contacts to Recoil and has no new engine/runtime acceptance. That wiring
 must join both selection draws to the existing atomic contact RNG transaction
 and preserve interrupted sequence ownership. Full M15S4 remains incomplete.
+
+### Intact NPC attacker Recoil on blocked contact
+
+Ordinary nonlethal, positive-absorption blocks now prepare an intact NPC
+attacker's Recoil together with the defender's BlockHit. The factory keeps the
+native drawn/movement family, does not apply BlockHit's shield override to
+Recoil, and uses the verified ordered stock-resource catalog. Both original
+Multiple operations are represented: discarded preflight and playback. Their
+RNG draws follow existing numerical/armor draws in the same immutable contact
+transition. A failed or stale preparation publishes neither reaction nor RNG.
+The final contact reports the aggregate draw count.
+
+The new Recoil retains the interrupted strike as a retiring sequence with its
+causal action, group, animation time and timing offsets. Its incoming body
+reaction owns action 7. The existing service publishes both reactions, resources,
+equipment and shared RNG once. Own projected equipment withdrawal is excluded
+from this new factory path so pre-break equipment cannot select a Recoil group.
+Player attacker Recoil, zero-absorption unarmed reactions and fatal blocked-contact
+parity remain open.
+
+Two new World tests cover paired publication, invalidation by another actor's
+shared RNG commit, retry/once-only publication and rejection of Recoil selected
+from equipment scheduled for withdrawal. Full engine inventories pass 1,769
+cases each in normal and ASan/UBSan configurations, with no failures/skips.
+The four engine source hashes are unchanged through the later fixture/input
+corrections. The final Python suite passes 345 cases, including real SDL relative
+motion delivery, native queue priority, held-key preservation and malformed
+motion rejection. The SDL helper is separately compiled without sanitizer
+instrumentation; engine sanitizer leak detection is disabled.
+
+The editable synthetic opponent script now stops combat on a second normal
+activation, allowing the restored NPC Recoil to bind and recover naturally.
+A negative-Fatigue safety stop remains unused. The builder changes only SCTX
+and weapon speed 0.5, preserves saved local layout, and is independently reread;
+actual fork compilation/world use is checked separately in every runtime phase.
+Stock body/FP BlockHit and Recoil resources are used without loose KFs.
+
+The final normal/sanitizer by first/third camera matrix records eight phases:
+two preserved normal first02 captures reused read-only, two fresh normal05
+continuations and four fresh sanitized05 phases. Six new 05 process epochs are
+verified against actual executables and environments. Every state/epoch/master
+reference check passes. The source RNG 505908858 advances by two selections per
+blocked contact to 773150046. Both first saves contain real Recoil cause 3 and the
+retiring cause 3 strike; reloaded reactions recover, a fresh action 4 starts, and
+normal activation cancels it before any further contact. All Health/Fatigue
+channels, conditions, original-reference inventories and RNG remain exact after
+reload. No hit/miss/sound or new reaction selection replays.
+
+Direct inspection covers all eight contact/recovery images. First-person
+contact images show the raised Player blade and bent/raised NPC pose; the NPC
+is mostly occluded in third person. Final images show ready poses after both
+Player view owners and the NPC have recovered. Stills do not establish original
+motion/camera parity or resolve the separate held-block skin gate. The configured
+60 FPS cap is not measured 60 FPS; controller and FPS sweeps remain open.
+
+The preceding failures remain failed: runtime01 auto-StopCombat canceled the
+NPC before restored binding; runtime02 activation missed the NPC; runtime03's
+first relative event was suppressed while establishing the pointer reference;
+runtime04 recovered and saved but contained contradictory required-action and
+forbidden-selection checks. Fresh05 removes only that contradiction, retaining
+the strict one-canceled-action/zero-contact verifier. The initial build01
+interruption for the intact-equipment guard also retains no test acceptance.
+Unused inherited fixture annotations are corrected in an explicit errata;
+sealed protocols and original reports are preserved.
+
+Both normal first-phase PCM recordings pass the unchanged two-cluster rule.
+Sanitized first-person finds only one required cluster and third-person finds
+none; both positive-contact audio checks remain failed. All four continuations
+pass the zero-cluster replay check. Each first phase separately logs four
+successfully played block requests. Neither those requests nor successful state
+checks override the failed PCM criterion; these recordings are not rerun until
+a chance pass.
+
+[`M15-NPC-BLOCKED-RECOIL-VERIFICATION.json`](M15-NPC-BLOCKED-RECOIL-VERIFICATION.json)
+pins each independent validation layer and its audio outcomes. Full M15S4 remains incomplete: Player FP strike
+and distinct/parallel ownership, Stagger/BlockAttack, mastery/effects, remaining
+creature/power branches, input/FPS/cancellation/restart matrices and audio gates
+are still separate required work.

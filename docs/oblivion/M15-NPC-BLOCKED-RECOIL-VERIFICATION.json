@@ -1,0 +1,1493 @@
+{
+  "schema_version": 1,
+  "passed": false,
+  "state_runtime_passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Ordinary nonlethal intact nonplayer NPC attacker Recoil on a positive-absorption block, paired with existing defender BlockHit through the atomic contact. Player attacker Recoil and own equipment withdrawal are outside this path.",
+  "implementation": "Native drawn/movement family; shield overrides only BlockHit. Native ordered Recoil catalog with two discarded-preflight/playback selections appended to the contact RNG transition. Keep outgoing strike identity, timing and retirement; Recoil body owns action7. Publish values/equipment/reactions/RNG once.",
+  "source_parent": "1d0ddaf9353e338be360928e7ff11aeb7a85c2a1",
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "028ec12faec431c6ffc2a499b6d93f2ec4239130ffc1b8ad94fc6e4c0effa10a"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "bcca102bae61519612744300b1446aab3a1e9c1b37df6283281e5517f65b3896"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "f8a349859613674fb2db755e7ece6e905f321df97ab46bf252fadde371382054"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "c604f96be439c5bee2a7c3de00346bfe3918e73dd8ea5743f5bcfe67bdfc2756"
+    },
+    {
+      "path": "scripts/sdl_offscreen_input.cpp",
+      "sha256": "2cf79bd12106e81658313147284e2c03724004d008696ab714575734c536e2b5"
+    },
+    {
+      "path": "scripts/sdl_offscreen_replay.py",
+      "sha256": "6bf79a69b20ca3e4b2154a0f9212035afd56a2e3f23f89daa0ee5ff2b5f5b9ad"
+    },
+    {
+      "path": "scripts/tests/test_sdl_offscreen_input.py",
+      "sha256": "aad2b9723c17ca0cf709b972cd6cf779ec2dc790a4ff2ddb957289d8ce364ab9"
+    },
+    {
+      "path": "scripts/tests/test_sdl_offscreen_replay.py",
+      "sha256": "02c621b8504958a4ec670d23a96b14b459ff83c8722d7ff6f04fb0f05734b695"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_recoil_opponent.obscript",
+      "sha256": "92c8a23ab313a099f75fe5b180f881a47c233dec89fed6907e52b4719efa3640"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_recoil_opponent_fixture.json",
+      "sha256": "af89cca7d9258f01c73ba8435457b97c7430a70e4a935026816eab332bfc1398"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_npc_recoil_contacts.json",
+      "sha256": "18d73c306e445e3881687c7d93842fd6e041351c2f967547aec40a7321871afc"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_npc_recoil_contacts_continuation.json",
+      "sha256": "0e99db6e70a919bb6af8f1f3a1217dc05b78ae95c901a6aa340ca8c2e8f660ac"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_npc_recoil_contacts_third.json",
+      "sha256": "29689be499c437bc886cba95637ba10f407192df3f9b2fa01e09bfc7bfab0103"
+    }
+  ],
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-normal-02/verification.json",
+        "sha256": "f595479fe6a497e966f1e80f0e417021819df1b3e7314f8e606158f5bec5c2e3"
+      },
+      "tested_source": {
+        "head": "1d0ddaf9353e338be360928e7ff11aeb7a85c2a1",
+        "source_fingerprint": "64472991bf75721a6982c8cae2938f4e5f461e71ff4fde1d72052bf6952a9716"
+      },
+      "results": {
+        "engine": {
+          "executed": 1769,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c63cce858925deeb905db563e810b099ab7ac27b29e64657e2d3f98705eb323f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "095f9faa75d571b0efe8e7ca9dbead4df3610011ee69f63a122653878a828563",
+          "inventory_sha256": "6f7be1abf2230f384c60a2ebd67e224c5cf1e2088972f15c740596603967ba8b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-sanitized-02/verification.json",
+        "sha256": "a1f0b742b96ea9e9453c681f7099900c5e57be3d5f5e6a48862facb3bffe23ee"
+      },
+      "tested_source": {
+        "head": "1d0ddaf9353e338be360928e7ff11aeb7a85c2a1",
+        "source_fingerprint": "64472991bf75721a6982c8cae2938f4e5f461e71ff4fde1d72052bf6952a9716"
+      },
+      "results": {
+        "engine": {
+          "executed": 1769,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "929c0128c204d2e83429d51800a2b9dbbf781a62ae11c6fce23dc9603be096a3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "0fe01d886ce6fca5c2ec6834760cf9b321181569f41ec4b0baf0134c0720ca43",
+          "inventory_sha256": "6f7be1abf2230f384c60a2ebd67e224c5cf1e2088972f15c740596603967ba8b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-python-07/verification.json",
+        "sha256": "05aa1ba870d85d39d30b21653a4ec46ebb0ee60f9ea61c9e3a8b36b4c44a6983"
+      },
+      "tested_source": {
+        "head": "1d0ddaf9353e338be360928e7ff11aeb7a85c2a1",
+        "source_fingerprint": "0fd6f4b2d8483544557f6012db6e6639edf01ba98d308dd77cb67480b940ea64"
+      },
+      "results": {
+        "python": {
+          "executed": 345,
+          "passed": true,
+          "log_sha256": "ef977537d3d284d7603721bbd740d7321b55b2c1be3716c8be632ff5e70a7ae3"
+        }
+      }
+    }
+  ],
+  "engine_source_reuse": {
+    "passed": true,
+    "source_files": [
+      {
+        "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+        "sha256": "028ec12faec431c6ffc2a499b6d93f2ec4239130ffc1b8ad94fc6e4c0effa10a"
+      },
+      {
+        "path": "apps/openmw/mwworld/worldimp.cpp",
+        "sha256": "bcca102bae61519612744300b1446aab3a1e9c1b37df6283281e5517f65b3896"
+      },
+      {
+        "path": "apps/openmw/mwworld/worldimp.hpp",
+        "sha256": "f8a349859613674fb2db755e7ece6e905f321df97ab46bf252fadde371382054"
+      },
+      {
+        "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+        "sha256": "c604f96be439c5bee2a7c3de00346bfe3918e73dd8ea5743f5bcfe67bdfc2756"
+      }
+    ],
+    "tested_fingerprint": "64472991bf75721a6982c8cae2938f4e5f461e71ff4fde1d72052bf6952a9716",
+    "scope": "All4engine/source test files unchanged byte-for-byte after1769normal/SAN acceptance. No engine rebuild for fixture-only correction."
+  },
+  "native_movement": {
+    "passed": true,
+    "cases": 896,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "85b35b706da25217ae4502d9b136baccd59da5addb9799f745a6fbcfb56d36ad",
+    "weapon_prefixes": [
+      2,
+      3,
+      2,
+      3,
+      4,
+      5
+    ],
+    "scope": "Full original5E5690 selector and actual51A9B0 encoding; actual64B2D0/484E80/41DF10 shield-worn getter and64AD30 weapon-out byte getter execute. Actor animation-data and+27C/+334, process movement flags/current-weapon readers supplied. Explicit weapon entries supplied for supported types. Actual animation lookup470D20 records encoded group, no playback/model/runtime.",
+    "observation": "In drawn contexts, Recoil30 retains its weapon family with a shield; BlockHit28 uses family0 with shield. Both choose movement Swim before Fly before Sneak before standing, including combined flags. Explicit force-hand chooses family1. Resource fallback and activation remain outside this probe."
+  },
+  "native_dispatch_and_variant_receipt": {
+    "path": "docs/oblivion/M15-SEQUENCE-VARIANT-VERIFICATION.json",
+    "sha256": "f5f8850fae235d385ffd9ed7d5512355a368d7438708c7d95252de67c5a1229c"
+  },
+  "native_caller": {
+    "path": "build/oblivion-compat/m15/S4/native-reaction-caller-review-01/caller-verification.json",
+    "sha256": "14ee67686154550fd1ec824481df34759fdec2e678aeb1b0f564952dba775ab4"
+  },
+  "native_rng": {
+    "passed": true,
+    "source_state": 505908858,
+    "operations": [
+      {
+        "operation": "preflight",
+        "contact_id": 2,
+        "seed": 505908858,
+        "index": 1,
+        "next_state": 3539360597
+      },
+      {
+        "operation": "playback",
+        "contact_id": 2,
+        "seed": 3539360597,
+        "index": 1,
+        "next_state": 159719620
+      },
+      {
+        "operation": "preflight",
+        "contact_id": 3,
+        "seed": 159719620,
+        "index": 2,
+        "next_state": 2727824503
+      },
+      {
+        "operation": "playback",
+        "contact_id": 3,
+        "seed": 2727824503,
+        "index": 1,
+        "next_state": 773150046
+      }
+    ],
+    "expected_final_state": 773150046,
+    "scope": "Actual Multiple selector470BF0 and initialized CRT path47DF80/9859DD; only thread storage supplied. Full NPC caller two-sampling order independently pinned by prior120 helper contexts."
+  },
+  "structural_and_readback": {
+    "passed": true,
+    "scope": "Existing reproducible builder structural output and independent byte reinspection. Fork SCTX compiler/world and actual runtime remain subsequent layers. No loose KFs: stock body/FP BlockHit and Recoil resources come from the pinned BSA.",
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-assets-02/fixture/M15CachedBlockOpponent.esp",
+        "sha256": "2d64166b9a62002f9c2b1bdcb61e29accef1818ba64224a9f7aa7e35fdd1b6b2"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-assets-02/fixture/M15FatigueExpenditure.esp",
+        "sha256": "d361e0708d4f4537911977d21f1e49f9d7d1f621049868c4d06e15a45d1be2ea"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-assets-02/fixture/M15StationaryOpponent.esp",
+        "sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+      }
+    ],
+    "source_save": {
+      "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/staged-input.omwsave",
+      "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8"
+    },
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "builder_report": {
+      "kind": "synthetic-native-cached-block-overlay",
+      "record_count": 2,
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "script_sha256": "92c8a23ab313a099f75fe5b180f881a47c233dec89fed6907e52b4719efa3640",
+      "sha256": "2d64166b9a62002f9c2b1bdcb61e29accef1818ba64224a9f7aa7e35fdd1b6b2",
+      "style": {
+        "standard_size": 124,
+        "standard": {
+          "dodge_chance": 0,
+          "left_right_chance": 0,
+          "dodge_lr_min": 0.0,
+          "dodge_lr_max": 0.0,
+          "dodge_forward_min": 0.0,
+          "dodge_forward_max": 0.0,
+          "dodge_back_min": 0.0,
+          "dodge_back_max": 0.0,
+          "idle_min": 0.0,
+          "idle_max": 0.0,
+          "block_chance": 0,
+          "attack_chance": 100,
+          "attack_recoil_bonus": 0.0,
+          "attack_unconscious_bonus": 0.0,
+          "attack_unarmed_bonus": 0.0,
+          "power_attack_chance": 0,
+          "power_recoil_bonus": 0.0,
+          "power_unconscious_bonus": 0.0,
+          "power_normal": 0,
+          "power_forward": 0,
+          "power_back": 0,
+          "power_left": 0,
+          "power_right": 0,
+          "hold_min": 0.0,
+          "hold_max": 0.0,
+          "flags": 34,
+          "acrobatic_chance": 0,
+          "optimal_range_multiplier": 1.0,
+          "maximum_range_multiplier": 1.0,
+          "melee_switch_distance": 250.0,
+          "ranged_switch_distance": 1000.0,
+          "buff_standoff": 325.0,
+          "ranged_standoff": 500.0,
+          "group_standoff": 325.0,
+          "rush_chance": 1,
+          "rush_distance_multiplier": 1.0,
+          "do_not_acquire": true
+        },
+        "advanced": null
+      },
+      "npc_fields_changed": [],
+      "scope": "Structural/semantic artifact; actual fork compilation and normal activation/contact/restart are separate gates.",
+      "weapon_fields_changed": [
+        "DATA.speed"
+      ],
+      "weapon_original_speed": 1.2000000476837158,
+      "weapon_speed": 0.5,
+      "weapon_flags": 0,
+      "stationary_master_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+      "script_local_layout_preserved": true
+    },
+    "script": {
+      "path": "scripts/data/oblivion_compat/m15_npc_recoil_opponent.obscript",
+      "sha256": "92c8a23ab313a099f75fe5b180f881a47c233dec89fed6907e52b4719efa3640"
+    }
+  },
+  "metadata_errata": {
+    "scope": "Correction of inherited informational annotations only. Sealed original protocol remains unchanged; executable verifier and effective expected table are unchanged. These fields are not consumed by launcher or verifier. Actual source/plugin hashes and builders already independently establish the fixture.",
+    "effective_expectations": "preregistered-acceptance.json expected, expected_contacts, native_recoil_operations and scope_limits; verify-runtime.py uses these values",
+    "corrections": {
+      "fixture": {
+        "weapon_speed": 0.5,
+        "stop": "Second OnActivate after natural recovery; negative Fatigue safety unused",
+        "directory": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-assets-02/fixture",
+        "zero_fatigue_regeneration": true
+      },
+      "expected_rng": 773150046,
+      "animation_fixture": null,
+      "previous_body_cause": 0,
+      "previous_first_cause": 0,
+      "audio": {
+        "positive_clusters_required": 2,
+        "scope": "First phase two temporal clusters for two blocked contacts, each with two played native requests. Continuation zero clusters."
+      }
+    },
+    "old_inherited_annotations": {
+      "fixture": {
+        "weapon_speed": 20,
+        "stop_fatigue_below": 145,
+        "zero_fatigue_regeneration": true,
+        "directory": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture",
+        "base_plugin_unchanged": true
+      },
+      "expected_rng": 505908858,
+      "animation_fixture": {
+        "report": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/fixture/reaction-duration.json",
+        "sha256": "6e658fc736f9d28ced3fa89136288ba798cef66f21cb1d40f485bf973c74843c"
+      },
+      "previous_body_cause": 2,
+      "previous_first_cause": 0
+    },
+    "sealed_protocol_sha256": "32f77490aa4a47f14bc9f192c981b2e304953b464c1717dc7d4e8d1f55f44ab3",
+    "full_M15S4_acceptance": false
+  },
+  "runtime": [
+    {
+      "profile": "normal",
+      "view": "first",
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta.",
+        "input_view": "first",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -13.00600814819336,
+              "ease_start": 13.00600814819336,
+              "last_input": 0.0,
+              "ease_end": 13.106008529663086,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -12.591007232666016,
+                "ease_start": 13.00600814819336,
+                "last_input": 0.41500091552734375,
+                "ease_end": 13.106008529663086,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 13.00600814819336
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "dd15b55f97a1dda7828a2c300632a9e730e15aa7cdbad8d30c00a35a6b330c6f"
+          },
+          {
+            "tracks": 66,
+            "sha256": "108d4b6cbc1add97ba457939dd33424108fb37da77ee1532dd444fba6d13488b"
+          }
+        ],
+        "first_person_clock": [
+          13.00600814819336,
+          28.444042205810547
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 904731,
+            "start_ticks": 27090184,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          {
+            "pid": 906885,
+            "start_ticks": 27284969,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          }
+        ],
+        "save_sha256": [
+          "8f68c4b0e26480d47af21df2e29db62bec3214250a6d96b3796e4160252931ac",
+          "eb3f7dfc42065691e5ffcda873337d3cf1af7aa79f2c7b57d8ceda03ffc18eb8"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/verification.json",
+        "sha256": "0eb4e8ff4f82ed2fdb1a6c73338465845841371ee6b452b40c42430d103c7005"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/extra-content-reference-audit.json",
+        "sha256": "5b54f6bc38bcbcba7857ad0867774db3d0657a752fb20497a4c4648846f0aab0"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/visual-review.json",
+        "sha256": "38ad4efc64f7c150cdb656e09fe3cd5db5b3ddf6fe26b6fcc97502dd53e17bf0"
+      },
+      "audio": [
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/audio-verification-2.json",
+            "sha256": "9428dea965a81c27e7b23a88d9b0775e21ee7e71af61249cedf7585f2035c9cf"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 51.121,
+                "last": 51.121,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024570336495
+              },
+              {
+                "first": 62.861,
+                "last": 62.861,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024625599269
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024625599269,
+                "best_offset_seconds": 62.861,
+                "threshold_samples": 2
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.11665754685053811,
+                "best_offset_seconds": 51.156416666666665,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.07889770924966849,
+                "best_offset_seconds": 51.26433333333333,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "70fc7683f0c8234e29f7edbae6f7de7ddfe675151767367887eab73c130b0490",
+            "frames_at_analysis_rate": 841440,
+            "duration_seconds": 70.12,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        },
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/second/audio-verification-0.json",
+            "sha256": "bc7def4ae77b7ff33cdd5c2b3b3f32d1c4fdf7851580c58d409eb1f5360a8840"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.0562500433170107,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.053766923351985206,
+                "best_offset_seconds": 89.16041666666666,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "229d14b6c44b896c73fa58f66b76400145656d13caf0a76e38c5534102ae788a",
+            "frames_at_analysis_rate": 1230720,
+            "duration_seconds": 102.56,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        }
+      ],
+      "actual_environments": [
+        {
+          "phase": "first",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/first/actual-engine-environment.json",
+            "sha256": "006ad6e8c50978b2b1cb368f00d50f7b09ef0bde87616cb8daa700a140838976"
+          },
+          "actual": {
+            "pid": 904731,
+            "start_ticks": 27090184,
+            "environment": {
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-02/first/sdl-input.so"
+            },
+            "leak_coverage": false
+          }
+        },
+        {
+          "phase": "second",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/second/actual-engine-environment.json",
+            "sha256": "5cd3be87685cb4f4ecd84116c20ea8a13ba8ef74db8264e9b1092d82b9641ca2"
+          },
+          "actual": {
+            "pid": 906885,
+            "start_ticks": 27284969,
+            "environment": {
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/second/sdl-input.so"
+            },
+            "leak_coverage": false
+          }
+        }
+      ],
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+      },
+      "first_phase_reuse": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/reused-first-phase.json",
+        "sha256": "0fcff3823333d1bcb4b793d2fcb7e4185c3387b21c3c39bbb7fa762e8f8b4e7d"
+      },
+      "unchanged_first_files": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-first-05/reused-first-phase-audit.json",
+        "sha256": "51e48a69ac91a4de7898605d3a2ebb5c084cccc691dc0bd153805440f33e88c5"
+      }
+    },
+    {
+      "profile": "normal",
+      "view": "third",
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta.",
+        "input_view": "third",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -13.504009246826172,
+              "ease_start": 13.504009246826172,
+              "last_input": 0.0,
+              "ease_end": 13.604009628295898,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -13.089008331298828,
+                "ease_start": 13.504009246826172,
+                "last_input": 0.41500091552734375,
+                "ease_end": 13.604009628295898,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 13.504009246826172
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "ef77d670e828455459f7eee8a359a8890131875896da55642c03b01a9a3dd06d"
+          },
+          {
+            "tracks": 66,
+            "sha256": "6ff3c0924e43d44e98486e31978b4ebcc560a5df132ac0d39cbe0f973aba6830"
+          }
+        ],
+        "first_person_clock": [
+          13.504009246826172,
+          28.94204330444336
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 904727,
+            "start_ticks": 27090172,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          {
+            "pid": 906884,
+            "start_ticks": 27284962,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          }
+        ],
+        "save_sha256": [
+          "7cc60cf0ae0a396e8f716bb996bd5cdb89c4701df1d0e32277d269b193638e6a",
+          "edbe7d7c314acd3c63bbec881f6a512091eca41c05ea891fbc1abd60f469dfce"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/verification.json",
+        "sha256": "345eb8edf02a3180006af7788792910ad5c270abbf62c3475abc85b951d305f1"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/extra-content-reference-audit.json",
+        "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/visual-review.json",
+        "sha256": "78655bfd02efb2de028a6c16f559b2669d67b9a0ef99feae9d6ab8f1fac7655e"
+      },
+      "audio": [
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/audio-verification-2.json",
+            "sha256": "003500e6b4a6e8f2f92d4d39324ea3ca9863e1032471a2575ff8fe1bc5eacdba"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 50.961,
+                "last": 50.961,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984025119183444
+              },
+              {
+                "first": 62.561,
+                "last": 62.561,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024347541754
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984025119183444,
+                "best_offset_seconds": 50.961,
+                "threshold_samples": 2
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.11665793875877152,
+                "best_offset_seconds": 50.99641666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.07890104323393425,
+                "best_offset_seconds": 51.10433333333334,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "b883158409e2892a41e601e557be6f0436714def0d530a95725702db80befb94",
+            "frames_at_analysis_rate": 829680,
+            "duration_seconds": 69.14,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        },
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/second/audio-verification-0.json",
+            "sha256": "23f8c7a961afa3e72f5f5cc2c2b57b8a4f01d1e0d741fe86930a516d0643d4ca"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701071,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.053766923351985206,
+                "best_offset_seconds": 89.16041666666666,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "b75e9a0ea77d66b98d037bb601b81806e55f4f4968a5b484610834b499d1d05f",
+            "frames_at_analysis_rate": 1237440,
+            "duration_seconds": 103.12,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        }
+      ],
+      "actual_environments": [
+        {
+          "phase": "first",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/first/actual-engine-environment.json",
+            "sha256": "f574bc275b10f98f52a7d033635e9c4c4ffde35cde65d836f22d4855c4cd9ec4"
+          },
+          "actual": {
+            "pid": 904727,
+            "start_ticks": 27090172,
+            "environment": {
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-02/first/sdl-input.so"
+            },
+            "leak_coverage": false
+          }
+        },
+        {
+          "phase": "second",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/second/actual-engine-environment.json",
+            "sha256": "76beab8349e67598636f9760c2c9cf4d34b0a0f21526966c770ce225b7eddc56"
+          },
+          "actual": {
+            "pid": 906884,
+            "start_ticks": 27284962,
+            "environment": {
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/second/sdl-input.so"
+            },
+            "leak_coverage": false
+          }
+        }
+      ],
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+      },
+      "first_phase_reuse": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/reused-first-phase.json",
+        "sha256": "cc1a627c23e60050b43b202a701e3939f227de8b699c5ccdc7acdb8c2692eca8"
+      },
+      "unchanged_first_files": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-normal-third-05/reused-first-phase-audit.json",
+        "sha256": "51e48a69ac91a4de7898605d3a2ebb5c084cccc691dc0bd153805440f33e88c5"
+      }
+    },
+    {
+      "profile": "sanitized",
+      "view": "first",
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta.",
+        "input_view": "first",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -11.180004119873047,
+              "ease_start": 11.180004119873047,
+              "last_input": 0.0,
+              "ease_end": 11.280004501342773,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -10.765003204345703,
+                "ease_start": 11.180004119873047,
+                "last_input": 0.41500091552734375,
+                "ease_end": 11.280004501342773,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 11.180004119873047
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "af13f82d30bae94b37c9f5d1b37f45ea28af3154d26f2911d4903f3b1e201992"
+          },
+          {
+            "tracks": 66,
+            "sha256": "c9b56d4129986200b6f1a451f7ba3dbe7deb2bf3e3cb8f07b6f5e672089c43ed"
+          }
+        ],
+        "first_person_clock": [
+          11.180004119873047,
+          16.160015106201172
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 907096,
+            "start_ticks": 27301634,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          {
+            "pid": 907667,
+            "start_ticks": 27339447,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          }
+        ],
+        "save_sha256": [
+          "eee45e3e292e2aa77ba545860b9f576046c82cf9d0b9dbe3096ac9d4255be2b4",
+          "75f60e2b70e24b9fbb3169f4189c0cd3ef0847e099a1534b92540cc4f0566c1a"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/verification.json",
+        "sha256": "2795dc80077915629a0ef72ab86c1d26cffdbfc074dc375b408a8474eb42551f"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/extra-content-reference-audit.json",
+        "sha256": "46c1846445c992840012433a2f6d4cdc4102f1b6a304b8ac7ce0b6eb60ecc980"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/visual-review.json",
+        "sha256": "342f52716520597dd00487ac12dff8e0e7f4a45aae1394f1e8f68bf45ecf0424"
+      },
+      "audio": [
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/audio-verification-2.json",
+            "sha256": "735488e230f336855a6de19093ffaca4824fcef22fbe9d35069e7ed5be81d247"
+          },
+          "result": {
+            "passed": false,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 263.101,
+                "last": 263.101,
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.9988389431444915
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.13927788978051647,
+                "best_offset_seconds": 318.59658333333334,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.9988389431444915,
+                "best_offset_seconds": 263.101,
+                "threshold_samples": 1
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.09202247456313609,
+                "best_offset_seconds": 319.0995,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "688592edc8ed4be8a6c501a1892b91e93024fd1be49384406b6e2cb8400d5aa1",
+            "frames_at_analysis_rate": 4206000,
+            "duration_seconds": 350.5,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        },
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/second/audio-verification-0.json",
+            "sha256": "d7b1c6b44ed6034ecbda9b067e8c2bbc3f1317edf161e8e2ba83956e57a50fad"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701069,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.05765421011002203,
+                "best_offset_seconds": 186.4575,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "923da63450988c7e35fc29b46fefdbb7b19dfdbd6606f5eb5e6dc717e4f3cf75",
+            "frames_at_analysis_rate": 4026480,
+            "duration_seconds": 335.54,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        }
+      ],
+      "actual_environments": [
+        {
+          "phase": "first",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/first/actual-engine-environment.json",
+            "sha256": "28834a4ae759079e757daafb5d83ee56bea901dc6ea8084c46869b9313e21d6e"
+          },
+          "actual": {
+            "pid": 907096,
+            "start_ticks": 27301634,
+            "environment": {
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/first/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          }
+        },
+        {
+          "phase": "second",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/second/actual-engine-environment.json",
+            "sha256": "e49e4516cb825a39d3a581b9241d49128fe885b12005ba6f76bc0a5e69b3e7ec"
+          },
+          "actual": {
+            "pid": 907667,
+            "start_ticks": 27339447,
+            "environment": {
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/second/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          }
+        }
+      ],
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+      }
+    },
+    {
+      "profile": "sanitized",
+      "view": "third",
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta.",
+        "input_view": "third",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -11.346004486083984,
+              "ease_start": 11.346004486083984,
+              "last_input": 0.0,
+              "ease_end": 11.446004867553711,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -10.93100357055664,
+                "ease_start": 11.346004486083984,
+                "last_input": 0.41500091552734375,
+                "ease_end": 11.446004867553711,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 11.346004486083984
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "b10a9376326d3f63c910e2057ce266b0698e67a262e9c6ad69a0a9185e391045"
+          },
+          {
+            "tracks": 66,
+            "sha256": "e3d5995640daf363ebd4a9c9efefbcf319208436c784f91b3099c21cbf63b462"
+          }
+        ],
+        "first_person_clock": [
+          11.346004486083984,
+          16.32601547241211
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 907097,
+            "start_ticks": 27301640,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          {
+            "pid": 907668,
+            "start_ticks": 27339448,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          }
+        ],
+        "save_sha256": [
+          "c71fd3109537166a7ae8046b252c87029985c9ae7eb30d02a9621a24f12825e4",
+          "7fd61afe13e8de374054e2ab94d9799fbe311e6f9220d208833b632d23f6f420"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/verification.json",
+        "sha256": "c29cedadda706cf540398bd9fd1c7825cb2a84d14d73957888b8b664895705f9"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/extra-content-reference-audit.json",
+        "sha256": "960304ab063440ee9147f2a862ed20854e897934ffa4857a681332d248c0ae06"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/visual-review.json",
+        "sha256": "ad7c63c414be322ab08e486b29bac4913925769e83bafd1a0f5bbaa4728934f1"
+      },
+      "audio": [
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/audio-verification-2.json",
+            "sha256": "35a347a504d3f82f16825bbc30ce90c8d6723a1bb8bf736f85e28af5ae139db8"
+          },
+          "result": {
+            "passed": false,
+            "expected_clusters": 2,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.08497680474845438,
+                "best_offset_seconds": 274.76366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.09800446434776221,
+                "best_offset_seconds": 275.266,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.6894651764188858,
+                "best_offset_seconds": 331.041,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "83c96ee89f478b9f3cc04ace0f914e3c3ce74b0f36b5f083d512bd904df54df8",
+            "frames_at_analysis_rate": 4336080,
+            "duration_seconds": 361.34,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        },
+        {
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/second/audio-verification-0.json",
+            "sha256": "4fa503ffdcaa76c8fafdfd22cf78bcf93451f06172eb5caab2f0fb309a39cc51"
+          },
+          "result": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701069,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.05765421011002205,
+                "best_offset_seconds": 186.4575,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "1ac86bb260bf79abddb2299c514b0e94deb7400bc46bb4c11a0dbb758da38c53",
+            "frames_at_analysis_rate": 3949920,
+            "duration_seconds": 329.16,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          }
+        }
+      ],
+      "actual_environments": [
+        {
+          "phase": "first",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/first/actual-engine-environment.json",
+            "sha256": "d7fc3c1fa50a6610246d9b93038f7bf03d250abce2850de99b8c3cf549b0c6e0"
+          },
+          "actual": {
+            "pid": 907097,
+            "start_ticks": 27301640,
+            "environment": {
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/first/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          }
+        },
+        {
+          "phase": "second",
+          "evidence": {
+            "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/second/actual-engine-environment.json",
+            "sha256": "e7351ccbdd8371e5b4d912ea0b0adc8ed31a40080bfef1ff323228d26b5c4087"
+          },
+          "actual": {
+            "pid": 907668,
+            "start_ticks": 27339448,
+            "environment": {
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/second/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          }
+        }
+      ],
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+      }
+    }
+  ],
+  "process_scope": "Eight phase-evidence records: two reused read-only normal first02 phases, two fresh normal05 continuations, four fresh sanitized05 phases. Six fresh05 process epochs. Previous failed continuations remain failed.",
+  "retained_failures": [
+    "Initial build01 interrupted deliberately for the intact-equipment guard, no test acceptance.",
+    "Runtime01 auto-StopCombat canceled restored NPC owners before bind; both normal continuations failed.",
+    "Runtime02 activation ray missed the NPC; natural recovery succeeded but later fresh attacks caused more contacts. Both continuations failed.",
+    "Runtime03 first relative mouse movement suppressed while establishing reference; both normal continuations failed.",
+    "Runtime04 camera/activation/recovery/save succeeded but scenario failed because it simultaneously required action4 and forbade its selection. Both reports remain failed. Fresh05 removes only that contradiction; strict state verifier still demands exactly one action4 and zero new contacts."
+  ],
+  "limitations": [
+    "This fixture is synthetic and slows the weapon to0.5 with Fatigue regeneration disabled; no scripted damage/condition/RNG changes. No loose animation override. Structural generation and readback, fork compiler/world checks, save/log state and rendered image/audio observations are separate layers.",
+    "Configured60FPS is a cap, not measured60FPS. Keyboard plus relative mouse only; no new controller/FPS sweep.",
+    "Two played audio requests per contact are independently logged. PCM identifies temporal clusters, not individual coincident voices; unchanged0.75 single-stock-wave criterion, all failures retained.",
+    "Actual ASan/UBSan processes use halt-on-error; leak detection disabled. SDL input helper is compiled separately without sanitizer instrumentation.",
+    "Recoil after own equipment withdrawal, zero-absorption unarmed, Player attacker/FP strike replacement, Stagger/BlockAttack, mastery/effects/creatures/powers and broader cancellation/restart acceptance remain open.",
+    "The existing victimRemainsAlive gate also bounds this new factory path; no full fatal blocked-contact parity claim.",
+    "Current contact RNG includes Recoil selection, but native ordinary attack variant/global audio RNG parity remains open.",
+    "Direct still review establishes visible poses/cameras, not original motion/camera parity or held-block skin acceptance. Full M15S4 remains active and incomplete."
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/run-runtime.py",
+      "sha256": "37fd0dc88c365abac077888e1b901a4b7830f0b4e6184a47fca6ac6e8b14d32e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/verify-runtime.py",
+      "sha256": "7afedf091b375c0945afbae25753be5d264774d1591f0dbe1381dec07a0a4f13"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/preregistered-inputs.json",
+      "sha256": "8173f8d808696ed81c8bbd0e3021f62296428536cc0204271da63732c4fbf465"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/preregistered-acceptance.json",
+      "sha256": "32f77490aa4a47f14bc9f192c981b2e304953b464c1717dc7d4e8d1f55f44ab3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/protocol-native-rng.json",
+      "sha256": "ecee388b5be1218fb03756d9e73680772708363e0f3d2c3d8a8c01ec28dc2a88"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/assets.json",
+      "sha256": "db2995a58b96cb4955b696048f5608f70d064af58f8ed417c140719ccfffa548"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/engine-source-identity.json",
+      "sha256": "cb156c74f53ecca8f3602b3063a4be5a4d4fe7f999d35dbb13383ec3205943b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/stock-mesh-identity.json",
+      "sha256": "a8412c2144f9afa8c0bc908aa7e036f31bec0be8cde86afc418b15b2746d0d28"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/inherited-metadata-errata.json",
+      "sha256": "746c29783e4a791728505208c20d4a90920e5e7898635635ec7eb063fffd185d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/runtime-pipeline.json",
+      "sha256": "b7bd0cc113f94f8a80751a749a98f847e38499e30f4613e7d5670cbb9badf76d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/retained-contradictory-selection-failure.json",
+      "sha256": "67fa6af1ef842eb18bdf4a39550a7c0cff3b916d697c0f896541bc76cb420ec1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-05/actual-sanitized-unit-environment.json",
+      "sha256": "c36cfb452c9884d909617e29c362af7701a9e9749ddecafc3c667be74cd08f19"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-01/reaction-movement-probe.py",
+      "sha256": "1f55d37e1ac8df36450dca327b71225bf0992a2b899908396dd710cab68a53ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-01/reaction-movement-corpus.json",
+      "sha256": "85b35b706da25217ae4502d9b136baccd59da5addb9799f745a6fbcfb56d36ad"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-review-01/reaction-movement-verification.json",
+      "sha256": "8bf293c5104b94005c4162180764f7dc96cf8a9a9e616d724613276803b0701a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shield-break-caller-review-01/wear-probe.py",
+      "sha256": "5a7ec865f4d8b143dc27678729b7121a22b5a264cb1742a27e74f383036afa8f"
+    }
+  ]
+}

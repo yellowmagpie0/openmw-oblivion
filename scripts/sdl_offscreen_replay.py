@@ -11,7 +11,7 @@ import time
 
 
 INPUT_ACTIONS = frozenset({"key", "key_down", "key_up", "key_hold", "key_held",
-                          "type", "type_held", "focus_window", "screenshot"})
+                          "type", "type_held", "focus_window", "screenshot", "mouse_move"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
 
 
@@ -39,6 +39,12 @@ def receipt_timeout(value):
     return float(value)
 
 
+def mouse_delta(value):
+    if type(value) is not int or not -(2 ** 31) <= value < 2 ** 31:
+        raise ValueError("Relative mouse motion requires signed 32-bit integers")
+    return value
+
+
 def validate(manifest):
     if type(manifest.get("sdl_offscreen_input", False)) is not bool:
         raise ValueError("sdl_offscreen_input must be a boolean")
@@ -52,6 +58,9 @@ def validate(manifest):
             raise ValueError(f"Unsupported offscreen action: {action.get('type')!r}")
         if action["type"].startswith("key"):
             scancode(action["value"])
+        elif action["type"] == "mouse_move":
+            mouse_delta(action.get("x"))
+            mouse_delta(action.get("y"))
 
 
 class Replay:
@@ -118,6 +127,9 @@ class Replay:
         first = self.sequence + 1
         if kind == "focus_window":
             self.send("focus")
+        elif kind == "mouse_move":
+            x, y = mouse_delta(action.get("x")), mouse_delta(action.get("y"))
+            self.send("motion", f"{x} {y}")
         elif kind in ("type", "type_held"):
             text = action["value"]
             if not isinstance(text, str) or any(not 32 <= ord(c) <= 126 for c in text):
