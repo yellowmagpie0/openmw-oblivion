@@ -8689,8 +8689,10 @@ retroactively alter the single-wave criterion or establish coincident voice coun
 
 All16 images were directly reviewed and show the intended cameras. Seven
 continuations show ready poses. The sanitizer first-long/first-person
-continuation still shows a raised sword/forearm after its saved owners cleared;
-a settled-frame observation is needed before claiming ready-pose acceptance.
+continuation still shows a raised sword/forearm before its later save. A
+subsequent chronology check found that the screenshot preceded first-person
+cleanup (see the following correction); this capture does not establish
+settled ready-pose acceptance.
 Static frames do not establish original motion/camera parity, and the held-block
 skin issue remains open. Full course acceptance is separated from state audits.
 
@@ -8710,3 +8712,32 @@ incomplete: general missing resources, normal remaining reaction factories,
 distinct/parallel owners, native FP strikes, mastery/effects/creatures and
 directional powers, audio/settled-pose criteria and the full input/FPS/cancellation/
 in-flight restart matrix still require delivery.
+
+### Settled Player recovery capture correction
+
+The preceding raised-sword image was captured 33.998 seconds **before** the
+first-person cleanup event, as the original process log confirms. The later
+save establishes cleared owners after that image; it cannot establish their
+state at capture time. The prior inference of a persistent after-cleanup pose
+was incorrect. Historical reports and images remain preserved.
+
+The continuation manifest now waits for both cleanup events before its existing
+60-second settling interval, screenshot and save. Eight fresh processes loaded
+the eight preserved actual contact saves without changing or rerunning their
+first phases: normal/sanitizer × body/first-person long owner × first/third
+camera. All eight pass scenario/epoch checks, exact state/resource/RNG/inventory
+verification, master-reference audit and zero-replay PCM checks. Actual process
+logs put both cleanup events before each capture. Direct inspection of all
+eight new images shows the intended camera and a ready sword pose.
+
+The Python suite passes 341 tests for this manifest revision. No engine source
+or executable changed; the prior 1767-test normal and sanitizer inventories are
+reused evidence, not fresh builds. Four new continuations use ASan/UBSan with
+halt-on-error and leak detection disabled.
+
+[`M15-PLAYER-SETTLED-RECOVERY-VERIFICATION.json`](M15-PLAYER-SETTLED-RECOVERY-VERIFICATION.json)
+pins the correction, readonly inputs, actual process epochs, checks and reviewed
+images. The two historical positive-contact PCM failures retain their original
+failed status. Static recovery images do not establish original motion/camera
+parity or close the separate held-block skin issue. The broad M15S4 gaps listed
+above remain open.

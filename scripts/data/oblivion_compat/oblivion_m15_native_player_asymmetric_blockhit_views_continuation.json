@@ -60,6 +60,12 @@
     },
     {
       "type": "wait_log",
+      "pattern": "M15 first-person reaction recovered: actor=dynamic:player:0000000000000001 cause=3",
+      "timeout_seconds": 300,
+      "poll_interval_seconds": 0.005
+    },
+    {
+      "type": "wait_log",
       "pattern": "M15 Player BlockHit ready: load=2 frame=5",
       "timeout_seconds": 300
     },
@@ -72,12 +78,6 @@
       "name": "player-blockhit-recovered.png",
       "minimum_entropy": 0.03,
       "timeout_seconds": 180
-    },
-    {
-      "type": "wait_log",
-      "pattern": "M15 first-person reaction recovered: actor=dynamic:player:0000000000000001 cause=3",
-      "timeout_seconds": 300,
-      "poll_interval_seconds": 0.005
     },
     {
       "type": "key_held",

@@ -1,0 +1,715 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Corrected settled Player recovery capture ordering. Eight fresh continuation processes reuse eight preserved contact saves without rerunning or changing their first phases.",
+  "change": "Move the first-person cleanup wait before the unchanged60-second settling interval and screenshot. No C++ or binary change.",
+  "supersedes": "The after-cleanup visual inference in M15-PLAYER-ASYMMETRIC-OWNERS-VERIFICATION.json is disproven by original process-log chronology: the raised-sword screenshot preceded first-person cleanup by33.998 seconds. Historical receipt and artifacts are preserved.",
+  "source_parent": "94c52419fb6be1a4703877b1558b1128fbb8e52a",
+  "source_files": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_native_player_asymmetric_blockhit_views_continuation.json",
+      "sha256": "7791c80864edb5a22d3c285b2dfb6e11492eb3fdb78f11028e545396512efe23"
+    }
+  ],
+  "verification": {
+    "python": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "/usr/bin/python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "scripts/tests"
+          ],
+          "log": "python.log",
+          "returncode": 0,
+          "seconds": 56.728
+        }
+      ],
+      "results": {
+        "python": {
+          "executed": 341,
+          "passed": true,
+          "log_sha256": "fc162641e2b99f63eff0f8709bf2cd3772364f5b4b4e03a919879713ebd180fe"
+        }
+      },
+      "source_before": {
+        "head": "94c52419fb6be1a4703877b1558b1128fbb8e52a",
+        "source_fingerprint": "42e0604f0b39b13e014c52b5d3338f18e900d59509036039283e151374d7c1af"
+      },
+      "source_after": {
+        "head": "94c52419fb6be1a4703877b1558b1128fbb8e52a",
+        "source_fingerprint": "42e0604f0b39b13e014c52b5d3338f18e900d59509036039283e151374d7c1af"
+      }
+    },
+    "engine": "No engine change: prior final normal and ASan/UBSan inventories each passed1767 tests/125 suites. This is reused engine evidence, not a new build.",
+    "runtime": "All8 fresh continuations: scenario/epochs, strict state/resource/RNG/inventory audit, master reference audit, zero PCM replay, actual environment and direct settled-image inspection pass.",
+    "sanitizers": "Four continuations use actual ASan/UBSan engines, halt on error; leak detection disabled. Actual environment reports pinned per case."
+  },
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-review-01/run.py",
+      "sha256": "9640bc5c59bb3492a1833ed370d875ae9bb4c82057c55ae206ac02ac1a0244b3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-review-01/close.py",
+      "sha256": "99ad0389a55b02c473d65f350415459a8fb2dec6573e13368fcf93ddf469e528"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-review-01/engine-source-identity.json",
+      "sha256": "e55e3139f98680c488d68782d7eec8476c587545919dfae25a437d2de9458f76"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-review-01/prior-chronology-correction.json",
+      "sha256": "f0399da12787d491ba1be92ff14d88fe9a0251738c8196d12445bbed3d6f4615"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-python-01/verification.json",
+      "sha256": "3632aec051fd1275286d45f59c7254e1c901cc8cddd3cdf6926a77774d48fa21"
+    }
+  ],
+  "cases": [
+    {
+      "profile": "normal",
+      "long_view": "body",
+      "camera": "first",
+      "reused_contact_epoch": {
+        "pid": 888123,
+        "start_ticks": 26348222,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892568,
+        "start_ticks": 26584422,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/preregistered-continuation.json",
+          "sha256": "569fa4aec04a0fecd85b17428b5d57148a7885416f55627900cd6019504970bb"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/continuation.json",
+          "sha256": "7791c80864edb5a22d3c285b2dfb6e11492eb3fdb78f11028e545396512efe23"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/verification.json",
+          "sha256": "05a30f0e943689d54205ebcbd476157600ecd5443f29edfced0967e1dc11e3f7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/scenario.json",
+          "sha256": "046d71abd1a5c175c0d11e3c184d2aec1795107ee5503e95bd4783f5610f9769"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/launcher.json",
+          "sha256": "7382214f7307ab42faa4a67a18f8a85cbc834109e0013a45469952ff40754243"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/audio-verification-0.json",
+          "sha256": "1ae2f79f20d9b1eab1dbef045df92c36bae2c4f9aa2f5083ce09c70b1e21661c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/second/actual-engine-environment.json",
+          "sha256": "7d8c05857968ab86d67fadcdc1650fb91f9bcbe1eba8b4dafd85ebfa66fdc0a2"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/visual-review.json",
+          "sha256": "4959fce82d6e13fd2928d121c897827156b654148e08c6e44f902bea9b66cb2c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-first-01/capture-chronology.json",
+          "sha256": "db99a706181a5d29b9cf31a859ce3cb5b9417d3a81ef0a4b2814ad2657479946"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "body",
+      "camera": "third",
+      "reused_contact_epoch": {
+        "pid": 888124,
+        "start_ticks": 26348227,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-body-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892592,
+        "start_ticks": 26584833,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/preregistered-continuation.json",
+          "sha256": "bad616a07730d5bdf7fc18e3944d485187c462a6aa5e3b73be74a385f279022e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/continuation.json",
+          "sha256": "7791c80864edb5a22d3c285b2dfb6e11492eb3fdb78f11028e545396512efe23"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/verification.json",
+          "sha256": "7852be4f2fb4d068b83125f268960a363be841904947c16dd2520c1643cdb02d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/scenario.json",
+          "sha256": "66e189be8f48a2ebd6eb372cdd26466dc0b72a3c76fe10fb31594b682b346e8e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/launcher.json",
+          "sha256": "18f222e3d46e2c285f2230a1fe01faf1f37d9e90864dcb4c51fe0f50ae44244f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/audio-verification-0.json",
+          "sha256": "53d7a5210126ce70694205760df73aef769e6de70f54225f2b988ebe2ff52cd6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/second/actual-engine-environment.json",
+          "sha256": "b68b6b94a7d69c4eb76b2a705699f48077c8cb86a299b310d9b24484f8d1af6d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/visual-review.json",
+          "sha256": "81ce0947813a3f0e64de3e191984aad9fe5eb0a8d5d06b7257a28c144bf7d500"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-body-long-third-01/capture-chronology.json",
+          "sha256": "88d08bdf058674bdc18235bfe7ba2ccf1bfd2974cd77b76214ff3dbad53408a0"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "first",
+      "camera": "first",
+      "reused_contact_epoch": {
+        "pid": 888119,
+        "start_ticks": 26348215,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892616,
+        "start_ticks": 26585174,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/preregistered-continuation.json",
+          "sha256": "ecfb2f1d59fd9732797727af895225a18f0dee36520c36c6886a7f7362eb9164"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/continuation.json",
+          "sha256": "7791c80864edb5a22d3c285b2dfb6e11492eb3fdb78f11028e545396512efe23"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/verification.json",
+          "sha256": "3a10c91fc4d4e784c39dd2a43186aa47f09d9f8641f83285cc82d4fa00bd4b27"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/scenario.json",
+          "sha256": "836ce3daedf16e8a73432148fed3795381e1a3ea40bb3257c499539b692bfe92"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/launcher.json",
+          "sha256": "afae84cac5d8bc5ba6865b69c0b2c7cfc256ac01fd3b4820e696595ebcab8edd"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/audio-verification-0.json",
+          "sha256": "62c71d4edbe44ebf87b22ef26c98a9fd06b845e230d754f82238be9b01444672"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/second/actual-engine-environment.json",
+          "sha256": "d89ceffb6c974c9b4746b0f8e9f03f9c5352a904495ecfbf81c4e31d04da5e03"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/visual-review.json",
+          "sha256": "8549c6c61de1ccffa754318743c3493cd38d6ecbb11a70e90ebaf22994a8dc17"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-first-01/capture-chronology.json",
+          "sha256": "67baae8a55e7218888d018436efcc8f15e399b12e3288441127b5d275d2341fa"
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "long_view": "first",
+      "camera": "third",
+      "reused_contact_epoch": {
+        "pid": 888118,
+        "start_ticks": 26348215,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-normal-first-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892638,
+        "start_ticks": 26585540,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "d4e34ed1f4ffd6cc266aa84306506bae75efa1720a163f77c576ef878c1795a5"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/preregistered-continuation.json",
+          "sha256": "1829a9605725000acd226588594ef9a4445637de4ccaf8c318b621c6fbbc6524"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/continuation.json",
+          "sha256": "7791c80864edb5a22d3c285b2dfb6e11492eb3fdb78f11028e545396512efe23"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/verification.json",
+          "sha256": "6f709360289a7534587341a72b1bbc5a249b96fa6322e3bd08b2a9b08612883c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/extra-content-reference-audit.json",
+          "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/scenario.json",
+          "sha256": "0f6e5f7ff290c8aedd4fdf9c706defd85bad98a09ed36889745f02220ceaed11"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/launcher.json",
+          "sha256": "40f82ba2c25c81a38f142d63cbc828dd313a79cbbf4ae821cafbfa6f979b1649"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/audio-verification-0.json",
+          "sha256": "7021c1cd029061ae8199b17fb38653222fb77b89fdfa874338495304c9b0dee0"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/second/actual-engine-environment.json",
+          "sha256": "093a241b96e1429cfc95add432cb9a59bb721002209c93be8cb2c7cacd525e6e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/visual-review.json",
+          "sha256": "be9a60da092ed685d09660c25ba1f3b69ccde9b627edcfda7e3af83488075607"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-normal-first-long-third-01/capture-chronology.json",
+          "sha256": "4da18c7c29e022eb384cd7568864e4471720ff68133ff8b79ca46e10d6a28012"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "body",
+      "camera": "first",
+      "reused_contact_epoch": {
+        "pid": 891100,
+        "start_ticks": 26368218,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892861,
+        "start_ticks": 26605551,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/preregistered-continuation.json",
+          "sha256": "893e853ceabcbf9ab32d298a52775cd154b8715db37bd1c8cef60fd1d63be612"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/continuation.json",
+          "sha256": "66a48dbbf816893d7fe6791a65a007e6806c8e19d4355c14fcb33b943a540b6e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/verification.json",
+          "sha256": "8f3484b02bacd661a42ab810611b7be680cae2ccb8af7c9f0728d16d961c0375"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/extra-content-reference-audit.json",
+          "sha256": "bcc96a2a154bc7c9ac8d43add8bcacdc3a8f6c90e73cc54d3bb9da9586280c4f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/scenario.json",
+          "sha256": "f1e8eef7019533f3917ba7cc292215bf016c0c9f1c428d8579b52dddb4c895ce"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/launcher.json",
+          "sha256": "232872ca72b187d3193f69ce1c13cd59f0efdaa4a929e0662d5b9d92526c3834"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/audio-verification-0.json",
+          "sha256": "88b6c4f4d7115e459398e3f2c2fc6c960718e5f5f38b6193ca57d9a54fb28426"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/second/actual-engine-environment.json",
+          "sha256": "d10cf0f5a4c355a759a67614565956724100f6832db6edfc0a9f7f4b3c387bfe"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/visual-review.json",
+          "sha256": "5a47a1207c4d41e5e28e1c26a14ab1af3fc87eb3380d92ed4335024e0ae3ce0d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-first-01/capture-chronology.json",
+          "sha256": "66b167d5e0dd55260b5ce6b40cae87ec1e2f3df3a3043179ae1ec6d9e1e3dbdc"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "body",
+      "camera": "third",
+      "reused_contact_epoch": {
+        "pid": 891102,
+        "start_ticks": 26368219,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-body-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892884,
+        "start_ticks": 26606290,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/preregistered-continuation.json",
+          "sha256": "e7c54abb3d922ce25377757d5815eccdff945c847436e6df13733c9ca2dbb5c7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/continuation.json",
+          "sha256": "66a48dbbf816893d7fe6791a65a007e6806c8e19d4355c14fcb33b943a540b6e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/verification.json",
+          "sha256": "5045a79b3aabc1ab685b9acb6d2dae003800a45a7390865697a238e81f6b0832"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/extra-content-reference-audit.json",
+          "sha256": "ba946df702d1cf838d66321855d78d85efa71895db1996ee864862f9c25da6c5"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/scenario.json",
+          "sha256": "e42b487bcd1dcc85cf47ea00898b2d6c6224ae5c7896bc998b1e7f277b45771b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/launcher.json",
+          "sha256": "1fa308e5f7a033c2429f10d2a5612e35d7dc599e43ff18dfb82ddb516f9f2d1a"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/audio-verification-0.json",
+          "sha256": "6cc73251398a62046ce8ea63198bbe746ebb83c2bf91a68070dca7bc0b57cdce"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/second/actual-engine-environment.json",
+          "sha256": "adf1737967453c5f5d7bee4b0a07b1ac3c155f2718def49d060d130c7ee2d33f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/visual-review.json",
+          "sha256": "3050675668f577978b718af622bf42e59df93afa1e04daf9eb98871cbfeb9338"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-body-long-third-01/capture-chronology.json",
+          "sha256": "20a006b45e0953363a99a902f94aab3c6d71ae92b84f802ca25d1361768961e9"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "first",
+      "camera": "first",
+      "reused_contact_epoch": {
+        "pid": 891103,
+        "start_ticks": 26368220,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892906,
+        "start_ticks": 26606929,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/preregistered-continuation.json",
+          "sha256": "430d99483926a43b96ef9c356160acf38e60a0fcde6cd3d822d430781030e265"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/continuation.json",
+          "sha256": "66a48dbbf816893d7fe6791a65a007e6806c8e19d4355c14fcb33b943a540b6e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/verification.json",
+          "sha256": "9a1cce6bd051366de87d2ddc2ff95d6584aba54af85663724d571cb31294917d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/extra-content-reference-audit.json",
+          "sha256": "bcc96a2a154bc7c9ac8d43add8bcacdc3a8f6c90e73cc54d3bb9da9586280c4f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/scenario.json",
+          "sha256": "b17315b990ea5fe9c2e01a03d06a3c4216339ba5d7af622e0d9714a3d7fe3c47"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/launcher.json",
+          "sha256": "35073a6625d29436ba3f55fe73f474d4e5e5ef8268483eb1b9da460900abe99f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/audio-verification-0.json",
+          "sha256": "1df1c8124a2f39d2f6965eb5c44922d45ec1eba6e8f964b69c7dabebbde5185e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/second/actual-engine-environment.json",
+          "sha256": "0ff6f6acfc76e884eaa8d215fe9e16886bc7b330bd03a4ef00df27404319b0b9"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/visual-review.json",
+          "sha256": "1c57f424af04f2ac28e2a859e2a1c060d8437f5a6f82e73b0c669fa3f3d04dd1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-first-01/capture-chronology.json",
+          "sha256": "3cf66ee4148bbf14449037e7afafd9187c9060c1c39b06718ddf076c49e8d443"
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "long_view": "first",
+      "camera": "third",
+      "reused_contact_epoch": {
+        "pid": 891101,
+        "start_ticks": 26368218,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-asymmetric-owners-runtime-sanitized-first-long-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "fresh_continuation_epoch": {
+        "pid": 892928,
+        "start_ticks": 26607577,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "b2386cc520c261da9f388057964cf0826ee0c7dc83289e1f34c910a69e8edb36"
+      },
+      "first_phase_reused_read_only": true,
+      "all_checks_passed": true,
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/preregistered-continuation.json",
+          "sha256": "4474d7023c9c1eb92a6cd7a1a0ad52095480e94d5927feac4376d51eff04e8d7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/continuation.json",
+          "sha256": "66a48dbbf816893d7fe6791a65a007e6806c8e19d4355c14fcb33b943a540b6e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/verification.json",
+          "sha256": "2e78f58260061bf01a71b6e7169ffdaee2aa0c610e9782d0cedffaeb432ed502"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/extra-content-reference-audit.json",
+          "sha256": "ba946df702d1cf838d66321855d78d85efa71895db1996ee864862f9c25da6c5"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/scenario.json",
+          "sha256": "27fedd62309649d5a36756f832e102de04bd6a1d64844312ef33f3d161113dfc"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/launcher.json",
+          "sha256": "4cee57cf9e88a45592b2301020bd6e64ac10ee7df8019b917215672f64030a46"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/audio-verification-0.json",
+          "sha256": "4bb07d2027e390c7ab5a68a24b1338c419e4f46665345c7dad8ceccf160c1f8e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/second/actual-engine-environment.json",
+          "sha256": "744be1caa0fb5a7885301e753bc97d90ef1d7fbf4844f580eaf8b8932493733c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/visual-review.json",
+          "sha256": "4a4403d9c8cfb93922e70ab0fd40353f0d4a84ec52bfc005eba1e667527ec68c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-player-settled-recovery-sanitized-first-long-third-01/capture-chronology.json",
+          "sha256": "a3acdd3b61adde1a1a37ee774dc9bc3b6dbc124406e31047bd16e573f86a3bd9"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Two original first-phase single-wave PCM cluster failures remain failed; this continuation-only run does not regrade those positive-contact tests.",
+    "Static ready-pose captures do not establish original motion/camera parity. Held-block skin acceptance remains open.",
+    "Full M15S4 remains incomplete: general missing resources, remaining reaction factories, distinct/parallel owners, native FP strikes, mastery/effects/creatures/directional powers and full input/FPS/cancellation/in-flight restart coverage remain."
+  ]
+}
