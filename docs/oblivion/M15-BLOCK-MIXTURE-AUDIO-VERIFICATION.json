@@ -1,0 +1,4087 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Fixed finite stock block-sound pair assay, independent synthetic controls and eight fresh explicit-period normal-input runtime phases. Does not change any historical failed criterion.",
+  "model": {
+    "stage": "Model frozen after independent controls, before historical diagnostic and before fresh held-out runtime captures",
+    "schema_version": 1,
+    "model": "Six aligned equal-gain unordered stock pairs plus nine ordered pairs offset240 analysis samples, exactly one declared960-frame/48kHz mixer period. No amplitude/offset/time-stretch fitting. Per-channel measurements.",
+    "threshold": 0.75,
+    "cluster_gap_seconds": 1,
+    "source_files": [
+      {
+        "path": "scripts/tes4_m15_block_audio.py",
+        "sha256": "ee216e72417cdb5af479c9e8242661f73dc98294d4c0a40741e25dee02d39c12"
+      },
+      {
+        "path": "scripts/tests/test_tes4_m15_block_audio.py",
+        "sha256": "c17ba90450462593f82988d088003de7e385fa6df0da5d63e4f9c75ae2256fce"
+      },
+      {
+        "path": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
+        "sha256": "aa38cebf3f07e72cc7f724f8aa6f00e0c3ec185b82961781c764443667f3c659"
+      }
+    ],
+    "controls": {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/unit-02.log",
+      "sha256": "bae8386ce7bedf86d08cd78d76d6afaf3c4db1b01278c859c6815709d3d0b405"
+    },
+    "historical_diagnostic": [
+      {
+        "input": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-first-05/first/rendered-audio.wav",
+          "sha256": "688592edc8ed4be8a6c501a1892b91e93024fd1be49384406b6e2cb8400d5aa1"
+        },
+        "expected_clusters": 2,
+        "prior_single_asset_status": "failed; preserved",
+        "use": "diagnostic only, not held-out acceptance"
+      },
+      {
+        "input": {
+          "path": "build/oblivion-compat/m15/S4/native-npc-blocked-recoil-runtime-sanitized-third-05/first/rendered-audio.wav",
+          "sha256": "83c96ee89f478b9f3cc04ace0f914e3c3ce74b0f36b5f083d512bd904df54df8"
+        },
+        "expected_clusters": 2,
+        "prior_single_asset_status": "failed; preserved",
+        "use": "diagnostic only, not held-out acceptance"
+      }
+    ],
+    "fresh_runtime_requirement": "Explicit period_size960 in each actual runtime config. Freeze model and recipe before fresh positive and continuation captures; keep original single-template reports and independently report both criteria.",
+    "voice_limit": "Coincident same-asset pairs are not distinguishable from a louder single asset by normalized correlation. Request count is separate evidence."
+  },
+  "tested_source": {
+    "head": "9347cf7bba1c99520da52fc13806d713b2fe0556",
+    "source_fingerprint": "ec9dea4cd7ac7751c19eeb9b2a6919a75a335ebde3036f527fbf87ee37d1f9b3"
+  },
+  "python": {
+    "executed": 351,
+    "passed": true,
+    "log_sha256": "8476313bff5b1300bd8a84f53e0cf258e7a529344d96ca027183900edf48bc3b"
+  },
+  "python_evidence": {
+    "path": "build/oblivion-compat/m15/S4/block-mixture-assay-python-01/verification.json",
+    "sha256": "684f4cdfd59a846ad6db862bf773c1c0ff975a61f8f189f56306a0b09205f141"
+  },
+  "source_files": [
+    {
+      "path": "scripts/tes4_m15_block_audio.py",
+      "sha256": "ee216e72417cdb5af479c9e8242661f73dc98294d4c0a40741e25dee02d39c12"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_block_audio.py",
+      "sha256": "c17ba90450462593f82988d088003de7e385fa6df0da5d63e4f9c75ae2256fce"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
+      "sha256": "aa38cebf3f07e72cc7f724f8aa6f00e0c3ec185b82961781c764443667f3c659"
+    },
+    {
+      "path": "scripts/sdl_offscreen_input.cpp",
+      "sha256": "2cf79bd12106e81658313147284e2c03724004d008696ab714575734c536e2b5"
+    },
+    {
+      "path": "scripts/sdl_offscreen_replay.py",
+      "sha256": "6bf79a69b20ca3e4b2154a0f9212035afd56a2e3f23f89daa0ee5ff2b5f5b9ad"
+    }
+  ],
+  "controls": {
+    "passed": true,
+    "tests": 6,
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/unit-02.log",
+      "sha256": "bae8386ce7bedf86d08cd78d76d6afaf3c4db1b01278c859c6815709d3d0b405"
+    },
+    "initial_failure": {
+      "passed": false,
+      "stage": "Initial independent six-test suite",
+      "tests": 6,
+      "failures": 1,
+      "observation": "All15 expected clusters detected, but first above-threshold hypothesis for the event at11 seconds starts10.98. Shorter/offset alternate hypotheses can cross threshold before the known onset; earliest window is not a maximum-correlation onset.",
+      "assertion": "10.98 !=11 within4 decimal places",
+      "correction": "Expose the strongest hypothesis offset separately; assert its known source onset and retain exact15 clusters and0.75 threshold. Earliest/latest above-threshold windows are still reported without alteration.",
+      "source_files": [
+        {
+          "path": "scripts/tes4_m15_block_audio.py",
+          "sha256": "a56ca00a5648f6895ffa8344e6cc670ade74e79366dbee31a68becb34e5cb268"
+        },
+        {
+          "path": "scripts/tests/test_tes4_m15_block_audio.py",
+          "sha256": "0a4d2bd1b53505b21a387f152e4eb3715bddfa4d21a8802f592f697d80086fb1"
+        }
+      ]
+    }
+  },
+  "diagnostics": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/historical-sanitized-first-diagnostic.json",
+        "sha256": "bd2e0770e49f3ed4d2a8e3ba32a0357205b2e627cec8c71046bf83f35360e752"
+      },
+      "result": {
+        "passed": true,
+        "expected_clusters": 2,
+        "clusters": [
+          {
+            "first": 263.101,
+            "last": 263.101,
+            "best": 263.101,
+            "template": "1+1@0",
+            "channel": 0,
+            "maximum_correlation": 0.9988389905479893
+          },
+          {
+            "first": 318.601,
+            "last": 318.601,
+            "best": 318.601,
+            "template": "1+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.9987713604260545
+          }
+        ],
+        "templates": [
+          {
+            "template": "0+0@0",
+            "channel": 0,
+            "maximum_correlation": 0.1392785376467445,
+            "best_offset_seconds": 318.59658333333334,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@0",
+            "channel": 0,
+            "maximum_correlation": 0.709560338119792,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.08488153186169807,
+            "best_offset_seconds": 318.61875,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@0",
+            "channel": 0,
+            "maximum_correlation": 0.9988389905479893,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 1
+          },
+          {
+            "template": "1+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.6850891520001599,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.09194074879647056,
+            "best_offset_seconds": 319.0995,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.1600565247366487,
+            "best_offset_seconds": 318.59816666666666,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.7141884164900512,
+            "best_offset_seconds": 263.081,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.09032790926298136,
+            "best_offset_seconds": 263.09875,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.7159630522881206,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.9987712574594879,
+            "best_offset_seconds": 318.601,
+            "threshold_samples": 1
+          },
+          {
+            "template": "1+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.654261735689088,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.0915917320585432,
+            "best_offset_seconds": 318.57758333333334,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.6563471470257184,
+            "best_offset_seconds": 263.081,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.11034563212836207,
+            "best_offset_seconds": 319.06108333333333,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+0@0",
+            "channel": 1,
+            "maximum_correlation": 0.1392772441996244,
+            "best_offset_seconds": 318.59658333333334,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@0",
+            "channel": 1,
+            "maximum_correlation": 0.7095602236270284,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.08488189262189173,
+            "best_offset_seconds": 318.61875,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@0",
+            "channel": 1,
+            "maximum_correlation": 0.9988388924360775,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 1
+          },
+          {
+            "template": "1+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.6850903749715135,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.09209575979952854,
+            "best_offset_seconds": 319.0995,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.16005746300443982,
+            "best_offset_seconds": 318.59816666666666,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.7141879071378411,
+            "best_offset_seconds": 263.081,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.09032730193079871,
+            "best_offset_seconds": 263.09875,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.7159637470485152,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.9987713604260545,
+            "best_offset_seconds": 318.601,
+            "threshold_samples": 1
+          },
+          {
+            "template": "1+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.6542632666899405,
+            "best_offset_seconds": 263.101,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.0915921588437848,
+            "best_offset_seconds": 318.57758333333334,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.6563483132206847,
+            "best_offset_seconds": 263.081,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.11054356770353171,
+            "best_offset_seconds": 319.06108333333333,
+            "threshold_samples": 0
+          }
+        ],
+        "recipe": {
+          "schema_version": 1,
+          "assets": [
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+              "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+              "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+              "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+            }
+          ],
+          "sample_rate": 48000,
+          "channels": 2,
+          "analysis_rate": 12000,
+          "mixer_period_frames": 960,
+          "minimum_normalized_correlation": 0.75,
+          "cluster_gap_seconds": 1
+        },
+        "pcm_sha256": "688592edc8ed4be8a6c501a1892b91e93024fd1be49384406b6e2cb8400d5aa1",
+        "duration_seconds": 350.5,
+        "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+      },
+      "scope": "Historical diagnostic only, not held-out runtime acceptance"
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/historical-sanitized-third-diagnostic.json",
+        "sha256": "c782b407f7153adcfeb9400a063c3c20bf3b64252945e67a484e02bd6fd290c0"
+      },
+      "result": {
+        "passed": true,
+        "expected_clusters": 2,
+        "clusters": [
+          {
+            "first": 274.721,
+            "last": 274.721,
+            "best": 274.721,
+            "template": "2+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.9988144878947358
+          },
+          {
+            "first": 331.021,
+            "last": 331.021,
+            "best": 331.021,
+            "template": "2+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.9988145390709833
+          }
+        ],
+        "templates": [
+          {
+            "template": "0+0@0",
+            "channel": 0,
+            "maximum_correlation": 0.08497736780379168,
+            "best_offset_seconds": 274.76366666666667,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@0",
+            "channel": 0,
+            "maximum_correlation": 0.08048077429639232,
+            "best_offset_seconds": 331.1095,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.5285426106208769,
+            "best_offset_seconds": 274.741,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@0",
+            "channel": 0,
+            "maximum_correlation": 0.09799112761647064,
+            "best_offset_seconds": 275.266,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.5313028597251827,
+            "best_offset_seconds": 274.741,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@0",
+            "channel": 0,
+            "maximum_correlation": 0.689465078324215,
+            "best_offset_seconds": 274.741,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.1048063269316023,
+            "best_offset_seconds": 274.7436666666667,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.06785797371924436,
+            "best_offset_seconds": 274.82533333333333,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.5219568087478025,
+            "best_offset_seconds": 331.001,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.08179740573964533,
+            "best_offset_seconds": 331.04366666666664,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.09086190138893951,
+            "best_offset_seconds": 331.15133333333335,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.5316421398039197,
+            "best_offset_seconds": 274.721,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+0@240",
+            "channel": 0,
+            "maximum_correlation": 0.5287834311565383,
+            "best_offset_seconds": 331.041,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+1@240",
+            "channel": 0,
+            "maximum_correlation": 0.5350033420977347,
+            "best_offset_seconds": 331.021,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@240",
+            "channel": 0,
+            "maximum_correlation": 0.9988144725641757,
+            "best_offset_seconds": 331.021,
+            "threshold_samples": 2
+          },
+          {
+            "template": "0+0@0",
+            "channel": 1,
+            "maximum_correlation": 0.08497710314696107,
+            "best_offset_seconds": 331.0636666666667,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@0",
+            "channel": 1,
+            "maximum_correlation": 0.08048206080627286,
+            "best_offset_seconds": 274.8095,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.5285427690808182,
+            "best_offset_seconds": 331.041,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@0",
+            "channel": 1,
+            "maximum_correlation": 0.09808418114241038,
+            "best_offset_seconds": 331.566,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.5313033581150588,
+            "best_offset_seconds": 274.741,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@0",
+            "channel": 1,
+            "maximum_correlation": 0.689465639614581,
+            "best_offset_seconds": 331.041,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.10480690231614057,
+            "best_offset_seconds": 331.04366666666664,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.06785874956058495,
+            "best_offset_seconds": 274.82533333333333,
+            "threshold_samples": 0
+          },
+          {
+            "template": "0+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.5219555874261887,
+            "best_offset_seconds": 331.001,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.08179801638428913,
+            "best_offset_seconds": 274.7436666666667,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.09086273474886623,
+            "best_offset_seconds": 331.15133333333335,
+            "threshold_samples": 0
+          },
+          {
+            "template": "1+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.5316429673791677,
+            "best_offset_seconds": 331.021,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+0@240",
+            "channel": 1,
+            "maximum_correlation": 0.5287850583616167,
+            "best_offset_seconds": 331.041,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+1@240",
+            "channel": 1,
+            "maximum_correlation": 0.5350035922043529,
+            "best_offset_seconds": 274.721,
+            "threshold_samples": 0
+          },
+          {
+            "template": "2+2@240",
+            "channel": 1,
+            "maximum_correlation": 0.9988145390709833,
+            "best_offset_seconds": 331.021,
+            "threshold_samples": 2
+          }
+        ],
+        "recipe": {
+          "schema_version": 1,
+          "assets": [
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+              "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+              "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+              "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+            }
+          ],
+          "sample_rate": 48000,
+          "channels": 2,
+          "analysis_rate": 12000,
+          "mixer_period_frames": 960,
+          "minimum_normalized_correlation": 0.75,
+          "cluster_gap_seconds": 1
+        },
+        "pcm_sha256": "83c96ee89f478b9f3cc04ace0f914e3c3ce74b0f36b5f083d512bd904df54df8",
+        "duration_seconds": 361.34,
+        "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+      },
+      "scope": "Historical diagnostic only, not held-out runtime acceptance"
+    }
+  ],
+  "source_extraction": {
+    "passed": true,
+    "scope": "Fresh local extraction reinspection; original model assets untouched. All three source-archive members reproduce pinned bytes.",
+    "archive": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Sounds.bsa",
+      "sha256": "f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec"
+    },
+    "extractor": {
+      "path": "build/bsatool",
+      "sha256": "85e37a09d7454dbd4d2c56be47a345f09ad56c38304bf4b72737892872dede44"
+    },
+    "rows": [
+      {
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/bsatool",
+          "extract",
+          "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Sounds.bsa",
+          "sound\\fx\\wpn\\weaponblock\\blade\\wpn_block_blade_01.wav",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection"
+        ],
+        "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642",
+        "output": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection/wpn_block_blade_01.wav"
+      },
+      {
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/bsatool",
+          "extract",
+          "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Sounds.bsa",
+          "sound\\fx\\wpn\\weaponblock\\blade\\wpn_block_blade_02.wav",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection"
+        ],
+        "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269",
+        "output": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection/wpn_block_blade_02.wav"
+      },
+      {
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/bsatool",
+          "extract",
+          "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Sounds.bsa",
+          "sound\\fx\\wpn\\weaponblock\\blade\\wpn_block_blade_03.wav",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection"
+        ],
+        "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d",
+        "output": "build/oblivion-compat/m15/S4/block-mixture-assay-review-01/extraction-reinspection/wpn_block_blade_03.wav"
+      }
+    ]
+  },
+  "runtime": [
+    {
+      "profile": "normal",
+      "view": "first",
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/verification.json",
+        "sha256": "abc61f22143b211bb4fd51372cf817c45a5947baefd4f3dbe9ee98c94a8d280d"
+      },
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta. Fresh captures with explicit mixer period960 frames and periods3, additional fixed-bank PCM criterion reported separately. All first phases are fresh.",
+        "input_view": "first",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -13.172008514404297,
+              "ease_start": 13.172008514404297,
+              "last_input": 0.0,
+              "ease_end": 13.272008895874023,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -12.757007598876953,
+                "ease_start": 13.172008514404297,
+                "last_input": 0.41500091552734375,
+                "ease_end": 13.272008895874023,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 13.172008514404297
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "dd15b55f97a1dda7828a2c300632a9e730e15aa7cdbad8d30c00a35a6b330c6f"
+          },
+          {
+            "tracks": 66,
+            "sha256": "108d4b6cbc1add97ba457939dd33424108fb37da77ee1532dd444fba6d13488b"
+          }
+        ],
+        "first_person_clock": [
+          13.172008514404297,
+          28.112041473388672
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 908639,
+            "start_ticks": 27430755,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          {
+            "pid": 908781,
+            "start_ticks": 27438789,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          }
+        ],
+        "save_sha256": [
+          "01f4dcf115364561ea58091173aab124fe0811b5314363b7cc1198ed380b0b6d",
+          "7431601467aee60e698d79d42e269f00308c0d6d0f3b7017df2e1810ad3c4f78"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/extra-content-reference-audit.json",
+        "sha256": "5b54f6bc38bcbcba7857ad0867774db3d0657a752fb20497a4c4648846f0aab0"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/visual-review.json",
+        "sha256": "fbe6a01e5831b28d9972527ba9ea4ef4f250405b405f2e564325ed8440581546"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 48.461,
+                "last": 48.481,
+                "best": 48.481,
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.998890268945823
+              },
+              {
+                "first": 59.101,
+                "last": 59.121,
+                "best": 59.121,
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.9988902903038615
+              }
+            ],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.08245216798456124,
+                "best_offset_seconds": 48.50366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.08065585568220729,
+                "best_offset_seconds": 48.50366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.7630442944014727,
+                "best_offset_seconds": 48.481,
+                "threshold_samples": 2
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.09636111843168088,
+                "best_offset_seconds": 49.00633333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.7687507824753961,
+                "best_offset_seconds": 48.481,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.9988902903038615,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.07645510193823124,
+                "best_offset_seconds": 48.50366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.0800971619085029,
+                "best_offset_seconds": 59.215583333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.7708118719656237,
+                "best_offset_seconds": 48.461,
+                "threshold_samples": 2
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.07908242117909738,
+                "best_offset_seconds": 48.5495,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.0892627408892269,
+                "best_offset_seconds": 49.006,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.7476299236593988,
+                "best_offset_seconds": 59.101,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.7738001924181881,
+                "best_offset_seconds": 48.481,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.7504861118594163,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.6728484079798083,
+                "best_offset_seconds": 59.101,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.08245320886516207,
+                "best_offset_seconds": 59.14366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.08065523029819825,
+                "best_offset_seconds": 59.14366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.7630442727416286,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.09633888381600762,
+                "best_offset_seconds": 49.00633333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.7687511193337332,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.9988902349855008,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.07645659630396946,
+                "best_offset_seconds": 59.14366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.08009585428203583,
+                "best_offset_seconds": 59.215583333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.7708117955840045,
+                "best_offset_seconds": 48.461,
+                "threshold_samples": 2
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.07908234019112248,
+                "best_offset_seconds": 59.1895,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.08930313268441027,
+                "best_offset_seconds": 59.646,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.7476302370467818,
+                "best_offset_seconds": 48.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.7738008737489475,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.7504848376688097,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.6728475963394243,
+                "best_offset_seconds": 48.461,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "c4debb59f05bf30c768ac21305f30b9503b804470c5596ce783b7b7d48151a77",
+            "duration_seconds": 65.8,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/mixture-first-verification.json",
+            "sha256": "2ba59b9a497ef6d60da183849fd6abea29cba5e3c7f6eab2f8a240f4a26c91bb"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 48.481,
+                "last": 48.481,
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.9988902505254154
+              },
+              {
+                "first": 59.121,
+                "last": 59.121,
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.9988902637208052
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0824524309252059,
+                "best_offset_seconds": 59.14366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.0963512825604244,
+                "best_offset_seconds": 49.00633333333333,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.9988902637208052,
+                "best_offset_seconds": 59.121,
+                "threshold_samples": 2
+              }
+            ],
+            "pcm_sha256": "c4debb59f05bf30c768ac21305f30b9503b804470c5596ce783b7b7d48151a77",
+            "frames_at_analysis_rate": 789600,
+            "duration_seconds": 65.8,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/audio-verification-2.json",
+            "sha256": "29d97f33d88220b17caeebca1fcc04a0bff0bf1a8167c2da7c87f280e86b1eb7"
+          },
+          "actual_environment": {
+            "pid": 908639,
+            "start_ticks": 27430755,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/config/alsoft.conf",
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/sdl-input.so"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 908639,
+            "start_ticks": 27430755,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/config/alsoft.conf",
+            "config_sha256": "5e66b01caf08fa9807a6bcbb12465e043cb20e03f562af068aa1a75134a071b9",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 908639,
+            "start_ticks": 27430755,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/first/scenario.json",
+            "sha256": "df13e1476305e43580ccfa4e4cd4984cab5c6ec1ef720a4a532f883e12c93772"
+          }
+        },
+        {
+          "phase": "second",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.05484746214778646,
+                "best_offset_seconds": 104.18166666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.04998804901302306,
+                "best_offset_seconds": 101.66066666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05373965501018232,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.05178582319620307,
+                "best_offset_seconds": 12.992583333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.051422006935206425,
+                "best_offset_seconds": 94.79783333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05710082281599196,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.052130734775084245,
+                "best_offset_seconds": 41.084583333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.049667110400467215,
+                "best_offset_seconds": 48.539,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05354794037919567,
+                "best_offset_seconds": 17.466416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.05316029261412524,
+                "best_offset_seconds": 20.735833333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05324965756254912,
+                "best_offset_seconds": 33.19725,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.049940676659190934,
+                "best_offset_seconds": 53.35316666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.053025632544480485,
+                "best_offset_seconds": 27.304583333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05510065583909415,
+                "best_offset_seconds": 62.21608333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05219063774425058,
+                "best_offset_seconds": 19.757583333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.05264174516181933,
+                "best_offset_seconds": 5.559666666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.053052865276374775,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.056064474312389194,
+                "best_offset_seconds": 92.79358333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.05293350887051372,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.04932132527755305,
+                "best_offset_seconds": 99.729,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05654632146675208,
+                "best_offset_seconds": 67.7605,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05091324948374728,
+                "best_offset_seconds": 86.425,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.0509894914509443,
+                "best_offset_seconds": 47.32825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05512819089746407,
+                "best_offset_seconds": 4.082416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05276518959753075,
+                "best_offset_seconds": 10.307666666666666,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05274148344621829,
+                "best_offset_seconds": 5.899166666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05188041937956219,
+                "best_offset_seconds": 26.956083333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05218393433191228,
+                "best_offset_seconds": 60.48875,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.0507956895307638,
+                "best_offset_seconds": 46.10366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.051241804571346077,
+                "best_offset_seconds": 19.1505,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "d656848497329452aa5631b25567d8bac101826a2d8344c00584b7d850260fe9",
+            "duration_seconds": 105.1,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/mixture-second-verification.json",
+            "sha256": "ee6ed9d5347226abb4d5240b2a72067f35503077003ef09e42d9a7761693d7d2"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701072,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.053766923351985206,
+                "best_offset_seconds": 89.16041666666666,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "d656848497329452aa5631b25567d8bac101826a2d8344c00584b7d850260fe9",
+            "frames_at_analysis_rate": 1261200,
+            "duration_seconds": 105.1,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/audio-verification-0.json",
+            "sha256": "d96e260036480dc6fa3ea26c25f72992c93ad6d14f37a1821cbfe937478f05d7"
+          },
+          "actual_environment": {
+            "pid": 908781,
+            "start_ticks": 27438789,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/config/alsoft.conf",
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/sdl-input.so"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 908781,
+            "start_ticks": 27438789,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/config/alsoft.conf",
+            "config_sha256": "5b935e6176167589491b16d97914d36ad13bb4dab52b2f9e5cb0327a97eda1ee",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 908781,
+            "start_ticks": 27438789,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-first-01/second/scenario.json",
+            "sha256": "2a92e1d64a1b67c382c4e12406671de243444a05afaf2b9f51fee0f18728bcb6"
+          }
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "view": "third",
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/verification.json",
+        "sha256": "d41c447b1f38150408ee664409d8e458a183df8f407288a4ce1807f2fa41d914"
+      },
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta. Fresh captures with explicit mixer period960 frames and periods3, additional fixed-bank PCM criterion reported separately. All first phases are fresh.",
+        "input_view": "third",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -13.67000961303711,
+              "ease_start": 13.67000961303711,
+              "last_input": 0.0,
+              "ease_end": 13.770009994506836,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -13.255008697509766,
+                "ease_start": 13.67000961303711,
+                "last_input": 0.41500091552734375,
+                "ease_end": 13.770009994506836,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 13.67000961303711
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "da13a084cb1969b7cc117e03a95cdc8084609d6bb39bc798befe10b76d76fd88"
+          },
+          {
+            "tracks": 66,
+            "sha256": "ecd3ac50bec7576451fba12c41c8df0b604242c261195c1656e23d0fe4a28872"
+          }
+        ],
+        "first_person_clock": [
+          13.67000961303711,
+          28.610042572021484
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 908638,
+            "start_ticks": 27430752,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          {
+            "pid": 908796,
+            "start_ticks": 27438853,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          }
+        ],
+        "save_sha256": [
+          "d14e954c65e533b31f11336b049294dc06e96754aee7430a18d78818a92419dd",
+          "86f290be2c5805fac4531d73188e4784b19d5c0bffa8fc74462d171c2663c73f"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/extra-content-reference-audit.json",
+        "sha256": "e144bc5e3981d2542a274eb552a7a342f160f1ee6415d6fc937f99a07c8abf33"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/visual-review.json",
+        "sha256": "8e0c2b9d82ec69b3cd5e2101ae7556fde1774037fe68a80a7e1f8bb76fc5cddc"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 53.461,
+                "last": 53.461,
+                "best": 53.461,
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.9984024432722542
+              },
+              {
+                "first": 64.661,
+                "last": 64.661,
+                "best": 64.661,
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.9984024937801887
+              }
+            ],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.9984024937801887,
+                "best_offset_seconds": 64.661,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.6606677148764174,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.6187646171368576,
+                "best_offset_seconds": 64.661,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.11665773908573779,
+                "best_offset_seconds": 53.49641666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.09586948088335252,
+                "best_offset_seconds": 53.587666666666664,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.07890746006373975,
+                "best_offset_seconds": 64.80433333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.7250911296826216,
+                "best_offset_seconds": 64.641,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.6622995580205162,
+                "best_offset_seconds": 64.661,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.6314867054073837,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.6647258830214546,
+                "best_offset_seconds": 64.641,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.13755595072707613,
+                "best_offset_seconds": 53.46541666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.1194796759439729,
+                "best_offset_seconds": 53.49641666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.6369553358197416,
+                "best_offset_seconds": 53.441,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.1060055425421389,
+                "best_offset_seconds": 53.46383333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.0742716330567723,
+                "best_offset_seconds": 53.41833333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.9984024432722542,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.6606688721257714,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.6187656674007176,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.1166559610057947,
+                "best_offset_seconds": 53.49641666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.09586897119664627,
+                "best_offset_seconds": 53.587666666666664,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.07890189563277684,
+                "best_offset_seconds": 53.60433333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.7250924724806119,
+                "best_offset_seconds": 53.441,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.6622988930857967,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.6314846754165387,
+                "best_offset_seconds": 64.661,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.6647251693215716,
+                "best_offset_seconds": 53.441,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.13755880575118207,
+                "best_offset_seconds": 64.66541666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.11947885417203964,
+                "best_offset_seconds": 64.69641666666666,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.6369553073370205,
+                "best_offset_seconds": 64.641,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.10600428211115293,
+                "best_offset_seconds": 64.66383333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.07427032026411841,
+                "best_offset_seconds": 53.41833333333334,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "d240011c91de8c6cfb3342b5af3bef5e33a7712cf38835829a8cfa32c1c4d637",
+            "duration_seconds": 71.48,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/mixture-first-verification.json",
+            "sha256": "e73750fab1ded4442f63bc75ec80de04ed7a46fbdf94bca7f7d80d571cca8759"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 53.461,
+                "last": 53.461,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024401291496
+              },
+              {
+                "first": 64.661,
+                "last": 64.661,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024195402414
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024401291496,
+                "best_offset_seconds": 53.461,
+                "threshold_samples": 2
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.1166568503710696,
+                "best_offset_seconds": 53.49641666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.07889963126465264,
+                "best_offset_seconds": 64.80433333333333,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "d240011c91de8c6cfb3342b5af3bef5e33a7712cf38835829a8cfa32c1c4d637",
+            "frames_at_analysis_rate": 857760,
+            "duration_seconds": 71.48,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/audio-verification-2.json",
+            "sha256": "db2382159d618ae0f788faf78ad7d0698442eae64875517a6e3a1033c52beda2"
+          },
+          "actual_environment": {
+            "pid": 908638,
+            "start_ticks": 27430752,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/config/alsoft.conf",
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/sdl-input.so"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 908638,
+            "start_ticks": 27430752,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/config/alsoft.conf",
+            "config_sha256": "1e74fdd38381cb62271e8a381ff2bea37c263e989b8bc3c1e081266f2e640386",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 908638,
+            "start_ticks": 27430752,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/first/scenario.json",
+            "sha256": "85700d9ccf64279be524e55a0f05487c20bd116f65a4dfa2f56c9d39a47be0aa"
+          }
+        },
+        {
+          "phase": "second",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.05469808714501061,
+                "best_offset_seconds": 22.407833333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.04998804901302306,
+                "best_offset_seconds": 101.66066666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05373965501018232,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.05178582319620307,
+                "best_offset_seconds": 12.992583333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.051422006935206425,
+                "best_offset_seconds": 94.79783333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05710082281599196,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.052130734775084245,
+                "best_offset_seconds": 41.084583333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.049667110400467215,
+                "best_offset_seconds": 48.539,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05354794037919567,
+                "best_offset_seconds": 17.466416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.053160292614125235,
+                "best_offset_seconds": 20.735833333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05324965756254913,
+                "best_offset_seconds": 33.19725,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.04994067665919092,
+                "best_offset_seconds": 53.35316666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.05302563254448049,
+                "best_offset_seconds": 27.304583333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05510065583909415,
+                "best_offset_seconds": 62.21608333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05219063774425058,
+                "best_offset_seconds": 19.757583333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.052641745161819326,
+                "best_offset_seconds": 5.559666666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.053052865276374775,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.056064474312389194,
+                "best_offset_seconds": 92.79358333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.05293350887051372,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.04932132527755305,
+                "best_offset_seconds": 99.729,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05654632146675208,
+                "best_offset_seconds": 67.7605,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05091324948374728,
+                "best_offset_seconds": 86.425,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.0509894914509443,
+                "best_offset_seconds": 47.32825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05512819089746407,
+                "best_offset_seconds": 4.082416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.052765189597530765,
+                "best_offset_seconds": 10.307666666666666,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05274148344621829,
+                "best_offset_seconds": 5.899166666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05188041937956219,
+                "best_offset_seconds": 26.956083333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05218393433191228,
+                "best_offset_seconds": 60.48875,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.050795689530763806,
+                "best_offset_seconds": 46.10366666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.051241804571346077,
+                "best_offset_seconds": 19.1505,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "6c77c23a390796ad897b5a79eba4dd2465b6ac65519329ddc77501110e05c77b",
+            "duration_seconds": 103.4,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/mixture-second-verification.json",
+            "sha256": "22167f9a89f726105248dcee59256aa71f78d63484070ce98b7c81824a4a9153"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.0577516187191004,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701071,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.053766923351985206,
+                "best_offset_seconds": 89.16041666666666,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "6c77c23a390796ad897b5a79eba4dd2465b6ac65519329ddc77501110e05c77b",
+            "frames_at_analysis_rate": 1240800,
+            "duration_seconds": 103.4,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/audio-verification-0.json",
+            "sha256": "60995b7013f9979c062c2201b0f337286d644038cd7f704547b746f06fb4b6fb"
+          },
+          "actual_environment": {
+            "pid": 908796,
+            "start_ticks": 27438853,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/config/alsoft.conf",
+              "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/sdl-input.so"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 908796,
+            "start_ticks": 27438853,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/config/alsoft.conf",
+            "config_sha256": "2bf1dfc26efe9bfc67cfe939d014af39f804979de941d0f52b5f2020a315dbbd",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 908796,
+            "start_ticks": 27438853,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fcf5f25cc68cafe434b8f8e830856f50a656f55a4ff04b4e2ef45fab0104cab9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-normal-third-01/second/scenario.json",
+            "sha256": "1b65b90f69d74353c60c3424a2294d179a5e41bef7ede1c054037db30327e496"
+          }
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "view": "first",
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/verification.json",
+        "sha256": "17514e22f32d51294d79e956ceb44d76d3216dccf258b41dcb3e57f55618e254"
+      },
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta. Fresh captures with explicit mixer period960 frames and periods3, additional fixed-bank PCM criterion reported separately. All first phases are fresh.",
+        "input_view": "first",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -11.346004486083984,
+              "ease_start": 11.346004486083984,
+              "last_input": 0.0,
+              "ease_end": 11.446004867553711,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -10.93100357055664,
+                "ease_start": 11.346004486083984,
+                "last_input": 0.41500091552734375,
+                "ease_end": 11.446004867553711,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 11.346004486083984
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "37ea91bec3f1128174ddc2e042bc9c1c148ecfd14eb18b052f753c555c2a7e92"
+          },
+          {
+            "tracks": 66,
+            "sha256": "08a45112a67768d705d55b6528d8bf87301cd0ee0d2858b333c2ad81c549c8e8"
+          }
+        ],
+        "first_person_clock": [
+          11.346004486083984,
+          16.492015838623047
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 909059,
+            "start_ticks": 27458497,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          {
+            "pid": 909359,
+            "start_ticks": 27495591,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          }
+        ],
+        "save_sha256": [
+          "6b92d4fffdd613e9f76660e60c209b84f7e0d52b386d0fdf15ad8f57cab2b983",
+          "fcf8de86c34b038919a66cc1080efb3d1b124de37ceae7dbc964e26d426ac1ee"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/extra-content-reference-audit.json",
+        "sha256": "960304ab063440ee9147f2a862ed20854e897934ffa4857a681332d248c0ae06"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/visual-review.json",
+        "sha256": "0ad99f92d352e3dc75bc2ff953d55d3a15b590abe6b28d64cf9015661befa1ba"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 266.361,
+                "last": 266.381,
+                "best": 266.381,
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.9988903572485994
+              },
+              {
+                "first": 323.201,
+                "last": 323.201,
+                "best": 323.201,
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.9988144638137193
+              }
+            ],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.08497663379134082,
+                "best_offset_seconds": 323.2436666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.08065450487383306,
+                "best_offset_seconds": 266.40366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.7630436871021702,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.09806925147273039,
+                "best_offset_seconds": 323.746,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.768750140727816,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.9988903260879847,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.10480556140490428,
+                "best_offset_seconds": 323.22366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.0800961927394031,
+                "best_offset_seconds": 266.47558333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.7708113454667048,
+                "best_offset_seconds": 266.361,
+                "threshold_samples": 1
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.08179670059877152,
+                "best_offset_seconds": 323.22366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.09085945982363898,
+                "best_offset_seconds": 323.33133333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.7476296822502462,
+                "best_offset_seconds": 266.361,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.7738001947246352,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.750484632741555,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.998814405488667,
+                "best_offset_seconds": 323.201,
+                "threshold_samples": 1
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.08497611761210852,
+                "best_offset_seconds": 323.2436666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.0806544594168279,
+                "best_offset_seconds": 266.40366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.7630434780798303,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.09788639656815144,
+                "best_offset_seconds": 323.746,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.7687506144228732,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.9988903572485994,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.10480355058496416,
+                "best_offset_seconds": 323.22366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.08009600556157946,
+                "best_offset_seconds": 266.47558333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.7708114133694318,
+                "best_offset_seconds": 266.361,
+                "threshold_samples": 1
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.08179430553747648,
+                "best_offset_seconds": 323.22366666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.09086262498625057,
+                "best_offset_seconds": 323.33133333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.7476301234266934,
+                "best_offset_seconds": 266.361,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.7737998887906125,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.7504846728024701,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.9988144638137193,
+                "best_offset_seconds": 323.201,
+                "threshold_samples": 1
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "bf85bfca70b71a0c922c204bd97a460b3ef0d7c41f57d7c0c9e5ee2c6ad00d11",
+            "duration_seconds": 354.02,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/mixture-first-verification.json",
+            "sha256": "215a9e97a68cffa22b78b99401ff10b357fec0f954cf63adbf4495f88d59d944"
+          },
+          "single_asset_criterion": {
+            "passed": false,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 266.381,
+                "last": 266.381,
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.9988903428540955
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.08497637533325035,
+                "best_offset_seconds": 323.2436666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.09798071890196683,
+                "best_offset_seconds": 323.746,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.9988903428540955,
+                "best_offset_seconds": 266.381,
+                "threshold_samples": 1
+              }
+            ],
+            "pcm_sha256": "bf85bfca70b71a0c922c204bd97a460b3ef0d7c41f57d7c0c9e5ee2c6ad00d11",
+            "frames_at_analysis_rate": 4248240,
+            "duration_seconds": 354.02,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/audio-verification-2.json",
+            "sha256": "0f71c65931c1b81cb72b9c5685bc07700c0937175b8d7475a23c615a67fffaa7"
+          },
+          "actual_environment": {
+            "pid": 909059,
+            "start_ticks": 27458497,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/config/alsoft.conf",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 909059,
+            "start_ticks": 27458497,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/config/alsoft.conf",
+            "config_sha256": "8c98ad4d87dac1cb8e58e4eaf4ddb9c7b251bad7711517ca3a9bce0d9c5c65b7",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 909059,
+            "start_ticks": 27458497,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/first/scenario.json",
+            "sha256": "13707b2b1eedbb5d94bdc9cffd6b9f91faf30dfad3608269031cadd776bd6218"
+          }
+        },
+        {
+          "phase": "second",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.05906142251972518,
+                "best_offset_seconds": 141.66308333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.050620087362017015,
+                "best_offset_seconds": 236.39241666666666,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.0537396550101823,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.052936109192755834,
+                "best_offset_seconds": 181.08825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05407159540085527,
+                "best_offset_seconds": 155.31825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.057674709381968566,
+                "best_offset_seconds": 196.97125,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.055461483480838604,
+                "best_offset_seconds": 203.08516666666668,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.06048964771842558,
+                "best_offset_seconds": 281.7708333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05680773392806281,
+                "best_offset_seconds": 115.85133333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.05316029261412524,
+                "best_offset_seconds": 20.735833333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05391373296879994,
+                "best_offset_seconds": 148.20816666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.052086193766825585,
+                "best_offset_seconds": 161.00958333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.0558979507363473,
+                "best_offset_seconds": 199.227,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05510065583909415,
+                "best_offset_seconds": 62.21608333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.053034832560580655,
+                "best_offset_seconds": 127.00633333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.05939120348972393,
+                "best_offset_seconds": 256.11575,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.05305286527637477,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.059105593632354826,
+                "best_offset_seconds": 239.0585,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.053209889442556536,
+                "best_offset_seconds": 120.90891666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05336943449847135,
+                "best_offset_seconds": 118.72041666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05654632146675208,
+                "best_offset_seconds": 67.7605,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05574829459470344,
+                "best_offset_seconds": 256.09575,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05953460502602268,
+                "best_offset_seconds": 302.11783333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05512819089746407,
+                "best_offset_seconds": 4.082416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05620932449251111,
+                "best_offset_seconds": 205.85208333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05373012693685063,
+                "best_offset_seconds": 254.22008333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05188041937956219,
+                "best_offset_seconds": 26.956083333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05369935668797487,
+                "best_offset_seconds": 182.3215,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.054861665195949476,
+                "best_offset_seconds": 171.38408333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05383176821879472,
+                "best_offset_seconds": 323.8946666666667,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "5b0e73e78015f820dd61692c2e9279839846821638ad9dca3b42edb1dae292b5",
+            "duration_seconds": 325.12,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/mixture-second-verification.json",
+            "sha256": "407bfe8a6392a3d104435ec9fc98522000856894fcd7cb6539365b13e8fdbe54"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.05775161871910038,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.0562500433170107,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.05765421011002203,
+                "best_offset_seconds": 186.4575,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "5b0e73e78015f820dd61692c2e9279839846821638ad9dca3b42edb1dae292b5",
+            "frames_at_analysis_rate": 3901440,
+            "duration_seconds": 325.12,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/audio-verification-0.json",
+            "sha256": "03891263b6f62c26e8a507da7490049ace6d3551d1a755756e61f79e6049c97f"
+          },
+          "actual_environment": {
+            "pid": 909359,
+            "start_ticks": 27495591,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/config/alsoft.conf",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 909359,
+            "start_ticks": 27495591,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/config/alsoft.conf",
+            "config_sha256": "0cbcce2b2502d922fdb55b8c31ae7e5f6f0fb55d4739f157940d4a21a8274c6d",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 909359,
+            "start_ticks": 27495591,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-first-01/second/scenario.json",
+            "sha256": "1beddcccc631e98d8c83fdd06768ca43f27a0a9cfe928ad2a7ab255050f3d35c"
+          }
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "view": "third",
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/verification.json",
+        "sha256": "d1b33f904dd5040f2d4efa62be5aa328061dd5fcd45ed90fdf6d6dff32c07120"
+      },
+      "state": {
+        "passed": true,
+        "scope": "Two real intact NPC attacks blocked by Player, then fresh-process natural NPC Recoil recovery, new attack4 windup and second normal activation explicitly stopping combat before any further contact. Stock short Player BlockHit KFs; all canonical resources/inventory/RNG audited. Continuation looks down80 mouse pixels before natural-recovery/new-attack waits so the subsequent normal activation aims into the opponent body. Focus and two zero-delta SDL reference events immediately after load precede the80-pixel aim movement; InputWrapper may consume a warp reference and suppress the first relative delta. Fresh captures with explicit mixer period960 frames and periods3, additional fixed-bank PCM criterion reported separately. All first phases are fresh.",
+        "input_view": "third",
+        "long_view": "stock body/first-person durations",
+        "native_recoil": {
+          "actor": "content:oblivion.esm:01fc43",
+          "input": {
+            "held_seconds": 0.0,
+            "input_held": false,
+            "prefer_left": true,
+            "queued": 0
+          },
+          "strike": null,
+          "ai_intent": {
+            "target": "dynamic:player:0000000000000001",
+            "style": "content:m15stationaryopponent.esp:000880"
+          },
+          "reaction": {
+            "contact_id": 3,
+            "kind": 1,
+            "animation_group": "onehandrecoil_02",
+            "animation_time": 0.0,
+            "started": false,
+            "sequence_timing": {
+              "easing": true,
+              "offset": -11.346004486083984,
+              "ease_start": 11.346004486083984,
+              "last_input": 0.0,
+              "ease_end": 11.446004867553711,
+              "weighted_time": 0.0,
+              "output_time": 0.0
+            },
+            "retirement": null,
+            "inactive": false,
+            "pose_snapshot": null
+          },
+          "retiring_sequences": [
+            {
+              "contact_id": 3,
+              "animation_group": "onehandattackleft",
+              "animation_time": 0.41500091552734375,
+              "sequence_timing": {
+                "easing": false,
+                "offset": -10.93100357055664,
+                "ease_start": 11.346004486083984,
+                "last_input": 0.41500091552734375,
+                "ease_end": 11.446004867553711,
+                "weighted_time": 0.41500091552734375,
+                "output_time": 0.41500091552734375
+              },
+              "retirement": {
+                "duration": 0.10000000149011612,
+                "start_clock": 11.346004486083984
+              }
+            }
+          ],
+          "first_person": null
+        },
+        "final_npc_reaction_cleared": true,
+        "full_M15S4_acceptance": false,
+        "source_schema_version": 57,
+        "body_first_person_pose": [
+          {
+            "tracks": 64,
+            "sha256": "b10a9376326d3f63c910e2057ce266b0698e67a262e9c6ad69a0a9185e391045"
+          },
+          {
+            "tracks": 66,
+            "sha256": "e3d5995640daf363ebd4a9c9efefbcf319208436c784f91b3099c21cbf63b462"
+          }
+        ],
+        "first_person_clock": [
+          11.346004486083984,
+          16.160015106201172
+        ],
+        "player_health_damage": -1.9427038431167603,
+        "health_precision_gate": "actual original blocked-contact007F observed; exact PC24 composed fixture value only",
+        "player_weapon_condition": 55.826988220214844,
+        "opponent_weapon_condition": 55.400001525878906,
+        "combat_rng": 773150046,
+        "action_next": [
+          4,
+          5
+        ],
+        "continuation_fresh_attack_canceled": 4,
+        "original_reference_inventories_checked": 36289,
+        "process_epochs": [
+          {
+            "pid": 909068,
+            "start_ticks": 27458575,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          {
+            "pid": 909358,
+            "start_ticks": 27495589,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          }
+        ],
+        "save_sha256": [
+          "e9e447a46f77e04094d07eac2ec8b597779728f8447de722e5fc395ad0a6ec6d",
+          "a5a8ab25a2250b60e56ccff0ed7a7faad399fbaff3272ce46484717610472763"
+        ],
+        "audio_acceptance": "PCM captured; asset correlation not yet checked",
+        "visual_review": "pending"
+      },
+      "reference_audit": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/extra-content-reference-audit.json",
+        "sha256": "960304ab063440ee9147f2a862ed20854e897934ffa4857a681332d248c0ae06"
+      },
+      "visual_review": {
+        "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/visual-review.json",
+        "sha256": "1e665551e8f7cbb3e22b6480ee28cd5e05942e7c6b5b8e219c9249702c3bac3c"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 265.241,
+                "last": 265.241,
+                "best": 265.241,
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.9984025407536681
+              },
+              {
+                "first": 322.021,
+                "last": 322.021,
+                "best": 322.021,
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.9984024684174296
+              }
+            ],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.9984024684174296,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.6606679389058763,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.6187635040288508,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.11665787545255211,
+                "best_offset_seconds": 265.27641666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.09587108192818106,
+                "best_offset_seconds": 322.1476666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.07890565487826504,
+                "best_offset_seconds": 265.38433333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.7250921675291574,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.6622991608286337,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.6314852467890367,
+                "best_offset_seconds": 265.241,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.664724361398818,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.13755745293455232,
+                "best_offset_seconds": 265.24541666666664,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.11948038913308211,
+                "best_offset_seconds": 322.0564166666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.6369561001881849,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.10600620619942765,
+                "best_offset_seconds": 322.02383333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.07427086107988956,
+                "best_offset_seconds": 265.1983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.9984025407536681,
+                "best_offset_seconds": 265.241,
+                "threshold_samples": 2
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.6606685452564167,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.6187646785841812,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.11665773196728692,
+                "best_offset_seconds": 265.27641666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.09586573516889835,
+                "best_offset_seconds": 322.1476666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.07890593587286607,
+                "best_offset_seconds": 265.38433333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.7250928020942149,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.6622989568480698,
+                "best_offset_seconds": 322.021,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.6314863926183291,
+                "best_offset_seconds": 265.241,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.664725596345078,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.13755885620671893,
+                "best_offset_seconds": 322.0254166666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.11947890113278398,
+                "best_offset_seconds": 265.27641666666665,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.6369560143310988,
+                "best_offset_seconds": 265.221,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.10600403092592872,
+                "best_offset_seconds": 322.02383333333336,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.07427071270150094,
+                "best_offset_seconds": 265.1983333333333,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "2105c5388096be43de6a01143eec1d038fc7b9f29bfd2626319e00cce6076e97",
+            "duration_seconds": 353.06,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/mixture-first-verification.json",
+            "sha256": "6e00cfc9770092c97239fd3c1be218f605a93d24191b9ad0620be05cc5e5d7d5"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 2,
+            "clusters": [
+              {
+                "first": 265.241,
+                "last": 265.241,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984025051358164
+              },
+              {
+                "first": 322.021,
+                "last": 322.021,
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984024597753877
+              }
+            ],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.9984025051358164,
+                "best_offset_seconds": 265.241,
+                "threshold_samples": 2
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.11665780403615868,
+                "best_offset_seconds": 265.27641666666665,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.0789057988475927,
+                "best_offset_seconds": 265.38433333333336,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "2105c5388096be43de6a01143eec1d038fc7b9f29bfd2626319e00cce6076e97",
+            "frames_at_analysis_rate": 4236720,
+            "duration_seconds": 353.06,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/audio-verification-2.json",
+            "sha256": "c5bb3f692025051d715010288c1ddc800f3541feca9deb31248c6aee771b5842"
+          },
+          "actual_environment": {
+            "pid": 909068,
+            "start_ticks": 27458575,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/config/alsoft.conf",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 909068,
+            "start_ticks": 27458575,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/config/alsoft.conf",
+            "config_sha256": "7eb655f7f766893e061f1123f77ea06a12efa83bbd06b216fb6d66d684f66d11",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 909068,
+            "start_ticks": 27458575,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/first/scenario.json",
+            "sha256": "c3f90b079fe7a79129de3dc79e6afe03a2a9b93404c42f9986cbf7505a7ee6be"
+          }
+        },
+        {
+          "phase": "second",
+          "mixture": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "templates": [
+              {
+                "template": "0+0@0",
+                "channel": 0,
+                "maximum_correlation": 0.05906142251972518,
+                "best_offset_seconds": 141.66308333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.050620087362017015,
+                "best_offset_seconds": 236.39241666666666,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.0537396550101823,
+                "best_offset_seconds": 78.08983333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 0,
+                "maximum_correlation": 0.05293610919275583,
+                "best_offset_seconds": 181.08825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05407159540085527,
+                "best_offset_seconds": 155.31825,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 0,
+                "maximum_correlation": 0.05767470938196857,
+                "best_offset_seconds": 196.97125,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.05546148348083859,
+                "best_offset_seconds": 203.08516666666668,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.0604896477184256,
+                "best_offset_seconds": 281.7708333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05680773392806283,
+                "best_offset_seconds": 115.85133333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.053160292614125235,
+                "best_offset_seconds": 20.735833333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05391373296879994,
+                "best_offset_seconds": 148.20816666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05208619376682559,
+                "best_offset_seconds": 161.00958333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 0,
+                "maximum_correlation": 0.0558979507363473,
+                "best_offset_seconds": 199.227,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 0,
+                "maximum_correlation": 0.05510065583909415,
+                "best_offset_seconds": 62.21608333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 0,
+                "maximum_correlation": 0.05303483256058065,
+                "best_offset_seconds": 127.00633333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@0",
+                "channel": 1,
+                "maximum_correlation": 0.05939120348972394,
+                "best_offset_seconds": 256.11575,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.05305286527637477,
+                "best_offset_seconds": 34.19025,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05910559363235484,
+                "best_offset_seconds": 239.0585,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@0",
+                "channel": 1,
+                "maximum_correlation": 0.053209889442556536,
+                "best_offset_seconds": 120.90891666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.05336943449847135,
+                "best_offset_seconds": 118.72041666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@0",
+                "channel": 1,
+                "maximum_correlation": 0.056546321466752064,
+                "best_offset_seconds": 67.7605,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05574829459470344,
+                "best_offset_seconds": 256.09575,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05953460502602268,
+                "best_offset_seconds": 302.11783333333335,
+                "threshold_samples": 0
+              },
+              {
+                "template": "0+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05512819089746407,
+                "best_offset_seconds": 4.082416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05620932449251113,
+                "best_offset_seconds": 205.85208333333333,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.05373012693685062,
+                "best_offset_seconds": 254.22008333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "1+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.051880419379562184,
+                "best_offset_seconds": 26.956083333333332,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+0@240",
+                "channel": 1,
+                "maximum_correlation": 0.05369935668797487,
+                "best_offset_seconds": 182.3215,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+1@240",
+                "channel": 1,
+                "maximum_correlation": 0.054861665195949476,
+                "best_offset_seconds": 171.38408333333334,
+                "threshold_samples": 0
+              },
+              {
+                "template": "2+2@240",
+                "channel": 1,
+                "maximum_correlation": 0.05371480813010571,
+                "best_offset_seconds": 279.88666666666666,
+                "threshold_samples": 0
+              }
+            ],
+            "recipe": {
+              "schema_version": 1,
+              "assets": [
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+                  "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+                  "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+                },
+                {
+                  "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+                  "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+                }
+              ],
+              "sample_rate": 48000,
+              "channels": 2,
+              "analysis_rate": 12000,
+              "mixer_period_frames": 960,
+              "minimum_normalized_correlation": 0.75,
+              "cluster_gap_seconds": 1
+            },
+            "pcm_sha256": "48e834e87606252643d2412d2169936443ac62deac4add080c61fb46ac3ccb62",
+            "duration_seconds": 318.58,
+            "scope": "Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count."
+          },
+          "mixture_evidence": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/mixture-second-verification.json",
+            "sha256": "8dc1b353ca01e0f647fe947525ba192dbb0871b3bdfe4be5fdc162313b04dad0"
+          },
+          "single_asset_criterion": {
+            "passed": true,
+            "expected_clusters": 0,
+            "clusters": [],
+            "assets": [
+              {
+                "asset": "wpn_block_blade_01.wav",
+                "maximum_correlation": 0.057751618719100395,
+                "best_offset_seconds": 23.088416666666667,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_02.wav",
+                "maximum_correlation": 0.05625004331701071,
+                "best_offset_seconds": 34.60225,
+                "threshold_samples": 0
+              },
+              {
+                "asset": "wpn_block_blade_03.wav",
+                "maximum_correlation": 0.05765421011002203,
+                "best_offset_seconds": 186.4575,
+                "threshold_samples": 0
+              }
+            ],
+            "pcm_sha256": "48e834e87606252643d2412d2169936443ac62deac4add080c61fb46ac3ccb62",
+            "frames_at_analysis_rate": 3822960,
+            "duration_seconds": 318.58,
+            "method": "Stock PCM linearly resampled to 12kHz; actual stereo PCM averaged and decimated by4; normalized mean-corrected sliding correlation using FFT; all above-threshold windows grouped within1s. Threshold fixed before baseline."
+          },
+          "single_asset_report": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/audio-verification-0.json",
+            "sha256": "8798351d923014010281e4c545c8232aa482cf0934b543afd255163c2b706108"
+          },
+          "actual_environment": {
+            "pid": 909358,
+            "start_ticks": 27495589,
+            "environment": {
+              "ALSOFT_CONF": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/config/alsoft.conf",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          },
+          "actual_audio_configuration": {
+            "pid": 909358,
+            "start_ticks": 27495589,
+            "config_path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/config/alsoft.conf",
+            "config_sha256": "47d8e06cbe2c93bc29bbc310cf1ed3fecf2adebf4883ee36ad08792d5d9a9171",
+            "mixer_period_frames": 960,
+            "periods": 3,
+            "libraries": [
+              {
+                "path": "/usr/lib64/libopenal.so.1.24.2",
+                "sha256": "cafeb94fb4f05d6d0b337cac62e77dbcf11037701c83f9f6444bb39c0c5ee7a1"
+              }
+            ],
+            "scope": "Actual process environment, on-disk configuration and mapped OpenAL library identity; PCM format checked separately."
+          },
+          "process_epoch": {
+            "pid": 909358,
+            "start_ticks": 27495589,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c947f8457ff436d366177b0c3c78979ffe8ea1feef0435e0655dfc95bf4112ae"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/block-mixture-assay-runtime-sanitized-third-01/second/scenario.json",
+            "sha256": "cb8d309c9afdcafc6c4378ff687c622304dce397f8c8405c825076d4dfd2fbd5"
+          }
+        }
+      ]
+    }
+  ],
+  "process_scope": "All eight phases are fresh actual engine process epochs: normal/sanitized by first/third camera, positive contacts followed by fresh-process natural recovery/cancel without replay.",
+  "engine_reuse": {
+    "prior_receipt": {
+      "path": "docs/oblivion/M15-NPC-BLOCKED-RECOIL-VERIFICATION.json",
+      "sha256": "c81506986a4709e87f3adfeeee0228b2a2d6fd912167a5787218b14c0385c25e"
+    },
+    "source_identity": {
+      "passed": true,
+      "source_files": [
+        {
+          "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+          "sha256": "028ec12faec431c6ffc2a499b6d93f2ec4239130ffc1b8ad94fc6e4c0effa10a"
+        },
+        {
+          "path": "apps/openmw/mwworld/worldimp.cpp",
+          "sha256": "bcca102bae61519612744300b1446aab3a1e9c1b37df6283281e5517f65b3896"
+        },
+        {
+          "path": "apps/openmw/mwworld/worldimp.hpp",
+          "sha256": "f8a349859613674fb2db755e7ece6e905f321df97ab46bf252fadde371382054"
+        },
+        {
+          "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+          "sha256": "c604f96be439c5bee2a7c3de00346bfe3918e73dd8ea5743f5bcfe67bdfc2756"
+        }
+      ],
+      "tested_fingerprint": "64472991bf75721a6982c8cae2938f4e5f461e71ff4fde1d72052bf6952a9716",
+      "scope": "All4engine/source test files unchanged byte-for-byte after1769normal/SAN acceptance. No engine rebuild for fixture-only correction."
+    },
+    "scope": "Four C++ sources unchanged and binaries pinned to prior normal/SAN1769-test evidence; no new engine build for Python-only assay and config change."
+  },
+  "limitations": [
+    "Threshold0.75, cluster gap1s, two equal-gain voices, offset0 or one explicitly declared960-frame mixer period; no amplitude/offset/time-stretch fit. This is a finite supported model, not arbitrary audio-source separation.",
+    "Stereo channels are measured independently; antiphase cannot hide a target from the zero-replay check. Correlation windows and strongest offsets are reported separately; temporal clusters do not identify coincident voice counts.",
+    "Each positive phase independently logs four played requests for two blocked contacts. Same-asset coincident pairs are observationally equivalent to a louder single asset under normalized correlation.",
+    "Historical single-asset failed reports remain failed. Fresh runs also retain their original single-asset reports; mixture acceptance is a distinct preregistered criterion.",
+    "Configured60FPS is a cap, not measured60FPS. Static pose/camera review does not close original motion/camera, held-block skin or controller/FPS gates.",
+    "ASan/UBSan halt-on-error verified from actual processes; leak checking disabled. SDL input helper compiled separately without sanitizer instrumentation. Full M15S4 remains incomplete."
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/preregistered-inputs.json",
+      "sha256": "d1fd8a36f19a4cc17840429b98c25b52ec95f90d62437def5ec84a8340b86cb0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/preregistered-acceptance.json",
+      "sha256": "600c3b87916d1318b015a04b35b067a4ce5e0210d2f9e350c16c317fc7e62386"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/mixture-recipe.json",
+      "sha256": "aa38cebf3f07e72cc7f724f8aa6f00e0c3ec185b82961781c764443667f3c659"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/run-runtime.py",
+      "sha256": "6974be3bbde079c8a9009611cc79c5e42e81f45dacd1b25f0513300b3f0f6d02"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/launcher.py",
+      "sha256": "c46081dd070ce59a2324f8f7cee9796d2748199767b7030b42f2a2a8607eb93d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/verify-runtime.py",
+      "sha256": "7afedf091b375c0945afbae25753be5d264774d1591f0dbe1381dec07a0a4f13"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/runtime-pipeline.json",
+      "sha256": "fb410fbba5f7a86efd91e4628e612de71e75067ee0e7839e981f1171e186404d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/assets.json",
+      "sha256": "db2995a58b96cb4955b696048f5608f70d064af58f8ed417c140719ccfffa548"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/stock-mesh-identity.json",
+      "sha256": "a8412c2144f9afa8c0bc908aa7e036f31bec0be8cde86afc418b15b2746d0d28"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-mixture-runtime-review-01/close-assay.py",
+      "sha256": "499881764b2ecc7755e825a4c46272bd813b3d2b053b3e8f0c0a7829db81553a"
+    }
+  ]
+}

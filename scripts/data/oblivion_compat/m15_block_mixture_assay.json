@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+      "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+      "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+      "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+    }
+  ],
+  "sample_rate": 48000,
+  "channels": 2,
+  "analysis_rate": 12000,
+  "mixer_period_frames": 960,
+  "minimum_normalized_correlation": 0.75,
+  "cluster_gap_seconds": 1
+}

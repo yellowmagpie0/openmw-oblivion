@@ -8861,3 +8861,66 @@ pins each independent validation layer and its audio outcomes. Full M15S4 remain
 and distinct/parallel ownership, Stagger/BlockAttack, mastery/effects, remaining
 creature/power branches, input/FPS/cancellation/restart matrices and audio gates
 are still separate required work.
+
+### Stock block-audio mixture assay
+
+The original single-template PCM failures remain failed. Each blocked contact
+requests two equal-gain voices from the same emitter, and the mixer can start
+them together or one update period apart. A sound compared only with a single
+clip can therefore fail the existing correlation threshold even when the two
+voices are present. The new assay declares a finite bank before fresh captures:
+six aligned unordered pairs of three pinned stock clips and nine ordered pairs
+separated by exactly one 960-frame/48 kHz mixer period. It keeps correlation 0.75
+and one-second cluster separation, fits no amplitude/offset/time stretch, and
+measures stereo channels separately. Coincident same-clip voices remain
+indistinguishable from a louder single clip under normalized correlation;
+native voice requests and temporal audio events are separate observations.
+
+Six independent control tests construct capture-rate PCM without the bank or
+correlation implementation. They cover all 15 pair/offset combinations, silence,
+DC, unrelated noise, antiphase stereo, wrong event counts, truncated/unsupported
+formats, malformed recipes/hash mismatches and refusal to overwrite a report.
+The initial onset assertion used the earliest above-threshold window; an
+alternate finite hypothesis could start 20 ms earlier. That failure is retained.
+Reports now expose the strongest offset separately, which matches known source
+onsets. Cluster counts, threshold and finite hypotheses are unchanged. The full
+Python inventory passes 351 tests without skips.
+
+The model is frozen before historical diagnostics and fresh runtime capture.
+Diagnostics identify two clusters in each preceding failed sanitized recording,
+with strongest correlations near 0.999 and one-period delayed pairs. Those known
+recordings are diagnostics, not held-out acceptance, and their original failed
+reports are preserved.
+
+The fresh matrix uses eight new engine epochs: normal/sanitizer by first/third
+camera, positive contacts and fresh-process recovery. Every actual process pins
+its executable, environment, on-disk audio configuration and mapped OpenAL
+library. Both phases explicitly configure period_size 960 and periods 3. Every
+state/epoch/master-reference check passes, as do all four two-cluster positive
+and four zero-cluster continuation checks under the frozen mixture criterion.
+Original single-asset reports are also retained independently: three fresh
+positive cases pass and sanitized first-person fails with only one cluster.
+All four original single-asset continuation checks also pass. The new assay
+does not rewrite that failed criterion. Direct inspection
+covers all eight new contact/ready images, with the same static-pose limitations
+as the prior Recoil course. No engine source or binary changes; prior 1,769-test
+normal/sanitizer inventories are reused, with exact source/binary identity.
+
+The three local asset bytes reproduce exactly from the pinned Sounds BSA using
+`build/bsatool extract`. The editable recipe is
+[`m15_block_mixture_assay.json`](../../scripts/data/oblivion_compat/m15_block_mixture_assay.json);
+assets remain local. From the repository root, with NumPy installed, run:
+
+```sh
+python3 scripts/tes4_m15_block_audio.py --wave CAPTURE.wav --recipe scripts/data/oblivion_compat/m15_block_mixture_assay.json --clusters 2 --output NEW-REPORT.json
+```
+
+Use `--clusters 0` for continuation/absence checks. The tool refuses to replace
+an existing report. The receipt records reproducible archive member names,
+extraction commands and hashes, controls, diagnostics, source fingerprints,
+fresh process/config identities and both PCM criteria:
+[`M15-BLOCK-MIXTURE-AUDIO-VERIFICATION.json`](M15-BLOCK-MIXTURE-AUDIO-VERIFICATION.json).
+This closes only the declared finite block-audio course. Full M15S4 still needs
+Player strike/parallel-view ownership, remaining reactions/mastery/effects and
+full input/FPS/cancellation/restart acceptance. The configured 60 FPS cap is not
+measured 60 FPS, and sanitizer leak detection remains disabled.
