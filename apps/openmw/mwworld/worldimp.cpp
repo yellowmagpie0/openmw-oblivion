@@ -2709,11 +2709,11 @@ namespace MWWorld
             if (player)
             {
                 auto* first = animation->getPlaybackPeer();
-                // Fresh owned-root activation only. Cached replacements and
-                // outgoing/parallel first-person owners need separate contracts.
-                if (!first || (previous && (previous->mReaction || previous->mStrike
-                        || !previous->mRetiringSequences.empty()
-                        || (previous->mFirstPerson && previous->mFirstPerson->mReaction)))) return false;
+                // Fresh or same-cached BlockHit only. Distinct replacements
+                // and outgoing/parallel first-person owners need their own
+                // resource/lifetime contracts.
+                if (!first || (previous && (previous->mStrike
+                        || !previous->mRetiringSequences.empty()))) return false;
                 const auto& firstCatalog = first->getNativeReactionCatalog();
                 // Original65D790 mirrors the body's resolved key directly;
                 // it does not repeat family/movement fallback in the FP cache.
@@ -2723,6 +2723,17 @@ namespace MWWorld
                 if (firstEntry == firstCatalog.end()) return true;
                 if (firstEntry->mGroups.size() != 1) return false;
                 const std::string firstGroup = firstEntry->mGroups.front();
+                if (previous && previous->mReaction)
+                {
+                    const auto& body = *previous->mReaction;
+                    if (body.mKind != ESM4::MeleeReactionKind::BlockHit || body.mAnimationGroup != group
+                        || !previous->mFirstPerson || !previous->mFirstPerson->mReaction) return false;
+                    const auto& mirror = *previous->mFirstPerson->mReaction;
+                    if (mirror.mContactId != body.mContactId || mirror.mKind != body.mKind
+                        || mirror.mAnimationGroup != firstGroup) return false;
+                }
+                else if (previous && previous->mFirstPerson && previous->mFirstPerson->mReaction)
+                    return false;
                 const auto firstMetadata = MWMechanics::captureOblivionMeleeSequenceMetadata(*first, firstGroup, true);
                 const auto* firstSource = first->getControllerSequenceMetadata(firstGroup);
                 if (!firstSource || firstSource->mWeight != 1) return false;
@@ -2741,7 +2752,9 @@ namespace MWWorld
                 deltas.mVictimFirstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, std::move(mirror)};
                 deltas.mVictimReaction = std::move(reaction);
                 Log(Debug::Verbose) << "M15 Player first-person block resource selected: actor=" << key.serialize()
-                                    << " cause=" << id << " native_group=" << *selected << " group=" << firstGroup;
+                                    << " cause=" << id << " native_group=" << *selected << " group=" << firstGroup
+                                    << " previous_cause=" << (previous && previous->mReaction
+                                            ? previous->mReaction->mContactId : 0);
                 return true;
             }
             if (previous && std::any_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),

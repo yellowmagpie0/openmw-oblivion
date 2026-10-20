@@ -8438,3 +8438,119 @@ native first-person strikes, normal Recoil/Stagger/BlockAttack factories,
 creature reactions, mastery/effects, directional powers and the full
 opponent/input/view/FPS/cancellation and in-flight restart matrix remain open.
 **M15S4 remains incomplete.**
+
+## Repeated Player BlockHit replaces both cached owners
+
+Paired Player contacts can now reset the same cached BlockHit/Recoil resource
+with fresh captured poses in both views. Both old owners must have the same
+cause, with matching incoming kind/group in each view; the old body must still
+own its process action. No strike, detached retiring layer or outgoing copy is
+admitted. Resident reaction retirement is supported independently of detached
+layers. Normal blocked-contact generation admits matching Player BlockHit pairs;
+normal Recoil generation and distinct-resource/parallel replacement remain open.
+Only the body owns gameplay action. Each view keeps its clock, replaces its own
+pose and binds the new consumed cause. Runtime schema remains **57**.
+
+The new World test covers initial captured state, direct easing, steady,
+retiring and inactive representations, independent body/FP clocks, rejection
+without mutation, restoration, consumed-action replay and first-person-only
+cleanup invalidating a prepared replacement while the body remains unchanged.
+Normal and ASan/UBSan checks pass **1,766 tests / 125 suites**, with exact
+inventory/XML agreement, no failures or skips. Their engine-source fingerprint
+is `39cba6dce48abc8c88b0c3ea77952eb5cce5fbe56002fdd444cb215e745f270b`
+(parent `e1cf006080`). Subsequent fixture-only authoring passes **338 Python
+tests** and actual structural/semantic readback. ASan disables leak detection;
+UBSan halts on errors. No leak coverage is claimed.
+
+The independent original selector/pose probe executes `474530`, real
+manager/sequence/controller/blend/interpolator constructors, `6C5C70`/`6C9F10`,
+`6CA950` and `6CC3A0`. **288 contexts / 2,016 samples** cover both views,
+BlockHit/Recoil/Stagger native group keys, four clocks including100000, both
+027F/037F words and old native states0/1/2/3/5. State0 includes both missing and
+resident inactive targets. Each same-cached reset enters state5 with two
+registered sequences, and all following timing/pose samples match fresh start.
+Raw pre-first-update last/weighted/output fields can retain zero for old
+resident0/1/2/3, unlike the fresh sentinel; byte equality of that unsampled raw
+prefix is not claimed. The fixture supplies one prescribed transform per view,
+heap/OS boundaries and false scene predicates. It proves no full original
+helper/input/gameplay or distinct/parallel-layer acceptance.
+
+The editable runtime fixture keeps `M15StationaryOpponent.esp` unchanged and
+adds a two-record overlay: the same local-layout script stops combat after real
+Fatigue spending crosses145, and the stock rusty shortsword's speed is20. All
+other weapon fields, record flags, NPC stats and style are retained. The existing
+zero-regeneration fixture makes both contacts' resource channels exact. No
+script supplies damage, contacts, condition or Fatigue writes. A typed input
+helper promotes the pinned idle save46->57 and changes only its one idle
+`fighting=0` script instance's winning origin to the overlay. Exhaustive decoded
+comparison permits only that identity, version and enumerated empty schema
+fields; every other value, inventory, action and RNG entry is preserved.
+Structural writing, readback, fork compilation and runtime acceptance are
+recorded separately. No TES4 authoring support is attributed to the TES3 MCP.
+
+The normal held-B / Space course performs two production NPC contacts2/3.
+Cause3's factory reports previous cause2; the old reaction is not recovered
+before replacement. Both view bind records occur once per cause. The first
+actual save contains the new cause3 captured poses (64 body / 66 FP tracks),
+with no detached old owner. A fresh process loads that exact output, rebinds
+both poses, recovers unheld-input action-1 and removes both reaction owners.
+RNG stays505908858 and next action4, with no pending owners or replayed contacts,
+selections or impact requests. Configured cap60 is not measured60FPS coverage.
+
+Expected cumulative Fatigue Damage is **-40.04821014404297** for Player and
+**-15.600000381469727** for the NPC. Player/opponent sword conditions become
+**55.826988220214844 / 55.400001525878906**. These persist without regeneration
+through continuation. Other native AV channels and original inventories retain
+only the declared Health/Fatigue/condition changes. Added cached references are
+independently checked against original master identity/base/CELL. Whole-world
+cache counts are not fixed outcomes.
+
+The composed original arithmetic probe exposes a separate unresolved precision
+question: `5FF8F3` Health-store results differ by one float bit between007F and
+027F/037F. Actual weapon-entry007F observations do not identify the control word
+at the later blocked-contact Health store. Both executed alternatives are
+preregistered explicitly: cumulative Player HealthDamage
+**-1.9427038431167603 / -1.9427037239074707**. Every other selected numeric result
+agrees across the three words. The current engine matches the wider alternative;
+this does not close original runtime block-Health precision. No tolerance is
+tuned to an observed engine result, and that fidelity gate remains open.
+
+Audio requires two stock blade-block temporal clusters and four independently
+logged played requests before restart, then none. The inherited0.75 waveform
+threshold and pinned stock files are unchanged. The pilot's inherited
+one-cluster assumption failed: actual audio/wall contact spacing was3.485s,
+although the native-clock interval stayed short. Its two stock matches are
+retained as a failed original criterion, and fresh final courses preregister
+two clusters. Correlation does not establish coincident voice count. Direct
+image review supplies only the observed views/guard/recovery frames; clean
+held-block skin rendering and original animation interpolation remain open.
+
+Retained failures also include a stale-test fixture with an Offset but missing
+paired timing fields; only its fixture initialization was corrected, preserving
+validation. A sanitizer build was stopped before source edits and is not a
+pass. Changing the base plugin first correctly failed its saved fingerprint;
+an overlay then correctly failed the old saved script-unit origin. The explicit
+idle fixture migration resolves those authoring inputs without changing engine
+admission. The first migration comparison omitted empty schema fields; exhaustive
+reinspection identifies only the declared defaults and idle unit change.
+
+All four normal/sanitizer × first/third-person courses pass the strict save,
+fresh-process continuation and original-master reference audits. Both normal
+courses and the sanitizer third-person course pass the preregistered two/zero
+PCM cluster criterion. Sanitizer first-person matches only one of the required
+two clusters before restart (zero afterward), despite four played requests and
+two accepted gameplay contacts. Its original PCM report remains **failed**.
+A diagnostic finds a stock02 correlation0.71579 near the unmatched impact;
+this does not pass the0.75 criterion. No threshold is lowered and this course's
+audio acceptance remains open. All eight actual screenshots were inspected,
+showing the intended camera and guard/ready frames with the stated limits.
+
+The hash-linked receipt is
+[`M15-PLAYER-CACHED-POSE-VERIFICATION.json`](M15-PLAYER-CACHED-POSE-VERIFICATION.json).
+It distinguishes passing runtime state checks from full course acceptance.
+
+Full M15S4 remains incomplete: normal Recoil/Stagger/BlockAttack generation,
+distinct/parallel Player layers, independent native FP strikes, creature and
+mastery/effect branches, directional powers, actual block-Health precision,
+the failed sanitizer audio criterion, clean held-block rendering and the complete view/input/FPS/cancellation and
+in-flight restart matrix remain open.

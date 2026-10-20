@@ -1,0 +1,42 @@
+{
+  "version": 3,
+  "purpose": "Synthetic repeated Player BlockHit course: faster authored sword permits two production contacts before the first reaction ends; real Fatigue spending below145 stops combat. Use the separate zero-Fatigue-regeneration fixture for exact resource checks. No scripted damage, contacts or resource writes.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "npc": {
+    "id": 152064,
+    "editor_id": "ValenDreth"
+  },
+  "style": {
+    "id": 16779392,
+    "editor_id": "M15StationaryStyle",
+    "attack_chance": 100,
+    "block_chance": 0,
+    "dodge_chance": 0,
+    "power_attack_chance": 0,
+    "idle": [
+      0,
+      0
+    ],
+    "hold": [
+      0,
+      0
+    ],
+    "flags": 34,
+    "do_not_acquire": true
+  },
+  "script": {
+    "id": 16779393,
+    "editor_id": "M15StationaryOpponent",
+    "sha256": "d75aa625f9b68a1eeeba31a570886f982d2e75fa06dcfaa2afc58eb8e7d84002"
+  },
+  "weapon": {
+    "id": 591381,
+    "editor_id": "WeapIronShortswordRusty",
+    "speed": 20
+  },
+  "stationary_master": {
+    "name": "M15StationaryOpponent.esp",
+    "sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+  }
+}

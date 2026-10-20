@@ -1,0 +1,62 @@
+{
+  "scope": "Actual474530 for supplied same-cached owned Player body/first-person sequence, with target in native states0/1/2/3/5 (both absent and resident state0). Actual manager/sequence/controller/blend/interpolator constructors and6C5C70/6C9F10/6CA950/6CC3A0 run for one prescribed transform per view. No original-game input, loaded file cache, complete helper dispatch or production acceptance.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "contexts": 288,
+  "post_reset_samples": 2016,
+  "prior_native_states": [
+    0,
+    1,
+    2,
+    3,
+    5
+  ],
+  "new_native_state": 5,
+  "registered_sequences_after_reset": 2,
+  "same_post_update_timing_and_transform_as_fresh": true,
+  "limits": [
+    "Fresh supplies inactive constructor state0; steady/active/retiring supplied via actual activation/update/deactivation; captured state5 produced by an actual preceding474530 call.",
+    "Same target is installed in its actual group slot for state1/2/3; captured mode uses actual first474530 slot publication.",
+    "Heap allocation/OS imports and false scene predicates remain declared harness boundaries inherited from the prior cumulative probe.",
+    "One prescribed transform and unit resource weight; no old distinct same-slot owner, parallel layers or actual renderer capture of an interrupted frame.",
+    "Sample0 anchors the new fade; observable subsequent times/poses equal the fresh oracle. Raw last_input/weighted/output fields can retain zero before that first update for prior resident0/1/2/3."
+  ],
+  "native_report": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cached-review-01/native-verification03.json",
+    "sha256": "33d87e3469bad28d89d5c250d463753f6a294dc1db15d10094b1828eab673517"
+  },
+  "fresh_expectations": "m15_native_player_owned_pose_expected.json",
+  "production_scope": "Paired Player same-cached BlockHit/Recoil captured-pose publication only. Distinct-resource replacement, independent outgoing/parallel FP layers, normal Recoil generation and full M15S4 remain open.",
+  "two_contact_numeric_oracle": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-pose-cached-review-01/two-contact-oracle02.json",
+    "sha256": "4fcbbc7726dc70dcbbc1caa310f472d82cba466b51ba93e95ab28f25c6af51bc"
+  },
+  "runtime_expected": {
+    "contacts": [
+      2,
+      3
+    ],
+    "final_cause": 3,
+    "action_next": 4,
+    "combat_rng": 505908858,
+    "body_pose_tracks": 64,
+    "first_person_pose_tracks": 66,
+    "player_health_damage_bits": [
+      3220744836,
+      3220744837
+    ],
+    "player_fatigue_damage_bits": 3256889694,
+    "npc_fatigue_damage_bits": 3245971866,
+    "player_weapon_condition_bits": 1113542358,
+    "npc_weapon_condition_bits": 1113430426,
+    "native_played_block_requests": [
+      4,
+      0
+    ],
+    "pcm_clusters": [
+      2,
+      0
+    ],
+    "numeric_precision_gate": "Block Health-store actual control word remains unobserved; allow only the independently executed native PC24/wider alternatives. No identified original-runtime Health precision acceptance.",
+    "audio_scope": "Two temporal stock-wave clusters in this slow-rendering course; configured cap60 is not measured60FPS. Each real contact has two native played requests. Threshold0.75 inherited unchanged."
+  }
+}

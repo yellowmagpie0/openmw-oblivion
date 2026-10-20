@@ -2368,6 +2368,25 @@ namespace MWMechanics
             }
             request->validate();
             const auto& timing = request->mSequenceTiming;
+            // Player-owned roots reset the same cached clamp sequence through
+            // pose capture too (474530 -> 6C5C70), including states2/3/5.
+            // Replace both causal owners together; neither view retains an
+            // outgoing copy of this same resource.
+            const bool capturedPlayerRestart = values.mOwner == ESM4::ActorValueOwner::Player
+                && previous && previous->mReaction && previous->mFirstPerson
+                && previous->mFirstPerson->mReaction && firstPerson && firstPerson->mReaction
+                && !previous->mStrike && previous->mRetiringSequences.empty() && !outgoing
+                && request->mKind != ESM4::MeleeReactionKind::Stagger
+                && previous->mReaction->mKind == request->mKind
+                && previous->mReaction->mAnimationGroup == request->mAnimationGroup
+                && values.mProcessAction == previous->mReaction->processAction()
+                && previous->mFirstPerson->mReaction->mContactId == previous->mReaction->mContactId
+                && previous->mFirstPerson->mReaction->mKind == firstPerson->mReaction->mKind
+                && previous->mFirstPerson->mReaction->mAnimationGroup == firstPerson->mReaction->mAnimationGroup
+                && request->mPoseSnapshot && timing.mEasing && timing.mEaseEnd > 0
+                && firstPerson->mReaction->mPoseSnapshot
+                && firstPerson->mReaction->mSequenceTiming.mEasing
+                && firstPerson->mReaction->mSequenceTiming.mEaseEnd > 0;
             const bool cachedRestart = previous && previous->mReaction
                 && request->mKind != ESM4::MeleeReactionKind::Stagger
                 && previous->mReaction->mKind == request->mKind
@@ -2401,7 +2420,7 @@ namespace MWMechanics
                 || timing.mEasing != (timing.mEaseEnd > 0)
                 || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
                 || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
-                || (previous && previous->mReaction && !cachedRestart && !reactionCrossfade)
+                || (previous && previous->mReaction && !cachedRestart && !capturedPlayerRestart && !reactionCrossfade)
                 || mBowStates.contains(values.mActor))
                 throw std::invalid_argument("invalid or unsupported native contact reaction start");
             auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
@@ -2450,7 +2469,7 @@ namespace MWMechanics
                 const auto expectedClock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock
                     : animationClock(values.mActor);
                 if (values.mOwner != ESM4::ActorValueOwner::Player || !firstPerson->mReaction
-                    || (candidate.mFirstPerson && candidate.mFirstPerson->mReaction)
+                    || (candidate.mFirstPerson && candidate.mFirstPerson->mReaction && !capturedPlayerRestart)
                     || std::bit_cast<std::uint32_t>(firstPerson->mClock) != std::bit_cast<std::uint32_t>(expectedClock))
                     throw std::invalid_argument("invalid or stale native first-person mirror owner/clock");
                 const auto& mirror = *firstPerson->mReaction;
