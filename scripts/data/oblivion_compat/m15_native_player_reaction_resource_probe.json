@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "purpose": "Resolved Player reaction resource collection selection before normal Player attacker Recoil integration. Integer/filename selection only; group resolution and activation remain caller responsibilities.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_entries": {
+    "recoil": "0x5F4F00",
+    "block": "0x5F4E10",
+    "stagger": "0x5F4FD0",
+    "group_selector": "0x5E5690",
+    "player_active_view": "0x65D720",
+    "body_playback": "0x477B60",
+    "mirror": "0x65D790",
+    "matching": "0x474BE0/0x470C40",
+    "single": "0x471710",
+    "multiple": "0x470BF0",
+    "rng": "0x47DF80/0x9859DD"
+  },
+  "axes": {
+    "camera_byte588": [
+      0,
+      1
+    ],
+    "control_words": [
+      127,
+      639,
+      895
+    ],
+    "seeds": [
+      0,
+      1,
+      5540,
+      305419896,
+      3735928559
+    ],
+    "body_cache": [
+      "Single1",
+      "Multiple3"
+    ],
+    "first_cache": [
+      "Single1",
+      "Multiple1",
+      "Multiple2",
+      "Multiple3"
+    ],
+    "helpers": [
+      "block",
+      "counter",
+      "recoil",
+      "stagger"
+    ]
+  },
+  "corpora": [
+    "native-reaction-caller-review-01/player-channel-corpus04.json",
+    "native-reaction-caller-review-01/player-channel-corpus06.json",
+    "native-player-reaction-resources-review-01/original-clock7f/player-channel-corpus04.json",
+    "native-player-reaction-resources-review-01/original-clock7f/player-channel-corpus06.json"
+  ],
+  "expected_total_original_contexts": 840,
+  "deduplicated_integer_input_goldens": 60,
+  "expected_rule": [
+    "Discard one selection from active-camera preflight collection.",
+    "Select body using next CRT state.",
+    "Only Multiple supports matching by exact Windows basename; matching does not consume RNG.",
+    "Absent match selects from first-person collection using next state; preserve explicit collection kind including Multiple1."
+  ],
+  "boundaries": [
+    "Synthetic one-bucket cache/hash/equality and resource lists; no file loading or real gameplay.",
+    "Actual original full helpers, Player vtable/getters, initialized CRT and filename matcher execute.",
+    "Only CRT TLS, scene/current node, empty-controller/preallocated manager and OS atomic reference boundaries as in pinned source probes.",
+    "Production helper requires two already resolved, nonempty supported collections. Missing-group/family/movement fallback is not implemented by this helper."
+  ],
+  "full_M15S4_acceptance": false
+}

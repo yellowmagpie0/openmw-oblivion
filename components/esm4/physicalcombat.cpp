@@ -1411,6 +1411,44 @@ namespace ESM4
         return {draw.mValue % count, draw.mNextState, 1};
     }
 
+    NativePlayerReactionSelection selectNativePlayerReactionResources(bool firstPersonCamera,
+        const NativeSequenceResources& body, const NativeSequenceResources& firstPerson,
+        std::uint32_t randomState)
+    {
+        const auto validate = [](const NativeSequenceResources& resources) {
+            if (resources.mPaths.empty() || resources.mPaths.size() > std::numeric_limits<std::int32_t>::max())
+                throw std::invalid_argument("invalid Player reaction resource count");
+            // An explicit index validates collection identity without drawing.
+            selectNativeSequenceVariant(resources.mCollection, static_cast<std::uint32_t>(resources.mPaths.size()), 0, 0);
+            for (const auto path : resources.mPaths)
+                if (path.empty() || path.find('\0') != std::string_view::npos || path.ends_with('\\'))
+                    throw std::invalid_argument("invalid Player reaction resource path");
+        };
+        validate(body);
+        validate(firstPerson);
+        const auto select = [](const NativeSequenceResources& resources, std::uint32_t state) {
+            return selectNativeSequenceVariant(resources.mCollection,
+                static_cast<std::uint32_t>(resources.mPaths.size()), 255, state);
+        };
+        const auto preflight = select(firstPersonCamera ? firstPerson : body, randomState);
+        const auto playback = select(body, preflight.mNextState);
+        const auto basename = [](std::string_view path) {
+            const auto separator = path.rfind('\\');
+            return separator == std::string_view::npos ? path : path.substr(separator + 1);
+        };
+        if (firstPerson.mCollection == NativeSequenceCollection::Multiple)
+        {
+            const auto name = basename(body.mPaths[playback.mIndex]);
+            for (std::size_t i = 0; i < firstPerson.mPaths.size(); ++i)
+                if (basename(firstPerson.mPaths[i]) == name)
+                    return {preflight.mIndex, playback.mIndex, static_cast<std::uint32_t>(i), true,
+                        playback.mNextState, preflight.mDraws + playback.mDraws};
+        }
+        const auto fallback = select(firstPerson, playback.mNextState);
+        return {preflight.mIndex, playback.mIndex, fallback.mIndex, false,
+            fallback.mNextState, preflight.mDraws + playback.mDraws + fallback.mDraws};
+    }
+
     void validateArmorWearSelectionSettings(const ArmorWearSelectionSettings& settings)
     {
         for (int value : {settings.mHeadChance, settings.mUpperBodyChance, settings.mLowerBodyChance,

@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Immutable resolved Player reaction resource selection: camera preflight, body playback, first-person Multiple basename match or fallback, exact CRT transition. No World integration.",
+  "source_parent": "9eb10db659f2e83ae1fa9bd864263ce47fa2edd5",
+  "source_files": [
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "157593ff9ddf396b0f190d440b89145bb9235000adcd23fedb186cd667a460fc"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "c00458c1753598e5a80b03f91fa495cc078557d34d2b35a7558df51cff0d6936"
+    },
+    {
+      "path": "apps/components_tests/esm4/physicalcombat.cpp",
+      "sha256": "39ae444830073b4b944125ff3b9e5de8714c57e8272820a06dc547e5fda3cc92"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_player_reaction_resource_probe.json",
+      "sha256": "6396ce763675a120fe0a45733214b096ae6640dd21c18d7a5e410ce9db0fbdd5"
+    }
+  ],
+  "checks": [
+    {
+      "profile": "normal",
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-normal-01/verification.json",
+        "sha256": "e675c6648a7ba9713c93fcf2c5b9943d6ec16c4df3f676fbe2519d31ec933438"
+      },
+      "tested_source": {
+        "head": "9eb10db659f2e83ae1fa9bd864263ce47fa2edd5",
+        "source_fingerprint": "2f4f9da3ea8171482ed92089a8bdff038ae2bd65673e438f70c2588ed16a0822"
+      },
+      "results": {
+        "components": {
+          "executed": 2973,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ab25f28c6cac0af67cd47c90a8cc34fd7d8857b31e9e1bf481c5c4caaf24d104",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f9ce5d637edb8e65fbb95a60002468124d149c59eda62c15980e696a87ec7955",
+          "inventory_sha256": "aa34b79857da42785feb41334a56d6b5a5f1847d816a9f67b9574b60485a003d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "profile": "sanitized",
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-sanitized-01/verification.json",
+        "sha256": "aae195b05a2d430aaf8a964eabcbb12f3a7fedcf5e12c241b1c61c214a67ae66"
+      },
+      "tested_source": {
+        "head": "9eb10db659f2e83ae1fa9bd864263ce47fa2edd5",
+        "source_fingerprint": "2f4f9da3ea8171482ed92089a8bdff038ae2bd65673e438f70c2588ed16a0822"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 826,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "836afec35fd1a4a7864f651bf91ed2b0754b52028886d9f8836f418bd25c4ae2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6c2a5e90c9e370c714c867897027f325c9f7426ffbbd1760599f1c57be45e28b",
+          "inventory_sha256": "d926ca15c9ba9e0671230e1b57bf0826280bf11a4af82909ee40d7ce2046a251",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "actual_sanitizer_environment": {
+    "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-review-01/actual-sanitized-unit-environment-01.json",
+    "sha256": "164bd2db716ac7616c33ab63efadbbb073ea2cc101b2887cf27ee9e4135d16df"
+  },
+  "leak_coverage": false,
+  "original_comparison": {
+    "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-review-01/production-comparison-02.json",
+    "sha256": "0090e4ee968ec542b930477e22735fd4f43d66d332dfec787f51f1af692d84ee"
+  },
+  "original_contexts": 840,
+  "deduplicated_native_goldens": 60,
+  "control_words": [
+    127,
+    639,
+    895
+  ],
+  "implementation": "Validate explicit nonempty Single/Multiple collections and resource paths; discard active-camera preflight choice, select body, match exact Windows basename only in a Multiple first-person collection, or select fallback from the resulting state. Return all indices, match flag, next state and exact draw count without mutation.",
+  "native_boundaries": "Existing pinned full Player helper supplied cache/hash/list, scene and empty-controller/preallocated manager/atomic/TLS boundaries. Resource operations only; no group-loading/gameplay acceptance.",
+  "retained_import_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-review-01/original-clock7f/probe04.log",
+      "sha256": "e21af959f0feef26fff50a4ea578d1e42040a54e407d21ec67476bdc5172427f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-reaction-resources-review-01/original-clock7f/probe06.log",
+      "sha256": "6003e54341a1b084339c8aa11da03e7deb2bc27999e47b0fe79bb8be8dff30b3"
+    }
+  ],
+  "limits": [
+    "Both ordered resource groups must already be resolved; missing-group/family/movement fallback and resource loading remain callers responsibilities.",
+    "World still rejects normal Player attacker Recoil. Paired reaction/outgoing/capture transactions and normal-input acceptance remain required.",
+    "Prior engine runtime matrix stays pinned to unchanged earlier engine binaries; this unused helper is separately component/oracle verified."
+  ]
+}

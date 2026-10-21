@@ -721,6 +721,30 @@ namespace ESM4
     NativeSequenceSelection selectNativeSequenceVariant(NativeSequenceCollection collection,
         std::uint32_t count, std::uint8_t requested, std::uint32_t randomState);
 
+    struct NativeSequenceResources
+    {
+        NativeSequenceCollection mCollection;
+        std::span<const std::string_view> mPaths;
+    };
+    struct NativePlayerReactionSelection
+    {
+        std::uint32_t mPreflightIndex;
+        std::uint32_t mBodyIndex;
+        std::uint32_t mFirstPersonIndex;
+        bool mFirstPersonMatched;
+        std::uint32_t mNextState;
+        unsigned mDraws;
+        friend bool operator==(const NativePlayerReactionSelection&, const NativePlayerReactionSelection&) = default;
+    };
+    // Original Player group preflight uses the active camera's collection;
+    // playback uses body, then65D790/470C40 matches a Windows basename in a
+    // Multiple first-person collection or falls back to another selection.
+    // Both group resolutions and ordered resources must already be available.
+    // Missing-group/family fallback and playback activation belong to callers.
+    NativePlayerReactionSelection selectNativePlayerReactionResources(bool firstPersonCamera,
+        const NativeSequenceResources& body, const NativeSequenceResources& firstPerson,
+        std::uint32_t randomState);
+
     enum class ArmorWearSlot { Head, Hair, UpperBody, LowerBody, Hands, Feet, Shield };
     struct ArmorWearSelectionSettings
     {

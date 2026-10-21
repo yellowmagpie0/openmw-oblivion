@@ -6025,3 +6025,111 @@ TEST(ESM4PhysicalCombat, OwnedPowerCaptureMatchesOriginalFrameHistory)
         }
     }
 }
+
+TEST(ESM4PhysicalCombat, PlayerReactionResourceSelectionMatchesOriginalCameraAndCacheHistory)
+{
+    constexpr std::array<std::string_view, 3> body{
+        R"(meshes\characters\_male\reaction_1.kf)", R"(meshes\characters\_male\reaction_2.kf)",
+        R"(meshes\characters\_male\reaction_3.kf)"};
+    constexpr std::array<std::string_view, 3> first{
+        R"(meshes\characters\_1stperson\reaction_1.kf)", R"(meshes\characters\_1stperson\reaction_2.kf)",
+        R"(meshes\characters\_1stperson\reaction_3.kf)"};
+    // Deduplicated input/output rows from original full Player helpers,
+    // native-reaction-caller-review-01/player-channel-corpus04/06.json.
+    // Fields: camera byte, body/FP kind, body/FP count, initial CRT state,
+    // discarded preflight index, body/FP index, matched, next CRT state, draws.
+    constexpr std::array<std::array<std::uint32_t, 12>, 60> cases{{
+        {0u, 1u, 1u, 3u, 1u, 0u, 0u, 0u, 0u, 1u, 505908858u, 2u},
+        {0u, 1u, 1u, 3u, 2u, 0u, 0u, 0u, 0u, 1u, 505908858u, 2u},
+        {0u, 1u, 1u, 3u, 3u, 0u, 2u, 0u, 0u, 1u, 505908858u, 2u},
+        {0u, 1u, 1u, 3u, 1u, 1u, 0u, 2u, 0u, 0u, 415139642u, 3u},
+        {0u, 1u, 1u, 3u, 2u, 1u, 1u, 2u, 0u, 0u, 415139642u, 3u},
+        {0u, 1u, 1u, 3u, 3u, 1u, 2u, 2u, 2u, 1u, 3357800067u, 2u},
+        {0u, 1u, 1u, 3u, 1u, 5540u, 0u, 1u, 0u, 0u, 4073472777u, 3u},
+        {0u, 1u, 1u, 3u, 2u, 5540u, 1u, 1u, 1u, 1u, 3093492030u, 2u},
+        {0u, 1u, 1u, 3u, 3u, 5540u, 0u, 1u, 1u, 1u, 3093492030u, 2u},
+        {0u, 1u, 1u, 3u, 1u, 305419896u, 0u, 1u, 0u, 0u, 3423460525u, 3u},
+        {0u, 1u, 1u, 3u, 2u, 305419896u, 1u, 1u, 1u, 1u, 1530878130u, 2u},
+        {0u, 1u, 1u, 3u, 3u, 305419896u, 2u, 1u, 1u, 1u, 1530878130u, 2u},
+        {0u, 1u, 1u, 3u, 1u, 3735928559u, 0u, 0u, 0u, 1u, 1108892897u, 2u},
+        {0u, 1u, 1u, 3u, 2u, 3735928559u, 1u, 0u, 0u, 1u, 1108892897u, 2u},
+        {0u, 1u, 1u, 3u, 3u, 3735928559u, 1u, 0u, 0u, 1u, 1108892897u, 2u},
+        {1u, 1u, 1u, 3u, 1u, 0u, 2u, 0u, 0u, 1u, 505908858u, 2u},
+        {1u, 1u, 1u, 3u, 2u, 0u, 2u, 0u, 0u, 1u, 505908858u, 2u},
+        {1u, 1u, 1u, 3u, 3u, 0u, 2u, 0u, 0u, 1u, 505908858u, 2u},
+        {1u, 1u, 1u, 3u, 1u, 1u, 2u, 2u, 0u, 0u, 415139642u, 3u},
+        {1u, 1u, 1u, 3u, 2u, 1u, 2u, 2u, 0u, 0u, 415139642u, 3u},
+        {1u, 1u, 1u, 3u, 3u, 1u, 2u, 2u, 2u, 1u, 3357800067u, 2u},
+        {1u, 1u, 1u, 3u, 1u, 5540u, 0u, 1u, 0u, 0u, 4073472777u, 3u},
+        {1u, 1u, 1u, 3u, 2u, 5540u, 0u, 1u, 1u, 1u, 3093492030u, 2u},
+        {1u, 1u, 1u, 3u, 3u, 5540u, 0u, 1u, 1u, 1u, 3093492030u, 2u},
+        {1u, 1u, 1u, 3u, 1u, 305419896u, 2u, 1u, 0u, 0u, 3423460525u, 3u},
+        {1u, 1u, 1u, 3u, 2u, 305419896u, 2u, 1u, 1u, 1u, 1530878130u, 2u},
+        {1u, 1u, 1u, 3u, 3u, 305419896u, 2u, 1u, 1u, 1u, 1530878130u, 2u},
+        {1u, 1u, 1u, 3u, 1u, 3735928559u, 1u, 0u, 0u, 1u, 1108892897u, 2u},
+        {1u, 1u, 1u, 3u, 2u, 3735928559u, 1u, 0u, 0u, 1u, 1108892897u, 2u},
+        {1u, 1u, 1u, 3u, 3u, 3735928559u, 1u, 0u, 0u, 1u, 1108892897u, 2u},
+        {0u, 0u, 0u, 1u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u},
+        {0u, 0u, 1u, 1u, 3u, 0u, 2u, 0u, 0u, 1u, 2531011u, 1u},
+        {0u, 1u, 0u, 3u, 1u, 0u, 0u, 2u, 0u, 0u, 2531011u, 1u},
+        {0u, 0u, 0u, 1u, 1u, 1u, 0u, 0u, 0u, 0u, 1u, 0u},
+        {0u, 0u, 1u, 1u, 3u, 1u, 2u, 0u, 0u, 1u, 2745024u, 1u},
+        {0u, 1u, 0u, 3u, 1u, 1u, 0u, 2u, 0u, 0u, 2745024u, 1u},
+        {0u, 0u, 0u, 1u, 1u, 5540u, 0u, 0u, 0u, 0u, 5540u, 0u},
+        {0u, 0u, 1u, 1u, 3u, 5540u, 0u, 0u, 0u, 1u, 1188163031u, 1u},
+        {0u, 1u, 0u, 3u, 1u, 5540u, 0u, 0u, 0u, 0u, 1188163031u, 1u},
+        {0u, 0u, 0u, 1u, 1u, 305419896u, 0u, 0u, 0u, 0u, 305419896u, 0u},
+        {0u, 0u, 1u, 1u, 3u, 305419896u, 2u, 0u, 0u, 1u, 3018423131u, 1u},
+        {0u, 1u, 0u, 3u, 1u, 305419896u, 0u, 2u, 0u, 0u, 3018423131u, 1u},
+        {0u, 0u, 0u, 1u, 1u, 3735928559u, 0u, 0u, 0u, 0u, 3735928559u, 0u},
+        {0u, 0u, 1u, 1u, 3u, 3735928559u, 1u, 0u, 0u, 1u, 3349274102u, 1u},
+        {0u, 1u, 0u, 3u, 1u, 3735928559u, 0u, 1u, 0u, 0u, 3349274102u, 1u},
+        {1u, 0u, 0u, 1u, 1u, 0u, 0u, 0u, 0u, 0u, 0u, 0u},
+        {1u, 0u, 1u, 1u, 3u, 0u, 0u, 0u, 0u, 1u, 0u, 0u},
+        {1u, 1u, 0u, 3u, 1u, 0u, 2u, 0u, 0u, 0u, 505908858u, 2u},
+        {1u, 0u, 0u, 1u, 1u, 1u, 0u, 0u, 0u, 0u, 1u, 0u},
+        {1u, 0u, 1u, 1u, 3u, 1u, 0u, 0u, 0u, 1u, 1u, 0u},
+        {1u, 1u, 0u, 3u, 1u, 1u, 2u, 2u, 0u, 0u, 3357800067u, 2u},
+        {1u, 0u, 0u, 1u, 1u, 5540u, 0u, 0u, 0u, 0u, 5540u, 0u},
+        {1u, 0u, 1u, 1u, 3u, 5540u, 0u, 0u, 0u, 1u, 5540u, 0u},
+        {1u, 1u, 0u, 3u, 1u, 5540u, 0u, 1u, 0u, 0u, 3093492030u, 2u},
+        {1u, 0u, 0u, 1u, 1u, 305419896u, 0u, 0u, 0u, 0u, 305419896u, 0u},
+        {1u, 0u, 1u, 1u, 3u, 305419896u, 0u, 0u, 0u, 1u, 305419896u, 0u},
+        {1u, 1u, 0u, 3u, 1u, 305419896u, 2u, 1u, 0u, 0u, 1530878130u, 2u},
+        {1u, 0u, 0u, 1u, 1u, 3735928559u, 0u, 0u, 0u, 0u, 3735928559u, 0u},
+        {1u, 0u, 1u, 1u, 3u, 3735928559u, 0u, 0u, 0u, 1u, 3735928559u, 0u},
+        {1u, 1u, 0u, 3u, 1u, 3735928559u, 1u, 0u, 0u, 0u, 1108892897u, 2u},
+    }};
+    for (const auto& row : cases)
+    {
+        SCOPED_TRACE(::testing::Message() << "camera=" << row[0] << " body=" << row[1]
+            << " first=" << row[2] << " firstCount=" << row[4] << " seed=" << row[5]);
+        const auto selected = ESM4::selectNativePlayerReactionResources(row[0] == 0,
+            {static_cast<ESM4::NativeSequenceCollection>(row[1]), std::span(body).first(row[3])},
+            {static_cast<ESM4::NativeSequenceCollection>(row[2]), std::span(first).first(row[4])}, row[5]);
+        EXPECT_EQ(selected, (ESM4::NativePlayerReactionSelection{
+            row[6], row[7], row[8], row[9] != 0, row[10], row[11]}));
+    }
+}
+
+TEST(ESM4PhysicalCombat, PlayerReactionResourceSelectionRejectsMalformedResolvedCollections)
+{
+    using Collection = ESM4::NativeSequenceCollection;
+    const std::array<std::string_view, 1> one{R"(meshes\reaction.kf)"};
+    const std::array<std::string_view, 2> two{one[0], R"(meshes\reaction2.kf)"};
+    const ESM4::NativeSequenceResources valid{Collection::Single, one};
+    for (const ESM4::NativeSequenceResources invalid : {
+             ESM4::NativeSequenceResources{Collection::Multiple, {}},
+             ESM4::NativeSequenceResources{Collection::Single, two},
+             ESM4::NativeSequenceResources{static_cast<Collection>(2), one}})
+    {
+        EXPECT_THROW(ESM4::selectNativePlayerReactionResources(true, invalid, valid, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::selectNativePlayerReactionResources(false, valid, invalid, 1), std::invalid_argument);
+    }
+    for (const std::string_view path : {std::string_view{}, std::string_view("a\0b", 3), std::string_view("a\\")})
+    {
+        const std::array<std::string_view, 1> bad{path};
+        EXPECT_THROW(ESM4::selectNativePlayerReactionResources(true, valid,
+            {Collection::Single, bad}, 1), std::invalid_argument);
+    }
+}

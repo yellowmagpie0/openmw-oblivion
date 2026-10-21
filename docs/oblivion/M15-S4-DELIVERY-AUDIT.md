@@ -9130,3 +9130,31 @@ uninterrupted motion parity. Sound is disabled, and the configured60 FPS cap is
 not measured60 FPS. Sanitized runtime courses remain a separate running matrix.
 Queued power, mixed captured/outgoing runtime transitions, Player Recoil,
 parallel Stagger and the broader milestone gates remain open. M15S4 is incomplete.
+
+### Resolved Player reaction resource selection
+
+A new immutable selector models the Player caller's separate resource choices:
+active-camera preflight, body playback, then first-person Multiple basename
+matching or fallback selection. It preserves explicit Single/Multiple identity,
+including Multiple with one entry, and returns indices, match status, final CRT
+state and draw count. Single first-person collections take their direct fallback;
+Multiple matches consume no extra RNG. Both resource groups must already be
+resolved and nonempty; group/family/movement fallback and loading remain outside
+this helper. No World/contact factory uses the new helper yet.
+
+Compiled production agrees with840 preserved original full-helper observations
+across both cameras, mixed cache kinds, partial first-person variant lists, five
+seeds and CW007F/027F/037F. The280 CW007F contexts are fresh executions of the
+pinned original helper harnesses. Actual Player getters, helpers, filename matcher
+and initialized CRT execute within the declared supplied cache/hash/list,
+scene/TLS/empty-controller/atomic boundaries. The initial interpreter lacking
+Unicorn remains a failed import attempt. Sixty distinct original input/output
+rows become component goldens. Normal component checks pass2973 tests; sanitized
+ESM4* checks pass826, with exact inventories and no failures/skips. The actual
+sanitized process options are recorded; leak checking is disabled.
+
+[`M15-PLAYER-REACTION-RESOURCE-VERIFICATION.json`](M15-PLAYER-REACTION-RESOURCE-VERIFICATION.json)
+pins these sources, original corpora, independent comparison and component checks.
+The existing strike runtime matrix remains pinned to its earlier unchanged engine
+binaries. Player Recoil integration, paired reaction replacement and normal
+blocked-contact acceptance remain open, as do the wider M15S4 requirements.
