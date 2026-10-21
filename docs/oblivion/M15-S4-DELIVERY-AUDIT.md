@@ -9332,3 +9332,38 @@ compiler/world and current-input runtime acceptance remain separate layers.
 pins those sources and checks. C++ production is unchanged. Two generated
 four-second BlockHit holds separately pass strict NIF reading and independent
 byte checks; runtime cached replacement with those assets is the next case.
+
+### Join renderer threads before Engine teardown
+
+A cached-contact course completed its actions and saves but crashed during
+shutdown. Its raw process log and preserved crash stack show signal11 at nil
+inside osg::GLBufferObject::compileBuffer on an active graphics draw thread while
+the main thread destroys World/OblivionScriptManager. The crash catcher's later
+SIGKILL explains the initially recorded exit-9; the earlier unknown-kill diagnosis
+is superseded. Cgroup counters did not establish an OOM event.
+
+Engine destruction now stops viewer threading before releasing screen-capture
+and game managers. Both normal and ASan/UBSan applications rebuild with frozen
+source fingerprints. Headless test binaries do not link the changed destructor;
+their unchanged complete 1775-test inventories are reused for unchanged code.
+Actual applications verify the new lifecycle behavior.
+
+An explicit DrawThreadPerContext normal first-camera cached replacement and
+in-flight continuation pass exact native state, inventories, PC24 Health,
+RNG773150046 and no-replay checks. Both processes record final thread stop after
+last thread start before peaceful exit. Three further Morrowind boot/save/quit
+courses pass normal SingleThreaded, normal DrawThreadPerContext and sanitized
+DrawThreadPerContext. Each produces one actual TES3 save without native state
+markers. All five accepted engine processes exit0; three native save/live pairs
+match. Actual environment epochs are retained and six images directly reviewed.
+The legacy images show the existing terrain/sky/HUD view; this is narrow profile
+isolation, not city traversal or full Morrowind gameplay. The OSG model and stop
+semantics are identified against its installed3.6.5
+[ViewerBase source](https://raw.githubusercontent.com/openscenegraph/OpenSceneGraph/OpenSceneGraph-3.6.5/src/osgViewer/ViewerBase.cpp).
+
+[`M15-RENDER-THREAD-SHUTDOWN-VERIFICATION.json`](M15-RENDER-THREAD-SHUTDOWN-VERIFICATION.json)
+pins the fault, preserved failed binary, builds, runtime checks and limitations.
+A separate corrected third-camera baseline exits0 but its first saved captured
+poses have already finished the stock0.1s fade. That capture-restart criterion
+remains failed; a longer declared fixture blend is being prepared. The full
+cached replacement camera/sanitizer matrix and wider M15S4 gates remain open.

@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Stop and join viewer graphics/camera threads before Engine manager teardown, after actual cached-contact shutdown signal11. Rebuilt normal/sanitized applications and bounded real lifecycle checks.",
+  "source_parent": "2a0d655960aed731262da0259ae842d43a1c02c4",
+  "source": {
+    "path": "apps/openmw/engine.cpp",
+    "sha256": "b3348856973d788270fb8d859d78395448aa6640de9852b056159c648cb0ef4b"
+  },
+  "application_builds": {
+    "path": "build/oblivion-compat/m15/S4/native-render-thread-shutdown-builds-01/verification.json",
+    "sha256": "75820fd55c1a087b7592e8992688b689433deaaaf70cd2a938bf323f59954165"
+  },
+  "build_driver": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/build-render-shutdown-fix.py",
+    "sha256": "a2f5d31f56b39b349ce83f8d67be6232326eaf5d2cb105047ad8593ffaab29fd"
+  },
+  "headless_test_reuse_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/engine-test-symbol-reuse-audit-01.json",
+    "sha256": "0701779e0d3d094d43a267fdce187c961e7b2e98a49a3c7e84be86ae8177ef5b"
+  },
+  "native_case": {
+    "state_verification": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/verification.json",
+      "sha256": "b92917742bf7f72adfb4e6b111274407b2153c7e9eff868c7a3ec6e8d278f9a8"
+    },
+    "threading_shutdown_verification": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/threaded-shutdown-verification.json",
+      "sha256": "bf0f96f61065280a9c79c6fe8c8c70b381282e774b3c368712fc27662fee5b53"
+    },
+    "preregistration": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/preregistered.json",
+      "sha256": "90afd03979e2bca7cae85f99979ce96729393f13f78231727d657175e40e3ab8"
+    },
+    "baseline_manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/manifest.json",
+      "sha256": "96e0943b2a813e53704bb24eb4c42f05e9181988877503dd6d2c5ac94ac5ce73"
+    },
+    "continuation_manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/continuation.json",
+      "sha256": "c778b663f7eb0948708d0762cd23ebc5c1beb0dd852ac2177129e24fb9251b8c"
+    },
+    "restart_selection": {
+      "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/restart-selection.json",
+      "sha256": "a0b9c6c24ce3f2f7c3749133ed53971ced82634e85162e2d37b85f2c4e1b51bd"
+    }
+  },
+  "morrowind_cases": [
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/verification.json",
+        "sha256": "956e9f350c6ccabf5762bac904f4351f4d1d54630746c5ab2a21fde4869d88bf"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/preregistered.json",
+        "sha256": "563215981a5fc190e969ab2a0ce8f6e4d395de51ec9cd7327eef8a0ad16e0a3f"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/manifest.json",
+        "sha256": "3889886d07c22ea0eb29e25bb57f11f5ecd844e50b4c002bc365aab44108c75a"
+      },
+      "launcher": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/first/launcher.json",
+        "sha256": "eae964134a859269144b22446558e9fef4578f2728df6539d5b69d4635c058ae"
+      },
+      "actual_environment": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/first/actual-engine-environment.json",
+        "sha256": "c97c4d3f88067399033cedc39394c5a0e96a5ae61fe683c81fd97c04cdee4155"
+      },
+      "epoch": {
+        "pid": 982890,
+        "start_ticks": 29881396,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/first/config",
+          "--no-sound=1",
+          "--no-grab"
+        ],
+        "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+      },
+      "save": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/first/userdata/saves/player/Quicksave.omwsave",
+        "sha256": "4e965846acab03867505d7a33ca0e8ff9a78a729232d35aae999156108ce4e66",
+        "bytes": 173170
+      }
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/verification.json",
+        "sha256": "579f57bf34ec3a653f8e29f48b5153476455ad122435da6f3ee88464f7cb8e73"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/preregistered.json",
+        "sha256": "adafa7360cbe050b0c331810bc6162c32abf2376fb5e4a52d09da09558159336"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/manifest.json",
+        "sha256": "384f593706617c3ca51150dfdb7a3ab467c9f886b02eb37e4e48113d41f39af2"
+      },
+      "launcher": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/first/launcher.json",
+        "sha256": "e07082149ed52501257d4126ae1324e6570f13b8c30ab993d6cc8802a07bb7b3"
+      },
+      "actual_environment": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/first/actual-engine-environment.json",
+        "sha256": "0b2cfe5dc65d1ca2843065fc0ba6ee43683f88db69c00bb0f1d15da4bff33822"
+      },
+      "epoch": {
+        "pid": 983118,
+        "start_ticks": 29898895,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/first/config",
+          "--no-sound=1",
+          "--no-grab"
+        ],
+        "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+      },
+      "save": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/first/userdata/saves/player/Quicksave.omwsave",
+        "sha256": "a9796ae8a46172403811872ce7abfca4ce536b8503ed01aa036e915bb4f9e5f3",
+        "bytes": 180852
+      }
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/verification.json",
+        "sha256": "2869e0e339f051a14a66eec20c701a4c4c0b3e2b294771a5c764eb5a7b049e18"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/preregistered.json",
+        "sha256": "26aaba017be9f5609432e64323a6ee73ba4a0f88019e60faa08e842f8a13781c"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/manifest.json",
+        "sha256": "f01833cbbff605a27db8cd2c9831a4894cc4ec6bebd9cac8f53e2fa27be96c03"
+      },
+      "launcher": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/first/launcher.json",
+        "sha256": "3b8ba39f10fd6f9b62c6d558d8c3e3d0f387bed30388306909e6f8b85acca3d3"
+      },
+      "actual_environment": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/first/actual-engine-environment.json",
+        "sha256": "93ec8fe306b7373dd47a1c8aec06549647b816631edd0367d21a79446e61307c"
+      },
+      "epoch": {
+        "pid": 983184,
+        "start_ticks": 29905039,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/first/config",
+          "--no-sound=1",
+          "--no-grab"
+        ],
+        "executable_sha256": "da28f10b8b4dcd96fb37beeb6ccee26db95b0212c3e667fbe1bb3523dd12689c"
+      },
+      "save": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/first/userdata/saves/player/Quicksave.omwsave",
+        "sha256": "935cf45879c5bc7ea3accb1f4274b99a4e772e0144ca8afbaabc95080d86e536",
+        "bytes": 180424
+      }
+    }
+  ],
+  "images": [
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/first/player-blockhit-first.png",
+        "sha256": "93636c9ac4693c53ca5c7a9bc703dcaec4bbacd332a21dfde1a40be3d6d5060c"
+      },
+      "directly_reviewed": true,
+      "finding": "Normal first-camera guard contact and final ready sword posture; baseline/restart recover. Full skin/interpolation parity outside bounded lifecycle proof."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/first/settled.png",
+        "sha256": "5aff76e832b3a8e63600412f712d4a1ef561775214c226509ae7852977859f9b"
+      },
+      "directly_reviewed": true,
+      "finding": "Normal first-camera guard contact and final ready sword posture; baseline/restart recover. Full skin/interpolation parity outside bounded lifecycle proof."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-01/second/settled.png",
+        "sha256": "da576b047a26c424d103f16a0e4297640a95b32fe65cbff9abe64d2ae768dacd"
+      },
+      "directly_reviewed": true,
+      "finding": "Normal first-camera guard contact and final ready sword posture; baseline/restart recover. Full skin/interpolation parity outside bounded lifecycle proof."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-single-01/first/morrowind-m14-initial.png",
+        "sha256": "29601cbbc641abac0b8773e29fb1cdcdceb651c9d40509f1c648b1c8f7d730e6"
+      },
+      "directly_reviewed": true,
+      "finding": "Existing terrain/sky/HUD view is visible; narrow profile boot/save/quit isolation, not city traversal or full Morrowind visual/gameplay acceptance."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-normal-draw-01/first/morrowind-m14-initial.png",
+        "sha256": "c446bca7f45a4012daf678a50703a14f268f8d0edc443f78057dcb8d425c0223"
+      },
+      "directly_reviewed": true,
+      "finding": "Existing terrain/sky/HUD view is visible; narrow profile boot/save/quit isolation, not city traversal or full Morrowind visual/gameplay acceptance."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-morrowind-sanitized-draw-01/first/morrowind-m14-initial.png",
+        "sha256": "30a8b59444f747213dfc81b9a1f5f4aece23d4535567c8748bfdeee7486b180a"
+      },
+      "directly_reviewed": true,
+      "finding": "Existing terrain/sky/HUD view is visible; narrow profile boot/save/quit isolation, not city traversal or full Morrowind visual/gameplay acceptance."
+    }
+  ],
+  "engine_processes": 5,
+  "native_completed_save_live_equal_pairs": 3,
+  "legacy_tes3_saves_without_native_state_markers": 3,
+  "leak_coverage": false,
+  "retained_crash": {
+    "diagnosis": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-shutdown-crash-diagnosis-01.json",
+      "sha256": "b4dcaa989642f60784baa460c9eb8a8443a0aeb8ad4776f15c9ad150a875784b"
+    },
+    "stack": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-normal-first-crash-981018.log",
+      "sha256": "1096f4913cd721022f283ce29d831e3818b522a4f1f7e20028b49b1de5f656fb"
+    },
+    "raw_process_log": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-cached-block-hold-normal-first-01/first/process.log",
+      "sha256": "75e7da2a3e6ef3e1b2ae6242722ac8cd4960643af01f10183a1b7aabda1beb15"
+    },
+    "failed_scenario": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-cached-block-hold-normal-first-01/first/scenario.json",
+      "sha256": "7f37d71dd11fa32c5cb75c23f4f760426d67b6aeb359f27de75f8a1118ac0161"
+    },
+    "original_unknown_signal9_report": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-normal-first-shutdown-signal9-01.json",
+      "sha256": "d5517a9f72ab339907901cd88053c2a8ccea891ca5b3ded652a5ad9e804393c2"
+    },
+    "preserved_failed_binary": {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/openmw-before-shutdown-fix-normal-01",
+      "sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+    }
+  },
+  "interpretation": "Crash catcher reported signal11 at nil in osg::GLBufferObject::compileBuffer on a graphics draw thread while main thread Engine destructor destroyed World/OblivionScriptManager; subsequent crash-catcher SIGKILL explains exit-9. Source teardown released managers before stopping viewer threading. The fix joins viewer threading first, including partial initialization null safety.",
+  "primary_reference": {
+    "url": "https://raw.githubusercontent.com/openscenegraph/OpenSceneGraph/OpenSceneGraph-3.6.5/src/osgViewer/ViewerBase.cpp",
+    "scope": "Installed3.6.5 source: explicit OSG_THREADING models and stopThreading release/reset path. Actual process environments and final start/stop/peaceful-exit ordering are retained."
+  },
+  "lifecycle_scripts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-threaded-reaction-course.py",
+      "sha256": "ce5957086d60cda8049f9ea10274ec2edd8c5232aae3a9a51aa1d484f0593eea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-threaded-shutdown.py",
+      "sha256": "0815dbd8424133d45837b700f426887ad5056640890c0839fc106b2530efc171"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-render-shutdown-morrowind.py",
+      "sha256": "010a8a1ec5c8d3faa7121c89530b8e211c3c6e15918917130824519d94a091cb"
+    }
+  ],
+  "limits": [
+    "Headless engine binaries omit Engine::~Engine; exact prior1775-test normal and sanitized inventories cover unchanged linked code and are reused, not newly executed for this guard. Renderer behavior is verified by actual applications.",
+    "Only one complete new native normal first-camera captured replacement/restart course is accepted here. Wider cached normal/sanitized camera matrix remains open.",
+    "A separate normal third-camera baseline exited0 but its first save missed stock0.1s captured poses; that original capture-restart criterion remains failed and the fixture window is being corrected.",
+    "Legacy checks establish boot/save/quit profile isolation only. Existing terrain placement and held-block skin/interpolation limits remain. Sound disabled and no leak coverage.",
+    "Parallel Stagger, queued-power/mixed runtime, mastery/effects, creatures and wider input/FPS/cancellation gates keep M15S4 incomplete."
+  ],
+  "retained_capture_window_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/fixed-third-capture-window-failure-01.json",
+    "sha256": "32a1e0c7f57244af566a42363d20df076d2b71be1eed94303c934d6c1ad830c3"
+  }
+}

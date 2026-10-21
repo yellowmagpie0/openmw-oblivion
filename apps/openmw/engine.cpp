@@ -440,6 +440,11 @@ OMW::Engine::Engine(Files::ConfigurationManager& configurationManager)
 
 OMW::Engine::~Engine()
 {
+    // Graphics threads can still be drawing the last frame. Join them before
+    // managers release scene nodes and their GL resources.
+    if (mViewer)
+        mViewer->stopThreading();
+
     if (mScreenCaptureOperation != nullptr)
     {
         mScreenCaptureOperation->stop();
