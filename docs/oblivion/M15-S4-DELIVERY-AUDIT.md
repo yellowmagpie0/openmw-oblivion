@@ -9185,3 +9185,50 @@ selection, restart, image audit and the retained timeout failure. This closes
 the declared ordinary asymmetric strike-tail runtime matrix. Queued power,
 mixed capture/outgoing transitions, paired reactions and the wider M15S4 gates
 remain separate requirements. M15S4 remains incomplete.
+
+### Paired Player contact reaction integration
+
+Player BlockHit/Recoil now replace the prior body and first-person owners
+independently. A steady distinct source retains its exact outgoing timing and
+cause; an easing, captured, same-cached or inactive source uses pose capture.
+Existing detached history survives. Stale clocks, foreign causes and colliding
+history reject before mutation. The body owns process6/7 and contact consumption;
+first-person recovery stays independent. Fresh captured reactions retain requested
+offset+0 before manager anchors, including NPC captures; legacy absent-offset
+saves remain valid in both C++ and Python. The World factory now uses the native
+Player resource selector and actual active camera. The melee caller also admits
+Player attacker Recoil for intact, positively absorbed blocks.
+
+Original instruction evidence supplies840 resource-selection observations and
+separate96-context/672-sample steady and easing owned-root replacement corpora.
+Those supplied scene/cache/controller boundaries do not establish full original
+gameplay parity. New engine tests cover independently captured/steady/ended
+heads, prior history, opposite finish orders, exact source preservation, stale
+packet atomicity, aggregate RNG and saved recovery. Full normal and sanitized
+engine inventories each pass1775 tests. Normal components pass2974, sanitized
+ESM4*827, and Python357; unchanged passing component/Python sources are reused.
+Fifteen C++/Python wire payloads agree exactly. Actual sanitizer options are
+recorded; leak checking is disabled.
+
+Two normal runtime courses now pass first/third-camera blocked Player contacts
+and in-flight fresh-process recovery. All six completed disk/live pairs agree;
+final values, life, bases, full inventories/conditions, ledger, RNG, bow and loose
+weapons match same-process continuation exactly. Both Player Recoil roots and
+the NPC captured BlockHit recover, with one baseline contact and zero replayed
+contacts or selections. Six images are directly reviewed. The opponent fixture
+sets normal stance/movement/block controls in Lua; production blocking AI is not
+covered. Contact numbers are a pinned fork regression baseline, not an original
+numerical oracle. Sound is disabled.
+
+The retained failed pilot exposed a second Player exclusion upstream of the
+factory. The corrected normal runtime reaches process7 without changing damage,
+fatigue, absorption or RNG expectations. Earlier fixture/API mistakes and two
+interrupted sanitizer builds remain failed evidence. Editable baseline,
+third-camera and continuation manifests plus course metadata are versioned.
+
+[`M15-PLAYER-PAIRED-REACTION-VERIFICATION.json`](M15-PLAYER-PAIRED-REACTION-VERIFICATION.json)
+pins sources, checks, native boundaries, wire proof, normal courses and failures.
+Sanitized runtime remains a separate running course. Missing-resource/zero-blend
+contracts, legacy body-only history, breaking/fatal contacts, blocking AI,
+queued-power/mixed runtime transitions, parallel Stagger, mastery/effects,
+creatures and the wider input/FPS/cancellation matrix keep M15S4 incomplete.

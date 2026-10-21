@@ -1156,7 +1156,7 @@ namespace ESM4
             || mAnimationGroup.find('\0') != std::string::npos
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
             throw std::runtime_error("Invalid TES4 melee reaction identity or animation");
-        validateMeleeTiming(mSequenceTiming);
+        validateMeleeTiming(mSequenceTiming, mPoseSnapshot.has_value());
         if (mPoseSnapshot)
         {
             mPoseSnapshot->validate();

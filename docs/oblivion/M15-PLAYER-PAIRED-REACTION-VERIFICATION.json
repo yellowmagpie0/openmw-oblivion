@@ -1,0 +1,440 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Atomic per-view Player BlockHit/Recoil replacement of independent strike/reaction owners; actual World resource selection and Player attacker caller integration; fresh captured reaction offset initialization. Normal scripted-opponent runtime recovery in both cameras.",
+  "full_M15S4_acceptance": false,
+  "source_parent": "ddbde0c0642af9d8685171a34d98f13629ec048a",
+  "source_files": [
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "1acb4dd28964acb9b2ffcb4fee95e8c92ef354e23656ef25f12ee482cfb6626b"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "6ac32708457299496054ac300fe1fcb52a958f409b48241a95db6ebd380d7a75"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "e50bc7ef1bffedbf6c083115b9c5196556e37013edb24175d0bb44489ce0328c"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "7bc35e2580280db17b2743fafdcbdc24d67660f3d46eb64173272542e9c1c813"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "14bf6126c63a7cb28e0834f17e1b076f0c90afcab5926cdef7e9110a40528695"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "aea155f35fe755bf9efc3fdda115fe9aa045c2751b9ef70a537614544e476146"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "ed08ab15a0b15ed5ee6f6b7f894da4f227875488cd6b4727e66dcff1538676d1"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "7bc89e7b598b90bc9da434ba078f9d0f77b820bdede27fa100af9a6d1f567fe9"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_blocked_recoil.json",
+      "sha256": "0ef96225115dc5896eceb960df7820655a6d7eb76930a73d135575910e66e2ad"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_blocked_recoil_third.json",
+      "sha256": "fdac9b544bb81af75e4c3d8b6f15436f3f793e80c1e5961d5a884a4473c45648"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_blocked_recoil_continuation.json",
+      "sha256": "e555e0aa1fa624f8da3a5b5fea57e25a0d49aa9e65ac344a3fbb5f4e68180f7c"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_blocked_recoil_course.json",
+      "sha256": "25a70aec76f45479e715e1fb9027f06f0ee8057f441cf2866741e5f6b089d9e1"
+    }
+  ],
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-normal-01/verification.json",
+        "sha256": "fceda9ab41993ea013a5c84ea706bc23bafc7bafe0261d86d1a35fed25dffbb2"
+      },
+      "selection": "components",
+      "tested_source": {
+        "head": "60f9bc223232302224cd722a3eb65d30e73ad60d",
+        "source_fingerprint": "16d8c40bdb127d2ee6cb76c34d18325540ec4b7d98030d7e82194c5e48efb8de"
+      },
+      "result": {
+        "executed": 2974,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "d6b27eb99829762f1ae2c4a7c1554a16a9419dceaf9a50b4e0bd8fa551a17973",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "eeefe6f91366209db06d9d37fb08767ad501d97c7888f1ea0759b5e52443a41f",
+        "inventory_sha256": "ba2c245021c11b5556d7e502bca04e9f07aa222d36d2160b03d25eea55592f68",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "receipt_passed": false,
+      "reuse_note": "normal01 components passed before engine failure; common component sources unchanged thereafter. normal03 Python passed before final C++ caller correction; Python sources unchanged. Full normal04 and sanitized05 engine cover final caller."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-normal-03/verification.json",
+        "sha256": "bdfd32af279d2402a32666beac1e9e5cecddc45a8dc63cf2abebd1fd0c71e03d"
+      },
+      "selection": "python",
+      "tested_source": {
+        "head": "60f9bc223232302224cd722a3eb65d30e73ad60d",
+        "source_fingerprint": "70f5e65fd78543122eb437dec3e0b876075979695b6afd7b2890241ab0cae9a4"
+      },
+      "result": {
+        "executed": 357,
+        "passed": true,
+        "log_sha256": "3a2fed997ce51fc8bfa51f2a877e873eb7ee6567796dd881a3aefa39ee9cfee0"
+      },
+      "receipt_passed": true,
+      "reuse_note": "normal01 components passed before engine failure; common component sources unchanged thereafter. normal03 Python passed before final C++ caller correction; Python sources unchanged. Full normal04 and sanitized05 engine cover final caller."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-normal-04/verification.json",
+        "sha256": "d806925e044cf3e7fbe7a2d3585fe505f07bea255a8287e1814360728861c082"
+      },
+      "selection": "engine",
+      "tested_source": {
+        "head": "60f9bc223232302224cd722a3eb65d30e73ad60d",
+        "source_fingerprint": "fa024fd1192bb270561bc614e6b66d024f9a89f7172bcbc8999e3b52ab2d47df"
+      },
+      "result": {
+        "executed": 1775,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a05cf9cd642435a0236d1ba061faf8bca939a04db4768bb1ed41beff3a800870",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "73ba176d0618e3c341f01cda4c6038251f73bbb0081af74a28035ba7e2908f10",
+        "inventory_sha256": "a8ba1b2eb8a4ef7c808f2b26d066e55d9774e711b55681ee3de068310e409b89",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "receipt_passed": true,
+      "reuse_note": "normal01 components passed before engine failure; common component sources unchanged thereafter. normal03 Python passed before final C++ caller correction; Python sources unchanged. Full normal04 and sanitized05 engine cover final caller."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-components-sanitized-01/verification.json",
+        "sha256": "aaa555548b68704e6cfb24f8bef5fd5924dc9260ca446304d9787cde4c973d8a"
+      },
+      "selection": "sanitize",
+      "tested_source": {
+        "head": "60f9bc223232302224cd722a3eb65d30e73ad60d",
+        "source_fingerprint": "16d8c40bdb127d2ee6cb76c34d18325540ec4b7d98030d7e82194c5e48efb8de"
+      },
+      "result": {
+        "executed": 827,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "f2f6d3ac1c8c68975ff89309f0613bcac768199451b58c6144d252672e4a57df",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "77d19cfff2535b1a3d180638acdccaf3c1cb3de8e6f84daa3b628c83f133bd00",
+        "inventory_sha256": "f7039970a80dbd6e530c775f4570983a3f14372c98e4f62c1d0af38927e1111b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "receipt_passed": true,
+      "reuse_note": "normal01 components passed before engine failure; common component sources unchanged thereafter. normal03 Python passed before final C++ caller correction; Python sources unchanged. Full normal04 and sanitized05 engine cover final caller."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-engine-sanitized-05/verification.json",
+        "sha256": "e3f4e8b5595becc9c3286a513b552844dc195bd6e07da54ee8c9ec15451cc372"
+      },
+      "selection": "engine",
+      "tested_source": {
+        "head": "60f9bc223232302224cd722a3eb65d30e73ad60d",
+        "source_fingerprint": "fa024fd1192bb270561bc614e6b66d024f9a89f7172bcbc8999e3b52ab2d47df"
+      },
+      "result": {
+        "executed": 1775,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3fd065316f61dba5cef1b5710a990d15d50c2f1153df4453e2cc2c597f9f65b2",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "8c56251a58a0e873988c3435faed08d3dcab9ec4dad360277bca5d07aab256ee",
+        "inventory_sha256": "a8ba1b2eb8a4ef7c808f2b26d066e55d9774e711b55681ee3de068310e409b89",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "receipt_passed": true,
+      "reuse_note": "normal01 components passed before engine failure; common component sources unchanged thereafter. normal03 Python passed before final C++ caller correction; Python sources unchanged. Full normal04 and sanitized05 engine cover final caller."
+    }
+  ],
+  "actual_sanitizer_environments": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/actual-sanitized-unit-environment-01.json",
+      "sha256": "c5bc4bfd0db826f641a39b98d04e0284dc9f896b84ceea981062d977d55d69ad"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/actual-sanitized-engine-environment-05.json",
+      "sha256": "d7475dbb415a8cffc9f2fab9d891ad3ef90f5660ab561f3e8244e2514a0ace6a"
+    }
+  ],
+  "leak_coverage": false,
+  "cpp_python_wire_comparison": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cpp-python-wire-verification-01.json",
+    "sha256": "27d5be7583106dbcfd7faca9d00683f82bab7e7be9f4724acaf44bb2637972cf"
+  },
+  "public_manifest_validation": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/public-manifest-validation.json",
+    "sha256": "d72175718b4c6d5b8c6e06d87872797ae1abe9d9450e3e20c87b6e2137df3a06"
+  },
+  "native_evidence": [
+    {
+      "path": "docs/oblivion/M15-PLAYER-REACTION-RESOURCE-VERIFICATION.json",
+      "sha256": "bd01463704247db8ccbd673a656bfb3456f6188f8a82bddd0c351cf4e22c7e90"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-recoil-review-01/verification-03.json",
+      "sha256": "c18e90fa426d0e532a43318de4d7efd1e16cf9681c25e86c01ea2a6265a09ab5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-easing-strike-recoil-review-01/verification-01.json",
+      "sha256": "3b93f34f03eedf5c7a693b7fbcd6f83d52d9fcb02356e56d7c1c510bc8f51625"
+    }
+  ],
+  "native_limits": "Resource selector original840 observations; owned steady and easing replacement each96 contexts/672 samples execute original instructions within explicitly supplied cache/scene/controller/heap/TLS boundaries. Per-view fixtures are not original simultaneous gameplay or skin/motion parity.",
+  "normal_runtime": [
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/verification.json",
+        "sha256": "36d23537cbca99c73a6516ccaee0c36fc17ae681f01deeb5f4ddfa4114b12552"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/manifest.json",
+        "sha256": "23b1e8cab9165ef4096bb1231b2ee59001ca1bbe7da50c8a0222de86d239660f"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/continuation.json",
+        "sha256": "3cee43c64098bddd12b600a636074d0796eaae0b1d0d6da2e4185fbc677a562a"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/preregistered.json",
+        "sha256": "7413e94e0ef2f84bd01c77b32376f1b3df93b46d2d53ac567a1ff1388e71a354"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/restart-selection.json",
+        "sha256": "18ade24c31ba27203f0b73a2a8b1ab90bf8e2eaa416849cdb0a7e3ace641c92b"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 974647,
+            "start_ticks": 29419629,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/first/launcher.json",
+            "sha256": "14e80749469861c3ab062524d34ccb02920b820de64b7a293df0e6a49ddc10ea"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/first/events.jsonl",
+            "sha256": "4730ed356987ca9fbd3945410658ccae7866e8e7c987ab0d506077a1c5c55ea2"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 975059,
+            "start_ticks": 29437660,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/second/launcher.json",
+            "sha256": "aa907aebea251d5584844f1600c2911c943ffe3896ac81c8e2c8b722cd8ad82d"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/second/events.jsonl",
+            "sha256": "4dc07ec1212d444f04f219114e2e70539c196fa30756eba34cecb22aafc5e848"
+          }
+        }
+      ]
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/verification.json",
+        "sha256": "e3d5c25ad17db2f5e7142ed40f4a495a7214510d3845928a9b155c574f11a079"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/manifest.json",
+        "sha256": "55531351c7488bb60eab87bfa758f70f9a9c897725ef6d791000ed9f9032dcc3"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/continuation.json",
+        "sha256": "e9ce7affc578029fe03b5171fd472f63ed0a81964d867d7b833c4e72a3100af1"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/preregistered.json",
+        "sha256": "3e62d79103a8a190eb0e30c90f440f77d426af953ca105b2bd776485e0d070e1"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/restart-selection.json",
+        "sha256": "07c6611f2b9d94ce6dd186a89f819956ff960401eadce77b9584746ae43f35b7"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 975714,
+            "start_ticks": 29448585,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/first/launcher.json",
+            "sha256": "d8b002aa0eddf8cc9def109e12f1083bf8519f4b299d054499ad59ca9ded9877"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/first/events.jsonl",
+            "sha256": "a9b32f56ab3d1d66c5ab372339862c2968f885c102ccd7989be0827731404ad8"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 978006,
+            "start_ticks": 29456890,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/second/launcher.json",
+            "sha256": "6656ae26af89a8fdc6fe5545173485471e750602e3c23eb5f30aa2bd886bbfb9"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/second/events.jsonl",
+            "sha256": "363cfc3c964010e77c562bdc9e76ec776ee87f977cc0e468cc87a511c4aed36c"
+          }
+        }
+      ]
+    }
+  ],
+  "normal_image_review": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/normal-images-reviewed-01.json",
+    "sha256": "c6a62f2070e152caab43182c2c760436b84d5f730798105b476e6a141592f16f"
+  },
+  "normal_processes": 4,
+  "normal_completed_save_live_equal_pairs": 6,
+  "retained_failed_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/initial-engine-failures-01.json",
+      "sha256": "11f10406906b68be731a35b4a9f8fe413010621ebeedb9ff32f243fcca85ed25"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/second-engine-failures-02.json",
+      "sha256": "ab3d6484074372c284027e0d9f1b744b7a658c2e1e0c762d1ed519e076749db2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/omitted-sanitizer-environment-interruption-03.json",
+      "sha256": "c01452bc04df5654e9c7a4405a315326ce7fb749de759c82240259543a300c0a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/caller-guard-counterexample-interruption-04.json",
+      "sha256": "9d46bc59b7ca3c61118bdba086bd68a31f1a906c7012a6c91d5f989db6eb63a6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/normal-caller-guard-counterexample-02.json",
+      "sha256": "1590458ed024cb3b729f92b2a11777853fa49bfc9e17df31acc8dbf267e6ab4f"
+    }
+  ],
+  "startup_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-01/startup-failure-and-cleanup.json",
+    "sha256": "71a8b49535a8af360a28f68ab1f74e60b22ebcda960d3f2e424483b7fc5bcdb4"
+  },
+  "implementation": [
+    "Resolve Player preflight from active camera, body variant then mirrored basename/fallback selection with aggregate atomic RNG; newly built static count classification only.",
+    "Preserve independent steady outgoing state3/incoming state2 or captured state5 per actual prior owner; retain old detached history, cause, exact clock and timing; reject stale/foreign/colliding packets atomically.",
+    "Body process6/7 owns contact; consume abandoned pending action once and reset input; both view reactions recover independently and persist across restart.",
+    "Admit captured requested offset +0 before EaseStart/LastInput in C++ and Python; retain legacy absent-offset saves. Apply fresh NPC capture initialization too.",
+    "Remove upstream Player Recoil exclusion while retaining positive absorption, equipment-break and actor-type guards."
+  ],
+  "limits": [
+    "Sanitized runtime course is running separately, not accepted by this receipt.",
+    "NPC block is authored Lua normal-control fixture; production combat-style blocking AI remains open.",
+    "Numeric contact values are pinned pre-caller-fix fork regression baseline, not independent native expectations.",
+    "Sound disabled; no audio acceptance or measured FPS.",
+    "Missing/different body or mirror resources, zero blend, legacy body-only strike history, breaking/fatal contacts and broader replacement failures remain guarded or separate gates.",
+    "Queued power/mixed runtime transitions, parallel Stagger, creatures, mastery/effects and wider input/FPS/cancellation gates keep M15S4 incomplete."
+  ]
+}

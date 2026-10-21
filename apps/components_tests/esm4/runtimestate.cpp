@@ -4275,9 +4275,11 @@ namespace
         auto& body = *melee.mReaction;
         // Full original Player activation + first update. Same alias in both
         // views, but body state2 fades and first-person state1 starts directly.
-        body.mSequenceTiming = {true, -.5f, .5f, 0.f, .6f, 0.f, 0.f};
+        body.mSequenceTiming = {.mEasing = true, .mOffset = -.5f, .mEaseStart = .5f,
+            .mEaseEnd = .6f, .mLastInput = 0.f};
         auto mirror = body;
-        mirror.mSequenceTiming = {false, -.25f, 0.f, 0.f, .25f, 0.f, 0.f};
+        mirror.mSequenceTiming = {.mEasing = false, .mOffset = -.25f, .mEaseStart = 0.f,
+            .mEaseEnd = .25f, .mLastInput = 0.f};
         melee.mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{.25f, std::move(mirror)};
         return state;
     }
@@ -4508,4 +4510,44 @@ TEST(ESM4RuntimeState, Strike58RejectsSplitIdentityReplayMissingHistoryAndInvali
     legacy.mVersion = 58;
     const auto loaded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
     EXPECT_EQ(loaded.mNativeMeleeStates, before); // No invented strike, clock or pose history.
+}
+
+TEST(ESM4RuntimeState, CapturedReactionRetainsRequestedOffsetBeforeBothViewAnchors)
+{
+    for (unsigned mask = 1; mask < 4; ++mask)
+    {
+        auto state = firstPersonReactionState();
+        state.mVersion = 58;
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        const std::array<ESM4::RuntimeMeleeReaction*, 2> views{&*melee.mReaction, &*melee.mFirstPerson->mReaction};
+        for (unsigned view = 0; view < views.size(); ++view)
+            if (mask & (1u << view))
+            {
+                auto& reaction = *views[view];
+                reaction.mAnimationTime = 0;
+                reaction.mStarted = false;
+                reaction.mSequenceTiming = {.mEasing = true, .mOffset = 0.f, .mEaseEnd = .125f};
+                reaction.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
+            }
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        std::string wire;
+        constexpr char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+        RecordProperty("reaction58_partial_hex_" + std::to_string(mask), wire);
+        RecordProperty("reaction58_partial_json_" + std::to_string(mask), state.canonicalJson());
+        for (unsigned view = 0; view < views.size(); ++view)
+            if (mask & (1u << view))
+            {
+                const auto valid = *views[view];
+                views[view]->mPoseSnapshot.reset();
+                EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+                *views[view] = valid;
+                views[view]->mSequenceTiming.mLastInput = 0;
+                EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+                *views[view] = valid;
+            }
+    }
 }

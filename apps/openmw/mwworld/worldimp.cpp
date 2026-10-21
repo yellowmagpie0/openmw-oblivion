@@ -2653,7 +2653,6 @@ namespace MWWorld
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
         if ((!player && actor.getType() != ESM::REC_NPC_4)
-            || (player && kind != ESM4::MeleeReactionKind::BlockHit)
             || requested || retiring || firstPerson)
             return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
@@ -2698,6 +2697,132 @@ namespace MWWorld
             const auto& catalog = animation->getNativeReactionCatalog();
             std::vector<std::uint16_t> available;
             for (const auto& entry : catalog) available.push_back(entry.mNativeGroup);
+            if (player)
+            {
+                auto* first = animation->getPlaybackPeer();
+                if (!first) return false;
+                const auto& firstCatalog = first->getNativeReactionCatalog();
+                const auto& activeCatalog = isFirstPerson() ? firstCatalog : catalog;
+                std::vector<std::uint16_t> activeAvailable;
+                for (const auto& item : activeCatalog) activeAvailable.push_back(item.mNativeGroup);
+                const auto selected = ESM4::resolveNativeReactionSequenceGroup(
+                    static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00)
+                        | (kind == ESM4::MeleeReactionKind::BlockHit ? 28 : 30)), activeAvailable);
+                if (!selected) return true;
+                const auto find = [&](const auto& resources) {
+                    return std::find_if(resources.begin(), resources.end(), [&](const auto& item) {
+                        return item.mNativeGroup == *selected;
+                    });
+                };
+                const auto bodyEntry = find(catalog), firstEntry = find(firstCatalog);
+                // A different body fallback or absent mirror needs the native
+                // failed-playback contract, not an invented paired owner.
+                if (bodyEntry == catalog.end()) return false;
+                if (firstEntry == firstCatalog.end())
+                    return kind == ESM4::MeleeReactionKind::BlockHit;
+                const auto resources = [](const auto& entry) {
+                    std::vector<std::string_view> names;
+                    for (const auto& name : entry.mGroups) names.push_back(name);
+                    return names;
+                };
+                const auto bodyNames = resources(*bodyEntry), firstNames = resources(*firstEntry);
+                const auto collection = [](std::size_t count) {
+                    return count == 1 ? ESM4::NativeSequenceCollection::Single : ESM4::NativeSequenceCollection::Multiple;
+                };
+                auto random = deltas.mRandomTransition;
+                const auto selection = ESM4::selectNativePlayerReactionResources(isFirstPerson(),
+                    {collection(bodyNames.size()), bodyNames}, {collection(firstNames.size()), firstNames},
+                    random ? random->mNextState : mOblivionCombat->combatRandomState());
+                if (selection.mDraws)
+                {
+                    random = mOblivionCombat->prepareCombatRandom((random ? random->mDraws : 0) + selection.mDraws);
+                    if (random->mNextState != selection.mNextState) return false;
+                }
+                const auto* previous = mOblivionCombat->findMeleeState(key);
+                if (previous && previous->mStrike && (!previous->mFirstPerson || !previous->mFirstPerson->mStrike))
+                    return false; // The old save did not retain first-person strike history.
+                const auto prepareView = [&](MWRender::Animation& view, const std::string& group,
+                                             const ESM4::RuntimeMeleeStrike* oldStrike,
+                                             const ESM4::RuntimeMeleeReaction* oldReaction, bool firstView,
+                                             std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
+                    const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(view, group, true);
+                    const auto* source = view.getControllerSequenceMetadata(group);
+                    if (!source || source->mWeight != 1 || (oldStrike && !oldStrike->mSequenceTiming)
+                        || (oldReaction && oldReaction->mKind == ESM4::MeleeReactionKind::Stagger))
+                        throw std::invalid_argument("unsupported paired Player reaction source");
+                    const bool inactive = (oldReaction && (oldReaction->mInactive || oldReaction->mRetirement))
+                        || (firstView && oldStrike && (oldStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                            ? oldStrike->mPowerPhase == ESM4::PowerMeleePhase::End
+                            : oldStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End));
+                    const auto priorGroup = oldStrike ? std::string_view(oldStrike->mAnimationGroup)
+                        : oldReaction ? std::string_view(oldReaction->mAnimationGroup) : std::string_view{};
+                    const auto* priorTiming = oldStrike ? &*oldStrike->mSequenceTiming
+                        : oldReaction ? &oldReaction->mSequenceTiming : nullptr;
+                    const bool priorPose = oldStrike ? oldStrike->mPoseSnapshot.has_value()
+                        : oldReaction && oldReaction->mPoseSnapshot.has_value();
+                    std::optional<std::uint8_t> priorFrames;
+                    if (!priorGroup.empty() && !inactive)
+                        priorFrames = MWMechanics::captureOblivionMeleeSequenceMetadata(
+                            view, priorGroup, false).mBlendFrames;
+                    const float duration = ESM4::meleeBlendDuration(priorFrames, metadata.mBlendFrames, .1f);
+                    if (duration <= 0)
+                        throw std::invalid_argument("paired Player reaction zero blend is not admitted");
+                    ESM4::RuntimeMeleeReaction incoming{id, kind, group};
+                    incoming.mSequenceTiming.mEasing = true;
+                    incoming.mSequenceTiming.mEaseEnd = duration;
+                    if (priorTiming && !inactive && !priorTiming->mEasing && !priorPose && priorGroup != group)
+                    {
+                        if (!priorTiming->mOffset)
+                            throw std::invalid_argument("paired Player outgoing source has no manager history");
+                        outgoing = ESM4::RuntimeRetiringMeleeSequence{
+                            oldStrike ? oldStrike->mActionId : oldReaction->mContactId, std::string(priorGroup),
+                            oldStrike ? oldStrike->mAnimationTime : oldReaction->mAnimationTime,
+                            *priorTiming, {duration, {}}};
+                    }
+                    else
+                    {
+                        incoming.mPoseSnapshot = view.captureNativeSequencePose(group, 0);
+                        if (!incoming.mPoseSnapshot) throw std::invalid_argument("paired Player reaction has no pose");
+                        incoming.mSequenceTiming.mOffset = 0.f;
+                    }
+                    incoming.validate();
+                    return incoming;
+                };
+                std::optional<ESM4::RuntimeRetiringMeleeSequence> bodyOutgoing, firstOutgoing;
+                auto body = prepareView(*animation, bodyEntry->mGroups[selection.mBodyIndex],
+                    previous && previous->mStrike ? &*previous->mStrike : nullptr,
+                    previous && previous->mReaction ? &*previous->mReaction : nullptr, false, bodyOutgoing);
+                auto mirror = prepareView(*first, firstEntry->mGroups[selection.mFirstPersonIndex],
+                    previous && previous->mFirstPerson && previous->mFirstPerson->mStrike
+                        ? &*previous->mFirstPerson->mStrike : nullptr,
+                    previous && previous->mFirstPerson && previous->mFirstPerson->mReaction
+                        ? &*previous->mFirstPerson->mReaction : nullptr, true, firstOutgoing);
+                const float clock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
+                    : mOblivionCombat->animationClock(key);
+                ESM4::RuntimeFirstPersonMeleeState firstState{clock, std::move(mirror)};
+                if (firstOutgoing) firstState.mRetiringSequences.push_back(*firstOutgoing);
+                Log(Debug::Verbose) << "M15 Player reaction resources selected: actor=" << key.serialize()
+                    << " cause=" << id << " kind=" << static_cast<unsigned>(kind) << " native_group=" << *selected
+                    << " body_group=" << body.mAnimationGroup << " first_group=" << firstState.mReaction->mAnimationGroup
+                    << " selection_draws=" << selection.mDraws << " first_matched=" << selection.mFirstPersonMatched;
+                if (kind == ESM4::MeleeReactionKind::BlockHit)
+                {
+                    Log(Debug::Verbose) << "M15 Player block resource selected: actor=" << key.serialize()
+                        << " cause=" << id << " native_group=" << *selected << " group=" << body.mAnimationGroup
+                        << " selection_draws=" << selection.mDraws << " variant=" << selection.mBodyIndex;
+                    Log(Debug::Verbose) << "M15 Player first-person block resource selected: actor=" << key.serialize()
+                        << " cause=" << id << " native_group=" << *selected
+                        << " group=" << firstState.mReaction->mAnimationGroup
+                        << " previous_cause=" << (previous && previous->mReaction ? previous->mReaction->mContactId : 0)
+                        << " previous_first_cause=" << (previous && previous->mFirstPerson
+                            && previous->mFirstPerson->mReaction ? previous->mFirstPerson->mReaction->mContactId : 0);
+                }
+                requested = std::move(body);
+                retiring = std::move(bodyOutgoing);
+                firstPerson = std::move(firstState);
+                deltas.mRandomTransition = random;
+                return true;
+            }
             const auto selected = ESM4::resolveNativeReactionSequenceGroup(
                 static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00)
                     | (kind == ESM4::MeleeReactionKind::BlockHit ? 28 : 30)), available);
@@ -2707,7 +2832,7 @@ namespace MWWorld
             });
             if (entry == catalog.end() || entry->mGroups.empty()
                 || entry->mGroups.size() > std::numeric_limits<std::int32_t>::max()) return false;
-            // Keep Player and BlockHit on their established Single path.
+            // NPC BlockHit retains its established Single path.
             // Recoil's static catalog has native insertion order: a second
             // resource promotes the freshly constructed cache to Multiple.
             if (kind == ESM4::MeleeReactionKind::BlockHit && entry->mGroups.size() != 1) return false;
@@ -2740,60 +2865,6 @@ namespace MWWorld
             if (!source || source->mWeight != 1) return false;
             ESM4::RuntimeMeleeReaction reaction{id, kind, group};
             const auto* previous = mOblivionCombat->findMeleeState(key);
-            if (player)
-            {
-                auto* first = animation->getPlaybackPeer();
-                // Fresh or same-cached BlockHit only. Distinct replacements
-                // and outgoing/parallel first-person owners need their own
-                // resource/lifetime contracts.
-                if (!first || (previous && (previous->mStrike
-                        || !previous->mRetiringSequences.empty()))) return false;
-                const auto& firstCatalog = first->getNativeReactionCatalog();
-                // Original65D790 mirrors the body's resolved key directly;
-                // it does not repeat family/movement fallback in the FP cache.
-                const auto firstEntry = std::find_if(firstCatalog.begin(), firstCatalog.end(), [&](const auto& item) {
-                    return item.mNativeGroup == *selected;
-                });
-                if (firstEntry == firstCatalog.end()) return true;
-                if (firstEntry->mGroups.size() != 1) return false;
-                const std::string firstGroup = firstEntry->mGroups.front();
-                if (previous && previous->mReaction)
-                {
-                    const auto& body = *previous->mReaction;
-                    if (body.mKind != ESM4::MeleeReactionKind::BlockHit || body.mAnimationGroup != group) return false;
-                }
-                if (previous && previous->mFirstPerson && previous->mFirstPerson->mReaction)
-                {
-                    const auto& mirror = *previous->mFirstPerson->mReaction;
-                    if (mirror.mKind != ESM4::MeleeReactionKind::BlockHit
-                        || mirror.mAnimationGroup != firstGroup) return false;
-                }
-                const auto firstMetadata = MWMechanics::captureOblivionMeleeSequenceMetadata(*first, firstGroup, true);
-                const auto* firstSource = first->getControllerSequenceMetadata(firstGroup);
-                if (!firstSource || firstSource->mWeight != 1) return false;
-                ESM4::RuntimeMeleeReaction mirror{id, ESM4::MeleeReactionKind::BlockHit, firstGroup};
-                // Actual Player-owned body/FP roots bypass the frustum gate.
-                // Each captures its own pose and uses its own authored blend.
-                reaction.mPoseSnapshot = animation->captureNativeSequencePose(group, 0);
-                mirror.mPoseSnapshot = first->captureNativeSequencePose(firstGroup, 0);
-                if (!reaction.mPoseSnapshot || !mirror.mPoseSnapshot) return false;
-                reaction.mSequenceTiming.mEasing = mirror.mSequenceTiming.mEasing = true;
-                reaction.mSequenceTiming.mEaseEnd = ESM4::meleeBlendDuration({}, metadata.mBlendFrames, .1f);
-                mirror.mSequenceTiming.mEaseEnd = ESM4::meleeBlendDuration({}, firstMetadata.mBlendFrames, .1f);
-                reaction.validate(); mirror.validate();
-                const float firstClock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
-                    : mOblivionCombat->animationClock(key);
-                firstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, std::move(mirror)};
-                requested = std::move(reaction);
-                Log(Debug::Verbose) << "M15 Player first-person block resource selected: actor=" << key.serialize()
-                                    << " cause=" << id << " native_group=" << *selected << " group=" << firstGroup
-                                    << " previous_cause=" << (previous && previous->mReaction
-                                            ? previous->mReaction->mContactId : 0)
-                                    << " previous_first_cause=" << (previous && previous->mFirstPerson
-                                            && previous->mFirstPerson->mReaction
-                                            ? previous->mFirstPerson->mReaction->mContactId : 0);
-                return true;
-            }
             if (previous && std::any_of(previous->mRetiringSequences.begin(), previous->mRetiringSequences.end(),
                     [&](const auto& sequence) { return sequence.mAnimationGroup == group; }))
                 return false;
@@ -2844,6 +2915,7 @@ namespace MWWorld
                 reaction.mPoseSnapshot = animation->captureNativeSequencePose(group, 0);
                 if (!reaction.mPoseSnapshot) return false;
                 reaction.mSequenceTiming.mEasing = true;
+                reaction.mSequenceTiming.mOffset = 0.f;
                 reaction.mSequenceTiming.mEaseEnd = duration;
             }
             reaction.validate();
@@ -2996,7 +3068,7 @@ namespace MWWorld
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
             return nullptr;
-        if (attackerRecoil && (!blockHit || player || attacker.getType() != ESM::REC_NPC_4
+        if (attackerRecoil && (!blockHit || (!player && attacker.getType() != ESM::REC_NPC_4)
                 || std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
                     return change.mOwner == attacker
                         && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;

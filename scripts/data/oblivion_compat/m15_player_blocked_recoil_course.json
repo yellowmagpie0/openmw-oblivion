@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "One normal unarmed Player contact blocked by a stationary scripted NPC; paired Player Recoil, NPC captured BlockHit and no-input in-flight fresh-process recovery.",
+  "input_recipe": "m15_player_strike_tail_input.json",
+  "baseline_manifest": "oblivion_m15_player_blocked_recoil.json",
+  "third_camera_manifest": "oblivion_m15_player_blocked_recoil_third.json",
+  "continuation_manifest": "oblivion_m15_player_blocked_recoil_continuation.json",
+  "input_staging": "Use tes4_m15_player_strike_tail_input.py with the pinned idle source and recipe. Copy staged input into an isolated user-data quicksave slot; never overwrite historical evidence.",
+  "fixture": "opponent_fixture supplies stationary, cached-block and zero-fatigue-regeneration generated plugins already identified in the course receipts. Stock body/first-person animation resources; no duration overrides.",
+  "npc_control": "Lua sets only weapon stance, zero movement and block controls for Valen Dreth base FormId:0x1025200. Normal production combat-style block AI is not covered.",
+  "restart_selection": "First completed post-contact quicksave with both Player Recoil heads active, outgoing strikes retained, NPC captured BlockHit and consumed contact2. Preserve disk/live hashes and use a fresh engine process without attack input.",
+  "expected_contact_regression": {
+    "fatigue_cost": 7,
+    "health_damage": 1.2425,
+    "fatigue_damage": 1.49625,
+    "block_fraction": 0.125,
+    "block_fatigue": 0,
+    "combat_random_draws": 0,
+    "player_process_action": 7,
+    "victim_process_action": 6
+  },
+  "expectation_provenance": "Numerical fork regression baseline from retained pre-caller-fix pilot02. This is not an independent original-game damage oracle. Sequence selection and transition contracts have separate original-instruction evidence.",
+  "required_checks": [
+    "One baseline contact2, zero continuation contacts or selections.",
+    "Every completed saved-state object equals independent live serialization.",
+    "Natural recovery in body/first-person and NPC; no surviving strike, reaction or retiring history.",
+    "Final native values, life, bases, complete Player/target inventories including condition/charge/equip, ledger, RNG, bow and loose weapons match same-process continuation exactly.",
+    "Actual process epochs, tested binaries, compiler reports and direct image review."
+  ],
+  "audio_acceptance": false,
+  "full_M15S4_acceptance": false
+}

@@ -3155,6 +3155,37 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         melee["first_person"] = {"clock": .25, "reaction": mirror}
         return state
 
+    def test_captured_reaction_retains_requested_offset_before_view_anchors(self):
+        for mask in (1, 2, 3):
+            with self.subTest(mask=mask):
+                state = self.first_person_melee_state()
+                state_io._upgrade_first_person_melee(state)
+                state["schema_version"] = 58
+                melee = state["native_melee_states"][0]
+                for view, reaction in enumerate((melee["reaction"], melee["first_person"]["reaction"])):
+                    if mask & (1 << view):
+                        reaction.update(animation_time=0., started=False,
+                            pose_snapshot={"destination_frame": 0., "tracks": []})
+                        reaction["sequence_timing"].update(easing=True, offset=0., ease_start=None,
+                            last_input=None, ease_end=.125, weighted_time=0., output_time=0.)
+                payload = state_io.encode_payload(state)
+                self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+                for view in (0, 1):
+                    if not mask & (1 << view):
+                        continue
+                    for bad_field in ("pose_snapshot", "last_input"):
+                        bad = copy.deepcopy(state)
+                        reaction = bad["native_melee_states"][0]
+                        if view:
+                            reaction = reaction["first_person"]
+                        reaction = reaction["reaction"]
+                        if bad_field == "pose_snapshot":
+                            reaction["pose_snapshot"] = None
+                        else:
+                            reaction["sequence_timing"]["last_input"] = 0.
+                        with self.assertRaises(state_io.RuntimeStateError):
+                            state_io.encode_payload(bad)
+
     def test_first_person57_preserves_independent_timing_and_retirement_after_body_recovery(self):
         for phase in ("active", "retiring", "body-recovered", "inactive", "clock-only", "signed-zero"):
             with self.subTest(phase=phase):

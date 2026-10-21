@@ -2553,26 +2553,111 @@ namespace MWMechanics
             }
             request->validate();
             const auto& timing = request->mSequenceTiming;
-            // Player-owned roots reset the same cached clamp sequence through
-            // pose capture too (474530 -> 6C5C70), including states2/3/5.
-            // Either old owner may already have finished on its own clock.
-            // Replace the surviving same-cached owners together; neither view
-            // retains an outgoing copy of this same resource.
-            const bool capturedPlayerRestart = values.mOwner == ESM4::ActorValueOwner::Player
-                && previous && firstPerson && firstPerson->mReaction
-                && (previous->mReaction || (previous->mFirstPerson && previous->mFirstPerson->mReaction))
-                && !previous->mStrike && previous->mRetiringSequences.empty() && !outgoing
-                && request->mKind != ESM4::MeleeReactionKind::Stagger
-                && (!previous->mReaction || (previous->mReaction->mKind == request->mKind
-                    && previous->mReaction->mAnimationGroup == request->mAnimationGroup
-                    && values.mProcessAction == previous->mReaction->processAction()))
-                && (!previous->mFirstPerson || !previous->mFirstPerson->mReaction
-                    || (previous->mFirstPerson->mReaction->mKind == firstPerson->mReaction->mKind
-                        && previous->mFirstPerson->mReaction->mAnimationGroup == firstPerson->mReaction->mAnimationGroup))
-                && request->mPoseSnapshot && timing.mEasing && timing.mEaseEnd > 0
-                && firstPerson->mReaction->mPoseSnapshot
-                && firstPerson->mReaction->mSequenceTiming.mEasing
-                && firstPerson->mReaction->mSequenceTiming.mEaseEnd > 0;
+            if (values.mOwner == ESM4::ActorValueOwner::Player && firstPerson
+                && request->mKind != ESM4::MeleeReactionKind::Stagger)
+            {
+                firstPerson->validate();
+                const float expectedClock = previous && previous->mFirstPerson
+                    ? previous->mFirstPerson->mClock : animationClock(values.mActor);
+                if (!firstPerson->mReaction || firstPerson->mStrike
+                    || firstPerson->mRetiringSequences.size() > 1
+                    || firstPerson->mReaction->mKind != request->mKind
+                    || std::bit_cast<std::uint32_t>(firstPerson->mClock)
+                        != std::bit_cast<std::uint32_t>(expectedClock)
+                    || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
+                    || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
+                    || mBowStates.contains(values.mActor)
+                    || (previous && previous->mReaction
+                        && values.mProcessAction != previous->mReaction->processAction())
+                    || (previous && previous->mStrike
+                        && (!previous->mFirstPerson || !previous->mFirstPerson->mStrike)))
+                    throw std::invalid_argument("invalid paired Player contact reaction ownership");
+                auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+                const auto replaceView = [&](const ESM4::RuntimeMeleeStrike* oldStrike,
+                                             const ESM4::RuntimeMeleeReaction* oldReaction,
+                                             const ESM4::RuntimeMeleeReaction& incoming,
+                                             const ESM4::RuntimeRetiringMeleeSequence* detached,
+                                             std::vector<ESM4::RuntimeRetiringMeleeSequence>& history,
+                                             bool first) {
+                    incoming.validate();
+                    const auto& fresh = incoming.mSequenceTiming;
+                    const bool capturedOffset = incoming.mPoseSnapshot && fresh.mOffset
+                        && std::bit_cast<std::uint32_t>(*fresh.mOffset) == 0;
+                    if (incoming.mContactId != id || incoming.mAnimationTime != 0
+                        || incoming.mStarted || incoming.mInactive || incoming.mRetirement
+                        || fresh.mOffset.has_value() != capturedOffset || fresh.mEaseStart || fresh.mLastInput
+                        || fresh.mWeightedTime != 0 || fresh.mOutputTime != 0 || fresh.mEaseEnd < 0
+                        || fresh.mEasing != (fresh.mEaseEnd > 0)
+                        || (oldReaction && oldReaction->mKind == ESM4::MeleeReactionKind::Stagger)
+                        || (oldReaction && oldReaction->mAnimationGroup == incoming.mAnimationGroup
+                            && oldReaction->mKind != incoming.mKind)
+                        || (oldStrike && !oldStrike->mSequenceTiming)
+                        || ((oldStrike || oldReaction) && !fresh.mEasing))
+                        throw std::invalid_argument("unsupported paired Player reaction activation history");
+                    const auto cause = oldStrike ? oldStrike->mActionId : oldReaction ? oldReaction->mContactId : 0;
+                    const auto group = oldStrike ? std::string_view(oldStrike->mAnimationGroup)
+                        : oldReaction ? std::string_view(oldReaction->mAnimationGroup) : std::string_view{};
+                    const auto time = oldStrike ? oldStrike->mAnimationTime : oldReaction ? oldReaction->mAnimationTime : 0;
+                    const auto* oldTiming = oldStrike ? &*oldStrike->mSequenceTiming
+                        : oldReaction ? &oldReaction->mSequenceTiming : nullptr;
+                    if ((oldReaction && !isActionConsumed(cause))
+                        || (oldStrike && (oldStrike->mContactCommitted ? !isActionConsumed(cause)
+                            : !isActionPending(cause, values.mActor))))
+                        throw std::invalid_argument("paired Player reaction lost its outgoing causal action");
+                    const bool inactive = (oldReaction && (oldReaction->mInactive || oldReaction->mRetirement))
+                        || (first && oldStrike && (oldStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                            ? oldStrike->mPowerPhase == ESM4::PowerMeleePhase::End
+                            : oldStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End));
+                    const bool oldPose = oldStrike ? oldStrike->mPoseSnapshot.has_value()
+                        : oldReaction && oldReaction->mPoseSnapshot.has_value();
+                    if (oldTiming && !inactive && !oldTiming->mEasing && !oldPose
+                        && group != incoming.mAnimationGroup && !oldTiming->mOffset)
+                        throw std::invalid_argument("paired Player outgoing source has no manager history");
+                    const bool crossfade = oldTiming && !inactive && oldTiming->mOffset
+                        && !oldTiming->mEasing && !oldPose && group != incoming.mAnimationGroup && fresh.mEasing;
+                    if (bool(detached) != crossfade || (fresh.mEasing
+                            && incoming.mPoseSnapshot.has_value() == crossfade))
+                        throw std::invalid_argument("paired Player reaction lost its capture/crossfade source");
+                    for (const auto& sequence : history)
+                        if (sequence.mAnimationGroup == incoming.mAnimationGroup
+                            || (detached && sequence.mAnimationGroup == detached->mAnimationGroup))
+                            throw std::invalid_argument("paired Player reaction collides with outgoing history");
+                    if (detached)
+                    {
+                        const ESM4::RuntimeRetiringMeleeSequence expected{
+                            cause, std::string(group), time, *oldTiming, {fresh.mEaseEnd, {}}};
+                        if (*detached != expected)
+                            throw std::invalid_argument("paired Player reaction changed outgoing timing or identity");
+                        history.push_back(expected);
+                    }
+                };
+                replaceView(previous && previous->mStrike ? &*previous->mStrike : nullptr,
+                    previous && previous->mReaction ? &*previous->mReaction : nullptr, *request,
+                    outgoing ? &*outgoing : nullptr, candidate.mRetiringSequences, false);
+                auto mirror = candidate.mFirstPerson.value_or(ESM4::RuntimeFirstPersonMeleeState{expectedClock, {}});
+                replaceView(previous && previous->mFirstPerson && previous->mFirstPerson->mStrike
+                        ? &*previous->mFirstPerson->mStrike : nullptr,
+                    previous && previous->mFirstPerson && previous->mFirstPerson->mReaction
+                        ? &*previous->mFirstPerson->mReaction : nullptr,
+                    *firstPerson->mReaction, firstPerson->mRetiringSequences.empty()
+                        ? nullptr : &firstPerson->mRetiringSequences.front(), mirror.mRetiringSequences, true);
+                if (candidate.mStrike && !candidate.mStrike->mContactCommitted && candidate.mStrike->mActionId != id)
+                    reactionCanceledActions.push_back(candidate.mStrike->mActionId);
+                candidate.mStrike.reset();
+                candidate.mInput = {};
+                candidate.mReaction = *request;
+                mirror.mStrike.reset();
+                mirror.mReaction = firstPerson->mReaction;
+                candidate.mFirstPerson = std::move(mirror);
+                if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
+                    && candidate.mAiIntent->mTarget == victimKey)
+                    candidate.mAiIntent.reset();
+                candidate.validate();
+                reactionStates.emplace(values.mActor, std::move(candidate));
+                if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
+                values.mProcessAction = request->processAction();
+                return;
+            }
             const bool cachedRestart = previous && previous->mReaction
                 && request->mKind != ESM4::MeleeReactionKind::Stagger
                 && previous->mReaction->mKind == request->mKind
@@ -2600,13 +2685,15 @@ namespace MWMechanics
                         return sequence.mAnimationGroup == request->mAnimationGroup
                             || sequence.mAnimationGroup == previous->mReaction->mAnimationGroup;
                     });
+            const bool capturedOffset = request->mPoseSnapshot && timing.mOffset
+                && std::bit_cast<std::uint32_t>(*timing.mOffset) == 0;
             if (request->mContactId != id || request->mAnimationTime != 0 || request->mStarted || request->mInactive
-                || request->mRetirement || timing.mOffset || timing.mEaseStart || timing.mLastInput
+                || request->mRetirement || timing.mOffset.has_value() != capturedOffset || timing.mEaseStart || timing.mLastInput
                 || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
                 || timing.mEasing != (timing.mEaseEnd > 0)
                 || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
                 || values.mProcessAction == 8 || life.mPhase != ESM4::ActorLifePhase::Alive
-                || (previous && previous->mReaction && !cachedRestart && !capturedPlayerRestart && !reactionCrossfade)
+                || (previous && previous->mReaction && !cachedRestart && !reactionCrossfade)
                 || mBowStates.contains(values.mActor))
                 throw std::invalid_argument("invalid or unsupported native contact reaction start");
             auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
@@ -2655,7 +2742,7 @@ namespace MWMechanics
                 const auto expectedClock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock
                     : animationClock(values.mActor);
                 if (values.mOwner != ESM4::ActorValueOwner::Player || !firstPerson->mReaction
-                    || (candidate.mFirstPerson && candidate.mFirstPerson->mReaction && !capturedPlayerRestart)
+                    || (candidate.mFirstPerson && candidate.mFirstPerson->mReaction)
                     || std::bit_cast<std::uint32_t>(firstPerson->mClock) != std::bit_cast<std::uint32_t>(expectedClock))
                     throw std::invalid_argument("invalid or stale native first-person mirror owner/clock");
                 const auto& mirror = *firstPerson->mReaction;

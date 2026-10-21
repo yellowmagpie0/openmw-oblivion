@@ -1508,7 +1508,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or type(timing["easing"]) is not bool):
             raise RuntimeStateError("Invalid TES4 reaction sequence timing")
         optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
-        if any(v is None for v in optional) and not all(v is None for v in optional):
+        fresh_capture = (version >= 56 and reaction.get("pose_snapshot") is not None and timing["easing"]
+                         and optional[0] is not None and optional[1] is None and optional[2] is None)
+        if not fresh_capture and any(v is None for v in optional) and not all(v is None for v in optional):
             raise RuntimeStateError("Partial TES4 reaction sequence initialization")
         for value in optional:
             if value is not None:
