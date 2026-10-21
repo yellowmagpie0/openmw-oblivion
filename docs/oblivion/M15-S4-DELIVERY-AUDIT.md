@@ -8924,3 +8924,79 @@ This closes only the declared finite block-audio course. Full M15S4 still needs
 Player strike/parallel-view ownership, remaining reactions/mastery/effects and
 full input/FPS/cancellation/restart acceptance. The configured 60 FPS cap is not
 measured 60 FPS, and sanitizer leak detection remains disabled.
+
+### Observed PC24 melee-frame arithmetic
+
+A widened original-instruction matrix exposed a precision-domain mistake in the
+shared timing kernel. The previous implementation matches all 9,720 027F/037F
+control updates, but fails the newly sampled 007F path. For example, with speed
+and frequency 0.7 and duration 0.1, its second offset store is -0.1300000101327896;
+the original 007F result is -0.12999999523162842. Historical wider-control passes
+remain valid for their declared context; they do not establish the game-frame
+control word.
+
+An isolated original-game run now supplies that missing observation. Four
+normal-input phases cover unarmed and vanilla Rusty Iron Shortsword swings in
+first/third camera modes. Each phase records four ordinary-frame and four
+sequence-manager entries for both actual Player body and first-person owners:
+64 entries, all with control word 007F. These are four gameplay phases, not 64
+independent trials. Player/form/group/pointer identity and executable instruction
+bytes are checked. The first attempt assumed the wrong camera-byte mapping and
+recorded no samples; its interrupted/detached debugger artifacts remain failed.
+A live byte inspection and displayed camera establish 0 first/1 third before the
+corrected observations. Normal camera switching uses a short R press.
+
+The weapon cases use logged console add/equip setup before normal mouse swings;
+no Health/Fatigue/condition/RNG/clock/CW values or contact calls are forced.
+Debugger breakpoints affect scheduling, so the observations do not establish
+uninterrupted timing. Every debugger detaches, the game and owned Steam exit 0,
+the private relevant inputs restore exactly, and source prefix/pristine save
+hashes remain unchanged. Original observations are separate from the fork's
+structural/compiler/runtime layers.
+
+The timing helper now rounds speed*duration, its subtraction, and manager
+frequency*delta before subsequent operations, matching PC24 register arithmetic.
+It changes neither host FPU state nor save schema. Signed-zero initialization,
+anchor stores, one-phase ordering and validation remain in place. The compiled
+production implementation matches 4,860 ordinary and 4,860 power frame updates,
+including clock/phase/state and every timing store, plus 2,048 scalar offset
+cases. The composed oracle supplies isolated slot 3/null-sync clamp metadata and
+empty controllers; original activation/frame/manager instructions execute without
+called-function stubs. Full actor/contact/culling/geometry scheduling is separate.
+
+Two component tests retain 30 independently emitted frame-history goldens. Four
+prior speed-offset goldens are replaced by directly executed 007F values after
+observing the actual control word. Full normal component checks pass 2,967 tests;
+selected ESM4* sanitizer checks pass 820, and full engine checks pass 1,769 in each
+profile, with inventories matching and no skips/failures. Actual sanitizer unit
+epochs/options are captured separately: the component helper sets leak0 and
+UBSANhalt, while engine tests inherit explicit halt/stacktrace settings. Leak
+checking remains disabled.
+
+A fresh normal/sanitizer by first/third matrix exercises nonbinary speed 0.7,
+stored as 0.699999988079071, using the same activation-controlled opponent and
+zero Fatigue regeneration. The editable fixture recipe is preserved as source;
+only SCTX and WEAP speed are rebuilt/reinspected, with saved local layout and
+NPC/style preserved. Actual SCTX compilation/world use and all eight fresh
+process/scene/save/reference/resource/RNG checks pass independently. Both real
+blocked contacts retain Player body/FP BlockHit, NPC Recoil and its retiring
+strike. Reload recovers naturally and cancels new action 4 before another
+contact. No prior hit, sound or selection replays. The frozen two-voice PCM
+assay passes two positive clusters and zero continuation clusters in every
+case. The original single-asset method also passes two positive and zero
+continuation clusters in each case; its earlier failed runs remain failed.
+
+All eight images are directly reviewed, including ready poses after both Player
+owners and the NPC recover. Static views do not establish original motion/camera
+or held-block skin parity. The configured 60 FPS cap is not measured 60 FPS. The
+fixture source is added after frozen build checks; compiled source bytes remain
+identical to the checked checkpoint. The unchanged 351-test Python suite and assay
+implementation are reused evidence rather than a new Python run.
+
+[`M15-MELEE-PC24-TIMING-VERIFICATION.json`](M15-MELEE-PC24-TIMING-VERIFICATION.json)
+pins original observations/cleanup, retained failures, primary/wider oracle
+domains, source/build/actual sanitizer identities, editable inputs and every
+fresh runtime layer. This is a shared timing correction, not Player FP strike or
+parallel-owner implementation. Remaining reactions/mastery/effects, creature and
+power branches, and full input/FPS/cancellation/restart acceptance keep M15S4
+incomplete.

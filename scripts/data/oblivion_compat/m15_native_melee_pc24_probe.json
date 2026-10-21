@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "purpose": "Native PC24 ordinary/power animation-frame arithmetic; actual original body/FP frame and manager CW observed during unarmed and vanilla sword swings in first/third cameras.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "live_observations": 64,
+  "control_word": 127,
+  "addresses": {
+    "activation": "0x6C9BA0",
+    "frame_start": "0x476F95",
+    "ordinary_stop": [
+      "0x47710E",
+      "0x4774BD"
+    ],
+    "power_stop": [
+      "0x477282",
+      "0x4774BD"
+    ],
+    "manager": "0x6CA950",
+    "offset": [
+      "0x477086",
+      "0x4770B1"
+    ]
+  },
+  "frame_matrix": {
+    "origin": [
+      0,
+      1000,
+      1000000
+    ],
+    "ease": [
+      0,
+      0.1
+    ],
+    "frequency": [
+      0.7,
+      1,
+      1.3
+    ],
+    "begin": [
+      0,
+      10
+    ],
+    "duration": [
+      0,
+      0.1,
+      0.2
+    ],
+    "speed": [
+      0.7,
+      1,
+      2
+    ],
+    "steps": 15,
+    "contexts_per_kind": 324,
+    "updates_per_kind": 4860
+  },
+  "offset_matrix": {
+    "offset": [
+      -10000,
+      -1,
+      -0.1,
+      -0.0,
+      0,
+      0.2,
+      1,
+      10000
+    ],
+    "begin": [
+      0,
+      0.1,
+      1,
+      1000
+    ],
+    "speed": [
+      0.1,
+      0.7,
+      0.999,
+      1,
+      1.1,
+      1.25,
+      2,
+      10
+    ],
+    "duration": [
+      0,
+      0.001,
+      0.006944444444444444,
+      0.016666666666666666,
+      0.03333333333333333,
+      0.05,
+      0.1,
+      0.2
+    ],
+    "cases": 2048
+  },
+  "boundaries": [
+    "Index3 supplied at476FA6 to isolate attack slot; preallocated null-sync clamp sequences/groups with empty controlled attachments. Original activation, frame and full sequence manager instructions execute, no called-function stubs.",
+    "Offset-only slice supplies valid speed, duration, offset and begin; eligibility/clock/activation are separate.",
+    "Actual normal-input observations use an isolated prefix and pristine save; debugger changes scheduling. No original complete contact/motion/FPS or Player FP strike-ownership acceptance."
+  ],
+  "retained": [
+    "Initial camera mapping was incorrect and collected no observations; owned debugger interrupted/detached. Live byte inspection established0 first/1 third before corrected captures.",
+    "The unchanged C++ baseline matches9720 wider-control updates but fails the newly sampled007F corpus; those earlier controls do not establish actual game-frame precision."
+  ],
+  "full_M15S4_acceptance": false
+}

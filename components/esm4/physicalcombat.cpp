@@ -603,7 +603,10 @@ namespace ESM4
         if (playbackSpeed == 0)
             throw std::invalid_argument("zero native melee playback speed");
         const float relative = rounded(double(sequenceOffset) - sequenceBegin);
-        const double correction = double(playbackSpeed) * frameDuration - frameDuration;
+        // Actual Player frame477086 runs with007F in both camera/view owners.
+        // PC24 rounds each x87 operation, including these register-only terms.
+        const float scaled = rounded(double(playbackSpeed) * frameDuration);
+        const float correction = rounded(double(scaled) - frameDuration);
         const float corrected = rounded(correction + relative);
         return rounded(double(corrected) + sequenceBegin);
     }
@@ -659,7 +662,9 @@ namespace ESM4
         const float input = transitionFrame ? *transitionFrame : rounded(double(clock) + *result.mOffset);
         const float delta = state.mLastInput ? rounded(double(input) - *state.mLastInput) : input;
         const float previous = state.mLastInput ? state.mWeightedTime : 0.f;
-        result.mWeightedTime = rounded(double(frequency) * delta + previous);
+        // Actual6CA950 also retains007F: round FMUL before the following FADD.
+        const float weightedDelta = rounded(double(frequency) * delta);
+        result.mWeightedTime = rounded(double(weightedDelta) + previous);
         result.mLastInput = input;
         result.mOutputTime = std::clamp(result.mWeightedTime, begin, end);
         return result;

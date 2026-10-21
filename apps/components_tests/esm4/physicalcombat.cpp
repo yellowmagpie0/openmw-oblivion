@@ -2211,12 +2211,12 @@ TEST(ESM4PhysicalCombat, MeleeSequenceOffsetPreservesNativeStoresAndSignedZeroIn
     EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::initialMeleeSequenceOffset(-0.f)), 0u);
     EXPECT_EQ(ESM4::initialMeleeSequenceOffset(10000), -10000);
     EXPECT_EQ(ESM4::initialMeleeSequenceOffset(-1), 1);
-    // Original-instruction observations; rounding speed*dt separately changes
-    // these exact output bits, which can change the strict next-key predicate.
-    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .1f, .2f)), 0xbf970a3du);
-    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .7f, .2f)), 0xbf87ae15u);
-    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, 1.f/60)), 0xbf599999u);
-    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, .1f)), 0xbdcccccbu);
+    // Original007F goldens. Actual ordinary body/FP frames use PC24; the
+    // preceding27F/37F observations retained wider register intermediates.
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .1f, .2f)), 0xbf970a3eu);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, .7f, .2f)), 0xbf87ae14u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, 1.f/60)), 0xbf59999au);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::correctMeleeSequenceOffset(-1, 0, 10, .1f)), 0xbdccccd0u);
     // Even zero duration/speed1 retains the original anchor round trips.
     EXPECT_EQ(ESM4::correctMeleeSequenceOffset(.2f, 1000, 1, 0), .20001220703125f);
     EXPECT_THROW(ESM4::correctMeleeSequenceOffset(0, 0, 0, .1f), std::invalid_argument);
@@ -5760,4 +5760,76 @@ TEST(ESM4PhysicalCombat, NativeSequenceVariantSelectionRejectsUnsupportedCollect
             EXPECT_THROW(ESM4::selectNativeSequenceVariant(kind, count, 255, 1), std::invalid_argument);
     EXPECT_THROW(ESM4::selectNativeSequenceVariant(Kind::Single, 2, 0, 1), std::invalid_argument);
     EXPECT_THROW(ESM4::selectNativeSequenceVariant(static_cast<Kind>(2), 1, 0, 1), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, OrdinaryFramesMatchObservedPc24History)
+{
+    // Actual activation/frame-prefix/manager instructions with007F, fifteen
+    // successive updates. Values come from the independent native corpus.
+    constexpr std::array<std::array<std::uint32_t, 8>, 15> expected{{
+        { 0x3dcccccdu, 0x00000000u, 0xbdcccccdu, 0x00000000u, 0x3dcccccdu, 0x00000000u, 0x00000000u, 0x00000000u },
+        { 0x3e4ccccdu, 0x00000000u, 0xbe051eb8u, 0x00000000u, 0x3dcccccdu, 0x3d8f5c2au, 0x3d48b43bu, 0x3d48b43bu },
+        { 0x3e99999au, 0x00000000u, 0xbe23d70au, 0x3d48b43bu, 0x3dcccccdu, 0x3e0f5c2au, 0x3dc8b43bu, 0x3dc8b43bu },
+        { 0x3ecccccdu, 0x00000001u, 0xbe428f5cu, 0x3dc8b43bu, 0x3dcccccdu, 0x3e570a3eu, 0x3e16872cu, 0x3e16872cu },
+        { 0x3f000000u, 0x00000001u, 0xbe6147aeu, 0x3e16872cu, 0x3dcccccdu, 0x3e8f5c29u, 0x3e48b43au, 0x3e48b43au },
+        { 0x3f19999au, 0x00000001u, 0xbe800000u, 0x3e48b43au, 0x3dcccccdu, 0x3eb33334u, 0x3e7ae149u, 0x3e7ae149u },
+        { 0x3f333334u, 0x00000001u, 0xbe8f5c29u, 0x3e7ae149u, 0x3dcccccdu, 0x3ed70a3fu, 0x3e96872cu, 0x3e96872cu },
+        { 0x3f4cccceu, 0x00000001u, 0xbe9eb852u, 0x3e96872cu, 0x3dcccccdu, 0x3efae14au, 0x3eaf9db4u, 0x3eaf9db4u },
+        { 0x3f666668u, 0x00000001u, 0xbeae147bu, 0x3eaf9db4u, 0x3dcccccdu, 0x3f0f5c2au, 0x3ec8b43bu, 0x3ec8b43bu },
+        { 0x3f800001u, 0x00000002u, 0xbebd70a4u, 0x3ec8b43bu, 0x3dcccccdu, 0x3f2147b0u, 0x3ee1cac3u, 0x3ee1cac3u },
+        { 0x3f8cccceu, 0x00000002u, 0xbecccccdu, 0x3ee1cac3u, 0x3dcccccdu, 0x3f333336u, 0x3efae14bu, 0x3efae14bu },
+        { 0x3f99999bu, 0x00000002u, 0xbedc28f6u, 0x3efae14bu, 0x3dcccccdu, 0x3f451ebbu, 0x3f09fbe9u, 0x3f09fbe9u },
+        { 0x3fa66668u, 0x00000002u, 0xbeeb851fu, 0x3f09fbe9u, 0x3dcccccdu, 0x3f570a40u, 0x3f16872cu, 0x3f16872cu },
+        { 0x3fb33335u, 0x00000002u, 0xbefae148u, 0x3f16872cu, 0x3dcccccdu, 0x3f68f5c6u, 0x3f231270u, 0x3f231270u },
+        { 0x3fc00002u, 0x00000002u, 0xbf051eb8u, 0x3f231270u, 0x3dcccccdu, 0x3f7ae14cu, 0x3f2f9db4u, 0x3f2f9db4u },
+    }};
+    ESM4::OrdinaryMeleeFrame frame{0, ESM4::OrdinaryMeleePhase::Start, {}};
+    const auto bits = [](float value) { return std::bit_cast<std::uint32_t>(value); };
+    for (const auto& row : expected)
+    {
+        frame = ESM4::advanceOrdinaryMeleeFrame(frame, .1f, .7f, .7f, 0, 1, {0, .2f, .6f, 1});
+        const auto& timing = frame.mTiming;
+        ASSERT_TRUE(timing.mOffset && timing.mEaseStart && timing.mLastInput);
+        EXPECT_FALSE(timing.mEasing);
+        const std::array observed{bits(frame.mClock), static_cast<std::uint32_t>(frame.mPhase),
+            bits(*timing.mOffset), bits(*timing.mEaseStart), bits(timing.mEaseEnd),
+            bits(*timing.mLastInput), bits(timing.mWeightedTime), bits(timing.mOutputTime)};
+        EXPECT_EQ(observed, row);
+    }
+}
+
+TEST(ESM4PhysicalCombat, PowerFramesMatchObservedPc24History)
+{
+    // Actual activation/frame-prefix/manager instructions with007F, fifteen
+    // successive updates. Values come from the independent native corpus.
+    constexpr std::array<std::array<std::uint32_t, 8>, 15> expected{{
+        { 0x3dcccccdu, 0x00000000u, 0xbdcccccdu, 0x00000000u, 0x3dcccccdu, 0x00000000u, 0x00000000u, 0x00000000u },
+        { 0x3e4ccccdu, 0x00000000u, 0xbe051eb8u, 0x00000000u, 0x3dcccccdu, 0x3d8f5c2au, 0x3d48b43bu, 0x3d48b43bu },
+        { 0x3e99999au, 0x00000000u, 0xbe23d70au, 0x3d48b43bu, 0x3dcccccdu, 0x3e0f5c2au, 0x3dc8b43bu, 0x3dc8b43bu },
+        { 0x3ecccccdu, 0x00000001u, 0xbe428f5cu, 0x3dc8b43bu, 0x3dcccccdu, 0x3e570a3eu, 0x3e16872cu, 0x3e16872cu },
+        { 0x3f000000u, 0x00000001u, 0xbe6147aeu, 0x3e16872cu, 0x3dcccccdu, 0x3e8f5c29u, 0x3e48b43au, 0x3e48b43au },
+        { 0x3f19999au, 0x00000001u, 0xbe800000u, 0x3e48b43au, 0x3dcccccdu, 0x3eb33334u, 0x3e7ae149u, 0x3e7ae149u },
+        { 0x3f333334u, 0x00000001u, 0xbe8f5c29u, 0x3e7ae149u, 0x3dcccccdu, 0x3ed70a3fu, 0x3e96872cu, 0x3e96872cu },
+        { 0x3f4cccceu, 0x00000001u, 0xbe9eb852u, 0x3e96872cu, 0x3dcccccdu, 0x3efae14au, 0x3eaf9db4u, 0x3eaf9db4u },
+        { 0x3f666668u, 0x00000001u, 0xbeae147bu, 0x3eaf9db4u, 0x3dcccccdu, 0x3f0f5c2au, 0x3ec8b43bu, 0x3ec8b43bu },
+        { 0x3f800001u, 0x00000001u, 0xbebd70a4u, 0x3ec8b43bu, 0x3dcccccdu, 0x3f2147b0u, 0x3ee1cac3u, 0x3ee1cac3u },
+        { 0x3f8cccceu, 0x00000001u, 0xbecccccdu, 0x3ee1cac3u, 0x3dcccccdu, 0x3f333336u, 0x3efae14bu, 0x3efae14bu },
+        { 0x3f99999bu, 0x00000001u, 0xbedc28f6u, 0x3efae14bu, 0x3dcccccdu, 0x3f451ebbu, 0x3f09fbe9u, 0x3f09fbe9u },
+        { 0x3fa66668u, 0x00000001u, 0xbeeb851fu, 0x3f09fbe9u, 0x3dcccccdu, 0x3f570a40u, 0x3f16872cu, 0x3f16872cu },
+        { 0x3fb33335u, 0x00000001u, 0xbefae148u, 0x3f16872cu, 0x3dcccccdu, 0x3f68f5c6u, 0x3f231270u, 0x3f231270u },
+        { 0x3fc00002u, 0x00000001u, 0xbf051eb8u, 0x3f231270u, 0x3dcccccdu, 0x3f7ae14cu, 0x3f2f9db4u, 0x3f2f9db4u },
+    }};
+    ESM4::PowerMeleeFrame frame{0, ESM4::PowerMeleePhase::Start, {}};
+    const auto bits = [](float value) { return std::bit_cast<std::uint32_t>(value); };
+    for (const auto& row : expected)
+    {
+        frame = ESM4::advancePowerMeleeFrame(frame, .1f, .7f, .7f, 0, 1, {0, .2f, 1});
+        const auto& timing = frame.mTiming;
+        ASSERT_TRUE(timing.mOffset && timing.mEaseStart && timing.mLastInput);
+        EXPECT_FALSE(timing.mEasing);
+        const std::array observed{bits(frame.mClock), static_cast<std::uint32_t>(frame.mPhase),
+            bits(*timing.mOffset), bits(*timing.mEaseStart), bits(timing.mEaseEnd),
+            bits(*timing.mLastInput), bits(timing.mWeightedTime), bits(timing.mOutputTime)};
+        EXPECT_EQ(observed, row);
+    }
 }

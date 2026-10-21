@@ -161,8 +161,9 @@ namespace ESM4
     // The caller has resolved a newly activated sequence's sentinel offset.
     // Original6CA950 initializes it from the current native animation clock.
     float initialMeleeSequenceOffset(float animationClock);
-    // Original477086 speed correction, including separate stored offset-minus-
-    // begin and corrected terms. Caller owns group/state/freeze eligibility.
+    // Original477086 speed correction, including the offset-minus-begin store
+    // and PC24 register arithmetic observed in actual Player frames. Caller
+    // owns group/state/freeze eligibility.
     float correctMeleeSequenceOffset(float sequenceOffset, float sequenceBegin,
         float playbackSpeed, float frameDuration);
 
@@ -183,7 +184,8 @@ namespace ESM4
     };
     // Original6CA950/6C5FC0. Caller supplies the global animation clock and
     // owns activation, synchronization/cycle selection, phase ordering and
-    // actual controlled transforms. Does not change its input state.
+    // actual controlled transforms. PC24 operation rounding matches the live
+    // body/FP manager entry. Does not change its input state.
     MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
         float animationClock, float frequency, float begin, float end,
         std::optional<float> transitionFrame = std::nullopt);
