@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "purpose": "Synthetic one-view four-second attack hold and 30-frame blend for independent Player strike/retirement restart checks; no transform, contact, resource or RNG writes.",
+  "source_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "extended_end": 4.0,
+  "assets": {
+    "body": [
+      {
+        "path": "meshes/characters/_male/handtohandattackleft.kf",
+        "sha256": "2fa3186864ed950ca9c899d926beb7073b6ac1e456e293c0f2186faa15a8bcd6",
+        "stop_offset": 2852,
+        "end_key_offset": 20715,
+        "original_end_bits": 1059760816,
+        "sequence_name_offset": 405,
+        "controlled_blocks": 73,
+        "sequence_name": "AttackLeft",
+        "text_key_count_offset": 20676
+      },
+      {
+        "path": "meshes/characters/_male/handtohandattackright.kf",
+        "sha256": "749f9d4f6a4acb7465b4dc4fdb4acd4ed23c18a2890b3208ca796285c2644a1f",
+        "stop_offset": 2853,
+        "end_key_offset": 21736,
+        "original_end_bits": 1059760808,
+        "sequence_name_offset": 405,
+        "controlled_blocks": 73,
+        "sequence_name": "AttackRight",
+        "text_key_count_offset": 21697
+      },
+      {
+        "path": "meshes/characters/_male/handtohandattackpower.kf",
+        "sha256": "806239832040584812c90c8e66ff46f96080dbac3d030171dbdb9632fe65de0f",
+        "stop_offset": 2915,
+        "end_key_offset": 31271,
+        "original_end_bits": 1063675495,
+        "sequence_name_offset": 467,
+        "controlled_blocks": 73,
+        "sequence_name": "AttackPower",
+        "text_key_count_offset": 31243
+      }
+    ],
+    "first": [
+      {
+        "path": "meshes/characters/_1stperson/handtohandattackleft.kf",
+        "sha256": "49a3210d2cfc1d2d4595c5992dcb8696cffdd2e519977f3484b2d552065f9711",
+        "stop_offset": 2620,
+        "end_key_offset": 12049,
+        "original_end_bits": 1059760816,
+        "sequence_name_offset": 404,
+        "controlled_blocks": 66,
+        "sequence_name": "AttackLeft",
+        "text_key_count_offset": 12010
+      },
+      {
+        "path": "meshes/characters/_1stperson/handtohandattackright.kf",
+        "sha256": "1e061ab08bd96f33ed0f1dc265202f895ea0428ec5e9e49f38361965f3e2598b",
+        "stop_offset": 2621,
+        "end_key_offset": 11820,
+        "original_end_bits": 1059760808,
+        "sequence_name_offset": 404,
+        "controlled_blocks": 66,
+        "sequence_name": "AttackRight",
+        "text_key_count_offset": 11781
+      },
+      {
+        "path": "meshes/characters/_1stperson/handtohandattackpower.kf",
+        "sha256": "dbc700c6ee6f3574a85ba6c784b379655cba35d3eb12ae7e6ca06e83072d1939",
+        "stop_offset": 2705,
+        "end_key_offset": 12007,
+        "original_end_bits": 1063675495,
+        "sequence_name_offset": 488,
+        "controlled_blocks": 66,
+        "sequence_name": "AttackPower",
+        "text_key_count_offset": 11979
+      }
+    ]
+  },
+  "blend_frames": 30
+}

@@ -9079,3 +9079,16 @@ layers. The editable probe is retained under `scripts/data/oblivion_compat`.
 Asymmetric runtime restarts, Player attacker Recoil, parallel Stagger,
 mastery/effect/creature branches and the wider input/FPS/cancellation matrix keep
 M15S4 incomplete.
+
+The editable Player strike fixture now reproduces a selected view's four-second
+left/right/power holds and a zero-time `blend:30` key, making independent recovery
+and outgoing retirement observable. The generator rejects foreign identities,
+paths, hashes and malformed layouts before creating output, and refuses existing
+output. Three synthetic tests exercise both views and failure paths without game
+bytes in Git; all 356 Python tests pass. Independent byte comparisons of all six
+actual generated files preserve everything outside the declared two time stores,
+key count and inserted key. Strict NIF reading accepts all six files with zero
+failures. These are structural/readback checks; runtime acceptance remains open.
+[`M15-PLAYER-STRIKE-DURATION-FIXTURE-VERIFICATION.json`](M15-PLAYER-STRIKE-DURATION-FIXTURE-VERIFICATION.json)
+pins the source, extraction, Python inventory and byte/NIF evidence. Engine source
+and the prior tested runtime binaries are unchanged.

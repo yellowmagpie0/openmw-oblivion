@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Reproducible editable synthetic one-view attack hold/blend fixture; generator, byte audit and strict NIF reading only.",
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false,
+  "source_files": [
+    {
+      "path": "scripts/tes4_m15_reaction_duration_fixture.py",
+      "sha256": "49a2fb49f0cfef5f99f5b77ceb464791f2a44f28594cd682c69abc914f9cd655"
+    },
+    {
+      "path": "scripts/tes4_m15_strike_duration_fixture.py",
+      "sha256": "01deafe28c3d1ea1f27ed85dc7244aad738be04d8fe037cf500873ca5c9e4b4b"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_strike_duration_fixture.py",
+      "sha256": "5d9437a51091d0cd7887b603c1094940726e170a7c35887513945f910bd5ba01"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_strike_duration_fixture.json",
+      "sha256": "74bbab07d26d7034e0de15e05f4cd8ea0837fb2615438cd1b7b428c9579256f6"
+    }
+  ],
+  "python_check": {
+    "path": "build/oblivion-compat/m15/S4/native-player-strike-duration-python-01/verification.json",
+    "sha256": "fa2392d3bd22473926db8f0e6c70ccb5e208a99fb1bc8bd6dff105fda96aebfc"
+  },
+  "python_tests": 356,
+  "source_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "source_extraction": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-assets-01/source-extraction.json",
+    "sha256": "28b9e3bb54dc2035a4d3cc3f5fd5719de4222c7f9d4390a173c2c0d6753747cc"
+  },
+  "declared_changes": [
+    "Selected view left/right/power controller StopTime and final End time set to4 seconds",
+    "Insert time0 blend:30 key and increment final text-key count"
+  ],
+  "independent_byte_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-assets-01/final-independent-byte-audit-01.json",
+    "sha256": "4a5272999a1b0d9728fd4735cdf32a223adfbf59138fa9c67d9e7c233d93e77b"
+  },
+  "nif_readback": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-assets-01/final-nif-readback-01.log",
+    "sha256": "1e782c742c77d9d9f04b1850a4482cb2f0747190cf096b93cab286bde82e9b93"
+  },
+  "nif_files_read": 6,
+  "nif_files_failed": 0,
+  "validation_limits": "No transform, priority, Hit/queue key, plugin, resource, contact or RNG write. Strict NIF readback does not prove rendered scene/interaction acceptance. Original game animation parity is not claimed. Generator reports source archive hash as declared; separate extraction receipt pins actual archive.",
+  "compiled_engine_source_changed": false
+}

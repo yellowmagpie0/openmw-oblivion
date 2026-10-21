@@ -19,7 +19,7 @@ HEADER = b'Gamebryo File Format, Version 20.0.0.4\n'
 def build(source: bytes, asset: dict, end: float) -> tuple[bytes, dict]:
     fields = {'path', 'sha256', 'stop_offset', 'end_key_offset', 'original_end_bits',
               'sequence_name_offset', 'controlled_blocks'}
-    if set(asset) != fields or hashlib.sha256(source).hexdigest() != asset['sha256']:
+    if set(asset) not in (fields, fields | {'sequence_name'}) or hashlib.sha256(source).hexdigest() != asset['sha256']:
         raise ValueError('reaction duration source differs from recipe')
     if not source.startswith(HEADER):
         raise ValueError('reaction duration requires the reviewed KF version')
@@ -27,12 +27,16 @@ def build(source: bytes, asset: dict, end: float) -> tuple[bytes, dict]:
     if any(type(v) is not int or not 4 <= v <= len(source) - 12 for v in positions):
         raise ValueError('reaction duration offset outside source')
     stop, key, name = positions
+    sequence_name = asset.get('sequence_name', 'BlockHit')
+    if sequence_name not in ('BlockHit', 'AttackLeft', 'AttackRight', 'AttackPower'):
+        raise ValueError('unsupported native hold sequence identity')
+    sequence = sequence_name.encode('ascii')
     count = asset['controlled_blocks']
-    if type(count) is not int or not 1 <= count <= 256 or stop != name + 36 + count * 33:
+    if type(count) is not int or not 1 <= count <= 256 or stop != name + 28 + len(sequence) + count * 33:
         raise ValueError('reaction duration sequence layout differs')
-    if source[name - 4:name + 8] != struct.pack('<I', 8) + b'BlockHit':
+    if source[name - 4:name + len(sequence)] != struct.pack('<I', len(sequence)) + sequence:
         raise ValueError('reaction duration sequence identity differs')
-    if struct.unpack_from('<I', source, name + 8)[0] != count:
+    if struct.unpack_from('<I', source, name + len(sequence))[0] != count:
         raise ValueError('reaction duration controlled-block inventory differs')
     weight, _, cycle, frequency, start = struct.unpack_from('<fIIff', source, stop - 20)
     if (weight, cycle, frequency, start) != (1., 2, 1., 0.):
