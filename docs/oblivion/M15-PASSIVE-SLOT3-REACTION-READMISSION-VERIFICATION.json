@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "status": "Paired BlockHit/Recoil replacement of recovered passive slot3 verified in world/service tests; normal-input reaction readmission remains open.",
+  "tested_source": {
+    "head": "089d03b6cd98819dd7af28c2d0e94905a9c0edd2",
+    "source_fingerprint": "ac5243bb7be7408d70d24745ae7cf3c0c752a08a0d44ccf0bb81c497a96b8671"
+  },
+  "implementation": [
+    "Resource preparation and the contact transaction use the actual shared slot3 source independently in body and first person.",
+    "Descriptor carries reaction kind to preserve same-resource/protocol rejection. Consumed passive causes supply visual history without restoring contact authority.",
+    "Candidates clear passive fields only after validating captured/outgoing activation; outgoing layers retain old sampled time, timing and cause.",
+    "Both world factory and service explicitly reject replacement while either view still owns Stagger slot0, including body-recovered/first-person-active skew."
+  ],
+  "native_provenance": [
+    "Existing original474530 capture/crossfade and cached-resource proofs apply to occupied slot3; see M15-PLAYER-REACTION-OWNERSHIP-VERIFICATION.json and M15-PLAYER-CACHED-POSE-VERIFICATION.json.",
+    "Original5F4FD0/5EFFD0 slot separation and retained resident slot3 through process reset are pinned in M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json; this chunk adds no new original-executable probe."
+  ],
+  "coverage": {
+    "test": "OblivionWorldTest.PairedContactReactionsReplaceRecoveredPassiveSlot3Atomically",
+    "contexts": 32,
+    "predecessors": [
+      "ordinary",
+      "standing power",
+      "BlockHit",
+      "Recoil"
+    ],
+    "capture_masks": [
+      "neither",
+      "body",
+      "first person",
+      "both"
+    ],
+    "incoming": [
+      "BlockHit",
+      "Recoil"
+    ],
+    "same_cached_capture": true,
+    "fixed_activation_table_and_saved_history_comparison": true,
+    "restart_checkpoints": 128,
+    "checks": [
+      "Actual typed Stagger frame/prefix recovery before replacement.",
+      "Malformed/stale/missing mirror and altered outgoing packets preserve whole binary state.",
+      "Prepared transaction invalidated by clock change; fresh valid transaction commits exactly once.",
+      "Remaining first-person Stagger rejects without binary changes.",
+      "Old and incoming causes consumed, one contact delta, no extra action allocation.",
+      "Resources/bases/RNG and ledger remain exact across frame/restart checkpoints; outgoing layers finish."
+    ]
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-reaction-readmission-normal-01/verification.json",
+      "sha256": "aad3f376a7dfb103104bc16457e0833bf9af09019e082aeff41ba6fb46bb4d15",
+      "result": {
+        "executed": 1784,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "af3396f726396551910dc26fe139c0a927f2ba479a79c674b0d462b9a6128005",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "9142664a2f91756908d1046ffbe8d0150fbd69dcd9097f1c290de875182c0570",
+        "inventory_sha256": "0c22d52ea1a8d6ab53bf614261d621c68c7675c4ef0375f5e6bf5cc16cca3bd3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-reaction-readmission-sanitized-01/verification.json",
+      "sha256": "b434fd5643f94bd7f34d999dcbb28565e289fe6f8e699c6b70df142790e40624",
+      "result": {
+        "executed": 1784,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "364ea47b1ac2db8b13b3537b1b459b45a625fa3e793b43888f6b968f23227756",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "6b26d6ecbe8a917550e073844354ee1d5c41e090d2730d912f501eaa9792d197",
+        "inventory_sha256": "0c22d52ea1a8d6ab53bf614261d621c68c7675c4ef0375f5e6bf5cc16cca3bd3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "4f5abcfde2648960e8087fb48744841ab9ac8667519ece8af214076176bf3647"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "a940f1f6a66bc53c0ca2ad7de14f30202b54f2ede0a299d21434a59b22673b18"
+    }
+  },
+  "sanitizer": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "warnings": [
+    "Existing engine and earlier fixture warnings remain; no warning-free claim.",
+    "New fixture omitted optional fresh timing fields intentionally leave them unset, matching its fresh activation contract.",
+    "GoogleTest EXPECT_EQ macros under two guarded if statements produce dangling-else suggestions; no source else follows these statements. Both branches run across the fixed matrix.",
+    "Earlier strike fixture optional-pose conditional warning remains as already triaged in M15-PASSIVE-SLOT3-READMISSION-VERIFICATION.json; new fixture uses an owned emplaced optional."
+  ],
+  "limits": [
+    "Resource factory wiring rebuilt, but the new passive-to-reaction path is not yet exercised by normal-input rendered contact.",
+    "Body-only NPC activation, Stagger slot0 factory/activation and active/cached replacement remain open.",
+    "Full camera/input/gamepad/FPS/audio/cancellation and M15S4 E2E gates remain incomplete."
+  ],
+  "full_M15S4_acceptance": false
+}

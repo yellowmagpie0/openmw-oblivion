@@ -9790,3 +9790,31 @@ history remains injected/recovered, and this checkpoint covers one normal
 first-person same-cached Left attack. Sanitized/third-person/gamepad crosses,
 other predecessor protocols, normal Stagger activation, audio, measured FPS
 and the full M15S4 acceptance matrix remain open. M15S4 remains incomplete.
+
+### Paired contact reaction replacement of recovered passive slot3
+
+BlockHit/Recoil resource preparation and the contact transaction now consult
+the shared slot3 source in each view. A recovered passive strike or reaction
+supplies its actual group, sampled time, timing, pose and consumed cause.
+Candidates replace passive history only after validating capture/crossfade;
+outgoing layers preserve the saved predecessor. The source descriptor also
+retains reaction kind, preserving rejection of conflicting protocols using
+the same resource. A remaining Stagger in either view still rejects slot3
+replacement, including body recovery ahead of first-person slot0.
+
+A new 32-context world/service test covers four passive protocols, independent
+body/first capture masks and incoming BlockHit/Recoil. It runs actual typed
+Stagger frame/prefix recovery, checks a fixed activation table against raw
+saved history, rejects malformed/stale/missing-mirror requests without binary
+changes, tests stale prepared transactions and first-person Stagger skew,
+and verifies exactly one contact publication. All 128 frame/restart
+checkpoints preserve resources, RNG and the ledger; outgoing layers finish.
+Full normal and ASan/UBSan engine inventories each pass 1,784 tests across
+125 suites, with no failures or skips. Leak detection is disabled. Warnings
+are triaged explicitly in
+[`M15-PASSIVE-SLOT3-REACTION-READMISSION-VERIFICATION.json`](M15-PASSIVE-SLOT3-REACTION-READMISSION-VERIFICATION.json).
+
+This rebuilds the resource factory wiring but does not yet provide a rendered
+normal-input passive-to-reaction contact course. Body-only activation,
+Stagger slot0 factory/activation and the complete M15S4 input, audio, measured
+FPS, cancellation and E2E acceptance matrix remain open. M15S4 is incomplete.

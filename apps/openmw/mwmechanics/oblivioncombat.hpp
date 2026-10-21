@@ -78,6 +78,7 @@ namespace MWMechanics
         const ESM4::RuntimeMeleePoseSnapshot* mPose = nullptr;
         bool mCauseConsumed = false;
         bool mInactive = false;
+        std::optional<ESM4::MeleeReactionKind> mReactionKind = std::nullopt;
         explicit operator bool() const { return mCause != 0; }
     };
     OblivionMeleeSlot3Source oblivionMeleeSlot3Source(const ESM4::RuntimeMeleeState* view);

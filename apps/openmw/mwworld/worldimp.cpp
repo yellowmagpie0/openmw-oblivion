@@ -2741,43 +2741,34 @@ namespace MWWorld
                 const auto* previous = mOblivionCombat->findMeleeState(key);
                 if (previous && previous->mStrike && (!previous->mFirstPerson || !previous->mFirstPerson->mStrike))
                     return false; // The old save did not retain first-person strike history.
+                if (previous && ((previous->mReaction
+                        && previous->mReaction->mKind == ESM4::MeleeReactionKind::Stagger)
+                    || (previous->mFirstPerson && previous->mFirstPerson->mReaction
+                        && previous->mFirstPerson->mReaction->mKind == ESM4::MeleeReactionKind::Stagger)))
+                    return false;
                 const auto prepareView = [&](MWRender::Animation& view, const std::string& group,
-                                             const ESM4::RuntimeMeleeStrike* oldStrike,
-                                             const ESM4::RuntimeMeleeReaction* oldReaction, bool firstView,
+                                             const MWMechanics::OblivionMeleeSlot3Source& old,
                                              std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
                     const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(view, group, true);
                     const auto* source = view.getControllerSequenceMetadata(group);
-                    if (!source || source->mWeight != 1 || (oldStrike && !oldStrike->mSequenceTiming)
-                        || (oldReaction && oldReaction->mKind == ESM4::MeleeReactionKind::Stagger))
+                    if (!source || source->mWeight != 1 || (old && !old.mTiming))
                         throw std::invalid_argument("unsupported paired Player reaction source");
-                    const bool inactive = (oldReaction && (oldReaction->mInactive || oldReaction->mRetirement))
-                        || (firstView && oldStrike && (oldStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
-                            ? oldStrike->mPowerPhase == ESM4::PowerMeleePhase::End
-                            : oldStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End));
-                    const auto priorGroup = oldStrike ? std::string_view(oldStrike->mAnimationGroup)
-                        : oldReaction ? std::string_view(oldReaction->mAnimationGroup) : std::string_view{};
-                    const auto* priorTiming = oldStrike ? &*oldStrike->mSequenceTiming
-                        : oldReaction ? &oldReaction->mSequenceTiming : nullptr;
-                    const bool priorPose = oldStrike ? oldStrike->mPoseSnapshot.has_value()
-                        : oldReaction && oldReaction->mPoseSnapshot.has_value();
                     std::optional<std::uint8_t> priorFrames;
-                    if (!priorGroup.empty() && !inactive)
+                    if (old && !old.mInactive)
                         priorFrames = MWMechanics::captureOblivionMeleeSequenceMetadata(
-                            view, priorGroup, false).mBlendFrames;
+                            view, old.mGroup, false).mBlendFrames;
                     const float duration = ESM4::meleeBlendDuration(priorFrames, metadata.mBlendFrames, .1f);
                     if (duration <= 0)
                         throw std::invalid_argument("paired Player reaction zero blend is not admitted");
                     ESM4::RuntimeMeleeReaction incoming{id, kind, group};
                     incoming.mSequenceTiming.mEasing = true;
                     incoming.mSequenceTiming.mEaseEnd = duration;
-                    if (priorTiming && !inactive && !priorTiming->mEasing && !priorPose && priorGroup != group)
+                    if (old.mTiming && !old.mInactive && !old.mTiming->mEasing && !old.mPose && old.mGroup != group)
                     {
-                        if (!priorTiming->mOffset)
+                        if (!old.mTiming->mOffset)
                             throw std::invalid_argument("paired Player outgoing source has no manager history");
-                        outgoing = ESM4::RuntimeRetiringMeleeSequence{
-                            oldStrike ? oldStrike->mActionId : oldReaction->mContactId, std::string(priorGroup),
-                            oldStrike ? oldStrike->mAnimationTime : oldReaction->mAnimationTime,
-                            *priorTiming, {duration, {}}};
+                        outgoing = ESM4::RuntimeRetiringMeleeSequence{old.mCause, std::string(old.mGroup),
+                            old.mAnimationTime, *old.mTiming, {duration, {}}};
                     }
                     else
                     {
@@ -2790,13 +2781,10 @@ namespace MWWorld
                 };
                 std::optional<ESM4::RuntimeRetiringMeleeSequence> bodyOutgoing, firstOutgoing;
                 auto body = prepareView(*animation, bodyEntry->mGroups[selection.mBodyIndex],
-                    previous && previous->mStrike ? &*previous->mStrike : nullptr,
-                    previous && previous->mReaction ? &*previous->mReaction : nullptr, false, bodyOutgoing);
+                    MWMechanics::oblivionMeleeSlot3Source(previous), bodyOutgoing);
                 auto mirror = prepareView(*first, firstEntry->mGroups[selection.mFirstPersonIndex],
-                    previous && previous->mFirstPerson && previous->mFirstPerson->mStrike
-                        ? &*previous->mFirstPerson->mStrike : nullptr,
-                    previous && previous->mFirstPerson && previous->mFirstPerson->mReaction
-                        ? &*previous->mFirstPerson->mReaction : nullptr, true, firstOutgoing);
+                    MWMechanics::oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
+                    firstOutgoing);
                 const float clock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
                     : mOblivionCombat->animationClock(key);
                 ESM4::RuntimeFirstPersonMeleeState firstState{clock, std::move(mirror)};
