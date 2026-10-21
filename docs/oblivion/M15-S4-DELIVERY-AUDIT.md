@@ -9029,3 +9029,53 @@ change. [`M15-PLAYER-ACTION-ROUTING-VERIFICATION.json`](M15-PLAYER-ACTION-ROUTIN
 pins the editable probe, observations, instructions, boundaries and cleanup.
 This resolves the normal body-authority question before separate first-person
 strike ownership; it does not implement that ownership or complete M15S4.
+
+### Independent Player strike owners and captured activation
+
+Schema 58 retains separate body and first-person strike phase, raw time,
+sequence timing, captured pose and retiring sequences around one body-owned
+action/contact. Fresh captured activation stores offset positive zero before
+anchoring; distinct steady outgoing owners crossfade independently. Queued
+replacement consumes an abandoned pending action once. A first-person End marker
+lasts until body release, and body-first completion permits independent
+first-person recovery. Version 57 migration invents no strike or capture.
+Renderer event tracks and sequence layers bind each view at its durable time;
+prepare/commit rejects stale or mismatched paired histories atomically.
+
+Actual original owned-root activation and frame/manager instructions establish
+captured initialization independently. Two 162-context matrices cover 3,240
+ordinary and 3,240 power updates, across both views, three clock origins, speeds,
+frequencies and durations at CW 007F. Compiled production agrees exactly with
+these and the two prior 4,860-update controls: 16,200 frame updates. Supplied key
+arrays, slot 3, constant transforms and declared heap/import/scene boundaries
+limit this proof; full actor/contact/culling and original visual parity remain
+separate. The initial signed-zero counterexample is retained, rather than
+relabelled a pass. Component tests retain 120 independently emitted rows.
+
+Frozen normal checks pass 2,971 component tests, 1,772 engine tests and 353
+Python tests. Sanitized ESM4* checks pass 824 tests and the full sanitized engine
+inventory passes 1,772. Exact inventories match with no skips or failures. Actual
+sanitizer process identities and options are recorded; leak checking is disabled.
+Twelve fresh C++/Python payloads agree in complete binary and canonical JSON,
+including old reactions, paired heads, partial captured activation and outgoing
+history. The interrupted first build and second attempt's incorrect test
+aggregate initializer remain failed evidence.
+
+Two exploratory normal-input pilots remain explicitly separate from acceptance.
+The first failed before input because its schema 49 save lacked required native
+process state. The second loads known idle schema 57 state, unequips the Player's
+sword and restrains three nearby NPCs without resource/inventory-content/RNG
+writes. It saves both power action 3 heads with outgoing ordinary action 2 in
+each view. It fails an inherited expectation that ordinary 2 should contact:
+held input replaces that action before its hit. A fresh-process continuation
+passes its declared restore/one-contact/recovery checks, retains RNG 505908858,
+and empties the pending ledger. Both images are directly reviewed. Sound is
+disabled; there is no final same-process save comparison or asymmetric runtime
+matrix yet. These pilots do not close the runtime gate.
+
+[`M15-PLAYER-OWNED-STRIKE-VERIFICATION.json`](M15-PLAYER-OWNED-STRIKE-VERIFICATION.json)
+pins sources, exact checks, independent probes, failures and exploratory runtime
+layers. The editable probe is retained under `scripts/data/oblivion_compat`.
+Asymmetric runtime restarts, Player attacker Recoil, parallel Stagger,
+mastery/effect/creature branches and the wider input/FPS/cancellation matrix keep
+M15S4 incomplete.

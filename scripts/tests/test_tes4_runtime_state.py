@@ -3234,6 +3234,88 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_first_person_melee(corrupt)
 
 
+    def first_person_strike_state(self):
+        state = self.first_person_melee_state()
+        state_io._upgrade_first_person_melee(state)
+        state["schema_version"] = 58
+        melee = state["native_melee_states"][0]
+        melee["reaction"] = None
+        melee["first_person"]["reaction"] = None
+        body = {"id": 3, "kind": 0, "weapon_base": "null", "animation_group": "handtohandattackleft",
+                "playback_speed": .7, "animation_time": .25, "contact_committed": True, "ordinary_phase": 1,
+                "power_phase": None, "pose_snapshot": None,
+                "sequence_timing": {"easing": False, "offset": -.5, "ease_start": .25, "last_input": .25,
+                                    "ease_end": .5, "weighted_time": .25, "output_time": .25}}
+        melee["strike"] = body
+        first = copy.deepcopy(body)
+        first.update(animation_time=.125, ordinary_phase=0)
+        first["sequence_timing"].update(offset=-.25, ease_start=.125, last_input=.125,
+                                        ease_end=.25, weighted_time=.125, output_time=.125)
+        melee["first_person"]["strike"] = first
+        next(x for x in state["native_actor_values"] if x["actor"] == state["player"]["reference"])["process_action"] = 3
+        return state
+
+    def test_strike58_roundtrip_preserves_independent_pose_and_history_after_body_finishes(self):
+        for phase in range(6):
+            with self.subTest(phase=phase):
+                state = self.first_person_strike_state()
+                melee = state["native_melee_states"][0]
+                first = melee["first_person"]["strike"]
+                if phase == 1:
+                    first["sequence_timing"].update(easing=True, ease_start=.25, ease_end=.375)
+                    first["pose_snapshot"] = {"destination_frame": 0., "tracks": [{"bone": "Bip01",
+                        "translation": [1., 2., 3.], "rotation": [1., 0., 0., 0.], "scale": 1., "priority": 9}]}
+                if phase in (2, 3):
+                    melee["strike"] = None
+                    next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])["process_action"] = -1
+                if phase == 3: first["ordinary_phase"] = 3
+                if phase >= 4:
+                    identity = state["physical_actions"]["next"]
+                    state["physical_actions"]["next"] += 1
+                    state["physical_actions"]["pending"].append(identity)
+                    state["physical_actions"]["pending"].sort()
+                    state["physical_action_owners"].append({"id": identity, "actor": melee["actor"]})
+                    state["physical_action_owners"].sort(key=lambda x: x["id"])
+                    next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])["process_action"] = 2
+                    for strike in (melee["strike"], first):
+                        strike.update(id=identity, contact_committed=False, animation_time=0., ordinary_phase=0,
+                            sequence_timing={"easing": True, "offset": 0., "ease_start": None, "last_input": None,
+                                             "ease_end": .1, "weighted_time": 0., "output_time": 0.},
+                            pose_snapshot={"destination_frame": 0., "tracks": [{"bone": "Bip01", "translation": [1., 2., 3.],
+                                "rotation": [1., 0., 0., 0.], "scale": 1., "priority": 9}]})
+                    if phase == 5:
+                        old = self.first_person_strike_state()["native_melee_states"][0]
+                        for owner, old_strike, clock in ((melee, old["strike"], .5),
+                                (melee["first_person"], old["first_person"]["strike"], .25)):
+                            owner["retiring_sequences"].append({"contact_id": 3, "animation_group": "handtohandattackright",
+                                "animation_time": old_strike["animation_time"], "sequence_timing": old_strike["sequence_timing"],
+                                "retirement": {"duration": .125, "start_clock": clock}})
+                encoded = state_io.encode_payload(state)
+                loaded = state_io.decode_payload(encoded)
+                self.assertEqual(state_io.encode_payload(loaded), encoded)
+                self.assertEqual(loaded["native_melee_states"][0]["first_person"]["strike"]["ordinary_phase"], first["ordinary_phase"])
+                self.assertEqual(loaded["native_melee_states"][0]["first_person"]["strike"]["pose_snapshot"], first["pose_snapshot"])
+
+    def test_strike58_rejects_split_identity_replay_bad_pose_and_legacy_history(self):
+        def first(s): return s["native_melee_states"][0]["first_person"]["strike"]
+        mutations = [lambda s: first(s).update(id=2), lambda s: first(s).update(playback_speed=1.),
+                     lambda s: first(s).update(sequence_timing=None), lambda s: first(s).update(contact_committed=False),
+                     lambda s: first(s).update(pose_snapshot={"destination_frame": 0., "tracks": []}),
+                     lambda s: s.update(schema_version=57)]
+        for mutate in mutations:
+            state = self.first_person_strike_state()
+            mutate(state)
+            with self.subTest(mutate=mutate):
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        legacy = self.first_person_melee_state()
+        before = copy.deepcopy(legacy["native_melee_states"][0]["first_person"])
+        state_io._upgrade_first_person_melee(legacy)
+        legacy["schema_version"] = 58
+        loaded = state_io.decode_payload(state_io.encode_payload(legacy))
+        self.assertIsNone(loaded["native_melee_states"][0]["first_person"]["strike"])
+        self.assertEqual(loaded["native_melee_states"][0]["first_person"]["clock"], before["clock"])
+
+
 class SaveEnvelopeAdmissionTests(unittest.TestCase):
     @staticmethod
     def record(name, body):

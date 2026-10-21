@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 57;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 58;
 
     struct RuntimeContentIdentity
     {
@@ -525,6 +525,24 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeMeleeInput&, const RuntimeMeleeInput&) = default;
     };
+    struct RuntimeMeleePoseTrack
+    {
+        std::string mBone;
+        std::array<float, 3> mTranslation{};
+        std::array<float, 4> mRotation{1, 0, 0, 0}; // w,x,y,z
+        float mScale = 1;
+        std::uint8_t mPriority = 0;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleePoseTrack&, const RuntimeMeleePoseTrack&) = default;
+    };
+    struct RuntimeMeleePoseSnapshot
+    {
+        // Original destination sequence +54: requested sample / frequency.
+        float mDestinationFrame = 0;
+        std::vector<RuntimeMeleePoseTrack> mTracks;
+        void validate() const;
+        friend bool operator==(const RuntimeMeleePoseSnapshot&, const RuntimeMeleePoseSnapshot&) = default;
+    };
     struct RuntimeMeleeStrike
     {
         std::uint64_t mActionId = 0;
@@ -540,6 +558,8 @@ namespace ESM4
         std::optional<MeleeSequenceTiming> mSequenceTiming = std::nullopt;
         // Absent on old saves until power playback adopts native timing.
         std::optional<PowerMeleePhase> mPowerPhase = std::nullopt;
+        // v58: owned Player activation can capture a pose in either view.
+        std::optional<RuntimeMeleePoseSnapshot> mPoseSnapshot = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };
@@ -560,24 +580,6 @@ namespace ESM4
         // Absence preserves a save taken between the request and that update.
         std::optional<float> mStartClock = std::nullopt;
         friend bool operator==(const RuntimeReactionRetirement&, const RuntimeReactionRetirement&) = default;
-    };
-    struct RuntimeMeleePoseTrack
-    {
-        std::string mBone;
-        std::array<float, 3> mTranslation{};
-        std::array<float, 4> mRotation{1, 0, 0, 0}; // w,x,y,z
-        float mScale = 1;
-        std::uint8_t mPriority = 0;
-        void validate() const;
-        friend bool operator==(const RuntimeMeleePoseTrack&, const RuntimeMeleePoseTrack&) = default;
-    };
-    struct RuntimeMeleePoseSnapshot
-    {
-        // Original destination sequence +54: requested sample / frequency.
-        float mDestinationFrame = 0;
-        std::vector<RuntimeMeleePoseTrack> mTracks;
-        void validate() const;
-        friend bool operator==(const RuntimeMeleePoseSnapshot&, const RuntimeMeleePoseSnapshot&) = default;
     };
     struct RuntimeMeleeReaction
     {
@@ -618,6 +620,10 @@ namespace ESM4
         // activation need not share the body's fade or sequence timing.
         float mClock = 0;
         std::optional<RuntimeMeleeReaction> mReaction = std::nullopt;
+        // v58: independent animation history for the same logical Player
+        // strike. Contact authority and process action remain on the body.
+        std::optional<RuntimeMeleeStrike> mStrike = std::nullopt;
+        std::vector<RuntimeRetiringMeleeSequence> mRetiringSequences = {};
         void validate() const;
         friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
     };

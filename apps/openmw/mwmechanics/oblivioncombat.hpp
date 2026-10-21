@@ -48,12 +48,22 @@ namespace MWMechanics
         float mFrequency = 1;
         float mBegin = 0, mEnd = 0;
         float mTimelineBegin = 0, mTimelineEnd = 0;
-        std::optional<std::array<float, 2>> mReactionKeys;
+        std::optional<std::array<float, 2>> mReactionKeys = std::nullopt;
         float mRetirementDuration = 0;
         std::uint8_t mBlendFrames = 0;
         bool mFirstPerson = false;
+        std::optional<std::array<float, 4>> mOrdinaryKeys = std::nullopt;
+        std::optional<std::array<float, 3>> mPowerKeys = std::nullopt;
         float rendererTime(float time) const;
         void validate() const;
+    };
+
+    struct OblivionMeleeStrikeViews
+    {
+        ESM4::RuntimeMeleeStrike mBody;
+        ESM4::RuntimeFirstPersonMeleeState mFirstPerson;
+        std::optional<ESM4::RuntimeRetiringMeleeSequence> mBodyOutgoing = std::nullopt;
+        std::optional<ESM4::RuntimeRetiringMeleeSequence> mFirstPersonOutgoing = std::nullopt;
     };
 
     // Keeps first-time lifecycle adoption inside a writer's transaction.
@@ -483,9 +493,12 @@ namespace MWMechanics
         float animationClock(const ESM::FormKey& actor) const;
         float advanceAnimationClock(const ESM::FormKey& actor, float duration);
         bool setMeleeSequenceTiming(std::uint64_t id, const ESM::FormKey& actor,
-            const ESM4::MeleeSequenceTiming& timing);
+            const ESM4::MeleeSequenceTiming& timing,
+            std::optional<ESM4::RuntimeMeleePoseSnapshot> pose = std::nullopt);
         std::uint64_t beginMeleeStrike(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
-            std::string_view animationGroup, float playbackSpeed = 1, const ESM::FormKey& weaponBase = {});
+            std::string_view animationGroup, float playbackSpeed = 1, const ESM::FormKey& weaponBase = {},
+            std::optional<OblivionMeleeStrikeViews> views = std::nullopt);
+        bool finishFirstPersonMeleeStrike(const ESM::FormKey& actor);
         bool updateMeleeAnimation(std::uint64_t id, const ESM::FormKey& actor, float time);
         // One original ordinary phase step per caller animation update. No
         // inferred contact or renderer clock mutation occurs here.

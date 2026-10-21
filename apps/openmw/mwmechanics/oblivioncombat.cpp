@@ -817,7 +817,7 @@ namespace MWMechanics
             || values->mProcess != ESM4::ActorValueProcess::Active
             || values->mProcessKnockedState != 0 || values->mProcessAction != -1
             || mBowStates.contains(actor) || (melee && (melee->mStrike || melee->mReaction
-                || (melee->mFirstPerson && melee->mFirstPerson->mReaction)))
+                || (melee->mFirstPerson && (melee->mFirstPerson->mReaction || melee->mFirstPerson->mStrike))))
             || getProcessParalysis(actor) != 0)
             throw std::invalid_argument("native bow draw requires an idle, awake Active actor");
         prepared.mPlayerHoldLatched = values->mOwner == ESM4::ActorValueOwner::Player;
@@ -1273,7 +1273,8 @@ namespace MWMechanics
     }
 
     bool OblivionCombatService::setMeleeSequenceTiming(std::uint64_t id,
-        const ESM::FormKey& actor, const ESM4::MeleeSequenceTiming& timing)
+        const ESM::FormKey& actor, const ESM4::MeleeSequenceTiming& timing,
+        std::optional<ESM4::RuntimeMeleePoseSnapshot> pose)
     {
         const auto found = mMeleeStates.find(actor);
         if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
@@ -1282,8 +1283,10 @@ namespace MWMechanics
             throw std::invalid_argument("native sequence timing requires an initialized animation clock");
         auto candidate = *found->second.mStrike;
         candidate.mSequenceTiming = timing;
+        candidate.mPoseSnapshot = std::move(pose);
         candidate.validate();
         found->second.mStrike->mSequenceTiming = timing;
+        found->second.mStrike->mPoseSnapshot.swap(candidate.mPoseSnapshot);
         return true;
     }
 
@@ -1361,31 +1364,99 @@ namespace MWMechanics
 
     std::uint64_t OblivionCombatService::beginMeleeStrike(const ESM::FormKey& actor,
         ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
-        const ESM::FormKey& weaponBase)
+        const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views)
     {
         if (mBowStates.contains(actor))
             throw std::invalid_argument("native melee strike cannot replace owned bow playback");
         ESM4::RuntimeMeleeStrike strike{1, kind, weaponBase, std::string(animationGroup), playbackSpeed, 0, false};
-        if (kind >= ESM4::MeleeStrikeKind::StandingPower)
-            strike.mPowerPhase = ESM4::PowerMeleePhase::Start;
+        if (kind >= ESM4::MeleeStrikeKind::StandingPower) strike.mPowerPhase = ESM4::PowerMeleePhase::Start;
         strike.validate();
         const auto found = mMeleeStates.find(actor);
-        if (found != mMeleeStates.end() && (found->second.mReaction
-                || (found->second.mFirstPerson && found->second.mFirstPerson->mReaction)))
+        const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
+        if (previous && (previous->mReaction || (previous->mFirstPerson && previous->mFirstPerson->mReaction)))
             throw std::invalid_argument("native melee strike cannot replace an owned reaction");
-        if (found != mMeleeStates.end() && found->second.mStrike)
+        if (!views && previous && (previous->mStrike
+                || (previous->mFirstPerson && previous->mFirstPerson->mStrike)))
             throw std::invalid_argument("native melee strike must finish or cancel before replacement");
-        // Prepare every map node/string before allocating the action ID. The
-        // existing actor/action validation and ledger allocation remain atomic.
+        auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+        const auto fresh = [&](ESM4::RuntimeMeleeStrike& incoming) {
+            incoming.mActionId = 1;
+            incoming.validate();
+            if (!incoming.mSequenceTiming) throw std::invalid_argument("native paired strike has no timing");
+            const auto& timing = *incoming.mSequenceTiming;
+            const bool capturedOffset = incoming.mPoseSnapshot && timing.mOffset
+                && std::bit_cast<std::uint32_t>(*timing.mOffset) == 0;
+            if (incoming.mKind != kind || incoming.mWeaponBase != weaponBase || incoming.mPlaybackSpeed != playbackSpeed
+                || incoming.mContactCommitted || incoming.mOrdinaryPhase != ESM4::OrdinaryMeleePhase::Start
+                || (incoming.mPowerPhase && incoming.mPowerPhase != ESM4::PowerMeleePhase::Start)
+                || timing.mOffset.has_value() != bool(capturedOffset) || timing.mLastInput || timing.mEaseStart
+                || timing.mWeightedTime != 0 || timing.mOutputTime != 0 || timing.mEaseEnd < 0
+                || timing.mEasing != (timing.mEaseEnd > 0))
+                throw std::invalid_argument("native paired strike requires fresh playback history");
+        };
+        const auto outgoing = [&](const ESM4::RuntimeMeleeStrike* old, const ESM4::RuntimeMeleeStrike& incoming,
+                                  const std::optional<ESM4::RuntimeRetiringMeleeSequence>& requested,
+                                  std::vector<ESM4::RuntimeRetiringMeleeSequence>& retiring, bool first) {
+            if (old && (old->mContactCommitted ? !isActionConsumed(old->mActionId) : !isActionPending(old->mActionId, actor)))
+                throw std::invalid_argument("native outgoing strike lost its causal action");
+            const bool inactive = old && first && (old->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                ? old->mPowerPhase == ESM4::PowerMeleePhase::End : old->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
+            const bool steady = old && !inactive && old->mSequenceTiming && old->mSequenceTiming->mOffset
+                && !old->mSequenceTiming->mEasing && !old->mPoseSnapshot
+                && old->mAnimationGroup != incoming.mAnimationGroup;
+            const bool crossfade = steady && incoming.mSequenceTiming->mEasing;
+            if (requested.has_value() != crossfade || (incoming.mSequenceTiming->mEasing
+                    && incoming.mPoseSnapshot.has_value() == crossfade))
+                throw std::invalid_argument("native strike activation lost its capture/crossfade contract");
+            for (const auto& sequence : retiring)
+                if (sequence.mAnimationGroup == incoming.mAnimationGroup
+                    || (requested && sequence.mAnimationGroup == requested->mAnimationGroup))
+                    throw std::invalid_argument("native strike activation collides with an outgoing sequence");
+            if (requested)
+            {
+                const ESM4::RuntimeRetiringMeleeSequence expected{old->mActionId, old->mAnimationGroup,
+                    old->mAnimationTime, *old->mSequenceTiming, {incoming.mSequenceTiming->mEaseEnd, {}}};
+                if (*requested != expected)
+                    throw std::invalid_argument("native outgoing strike changed owned history");
+                retiring.push_back(expected);
+            }
+        };
+        if (views)
+        {
+            const auto* values = findActorValues(actor);
+            if (!values || values->mOwner != ESM4::ActorValueOwner::Player || views->mFirstPerson.mReaction
+                || !views->mFirstPerson.mStrike || !views->mFirstPerson.mRetiringSequences.empty())
+                throw std::invalid_argument("native paired strike requires fresh Player view ownership");
+            fresh(views->mBody);
+            fresh(*views->mFirstPerson.mStrike);
+            if (views->mBody.mAnimationGroup != animationGroup)
+                throw std::invalid_argument("native paired strike changed selected body group");
+            const float clock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock : animationClock(actor);
+            if (std::bit_cast<std::uint32_t>(views->mFirstPerson.mClock) != std::bit_cast<std::uint32_t>(clock))
+                throw std::invalid_argument("native paired strike changed first-person clock");
+            views->mFirstPerson.validate();
+            if (candidate.mFirstPerson) views->mFirstPerson.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
+            outgoing(previous && previous->mStrike ? &*previous->mStrike : nullptr, views->mBody,
+                views->mBodyOutgoing, candidate.mRetiringSequences, false);
+            outgoing(previous && previous->mFirstPerson && previous->mFirstPerson->mStrike
+                    ? &*previous->mFirstPerson->mStrike : nullptr, *views->mFirstPerson.mStrike,
+                views->mFirstPersonOutgoing, views->mFirstPerson.mRetiringSequences, true);
+            candidate.mStrike = std::move(views->mBody);
+            candidate.mFirstPerson = std::move(views->mFirstPerson);
+        }
+        else candidate.mStrike = std::move(strike);
+        candidate.validate();
+        // All copies, list growth and validation precede allocation/consumption.
         decltype(mMeleeStates) prepared;
-        auto candidate = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
-        candidate.mStrike = std::move(strike);
         prepared.emplace(actor, std::move(candidate));
         auto node = prepared.extract(prepared.begin());
+        const auto oldId = previous && previous->mStrike ? previous->mStrike->mActionId : 0;
         const auto id = allocateAction(actor);
+        if (oldId && isActionPending(oldId, actor)) consumeContactAction(oldId, actor);
         node.mapped().mStrike->mActionId = id;
-        if (found == mMeleeStates.end())
-            mMeleeStates.insert(std::move(node));
+        if (node.mapped().mFirstPerson && node.mapped().mFirstPerson->mStrike)
+            node.mapped().mFirstPerson->mStrike->mActionId = id;
+        if (!previous) mMeleeStates.insert(std::move(node));
         else
         {
             static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
@@ -1434,6 +1505,8 @@ namespace MWMechanics
         if (found == mMeleeStates.end() || !found->second.mStrike
             || found->second.mStrike->mActionId != id)
             return false;
+        if (found->second.mFirstPerson && found->second.mFirstPerson->mStrike)
+            throw std::invalid_argument("paired native strike requires per-view frame preparation");
         auto& strike = *found->second.mStrike;
         if (strike.mKind > ESM4::MeleeStrikeKind::Right || !strike.mSequenceTiming)
             return false;
@@ -1443,12 +1516,16 @@ namespace MWMechanics
         const auto next = ESM4::advanceOrdinaryMeleeFrame(
             {clock->second, strike.mOrdinaryPhase, *strike.mSequenceTiming}, duration,
             strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+        const std::optional<float> firstClock = found->second.mFirstPerson
+            ? std::optional(ESM4::advanceMeleeAnimationClock(found->second.mFirstPerson->mClock,
+                freezeClock ? 0.f : duration)) : std::nullopt;
         auto candidate = strike;
         candidate.mOrdinaryPhase = next.mPhase;
         candidate.mSequenceTiming = next.mTiming;
         candidate.validate();
         static_assert(std::is_nothrow_copy_assignable_v<ESM4::MeleeSequenceTiming>);
         clock->second = next.mClock;
+        if (firstClock) found->second.mFirstPerson->mClock = *firstClock;
         strike.mOrdinaryPhase = next.mPhase;
         strike.mSequenceTiming = next.mTiming;
         return true;
@@ -1474,6 +1551,8 @@ namespace MWMechanics
         if (found == mMeleeStates.end() || !found->second.mStrike
             || found->second.mStrike->mActionId != id)
             return false;
+        if (found->second.mFirstPerson && found->second.mFirstPerson->mStrike)
+            throw std::invalid_argument("paired native strike requires per-view frame preparation");
         auto& strike = *found->second.mStrike;
         if (strike.mKind < ESM4::MeleeStrikeKind::StandingPower || !strike.mSequenceTiming)
             return false;
@@ -1483,6 +1562,9 @@ namespace MWMechanics
         const auto next = ESM4::advancePowerMeleeFrame(
             {clock->second, strike.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start), *strike.mSequenceTiming},
             duration, strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+        const std::optional<float> firstClock = found->second.mFirstPerson
+            ? std::optional(ESM4::advanceMeleeAnimationClock(found->second.mFirstPerson->mClock,
+                freezeClock ? 0.f : duration)) : std::nullopt;
         auto candidate = strike;
         candidate.mPowerPhase = next.mPhase;
         // Earlier schemas had only the ordinary phase field. It never owned
@@ -1491,6 +1573,7 @@ namespace MWMechanics
         candidate.mSequenceTiming = next.mTiming;
         candidate.validate();
         clock->second = next.mClock;
+        if (firstClock) found->second.mFirstPerson->mClock = *firstClock;
         strike.mPowerPhase = next.mPhase;
         strike.mOrdinaryPhase = candidate.mOrdinaryPhase;
         strike.mSequenceTiming = next.mTiming;
@@ -1537,6 +1620,8 @@ namespace MWMechanics
             || !std::isfinite(mTimelineEnd - mTimelineBegin))
             throw std::invalid_argument("invalid native melee sequence metadata");
         if (mReactionKeys) (void)ESM4::advanceReactionSlot(false, 0, 0, *mReactionKeys);
+        if (mOrdinaryKeys) (void)ESM4::advanceOrdinaryMeleePhase(ESM4::OrdinaryMeleePhase::Start, 0, 0, *mOrdinaryKeys);
+        if (mPowerKeys) (void)ESM4::advancePowerMeleePhase(ESM4::PowerMeleePhase::Start, 0, 0, *mPowerKeys);
     }
 
     float OblivionMeleeSequenceMetadata::rendererTime(float time) const
@@ -1583,11 +1668,20 @@ namespace MWMechanics
         if (state->mReaction && !owner.isActionConsumed(state->mReaction->mContactId)) return false;
         if (state->mFirstPerson && state->mFirstPerson->mReaction
             && !owner.isActionConsumed(state->mFirstPerson->mReaction->mContactId)) return false;
+        if (state->mFirstPerson)
+            for (const auto& sequence : state->mFirstPerson->mRetiringSequences)
+                if (!owner.isActionConsumed(sequence.mContactId)) return false;
         for (const auto& sequence : state->mRetiringSequences)
             if (!owner.isActionConsumed(sequence.mContactId)) return false;
         if (state->mStrike && (state->mStrike->mContactCommitted
                 ? !owner.isActionConsumed(state->mStrike->mActionId)
                 : !owner.isActionPending(state->mStrike->mActionId, data.mActor))) return false;
+        if (state->mFirstPerson && state->mFirstPerson->mStrike)
+        {
+            const auto& strike = *state->mFirstPerson->mStrike;
+            if (strike.mContactCommitted ? !owner.isActionConsumed(strike.mActionId)
+                : !owner.isActionPending(strike.mActionId, data.mActor)) return false;
+        }
         return true;
     }
 
@@ -1611,7 +1705,9 @@ namespace MWMechanics
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
         if (!state || (!state->mReaction && state->mRetiringSequences.empty()
-                && (!state->mFirstPerson || !state->mFirstPerson->mReaction)) || !values || !life
+                && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
+                    && !state->mFirstPerson->mStrike && !state->mStrike
+                    && state->mFirstPerson->mRetiringSequences.empty()))) || !values || !life
             || values->mProcess != ESM4::ActorValueProcess::Active || life->mPhase != ESM4::ActorLifePhase::Alive)
             return {};
         using SourceKey = std::pair<bool, std::string_view>;
@@ -1639,6 +1735,45 @@ namespace MWMechanics
             next.mFirstPerson->mClock = ESM4::advanceMeleeAnimationClock(previous, freezeClock ? 0.f : duration);
             (void)ESM4::advanceMeleeAnimationClock(previous, duration);
         }
+        const auto updateStrike = [&](ESM4::RuntimeMeleeStrike& strike, float previousClock, bool first) {
+            if (!strike.mSequenceTiming) throw std::invalid_argument("native owned strike has no timing");
+            if (first && (strike.mKind >= ESM4::MeleeStrikeKind::StandingPower
+                    ? strike.mPowerPhase == ESM4::PowerMeleePhase::End
+                    : strike.mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End)) return;
+            const auto& source = sourceFor(strike.mAnimationGroup, first);
+            if (strike.mKind >= ESM4::MeleeStrikeKind::StandingPower)
+            {
+                if (!source.mPowerKeys) throw std::invalid_argument("native power strike has no phase keys");
+                const auto frame = ESM4::advancePowerMeleeFrame({previousClock,
+                    strike.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start), *strike.mSequenceTiming},
+                    duration, strike.mPlaybackSpeed, source.mFrequency, source.mBegin, source.mEnd,
+                    *source.mPowerKeys, freezeClock,
+                    strike.mPoseSnapshot ? std::optional(strike.mPoseSnapshot->mDestinationFrame) : std::nullopt);
+                strike.mPowerPhase = frame.mPhase;
+                strike.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+                strike.mSequenceTiming = frame.mTiming;
+            }
+            else
+            {
+                if (!source.mOrdinaryKeys) throw std::invalid_argument("native ordinary strike has no phase keys");
+                const auto frame = ESM4::advanceOrdinaryMeleeFrame({previousClock,
+                    strike.mOrdinaryPhase, *strike.mSequenceTiming}, duration, strike.mPlaybackSpeed,
+                    source.mFrequency, source.mBegin, source.mEnd, *source.mOrdinaryKeys, freezeClock,
+                    strike.mPoseSnapshot ? std::optional(strike.mPoseSnapshot->mDestinationFrame) : std::nullopt);
+                strike.mOrdinaryPhase = frame.mPhase;
+                strike.mSequenceTiming = frame.mTiming;
+            }
+            if (!strike.mSequenceTiming->mEasing) strike.mPoseSnapshot.reset();
+            const float target = source.rendererTime(strike.mSequenceTiming->mOutputTime);
+            if (target < strike.mAnimationTime) throw std::invalid_argument("native owned strike renderer rewind");
+            strike.mAnimationTime = target;
+        };
+        // Paired strikes use the same duration and distinct histories. The
+        // body remains the only process/contact phase authority.
+        if (next.mFirstPerson && next.mFirstPerson->mStrike)
+            updateStrike(*next.mFirstPerson->mStrike, state->mFirstPerson->mClock, true);
+        if (next.mFirstPerson && next.mFirstPerson->mStrike && next.mStrike)
+            updateStrike(*next.mStrike, clock->second, false);
         const auto updateRetirement = [&](ESM4::MeleeSequenceTiming& timing, float& animationTime,
                                           ESM4::RuntimeReactionRetirement& retirement,
                                           const OblivionMeleeSequenceMetadata& source, float viewClock) {
@@ -1704,6 +1839,19 @@ namespace MWMechanics
                 ++retained;
             }
         next.mRetiringSequences.erase(retained, next.mRetiringSequences.end());
+        if (next.mFirstPerson)
+        {
+            auto& sequences = next.mFirstPerson->mRetiringSequences;
+            auto retained = sequences.begin();
+            for (auto current = sequences.begin(); current != sequences.end(); ++current)
+                if (updateRetirement(current->mSequenceTiming, current->mAnimationTime,
+                        current->mRetirement, sourceFor(current->mAnimationGroup, true), next.mFirstPerson->mClock))
+                {
+                    if (retained != current) *retained = std::move(*current);
+                    ++retained;
+                }
+            sequences.erase(retained, sequences.end());
+        }
         next.validate();
         auto data = std::make_unique<PreparedMeleeReactionFrame::Data>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
@@ -1750,7 +1898,11 @@ namespace MWMechanics
     void OblivionCombatService::clearRetiringMeleeSequences(const ESM::FormKey& actor) noexcept
     {
         const auto found = mMeleeStates.find(actor);
-        if (found != mMeleeStates.end()) found->second.mRetiringSequences.clear();
+        if (found != mMeleeStates.end())
+        {
+            found->second.mRetiringSequences.clear();
+            if (found->second.mFirstPerson) found->second.mFirstPerson->mRetiringSequences.clear();
+        }
     }
 
     bool OblivionCombatService::cancelMeleeReaction(std::uint64_t contact, const ESM::FormKey& actor) noexcept
@@ -1784,18 +1936,41 @@ namespace MWMechanics
         const auto found = mMeleeStates.find(actor);
         if (found == mMeleeStates.end() || !found->second.mStrike || found->second.mStrike->mActionId != id)
             return false;
-        clearMeleePlaybackAction(actor);
         if (isActionPending(id, actor))
-            consumeAction(id, actor);
-        else
-            found->second.mStrike.reset();
+            consumeContactAction(id, actor);
+        clearMeleePlaybackAction(actor);
+        found->second.mStrike.reset();
+        finishFirstPersonMeleeStrike(actor);
+        return true;
+    }
+
+    bool OblivionCombatService::finishFirstPersonMeleeStrike(const ESM::FormKey& actor)
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mFirstPerson || !found->second.mFirstPerson->mStrike)
+            return false;
+        const auto& strike = *found->second.mFirstPerson->mStrike;
+        if (strike.mKind >= ESM4::MeleeStrikeKind::StandingPower
+                ? strike.mPowerPhase != ESM4::PowerMeleePhase::End
+                : strike.mOrdinaryPhase != ESM4::OrdinaryMeleePhase::End)
+            return false;
+        // Keep the finished view's causal history until the body releases the
+        // same action. It contributes no pose and receives no manager updates.
+        if (found->second.mStrike) return false;
+        Log(Debug::Verbose) << "M15 first-person strike recovered: actor=" << actor.serialize()
+                            << " id=" << strike.mActionId;
+        found->second.mFirstPerson->mStrike.reset();
         return true;
     }
 
     bool OblivionCombatService::cancelMeleeStrike(std::uint64_t id, const ESM::FormKey& actor)
     {
-        if (!finishMeleeStrike(id, actor))
-            return false;
+        const bool body = finishMeleeStrike(id, actor);
+        const auto found = mMeleeStates.find(actor);
+        const bool first = found != mMeleeStates.end() && found->second.mFirstPerson
+            && found->second.mFirstPerson->mStrike && found->second.mFirstPerson->mStrike->mActionId == id;
+        if (!body && !first) return false;
+        if (first) found->second.mFirstPerson->mStrike.reset();
         clearMeleeInput(actor);
         return true;
     }
@@ -1812,6 +1987,9 @@ namespace MWMechanics
         mActions.consume(id);
         mActionOwners.erase(id);
         const auto found = mMeleeStates.find(actor);
+        if (found != mMeleeStates.end() && found->second.mFirstPerson && found->second.mFirstPerson->mStrike
+            && found->second.mFirstPerson->mStrike->mActionId == id)
+            found->second.mFirstPerson->mStrike->mContactCommitted = true;
         if (found != mMeleeStates.end() && found->second.mStrike && found->second.mStrike->mActionId == id)
         {
             found->second.mStrike->mContactCommitted = true;
@@ -1860,6 +2038,9 @@ namespace MWMechanics
         if (bow != mBowStates.end() && bow->second.mActionId == id)
         { clearBowPlaybackAction(actor); mBowStates.erase(bow); }
         const auto melee = mMeleeStates.find(actor);
+        if (melee != mMeleeStates.end() && melee->second.mFirstPerson && melee->second.mFirstPerson->mStrike
+            && melee->second.mFirstPerson->mStrike->mActionId == id)
+            melee->second.mFirstPerson->mStrike.reset();
         if (melee != mMeleeStates.end() && melee->second.mStrike && melee->second.mStrike->mActionId == id)
         {
             clearMeleePlaybackAction(actor);

@@ -1559,6 +1559,37 @@ namespace MWMechanics
         const auto bodyReaction = state ? state->mReaction : std::nullopt;
         const auto firstReaction = state && state->mFirstPerson ? state->mFirstPerson->mReaction : std::nullopt;
         auto* peer = mAnimation->getPlaybackPeer();
+        const auto firstStrike = state && state->mFirstPerson ? state->mFirstPerson->mStrike : std::nullopt;
+        const bool firstFinished = firstStrike && (firstStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+            ? firstStrike->mPowerPhase == ESM4::PowerMeleePhase::End
+            : firstStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
+        if (!peer && (firstStrike || (state && state->mFirstPerson && !state->mFirstPerson->mRetiringSequences.empty())))
+            throw std::invalid_argument("native first-person strike has no renderer view");
+        if (peer && mOblivionFirstPersonRenderedStrike && (!firstStrike || firstFinished
+                || firstStrike->mActionId != mOblivionFirstPersonRenderedStrike
+                || firstStrike->mAnimationGroup != mOblivionFirstPersonStrikeGroup))
+        {
+            peer->disable(mOblivionFirstPersonStrikeGroup, MWRender::Animation::PlaybackScope::ThisView);
+            mOblivionFirstPersonRenderedStrike = 0;
+            mOblivionFirstPersonStrikeGroup.clear();
+        }
+        if (firstStrike && !firstFinished && (mOblivionFirstPersonRenderedStrike != firstStrike->mActionId
+                || !peer->getInfo(firstStrike->mAnimationGroup)))
+        {
+            const auto playback = nativeMeleePlayback(*peer, firstStrike->mAnimationGroup,
+                firstStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower);
+            if (!playback || firstStrike->mAnimationTime < playback->mTimelineBegin
+                || firstStrike->mAnimationTime > playback->mTimelineEnd)
+                throw std::invalid_argument("native first-person strike cannot bind saved metadata/time");
+            const float fraction = (firstStrike->mAnimationTime - playback->mTimelineBegin)
+                / (playback->mTimelineEnd - playback->mTimelineBegin);
+            peer->play(firstStrike->mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                false, 0.f, "start", "stop", fraction, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+            mOblivionFirstPersonRenderedStrike = firstStrike->mActionId;
+            mOblivionFirstPersonStrikeGroup = firstStrike->mAnimationGroup;
+            Log(Debug::Verbose) << "M15 first-person strike bind: actor=" << actor.serialize()
+                << " id=" << firstStrike->mActionId << " time=" << firstStrike->mAnimationTime;
+        }
         if (firstReaction && !peer)
             throw std::invalid_argument("native first-person reaction has no renderer view");
         const std::string oldStrike = mOblivionRenderedStrike ? mCurrentWeapon : std::string{};
@@ -1614,7 +1645,7 @@ namespace MWMechanics
             mOblivionReactionGroup, mOblivionPoseSnapshot, false);
         const bool first = peer && bind(*peer, firstReaction, mOblivionFirstPersonRenderedReaction,
             mOblivionFirstPersonReactionGroup, mOblivionFirstPersonPoseSnapshot, true);
-        return body || first;
+        return body || first || (firstStrike && !firstFinished);
     }
 
     bool CharacterController::advanceOblivionMeleeReactionFrame(float duration)
@@ -1627,7 +1658,8 @@ namespace MWMechanics
             : mPtr.getCellRef().getFormKey();
         const auto active = [](const auto* state) {
             return state && (state->mReaction || !state->mRetiringSequences.empty()
-                || (state->mFirstPerson && state->mFirstPerson->mReaction));
+                || (state->mFirstPerson && (state->mFirstPerson->mReaction || state->mFirstPerson->mStrike
+                    || !state->mFirstPerson->mRetiringSequences.empty())));
         };
         const auto* state = service->findMeleeState(actor);
         auto* peer = mAnimation->getPlaybackPeer();
@@ -1646,13 +1678,31 @@ namespace MWMechanics
         for (const auto& sequence : state->mRetiringSequences) groups[0].insert(sequence.mAnimationGroup);
         if (state->mFirstPerson && state->mFirstPerson->mReaction)
             groups[1].insert(state->mFirstPerson->mReaction->mAnimationGroup);
+        if (state->mFirstPerson && state->mFirstPerson->mStrike)
+        {
+            groups[1].insert(state->mFirstPerson->mStrike->mAnimationGroup);
+            if (state->mStrike) groups[0].insert(state->mStrike->mAnimationGroup);
+        }
+        if (state->mFirstPerson)
+            for (const auto& sequence : state->mFirstPerson->mRetiringSequences)
+                groups[1].insert(sequence.mAnimationGroup);
         std::vector<OblivionMeleeSequenceMetadata> metadata;
         for (unsigned view = 0; view < groups.size(); ++view)
             for (const auto group : groups[view])
             {
                 auto source = captureOblivionMeleeSequenceMetadata(view ? *peer : *mAnimation, group,
-                    view || (state->mReaction && state->mReaction->mAnimationGroup == group));
+                    view ? (state->mFirstPerson->mReaction && state->mFirstPerson->mReaction->mAnimationGroup == group)
+                        : (state->mReaction && state->mReaction->mAnimationGroup == group));
                 source.mFirstPerson = view != 0;
+                const auto& strike = view ? state->mFirstPerson->mStrike : state->mStrike;
+                if (strike && strike->mAnimationGroup == group && state->mFirstPerson && state->mFirstPerson->mStrike)
+                {
+                    const bool power = strike->mKind >= ESM4::MeleeStrikeKind::StandingPower;
+                    const auto playback = nativeMeleePlayback(view ? *peer : *mAnimation, group, power);
+                    if (!playback) throw std::invalid_argument("native owned strike metadata is missing");
+                    if (power) source.mPowerKeys = playback->mPowerKeys;
+                    else source.mOrdinaryKeys = playback->mKeys;
+                }
                 metadata.push_back(std::move(source));
             }
         auto prepared = service->prepareMeleeReactionFrame(actor, duration, metadata);
@@ -1694,18 +1744,32 @@ namespace MWMechanics
                     ? retirementEase(*reaction->mRetirement) : activationEase(reaction->mSequenceTiming));
             }
             if (strike)
+            {
+                if (strike->mPoseSnapshot)
+                {
+                    const auto& timing = *strike->mSequenceTiming;
+                    auto captured = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*strike->mPoseSnapshot);
+                    layers.push_back({strike->mAnimationGroup, MWRender::BlendMask_All, 0, 1,
+                        ESM4::sequenceBlendEase(clock, *timing.mEaseStart, timing.mEaseEnd, true), false, captured});
+                }
                 append(strike->mAnimationGroup, strike->mAnimationTime,
                     strike->mSequenceTiming ? activationEase(*strike->mSequenceTiming) : 1.f);
+            }
             return layers;
         };
         auto bodyLayers = project(*mAnimation, next.mReaction, next.mRetiringSequences,
             next.mStrike ? &*next.mStrike : nullptr, prepared->clock(), mOblivionPoseSnapshot, groups[0]);
         const auto firstReaction = next.mFirstPerson ? next.mFirstPerson->mReaction : std::nullopt;
         std::vector<MWRender::Animation::NativeSequenceLayer> firstLayers;
-        if (firstReaction)
-            firstLayers = project(*peer, firstReaction, {}, nullptr, next.mFirstPerson->mClock,
+        const auto* firstStrike = next.mFirstPerson && next.mFirstPerson->mStrike ? &*next.mFirstPerson->mStrike : nullptr;
+        if (firstStrike && (firstStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                ? firstStrike->mPowerPhase == ESM4::PowerMeleePhase::End
+                : firstStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End)) firstStrike = nullptr;
+        const bool firstRetiring = next.mFirstPerson && !next.mFirstPerson->mRetiringSequences.empty();
+        if (firstReaction || firstStrike || firstRetiring)
+            firstLayers = project(*peer, firstReaction, next.mFirstPerson->mRetiringSequences, firstStrike, next.mFirstPerson->mClock,
                 mOblivionFirstPersonPoseSnapshot, groups[1]);
-        const bool paired = peer && (firstReaction || mOblivionFirstPersonMeleeProjection);
+        const bool paired = peer && (firstReaction || firstStrike || firstRetiring || mOblivionFirstPersonMeleeProjection);
         if (!(paired ? mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers)
                      : mAnimation->setNativeSequenceLayers(bodyLayers)))
             throw std::invalid_argument("native melee sequence projection could not bind");
@@ -1719,6 +1783,15 @@ namespace MWMechanics
         };
         target(*mAnimation, next.mReaction);
         if (firstReaction) target(*peer, firstReaction);
+        if (next.mFirstPerson && next.mFirstPerson->mStrike)
+        {
+            if (next.mStrike && !mAnimation->setAnimationFrameTime(next.mStrike->mAnimationGroup,
+                    next.mStrike->mAnimationTime, MWRender::Animation::PlaybackScope::ThisView))
+                throw std::invalid_argument("native body strike event track is missing");
+            if (firstStrike && !peer->setAnimationFrameTime(firstStrike->mAnimationGroup,
+                    firstStrike->mAnimationTime, MWRender::Animation::PlaybackScope::ThisView))
+                throw std::invalid_argument("native first-person strike event track is missing");
+        }
         const bool bodyInactive = next.mReaction && next.mReaction->mInactive;
         if (!service->commitMeleeReactionFrame(*prepared))
             throw std::invalid_argument("native reaction frame lost actor ownership");
@@ -1747,7 +1820,7 @@ namespace MWMechanics
             if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
             {
                 group = state->mStrike->mAnimationGroup;
-                service->finishMeleeStrike(state->mStrike->mActionId, actor);
+                service->cancelMeleeStrike(state->mStrike->mActionId, actor);
             }
             else if (mOblivionRenderedStrike)
                 group = mCurrentWeapon;
@@ -1773,8 +1846,14 @@ namespace MWMechanics
         {
             bindOblivionMeleeReaction();
             state = service->findMeleeState(actor);
+            if (state && state->mFirstPerson && state->mFirstPerson->mStrike)
+            {
+                if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
+                return;
+            }
             if (state && !state->mStrike && (state->mReaction || !state->mRetiringSequences.empty()
-                    || (state->mFirstPerson && state->mFirstPerson->mReaction)))
+                    || (state->mFirstPerson && (state->mFirstPerson->mReaction
+                        || !state->mFirstPerson->mRetiringSequences.empty()))))
             {
                 if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
                 return;
@@ -1923,7 +2002,8 @@ namespace MWMechanics
         mUpperBodyState = UpperBodyState::WeaponEquipped;
         // runAnimation has returned; disabling here cannot invalidate its
         // text-key iterator. Publish cancellation before the Lua end callback.
-        mAnimation->disable(strike.mAnimationGroup);
+        mAnimation->disable(strike.mAnimationGroup, state->mFirstPerson && state->mFirstPerson->mStrike
+            ? MWRender::Animation::PlaybackScope::ThisView : MWRender::Animation::PlaybackScope::AllViews);
     }
 
     void CharacterController::cancelOblivionCombatInput()
@@ -1949,6 +2029,13 @@ namespace MWMechanics
         if (const auto* state = service->findMeleeState(actor);
             state && state->mFirstPerson && state->mFirstPerson->mReaction)
             service->cancelMeleeReaction(state->mFirstPerson->mReaction->mContactId, actor);
+        if (const auto* state = service->findMeleeState(actor);
+            state && state->mFirstPerson && state->mFirstPerson->mStrike)
+            service->cancelMeleeStrike(state->mFirstPerson->mStrike->mActionId, actor);
+        if (auto* peer = mAnimation->getPlaybackPeer(); peer && !mOblivionFirstPersonStrikeGroup.empty())
+            peer->disable(mOblivionFirstPersonStrikeGroup, MWRender::Animation::PlaybackScope::ThisView);
+        mOblivionFirstPersonRenderedStrike = 0;
+        mOblivionFirstPersonStrikeGroup.clear();
         service->clearRetiringMeleeSequences(actor);
         const auto reactionGroup = std::exchange(mOblivionReactionGroup, {});
         const auto firstReactionGroup = std::exchange(mOblivionFirstPersonReactionGroup, {});
@@ -2082,6 +2169,7 @@ namespace MWMechanics
                 }
         }
         const bool blockIdlePresent = !mOblivionBlockGroup.empty() && mAnimation->getInfo(mOblivionBlockGroup);
+        service->finishFirstPersonMeleeStrike(actor);
         const auto* recovering = service->findMeleeState(actor);
         const auto recoveryCause = recovering && recovering->mReaction ? recovering->mReaction->mContactId : 0;
         if (service->recoverInactiveMeleeReaction(actor, blockIdlePresent))
@@ -2170,6 +2258,10 @@ namespace MWMechanics
         if (const auto* state = service->findMeleeState(actor); state && state->mStrike
             && (state->mStrike->mWeaponBase != weaponBase || (mOblivionRenderedStrike && weapon != mWeapon)))
             interrupt();
+        if (const auto* state = service->findMeleeState(actor);
+            state && state->mFirstPerson && state->mFirstPerson->mStrike
+                && state->mFirstPerson->mStrike->mWeaponBase != weaponBase)
+            interrupt();
         const bool equipmentChanged = weapon != mWeapon || weaponType != mWeaponType
             || mUpperBodyState == UpperBodyState::None;
         mWeapon = weapon;
@@ -2244,8 +2336,13 @@ namespace MWMechanics
                     const float fraction = (std::max(start, strike.mAnimationTime) - start) / (stop - start);
                     try
                     {
-                        playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
-                            false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
+                        if (saved->mFirstPerson && saved->mFirstPerson->mStrike)
+                            mAnimation->play(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                                false, 0.f, "start", "stop", fraction, 0, false,
+                                MWRender::Animation::PlaybackScope::ThisView);
+                        else
+                            playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                                false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);
                     }
                     catch (...)
                     {
@@ -2347,6 +2444,8 @@ namespace MWMechanics
                 const float stop = mAnimation->getTextKeyTimeInGroup(group, group + ": stop");
                 bool nativeKeysValid = true;
                 std::optional<NativeMeleePlayback> nativePlayback;
+                std::optional<NativeMeleePlayback> firstPlayback;
+                std::optional<OblivionMeleeStrikeViews> views;
                 float nativeEase = 0;
                 {
                     nativePlayback = nativeMeleePlayback(*mAnimation, group,
@@ -2362,6 +2461,60 @@ namespace MWMechanics
                                 if (const auto* metadata = mAnimation->getControllerSequenceMetadata(prior))
                                     priorFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
                             nativeEase = ESM4::meleeBlendDuration(priorFrames, nativePlayback->mBlendFrames, .1f);
+                            if (player)
+                            {
+                                auto* first = mAnimation->getPlaybackPeer();
+                                firstPlayback = first ? nativeMeleePlayback(*first, group,
+                                    *selected >= ESM4::MeleeStrikeKind::StandingPower) : std::nullopt;
+                                if (!firstPlayback) throw std::invalid_argument("missing paired native strike resource");
+                                const auto* current = service->findMeleeState(actor);
+                                views.emplace();
+                                const auto prepareView = [&](MWRender::Animation& view, const NativeMeleePlayback& playback,
+                                        const ESM4::RuntimeMeleeStrike* old, bool firstPerson,
+                                        std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
+                                    ESM4::RuntimeMeleeStrike incoming{1, *selected, weaponBase, group, speed,
+                                        playback.mTimelineBegin, false};
+                                    if (*selected >= ESM4::MeleeStrikeKind::StandingPower)
+                                        incoming.mPowerPhase = ESM4::PowerMeleePhase::Start;
+                                    incoming.mSequenceTiming = ESM4::MeleeSequenceTiming{};
+                                    const bool inactive = old && firstPerson
+                                        && (old->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                                            ? old->mPowerPhase == ESM4::PowerMeleePhase::End
+                                            : old->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
+                                    std::optional<std::uint8_t> oldFrames;
+                                    if (old && !inactive)
+                                        if (const auto* metadata = view.getControllerSequenceMetadata(old->mAnimationGroup))
+                                            oldFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
+                                    const float ease = ESM4::meleeBlendDuration(oldFrames, playback.mBlendFrames, .1f);
+                                    incoming.mSequenceTiming->mEasing = ease > 0;
+                                    incoming.mSequenceTiming->mEaseEnd = ease;
+                                    if (ease > 0)
+                                    {
+                                        if (old && !inactive && old->mSequenceTiming && old->mSequenceTiming->mOffset
+                                            && !old->mSequenceTiming->mEasing && !old->mPoseSnapshot
+                                            && old->mAnimationGroup != group)
+                                            outgoing = ESM4::RuntimeRetiringMeleeSequence{old->mActionId,
+                                                old->mAnimationGroup, old->mAnimationTime, *old->mSequenceTiming, {ease, {}}};
+                                        else
+                                        {
+                                            incoming.mPoseSnapshot = view.captureNativeSequencePose(group, 0);
+                                            if (!incoming.mPoseSnapshot) throw std::invalid_argument("missing native strike pose");
+                                            incoming.mSequenceTiming->mOffset = 0.f;
+                                        }
+                                    }
+                                    incoming.validate();
+                                    return incoming;
+                                };
+                                views->mBody = prepareView(*mAnimation, *nativePlayback,
+                                    current && current->mStrike ? &*current->mStrike : nullptr, false, views->mBodyOutgoing);
+                                const auto firstClock = current && current->mFirstPerson
+                                    ? current->mFirstPerson->mClock : service->animationClock(actor);
+                                views->mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, {},
+                                    prepareView(*first, *firstPlayback,
+                                        current && current->mFirstPerson && current->mFirstPerson->mStrike
+                                            ? &*current->mFirstPerson->mStrike : nullptr,
+                                        true, views->mFirstPersonOutgoing)};
+                            }
                         }
                         catch (const std::invalid_argument&)
                         {
@@ -2375,15 +2528,23 @@ namespace MWMechanics
                 if (start >= 0 && stop > start && nativeKeysValid)
                 {
                     // A rejected replacement must not cancel the current strike.
-                    if (active)
-                        interrupt();
-                    const auto id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase);
+                    const std::string oldGroup = active ? saved->mStrike->mAnimationGroup : std::string{};
+                    if (active && !views) interrupt();
+                    std::uint64_t id;
+                    try { id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase, std::move(views)); }
+                    catch (const std::invalid_argument& error)
+                    {
+                        Log(Debug::Verbose) << "M15 melee start rejected: actor=" << actor.serialize()
+                                            << " reason=" << error.what();
+                        service->setMeleeInput(actor, input);
+                        return false;
+                    }
                     service->setMeleeInput(actor, input); // Publish input before text-key/Lua callbacks.
                     mCurrentWeapon = group;
                     mOblivionRenderedStrike = id;
                     try
                     {
-                        if (nativePlayback)
+                        if (nativePlayback && !firstPlayback)
                         {
                             service->advanceAnimationClock(actor, 0);
                             ESM4::MeleeSequenceTiming timing;
@@ -2399,8 +2560,18 @@ namespace MWMechanics
                             mCurrentWeapon.clear();
                             return false;
                         }
-                        playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_All,
-                            false, speed, "start", "stop", 0, 0);
+                        if (firstPlayback)
+                        {
+                            service->advanceAnimationClock(actor, 0);
+                            if (!oldGroup.empty() && oldGroup != group)
+                                mAnimation->disable(oldGroup, MWRender::Animation::PlaybackScope::ThisView);
+                            mAnimation->play(group, Priority_Weapon, MWRender::BlendMask_All,
+                                false, 0.f, "start", "stop", 0, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+                            bindOblivionMeleeReaction();
+                        }
+                        else
+                            playBlendedAnimation(group, Priority_Weapon, MWRender::BlendMask_All,
+                                false, speed, "start", "stop", 0, 0);
                     }
                     catch (...)
                     {

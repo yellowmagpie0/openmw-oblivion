@@ -234,6 +234,8 @@ namespace MWMechanics
         std::string mOblivionFirstPersonReactionGroup;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionFirstPersonPoseSnapshot;
         bool mOblivionFirstPersonMeleeProjection = false;
+        std::uint64_t mOblivionFirstPersonRenderedStrike = 0;
+        std::string mOblivionFirstPersonStrikeGroup;
         void updateIdleStormState(bool inwater) const;
 
         std::string chooseRandomAttackAnimation() const;

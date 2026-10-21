@@ -125,6 +125,20 @@ namespace ESM4
             std::size_t mOffset = 0;
         };
 
+        void writeMeleePose(BinaryWriter& writer, const RuntimeMeleePoseSnapshot& pose)
+        {
+            writer.floating(pose.mDestinationFrame);
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mTracks.size()));
+            for (const auto& track : pose.mTracks)
+            {
+                writer.string(track.mBone);
+                for (float value : track.mTranslation) writer.floating(value);
+                for (float value : track.mRotation) writer.floating(value);
+                writer.floating(track.mScale);
+                writer.integer(track.mPriority);
+            }
+        }
+
         void writeMeleeReaction(BinaryWriter& writer, const RuntimeMeleeReaction& reaction, std::uint32_t version)
         {
             writer.integer(reaction.mContactId);
@@ -156,19 +170,28 @@ namespace ESM4
                 writer.integer<std::uint8_t>(reaction.mPoseSnapshot.has_value());
                 if (reaction.mPoseSnapshot)
                 {
-                    const auto& pose = *reaction.mPoseSnapshot;
-                    writer.floating(pose.mDestinationFrame);
-                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(pose.mTracks.size()));
-                    for (const auto& track : pose.mTracks)
-                    {
-                        writer.string(track.mBone);
-                        for (float value : track.mTranslation) writer.floating(value);
-                        for (float value : track.mRotation) writer.floating(value);
-                        writer.floating(track.mScale);
-                        writer.integer(track.mPriority);
-                    }
+                    writeMeleePose(writer, *reaction.mPoseSnapshot);
                 }
             }
+        }
+
+        RuntimeMeleePoseSnapshot readMeleePose(BinaryReader& reader)
+        {
+            RuntimeMeleePoseSnapshot pose;
+            pose.mDestinationFrame = reader.float32();
+            const auto tracks = reader.count();
+            pose.mTracks.reserve(tracks);
+            for (std::uint32_t k = 0; k < tracks; ++k)
+            {
+                RuntimeMeleePoseTrack track;
+                track.mBone = reader.string();
+                for (float& value : track.mTranslation) value = reader.float32();
+                for (float& value : track.mRotation) value = reader.float32();
+                track.mScale = reader.float32();
+                track.mPriority = reader.integer<std::uint8_t>();
+                pose.mTracks.push_back(std::move(track));
+            }
+            return pose;
         }
 
         RuntimeMeleeReaction readMeleeReaction(BinaryReader& reader, std::uint32_t version)
@@ -201,21 +224,7 @@ namespace ESM4
             if (version >= 55) reaction.mInactive = boolean();
             if (version >= 56 && boolean())
             {
-                RuntimeMeleePoseSnapshot pose;
-                pose.mDestinationFrame = reader.float32();
-                const auto tracks = reader.count();
-                pose.mTracks.reserve(tracks);
-                for (std::uint32_t k = 0; k < tracks; ++k)
-                {
-                    RuntimeMeleePoseTrack track;
-                    track.mBone = reader.string();
-                    for (float& value : track.mTranslation) value = reader.float32();
-                    for (float& value : track.mRotation) value = reader.float32();
-                    track.mScale = reader.float32();
-                    track.mPriority = reader.integer<std::uint8_t>();
-                    pose.mTracks.push_back(std::move(track));
-                }
-                reaction.mPoseSnapshot = std::move(pose);
+                reaction.mPoseSnapshot = readMeleePose(reader);
             }
             return reaction;
         }
@@ -383,6 +392,37 @@ namespace ESM4
 
         std::string escapeJson(std::string_view value);
 
+        void writeMeleePoseJson(std::ostream& stream, const RuntimeMeleePoseSnapshot& pose)
+        {
+            const auto floating = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            stream << "{\"destination_frame\":"; floating(pose.mDestinationFrame);
+            stream << ",\"tracks\":[";
+            bool firstTrack = true;
+            for (const auto& track : pose.mTracks)
+            {
+                if (!firstTrack) stream << ',';
+                firstTrack = false;
+                stream << "{\"bone\":\"" << escapeJson(track.mBone) << "\",\"translation\":[";
+                for (std::size_t i = 0; i < track.mTranslation.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    floating(track.mTranslation[i]);
+                }
+                stream << "],\"rotation\":[";
+                for (std::size_t i = 0; i < track.mRotation.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    floating(track.mRotation[i]);
+                }
+                stream << "],\"scale\":"; floating(track.mScale);
+                stream << ",\"priority\":" << unsigned(track.mPriority) << '}';
+            }
+            stream << "]}";
+        }
+
         void writeMeleeReactionJson(std::ostream& stream, const RuntimeMeleeReaction& reaction, std::uint32_t version)
         {
             const auto floating = [&](float value) {
@@ -424,30 +464,7 @@ namespace ESM4
                 if (!reaction.mPoseSnapshot) stream << "null";
                 else
                 {
-                    const auto& pose = *reaction.mPoseSnapshot;
-                    stream << "{\"destination_frame\":"; floating(pose.mDestinationFrame);
-                    stream << ",\"tracks\":[";
-                    bool firstTrack = true;
-                    for (const auto& track : pose.mTracks)
-                    {
-                        if (!firstTrack) stream << ',';
-                        firstTrack = false;
-                        stream << "{\"bone\":\"" << escapeJson(track.mBone) << "\",\"translation\":[";
-                        for (std::size_t i = 0; i < track.mTranslation.size(); ++i)
-                        {
-                            if (i) stream << ',';
-                            floating(track.mTranslation[i]);
-                        }
-                        stream << "],\"rotation\":[";
-                        for (std::size_t i = 0; i < track.mRotation.size(); ++i)
-                        {
-                            if (i) stream << ',';
-                            floating(track.mRotation[i]);
-                        }
-                        stream << "],\"scale\":"; floating(track.mScale);
-                        stream << ",\"priority\":" << unsigned(track.mPriority) << '}';
-                    }
-                    stream << "]}";
+                    writeMeleePoseJson(stream, *reaction.mPoseSnapshot);
                 }
             }
             stream << '}';
@@ -1037,12 +1054,14 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 melee input state");
     }
 
-    static void validateMeleeTiming(const MeleeSequenceTiming& timing)
+    static void validateMeleeTiming(const MeleeSequenceTiming& timing, bool capturedPose = false)
     {
+        const bool freshCapture = capturedPose && timing.mEasing && timing.mOffset
+            && !timing.mEaseStart && !timing.mLastInput;
         if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
             || !std::isfinite(timing.mOutputTime)
-            || timing.mOffset.has_value() != timing.mEaseStart.has_value()
-            || timing.mOffset.has_value() != timing.mLastInput.has_value())
+            || (!freshCapture && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
+                || timing.mOffset.has_value() != timing.mLastInput.has_value())))
             throw std::runtime_error("Invalid TES4 melee sequence timing");
         for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
             if (value && !std::isfinite(*value))
@@ -1061,7 +1080,15 @@ namespace ESM4
                 || static_cast<unsigned>(*mPowerPhase) > static_cast<unsigned>(PowerMeleePhase::End)
                 || mOrdinaryPhase != OrdinaryMeleePhase::Start))
             throw std::runtime_error("Invalid TES4 power melee phase");
-        if (mSequenceTiming) validateMeleeTiming(*mSequenceTiming);
+        if (mSequenceTiming) validateMeleeTiming(*mSequenceTiming, mPoseSnapshot.has_value());
+        if (mPoseSnapshot)
+        {
+            mPoseSnapshot->validate();
+            if (!mSequenceTiming || !mSequenceTiming->mEasing
+                || (mSequenceTiming->mEaseStart ? mSequenceTiming->mEaseEnd <= *mSequenceTiming->mEaseStart
+                                               : mSequenceTiming->mEaseEnd <= 0))
+                throw std::runtime_error("Invalid TES4 strike pose transition");
+        }
     }
 
     void RuntimeMeleeAiIntent::validate() const
@@ -1165,6 +1192,15 @@ namespace ESM4
     {
         if (!std::isfinite(mClock) || mClock < 0)
             throw std::runtime_error("Invalid TES4 first-person melee clock");
+        if (mRetiringSequences.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Too many TES4 first-person retiring sequences");
+        for (const auto& sequence : mRetiringSequences) sequence.validate();
+        if (mStrike)
+        {
+            mStrike->validate();
+            if (!mStrike->mSequenceTiming || mReaction)
+                throw std::runtime_error("Invalid TES4 first-person strike ownership");
+        }
         if (mReaction)
         {
             mReaction->validate();
@@ -1194,6 +1230,14 @@ namespace ESM4
             if (mReaction && (mReaction->mContactId != mFirstPerson->mReaction->mContactId
                     || mReaction->mKind != mFirstPerson->mReaction->mKind))
                 throw std::runtime_error("Mismatched TES4 body and first-person reaction causes");
+        }
+        if (mStrike && mFirstPerson && mFirstPerson->mStrike)
+        {
+            const auto& first = *mFirstPerson->mStrike;
+            if (mStrike->mActionId != first.mActionId || mStrike->mKind != first.mKind
+                || mStrike->mWeaponBase != first.mWeaponBase || mStrike->mPlaybackSpeed != first.mPlaybackSpeed
+                || mStrike->mContactCommitted != first.mContactCommitted)
+                throw std::runtime_error("Mismatched TES4 body and first-person strike identity");
         }
     }
 
@@ -1536,6 +1580,17 @@ namespace ESM4
                     reaction && (reaction->mContactId >= mPhysicalActions.mNext
                         || pendingActions.contains(reaction->mContactId)))
                     throw std::runtime_error("Unowned or replaying TES4 first-person melee reaction");
+                if (const auto& strike = melee.mFirstPerson->mStrike; strike)
+                {
+                    if (mVersion < 58 || strike->mActionId >= mPhysicalActions.mNext
+                        || (!melee.mStrike && (!strike->mContactCommitted
+                            || pendingActions.contains(strike->mActionId))))
+                        throw std::runtime_error("Unowned or replaying TES4 first-person melee strike");
+                }
+                for (const auto& sequence : melee.mFirstPerson->mRetiringSequences)
+                    if (mVersion < 58 || sequence.mContactId >= mPhysicalActions.mNext
+                        || pendingActions.contains(sequence.mContactId))
+                        throw std::runtime_error("Unowned or replaying TES4 first-person retiring sequence");
             }
             for (const auto& sequence : melee.mRetiringSequences)
             {
@@ -1548,6 +1603,8 @@ namespace ESM4
             if (melee.mStrike)
             {
                 const auto& strike = *melee.mStrike;
+                if (mVersion < 58 && strike.mPoseSnapshot)
+                    throw std::runtime_error("TES4 captured strike pose requires version58");
                 if (mVersion < 22 && strike.mOrdinaryPhase != OrdinaryMeleePhase::Start)
                     throw std::runtime_error("TES4 ordinary melee phase requires runtime-state version 22");
                 if (mVersion < 49 && strike.mPowerPhase)
@@ -1576,7 +1633,8 @@ namespace ESM4
             if (!nativeActors.contains(actor) || life == lives.end()
                 || life->second->mPhase != ActorLifePhase::Alive || !mNativeAnimationClocks.contains(actor)
                 || (melee != mNativeMeleeStates.end() && (melee->second.mStrike || melee->second.mReaction
-                    || (melee->second.mFirstPerson && melee->second.mFirstPerson->mReaction)))
+                    || (melee->second.mFirstPerson && (melee->second.mFirstPerson->mReaction
+                        || melee->second.mFirstPerson->mStrike))))
                 || !meleeIds.insert(bow.mActionId).second || bow.mActionId >= mPhysicalActions.mNext
                 || (bow.mReleaseCommitted ? pending
                     : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
@@ -2374,9 +2432,7 @@ namespace ESM4
                 writer.integer<std::uint8_t>(melee.mInput.mPreferLeft);
                 writer.integer<std::uint8_t>(static_cast<std::uint8_t>(melee.mInput.mQueued));
                 writer.integer<std::uint8_t>(melee.mStrike.has_value());
-                if (melee.mStrike)
-                {
-                    const auto& strike = *melee.mStrike;
+                const auto writeStrike = [&](const RuntimeMeleeStrike& strike) {
                     writer.integer(strike.mActionId);
                     writer.integer<std::uint8_t>(static_cast<std::uint8_t>(strike.mKind));
                     writeKey(writer, strike.mWeaponBase);
@@ -2409,7 +2465,13 @@ namespace ESM4
                         if (strike.mPowerPhase)
                             writer.integer<std::uint8_t>(static_cast<std::uint8_t>(*strike.mPowerPhase));
                     }
-                }
+                    if (mVersion >= 58)
+                    {
+                        writer.integer<std::uint8_t>(strike.mPoseSnapshot.has_value());
+                        if (strike.mPoseSnapshot) writeMeleePose(writer, *strike.mPoseSnapshot);
+                    }
+                };
+                if (melee.mStrike) writeStrike(*melee.mStrike);
                 if (mVersion >= 28)
                 {
                     writer.integer<std::uint8_t>(melee.mAiIntent.has_value());
@@ -2424,10 +2486,9 @@ namespace ESM4
                     writer.integer<std::uint8_t>(melee.mReaction.has_value());
                     if (melee.mReaction) writeMeleeReaction(writer, *melee.mReaction, mVersion);
                 }
-                if (mVersion >= 55)
-                {
-                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(melee.mRetiringSequences.size()));
-                    for (const auto& sequence : melee.mRetiringSequences)
+                const auto writeRetiring = [&](const std::vector<RuntimeRetiringMeleeSequence>& sequences) {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(sequences.size()));
+                    for (const auto& sequence : sequences)
                     {
                         writer.integer(sequence.mContactId);
                         writer.string(sequence.mAnimationGroup);
@@ -2446,7 +2507,8 @@ namespace ESM4
                         writer.integer<std::uint8_t>(sequence.mRetirement.mStartClock.has_value());
                         if (sequence.mRetirement.mStartClock) writer.floating(*sequence.mRetirement.mStartClock);
                     }
-                }
+                };
+                if (mVersion >= 55) writeRetiring(melee.mRetiringSequences);
                 if (mVersion >= 57)
                 {
                     writer.integer<std::uint8_t>(melee.mFirstPerson.has_value());
@@ -2456,6 +2518,12 @@ namespace ESM4
                         writer.integer<std::uint8_t>(melee.mFirstPerson->mReaction.has_value());
                         if (melee.mFirstPerson->mReaction)
                             writeMeleeReaction(writer, *melee.mFirstPerson->mReaction, mVersion);
+                        if (mVersion >= 58)
+                        {
+                            writer.integer<std::uint8_t>(melee.mFirstPerson->mStrike.has_value());
+                            if (melee.mFirstPerson->mStrike) writeStrike(*melee.mFirstPerson->mStrike);
+                            writeRetiring(melee.mFirstPerson->mRetiringSequences);
+                        }
                     }
                 }
             }
@@ -3320,8 +3388,7 @@ namespace ESM4
                 melee.mInput.mInputHeld = boolean();
                 melee.mInput.mPreferLeft = boolean();
                 melee.mInput.mQueued = static_cast<MeleeQueuedStrike>(reader.integer<std::uint8_t>());
-                if (boolean())
-                {
+                const auto readStrike = [&]() {
                     RuntimeMeleeStrike strike;
                     strike.mActionId = reader.integer<std::uint64_t>();
                     strike.mKind = static_cast<MeleeStrikeKind>(reader.integer<std::uint8_t>());
@@ -3345,16 +3412,18 @@ namespace ESM4
                     }
                     if (result.mVersion >= 49 && boolean())
                         strike.mPowerPhase = static_cast<PowerMeleePhase>(reader.integer<std::uint8_t>());
-                    melee.mStrike = std::move(strike);
-                }
+                    if (result.mVersion >= 58 && boolean()) strike.mPoseSnapshot = readMeleePose(reader);
+                    return strike;
+                };
+                if (boolean()) melee.mStrike = readStrike();
                 if (result.mVersion >= 28 && boolean())
                     melee.mAiIntent = RuntimeMeleeAiIntent{key(), key()};
                 if (result.mVersion >= 54 && boolean())
                     melee.mReaction = readMeleeReaction(reader, result.mVersion);
-                if (result.mVersion >= 55)
-                {
+                const auto readRetiring = [&]() {
+                    std::vector<RuntimeRetiringMeleeSequence> retiring;
                     const auto sequences = reader.count();
-                    melee.mRetiringSequences.reserve(sequences);
+                    retiring.reserve(sequences);
                     for (std::uint32_t j = 0; j < sequences; ++j)
                     {
                         RuntimeRetiringMeleeSequence sequence;
@@ -3370,14 +3439,18 @@ namespace ESM4
                         timing.mOutputTime = reader.float32();
                         sequence.mRetirement.mDuration = reader.float32();
                         if (boolean()) sequence.mRetirement.mStartClock = reader.float32();
-                        melee.mRetiringSequences.push_back(std::move(sequence));
+                        retiring.push_back(std::move(sequence));
                     }
-                }
+                    return retiring;
+                };
+                if (result.mVersion >= 55) melee.mRetiringSequences = readRetiring();
                 if (result.mVersion >= 57 && boolean())
                 {
                     RuntimeFirstPersonMeleeState firstPerson;
                     firstPerson.mClock = reader.float32();
                     if (boolean()) firstPerson.mReaction = readMeleeReaction(reader, result.mVersion);
+                    if (result.mVersion >= 58 && boolean()) firstPerson.mStrike = readStrike();
+                    if (result.mVersion >= 58) firstPerson.mRetiringSequences = readRetiring();
                     melee.mFirstPerson = std::move(firstPerson);
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
@@ -4358,63 +4431,71 @@ namespace ESM4
                     << ",\"input_held\":" << (melee.mInput.mInputHeld ? "true" : "false")
                     << ",\"prefer_left\":" << (melee.mInput.mPreferLeft ? "true" : "false")
                     << ",\"queued\":" << static_cast<unsigned>(melee.mInput.mQueued) << "},\"strike\":";
-                if (!melee.mStrike) stream << "null";
-                else
-                {
-                    const auto& strike = *melee.mStrike;
-                    stream << "{\"id\":" << strike.mActionId << ",\"kind\":" << static_cast<unsigned>(strike.mKind)
-                        << ",\"weapon_base\":\"" << escapeJson(strike.mWeaponBase.serialize())
-                        << "\",\"animation_group\":\"" << escapeJson(strike.mAnimationGroup)
-                        << "\",\"playback_speed\":" << std::setprecision(17) << strike.mPlaybackSpeed
-                        << ",\"animation_time\":" << std::setprecision(17) << strike.mAnimationTime
-                        << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false");
-                    if (mVersion >= 22)
-                        stream << ",\"ordinary_phase\":" << static_cast<unsigned>(strike.mOrdinaryPhase);
-                    if (mVersion >= 49)
+                const auto writeStrikeJson = [&](const std::optional<RuntimeMeleeStrike>& owned) {
+                    if (!owned) stream << "null";
+                    else
                     {
-                        stream << ",\"power_phase\":";
-                        if (strike.mPowerPhase) stream << static_cast<unsigned>(*strike.mPowerPhase);
-                        else stream << "null";
-                    }
-                    if (mVersion >= 23)
-                    {
-                        const auto floating = [&](float value) {
-                            if (value == 0 && std::signbit(value)) stream << "-0.0";
-                            else stream << std::setprecision(17) << value;
-                        };
-                        stream << ",\"sequence_timing\":";
-                        if (!strike.mSequenceTiming) stream << "null";
-                        else
+                        const auto& strike = *owned;
+                        stream << "{\"id\":" << strike.mActionId << ",\"kind\":" << static_cast<unsigned>(strike.mKind)
+                            << ",\"weapon_base\":\"" << escapeJson(strike.mWeaponBase.serialize())
+                            << "\",\"animation_group\":\"" << escapeJson(strike.mAnimationGroup)
+                            << "\",\"playback_speed\":" << std::setprecision(17) << strike.mPlaybackSpeed
+                            << ",\"animation_time\":" << std::setprecision(17) << strike.mAnimationTime
+                            << ",\"contact_committed\":" << (strike.mContactCommitted ? "true" : "false");
+                        if (mVersion >= 22)
+                            stream << ",\"ordinary_phase\":" << static_cast<unsigned>(strike.mOrdinaryPhase);
+                        if (mVersion >= 49)
                         {
-                            const auto& timing = *strike.mSequenceTiming;
-                            stream << "{\"easing\":" << (timing.mEasing ? "true" : "false");
-                            const auto optional = [&](std::string_view name, std::optional<float> value) {
-                                stream << ",\"" << name << "\":";
-                                if (value) floating(*value);
-                                else stream << "null";
-                            };
-                            optional("offset", timing.mOffset);
-                            optional("ease_start", timing.mEaseStart);
-                            optional("last_input", timing.mLastInput);
-                            stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
-                            stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
-                            stream << ",\"output_time\":"; floating(timing.mOutputTime);
-                            stream << '}';
+                            stream << ",\"power_phase\":";
+                            if (strike.mPowerPhase) stream << static_cast<unsigned>(*strike.mPowerPhase);
+                            else stream << "null";
                         }
+                        if (mVersion >= 23)
+                        {
+                            const auto floating = [&](float value) {
+                                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                                else stream << std::setprecision(17) << value;
+                            };
+                            stream << ",\"sequence_timing\":";
+                            if (!strike.mSequenceTiming) stream << "null";
+                            else
+                            {
+                                const auto& timing = *strike.mSequenceTiming;
+                                stream << "{\"easing\":" << (timing.mEasing ? "true" : "false");
+                                const auto optional = [&](std::string_view name, std::optional<float> value) {
+                                    stream << ",\"" << name << "\":";
+                                    if (value) floating(*value);
+                                    else stream << "null";
+                                };
+                                optional("offset", timing.mOffset);
+                                optional("ease_start", timing.mEaseStart);
+                                optional("last_input", timing.mLastInput);
+                                stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                                stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                                stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                                stream << '}';
+                            }
+                        }
+                        if (mVersion >= 58)
+                        {
+                            stream << ",\"pose_snapshot\":";
+                            if (strike.mPoseSnapshot) writeMeleePoseJson(stream, *strike.mPoseSnapshot);
+                            else stream << "null";
+                        }
+                        stream << '}';
                     }
-                    stream << '}';
-                }
+                };
+                writeStrikeJson(melee.mStrike);
                 if (mVersion >= 54)
                 {
                     stream << ",\"reaction\":";
                     if (!melee.mReaction) stream << "null";
                     else writeMeleeReactionJson(stream, *melee.mReaction, mVersion);
                 }
-                if (mVersion >= 55)
-                {
-                    stream << ",\"retiring_sequences\":[";
+                const auto writeRetiringJson = [&](const std::vector<RuntimeRetiringMeleeSequence>& sequences) {
+                    stream << '[';
                     bool firstSequence = true;
-                    for (const auto& sequence : melee.mRetiringSequences)
+                    for (const auto& sequence : sequences)
                     {
                         if (!firstSequence) stream << ',';
                         firstSequence = false;
@@ -4443,6 +4524,11 @@ namespace ESM4
                         stream << "}}";
                     }
                     stream << ']';
+                };
+                if (mVersion >= 55)
+                {
+                    stream << ",\"retiring_sequences\":";
+                    writeRetiringJson(melee.mRetiringSequences);
                 }
                 if (mVersion >= 57)
                 {
@@ -4458,6 +4544,13 @@ namespace ESM4
                         if (melee.mFirstPerson->mReaction)
                             writeMeleeReactionJson(stream, *melee.mFirstPerson->mReaction, mVersion);
                         else stream << "null";
+                        if (mVersion >= 58)
+                        {
+                            stream << ",\"strike\":";
+                            writeStrikeJson(melee.mFirstPerson->mStrike);
+                            stream << ",\"retiring_sequences\":";
+                            writeRetiringJson(melee.mFirstPerson->mRetiringSequences);
+                        }
                         stream << '}';
                     }
                 }

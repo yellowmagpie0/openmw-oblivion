@@ -201,7 +201,8 @@ namespace ESM4
     // update. freezeClock models original mode5, not slot freezes3/6.
     OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, 4>& keyTimes, bool freezeClock = false);
+        const std::array<float, 4>& keyTimes, bool freezeClock = false,
+        std::optional<float> transitionFrame = std::nullopt);
     struct PowerMeleeFrame
     {
         float mClock;
@@ -212,7 +213,8 @@ namespace ESM4
     // Native subtype5 uses Start/Hit/End, without the ordinary a: queue slot.
     PowerMeleeFrame advancePowerMeleeFrame(const PowerMeleeFrame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, 3>& keyTimes, bool freezeClock = false);
+        const std::array<float, 3>& keyTimes, bool freezeClock = false,
+        std::optional<float> transitionFrame = std::nullopt);
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings

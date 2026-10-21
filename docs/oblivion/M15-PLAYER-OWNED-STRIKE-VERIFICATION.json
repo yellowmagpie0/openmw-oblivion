@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Schema58 paired Player strike state, captured-pose activation and per-view outgoing history; component/engine/wire/original-instruction verification. Broader runtime acceptance remains open.",
+  "source_parent": "b754a23ff74ce65301a5d11c95bdf96a38055a2f",
+  "source_files": [
+    {
+      "path": "apps/components_tests/esm4/physicalcombat.cpp",
+      "sha256": "bb7271e0167fab2e3e3d1ea5f2948339aff9770d670fd88e15a4230851201ac9"
+    },
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "94650f7bdb8ab685da64a1731b2095c74d075b4793b13aa224677abb7bf7517e"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.cpp",
+      "sha256": "9dd2877b522097fe8c2cdca948d824cee4490051e590cc291520f481ed4b0c07"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/character.hpp",
+      "sha256": "3ac93ee770438c231cbb623f370b12bc8eb59639755fce25b1502e4c452471b0"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "449f6366db125a086eddf4d5bedb30f778def5a7ae6533315c7a6ea03811f792"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "f6ec0943949358a604b9168528f2f4aa8c8ffe08816b0300643ed2c495d4a8d5"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "44a5bb220bae145c135422698d67492a95999840d58ef673d7adc79fccbcfd65"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "ea35b5e27e7cff81a8cfc1eb1675fefae3b61c39bd6a9518f3d0033316a125ed"
+    },
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "97e1b5c1413a6420c14e5efd03fdf85b4d54790b67fc307fef3ce78f9ee232ed"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "8681a20a379d41331575e3aff41a2434122b6981176d30da1e405956a8da5da1"
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "7b232f249f847c6127c4448e8803335195df39cc193f19e074f8d36e57ad25bb"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "43160bbaec23a3fa352a17d3cf7752f701946d98bdddb5f7e7163d130b3c30bb"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "c68e439eee30db4e73f538b9b0cc0a43eb8e2ace73eac7ed47207fb801fe42ce"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_player_owned_strike_probe.json",
+      "sha256": "f1d8dc3600678a2bfd7fef25d94d4470d70ac701969a98947070ddfb576aaf59"
+    }
+  ],
+  "implementation": [
+    "One shared body-owned logical action/contact; independently timed body and first-person strike heads, captured poses and retiring owners.",
+    "Fresh captured activation keeps offset +0 before its first anchor. Distinct steady outgoing sequences use crossfade; queued replacement consumes an abandoned action once.",
+    "First-person End marker persists until body release; body-first completion permits independent first-person recovery. Legacy57 migration creates no invented strike or pose.",
+    "Prepare/commit validates both view histories atomically and rejects stale state; renderer binds each view with durable raw time."
+  ],
+  "checks": [
+    {
+      "profile": "normal",
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-normal-03/verification.json",
+        "sha256": "25b9a56a2f75480862748b68bdabd160622ead0531a43ef3fbd1d5422a5ff725"
+      },
+      "tested_source": {
+        "head": "b754a23ff74ce65301a5d11c95bdf96a38055a2f",
+        "source_fingerprint": "4bdba9df92d3cfe144d20e5d315d90c5fb3aa4ca468ad86556d9465d4a389c7d"
+      },
+      "results": {
+        "components": {
+          "executed": 2971,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a27b099ee4cf695d737a3ad80a54f92ae61ed0d16531bcfd79d0c396d625b5aa",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "6db47723e889fab0e9848b98a520af313bf0f090aa8c6fc6c9565b0dd5c492e5",
+          "inventory_sha256": "e843dde56e4bba749cd3257886771fe5ea056e2a85b3295bcb96479d28b6f562",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1772,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1615719c5e7607b0419ffcfc9b85feb75d6c2caffe942f1f131d12b15b629888",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "94a08ecf64692790be3a1a5e8e956b4a10a230ca6eaf66996b4d067c7fe27f44",
+          "inventory_sha256": "94201e682393f7c66addc3f403ee0b316d4d0d650c67398836dddd6536bf827e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 353,
+          "passed": true,
+          "log_sha256": "212c0614ff884e5d502b9b49862b5a7453e252d6e6ae91dad79d968e585d8284"
+        }
+      }
+    },
+    {
+      "profile": "sanitized",
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-sanitized-03/verification.json",
+        "sha256": "0b9868973595b7aa8fa4f477c84184d02e747b17ad5ceb59506b51a32ca1aee2"
+      },
+      "tested_source": {
+        "head": "b754a23ff74ce65301a5d11c95bdf96a38055a2f",
+        "source_fingerprint": "4bdba9df92d3cfe144d20e5d315d90c5fb3aa4ca468ad86556d9465d4a389c7d"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 824,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "932717ca1a9125f36c13b4d603a95e7d160a6d73b607e235973e57a6fa86bd45",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "3c570661d15923d2471708a9ddecb2c73a0bd1d700bd310906b49176e4cc5aee",
+          "inventory_sha256": "f3067b1c306c419d1c9be384877034a9387bb281b876cdec6f9edf008cd1dd06",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1772,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "26305f8d4609a312ed00bbb70af48e63bbe87466fb3ed1ee9610aa86552db923",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f357b333b9ba89e8ea12c4a741e5b00ef5b07e0dd927ff480d67049a62fd7b8e",
+          "inventory_sha256": "94201e682393f7c66addc3f403ee0b316d4d0d650c67398836dddd6536bf827e",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "actual_sanitizer_environments": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/actual-sanitized-unit-environments-03.json",
+    "sha256": "144782e939dd233b6b0831a22998cb1930d2694ff118497ce6e2af31a764ec0b"
+  },
+  "leak_coverage": false,
+  "original_instruction_comparison": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/production-frame-comparison-01.json",
+    "sha256": "641bf3b9ea1fce88768f8aa95731bcf93f17fabb2de0d452e3524f77dbfd258f"
+  },
+  "exact_frame_updates": 16200,
+  "cross_language_cases": 12,
+  "wire_verification": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/cpp-python-wire-verification-03.json",
+    "sha256": "2721ecb5b970d1b3709bd157ab27f74ca4f70fcf143f32ec2e2f566f231254ed"
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/initial-build-interruption.json",
+      "sha256": "0870fdab5045039e77137c6091c087ca8df8edf416010267254f418cb4a04930"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/second-check-fixture-failure.json",
+      "sha256": "46d3a7ccc02bae8620b0f561c01912f739e9d1e9738a72bae2e3c68d9a34432d"
+    }
+  ],
+  "runtime_pilots": {
+    "scope": "Exploratory only; first01 failed old schema49 native process-state load before input. First02 failed inherited ordinary-hit expectation because normal held input replaced ordinary2 before contact; failure retained.",
+    "first02": {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-runtime-pilot-normal-first-02/first/launcher.json",
+      "sha256": "9f1e3cf2b97911b7d8bedbd40e422ef0d5f3273fdd812571c2d0eaaed637013c"
+    },
+    "first02_saved_transition": "Both power3 heads at time0, one ordinary2 outgoing owner in each view, pending[3], next4, RNG505908858.",
+    "restart02": {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-runtime-pilot-normal-first-02/second/launcher.json",
+      "sha256": "c0d8768160075fca11d36619d879a795bd82cd168b3e50a23962b8a39ca1306a"
+    },
+    "restart_observed": "Fresh process restores both heads/outgoing history; one power3 contact, no selection/replay, ledger settles, both heads recover. Two rendered images directly reviewed.",
+    "limitations": "No audio (sound disabled), no full same-process final-save comparison, no asymmetric synthetic hold, full camera/input/FPS/runtime matrix pending. These pilots do not pass the complete runtime gate."
+  },
+  "remaining": [
+    "Asymmetric strike and outgoing/capture restart runtime matrix",
+    "Player attacker Recoil",
+    "Parallel Stagger and other reaction/mastery/effect/creature branches",
+    "Full input/FPS/cancellation and milestone acceptance"
+  ]
+}

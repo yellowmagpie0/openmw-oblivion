@@ -673,12 +673,18 @@ namespace ESM4
     template <class Frame, std::size_t Size, class Advance>
     static Frame advanceMeleeFrame(const Frame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, Size>& keyTimes, bool freezeClock, Advance advancePhase)
+        const std::array<float, Size>& keyTimes, bool freezeClock, Advance advancePhase,
+        std::optional<float> transitionFrame)
     {
         nonnegative(duration);
         nonnegative(speed);
-        if (speed == 0 || frame.mTiming.mOffset.has_value() != frame.mTiming.mEaseStart.has_value()
-            || frame.mTiming.mOffset.has_value() != frame.mTiming.mLastInput.has_value())
+        // Owned pose capture stores its requested offset before the first
+        // manager update anchors the ease interval and previous input.
+        const bool freshCapture = transitionFrame && frame.mTiming.mEasing && frame.mTiming.mOffset
+            && !frame.mTiming.mEaseStart && !frame.mTiming.mLastInput;
+        if (speed == 0 || (!freshCapture
+                && (frame.mTiming.mOffset.has_value() != frame.mTiming.mEaseStart.has_value()
+                    || frame.mTiming.mOffset.has_value() != frame.mTiming.mLastInput.has_value())))
             throw std::invalid_argument("unsupported melee sequence initialization or speed");
         // Validate all keys/phase even while easing/frozen/uninitialized.
         (void)advancePhase(frame.mPhase, 0, 0, keyTimes);
@@ -689,24 +695,24 @@ namespace ESM4
             next.mTiming.mOffset = correctMeleeSequenceOffset(*frame.mTiming.mOffset, begin, speed, duration);
             next.mPhase = advancePhase(frame.mPhase, *next.mTiming.mOffset, next.mClock, keyTimes);
         }
-        next.mTiming = updateMeleeSequenceTiming(next.mTiming, next.mClock, frequency, begin, end);
+        next.mTiming = updateMeleeSequenceTiming(next.mTiming, next.mClock, frequency, begin, end, transitionFrame);
         return next;
     }
 
     OrdinaryMeleeFrame advanceOrdinaryMeleeFrame(const OrdinaryMeleeFrame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, 4>& keyTimes, bool freezeClock)
+        const std::array<float, 4>& keyTimes, bool freezeClock, std::optional<float> transitionFrame)
     {
         return advanceMeleeFrame(frame, duration, speed, frequency, begin, end, keyTimes, freezeClock,
-            advanceOrdinaryMeleePhase);
+            advanceOrdinaryMeleePhase, transitionFrame);
     }
 
     PowerMeleeFrame advancePowerMeleeFrame(const PowerMeleeFrame& frame,
         float duration, float speed, float frequency, float begin, float end,
-        const std::array<float, 3>& keyTimes, bool freezeClock)
+        const std::array<float, 3>& keyTimes, bool freezeClock, std::optional<float> transitionFrame)
     {
         return advanceMeleeFrame(frame, duration, speed, frequency, begin, end, keyTimes, freezeClock,
-            advancePowerMeleePhase);
+            advancePowerMeleePhase, transitionFrame);
     }
 
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)

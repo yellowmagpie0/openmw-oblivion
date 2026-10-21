@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "purpose": "Independently identify owned Player strike activation and captured manager timing before implementing independent view history.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "control_word": 127,
+  "addresses": {
+    "owned_activation": "0x474530",
+    "frame_start": "0x476F95",
+    "ordinary_stop": [
+      "0x47710E",
+      "0x4774BD"
+    ],
+    "power_stop": [
+      "0x477282",
+      "0x4774BD"
+    ],
+    "manager": "0x6CA950"
+  },
+  "ordinary_matrix": {
+    "views": [
+      "body",
+      "first_person"
+    ],
+    "origins": [
+      0,
+      1000,
+      1000000
+    ],
+    "speeds": [
+      0.7,
+      1,
+      2
+    ],
+    "frequencies": [
+      0.7,
+      1,
+      1.3
+    ],
+    "durations": [
+      0,
+      0.025,
+      0.1
+    ],
+    "cw": 127,
+    "groups": [
+      533
+    ],
+    "old_state": "fresh_control",
+    "steps": 20,
+    "contexts": 162,
+    "updates": 3240,
+    "scope": "Actual owned Player-root activation474530 followed by original ordinary prefix and full manager. Supplied slot3/key arrays, one authored constant transform. Heap/import/scene boundaries as declared by probe; no full gameplay acceptance."
+  },
+  "power_matrix": {
+    "views": [
+      "body",
+      "first_person"
+    ],
+    "origins": [
+      0,
+      1000,
+      1000000
+    ],
+    "speeds": [
+      0.7,
+      1,
+      2
+    ],
+    "frequencies": [
+      0.7,
+      1,
+      1.3
+    ],
+    "durations": [
+      0,
+      0.025,
+      0.1
+    ],
+    "cw": 127,
+    "groups": [
+      534
+    ],
+    "old_state": "fresh_control",
+    "steps": 20,
+    "contexts": 162,
+    "updates": 3240,
+    "scope": "Actual owned Player-root activation474530 followed by original power prefix and full manager. Supplied slot3/key arrays, one authored constant transform. Heap/import/scene boundaries as declared by probe; no full gameplay acceptance."
+  },
+  "activation_cases": [
+    "fresh: incoming state5/captured pose/offset positive zero",
+    "distinct steady old: outgoing state3, incoming state2"
+  ],
+  "expected": "Captured incoming offset is stored as positive zero before the first EaseStart/LastInput anchors. Keep view clocks, phases, timing and outgoing owners independent; body alone owns contact.",
+  "boundaries": [
+    "Supplied slot3/key arrays and one authored constant transform per sequence",
+    "Heap/import/scene boundaries documented in ignored probe harness; no full actor, contact, culling, input or original visual parity claim"
+  ],
+  "evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-ordinary-frame-review-01/verification-01.json",
+      "sha256": "72d54775aa99701fa3460992b37ac7f4ddf1891d0762e141abf73c834ca911ef"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-power-frame-review-01/verification-01.json",
+      "sha256": "915852cccc464f1fe3a6c545f46e8658ff5432d0b40b0ca92520c90f00d69433"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/production-frame-comparison-01.json",
+      "sha256": "641bf3b9ea1fce88768f8aa95731bcf93f17fabb2de0d452e3524f77dbfd258f"
+    }
+  ],
+  "full_M15S4_acceptance": false
+}

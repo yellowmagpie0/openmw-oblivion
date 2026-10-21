@@ -4395,3 +4395,117 @@ TEST(ESM4RuntimeState, Reaction57DoesNotInventFirstPersonStateWhenPromotingLegac
     EXPECT_EQ(promoted.mNativeAnimationClocks, legacy.mNativeAnimationClocks);
     EXPECT_NE(promoted.canonicalJson().find("\"first_person\":null"), std::string::npos);
 }
+
+namespace
+{
+    ESM4::RuntimeState firstPersonStrikeState()
+    {
+        auto state = firstPersonReactionState();
+        state.mVersion = 58;
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        melee.mReaction.reset();
+        melee.mFirstPerson->mReaction.reset();
+        ESM4::RuntimeMeleeStrike body{3, ESM4::MeleeStrikeKind::Left, {}, "handtohandattackleft", .7f, .25f, true};
+        body.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Contact;
+        body.mSequenceTiming = ESM4::MeleeSequenceTiming{.mOffset = -.5f, .mEaseStart = .25f, .mEaseEnd = .5f,
+            .mLastInput = .25f, .mWeightedTime = .25f, .mOutputTime = .25f};
+        melee.mStrike = body;
+        auto first = body;
+        first.mAnimationTime = .125f;
+        first.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+        first.mSequenceTiming = ESM4::MeleeSequenceTiming{.mOffset = -.25f, .mEaseStart = .125f, .mEaseEnd = .25f,
+            .mLastInput = .125f, .mWeightedTime = .125f, .mOutputTime = .125f};
+        melee.mFirstPerson->mStrike = first;
+        state.mNativeActorValues.back().mProcessAction = 3;
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, Strike58RetainsIndependentViewHistoryAndCapturedPoseAfterBodyFinishes)
+{
+    for (unsigned phase = 0; phase < 6; ++phase)
+    {
+        auto state = firstPersonStrikeState();
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        if (phase == 1)
+        {
+            auto& strike = *melee.mFirstPerson->mStrike;
+            strike.mSequenceTiming->mEasing = true;
+            strike.mSequenceTiming->mEaseStart = .25f;
+            strike.mSequenceTiming->mEaseEnd = .375f;
+            strike.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0, {{"Bip01", {1, 2, 3}, {1, 0, 0, 0}, 1, 9}}};
+        }
+        if (phase == 2 || phase == 3)
+        {
+            melee.mStrike.reset();
+            state.mNativeActorValues.back().mProcessAction = -1;
+        }
+        if (phase == 3) melee.mFirstPerson->mStrike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::End;
+        if (phase >= 4)
+        {
+            const auto id = state.mPhysicalActions.mNext++;
+            state.mPhysicalActions.mPending.push_back(id);
+            std::sort(state.mPhysicalActions.mPending.begin(), state.mPhysicalActions.mPending.end());
+            state.mPhysicalActionOwners.emplace(id, state.mPlayer.mReference);
+            state.mNativeActorValues.back().mProcessAction = 2;
+            for (auto* strike : {&*melee.mStrike, &*melee.mFirstPerson->mStrike})
+            {
+                strike->mActionId = id;
+                strike->mContactCommitted = false;
+                strike->mAnimationTime = 0;
+                strike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+                strike->mSequenceTiming = ESM4::MeleeSequenceTiming{.mEasing = true, .mOffset = 0.f, .mEaseEnd = .1f};
+                strike->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+                    {{"Bip01", {1, 2, 3}, {1, 0, 0, 0}, 1, 9}}};
+            }
+            if (phase == 5)
+            {
+                const auto old = firstPersonStrikeState();
+                const auto& owners = old.mNativeMeleeStates.at(state.mPlayer.mReference);
+                for (const bool first : {false, true})
+                {
+                    const auto& strike = first ? *owners.mFirstPerson->mStrike : *owners.mStrike;
+                    ESM4::RuntimeRetiringMeleeSequence outgoing{3, "handtohandattackright", strike.mAnimationTime,
+                        *strike.mSequenceTiming, {.125f, first ? .25f : .5f}};
+                    (first ? melee.mFirstPerson->mRetiringSequences : melee.mRetiringSequences).push_back(outgoing);
+                }
+            }
+        }
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        std::string wire;
+        constexpr char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+        RecordProperty("strike58_hex_" + std::to_string(phase), wire);
+        RecordProperty("strike58_json_" + std::to_string(phase), state.canonicalJson());
+    }
+}
+
+TEST(ESM4RuntimeState, Strike58RejectsSplitIdentityReplayMissingHistoryAndInvalidCapturedPose)
+{
+    const auto valid = firstPersonStrikeState();
+    const auto reject = [&](auto mutate) {
+        auto bad = valid;
+        mutate(bad, bad.mNativeMeleeStates.at(bad.mPlayer.mReference));
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mActionId = 2; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mPlaybackSpeed = 1; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mSequenceTiming.reset(); });
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mContactCommitted = false; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mReaction = ESM4::RuntimeMeleeReaction{3,
+        ESM4::MeleeReactionKind::BlockHit, "blockhit"}; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{}; });
+    reject([](auto& s, auto&) { s.mVersion = 57; });
+    reject([](auto&, auto& m) { m.mStrike.reset(); m.mFirstPerson->mStrike->mContactCommitted = false; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mRetiringSequences.push_back({2, "old",
+        .125f, {false, 0.f, 0.f, .125f, 0, .125f, .125f}, {.1f, {}}}); });
+    auto legacy = firstPersonReactionState();
+    const auto before = legacy.mNativeMeleeStates;
+    legacy.mVersion = 58;
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+    EXPECT_EQ(loaded.mNativeMeleeStates, before); // No invented strike, clock or pose history.
+}
