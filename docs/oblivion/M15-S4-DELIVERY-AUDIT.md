@@ -9642,3 +9642,57 @@ and service checks. Actual rendered save/restart courses remain open, as do
 slot0-aware world factory/resource handling, active/cached Stagger replacement,
 passive slot3 re-admission and the full normal-input/E2E matrix. M15S4 remains
 incomplete.
+
+### Rendered passive slot3 save/restart matrix
+
+Four actual application courses now retain ordinary slot3 beside an already
+retiring Stagger slot0, save while both views own their respective records,
+quit, load that exact save in a fresh process, and recover both Stagger views
+while retaining passive slot3. Normal and ASan/UBSan builds each cover first
+and third person: eight processes, eight complete save/live state comparisons,
+and eight exact loaded melee-state/clock comparisons. All 36,762 reference
+inventories in the pinned drawn source and the complete Player inventory remain
+unchanged, as do native values/bases, RNG and the consumed action ledger apart
+from the declared primary process-action recovery. Final native values/bases
+and Player inventories agree across all four courses; whole final reference-set
+equality is not claimed. Each process verifies actual DrawThreadPerContext and
+stops its final render threads before peaceful exit.
+
+The editable recipe, staging helper and scenario manifests live in `scripts/`.
+The helper requires shared Player `DRAW=1`, preserves the source and all other
+decoded state, and changes only the declared Player melee/action state and
+camera bool variant. Camera variants differ by exactly one shared `CAM_/FIRS`
+byte and produce identical staged files across builds. Five fixture tests cover
+complete wire/opaque preservation, absent/idle Player entries, foreign recipes,
+overwrite/replay rejection, holstered-source rejection and the camera byte.
+The full Python suite passes 369 cases at frozen source fingerprint
+`f7043356131aaa7b167870625151cd0d2282e60bc3a1a2e05b631741e812bbcd`.
+The applications match the prior 1,781-case normal/instrumented engine checkpoint;
+no production C++ changed during this fixture work.
+
+Two setup diagnostics remain explicit. The first prototype was labelled third
+person but actually first person, and its holstered source triggered the
+existing cancellation guard after recovery. A normal F-draw/F5 course supplied
+a drawn idle source instead; production cancellation was not changed. That
+seed's original all-inventory-unchanged check found one NPC weapon condition
+materialized from unset(-1) to56. Its failed comparison remains retained. The
+final recipe pins the resulting source, and all four final courses preserve
+every inventory in that source without exceptions.
+
+All 16 pre/post-save active/recovered images were directly inspected. The
+first-person foreground remains free of the torso obstruction, and the
+third-person actor remains visible without exploding geometry. This is a
+qualitative scene check, not original motion/lighting/appearance equivalence.
+Sound is disabled, the 1-FPS cap is configured rather than measured, and leak
+detection is disabled. The eight-second retirement is deliberately synthetic;
+these courses exercise injected saved state, not resource selection, a native
+retirement default, a normal contact or fresh Stagger activation.
+
+[`M15-STAGGER-PASSIVE-RUNTIME-VERIFICATION.json`](M15-STAGGER-PASSIVE-RUNTIME-VERIFICATION.json)
+pins the matrix, source recipe, binaries, helpers, retained diagnostics and
+remaining gates. Structural write, semantic reinspection and actual runtime
+world admission are recorded separately; no new plugin compilation is claimed.
+Slot0-aware world factory/activation, active/cached Stagger replacement, passive
+slot3 replacement by subsequent input, captured/other-protocol runtime crosses
+and the complete normal-input/audio/FPS/cancellation/E2E matrix remain open.
+M15S4 is still incomplete.

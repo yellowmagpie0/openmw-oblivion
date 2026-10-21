@@ -1,0 +1,354 @@
+{
+  "schema_version": 1,
+  "status": "Bounded schema59 saved-passive projection/recovery/restart accepted in both camera modes and builds. Full M15S4 remains incomplete.",
+  "application_code_verification": {
+    "path": "docs/oblivion/M15-STAGGER-PASSIVE-PROJECTION-VERIFICATION.json",
+    "sha256": "5138d23058fee7ec8ef942fda4c3ddc3e4ae0670e3036f72c6a574f31c62766a"
+  },
+  "application_binaries": {
+    "normal": "287ec8620be0efa5049c6a4b85d24890315a47224ff35fb4439e90a23ad03f92",
+    "sanitized": "f5ec9e3b27e9d5156339d86024ba4c7cade06e38d18df1a6ed8346c5cbb8f2bf"
+  },
+  "authoring_test_source": {
+    "head": "5c50e24987d845d2db069cb8e52b6e14154127a6",
+    "source_fingerprint": "f7043356131aaa7b167870625151cd0d2282e60bc3a1a2e05b631741e812bbcd"
+  },
+  "python_verification": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-fixture-python-03/verification.json",
+    "sha256": "3fc2dfa797a7a5861946f767c6addd7cdda3d9d73dd4fc6eced54e82b2cc0947",
+    "executed": 369
+  },
+  "editable_sources": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json",
+      "sha256": "df784dfe69f97132933d2df3571b4806f1cb0fe99388293b81160b8d011c5c90"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_controller.json",
+      "sha256": "7af040716eb15f536268b588a579bc31bf686aa62451e5be3fd96ce7a2d197f9"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_controller_continuation.json",
+      "sha256": "a70fba36cca343e7e4cae9602030397a044dc3d6b969c9415e2ce5051d4c95a1"
+    },
+    {
+      "path": "scripts/tes4_m15_passive_slot3_fixture.py",
+      "sha256": "27d0779925ab2b3603dc4b192e88ed50224ad3b973a19f59168927299048adaf"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_passive_slot3_fixture.py",
+      "sha256": "8ef4d826e0b91688b831ccf6f2640c09ba51af96b6ba5685605d6120e2ed5689"
+    }
+  ],
+  "fixture": {
+    "source": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/first/snapshots/save-3.omwsave",
+      "sha256": "ab2615819388931e614aa5aa76302434b1ad562325426a3660c0cd6c134d5564"
+    },
+    "drawn_source_created_with_normal_F_then_F5": true,
+    "shared_draw_required": 1,
+    "independent_first_person_clock_delta": 10,
+    "synthetic_retirement_seconds": 8,
+    "synthetic_retirement_not_native_default": true,
+    "stage_mutations": [
+      "Declared Player melee state installed",
+      "Player process action -1 -> 8",
+      "Declared shared CAM_/FIRS bool variant"
+    ],
+    "all_other_decoded_state_preserved": true
+  },
+  "validation_layers": {
+    "structural_write_success": true,
+    "semantic_reinspection_passed": true,
+    "new_plugin_compilation": false,
+    "unchanged_fixture_plugins_used": true,
+    "actual_runtime_world_admission": true,
+    "bounded_saved_state_runtime_acceptance": true,
+    "normal_input_contact": false
+  },
+  "matrix_verification": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-review-01/matrix-verification-01.json",
+    "sha256": "68789dafefd90d311c989731363e1c22511106d537267d45a5badb94d81d93a3"
+  },
+  "matrix": {
+    "passed": true,
+    "scope": "Synthetic saved-state resident ordinary slot3 beside already-retiring Stagger slot0; two views, both cameras/builds, actual save/quit/fresh-process continuation. No normal-input Stagger/contact or native-duration acceptance.",
+    "cases": [
+      {
+        "profile": "normal",
+        "camera": "first",
+        "verification": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/passive-restart-verification.json",
+          "sha256": "4dd2798fe9ed555bcb1e7acb3c46ceb1a5cd8903f4be600cbe10839a183afbb1"
+        },
+        "shutdown": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/threaded-shutdown-verification.json",
+          "sha256": "1cd91ba92290fc0640b625a0c3fe6675643a969563248f13963655486facb939"
+        },
+        "preregistered": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/preregistered.json",
+          "sha256": "a067e86588add44692706622d6c2c53e35d52f74928571d402c6bdec25c561d5"
+        },
+        "restart_selection": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/restart-selection.json",
+          "sha256": "712975f13ec91dd0aad1bbc058b92140179f0b23163a29b2f157dde51f035cf1"
+        },
+        "staging": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/staged-input.staging.json",
+          "sha256": "52980bb43d081a84263b9c169d3977ebb04685a9a924f14b0b3a8568011866a7"
+        },
+        "binary_sha256": "287ec8620be0efa5049c6a4b85d24890315a47224ff35fb4439e90a23ad03f92",
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/first/active-stagger-passive-slot3-first.png",
+            "sha256": "415ab3c214ac5ef7f70c51b340a962134c1b7d91abc1513cd36e972efaa05959",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/first/after-save-active-passive-slot3-first.png",
+            "sha256": "737bfa18e46737e40b28413417b04106e31b5c0ccc2da95bc3348e147d2c44a7",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/second/after-save-recovered-passive-slot3-first.png",
+            "sha256": "fc37abf611dcdf5423797075b6aadefb077b8925103c4a597f3d47ee4d450876",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/second/recovered-stagger-passive-slot3-first.png",
+            "sha256": "876899a0db60ad47512f97b9848f3be2113b6d4410c9282965f1a65709655984",
+            "reviewed_directly": true
+          }
+        ]
+      },
+      {
+        "profile": "normal",
+        "camera": "third",
+        "verification": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/passive-restart-verification.json",
+          "sha256": "12517151a36430c704db1d1dfe5fc7a7e09c8217e63eb2c9de296b755c171925"
+        },
+        "shutdown": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/threaded-shutdown-verification.json",
+          "sha256": "3457a9c7792e068851218fc57317d76697e6d108ea7e8f675f5215a115bbe03a"
+        },
+        "preregistered": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/preregistered.json",
+          "sha256": "b3170f0713b258acce5dd51d5c4d3d143e29b28096232a7557bdc368431dd6ad"
+        },
+        "restart_selection": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/restart-selection.json",
+          "sha256": "b4e6a3da53d84edd84bb9f5178b4db8d8e9cfe82156ac962c27fc9c5fcf89929"
+        },
+        "staging": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/staged-input.staging.json",
+          "sha256": "c96916680e90f325afe97b4fca995b725c16f415709d69c4f7fc63836c9852c2"
+        },
+        "binary_sha256": "287ec8620be0efa5049c6a4b85d24890315a47224ff35fb4439e90a23ad03f92",
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/first/active-stagger-passive-slot3-third.png",
+            "sha256": "04243a7e65e00ecb6258329a0122db5df84231c4c196e51b14d3ab9db02d349f",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/first/after-save-active-passive-slot3-third.png",
+            "sha256": "48b215de30fa8b91c7b56f148308404beb031d95aa3c17e78e77ac54a87b7dfe",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/second/after-save-recovered-passive-slot3-third.png",
+            "sha256": "2bddc0ba96279cc54feb9005dee0f342ac194a17282bcc06fa368e083fae428e",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-02/second/recovered-stagger-passive-slot3-third.png",
+            "sha256": "422517ce4d5a57b557ac29373c7dbc14139ab696e428114f6249ed0225aecd2b",
+            "reviewed_directly": true
+          }
+        ]
+      },
+      {
+        "profile": "sanitized",
+        "camera": "first",
+        "verification": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/passive-restart-verification.json",
+          "sha256": "d401583e27c481c49b4dcf7ef6f4c6d7b8758a001da9ed2f926a0e3ca8248423"
+        },
+        "shutdown": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/threaded-shutdown-verification.json",
+          "sha256": "d9d284c708224f7db368762a73268f3dd6c4c611b7d0336390580190c10f0ddb"
+        },
+        "preregistered": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/preregistered.json",
+          "sha256": "d54c769d59d185b8967d8693cb6828dbfe7b4d87d380c43b65006f5435e6c5dc"
+        },
+        "restart_selection": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/restart-selection.json",
+          "sha256": "d930d7823df43f78848aad79488d9870a86ce2da4b146aefcd8e625735412101"
+        },
+        "staging": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/staged-input.staging.json",
+          "sha256": "52980bb43d081a84263b9c169d3977ebb04685a9a924f14b0b3a8568011866a7"
+        },
+        "binary_sha256": "f5ec9e3b27e9d5156339d86024ba4c7cade06e38d18df1a6ed8346c5cbb8f2bf",
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/first/active-stagger-passive-slot3-first.png",
+            "sha256": "756df72ad375f5286e4c10a6c1da54f52108222cf5a699580b8494243a9e82ef",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/first/after-save-active-passive-slot3-first.png",
+            "sha256": "e1c0463e5bea2381231c5df298cb671b573ba68b921188c43cd324c3c5ab6319",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/second/after-save-recovered-passive-slot3-first.png",
+            "sha256": "9c73c8f504054fa3f34e289ba9ea1e8994c93d7d1a1fafb547d84f6ad6f95896",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-first-02/second/recovered-stagger-passive-slot3-first.png",
+            "sha256": "09901805aa5d8b79ba5fd2a9b363dfed967f54b75aa1c4fc65a9c68631951585",
+            "reviewed_directly": true
+          }
+        ]
+      },
+      {
+        "profile": "sanitized",
+        "camera": "third",
+        "verification": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/passive-restart-verification.json",
+          "sha256": "e4ee85609bbfcea9c911d282732b74014cfd5ff45c26dae5648a45c7c43bd081"
+        },
+        "shutdown": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/threaded-shutdown-verification.json",
+          "sha256": "44dc1e63c5ff6fbdc60b21fb25077727f8d623c79fe01ad7db902ccfd0cc26ef"
+        },
+        "preregistered": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/preregistered.json",
+          "sha256": "d610da148dbdf88a96ceb3af59e2d0242a71b5ca7a0d240c55dc6e69114276a5"
+        },
+        "restart_selection": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/restart-selection.json",
+          "sha256": "b01ff504f17534e24e377d9743c1d6c0cb402b3a369a5854ea231681267b3491"
+        },
+        "staging": {
+          "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/staged-input.staging.json",
+          "sha256": "c96916680e90f325afe97b4fca995b725c16f415709d69c4f7fc63836c9852c2"
+        },
+        "binary_sha256": "f5ec9e3b27e9d5156339d86024ba4c7cade06e38d18df1a6ed8346c5cbb8f2bf",
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/first/active-stagger-passive-slot3-third.png",
+            "sha256": "f93ab563fb1de95cc66ffc75fe5b73aeb604931999abc1a72b5db2fed0895118",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/first/after-save-active-passive-slot3-third.png",
+            "sha256": "1ce31c22d3bb21777b9465da08e443bca248433a5bf3e0d179d7f04cb2c6cfd9",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/second/after-save-recovered-passive-slot3-third.png",
+            "sha256": "2e4670b22799d36a3a04bbf60977dfdffbbe809bd61555a97b9a27516c87d83a",
+            "reviewed_directly": true
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-sanitized-third-02/second/recovered-stagger-passive-slot3-third.png",
+            "sha256": "80dfd64a5fd2e84ec725302a136fcbec34c0a4bcb742f9f0e967514cede202f0",
+            "reviewed_directly": true
+          }
+        ]
+      }
+    ],
+    "courses": 4,
+    "processes": 8,
+    "whole_save_live_pairs": 8,
+    "load_owned_state_and_clock_pairs": 8,
+    "original_reference_inventories_per_pair": 36762,
+    "complete_player_inventory_preserved": true,
+    "native_values_and_bases_preserved": true,
+    "ledger_rng_preserved": true,
+    "final_native_values_bases_player_inventory_equal_across_all4": true,
+    "whole_final_reference_set_equality_claimed": false,
+    "staged_files_equal_across_builds": true,
+    "staged_camera_variants_differ_only_one_declared_bool_byte": true,
+    "visual": {
+      "images_reviewed_directly": 16,
+      "foreground_torso_occlusion_absent": true,
+      "third_person_actor_visible": true,
+      "no_exploding_geometry_observed": true,
+      "scope": "Qualitative in-action/recovered scene inspection, including pre-save images. Not quantitative original motion/lighting/appearance parity."
+    },
+    "configured_fps_cap": 1,
+    "measured_fps": false,
+    "sound_enabled": false,
+    "leak_coverage": false,
+    "normal_input_stagger_acceptance": false,
+    "full_M15S4_acceptance": false
+  },
+  "drivers": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-review-01/prepare-course.py",
+      "sha256": "59e0e6d179ff0958d7d49bb879797db4c09a0516b33a0cecc8bf0c96449c3662"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-review-01/select-restart.py",
+      "sha256": "236645ae7c4870bc1a1736d9da40d0c48ebb3c08fc326d5f776bf13ee3091b16"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-review-01/verify-course.py",
+      "sha256": "9e660f1faa935555200f34165992d2a1d752d80fc1e6f885311e9d45d84936e2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-review-01/run-matrix.py",
+      "sha256": "9c0d785327120b8c769dbc97331ed3f16eb04370ac45e5965874f3370d6adbab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-threaded-reaction-course.py",
+      "sha256": "ce5957086d60cda8049f9ea10274ec2edd8c5232aae3a9a51aa1d484f0593eea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-threaded-shutdown.py",
+      "sha256": "0815dbd8424133d45837b700f426887ad5056640890c0839fc106b2530efc171"
+    }
+  ],
+  "retained_diagnostics": [
+    {
+      "path": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-third-01/camera-and-draw-diagnostic.json",
+        "sha256": "853c82fc059b9e298419b45da03bafbd99748cb5390b2ca5839033dd1b706229"
+      },
+      "explanation": "Prototype was actually first person and its source was holstered. Existing !drawn lifecycle cancellation removed passive history after recovery. Fixture guard/source were corrected; production cancellation was not changed."
+    },
+    {
+      "path": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/seed-diagnostic-verification.json",
+        "sha256": "95aa6349ace4c19c27ef5a0cb9c2008ef3cf8a960c619f1f7d0d6186dedc0cd6"
+      },
+      "explanation": "Original all-inventory-unchanged seed check failed on one NPC unset weapon condition -1 -> 56 during normal engine construction. This setup delta remains retained. Final fixture pins the resulting drawn source and all4 acceptance courses preserve every one of its36762 reference inventories without exceptions."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-inputs-01/fixture-tests-01.log",
+      "explanation": "Initial focused run imported the entire runtime TestCase into the new module and was deliberately stopped. Import changed to a module reference; final suite contains only the intended five new tests."
+    }
+  ],
+  "additional_state_course": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-02/passive-restart-verification.json",
+    "sha256": "6155bd5eafdf36a1c883842d450fbba883790ce95c009214e7eac7119de417e0"
+  },
+  "remaining_work": [
+    "Native slot0-aware resource factory/activation and outgoing slot0 source handling; factory still admits only BlockHit/Recoil.",
+    "Active/cached Stagger slot0 replacement and passive slot3 replacement on subsequent strike/reaction input.",
+    "Captured-passive and other protocol runtime crosses beyond this ordinary resident fixture.",
+    "Normal-input Stagger/contact and the complete M15S4 input/FPS/cancellation/audio/E2E matrix."
+  ],
+  "full_M15S4_acceptance": false,
+  "application_code_commit": "5c50e24987d845d2db069cb8e52b6e14154127a6",
+  "application_build_test_source": {
+    "head": "091946d776393aa51ef364363939b543ab90563c",
+    "source_fingerprint": "efab9c1b9dbe680ba7842b6f4d99b02bcaef468f96a178a2dd440edca4749727"
+  }
+}

@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "purpose": "Synthetic schema59 resident ordinary slot3 beside already retiring Stagger slot0, with independent Player clocks/samples. The8-second retirement is deliberately synthetic for saving. No normal contact, resource selection or original-duration acceptance; preserve all inventories, resources, RNG and action history. Source is an actual normal F-draw/F5 idle save with shared DRAW=1; one setup NPC unset weapon condition was materialized before this pinned source, as retained in the seed diagnostic.",
+  "source": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/first/snapshots/save-3.omwsave",
+  "source_sha256": "ab2615819388931e614aa5aa76302434b1ad562325426a3660c0cd6c134d5564",
+  "target_schema": 59,
+  "actor": "dynamic:player:0000000000000001",
+  "actor_clock": 7.859997272491455,
+  "physical_actions": {
+    "next": 2,
+    "pending": []
+  },
+  "process_action": 8,
+  "melee_state": {
+    "actor": "dynamic:player:0000000000000001",
+    "input": {
+      "held_seconds": 0.0,
+      "input_held": false,
+      "prefer_left": false,
+      "queued": 0
+    },
+    "strike": null,
+    "ai_intent": null,
+    "reaction": {
+      "contact_id": 1,
+      "kind": 2,
+      "animation_group": "handtohandstagger",
+      "animation_time": 0.25,
+      "started": true,
+      "sequence_timing": {
+        "easing": false,
+        "offset": -7.609997272491455,
+        "ease_start": 0.0,
+        "last_input": 0.25,
+        "ease_end": 0.0,
+        "weighted_time": 0.25,
+        "output_time": 0.25
+      },
+      "retirement": {
+        "duration": 8.0,
+        "start_clock": 7.859997272491455
+      },
+      "inactive": false,
+      "pose_snapshot": null
+    },
+    "retiring_sequences": [],
+    "first_person": {
+      "clock": 17.859996795654297,
+      "reaction": {
+        "contact_id": 1,
+        "kind": 2,
+        "animation_group": "handtohandstagger",
+        "animation_time": 0.25,
+        "started": true,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -17.609996795654297,
+          "ease_start": 0.0,
+          "last_input": 0.25,
+          "ease_end": 0.0,
+          "weighted_time": 0.25,
+          "output_time": 0.25
+        },
+        "retirement": {
+          "duration": 8.0,
+          "start_clock": 17.859996795654297
+        },
+        "inactive": false,
+        "pose_snapshot": null
+      },
+      "retiring_sequences": [],
+      "strike": null,
+      "passive_sequence": {
+        "strike": {
+          "id": 1,
+          "kind": 0,
+          "weapon_base": "null",
+          "animation_group": "handtohandattackleft",
+          "playback_speed": 1.0,
+          "animation_time": 0.5,
+          "contact_committed": true,
+          "ordinary_phase": 0,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -17.359996795654297,
+            "ease_start": 0.0,
+            "last_input": 0.5,
+            "ease_end": 0.0,
+            "weighted_time": 0.5,
+            "output_time": 0.5
+          },
+          "power_phase": null,
+          "pose_snapshot": null
+        }
+      }
+    },
+    "passive_sequence": {
+      "strike": {
+        "id": 1,
+        "kind": 0,
+        "weapon_base": "null",
+        "animation_group": "handtohandattackleft",
+        "playback_speed": 1.0,
+        "animation_time": 0.25,
+        "contact_committed": true,
+        "ordinary_phase": 0,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -7.609997272491455,
+          "ease_start": 0.0,
+          "last_input": 0.25,
+          "ease_end": 0.0,
+          "weighted_time": 0.25,
+          "output_time": 0.25
+        },
+        "power_phase": null,
+        "pose_snapshot": null
+      }
+    }
+  },
+  "shared_player_draw_state": 1,
+  "camera_first_person": true
+}
