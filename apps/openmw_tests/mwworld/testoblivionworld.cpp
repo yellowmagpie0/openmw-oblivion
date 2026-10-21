@@ -26187,6 +26187,8 @@ TEST(OblivionWorldTest, ContactReactionsPublishWithResourcesAndCancelOnlyPartici
             const auto id = service.beginMeleeStrike(a, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
             const auto peer = service.beginMeleeStrike(v, ESM4::MeleeStrikeKind::Right, "handtohandattackright");
             ASSERT_TRUE(service.bindMeleePlayback(id, a)); ASSERT_TRUE(service.bindMeleePlayback(peer, v));
+            service.advanceAnimationClock(v, 0.f);
+            ASSERT_TRUE(service.setMeleeSequenceTiming(peer, v, {}));
             if (priorVictimContact) ASSERT_TRUE(world.commitOblivionPhysicalContact(peer, victim, {}, {}));
             service.setMeleeInput(a, {.25f, true, false, ESM4::MeleeQueuedStrike::Power});
             service.setMeleeInput(v, {.25f, true, false, ESM4::MeleeQueuedStrike::Ordinary});
@@ -26237,6 +26239,13 @@ TEST(OblivionWorldTest, ContactReactionsPublishWithResourcesAndCancelOnlyPartici
                 EXPECT_FALSE(service.findMeleeState(key)->mStrike);
                 ASSERT_TRUE(service.findMeleeState(key)->mReaction);
                 EXPECT_EQ(service.findMeleeState(key)->mInput, ESM4::RuntimeMeleeInput{});
+            }
+            if (recipient == ESM4::MeleeReactionKind::Stagger)
+            {
+                const auto& passive = service.findMeleeState(v)->mPassiveSequence;
+                ASSERT_TRUE(passive);
+                EXPECT_EQ(std::get<ESM4::RuntimeMeleeStrike>(passive->mSequence).mActionId, peer);
+                EXPECT_EQ(std::get<ESM4::RuntimeMeleeStrike>(passive->mSequence).mContactCommitted, priorVictimContact);
             }
             const auto committed = snapshot();
             EXPECT_EQ(committed.mPhysicalActions.mNext, source.mPhysicalActions.mNext);
@@ -26589,8 +26598,9 @@ TEST(OblivionWorldTest, BlockingEquipmentWithdrawalRetiresExistingReactionInTheC
 
 TEST(OblivionWorldTest, ReactionFramesRetainOutgoingFadeAndRecoverActionOnlyOnFollowingPrefix)
 {
-    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil,
-             ESM4::MeleeReactionKind::Stagger})
+    // These two reactions replace slot3. Stagger's parallel slot0 recovery
+    // is covered by StaggerContactRetainsIndependentSlot3WithoutContactAuthority.
+    for (auto kind : {ESM4::MeleeReactionKind::BlockHit, ESM4::MeleeReactionKind::Recoil})
         for (float fade : {0.f, .125f})
         {
             NativeWorldFixture fixture; auto& world = fixture.mWorld;
@@ -27923,6 +27933,206 @@ TEST(OblivionWorldTest, PlayerContactReactionsReplaceIndependentStrikeSourcesAto
         EXPECT_EQ(current->mFirstPerson->mRetiringSequences.size(), mode == 6 ? 1u : 0u);
         EXPECT_TRUE(fixture.snapshot().mPhysicalActions.mPending.empty());
         EXPECT_EQ(service.combatRandomState(), request.mRandomTransition->mNextState);
+    }
+}
+
+TEST(OblivionWorldTest, StaggerContactRetainsIndependentSlot3WithoutContactAuthority)
+{
+    // Typed contact publication only: resource selection, renderer projection
+    // and normal-input Stagger acceptance are separate integration gates.
+    for (unsigned prior = 0; prior < 4; ++prior)
+        for (const bool paired : {false, true})
+            for (const bool captured : {false, true})
+    {
+        SCOPED_TRACE(prior);
+        SCOPED_TRACE(paired);
+        SCOPED_TRACE(captured);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        std::uint64_t oldId;
+        if (prior < 2)
+        {
+            ESM4::RuntimeMeleeStrike strike{1, ESM4::MeleeStrikeKind::Left, {}, "handtohandattackleft", 1, 0, false};
+            strike.mSequenceTiming = ESM4::MeleeSequenceTiming{};
+            MWMechanics::OblivionMeleeStrikeViews views{strike, {service.animationClock(actor), {}, strike}};
+            oldId = service.beginMeleeStrike(actor, strike.mKind, strike.mAnimationGroup, 1, {}, views);
+            ASSERT_TRUE(service.bindMeleePlayback(oldId, actor));
+        }
+        else
+        {
+            oldId = world.beginOblivionPhysicalAction(fixture.mAttacker);
+            auto initial = fixture.request(oldId, prior == 2 ? ESM4::MeleeReactionKind::BlockHit
+                : ESM4::MeleeReactionKind::Recoil, prior == 2 ? "handtohandblockhit" : "handtohandrecoil");
+            ASSERT_TRUE(world.commitOblivionPhysicalContact(oldId, fixture.mAttacker, fixture.mPlayer, initial));
+        }
+        auto seed = fixture.snapshot();
+        auto& old = seed.mNativeMeleeStates.at(actor);
+        if (paired) old.mFirstPerson->mClock += 10;
+        else old.mFirstPerson.reset();
+        const auto setHistory = [&](auto& view, float clock) {
+            auto& timing = prior < 2 ? *view.mStrike->mSequenceTiming : view.mReaction->mSequenceTiming;
+            timing = captured
+                ? ESM4::MeleeSequenceTiming{.mEasing = true, .mOffset = 0.f,
+                    .mEaseStart = clock, .mEaseEnd = clock + .5f, .mLastInput = 0.f}
+                : ESM4::MeleeSequenceTiming{.mOffset = .125f - clock, .mEaseStart = 0.f,
+                    .mLastInput = .125f, .mWeightedTime = .125f, .mOutputTime = .125f};
+            if (prior < 2)
+            {
+                view.mStrike->mAnimationTime = captured ? 0 : .125f;
+                if (captured) view.mStrike->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
+            }
+            else
+            {
+                view.mReaction->mAnimationTime = captured ? 0 : .125f;
+                if (captured) view.mReaction->mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
+            }
+        };
+        setHistory(old, seed.mNativeAnimationClocks.at(actor));
+        if (paired) setHistory(*old.mFirstPerson, old.mFirstPerson->mClock);
+        service.restore(seed, world.getStore());
+        const bool playerAttacker = prior == 0;
+        const auto attacker = playerAttacker ? fixture.mPlayer : fixture.mAttacker;
+        const auto victim = playerAttacker ? fixture.mAttacker : fixture.mPlayer;
+        const auto id = playerAttacker ? oldId : world.beginOblivionPhysicalAction(attacker);
+        const auto before = fixture.snapshot();
+        ESM4::RuntimeMeleeReaction incoming{id, ESM4::MeleeReactionKind::Stagger, "stagger"};
+        if (captured)
+        {
+            incoming.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
+            incoming.mSequenceTiming = {.mEasing = true, .mOffset = 0.f, .mEaseEnd = .25f};
+        }
+        MWMechanics::OblivionPhysicalContactDeltas request{-1, -2, 0, 0};
+        auto& body = playerAttacker ? request.mAttackerReaction : request.mVictimReaction;
+        auto& mirror = playerAttacker ? request.mAttackerFirstPerson : request.mVictimFirstPerson;
+        body = incoming;
+        if (paired) mirror = ESM4::RuntimeFirstPersonMeleeState{old.mFirstPerson->mClock, incoming};
+        request.mRandomTransition = service.prepareCombatRandom(2);
+        const auto reject = [&](auto invalid) {
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(id, attacker, victim, invalid), std::exception);
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        };
+        auto invalid = request;
+        (playerAttacker ? invalid.mAttackerReaction : invalid.mVictimReaction)->mStarted = true;
+        reject(invalid);
+        invalid = request;
+        (playerAttacker ? invalid.mAttackerRetiringSequence : invalid.mVictimRetiringSequence)
+            = ESM4::RuntimeRetiringMeleeSequence{oldId, "handtohandattackleft", 0, {}, {.25f, {}}};
+        reject(invalid);
+        if (paired)
+        {
+            invalid = request;
+            (playerAttacker ? invalid.mAttackerFirstPerson : invalid.mVictimFirstPerson)->mClock += .125f;
+            reject(invalid);
+            invalid = request;
+            (playerAttacker ? invalid.mAttackerFirstPerson : invalid.mVictimFirstPerson).reset();
+            reject(invalid);
+        }
+        auto stale = world.prepareOblivionPhysicalContact(id, attacker, victim, request);
+        ASSERT_TRUE(stale);
+        service.advanceAnimationClock(actor, .125f);
+        EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit());
+        EXPECT_EQ(service.combatRandomState(), before.mCombatRngState);
+        service.restore(before, world.getStore());
+        auto prepared = world.prepareOblivionPhysicalContact(id, attacker, victim, request);
+        ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+        EXPECT_FALSE(world.commitOblivionPhysicalContact(id, attacker, victim, request));
+        EXPECT_TRUE(service.isActionConsumed(id)); EXPECT_TRUE(service.isActionConsumed(oldId));
+        EXPECT_EQ(service.findActorValues(actor)->mProcessAction, 8);
+        const auto* current = service.findMeleeState(actor);
+        ASSERT_TRUE(current); ASSERT_TRUE(current->mPassiveSequence);
+        EXPECT_EQ(current->mReaction, body); EXPECT_FALSE(current->mStrike);
+        const auto expectedPassive = [&](const auto& previous) {
+            if (prior < 2)
+            {
+                auto strike = *previous.mStrike;
+                if (playerAttacker) strike.mContactCommitted = true;
+                return ESM4::RuntimePassiveMeleeSequence{strike};
+            }
+            return ESM4::RuntimePassiveMeleeSequence{*previous.mReaction};
+        };
+        EXPECT_EQ(*current->mPassiveSequence, expectedPassive(old));
+        EXPECT_EQ(current->mFirstPerson.has_value(), paired);
+        if (paired)
+        {
+            EXPECT_EQ(current->mFirstPerson->mClock, old.mFirstPerson->mClock);
+            EXPECT_EQ(current->mFirstPerson->mReaction, mirror->mReaction);
+            EXPECT_EQ(current->mFirstPerson->mPassiveSequence, expectedPassive(*old.mFirstPerson));
+        }
+        const auto saved = fixture.snapshot();
+        EXPECT_TRUE(saved.mPhysicalActions.mPending.empty());
+        EXPECT_EQ(saved.mCombatRngState, request.mRandomTransition->mNextState);
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), saved.serializeBinary());
+        auto legacy = saved; legacy.mVersion = 58;
+        EXPECT_THROW(service.capture(legacy), std::invalid_argument);
+        std::vector<MWMechanics::OblivionMeleeSequenceMetadata> sources;
+        for (const bool first : {false, true})
+        {
+            if (first && !paired) continue;
+            MWMechanics::OblivionMeleeSequenceMetadata stagger{"stagger", 1, 0, 1, 0, 1,
+                std::array<float, 2>{0, .25f}, 0};
+            stagger.mFirstPerson = first; sources.push_back(stagger);
+            MWMechanics::OblivionMeleeSequenceMetadata passive{saved.mNativeMeleeStates.at(actor).mPassiveSequence->group(),
+                1, 0, 1, 0, 1};
+            passive.mFirstPerson = first; sources.push_back(passive);
+        }
+        for (unsigned tick = 0; tick < 8; ++tick)
+        {
+            auto frame = service.prepareMeleeReactionFrame(actor, .25f, sources);
+            ASSERT_TRUE(frame); ASSERT_TRUE(frame->isValid());
+            EXPECT_EQ(fixture.snapshot().mPhysicalActions, saved.mPhysicalActions);
+            ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+            EXPECT_FALSE(service.commitMeleeReactionFrame(*frame));
+            (void)service.recoverInactiveMeleeReaction(actor, false);
+            current = service.findMeleeState(actor);
+            ASSERT_TRUE(current->mPassiveSequence);
+            const auto verifyPassive = [&](const auto& passive) {
+                if (prior < 2)
+                    EXPECT_EQ(std::get<ESM4::RuntimeMeleeStrike>(passive.mSequence).mOrdinaryPhase,
+                        ESM4::OrdinaryMeleePhase::Start);
+                else
+                {
+                    const auto& reaction = std::get<ESM4::RuntimeMeleeReaction>(passive.mSequence);
+                    EXPECT_FALSE(reaction.mStarted); EXPECT_FALSE(reaction.mInactive);
+                    EXPECT_FALSE(reaction.mRetirement);
+                }
+            };
+            verifyPassive(*current->mPassiveSequence);
+            if (paired) verifyPassive(*current->mFirstPerson->mPassiveSequence);
+            const auto checkpoint = fixture.snapshot();
+            EXPECT_EQ(checkpoint.mPhysicalActions, saved.mPhysicalActions);
+            EXPECT_EQ(checkpoint.mCombatRngState, saved.mCombatRngState);
+            auto expectedValues = saved.mNativeActorValues;
+            for (auto& value : expectedValues)
+                if (value.mActor == actor) value.mProcessAction = current->mReaction ? 8 : -1;
+            EXPECT_EQ(checkpoint.mNativeActorValues, expectedValues);
+            service.restore(ESM4::RuntimeState::deserializeBinary(checkpoint.serializeBinary()), world.getStore());
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), checkpoint.serializeBinary());
+        }
+        current = service.findMeleeState(actor);
+        EXPECT_FALSE(current->mReaction);
+        EXPECT_EQ(service.findActorValues(actor)->mProcessAction, -1);
+        std::visit([](const auto& sequence) { EXPECT_EQ(sequence.mAnimationTime, 1.f); }, current->mPassiveSequence->mSequence);
+        if (paired)
+            std::visit([](const auto& sequence) { EXPECT_EQ(sequence.mAnimationTime, 1.f); },
+                current->mFirstPerson->mPassiveSequence->mSequence);
+        // A recovered slot0 can activate again without erasing resident slot3.
+        // Replacing an active/cached Stagger slot0 remains a separate contract.
+        const auto retained = *current;
+        const auto nextId = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        auto nextRequest = fixture.request(nextId, ESM4::MeleeReactionKind::Stagger, "stagger");
+        if (!paired) nextRequest.mVictimFirstPerson.reset();
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(nextId, fixture.mAttacker, fixture.mPlayer, nextRequest));
+        current = service.findMeleeState(actor);
+        EXPECT_EQ(current->mPassiveSequence, retained.mPassiveSequence);
+        if (paired) EXPECT_EQ(current->mFirstPerson->mPassiveSequence, retained.mFirstPerson->mPassiveSequence);
+        EXPECT_EQ(service.cancelActorActions(actor), 0u);
+        EXPECT_FALSE(service.findMeleeState(actor));
+        EXPECT_EQ(service.findActorValues(actor)->mProcessAction, -1);
+        EXPECT_TRUE(fixture.snapshot().mPhysicalActions.mPending.empty());
+        EXPECT_EQ(service.combatRandomState(), saved.mCombatRngState);
     }
 }
 

@@ -1668,6 +1668,9 @@ namespace MWMechanics
         if (state->mReaction && !owner.isActionConsumed(state->mReaction->mContactId)) return false;
         if (state->mFirstPerson && state->mFirstPerson->mReaction
             && !owner.isActionConsumed(state->mFirstPerson->mReaction->mContactId)) return false;
+        if (state->mPassiveSequence && !owner.isActionConsumed(state->mPassiveSequence->cause())) return false;
+        if (state->mFirstPerson && state->mFirstPerson->mPassiveSequence
+            && !owner.isActionConsumed(state->mFirstPerson->mPassiveSequence->cause())) return false;
         if (state->mFirstPerson)
             for (const auto& sequence : state->mFirstPerson->mRetiringSequences)
                 if (!owner.isActionConsumed(sequence.mContactId)) return false;
@@ -1704,9 +1707,9 @@ namespace MWMechanics
         const auto* state = findMeleeState(actor);
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
-        if (!state || (!state->mReaction && state->mRetiringSequences.empty()
+        if (!state || (!state->mReaction && !state->mPassiveSequence && state->mRetiringSequences.empty()
                 && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
-                    && !state->mFirstPerson->mStrike && !state->mStrike
+                    && !state->mFirstPerson->mStrike && !state->mStrike && !state->mFirstPerson->mPassiveSequence
                     && state->mFirstPerson->mRetiringSequences.empty()))) || !values || !life
             || values->mProcess != ESM4::ActorValueProcess::Active || life->mPhase != ESM4::ActorLifePhase::Alive)
             return {};
@@ -1830,6 +1833,38 @@ namespace MWMechanics
             updateReaction(*next.mReaction, nextClock, false);
         if (next.mFirstPerson && next.mFirstPerson->mReaction && !next.mFirstPerson->mReaction->mInactive)
             updateReaction(*next.mFirstPerson->mReaction, next.mFirstPerson->mClock, true);
+        const auto updatePassive = [&](auto& passive, float viewClock, bool first) {
+            if (!passive) return;
+            std::visit([&](auto& sequence) {
+                const auto& source = sourceFor(sequence.mAnimationGroup, first);
+                // Only the controller manager runs here. Ordinary phase/speed
+                // correction and reaction Start/End dispatch belong to the
+                // process action that Stagger replaced, not resident slot3.
+                ESM4::MeleeSequenceTiming* timing;
+                if constexpr (std::is_same_v<std::decay_t<decltype(sequence)>, ESM4::RuntimeMeleeReaction>)
+                {
+                    if (sequence.mInactive) return;
+                    if (sequence.mRetirement)
+                    {
+                        sequence.mInactive = !updateRetirement(sequence.mSequenceTiming, sequence.mAnimationTime,
+                            *sequence.mRetirement, source, viewClock);
+                        return;
+                    }
+                    timing = &sequence.mSequenceTiming;
+                }
+                else timing = &*sequence.mSequenceTiming;
+                *timing = ESM4::updateMeleeSequenceTiming(*timing, viewClock,
+                    source.mFrequency, source.mBegin, source.mEnd,
+                    sequence.mPoseSnapshot ? std::optional(sequence.mPoseSnapshot->mDestinationFrame) : std::nullopt);
+                if (!timing->mEasing) sequence.mPoseSnapshot.reset();
+                const float target = source.rendererTime(timing->mOutputTime);
+                if (target < sequence.mAnimationTime)
+                    throw std::invalid_argument("native passive sequence renderer rewind");
+                sequence.mAnimationTime = target;
+            }, passive->mSequence);
+        };
+        updatePassive(next.mPassiveSequence, nextClock, false);
+        if (next.mFirstPerson) updatePassive(next.mFirstPerson->mPassiveSequence, next.mFirstPerson->mClock, true);
         auto retained = next.mRetiringSequences.begin();
         for (auto current = next.mRetiringSequences.begin(); current != next.mRetiringSequences.end(); ++current)
             if (updateRetirement(current->mSequenceTiming, current->mAnimationTime,
@@ -2553,6 +2588,89 @@ namespace MWMechanics
             }
             request->validate();
             const auto& timing = request->mSequenceTiming;
+            if (request->mKind == ESM4::MeleeReactionKind::Stagger
+                && (!previous || !previous->mReaction
+                    || previous->mReaction->mKind != ESM4::MeleeReactionKind::Stagger))
+            {
+                // Original5F4FD0 selects native slot0 and publishes action8.
+                // It does not deactivate the ordinary/BlockHit/Recoil slot3.
+                // The consumed logical action and the retained visual protocol
+                // therefore have distinct ownership after this publication.
+                const auto fresh = [&](const ESM4::RuntimeMeleeReaction& reaction) {
+                    reaction.validate();
+                    const auto& frame = reaction.mSequenceTiming;
+                    const bool capturedOffset = reaction.mPoseSnapshot && frame.mOffset
+                        && std::bit_cast<std::uint32_t>(*frame.mOffset) == 0;
+                    if (reaction.mKind != ESM4::MeleeReactionKind::Stagger || reaction.mContactId != id
+                        || reaction.mAnimationTime != 0 || reaction.mStarted || reaction.mInactive || reaction.mRetirement
+                        || frame.mOffset.has_value() != capturedOffset || frame.mEaseStart || frame.mLastInput
+                        || frame.mWeightedTime != 0 || frame.mOutputTime != 0 || frame.mEaseEnd < 0
+                        || frame.mEasing != (frame.mEaseEnd > 0)
+                        || (frame.mEasing && !reaction.mPoseSnapshot))
+                        throw std::invalid_argument("invalid fresh native Stagger slot0 activation");
+                };
+                fresh(*request);
+                if (outgoing || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
+                    || values.mProcessAction == 8
+                    || life.mPhase != ESM4::ActorLifePhase::Alive || mBowStates.contains(values.mActor))
+                    throw std::invalid_argument("unsupported native Stagger contact owner or slot0 source");
+                if (firstPerson)
+                {
+                    firstPerson->validate();
+                    if (values.mOwner != ESM4::ActorValueOwner::Player || !firstPerson->mReaction
+                        || firstPerson->mStrike || firstPerson->mPassiveSequence || !firstPerson->mRetiringSequences.empty())
+                        throw std::invalid_argument("invalid native Stagger first-person activation packet");
+                    fresh(*firstPerson->mReaction);
+                    const float expected = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
+                        : animationClock(values.mActor);
+                    if (std::bit_cast<std::uint32_t>(firstPerson->mClock) != std::bit_cast<std::uint32_t>(expected)
+                        || (previous && previous->mFirstPerson && previous->mFirstPerson->mReaction
+                            && previous->mFirstPerson->mReaction->mKind == ESM4::MeleeReactionKind::Stagger))
+                        throw std::invalid_argument("stale or unsupported native Stagger first-person slot0 source");
+                }
+                else if (previous && previous->mFirstPerson)
+                    throw std::invalid_argument("native Stagger requires its existing first-person view packet");
+                auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
+                const auto retainSlot3 = [&](auto& view, bool body) {
+                    if (view.mStrike)
+                    {
+                        if (view.mPassiveSequence)
+                            throw std::invalid_argument("native Stagger would overwrite a resident passive slot3");
+                        auto strike = *view.mStrike;
+                        if (strike.mActionId == id) strike.mContactCommitted = true;
+                        else if (body && !strike.mContactCommitted)
+                            reactionCanceledActions.push_back(strike.mActionId);
+                        view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{std::move(strike)};
+                        view.mStrike.reset();
+                    }
+                    else if (view.mReaction)
+                    {
+                        if (view.mReaction->mKind == ESM4::MeleeReactionKind::Stagger || view.mPassiveSequence)
+                            throw std::invalid_argument("unsupported native Stagger slot0 replacement history");
+                        view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{*view.mReaction};
+                        view.mReaction.reset();
+                    }
+                };
+                retainSlot3(candidate, true);
+                candidate.mInput = {};
+                candidate.mReaction = *request;
+                if (firstPerson)
+                {
+                    auto mirror = candidate.mFirstPerson.value_or(ESM4::RuntimeFirstPersonMeleeState{});
+                    mirror.mClock = firstPerson->mClock;
+                    retainSlot3(mirror, false);
+                    mirror.mReaction = firstPerson->mReaction;
+                    candidate.mFirstPerson = std::move(mirror);
+                }
+                if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
+                    && candidate.mAiIntent->mTarget == victimKey)
+                    candidate.mAiIntent.reset();
+                candidate.validate();
+                reactionStates.emplace(values.mActor, std::move(candidate));
+                if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
+                values.mProcessAction = request->processAction();
+                return;
+            }
             if (values.mOwner == ESM4::ActorValueOwner::Player && firstPerson
                 && request->mKind != ESM4::MeleeReactionKind::Stagger)
             {
@@ -5076,6 +5194,11 @@ namespace MWMechanics
         if (state.mVersion < 57 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mFirstPerson.has_value(); }))
             throw std::invalid_argument("native first-person melee ownership requires an Oblivion v57+ save");
+        if (state.mVersion < 59 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
+                return entry.second.mPassiveSequence
+                    || (entry.second.mFirstPerson && entry.second.mFirstPerson->mPassiveSequence);
+            }))
+            throw std::invalid_argument("native passive slot3 ownership requires an Oblivion v59+ save");
         if (state.mVersion < 55 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                 return !entry.second.mRetiringSequences.empty()
                     || (entry.second.mReaction && entry.second.mReaction->mInactive);

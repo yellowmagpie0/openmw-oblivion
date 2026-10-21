@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "status": "Stagger contact publication and passive slot3 service frames verified; renderer, resource-factory and normal-input acceptance remain incomplete.",
+  "tested_source": {
+    "head": "d8d2f8d2c96b513cccab5f620fc9993d8dfa726d",
+    "source_fingerprint": "b59c76e255b1a73f39c9a63c297cb13571a8869acc4ef22aaf987daf2ce0a9d8"
+  },
+  "implementation": [
+    "Fresh Stagger owns native slot0/action8 and preserves prior ordinary, BlockHit or Recoil slot3 records in each retained view.",
+    "Pending prior body strikes are canceled once; the contacting strike is consumed once and retained with committed contact. Passive records never reacquire contact authority.",
+    "Separate Player view clocks, timing, sampled times and captured poses survive atomic contact publication and schema59 restart.",
+    "Passive frames run sequence-manager timing without ordinary phase/speed correction or reaction Start/End action dispatch. Resident state1 protocols remain after primary Stagger recovery.",
+    "Explicit actor cancellation removes passive state; service capture rejects passive history in schema58 or earlier."
+  ],
+  "coverage": {
+    "test": "OblivionWorldTest.StaggerContactRetainsIndependentSlot3WithoutContactAuthority",
+    "contexts": 16,
+    "prior_protocols": [
+      "ordinary contacting attacker",
+      "ordinary interrupted victim",
+      "BlockHit victim",
+      "Recoil victim"
+    ],
+    "views": [
+      "body only",
+      "body and independently clocked first person"
+    ],
+    "prior_playback": [
+      "steady",
+      "captured easing"
+    ],
+    "frames_per_context": 8,
+    "frame_restart_checkpoints": 128,
+    "assertions": [
+      "Malformed/outgoing-slot3/stale-view requests preserve the full saved state.",
+      "Clock changes invalidate prepared contacts before resources or RNG are published.",
+      "Contact commits once; replay fails.",
+      "Whole binary state survives immediate restart and every passive frame checkpoint.",
+      "Frames leave resources, RNG and the action ledger unchanged except the primary process-action recovery.",
+      "Passive ordinary phases and reaction Start/End flags stay unchanged, including beyond their animation End.",
+      "Recovered slot0 can activate again while retaining passive slot3.",
+      "Actor cancellation clears both views without consuming another action."
+    ],
+    "legacy_fixture_changes": "Initialize the prior victim clock/native timing and assert its retained slot3. Remove Stagger from the slot3 outgoing-fade fixture; its parallel recovery is covered by the new matrix."
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-contact-normal-03/verification.json",
+      "sha256": "007ca5a69b24765e71f2902ec879765b8216f0f856b61f414836bed84b5b1e3e",
+      "result": {
+        "executed": 1778,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "634e1cbd8e2119beb5cba21d0e60b8e94e953b4f1dcaf40043fd6944aec6b22a",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "264b7302835eefa616783cb931e2b3d53ef95118d1fa0877899c5e2b8c9fe9b4",
+        "inventory_sha256": "c4272fde0b2607ea80321140b54305fd488860a6098aaa33698b81c812e071ba",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-contact-sanitized-03/verification.json",
+      "sha256": "86b7576489e2618556dbcc8c41bc78871f094ace7c9675bc8270746dd04ad552",
+      "result": {
+        "executed": 1778,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "8f29693ba6dddd9b105f3b029df77e2c563a43b879906cfce91f4a089ec5fbb8",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "e97adef0aeb8c2e9767bc5326e2ddd62f397d8cb23c3ce9e5d31de5ed157048a",
+        "inventory_sha256": "c4272fde0b2607ea80321140b54305fd488860a6098aaa33698b81c812e071ba",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125,
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "built_applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "b57c8c39e16b76d973b9e65b3c456452462c4a87f9cb8baac8c3a592359a5b64"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "be9fc804e4e6942d3813a904ab939ccec710bbf5051118769da0fd0435afb5f0"
+    },
+    "scope": "Schema59 applications rebuilt; no actual game session is claimed by these headless engine tests."
+  },
+  "independent_native_evidence": [
+    {
+      "path": "docs/oblivion/M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json",
+      "sha256": "322e157ec565cf0030f24277d57d014a6996bb8b6f3b67a1b7b27a0b3fdeae9d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-action-dispatch-oracle-02/verification.json",
+      "sha256": "7730e38e10606274dd3990aa0d0eca487488cc695af9e4058a50a585c7f5d494"
+    }
+  ],
+  "native_scope": "Original5F4FD0 helper/manager fixtures and action-switch prefix probes. The32-context extension explicitly invokes5EFFD0(-1,null); it does not execute automatic recovery, complete branch bodies or a full game frame.",
+  "retained_attempts": {
+    "notes": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/contact-service-retained-attempts.json",
+      "sha256": "f265f9bb18bb51c8a247dd12746220cb9e34707d7a69517e564adb066f1977a0"
+    },
+    "normal01": "Compile failure from same-line SCOPED_TRACE local names; no test execution.",
+    "normal02": "1777/1778 passed; legacy fixture initialized native timing before its clock.",
+    "sanitized02": "Deliberately terminated build after the normal02 fixture failure; no sanitizer pass."
+  },
+  "remaining_work": [
+    "Character renderer does not yet collect/project passive slot3 groups and captured poses, including after reload.",
+    "World resource factory still admits only BlockHit/Recoil; this checkpoint does not enable normal-input Stagger.",
+    "Active/cached prior Stagger slot0 replacement and outgoing slot0 history remain unsupported.",
+    "Strike/reaction re-admission must replace resident passive slot3 using the actual native source contract.",
+    "Full cancellation/input/FPS/view/resource matrices and the required complete M15S4 runtime/E2E courses remain open."
+  ],
+  "leak_coverage": false,
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}

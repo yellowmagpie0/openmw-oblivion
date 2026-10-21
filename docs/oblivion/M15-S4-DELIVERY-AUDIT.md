@@ -9574,3 +9574,37 @@ Service contact publication, passive clock/renderer advancement, replacement,
 cancellation and actual schema59 engine/runtime acceptance remain to be wired.
 The successful torso-filter matrix used schema58 applications. Full M15S4 is
 still incomplete; this checkpoint establishes its needed persisted state model.
+
+### Stagger contact publication and passive service frames
+
+The service now publishes a fresh Stagger slot0/action8 while preserving the
+previous slot3 protocol in each retained view. It consumes the contacting
+strike once or cancels a different pending prior body strike once. Body and
+first-person clocks, timing, sampled times and captured poses remain independent.
+Passive records cannot reacquire contact authority. Their frames run controller
+manager timing without ordinary phase/speed correction or reaction Start/End
+dispatch. Resident state1 records remain after primary Stagger recovery; an
+explicit actor cancellation removes them. Service capture requires schema59.
+
+The new typed world/service matrix covers16 contexts: contacting/interrupted
+ordinary strikes, prior BlockHit/Recoil, body-only/paired Player views and
+steady/captured playback. It rejects malformed and stale requests atomically,
+checks immediate binary restart plus128 frame/restart checkpoints, keeps passive
+phases and flags unchanged beyond End, and activates a fresh recovered slot0
+without erasing slot3. The existing NPC transaction fixture now retains native
+victim timing and asserts passive ownership. Stagger no longer uses the old
+slot3 outgoing-fade fixture.
+
+Full normal and ASan/UBSan engine runs each pass1778 tests across125 suites,
+with exact inventories, no failures and no skips, at source fingerprint
+`b59c76e255b1a73f39c9a63c297cb13571a8869acc4ef22aaf987daf2ce0a9d8`.
+Leak detection is disabled. The initial test-macro compile failure, legacy
+fixture clock-order failure and deliberately stopped sanitizer build remain
+recorded; the final03 runs use the corrected frozen source.
+
+[`M15-STAGGER-PASSIVE-SERVICE-VERIFICATION.json`](M15-STAGGER-PASSIVE-SERVICE-VERIFICATION.json)
+pins these checks and rebuilt schema59 applications. These are headless engine
+and semantic restart checks, not actual game sessions. Character rendering
+still needs passive group/pose projection; the world resource factory still
+rejects Stagger. Active/cached slot0 replacement, passive slot3 re-admission and
+the full input/runtime/E2E matrix remain open. M15S4 is not complete.
