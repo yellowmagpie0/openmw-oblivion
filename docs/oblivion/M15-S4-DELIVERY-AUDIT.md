@@ -9510,3 +9510,29 @@ pins the four courses, all process environments, byte-identical pristine inputs,
 first-save selection, verifiers and image hashes. It supplements the earlier
 implementation receipt's then-pending runtime matrix. The historical failed
 visual matrix remains unchanged. Full M15S4 remains incomplete.
+
+### Parallel Stagger ownership: native slot and dispatcher evidence
+
+Stagger selects native slot0; ordinary strikes, BlockHit and Recoil use slot3.
+An expanded original-helper corpus now covers128 contexts over prior actions
+2/6/7/8, both cameras, two x87 controls, four distinct first-person clocks and
+present/absent first-person slot3. The actual Stagger helper installs slot0,
+changes process action to8 and retains each supplied old slot3 in state1 through
+five actual manager updates. Prior slot3 protocols include ordinary strikes,
+BlockHit and Recoil. Preserving only old strikes would miss required histories.
+These are supplied foreign-root/empty-controller/cache contexts, not gameplay.
+
+A separate32-context probe composes the actual Stagger helper with the original
+5FCBEE action switch through its real process getter and jump table. Even with
+old ordinary slot3/phase1 retained, process action8 reaches5FD7DE; a manual raw
+action2 control reaches the ordinary branch5FCC05. The probe stops at those
+branch entries. It proves the dispatcher distinction, not execution of an entire
+frame, a damage callback, automatic recovery or complete cancellation semantics.
+
+The service currently has one primary strike/reaction owner and no independent
+active slot3 history beside Stagger. Both body and first-person state require a
+representation that separates resident visual protocols from process/contact
+ownership; retiring/ease-out history alone does not model a retained state1 slot.
+[`M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json`](M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json)
+pins the independent probes and concrete source gaps. No production schema or
+parallel-Stagger acceptance is claimed by this checkpoint. M15S4 remains open.

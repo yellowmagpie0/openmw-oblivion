@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "Native parallel-slot and action-dispatch distinction verified; production parallel Stagger ownership remains incomplete.",
+  "source_head": "5f3b649b4a",
+  "slot_correction": "Stagger uses native slot0, BlockIdle slot1, ordinary/BlockHit/Recoil slot3. Earlier channel1 shorthand is not a native slot index.",
+  "parallel_helper": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-parallel-slot3-oracle-01/verification.json",
+    "sha256": "994e39ac3eee7827230ed3955fce128eb4ad9d2ac31a44e826caecc256fd098e"
+  },
+  "parallel_harness": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-parallel-slot3-oracle-01/probe-01.py",
+    "sha256": "a628dca826afc3890e333c3036a364a39ba60b8a4245d88a5c2cba6bd33675d4"
+  },
+  "parallel_preregistered": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-parallel-slot3-oracle-01/preregistered.json",
+    "sha256": "a86013e5d04b05d7a8c1c83fca9269aa8abbf3e05c1b601687982c8d96c83f3b"
+  },
+  "dispatch": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-action-dispatch-oracle-01/verification.json",
+    "sha256": "fc0bbc9b854701a5bf6218f610208a0c05732779f4d7dc1f1ad4a144093ad082"
+  },
+  "dispatch_preregistered": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-action-dispatch-oracle-01/preregistered.json",
+    "sha256": "1f3f580304f9081d40db5baa81fb62d152ffaa419d47fbe9677b81ae209090b8"
+  },
+  "dispatch_harness": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-action-dispatch-oracle-01/probe-01.py",
+    "sha256": "2b2ec178495bc0e6c60ba08b2d664b1203f5248b651275263829ee050b90e9f9"
+  },
+  "interpretation": [
+    "Stagger activation preserves an existing slot3 ordinary or clamp reaction, independently in both Player views, including distinct clocks.",
+    "The owning process action becomes8 and its action-data sequence points at Stagger slot0.",
+    "With old slot3 ordinary phase1 retained, actual5FCBEE action dispatch routes8 to5FD7DE. Manual actual raw action2 control routes5FCC05 instead. Branch bodies were not executed in that dispatcher probe.",
+    "Resident visual slots and contact/process ownership must be represented separately. Preserving just a strike misses prior BlockHit/Recoil slot3 histories."
+  ],
+  "production_gaps": [
+    "RuntimeMeleeState and RuntimeFirstPersonMeleeState currently forbid concurrent strike/reaction; each has only one reaction field.",
+    "Contact preparation currently resets candidate strike and installs Stagger as the sole reaction; it cannot preserve independent active slot3 history.",
+    "Paired reaction factories explicitly reject prior Stagger and several native slot-parallel histories.",
+    "A complete service/save/renderer design must carry independent slot3 protocol/timing/pose without granting it contact authority while action8 owns the process.",
+    "Full original game-frame cancellation/recovery/input re-admission and normal-input/runtime acceptance remain unproven by these helpers."
+  ],
+  "full_M15S4_acceptance": false
+}
