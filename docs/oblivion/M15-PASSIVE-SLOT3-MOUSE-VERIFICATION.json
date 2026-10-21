@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "SDL mouse buttons and one normal first-person Player readmission windup verified; M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "5e56f62c5484afc2d15803e06b8c3c27c4da8f5c",
+    "source_fingerprint": "6d95aee9d5c96fefc10b4e59f6fd70e0ff63c814d3d5d8516cd4366a4dbef546"
+  },
+  "python": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-input-python-03/verification.json",
+    "sha256": "e34863602d0f7a8d29421ba9fa83c6e8442e2a43d6d622fa5dff902429084f66",
+    "result": {
+      "executed": 374,
+      "passed": true,
+      "log_sha256": "0e1d5493a7c7298824648f197bb647ca7f9677389bc3f9288d6c3929b66f0205"
+    }
+  },
+  "native_bridge": "Real SDL compilation with -Wall -Wextra -Werror; opt-out, keyboard/button chords, relative motion, partial lines, delivery ordering and invalid button domains tested.",
+  "runtime": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/mouse-readmission-verification.json",
+    "sha256": "0dfa6e94dc34eb3c428c9a4127c497a383e42a28938dceeaf99680540affa57d",
+    "result": {
+      "passed": true,
+      "scope": "Normal SDL left mouse button through the gameplay controller, starting from the pinned injected/recovered passive source. Save one new paired ordinary Left windup; no contact-tail acceptance claimed.",
+      "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/first/snapshots/save-3.omwsave",
+      "save_sha256": "5277e7ef7f736cb3d052056fbeaf4c6e5d6b50b896318d371edb24df4032339f",
+      "whole_save_live_exact": true,
+      "load_owned_states_and_clocks_exact": true,
+      "new_action": 2,
+      "pending": [
+        2
+      ],
+      "old_cause_consumed": true,
+      "both_passive_records_replaced": true,
+      "ordinary_left_windup_both_views": true,
+      "native_resources_and_bases_exact": true,
+      "complete_player_inventory_exact": true,
+      "original_reference_inventories_exact": 39111,
+      "combat_rng_unchanged": true,
+      "mouse_down_up_exact_once": true,
+      "one_controller_selection": true,
+      "draw_threads_joined_before_peaceful_exit": true,
+      "epoch_gone": true,
+      "post_save_contact_tail_accepted": false,
+      "full_M15S4_acceptance": false
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/preregistered.json",
+      "sha256": "5b687f279cdfcaf27a958acec1691dedf88b4187970dffc3532f3b83f91e088e"
+    },
+    "launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/first/launcher.json",
+      "sha256": "1bc4276e931e987f6f8bfb3e0356edca0e085122c4d9352d4ba846b22163c945"
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/verify.py",
+      "sha256": "e2a2674611a0a4e099414d6902e1e5b70f02127473443a0c0895c8262e05a0f0"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "0da134f56f2a6e6c2750b51a7bbd146851193850a103a4e524d279f5f9639592"
+    }
+  },
+  "manifest": {
+    "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_readmission.json",
+    "sha256": "fb27d3dccc4988355593dece7551ca9057abcf3567ff0557f4de912825d1791b"
+  },
+  "visual_review": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-03/first/mouse-readmission-windup-first.png",
+    "directly_viewed": true,
+    "scope": "Post-save first-person scene: arms visible, no foreground torso obstruction or exploding geometry. Image is later than the saved windup; no quantitative original pose/appearance parity."
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-01/diagnostic.json",
+      "reason": "Reused profile had no LEFT mouse binding; no attack selected."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-readmission-normal-first-02/diagnostic.json",
+      "reason": "Wait expected Right despite saved prefer_left=True; held button repeated private-fixture attacks. Not accepted."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-input-python-01/verification.json",
+      "reason": "Old backend validation test still rejected newly supported mouse_click; test corrected."
+    }
+  ],
+  "limits": [
+    "Pinned starting state is injected passive history recovered through the prior controller course; not normal Stagger activation.",
+    "One normal-build first-person course; no sanitized/third-person mouse readmission matrix claimed.",
+    "Same cached Left source capture only; other runtime protocols and crossfades remain open.",
+    "No fresh-process restart of the new mouse-admitted windup is claimed here.",
+    "Post-save contact tail is outside this acceptance checkpoint.",
+    "Sound disabled; configured 60 FPS cap, no measured FPS or audio acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}

@@ -9,6 +9,38 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_mouse_buttons_deliver_acknowledged_down_up_and_click_protocol(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send = mock.Mock()
+        for button in range(1, 6):
+            for kind, operation in (('mouse_down', 'button-down'), ('mouse_up', 'button-up')):
+                action = dict(type=kind, button=button)
+                replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+                control.action(action)
+                control.send.assert_called_with(operation, button)
+        control.send.reset_mock()
+        with mock.patch.object(replay.time, 'sleep') as sleep:
+            action = dict(type='mouse_click', button=1, hold_seconds=.125)
+            replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+            control.action(action)
+            self.assertEqual(control.send.call_args_list, [mock.call('button-down', 1), mock.call('button-up', 1)])
+            sleep.assert_called_once_with(.125)
+
+    def test_mouse_buttons_and_click_duration_reject_before_delivery(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send = mock.Mock()
+        actions = [dict(type=kind, button=value) for kind in ('mouse_down', 'mouse_up', 'mouse_click')
+                   for value in (0, 6, -1, True, 1.0, '1', None, '1\n2 quit')]
+        actions += [dict(type='mouse_click', button=1, hold_seconds=value)
+                    for value in (-1, True, '1', None, float('nan'), float('inf'))]
+        for action in actions:
+            with self.subTest(action=action):
+                with self.assertRaises(ValueError): replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+                with self.assertRaises(ValueError): control.action(action)
+        control.send.assert_not_called()
+
     def test_relative_mouse_motion_uses_signed_sdl_delta_protocol(self):
         control = object.__new__(replay.Replay)
         control.sequence = 0

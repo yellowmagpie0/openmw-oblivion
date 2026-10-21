@@ -11,7 +11,8 @@ import time
 
 
 INPUT_ACTIONS = frozenset({"key", "key_down", "key_up", "key_hold", "key_held",
-                          "type", "type_held", "focus_window", "screenshot", "mouse_move"})
+                          "type", "type_held", "focus_window", "screenshot", "mouse_move",
+                          "mouse_click", "mouse_down", "mouse_up"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
 
 
@@ -45,6 +46,18 @@ def mouse_delta(value):
     return value
 
 
+def mouse_button(value):
+    if type(value) is not int or not 1 <= value <= 5:
+        raise ValueError("Mouse button must be an SDL button from 1 through 5")
+    return value
+
+
+def mouse_hold(value):
+    if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+        raise ValueError("Mouse hold duration must be finite and non-negative")
+    return float(value)
+
+
 def validate(manifest):
     if type(manifest.get("sdl_offscreen_input", False)) is not bool:
         raise ValueError("sdl_offscreen_input must be a boolean")
@@ -61,6 +74,10 @@ def validate(manifest):
         elif action["type"] == "mouse_move":
             mouse_delta(action.get("x"))
             mouse_delta(action.get("y"))
+        elif action["type"] in ("mouse_click", "mouse_down", "mouse_up"):
+            mouse_button(action.get("button", 1))
+            if action["type"] == "mouse_click":
+                mouse_hold(action.get("hold_seconds", .08))
 
 
 class Replay:
@@ -130,6 +147,15 @@ class Replay:
         elif kind == "mouse_move":
             x, y = mouse_delta(action.get("x")), mouse_delta(action.get("y"))
             self.send("motion", f"{x} {y}")
+        elif kind in ("mouse_click", "mouse_down", "mouse_up"):
+            button = mouse_button(action.get("button", 1))
+            if kind == "mouse_click":
+                seconds = mouse_hold(action.get("hold_seconds", .08))
+                self.send("button-down", button)
+                time.sleep(seconds)
+                self.send("button-up", button)
+            else:
+                self.send("button-down" if kind == "mouse_down" else "button-up", button)
         elif kind in ("type", "type_held"):
             text = action["value"]
             if not isinstance(text, str) or any(not 32 <= ord(c) <= 126 for c in text):

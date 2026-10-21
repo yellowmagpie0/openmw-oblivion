@@ -54,6 +54,15 @@ int main() {
                           << " " << static_cast<int>(keys[SDL_SCANCODE_A]) << std::endl;
                 continue;
             }
+            if (line == "button") {
+                const auto* keys = SDL_GetKeyboardState(nullptr);
+                std::cout << "button " << result << " " << e.type << " " << e.button.windowID
+                          << " " << e.button.which << " " << static_cast<int>(e.button.button)
+                          << " " << static_cast<int>(e.button.state) << " " << static_cast<int>(e.button.clicks)
+                          << " " << SDL_GetMouseState(nullptr, nullptr)
+                          << " " << static_cast<int>(keys[SDL_SCANCODE_A]) << std::endl;
+                continue;
+            }
             const auto* keys = SDL_GetKeyboardState(&count);
             std::cout << result << " " << e.type << " " << e.key.keysym.scancode
                       << " " << e.key.keysym.sym << " " << e.key.keysym.mod
@@ -118,6 +127,41 @@ int main() {
         self.assertEqual(self.event(process)[1:7], [769, 4, 97, 1, 0, 1])
         self.assertEqual(self.event(process)[4:7], [0, 0, 0])
         self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_mouse_buttons_hold_independent_masks_and_preserve_keys_and_motion(self):
+        process = self.launch()
+        self.append("1 down 4\n2 button-down 1\n3 button-down 3\n4 motion -3 4\n"
+                    "5 button-up 1\n6 button-up 3\n7 up 4\n")
+        self.assertEqual(self.event(process)[1:4], [768, 4, 97])
+        self.assertEqual(self.command(process, 'button'), 'button 1 1025 1 0 1 1 1 1 1')
+        self.assertEqual(self.command(process, 'button'), 'button 1 1025 1 0 3 1 1 5 1')
+        self.assertEqual(self.command(process, 'motion'), 'motion 1 1024 1 0 5 -3 4 1')
+        self.assertEqual(self.command(process, 'button'), 'button 1 1026 1 0 1 0 1 4 1')
+        self.assertEqual(self.command(process, 'button'), 'button 1 1026 1 0 3 0 1 0 1')
+        self.assertEqual(self.event(process)[1:6], [769, 4, 97, 0, 0])
+        self.assertEqual(Path(str(self.input) + '.delivered').read_text(), self.input.read_text())
+
+    def test_mouse_buttons_preserve_native_queue_partial_lines_and_opt_out(self):
+        process = self.launch()
+        self.append('1 button-down 1\n2 button-up 1')
+        self.assertEqual(self.command(process, 'push'), 'pushed')
+        self.assertEqual(self.event(process)[1], 32768)
+        self.assertEqual(self.command(process, 'button'), 'button 1 1025 1 0 1 1 1 1 0')
+        self.assertEqual(self.command(process, 'button'), 'button 0 0 0 0 0 0 0 1 0')
+        self.append('\n')
+        self.assertEqual(self.command(process, 'button'), 'button 1 1026 1 0 1 0 1 0 0')
+        disabled = self.launch(enabled=False)
+        self.assertEqual(self.command(disabled, 'button'), 'button 0 0 0 0 0 0 0 0 0')
+
+    def test_mouse_button_domain_rejects_before_acknowledgement(self):
+        for operation in ('button-down', 'button-up'):
+            for value in ('0', '6', '-1', '1.5', '999999999999', '', '1 extra'):
+                with self.subTest(operation=operation, value=value):
+                    self.input.write_text('')
+                    process = self.launch()
+                    self.append(f'1 {operation} {value}\n')
+                    self.assertEqual(self.event(process)[1], 256)
+                    self.assertFalse(Path(str(self.input) + '.delivered').exists())
 
     def test_partial_line_waits_and_native_events_take_priority(self):
         process = self.launch()

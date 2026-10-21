@@ -9729,3 +9729,34 @@ pins the frozen source, rebuilt applications, checks and warning triage. This
 is service/engine verification, not yet actual normal-input re-admission.
 Body-only activation, reaction re-admission, Stagger slot0 factory/activation
 and the full M15S4 runtime/input/audio/FPS/cancellation/E2E gates remain open.
+
+### Mouse admission after recovered passive slot3
+
+The opt-in SDL replay bridge now delivers mouse button down/up/click events
+and exposes their held mask to the ordinary input controller. It preserves
+native coordinates and opt-out behavior; relative motion carries the held
+mask. Real-SDL tests cover button/keyboard chords, queue ordering, partial
+lines, invalid domains and exact receipts. All 374 Python tests pass at the
+frozen source recorded in
+[`M15-PASSIVE-SLOT3-MOUSE-VERIFICATION.json`](M15-PASSIVE-SLOT3-MOUSE-VERIFICATION.json).
+
+One normal-build first-person rendered course starts from the pinned prior
+recovered passive Left history. A real SDL left press selects one new ordinary
+Left strike. Its first completed save matches the whole live export: both
+views have strike2 at windup, both passive fields are cleared, cause1 remains
+consumed and only action2 is pending (next3). Native resources and bases,
+combat RNG, complete Player inventory and all 39,111 source reference
+inventories match the source exactly. Load-owned states and clocks match the
+input. Draw threads join before peaceful exit and the process epoch is gone.
+The post-save image was inspected; arms are visible without foreground torso
+obstruction or exploding geometry. It is later than the saved windup.
+
+The two failed setup courses remain retained: missing mouse binding, then an
+incorrect Right wait despite the source's Left preference. Numeric and action
+assertions were unchanged for the accepted course. The later hit after the
+accepted save is outside this windup checkpoint. This is one same-cached Left
+capture through normal input, from injected/recovered history. Sanitized and
+third-person mouse courses, other protocols/crossfades, a restart of the new
+windup, normal Stagger activation and the complete M15S4 input/audio/FPS/E2E
+matrix remain open. Sound is disabled and FPS is configured, not measured.
+M15S4 remains incomplete.

@@ -5,6 +5,7 @@
 // Lines: <sequence starting at 1> <down|up> <SDL scancode>, or <sequence> quit.
 // Also: <sequence> focus, or <sequence> text <hex-encoded printable ASCII>.
 // Relative mouse input: <sequence> motion <signed x delta> <signed y delta>.
+// Buttons: <sequence> button-down|button-up <SDL button 1..5>.
 // Complete lines are consumed only after SDL's existing event queue is empty.
 // The helper supplies input events; it has no engine or game-state interface.
 
@@ -28,6 +29,7 @@ namespace
         unsigned long long sequence = 1;
         bool failed = false;
         std::array<Uint8, SDL_NUM_SCANCODES> held{};
+        Uint32 buttons = 0;
 
         bool next(SDL_Event& event)
         {
@@ -101,6 +103,21 @@ namespace
                 event.motion.xrel = x;
                 event.motion.yrel = y;
             }
+            else if (operation == "button-down" || operation == "button-up")
+            {
+                if (!(fields >> code) || code < SDL_BUTTON_LEFT || code > SDL_BUTTON_X2 || (fields >> extra))
+                    return fail(event, "invalid mouse button");
+                const bool down = operation == "button-down";
+                if (down) buttons |= SDL_BUTTON(code);
+                else buttons &= ~SDL_BUTTON(code);
+                event.type = down ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
+                event.button.timestamp = SDL_GetTicks();
+                event.button.windowID = 1;
+                event.button.button = static_cast<Uint8>(code);
+                event.button.state = down ? SDL_PRESSED : SDL_RELEASED;
+                event.button.clicks = 1;
+                SDL_GetMouseState(&event.button.x, &event.button.y);
+            }
             else
             {
                 if ((operation != "down" && operation != "up") || !(fields >> code)
@@ -170,4 +187,11 @@ extern "C" const Uint8* SDL_GetKeyboardState(int* count)
     if (count)
         *count = SDL_NUM_SCANCODES;
     return replay().held.data();
+}
+
+extern "C" Uint32 SDL_GetMouseState(int* x, int* y)
+{
+    static auto original = reinterpret_cast<decltype(&SDL_GetMouseState)>(dlsym(RTLD_NEXT, "SDL_GetMouseState"));
+    const auto native = original(x, y);
+    return replay().path ? replay().buttons : native;
 }

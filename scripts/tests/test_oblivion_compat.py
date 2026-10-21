@@ -57,10 +57,13 @@ class OblivionCompatTests(unittest.TestCase):
         base = {"schema_version": 1, "name": "offscreen", "command": ["openmw"],
                 "sdl_offscreen_input": True, "actions": []}
         for changes in ({"xvfb": True}, {"virtual_gamepad": True},
-                        {"actions": [{"type": "mouse_click", "button": 1}]},
+                        {"actions": [{"type": "mouse_move_absolute", "x": 0, "y": 0}]},
                         {"sdl_offscreen_input": "true"}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 MODULE.validate_scenario_manifest(dict(base, **changes))
+        MODULE.validate_scenario_manifest(dict(base, actions=[
+            {"type": "mouse_click", "button": 1},
+            {"type": "mouse_down", "button": 3}, {"type": "mouse_up", "button": 3}]))
 
     def test_xvfb_uses_its_child_readiness_report(self):
         process = mock.Mock()
