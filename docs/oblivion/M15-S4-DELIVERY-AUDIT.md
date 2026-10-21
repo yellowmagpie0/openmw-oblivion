@@ -9392,3 +9392,22 @@ This closes structural writing and readback only. Compiler/world and captured
 restart acceptance remain separate. The one-second blend provides the declared
 observation window for the next cached normal/sanitized camera courses without
 changing contact, damage, wear, inventory or RNG expectations.
+
+### Reproduce strike-tail input through current-schema staging
+
+The unarmed strike-tail stage now accepts the two reviewed idle source layouts,
+57 and58, while retaining its exact recipe/hash, idle action/owner, equipped
+weapon and three restrained-actor guards. The default recipe consumes the current
+cached idle58 output, and the report records the actual declared source schema.
+The initial current58-source rejection remains retained evidence.
+
+Both the current58 and historical57 paths now produce exactly the same whole
+file as the accepted runtime input, SHA2566182819ef8cbbeaa96f83d920def92ff2432aa093bc15605f965c81f7e3a02fd.
+Every byte matches; all other decoded state remains preserved. Full Python checks
+pass362 tests with frozen sources. Existing normal/sanitized strike-tail courses
+remain the runtime evidence for those identical input bytes; no new gameplay
+acceptance is inferred from regeneration alone.
+
+[`M15-PLAYER-STRIKE-TAIL-INPUT58-VERIFICATION.json`](M15-PLAYER-STRIKE-TAIL-INPUT58-VERIFICATION.json)
+pins the complete current46->58->unarmed58 chain, compatibility branch, exact
+byte proof and checks. C++ production and animation assets are unchanged.

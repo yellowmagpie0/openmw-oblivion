@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Complete current idle46->58->unarmed58 fixture regeneration while retaining historical57->58 compatibility. Both paths reproduce the existing accepted strike-tail input byte for byte.",
+  "source_parent": "938c5441a6725e72323e3de945dbeb33679a91df",
+  "source_files": [
+    {
+      "path": "scripts/tes4_m15_player_strike_tail_input.py",
+      "sha256": "2ab8377733b3363438eb2e364b19b08f2ed7701d6f36a39fe408d8c0afb50aee"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_strike_tail_input.json",
+      "sha256": "e9e11027a6bc4192ecd92263ccf092b3718e7ecf7f75f6691609b8bd696e477c"
+    }
+  ],
+  "python": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-player-tail-input58-python-01/verification.json",
+      "sha256": "483a91b7908e73c672cfab6381b56f518d92060c422a895989b348a7c50876f6"
+    },
+    "tested_source": {
+      "head": "938c5441a6725e72323e3de945dbeb33679a91df",
+      "source_fingerprint": "43a0daa7be465f70f68caf29ada77f87ec84bd265b405b5f29dd8c314d192f90"
+    },
+    "result": {
+      "executed": 362,
+      "passed": true,
+      "log_sha256": "cfcb881db5c999ccc51ff29b5896d330d535d6266baa331b94406bd6b9798532"
+    }
+  },
+  "initial_rejection": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/tail-input58-current-rejection-01.json",
+    "sha256": "2411e0c8a1167fb572c86092f439b4de981c6e1f7a860941373cdd756dde63a0"
+  },
+  "whole_file_reproduction": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/player-tail-current-chain-byte-reproduction-01.json",
+    "sha256": "a311b50461b086454db181a7f51a990328652652c6b2a86e9dbd8e78c4793e76"
+  },
+  "current_source_staging": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/reproduced-cached-idle58-01.staging.json",
+    "sha256": "d0b7dd692b3bc0d258a793af29bab5d9a04211fbe10999280126f113bc79cfeb"
+  },
+  "current_tail_staging": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/reproduced-player-tail-from-idle58-01.staging.json",
+    "sha256": "182ce256e3dd01d724f0a7d67b9575b7102194020bfc0e2e4b4d5046081ef313"
+  },
+  "legacy_tail_staging": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/reproduced-player-tail-from-idle57-compat-02.staging.json",
+    "sha256": "a228e2ead143694222dfc04b6217db90228fb65917006d0a6ddb81305e37241c"
+  },
+  "legacy_recipe_snapshot": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/legacy-strike-tail-input-recipe-01.json",
+    "sha256": "f64aba0e13e5115c55fb097d8484d2133b666a5f2242e8804e4be4fa635beb24"
+  },
+  "regenerated_input_sha256": "6182819ef8cbbeaa96f83d920def92ff2432aa093bc15605f965c81f7e3a02fd",
+  "existing_runtime_receipts": [
+    {
+      "path": "docs/oblivion/M15-PLAYER-STRIKE-TAIL-NORMAL-VERIFICATION.json",
+      "sha256": "c15d0e19cace2aaca1d7aae5f8fe70848590a16143e215690ad2530859bf8f7a"
+    },
+    {
+      "path": "docs/oblivion/M15-PLAYER-STRIKE-TAIL-SANITIZED-VERIFICATION.json",
+      "sha256": "756fc0094db57de3eefa97dffaac49b214a88e0cf2e196d5e617dbf2c1a44476"
+    }
+  ],
+  "implementation": "Admit only declared idle57 or58 source, require actual schema equals recipe, preserve existing idle action/owner/input/resource guards, keep current58 target and report actual source schema. Default recipe uses regenerated58 source.",
+  "limits": [
+    "Structural writing and complete semantic/byte reinspection; no new gameplay implementation or runtime acceptance is claimed.",
+    "Existing normal/sanitized tail courses use identical bytes, so they remain the runtime evidence for that input. C++ and animation fixture bytes unchanged by this repair.",
+    "Known source46 save and stock assets remain external pinned inputs; this is narrow fixture reproduction, not general arbitrary save rewriting."
+  ]
+}

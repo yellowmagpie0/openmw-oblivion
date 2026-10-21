@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "purpose": "Known idle schema57 strike-tail source; unequip existing sword and restrain three NPCs. Preserve all other decoded state and migrate only version58.",
-  "source": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/staged-input.omwsave",
-  "source_sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8",
-  "source_schema": 57,
+  "source": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/reproduced-cached-idle58-01.omwsave",
+  "source_sha256": "e7dc3877e4488b13b64d80c6512b90f3f0a1bf304aff93350507e600f52fd729",
+  "source_schema": 58,
   "target_schema": 58,
   "weapon_base": "content:oblivion.esm:090615",
   "restrained_actors": [

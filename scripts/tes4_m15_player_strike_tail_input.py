@@ -20,7 +20,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     actors = ['content:oblivion.esm:01fc43', 'content:oblivion.esm:026be1', 'content:oblivion.esm:15985a']
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
-            or type(recipe['source_schema']) is not int or recipe['source_schema'] != 57
+            or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58)
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != 58
             or runtime.CURRENT_VERSION != 58 or recipe['restrained_actors'] != actors
             or recipe['weapon_base'] != 'content:oblivion.esm:090615'):
@@ -31,7 +31,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if source_hash != recipe['source_sha256']:
         raise ValueError('Player strike-tail source differs from pinned idle save')
     original = runtime.load_save(source)
-    if (original['schema_version'] != 57 or original['physical_actions'] != {'next': 2, 'pending': []}
+    if (original['schema_version'] != recipe['source_schema'] or original['physical_actions'] != {'next': 2, 'pending': []}
             or any(a['process_action'] != -1 for a in original['native_actor_values'])
             or any(a['strike'] or a['reaction'] or a['retiring_sequences'] or a['first_person']
                    for a in original['native_melee_states'])):
@@ -59,7 +59,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     report = dict(structural_write_success=True, semantic_reinspection_passed=True,
                   source=str(source), source_sha256=source_hash,
                   output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
-                  source_schema=57, target_schema=58,
+                  source_schema=recipe['source_schema'], target_schema=58,
                   mutations=dict(player_weapon_equipped_slots=[65536, 0], npc_restrained=changes),
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False)
