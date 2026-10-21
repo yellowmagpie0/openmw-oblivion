@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Restore narrow cached-block idle46->current58 fixture staging; actual pinned input migration and synthetic real-wire preservation/negative tests.",
+  "full_M15S4_acceptance": false,
+  "source_parent": "93f60497ec2e72e071182e6387d690a354459a8d",
+  "source_files": [
+    {
+      "path": "scripts/tes4_m15_cached_block_input.py",
+      "sha256": "bc69e1a18583ed39af9546f46a081a0b320965b639a7fedcab2f0a74625d2274"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+      "sha256": "6d00c002aa16107e246891912f6f71dc32c8081c32179163e27f50a2f41d7242"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_cached_block_input.py",
+      "sha256": "4b17bb5e5a68c7cae6b03fe457ef770571cbcbf83c847ec1fe7cc5a2aee859c6"
+    }
+  ],
+  "python": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-cached-input58-python-01/verification.json",
+      "sha256": "212d09b7602fd7c7064f21a5a0f213c0c59c99a28cb1ca00cd6df17e0fede1bc"
+    },
+    "tested_source": {
+      "head": "93f60497ec2e72e071182e6387d690a354459a8d",
+      "source_fingerprint": "2b448f4f4fb90ea803b9bef639afe1fafe550869cebad52b98f69e27e9cfa378"
+    },
+    "result": {
+      "executed": 360,
+      "passed": true,
+      "log_sha256": "bb04ae8355fe4dfca607c17401ae46dd6b3f1eeac0cb1e5b582e45fdd0ae3bb8"
+    }
+  },
+  "actual_staging": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/reproduced-cached-idle58-01.staging.json",
+    "sha256": "d0b7dd692b3bc0d258a793af29bab5d9a04211fbe10999280126f113bc79cfeb"
+  },
+  "independent_semantic_comparison": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-idle58-semantic-comparison-01.json",
+    "sha256": "4e39f46aea0a855d7b078c5462256615cfb8aa2dc4a37fd4c4e5bb2fca944f7c"
+  },
+  "initial_unit_expectation_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/initial-staging-unit-expectation-failure-01.json",
+    "sha256": "15da9d18203e0cf69fc64abe0fc76e5cfe7b1d0f6d38d43ffad6771be9fabd0f"
+  },
+  "tests": [
+    "Real46 wire ->58 migration preserves opaque following record, original source bytes, complete source values, inventory/charge/equip/ownership and RNG while changing only declared script origin and empty migration defaults.",
+    "Stale hash, foreign schema/identity and nonidle script locals reject before output. Existing output bytes remain unchanged."
+  ],
+  "structural_write_success": true,
+  "semantic_reinspection_passed": true,
+  "compiler_world_validation": false,
+  "runtime_acceptance": false,
+  "limits": [
+    "Explicit current58 only; no general arbitrary save/script rebasing.",
+    "Historical57 staged input remains separately pinned; current migrated58 is semantically equal after schema-tag normalization, not byte-identical to57.",
+    "C++ production and accepted engine/component checks unchanged. Actual cached reaction replacement with current generated input remains separate runtime work."
+  ]
+}

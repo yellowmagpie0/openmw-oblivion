@@ -9309,3 +9309,26 @@ editable manifests, images and failures. This is fresh activation, not runtime
 same-cached replacement. Historical source57 staging is identified explicitly;
 source regeneration with the current schema requires a separate fixture update.
 Sound is disabled. Other reaction branches and the wider M15S4 gates remain open.
+
+### Current-schema cached-block input regeneration
+
+The narrow cached-block idle staging helper had become unusable after schema58:
+it required both CURRENT_VERSION and the literal57. The recipe and explicit
+supported target now agree on58. The original46 source, pinned hash, script
+identity/locals, output-existence checks and full semantic reinspection remain
+strict. No general script/save rebasing is added.
+
+Three synthetic tests use actual binary saves to verify opaque-record/source
+preservation and unchanged values/inventory/RNG, plus stale hash, foreign
+schema/identity, nonidle locals and existing-output rejection. The first success
+assertion omitted the declared empty inventory extra_scale default; that failed
+assertion is retained and corrected in the test. The full Python suite passes
+360 tests with frozen sources. Actual staging of the pinned source succeeds;
+independent comparison to the historical57 idle input differs only at the
+normalized schema tag. This proves structural writing and semantic reinspection;
+compiler/world and current-input runtime acceptance remain separate layers.
+
+[`M15-CACHED-BLOCK-INPUT58-VERIFICATION.json`](M15-CACHED-BLOCK-INPUT58-VERIFICATION.json)
+pins those sources and checks. C++ production is unchanged. Two generated
+four-second BlockHit holds separately pass strict NIF reading and independent
+byte checks; runtime cached replacement with those assets is the next case.
