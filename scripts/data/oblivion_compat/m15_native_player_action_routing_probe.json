@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "scope": "Original normal Player caller and generic ordinary attack phase ownership; basis for separate first-person animation history without transferring contact authority.",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "addresses": {
+    "normal_caller_start": "00672DEE",
+    "normal_caller_end": "00672E23",
+    "generic_action": "005FCAB0",
+    "selected_animation_boundary": "005FCB17",
+    "ordinary_cost_call": "005FCDB5",
+    "frame_prefix": "00476F95"
+  },
+  "caller_matrix": {
+    "scope": "Original normal Player caller672DEE..672E23 camera routing only.",
+    "contexts": 48,
+    "initial_and_saved_cameras": [
+      0,
+      1
+    ],
+    "field594": [
+      0,
+      1
+    ],
+    "control_words": [
+      127,
+      639,
+      895
+    ],
+    "argument_pairs": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0.7,
+        1.3
+      ],
+      [
+        -1,
+        2
+      ]
+    ],
+    "boundary": "Full generic action5FCAB0 is a captured call boundary returning without actor changes. No contact, resource, phase or scheduler execution claimed. Earlier caller eligibility and saved-camera slot are supplied."
+  },
+  "generic_prefix_matrix": {
+    "contexts": 48,
+    "player": [
+      false,
+      true
+    ],
+    "camera_byte": [
+      0,
+      1
+    ],
+    "first_pointer_present": [
+      false,
+      true
+    ],
+    "body_pointer_present": [
+      false,
+      true
+    ],
+    "control_words": [
+      "007F",
+      "027F",
+      "037F"
+    ],
+    "boundary": "Earlier actor gate accepted, process and cache data supplied; actual vtables and animation getters execute. Stops before full action/contact dispatch."
+  },
+  "live": {
+    "phases": [
+      "first-unarmed",
+      "third-unarmed",
+      "third-sword",
+      "first-sword"
+    ],
+    "reload": "Pristine F9 before each subsequent phase; first phase loaded via Continue.",
+    "normal_input": "F draw, short R camera toggle, short left mouse swing. Sword phases add/equip vanilla90615 through logged console setup.",
+    "observations": 76,
+    "ordinary_cost_entries": 4,
+    "per_phase_frame_entries": 4,
+    "expected": "Every selected owner and ordinary cost uses body AnimData, body phase1; caller672E12 and temporary camera1 even when frame camera0.",
+    "outcomes": [
+      {
+        "phase": "first-unarmed",
+        "body_phase": 1,
+        "first_phase": 1
+      },
+      {
+        "phase": "third-unarmed",
+        "body_phase": 1,
+        "first_phase": 0
+      },
+      {
+        "phase": "third-sword",
+        "body_phase": 1,
+        "first_phase": 1
+      },
+      {
+        "phase": "first-sword",
+        "body_phase": 1,
+        "first_phase": 0
+      }
+    ]
+  },
+  "conclusion": "Keep body phase authority for the observed normal ordinary Player path. First-person phase can differ and must not be copied from body merely to manufacture synchronization.",
+  "limitations": [
+    "Air/near-wall swings only; no target damage, hit acquisition, full native contact or anti-replay gameplay acceptance.",
+    "Four phases in one game process, separately reloaded;76 debugger rows are not76 independent trials. Debugger changes scheduling.",
+    "This establishes the observed caller, not every special action/load/mount path or independent first-person strike implementation.",
+    "Caller emulation captures the full generic method as a boundary; generic-prefix proof and actual live observations remain separate.",
+    "Startup P:0000065432 failed attempt and unavailable xset input utility retained. No observation results were retuned."
+  ],
+  "full_M15S4_acceptance": false
+}

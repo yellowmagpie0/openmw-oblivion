@@ -9000,3 +9000,32 @@ fresh runtime layer. This is a shared timing correction, not Player FP strike or
 parallel-owner implementation. Remaining reactions/mastery/effects, creature and
 power branches, and full input/FPS/cancellation/restart acceptance keep M15S4
 incomplete.
+
+### Normal Player action routing and body phase authority
+
+The generic actor dispatcher skips Player camera byte 0, but that isolated
+prefix does not establish first-person contact authority. Four original-game
+normal-input phases now identify the actual normal caller: return address
+`672E12`. The caller temporarily writes camera byte 1 around `5FCAB0`, then
+restores the saved byte. Read-only mapped-code verification and a 48-context
+original-instruction caller matrix confirm that sequence. The full generic
+method is an explicit boundary in this caller matrix; the separate 48-context
+generic-prefix probe executes the real vtables/getters to select body data.
+
+Unarmed and vanilla sword swings in first/third cameras produce four ordinary
+attack-cost entries, all selecting body animation data with body phase 1.
+Two entries have first-person phase 0 at the same point. Separate normal frame
+observations identify both owners and the actual outside camera. The 76 total
+debugger rows are four reloaded gameplay phases in one process, not independent
+trials. Console add/equip is setup only; no AV, condition, clock, RNG, CW or
+register writes force an outcome. These air/near-wall swings do not establish
+native target damage, hit acquisition or complete contact/replay parity.
+
+All debuggers detach, the game and owned Steam exit zero, private inputs restore
+exactly, and source inputs/pristine save remain unchanged. The initial Steam
+startup error and unavailable `xset` input utility remain recorded failures.
+No new compiler or fork-runtime acceptance is claimed for this evidence-only
+change. [`M15-PLAYER-ACTION-ROUTING-VERIFICATION.json`](M15-PLAYER-ACTION-ROUTING-VERIFICATION.json)
+pins the editable probe, observations, instructions, boundaries and cleanup.
+This resolves the normal body-authority question before separate first-person
+strike ownership; it does not implement that ownership or complete M15S4.

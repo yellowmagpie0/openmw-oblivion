@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "source_parent": "c73f0f2b65eba9b817273f3155d2868d18534841",
+  "scope": "Original normal Player caller and generic ordinary attack phase ownership; basis for separate first-person animation history without transferring contact authority.",
+  "manifest": {
+    "path": "scripts/data/oblivion_compat/m15_native_player_action_routing_probe.json",
+    "sha256": "637743dad7be2e71255bc0806bea6b4235cf761db6703ebbc7130b0d2ac7e9e1"
+  },
+  "original_live": {
+    "passed": true,
+    "phases": [
+      {
+        "phase": "first-unarmed",
+        "declared_camera": 0,
+        "counts": {
+          "frame_body": 2,
+          "frame_first": 2,
+          "selected": 7,
+          "cost": 1,
+          "dispatcher": 7
+        },
+        "cost": {
+          "player": 411208928,
+          "form": 20,
+          "camera": 1,
+          "body": 478531900,
+          "first": 478493928,
+          "body_group": 277,
+          "first_group": 277,
+          "body_phase": 1,
+          "first_phase": 1,
+          "cw": 127,
+          "thread": [
+            934243,
+            934243,
+            0
+          ],
+          "monotonic_ns": 280587194693782,
+          "selected_anim": 478531900,
+          "caller_return": 6762002,
+          "cost_argument_byte": 0,
+          "kind": "cost"
+        },
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-unarmed-sample.json",
+          "sha256": "e866972fcbce3b08500340a6d505743785c0eb7053422bf7e96c5dad9eebdc7c"
+        },
+        "debugger": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-unarmed-gdb-command.json",
+          "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+        }
+      },
+      {
+        "phase": "third-unarmed",
+        "declared_camera": 1,
+        "counts": {
+          "frame_body": 2,
+          "frame_first": 2,
+          "selected": 6,
+          "cost": 1,
+          "dispatcher": 6
+        },
+        "cost": {
+          "player": 411208928,
+          "form": 20,
+          "camera": 1,
+          "body": 478531900,
+          "first": 478493928,
+          "body_group": 277,
+          "first_group": 277,
+          "body_phase": 1,
+          "first_phase": 0,
+          "cw": 127,
+          "thread": [
+            934243,
+            934243,
+            0
+          ],
+          "monotonic_ns": 280652105802679,
+          "selected_anim": 478531900,
+          "caller_return": 6762002,
+          "cost_argument_byte": 0,
+          "kind": "cost"
+        },
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-unarmed-sample.json",
+          "sha256": "c7fb050dd1d55bfff1c29ed4b5a07d71c6d876076ffef938aeb8bf1f8865f896"
+        },
+        "debugger": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-unarmed-gdb-command.json",
+          "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+        }
+      },
+      {
+        "phase": "third-sword",
+        "declared_camera": 1,
+        "counts": {
+          "frame_body": 2,
+          "frame_first": 2,
+          "selected": 8,
+          "cost": 1,
+          "dispatcher": 8
+        },
+        "cost": {
+          "player": 411208928,
+          "form": 20,
+          "camera": 1,
+          "body": 478531900,
+          "first": 478493928,
+          "body_group": 533,
+          "first_group": 533,
+          "body_phase": 1,
+          "first_phase": 1,
+          "cw": 127,
+          "thread": [
+            934243,
+            934243,
+            0
+          ],
+          "monotonic_ns": 280746436570525,
+          "selected_anim": 478531900,
+          "caller_return": 6762002,
+          "cost_argument_byte": 0,
+          "kind": "cost"
+        },
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-sword-sample.json",
+          "sha256": "26a002246ef367436182893568bde118c49474815ba6e6041abc3eb8c8a98aab"
+        },
+        "debugger": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-sword-gdb-command.json",
+          "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+        }
+      },
+      {
+        "phase": "first-sword",
+        "declared_camera": 0,
+        "counts": {
+          "frame_body": 2,
+          "frame_first": 2,
+          "selected": 7,
+          "cost": 1,
+          "dispatcher": 7
+        },
+        "cost": {
+          "player": 411208928,
+          "form": 20,
+          "camera": 1,
+          "body": 478531900,
+          "first": 478493928,
+          "body_group": 533,
+          "first_group": 533,
+          "body_phase": 1,
+          "first_phase": 0,
+          "cw": 127,
+          "thread": [
+            934243,
+            934243,
+            0
+          ],
+          "monotonic_ns": 280834522074508,
+          "selected_anim": 478531900,
+          "caller_return": 6762002,
+          "cost_argument_byte": 0,
+          "kind": "cost"
+        },
+        "evidence": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-sword-sample.json",
+          "sha256": "f0a566373a9b02b00c586dd030b841b36a073592d902d05c8265034d2f013d02"
+        },
+        "debugger": {
+          "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-sword-gdb-command.json",
+          "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+        }
+      }
+    ],
+    "rows": 76,
+    "observation_scope": "Observe original Player normal-input air-swing action dispatch and attack expenditure routing in actual first/third cameras. Normal console sword add/equip setup allowed. No contact/damage/AV/condition/clock/RNG/CW/register writes. No save. Debugger affects scheduling; no native motion or complete contact parity acceptance.",
+    "cleanup": {
+      "passed": true,
+      "game_and_owned_steam_exited_zero": true,
+      "actual_epochs_dead": true,
+      "private_inputs_restored": true,
+      "source_inputs_unchanged": true,
+      "pristine_save_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+    },
+    "full_M15S4_acceptance": false
+  },
+  "original_caller": {
+    "passed": true,
+    "contexts": 48,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "e9c496abd96d2d11e0ef5be099566f59b50eea0d0fa1da0f4b5a409af823ba07",
+    "recipe": {
+      "scope": "Original normal Player caller672DEE..672E23 camera routing only.",
+      "contexts": 48,
+      "initial_and_saved_cameras": [
+        0,
+        1
+      ],
+      "field594": [
+        0,
+        1
+      ],
+      "control_words": [
+        127,
+        639,
+        895
+      ],
+      "argument_pairs": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0.7,
+          1.3
+        ],
+        [
+          -1,
+          2
+        ]
+      ],
+      "boundary": "Full generic action5FCAB0 is a captured call boundary returning without actor changes. No contact, resource, phase or scheduler execution claimed. Earlier caller eligibility and saved-camera slot are supplied."
+    },
+    "finding": "Actual caller forces camera1 for generic action call, forwards the two global scalars unchanged and restores the saved camera independently of field594.",
+    "full_M15S4_acceptance": false
+  },
+  "generic_prefix": {
+    "passed": true,
+    "contexts": 48,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "04ea8b48db6feaefce60e0a807ea86591396aef61e00455205c70d89a01eeabf",
+    "scope": "Actual generic actor dispatcher5FCAEE through5FCB17 or5FE2CC with real vtables/65D720/4D8370/High-process getter. Earlier actor gate accepted, actor/process/cache fields supplied; no contact or full Player caller execution.",
+    "finding": "Generic dispatcher skips Player when camera byte0(first person); other cases select body AnimData. This alone does not establish first-person contact authority: caller may route separately or temporarily change camera byte. Full Player updater and anti-replay still require independent proof.",
+    "full_M15S4_acceptance": false
+  },
+  "mapped_caller": {
+    "passed": true,
+    "identity": {
+      "start": 6761966,
+      "size": 53,
+      "sha256": "93ea8e0ae6deb277b34ecc5d4e0434ffb61136558b999efcbb675c4859608f6a",
+      "reason": "Actual first/third unarmed and third sword dispatcher return address672E12 identifies this normal caller. Supplement declared before fourth capture, separate from pre-launch identities."
+    },
+    "actual_sha256": "93ea8e0ae6deb277b34ecc5d4e0434ffb61136558b999efcbb675c4859608f6a",
+    "player": 411208928,
+    "camera_after_capture": 0,
+    "scope": "Read-only mapped-code identity check after all four captures; camera restored to first view."
+  },
+  "structural_compiler_runtime": "Evidence-only change. No compiler or fork runtime execution newly claimed; prior PC24 implementation checks remain at their recorded revision.",
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/inputs.json",
+      "sha256": "13070a5c6e17d7f2cba8ddf384e951ba756ea61aad26fd41b4dd9128ef997490"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/preregistered-acceptance.json",
+      "sha256": "3a6b2edd045403681c485f170609902659f990183a1eb81bde161d8661c42a74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/launch-inputs.json",
+      "sha256": "cde876f759e039d940501c294afe54f8c6355bf4adafe01edc6b0af6b782fff6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/function-identity.json",
+      "sha256": "0533427b50181490cb5d25527f15f2bfd9024e46ab8753c8082ef3d4440fadf5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/observed-caller-identity.json",
+      "sha256": "4d525f3fd819fa6ae13a1913feded4fbf374a4c838b6e539dfc4ed069779bef1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/observed-caller-live-verification.json",
+      "sha256": "bd7ed4d41075af18d9b1639ea6312de884df1001eaf0a182103ff3cd3dae2871"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/inspect-caller.py",
+      "sha256": "27013da2f2f9b39d6a03ed1eb0aa86a1be45748a70a7da760df1193abdd249e9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/inspect-caller.log",
+      "sha256": "113384619c54e0ea77efbfb5fe5379390f7822ee54c878a9c237a2c6f8644c87"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/inspect-caller-command.json",
+      "sha256": "92404e75ac5bae26f8dd09115819169883794df45933a5a7a26dc98ffa0ecf55"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/game-process-epoch.json",
+      "sha256": "4372519cff074dc537bd16608ed6d92f3b8e6ea1a30d98c2cb2230fc063c0907"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/steam-process-epoch.json",
+      "sha256": "2c931b51ef1370e2fd39a52b7f4dc2aa5e27736fdec8c8741915f857735ab536"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/input-log.jsonl",
+      "sha256": "4c93c56c7a0b1c5a9da3d4f0a3a78c0179a9c04cec1f22454ec9d86a3ed11d5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/sample.py",
+      "sha256": "6c5e4dde4434c75b19ebb0298ca5f834d12e3a9f3aec1c4223024a8014cbddc0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/capture-01.py",
+      "sha256": "1bf858eab0b69d031d4dcd60845215360638eb9bf8f279c892edf10a24fd7cd7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/probe-cleanup-verification.json",
+      "sha256": "f58b247b9f1c3061d9d83a14b3e0e8624ccb55e3ec547a1b219f81175306f6f1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/input-utility-failure.json",
+      "sha256": "53fac2f561d382e6ee7764573114359308fd2066dfa4f5346e7c3533b2908d3d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/failed-startup-01/failure.json",
+      "sha256": "538c98c5137b5e244ce94850a44c624139d05cdee05aeb11dcfb68ccad50d57e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-unarmed-sample.json",
+      "sha256": "e866972fcbce3b08500340a6d505743785c0eb7053422bf7e96c5dad9eebdc7c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-unarmed-gdb-command.json",
+      "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-unarmed-gdb.log",
+      "sha256": "b83edcf3429f52b3f40eb5245b0e1c96900cd6fbf30e25af793a14216799a3f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-unarmed-sample.json",
+      "sha256": "c7fb050dd1d55bfff1c29ed4b5a07d71c6d876076ffef938aeb8bf1f8865f896"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-unarmed-gdb-command.json",
+      "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-unarmed-gdb.log",
+      "sha256": "c7517aab69c52acaba3a7fda93e47fd0c9b0c44e2511019340aa934c7a3b74e7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-sword-sample.json",
+      "sha256": "26a002246ef367436182893568bde118c49474815ba6e6041abc3eb8c8a98aab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-sword-gdb-command.json",
+      "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/third-sword-gdb.log",
+      "sha256": "544a93f1d04d1db1fbaaab9b3808127fb77e04931564f4d42a699de2ddb485f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-sword-sample.json",
+      "sha256": "f0a566373a9b02b00c586dd030b841b36a073592d902d05c8265034d2f013d02"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-sword-gdb-command.json",
+      "sha256": "234e5b84e70584745b9e12ace9535db3331abf130bc8a43356948049ba5d9677"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-contact-routing-original-live-01/first-sword-gdb.log",
+      "sha256": "53331232ef9397c41331f935de7036c29a7f5ab0439828ee223ca1253aa3d2d7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-animation-frame-routing-review-01/caller-camera-probe-01.py",
+      "sha256": "2bdaa55396a5cf9eb4be27b326b26748f4ca80c0d377e339ec1442e91d879485"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-animation-frame-routing-review-01/caller-camera-preregistered-01.json",
+      "sha256": "e0dae069e6f36e2ab0449c3197dc4a0128c47634dc165a04ea9d072f5b45d4c0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-animation-frame-routing-review-01/caller-camera-verification-01.json",
+      "sha256": "1f8b778f6d5abd3e9605bfc11b864691b58dff44448d43bd391ee82a1ae1d1ba"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-animation-frame-routing-review-01/contact-prefix-probe-01.py",
+      "sha256": "5c5ac7dfd6521c12b1e739f1945b5df37902a3be5a075b21ceb4de57bcd3f432"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-animation-frame-routing-review-01/contact-prefix-verification-01.json",
+      "sha256": "254a08a8c1193e7d74bc20bae9d852ac1851d1725283bfee9982cd00b7ac3bf8"
+    }
+  ],
+  "limitations": [
+    "Air/near-wall swings only; no target damage, hit acquisition, full native contact or anti-replay gameplay acceptance.",
+    "Four phases in one game process, separately reloaded;76 debugger rows are not76 independent trials. Debugger changes scheduling.",
+    "This establishes the observed caller, not every special action/load/mount path or independent first-person strike implementation.",
+    "Caller emulation captures the full generic method as a boundary; generic-prefix proof and actual live observations remain separate.",
+    "Startup P:0000065432 failed attempt and unavailable xset input utility retained. No observation results were retuned."
+  ]
+}
