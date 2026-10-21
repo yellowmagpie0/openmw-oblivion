@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "purpose": "Synthetic both-view four-second BlockHit holds and reviewed existing Blend:30 (one-second) fades make same-cached replacement and captured restart observable. No damage, contact, inventory or RNG changes.",
+  "source_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "extended_end": 4.0,
+  "assets": {
+    "body": {
+      "path": "meshes/characters/_male/onehandblockhit.kf",
+      "sha256": "ef30c2faafe9a7d9c6837140e19777c9307c9c4094dca006353b7adac504a795",
+      "stop_offset": 2906,
+      "end_key_offset": 15379,
+      "original_end_bits": 1050253720,
+      "sequence_name_offset": 461,
+      "controlled_blocks": 73,
+      "text_key_count_offset": 15346,
+      "blend_text_offset": 15371
+    },
+    "first": {
+      "path": "meshes/characters/_1stperson/onehandblockhit.kf",
+      "sha256": "abccad75b35a4284802d0415ba6fdc0a41b038d3acbd9ff6193cf328eb086d9a",
+      "stop_offset": 2678,
+      "end_key_offset": 9281,
+      "original_end_bits": 1050253720,
+      "sequence_name_offset": 464,
+      "controlled_blocks": 66,
+      "text_key_count_offset": 9248,
+      "blend_text_offset": 9273
+    }
+  },
+  "blend_frames": 30
+}

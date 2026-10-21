@@ -9367,3 +9367,28 @@ A separate corrected third-camera baseline exits0 but its first saved captured
 poses have already finished the stock0.1s fade. That capture-restart criterion
 remains failed; a longer declared fixture blend is being prepared. The full
 cached replacement camera/sanitizer matrix and wider M15S4 gates remain open.
+
+### Observable cached BlockHit capture fixture
+
+A new narrow generator reproduces both stock BlockHit clips with four-second
+StopTime/End holds and the existing Blend modifier changed from0 to30 frames.
+The modifier's original timestamp bits0x3d088880, key count, spelling, byte length,
+controller/transform data and all opaque bytes stay intact. Independent comparison
+finds exactly nine changed bytes per view: eight in the two float stores and one
+in the existing modifier text. Strict NIF reading accepts both actual files with
+zero failures and an explicit validator exit0.
+
+Two synthetic tests verify reversible whole-file preservation, both-view
+prevalidation and rejection of foreign fields, hashes, offsets, forged-hash
+modifier shapes and existing output. The full Python suite passes362 tests with
+frozen sources. The first wrapper tried the attack-key inserter, whose existing
+Blend guard correctly refused actual BlockHit inputs before output creation.
+That failure is retained; the synthetic layout now models the actual existing
+modifier rather than an unrelated middle key.
+
+[`M15-CACHED-BLOCK-HOLD-FIXTURE-VERIFICATION.json`](M15-CACHED-BLOCK-HOLD-FIXTURE-VERIFICATION.json)
+pins editable recipe/helper, exact checks, raw-byte proof and strict reading.
+This closes structural writing and readback only. Compiler/world and captured
+restart acceptance remain separate. The one-second blend provides the declared
+observation window for the next cached normal/sanitized camera courses without
+changing contact, damage, wear, inventory or RNG expectations.

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Reproducible both-view four-second BlockHit holds with reviewed existing Blend:30 modifier, preserving raw native key timestamp/count and all other bytes. Structural and strict NIF validation; runtime matrix remains separate.",
+  "source_parent": "17d952888f4f9b01a6ba5fb190a65d5b102453e1",
+  "source_files": [
+    {
+      "path": "scripts/tes4_m15_cached_block_hold_fixture.py",
+      "sha256": "7fecf00c70846e2b316bee2997d41de0a3a999abf74c6c76bb8804ae9900900f"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_cached_block_hold_fixture.json",
+      "sha256": "132d41b9a761d8a6912a71c96fd77ee792ad25e23d99399e0f5cb2701559aafe"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_cached_block_hold_fixture.py",
+      "sha256": "503600f2fee6735d7a7a2e7137e4eafd4adc6721f0f5b7ebab76e05964e7cf9d"
+    }
+  ],
+  "python": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-cached-block-hold-fixture-python-02/verification.json",
+      "sha256": "06812759cb8efdc92e9f2f03e650fe0620afb5174149769e5f2a3ad4ebeadade"
+    },
+    "tested_source": {
+      "head": "17d952888f4f9b01a6ba5fb190a65d5b102453e1",
+      "source_fingerprint": "915c55b26659ac892ae367684efdcbb41e6595e2743313f2e0bd68eb56e2d588"
+    },
+    "result": {
+      "executed": 362,
+      "passed": true,
+      "log_sha256": "de1ec302e33cc5706e34ec5d4e6b771ab8846bb65cfdbcb37fe5edc9b788e9a5"
+    }
+  },
+  "actual_generation": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-cached-block-hold-assets-03/fixture-report.json",
+    "sha256": "f0323d330c5bf52e524c9bd442923817334a7ae2f5d047b8b9fa9474a1651679"
+  },
+  "independent_byte_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-reviewed-blend-independent-byte-audit-03.json",
+    "sha256": "31287be20f446031ff8456a6ba5c5490a356beea4595ea8bd09fd0cf3b08707f"
+  },
+  "strict_nif_process_verification": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-reviewed-blend-nif-process-verification-04.json",
+    "sha256": "018db790be4e116b18c01401dd58d00a8f892acb6b50f95f4a8afdcdc982a316"
+  },
+  "retained_generation_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/cached-hold-existing-blend-rejection-01/failure.json",
+    "sha256": "cc910cfce78a679a2e58e350227ca0c29ae5a62eb92d95098e71827fa3263b41"
+  },
+  "retained_capture_window_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/fixed-third-capture-window-failure-01.json",
+    "sha256": "32a1e0c7f57244af566a42363d20df076d2b71be1eed94303c934d6c1ad830c3"
+  },
+  "test_scope": [
+    "Synthetic real-layout two-view byte edits can be reversed exactly to source; count/timestamp/size/footer and source files are preserved.",
+    "Wrong modifier/schema/duration/path/hash/offset/forged-hash key shape reject before output creation, including second-asset failure after first asset preparation. Existing user output remains unchanged."
+  ],
+  "structural_write_success": true,
+  "semantic_byte_reinspection_passed": true,
+  "strict_nif_files": 2,
+  "strict_nif_failed_files": 0,
+  "compiler_world_validation": false,
+  "runtime_acceptance": false,
+  "limits": [
+    "Only exact pinned stock BlockHit layouts, four-second hold and30-frame modifier. No general NIF rewriting.",
+    "Initial wrapper tried the existing attack-key inserter; actual BlockHit already has Blend: 0 and correctly rejected it before output. Synthetic source now matches that actual key shape. Initial full362 Python pass remains unit-only evidence, not actual fixture acceptance.",
+    "Only nine bytes per clip change; no transform, controller, bone, key-count or timestamp modifications. Synthetic hold/fade is not original motion or skin parity.",
+    "M15S4 cached camera/sanitizer capture restart matrix still must run with these files."
+  ]
+}
