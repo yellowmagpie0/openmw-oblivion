@@ -9411,3 +9411,33 @@ acceptance is inferred from regeneration alone.
 [`M15-PLAYER-STRIKE-TAIL-INPUT58-VERIFICATION.json`](M15-PLAYER-STRIKE-TAIL-INPUT58-VERIFICATION.json)
 pins the complete current46->58->unarmed58 chain, compatibility branch, exact
 byte proof and checks. C++ production and animation assets are unchanged.
+
+### Paired cached BlockHit matrix: state and lifecycle pass, visual gate fails
+
+The reviewed four-second holds and existing one-second Blend modifier now admit
+same-cached replacement and a captured restart in normal and ASan/UBSan builds,
+in both cameras. All eight engine processes exit successfully. Twelve complete
+save/live pairs match exactly; the first post-contact3 save retains both captured
+heads (64 body and66 first-person tracks), with no retry or numeric/image-based
+selection. Both cause2 heads remain until cause3 replacement. Two production NPC
+contacts produce the independently fixed PC24 Health damage, declared weapon
+wear and RNG773150046. All36289 original reference inventories and complete
+Player inventories match their declared changes. Fresh processes recover both
+Player heads without new selections or contacts; final resource/action arrays
+match their own settled baseline exactly. Actual DrawThreadPerContext epochs
+record final thread stop before peaceful exit, including both sanitized cameras.
+
+Direct review of twelve images finds a separate failure: large orange polygons
+obscure the first-person contact view in both builds. Final ready poses recover
+in both processes and cameras; third-person contact stills show raised guards.
+Finite saved locals and near-unit captured quaternions do not identify the
+rendering cause. No arithmetic change is justified by these images. First-person
+body attachment, skinning and camera investigation remains open; visual acceptance
+is explicitly false. Sound is disabled,60FPS is only a configured cap and leak
+checking is disabled.
+
+[`M15-PLAYER-PAIRED-CACHED-BLOCK-RUNTIME-VERIFICATION.json`](M15-PLAYER-PAIRED-CACHED-BLOCK-RUNTIME-VERIFICATION.json)
+pins every course, process, manifest, restart selection, verifier and image.
+The editable acceptance contract records exact actions and separate state,
+lifecycle and visual gates. Structural fixture reading, runtime state/restart
+acceptance and failed visual acceptance remain distinct. Full M15S4 is incomplete.

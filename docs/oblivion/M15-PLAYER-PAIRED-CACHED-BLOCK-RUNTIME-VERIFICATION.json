@@ -1,0 +1,500 @@
+{
+  "schema_version": 1,
+  "status": "State/restart and threaded lifecycle PASS in all four courses; first-person contact visual acceptance FAIL. Full M15S4 incomplete.",
+  "source_head": "876355508bf8872a767e081f6a3f4ef8022af956",
+  "production_change": "17d952888f renderer-thread join; paired reaction source0fee234ac3; generated fixture938c5441a6.",
+  "contract": {
+    "path": "scripts/data/oblivion_compat/m15_player_paired_cached_block_acceptance.json",
+    "sha256": "f7d8f901edd7037678662b1ca0973c4e578d7b66e22278ac0d92fc4036bc5c07"
+  },
+  "cases": [
+    {
+      "profile": "normal",
+      "camera": "first",
+      "directory": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/verification.json",
+        "sha256": "cbee95d3db51294c1f55442e2572ef71f2984931b00d23c7726176c52e0cb64d"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/threaded-shutdown-verification.json",
+        "sha256": "2d350fe175b8f8cf838670c5b7f582ab563363355798c233d8693a0c7f5b44a8"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/preregistered.json",
+        "sha256": "6be4cfc74ca42f06d7019ad032e45fa97afe88cfa935bfa4a78ee7627f29243a"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/manifest.json",
+        "sha256": "6030b4a99e26285e1f90bad0d8cc9b0067b0a9f771d88f1577abe0c791a3908b"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/continuation.json",
+        "sha256": "f6b373c82a559e036a17ae4c326d5b1ea0af0be931ba07ca466e10de23b74a3d"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/restart-selection.json",
+        "sha256": "8a6796d2e880431a1b1e2249cbefeb2de2361c012179b747d6fccc35a65c68b8"
+      },
+      "captured_body_first_person_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 983990,
+            "start_ticks": 30000814,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/launcher.json",
+            "sha256": "96a5a482171a81b9d2d02c1686f8406caa0203ac62a3d92cd17e3383074724b8"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/scenario.json",
+            "sha256": "15e71e2def8053f5086b784964102a6d489beca41263bde982deea932edc99b7"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/actual-engine-environment.json",
+            "sha256": "d4f968e93b60d519e50370c2f2f0fb0ffb7ad7be8fd25324c9ef513c20974a03"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 984065,
+            "start_ticks": 30011291,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/launcher.json",
+            "sha256": "5f329f54e99e66a4446a616818113a3bdf0223fdbbba67c0087390079d125511"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/scenario.json",
+            "sha256": "528d7e47e9747ebf4412b6e4ded29d18911d40fa62c8e1f5a8d786100652be4a"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/actual-engine-environment.json",
+            "sha256": "e603f2d5aa1bdd26ee67a86bfcf84a26dcb21b3592b1fc323ef7f9dbe8c4348a"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/player-blockhit-first.png",
+          "sha256": "510f21d632836725adffc77acf59c9270b91898801685647c1201b14819e45ef",
+          "finding": "FAIL: large orange skin-colored polygons obscure the first-person contact view; precise rendering cause unresolved."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/first/settled.png",
+          "sha256": "4493c36f6040e13571b6a3a75ac1dce88e16f7c405c9e2e94742abb7f94a3684",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-first-02/second/settled.png",
+          "sha256": "3c876bde3c0e4bb0f13aaf5bb041552420cf7a19f5f630e5945689484e05050c",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "camera": "third",
+      "directory": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/verification.json",
+        "sha256": "05fc4599bff01f212595d2a6dfde9d4fd75b6246f19e23be1527773a125bfb9b"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/threaded-shutdown-verification.json",
+        "sha256": "3adb3b026e41fd57e1fc56e75d6689ee47785f0232d7a9f8854838819e3dd96a"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/preregistered.json",
+        "sha256": "d981b7b152e822fa172d33a78d0c54d5a27909a3ea534613e7d1466612251e19"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/manifest.json",
+        "sha256": "cdfd4a5eba7ed5227d64a44f409e0c843a87c4eb8a032f8518c797d20b43776b"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/continuation.json",
+        "sha256": "28c51cf4c76d091eab1e69effbb803a61ef06472b726b7dcc70aa9ac3e834e85"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/restart-selection.json",
+        "sha256": "97a8feb58e5716bf66d9bd885daf15939c740b278aa402478d5164ddb4817015"
+      },
+      "captured_body_first_person_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 984145,
+            "start_ticks": 30019713,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/launcher.json",
+            "sha256": "6c48a2892ac66b3302decde79eba6fd9af072acde73f5d3806060cf8a49059fa"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/scenario.json",
+            "sha256": "a3e029feb86dede2f02bc253884716f63c517aad6e160457d46411fe4509d377"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/actual-engine-environment.json",
+            "sha256": "adb5306f7b8bfb11d399b7f61740d50f91b58fe2ca19fa556b9fd9c63632529a"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 984213,
+            "start_ticks": 30030235,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "5f48f911eff51d02f50ab597efddd01f7df1ffc37bdbc8640ff61d829e6f8c17"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/launcher.json",
+            "sha256": "e6fef1c674a6029cc2344da944548ccff246d2449f675f311f159db98e374326"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/scenario.json",
+            "sha256": "df7e12800ef8a97ad1c7aa88f817267ed08a97725b2ea45a8149a01409043164"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/actual-engine-environment.json",
+            "sha256": "37b33575d7dd68429b7b37564bad8070730b5d16bb61f7968892dc3a9af629cf"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/player-blockhit-first.png",
+          "sha256": "108fb26d6c839f4830ae5423be35cf782f19ab0e0079bb79183529dd3d2e866f",
+          "finding": "Third-person raised guard visible without the first-camera polygon distortion in this still."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/first/settled.png",
+          "sha256": "48ebea9f6eaa05807fdc4ea404f292f5bc002655149f906271bdc1313115c203",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-normal-third-02/second/settled.png",
+          "sha256": "4d0548336df1e6a3bdcc2d7900dbd709cc5093eaf7ff13adb6663d11566badb6",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "camera": "first",
+      "directory": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/verification.json",
+        "sha256": "0869a8faf46e4cad070b18197cddefe5f6e7a8a2d6ed21222a8139831c29b723"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/threaded-shutdown-verification.json",
+        "sha256": "758d538aa6c809972a141964e197f8262d77fe62b4ce637d6d687fbe727fb27f"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/preregistered.json",
+        "sha256": "d2eef5f5d6d7db781f4dcad467d2549cfda4ed0bb231c930987ebe9c94a33f03"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/manifest.json",
+        "sha256": "4af4087e1c3f99ad610f025c46976b80a2a703fac8281673b1cd5bda3bc925cd"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/continuation.json",
+        "sha256": "d82cfb777d5ceae810e9d71e9f931840c3101c65af65b9d525dc63c1b7415d06"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/restart-selection.json",
+        "sha256": "013d7ba3b446fe09c6986b6a9d62345993a972fbe28aa7e11543a8c4447d2895"
+      },
+      "captured_body_first_person_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 984273,
+            "start_ticks": 30038879,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "da28f10b8b4dcd96fb37beeb6ccee26db95b0212c3e667fbe1bb3523dd12689c"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/launcher.json",
+            "sha256": "61cf7d37f1a50ebf7b488b0604aaf2587c5072a96845d7a45fccba4faf913a14"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/scenario.json",
+            "sha256": "9efbe7bab4de73cc20cdf605acf2f04c3bfa0eab6e4df2639dddf736f2bd92ec"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/actual-engine-environment.json",
+            "sha256": "907f5092e63ace4c15ef3147b6a2903150cb0fdb8f4df946998d766e3416df00"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 984677,
+            "start_ticks": 30089772,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "da28f10b8b4dcd96fb37beeb6ccee26db95b0212c3e667fbe1bb3523dd12689c"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/launcher.json",
+            "sha256": "a2f258cbc462d004520a9319cecdefd59e333bb4429979ba7e4532de43ca04ea"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/scenario.json",
+            "sha256": "9d7b3504f953503f9a5c2aa1d08490ed624335f5e9b65e36b977743fc3e7be55"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/actual-engine-environment.json",
+            "sha256": "a87184de5d76f7082b9735e7ce9c8fe918815d604dd38059ceb7ed291fdd0574"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/player-blockhit-first.png",
+          "sha256": "5d862b6d45143b9bb0a90781c96c776493332d9ba32ed97d6d174760f44a7fb9",
+          "finding": "FAIL: large orange skin-colored polygons obscure the first-person contact view; precise rendering cause unresolved."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/first/settled.png",
+          "sha256": "786625c6c54fb376866700ec219b920febef1c91a0ecd458b235439c4e4f0c1f",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-first-02/second/settled.png",
+          "sha256": "17e0a491a7c4a4c82fb3cf667d38e01a406d0314ca0467a973226912c20ebdcb",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "camera": "third",
+      "directory": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/verification.json",
+        "sha256": "d1643e36e23324cb3321a593a93e38430b34c993443283df5c1dae95c5ec3c4c"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/threaded-shutdown-verification.json",
+        "sha256": "b0747e688b0080e8cf90986a57b196e71d07e502446583c9c487b900a35255d7"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/preregistered.json",
+        "sha256": "376bd8a4a6f7c97b3052b2c48b74b612b9301665cb272d3cb547f9b363b32ddf"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/manifest.json",
+        "sha256": "91467b5f155931b8968c5c4830b47c3b16e18e074e9b2a73fe79c76eaf5722bb"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/continuation.json",
+        "sha256": "6a7c3be79c32c0b60ba801b44e416a06f0ce904857064294a32a58141a12e383"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/restart-selection.json",
+        "sha256": "130396c06de818a108048d33c9a320f24a7ca7db42c03a4f785d01c427295a11"
+      },
+      "captured_body_first_person_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 984967,
+            "start_ticks": 30130221,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "da28f10b8b4dcd96fb37beeb6ccee26db95b0212c3e667fbe1bb3523dd12689c"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/launcher.json",
+            "sha256": "80edb523de4a1f0a249e312184f14b0696da8e4a7a4c121c05de4418fb53ff82"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/scenario.json",
+            "sha256": "c6dcd63956fb39d16e1e69d40e5ab861c94463ac1d4ec57df2ac634ce060aaa9"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/actual-engine-environment.json",
+            "sha256": "f1517f9ef4a87d2cf63369b47a220cbd6266b97c931120e6239662a0bbb66bc2"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 985274,
+            "start_ticks": 30182245,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "da28f10b8b4dcd96fb37beeb6ccee26db95b0212c3e667fbe1bb3523dd12689c"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/launcher.json",
+            "sha256": "2b83d48c973b862140635411fe717414302b4e7da44c0d181d8a79b5fc1ad923"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/scenario.json",
+            "sha256": "8effb02ef6c7569f928204709a3740742bba09006969e2642c7fb0d88f4afd9c"
+          },
+          "actual_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/actual-engine-environment.json",
+            "sha256": "ac04023f82930baf5c4872ac07159125f0b87f756f44a31057ec5703ddab2c3e"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/player-blockhit-first.png",
+          "sha256": "2745fa6bc003450b6edd2401349d64c3ab37fc00ae5fe405bdab89cfc86cd792",
+          "finding": "Third-person raised guard visible without the first-camera polygon distortion in this still."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/first/settled.png",
+          "sha256": "a8a0a382ad3d3ea8ecbad387ce4378f8933c8477d1c59a761bc6a1f66f22300f",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-render-shutdown-cached-block-sanitized-third-02/second/settled.png",
+          "sha256": "ed104c03307079eeeff4e862ee50a10822568dd45a373f6ffc99bb737dce9ccf",
+          "finding": "Recovered ready sword posture visible in intended camera after release or fresh-process recovery."
+        }
+      ]
+    }
+  ],
+  "completed_engine_processes": 8,
+  "exact_save_live_pairs": 12,
+  "original_reference_inventories_per_final_save": 36289,
+  "state_restart_acceptance": true,
+  "threaded_shutdown_acceptance": true,
+  "visual_acceptance": false,
+  "audio_acceptance": false,
+  "full_M15S4_acceptance": false,
+  "evidence_helpers": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-reviewed-threaded-cached-matrix-02.py",
+      "sha256": "c083f59b010ec2dc008583239bc776404cf1494bc8f2950cbb39f0a7b128e517"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-threaded-reaction-course.py",
+      "sha256": "ce5957086d60cda8049f9ea10274ec2edd8c5232aae3a9a51aa1d484f0593eea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-cached-block-regression.py",
+      "sha256": "186f707403dec755d38540daaa1f7ee5084049efbde364e370e54569df60e36e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-threaded-shutdown.py",
+      "sha256": "0815dbd8424133d45837b700f426887ad5056640890c0839fc106b2530efc171"
+    }
+  ],
+  "visual_diagnosis": "Finite captured locals, near-unit quaternions and scales near1 do not identify the cause. Geometry/camera/skin investigation remains open; no quaternion/blend arithmetic changes inferred from screenshots.",
+  "limits": [
+    "Synthetic holds and one-second authored blends; sound disabled.",
+    "Configured60FPS cap is not measured60FPS. Leak checking disabled.",
+    "Current first-person contact rendering fails image review. Full M15S4 incomplete."
+  ]
+}

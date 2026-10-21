@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "purpose": "Paired same-cached Player BlockHit replacement and captured restart; visual acceptance is a separate gate.",
+  "profiles": [
+    "normal",
+    "ASan/UBSan"
+  ],
+  "cameras": [
+    "first",
+    "third"
+  ],
+  "fixture_recipe": "scripts/data/oblivion_compat/m15_player_cached_block_hold_fixture.json",
+  "input_recipe": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+  "expected": {
+    "npc_contacts": [
+      2,
+      3
+    ],
+    "next": 4,
+    "pending": [],
+    "player_weapon_condition": 55.826988220214844,
+    "opponent_weapon_condition": 55.400001525878906,
+    "player_health_damage": -1.9427038431167603,
+    "rng": 773150046,
+    "combat_random_draws_per_contact": 2,
+    "player_health_damage_bits": 3220744837
+  },
+  "rng_derivation": {
+    "source": 505908858,
+    "draws": 4,
+    "recurrence": "(state*214013+2531011) mod 2^32; independently computed Python integer stores; native CRT recurrence already proven in original resource-selection corpora",
+    "final": 773150046
+  },
+  "baseline_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Player BlockHit ready: load=1 frame=5",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "sleep",
+      "seconds": 8
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "f"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Player BlockHit camera: first",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "key_held",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: startcombat actor=content:oblivion.esm:01fc43",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=3 fatigue_cost=7.8",
+      "timeout_seconds": 120,
+      "poll_interval_seconds": 0.005
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.01
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction bind: actor=dynamic:player:0000000000000001 cause=3 group=onehandblockhit pose_tracks=64 view=body",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction bind: actor=dynamic:player:0000000000000001 cause=3 group=onehandblockhit pose_tracks=66 view=first",
+      "timeout_seconds": 240
+    },
+    {
+      "type": "screenshot",
+      "name": "player-blockhit-first.png",
+      "minimum_entropy": 0.03,
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=3",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "continuation_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=3",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 Player BlockHit ready: load=2 frame=5",
+      "timeout_seconds": 300
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "player-blockhit-recovered.png",
+      "minimum_entropy": 0.03,
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "restart_selection": "First completed post-contact3 save, both body and first-person cause3 captured poses retained; no retry or numeric/image-based selection.",
+  "requirements": [
+    "Keep cause2 paired heads retained until cause3; require previous_cause=2 previous_first_cause=2 and forbid cause2 Player recovery.",
+    "Exactly two production stationary NPC contacts, IDs2/3. StopCombat explicitly cancels NPC second Recoil.",
+    "Exactly two baseline and one fresh-process restart save/live pairs; compare complete decoded state.",
+    "Require Player process_action=-1 and empty paired reaction/strike/retiring state after release/recovery.",
+    "Verify all original36289 reference inventories and complete Player inventory with only declared weapon wear.",
+    "Final baseline and restart ledger, RNG, actor values/life/bases, bow and loose weapons equal exactly.",
+    "Actual DrawThreadPerContext environment; last thread stop follows last start and precedes peaceful exit.",
+    "Direct image review must independently accept visible rendering; state/lifecycle success does not imply visual success."
+  ],
+  "limits": [
+    "Synthetic holds and one-second authored blends; sound disabled.",
+    "Configured60FPS cap is not measured60FPS. Leak checking disabled.",
+    "Current first-person contact rendering fails image review. Full M15S4 incomplete."
+  ]
+}
