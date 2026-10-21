@@ -1699,14 +1699,22 @@ namespace MWMechanics
         for (unsigned view = 0; view < groups.size(); ++view)
             for (const auto group : groups[view])
             {
+                const auto& reaction = view ? state->mFirstPerson->mReaction : state->mReaction;
+                const auto& passive = view ? state->mFirstPerson->mPassiveSequence : state->mPassiveSequence;
+                const auto* passiveReaction = passive
+                    ? std::get_if<ESM4::RuntimeMeleeReaction>(&passive->mSequence) : nullptr;
                 auto source = captureOblivionMeleeSequenceMetadata(view ? *peer : *mAnimation, group,
-                    view ? (state->mFirstPerson->mReaction && state->mFirstPerson->mReaction->mAnimationGroup == group)
-                        : (state->mReaction && state->mReaction->mAnimationGroup == group));
+                    (reaction && reaction->mAnimationGroup == group)
+                        || (passiveReaction && passiveReaction->mAnimationGroup == group));
                 source.mFirstPerson = view != 0;
                 const auto& strike = view ? state->mFirstPerson->mStrike : state->mStrike;
-                if (strike && strike->mAnimationGroup == group && state->mFirstPerson && state->mFirstPerson->mStrike)
+                const auto* passiveStrike = passive
+                    ? std::get_if<ESM4::RuntimeMeleeStrike>(&passive->mSequence) : nullptr;
+                const auto* advancingStrike = strike && strike->mAnimationGroup == group
+                    && state->mFirstPerson && state->mFirstPerson->mStrike ? &*strike : passiveStrike;
+                if (advancingStrike && advancingStrike->mAnimationGroup == group)
                 {
-                    const bool power = strike->mKind >= ESM4::MeleeStrikeKind::StandingPower;
+                    const bool power = advancingStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower;
                     const auto playback = nativeMeleePlayback(view ? *peer : *mAnimation, group, power);
                     if (!playback) throw std::invalid_argument("native owned strike metadata is missing");
                     if (power) source.mPowerKeys = playback->mPowerKeys;

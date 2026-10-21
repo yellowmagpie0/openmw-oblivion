@@ -9977,7 +9977,7 @@ not measured; sound is disabled. M15S4 remains incomplete.
 ### Native counter dispatch and correction to the passive-phase assumption
 
 Independent execution of the pinned original executable now covers1,024 counter
-branch contexts and160 paired Stagger/slot3 phase-prefix contexts. The counter
+branch contexts and240 paired Stagger/slot3 phase-prefix contexts. The counter
 branch uses BlockAttack29/action2, attempts its target at AnimData phase1, calls
 disarm then Stagger when a target exists regardless of the disarm result, and
 immediately recovers action6 with the same sequence, including on acquisition
@@ -9989,8 +9989,8 @@ action6 table entry and an incorrect armor-getter calling convention.
 The phase-prefix probe exposes an earlier interpretation error. The previous
 manager-only evidence never executed the AnimData prefix and cannot justify
 freezing ordinary/power phases, speed correction or reaction Start/End. Actual
-Stagger activation leaves the freeze selector FF and speed unchanged; all80
-activated contexts match the80 baseline slot3 histories through phase changes
+Stagger activation leaves the freeze selector FF and speed unchanged; all120
+activated contexts match the120 baseline slot3 histories through phase changes
 and End retirement, while process action stays8. Actual metadata lookup, slot
 reset, retirement/deactivation and controller updates execute on supplied
 fixtures. No complete original actor frame or live normal-input result is
@@ -10006,3 +10006,63 @@ The editable manifest, exact instruction scope, hashes and retained failures
 are recorded in
 [`M15-STAGGER-NATIVE-DISPATCH-VERIFICATION.json`](M15-STAGGER-NATIVE-DISPATCH-VERIFICATION.json).
 M15S4 remains incomplete.
+
+
+The phase-prefix corpus was rerun with an explicit group/subtype/key-count gate
+and x87 control words007F,027F and037F. An initial fixture incorrectly labeled
+ordinary right21 as power and supplied three keys; that160-case attempt is
+retained and excluded from final acceptance. The corrected corpus uses standing
+power22/subtype5. Its240 contexts and120 activation/baseline pairs all pass.
+Seven007F cases supply fixed bit observations for engine regressions, covering
+ordinary speeds.7/1/2/20 and power/BlockHit/Recoil, eight frames each.
+
+
+### Correct passive slot3 phases, speed and End retirement
+
+The passive path now follows the actual AnimData prefix: ordinary/power speed
+correction and one visual phase step, or BlockHit/Recoil Start/End processing,
+then controller timing. End immediately detaches slot3 into the existing
+retirement layers; the manager advances that layer once in the same frame and
+removes it on completion. Gameplay process action and the consumed cause remain
+unchanged. Each renderer view supplies the correct phase metadata. Missing
+metadata rejects atomically. Independent clocks, captured destinations and
+schema59 restart remain supported; no wire-format change is involved.
+
+Seven fixed original007F cases cover ordinary speeds.7/1/2/20 plus standing
+power, BlockHit and Recoil over eight frames in both views. The engine test
+compares112 view samples for exact phase/residency, retirement state, offset and
+output bits, and checks56 binary restart checkpoints with unchanged resources,
+RNG, action8 and consumed ledger. The16-context contact publication matrix now
+requires visual phase progress and eventual removal. Requests after every
+history has expired return no frame and preserve the whole state. Readmission
+fixtures supply actual phase metadata. Normal and ASan/UBSan full inventories
+each pass1,786 tests across125 suites with no failures or skips on the same
+source fingerprint. Leak detection is disabled.
+
+The first normal attempt passed1,785/1,786 tests, including the new original-bit
+comparison; the legacy contact fixture still demanded a frame after all history
+expired. That expectation was corrected without weakening binary/resource or
+phase checks. Its paired sanitizer build was deliberately stopped. Both failed
+attempts and the earlier wrong-group native fixture remain retained.
+
+A rendered normal-build, first-person course loads the existing injected Left
+history and independently clocked Player views beside an authored eight-second
+Stagger retirement. At the first normalF5 save, both passive slots and their
+retirement layers are absent while both Stagger reactions and action8 remain
+active. The process then recovers Stagger automatically. A fresh process loads
+the exact early save and reaches the same completed state. Three whole saved/
+live pairs and both load-owned-state/clock comparisons match. Resources, bases,
+combat RNG, ledger and all36,762 initial inventories are unchanged; all37,365
+early-save inventories and every saved Player field match the uninterrupted
+completion exactly. No strike selection/contact occurs. All three captures
+were directly inspected: Player arms and the NPC body are visible without torso
+obstruction or exploding geometry. Both epochs exit with draw workers joined.
+
+Editable manifests, original observations, source/binary identities, exact
+inventories, runtime comparisons and retained failures are pinned in
+[`M15-PASSIVE-SLOT3-PHASE-CORRECTION-VERIFICATION.json`](M15-PASSIVE-SLOT3-PHASE-CORRECTION-VERIFICATION.json).
+This accepts the bounded passive recovery correction. Initial history and the
+eight-second Stagger interval are injected, sound is disabled and FPS is
+configured rather than measured. Normal Stagger/counter triggering, outgoing
+slot0/cached replacement and the broader mastery/input/cancellation/E2E gates
+remain open. M15S4 remains incomplete.

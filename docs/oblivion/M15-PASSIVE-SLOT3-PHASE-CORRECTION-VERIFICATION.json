@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "status": "Passive slot3 visual phase/speed/End correction verified against original instructions, both full engine inventories, and a rendered two-process recovery course. M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "6d3a3f2d1500af18c0db6d83335c3d750e1d989d",
+    "source_fingerprint": "cfa4737a5e8ddd940a9c0cb47ae5e410f0ccd92f50199168093bc244d32d63ef"
+  },
+  "implementation": [
+    "Passive ordinary/power slots run native speed correction and one visual phase step before controller-manager update, independently of process action.",
+    "Passive BlockHit/Recoil run native Start/End processing without changing process action or acquiring contact authority.",
+    "At End, detach slot3 immediately into the existing consumed-cause retirement layers; update the layer once in the same frame and erase it on completion.",
+    "Preserve independent Player view clocks, captured-destination timing and schema59 restart. Legacy passive reactions already retiring transfer their existing interval. No schema/wire-format change.",
+    "Collect actual passive ordinary/power keys and reaction Start/End metadata from each renderer view. Reject missing metadata atomically."
+  ],
+  "independent_native_evidence": {
+    "path": "docs/oblivion/M15-STAGGER-NATIVE-DISPATCH-VERIFICATION.json",
+    "sha256": "1ae3860248b3ec62bf044563d1302619304e83523097817934fd8f338e59fa0c"
+  },
+  "coverage": {
+    "native_bit_observation_test": "OblivionWorldTest.PassiveSlot3MatchesOriginalPhaseSpeedAndEndRetirement",
+    "fixed_observations": {
+      "path": "apps/openmw_tests/mwworld/staggerprefixoracle.hpp",
+      "sha256": "ce9a83aac9919b87d1b83e515da7fb42c70fd40ba93615ddb9981edbdb14cb52"
+    },
+    "native_cases": 7,
+    "frames_per_case": 8,
+    "views_per_case": 2,
+    "view_samples": 112,
+    "frame_restart_checkpoints": 56,
+    "ordinary_speeds": [
+      0.7,
+      1,
+      2,
+      20
+    ],
+    "other_protocols": [
+      "standing power",
+      "BlockHit",
+      "Recoil"
+    ],
+    "assertions": [
+      "Exact native phase/resident-versus-detached state, offset and output bits from original007F execution.",
+      "Both views and actor clock advance once.",
+      "Frozen preparation retains clock/phase/offset and follows state1 previous-output timing.",
+      "Missing phase metadata rejects without any binary state change.",
+      "Resources, process action8, RNG and consumed action ledger remain exact through every native frame/restart checkpoint."
+    ],
+    "contact_publication_test": "OblivionWorldTest.StaggerContactRetainsIndependentSlot3WithoutContactAuthority",
+    "contact_contexts": 16,
+    "contact_frame_or_idle_restart_checkpoints": 128,
+    "legacy_fixture_adjustments": "Readmission fixtures now supply real phase metadata. The contact fixture requires phase progress and eventual End removal, and asserts no mutation when a frame is requested after all history expired."
+  },
+  "checks": {
+    "normal": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-correction-normal-02/verification.json",
+        "sha256": "e5dc956e3f21af05cc2c4d2546511df66d508159d32a3ef180016a5270ceff43"
+      },
+      "source": {
+        "head": "6d3a3f2d1500af18c0db6d83335c3d750e1d989d",
+        "source_fingerprint": "cfa4737a5e8ddd940a9c0cb47ae5e410f0ccd92f50199168093bc244d32d63ef"
+      },
+      "result": {
+        "executed": 1786,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3013e21a844cf95752198eb4a1e043eae3c011f9bf10bd2566d3fc26599b50ec",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "a5208f57ff49b760439c2eeffa9b79a0b1870a7677da4686e20446e6b2637e5c",
+        "inventory_sha256": "16f951b56cd316f2b3ff47f7c0a46331409f6c2071d98b3fef5f0556c9463f3d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125
+    },
+    "sanitized": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-correction-sanitized-02/verification.json",
+        "sha256": "6fe642b8a6693204bac63cb7c605d8746a2270c983c5574418e75da765c6c9b5"
+      },
+      "source": {
+        "head": "6d3a3f2d1500af18c0db6d83335c3d750e1d989d",
+        "source_fingerprint": "cfa4737a5e8ddd940a9c0cb47ae5e410f0ccd92f50199168093bc244d32d63ef"
+      },
+      "result": {
+        "executed": 1786,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5fc44fb007167f390b98949cdadb7aa3e7be97ed91e71a8d2a1cc0796c0027bd",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "fe4351591c36753cd38bc998b1007a2881f988af26cbdee15cb4a10f21f628aa",
+        "inventory_sha256": "16f951b56cd316f2b3ff47f7c0a46331409f6c2071d98b3fef5f0556c9463f3d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125,
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "26124f202b177b979c7a8cb8d0bdc5391639eeddf1c93ca0f8f77d52a1e00ca3"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "2957b91be6f8bf3b31324c76306449689c432796c331a7da12367709844e0dca"
+    }
+  },
+  "rendered_runtime": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/passive-phase-restart-verification.json",
+      "sha256": "7b1c179fc15a536ed5d53ff793c61a73b3ba7e395874612522cabe3808c182c7"
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/verify.py",
+      "sha256": "fd06b09f7b1b34311ef162bf79b27c7fa6bfc3226f3a82e69a56340d8177a140"
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/preregistered.json",
+      "sha256": "8dc344632c86760bb6ad7c78291e3f943628f1928103f53032d0a7b00b19dda6"
+    },
+    "visual_review": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/visual-review.json",
+      "sha256": "e442449f4536fd8ab5b721238bab10a8d59b8f22ed756a8f6cea400ecca38692"
+    },
+    "result": {
+      "passed": true,
+      "scope": "Previously injected consumed Player Left passive history with independent clocks and authored8s Stagger retirement; actual renderer updates and normalF5 save/restart, not normalStagger activation.",
+      "saves": [
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/first/snapshots/save-3.omwsave",
+          "sha256": "fd4fa22a550aa7a4ea2052e178591db8a6f1ec9e2b950e2be08392ca0a30853d"
+        },
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/first/snapshots/save-4.omwsave",
+          "sha256": "ef7877547e2f060fcf0176968938fe3ee37fbeadd6002dd1e932146cc4e1aa81"
+        },
+        {
+          "phase": "second",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/second/snapshots/save-3.omwsave",
+          "sha256": "e7a7f1af24bc3360920b098f57fc0d19e09b68b26095877ddccc1862e9e520e9"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_clock_comparisons": 2,
+      "both_slots_retire_before_stagger_recovery": true,
+      "resources_bases_rng_ledger_inventories_exact": true,
+      "source_inventories": 36762,
+      "all_early_inventories": 37365,
+      "completed_player_fields_exact": true,
+      "both_epochs_gone": true,
+      "draw_threads_joined_before_exit": true,
+      "normal_Stagger_activation": false,
+      "full_M15S4_acceptance": false
+    },
+    "manifests": [
+      {
+        "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_phase_retirement.json",
+        "sha256": "b401aa1a710bf2c5b8162127b6d530d43b26893fe39d0b9da8e2b5c9a8ce5514"
+      },
+      {
+        "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_phase_retirement_continuation.json",
+        "sha256": "b993a8c8462f978f665927980ff557ad00ebedb187afa4cdb90fbbd2eb42bb1c"
+      }
+    ],
+    "source_fixture": {
+      "path": "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json",
+      "sha256": "df784dfe69f97132933d2df3571b4806f1cb0fe99388293b81160b8d011c5c90"
+    },
+    "input": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/staged-input.omwsave",
+      "sha256": "ac5a730e09c2770a92d154461d1beedba003ba8903b4188ca7d602cf03712811"
+    },
+    "restart_selection": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/restart-selection.json",
+      "sha256": "6cc126541edd69705ed9a3f00469dae1cde5d5ed6683c5cdf0f76040518e5de9"
+    },
+    "actual_engine_environment": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/first/actual-engine-environment.json",
+        "sha256": "8d5ba00554dd6ae1b05d947f179aac8d74aa87cda899a63b257a36b77f72b6ff"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/second/actual-engine-environment.json",
+        "sha256": "0679f8bf8abc91a0c5173f5284e67917a4f5c5dd6ed1d0dfea8a25da547773b2"
+      }
+    ],
+    "launchers": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/first/launcher.json",
+        "sha256": "4a6c8e92ea4e44d24f12ba0dc1221fbda35b66300d3f796b977441eb1796934a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-runtime-normal-first-01/second/launcher.json",
+        "sha256": "822886b11cdc78f8c9f18e3b9abb93a1b088add87850058cade9b6a8e8d48cdf"
+      }
+    ],
+    "scope": "Normal build, first-person camera, independent saved body/FP clocks. Initial consumed Left slot3 and already retiring Stagger0 are injected using the existing editable fixture;8-second Stagger retirement is synthetic. NormalF5 and actual renderer updates/recovery/restart execute. No attack input, normalStagger activation, original-duration or full camera/build/input/FPS/audio matrix acceptance."
+  },
+  "retained_attempts": {
+    "engine_notes": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/engine-retained-attempts.json",
+      "sha256": "c3795035d55f86ace746aa717f0bd953d66706d7826246f98f718ba5038e430c"
+    },
+    "normal01": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-correction-normal-01/verification.json",
+      "sha256": "cd5b9db3056d500cf764af98947489035783306e7fef74ef038411a156711644"
+    },
+    "sanitized01": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-phase-correction-sanitized-01/verification.json",
+      "sha256": "d23a4c9497890a3073c0223696f818ebaad5e9e0471d5b30a20f4b4b53678028"
+    },
+    "native_fixture_correction": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/attempt01-scope-correction.json",
+      "sha256": "abafede3e3878fbb106e699d6baefd5bc3c75b6b620f3f16e169f9fe13e6b1aa"
+    }
+  },
+  "warnings": "Existing shadowed iterator, AnimationQueueEntry initialization, optional-pose and aggregate-initializer warnings remain; no warning-free build claim. The initial new frozen-state optional warning was removed by asserting presence and copying its value before visiting.",
+  "validation_layers": {
+    "save_structural_write_and_semantic_reinspection": true,
+    "compiler_or_general_world_validation": false,
+    "engine_service_tests": true,
+    "bounded_actual_runtime_acceptance": true,
+    "new_TES4_content_authoring_or_TES3_MCP_support": false
+  },
+  "remaining_work": [
+    "Normal Stagger/counter initiation, resource-factory selection and actual contact-triggered acceptance.",
+    "Durable outgoing slot0 and active/cached Stagger replacement.",
+    "Remaining directional-power/mastery/knockdown/effect and cancellation requirements.",
+    "Canonical normal-input camera/input/gamepad/FPS/audio/restart and complete M15S4 E2E gates."
+  ],
+  "leak_coverage": false,
+  "full_M15S4_acceptance": false
+}

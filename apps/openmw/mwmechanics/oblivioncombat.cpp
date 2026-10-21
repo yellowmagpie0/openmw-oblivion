@@ -1888,26 +1888,69 @@ namespace MWMechanics
             updateReaction(*next.mReaction, nextClock, false);
         if (next.mFirstPerson && next.mFirstPerson->mReaction && !next.mFirstPerson->mReaction->mInactive)
             updateReaction(*next.mFirstPerson->mReaction, next.mFirstPerson->mClock, true);
-        const auto updatePassive = [&](auto& passive, float viewClock, bool first) {
+        const auto updatePassive = [&](auto& passive, auto& retiring, float viewClock, bool first) {
             if (!passive) return;
-            std::visit([&](auto& sequence) {
+            const bool detached = std::visit([&](auto& sequence) {
                 const auto& source = sourceFor(sequence.mAnimationGroup, first);
-                // Only the controller manager runs here. Ordinary phase/speed
-                // correction and reaction Start/End dispatch belong to the
-                // process action that Stagger replaced, not resident slot3.
                 ESM4::MeleeSequenceTiming* timing;
+                bool retire = false;
+                std::optional<ESM4::RuntimeReactionRetirement> retirement;
                 if constexpr (std::is_same_v<std::decay_t<decltype(sequence)>, ESM4::RuntimeMeleeReaction>)
                 {
-                    if (sequence.mInactive) return;
-                    if (sequence.mRetirement)
-                    {
-                        sequence.mInactive = !updateRetirement(sequence.mSequenceTiming, sequence.mAnimationTime,
-                            *sequence.mRetirement, source, viewClock);
-                        return;
-                    }
+                    if (sequence.mInactive) return true;
                     timing = &sequence.mSequenceTiming;
+                    retirement = sequence.mRetirement;
+                    if (!source.mReactionKeys)
+                        throw std::invalid_argument("native passive reaction has no Start/End keys");
+                    if (!retirement && !freezeClock && !timing->mEasing && timing->mOffset)
+                    {
+                        const auto progress = ESM4::advanceReactionSlot(
+                            sequence.mStarted, *timing->mOffset, viewClock, *source.mReactionKeys);
+                        sequence.mStarted = progress.mStarted;
+                        retire = progress.mRetire;
+                    }
                 }
-                else timing = &*sequence.mSequenceTiming;
+                else
+                {
+                    if (!sequence.mSequenceTiming)
+                        throw std::invalid_argument("native passive strike has no timing");
+                    timing = &*sequence.mSequenceTiming;
+                    const bool power = sequence.mKind >= ESM4::MeleeStrikeKind::StandingPower;
+                    if (power ? !source.mPowerKeys : !source.mOrdinaryKeys)
+                        throw std::invalid_argument("native passive strike has no phase keys");
+                    // AnimData advances every resident slot independently of
+                    // process action. This visual phase never dispatches a hit.
+                    if (power)
+                        (void)ESM4::advancePowerMeleePhase(
+                            sequence.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start), 0, 0, *source.mPowerKeys);
+                    else
+                        (void)ESM4::advanceOrdinaryMeleePhase(sequence.mOrdinaryPhase, 0, 0, *source.mOrdinaryKeys);
+                    if (!freezeClock && !timing->mEasing && timing->mOffset)
+                    {
+                        timing->mOffset = ESM4::correctMeleeSequenceOffset(
+                            *timing->mOffset, source.mBegin, sequence.mPlaybackSpeed, duration);
+                        if (power)
+                            sequence.mPowerPhase = ESM4::advancePowerMeleePhase(
+                                sequence.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start),
+                                *timing->mOffset, viewClock, *source.mPowerKeys);
+                        else
+                            sequence.mOrdinaryPhase = ESM4::advanceOrdinaryMeleePhase(
+                                sequence.mOrdinaryPhase, *timing->mOffset, viewClock, *source.mOrdinaryKeys);
+                        const float end = power ? source.mPowerKeys->back() : source.mOrdinaryKeys->back();
+                        retire = ESM4::advanceReactionSlot(true, *timing->mOffset, viewClock, {0, end}).mRetire;
+                    }
+                }
+                // Original4733A0 clears slot3 immediately at End, then the
+                // manager advances its detached state3 layer in this frame.
+                if (retire || retirement)
+                {
+                    if (!retirement && source.mRetirementDuration > 0)
+                        retirement = ESM4::RuntimeReactionRetirement{source.mRetirementDuration, {}};
+                    if (retirement)
+                        retiring.push_back(ESM4::RuntimeRetiringMeleeSequence{passive->cause(),
+                            sequence.mAnimationGroup, sequence.mAnimationTime, *timing, *retirement});
+                    return true;
+                }
                 *timing = ESM4::updateMeleeSequenceTiming(*timing, viewClock,
                     source.mFrequency, source.mBegin, source.mEnd,
                     sequence.mPoseSnapshot ? std::optional(sequence.mPoseSnapshot->mDestinationFrame) : std::nullopt);
@@ -1916,10 +1959,14 @@ namespace MWMechanics
                 if (target < sequence.mAnimationTime)
                     throw std::invalid_argument("native passive sequence renderer rewind");
                 sequence.mAnimationTime = target;
+                return false;
             }, passive->mSequence);
+            if (detached) passive.reset();
         };
-        updatePassive(next.mPassiveSequence, nextClock, false);
-        if (next.mFirstPerson) updatePassive(next.mFirstPerson->mPassiveSequence, next.mFirstPerson->mClock, true);
+        updatePassive(next.mPassiveSequence, next.mRetiringSequences, nextClock, false);
+        if (next.mFirstPerson)
+            updatePassive(next.mFirstPerson->mPassiveSequence, next.mFirstPerson->mRetiringSequences,
+                next.mFirstPerson->mClock, true);
         auto retained = next.mRetiringSequences.begin();
         for (auto current = next.mRetiringSequences.begin(); current != next.mRetiringSequences.end(); ++current)
             if (updateRetirement(current->mSequenceTiming, current->mAnimationTime,

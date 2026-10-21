@@ -1,40 +1,45 @@
 {
   "schema_version": 1,
-  "status": "Independent original-instruction evidence; passive phase-freeze assumption falsified. Production correction remains required.",
-  "tested_head": "6adb640869",
+  "status": "Independent original-instruction evidence supersedes the earlier passive-phase-freeze interpretation. Production correction and engine/runtime results are recorded separately in M15-PASSIVE-SLOT3-PHASE-CORRECTION-VERIFICATION.json.",
+  "tested_head": "6d3a3f2d1500af18c0db6d83335c3d750e1d989d",
   "manifest": {
     "path": "scripts/data/oblivion_compat/m15_stagger_native_dispatch_oracle.json",
-    "sha256": "d120b618b644c9c428493b8ee315a334dbd83596f6c070cd19fdd6948e149aee"
+    "sha256": "d535b5319356f0fa3f0a365369116f99ac7a1568b200c5fbc839fffa2b5ba9ac"
   },
   "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
   "phase_prefix": {
     "verification": {
-      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/verification01.json",
-      "sha256": "d6dfd43e6aa45b20a3c3be5ede5203dd211377939511397a15a88535a4523af8"
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/verification02.json",
+      "sha256": "4db0573a8d98cd6532411b6fbd2a2fe2402644f5bed45c707d32bdc66daeda1a"
     },
     "harness": {
-      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/probe-01.py",
-      "sha256": "5df0bf2dd3899a706a51b8661e2466b7f7cae6fe9475dbd33aed9c0ae9da1f98"
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/probe-02.py",
+      "sha256": "5293438b4357430b1b9cf567a8695871b0ed0f3d803418fcbea377ce6a4e1ee0"
     },
     "corpus": {
-      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/corpus01.json",
-      "sha256": "8804f76714bc49f2e4a7aa99209362c104314a6a4b7d8e20df14869849a46141"
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/corpus02.json",
+      "sha256": "b2f5974104626e68df5df7d43796ce1465d3c196e299f958e8fda996bcd59fd0"
     },
     "preregistered": {
-      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/preregistered.json",
-      "sha256": "ce1f4c36156eabfb20c93ff5a697ad24132859565159c05155ee6560bdf7d948"
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/preregistered02.json",
+      "sha256": "883eaa86ea13e52a31a954e303ecdd64dc095ed198d54a5b96317397a115dfd7"
     },
     "result": {
       "passed": true,
-      "cases": 160,
-      "matched_activation_baseline_pairs": 80,
-      "stagger_cases_with_phase_change": 80,
-      "stagger_cases_with_end_retirement": 80,
+      "cases": 240,
+      "matched_activation_baseline_pairs": 120,
+      "stagger_cases_with_phase_change": 120,
+      "stagger_cases_with_end_retirement": 120,
       "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
-      "corpus_sha256": "8804f76714bc49f2e4a7aa99209362c104314a6a4b7d8e20df14869849a46141",
-      "harness_sha256": "5df0bf2dd3899a706a51b8661e2466b7f7cae6fe9475dbd33aed9c0ae9da1f98",
-      "scope": "Actual Stagger helper then original slot3 AnimData clock/phase/speed/retirement prefix and NI manager; supplied controller/cache/metadata fixture, not full actor frame or normal input.",
-      "conclusion": "All 80 Stagger cases exactly match baseline slot3 state apart from actor process action. Earlier manager-only probe does not justify freezing AnimData phases, speed or End retirement."
+      "corpus_sha256": "b2f5974104626e68df5df7d43796ce1465d3c196e299f958e8fda996bcd59fd0",
+      "harness_sha256": "5293438b4357430b1b9cf567a8695871b0ed0f3d803418fcbea377ce6a4e1ee0",
+      "scope": "Actual Stagger helper then slot3 AnimData clock/phase/speed/retirement prefix and NI manager; correct20 ordinary/22 power/28 BlockHit/30 Recoil metadata; supplied fixture, not full actor frame or normal input.",
+      "x87_control_words": [
+        127,
+        639,
+        895
+      ],
+      "conclusion": "All120 Stagger contexts match baseline slot3 history apart from process action, which stays8 through retirement."
     },
     "executed_paths": [
       "Actual5F4FD0 and its resource/activation/action-writing helpers with existing cache fixtures.",
@@ -46,7 +51,24 @@
       "Only slot3 phase prefix executes; no other slots or complete actor frame.",
       "Metadata key times and playback-speed storage are supplied, not extracted from game animation assets."
     ],
-    "finding": "Stagger leaves the freeze selector FF and speed storage unchanged. All80 activated contexts advance and retire identically to baseline. Gameplay action remains8 throughout, including old-slot End retirement. Visual phase advancement is independent of action/contact dispatch."
+    "finding": "Stagger leaves the freeze selector FF and speed storage unchanged. All120 activated contexts advance and retire identically to baseline. Gameplay action remains8 throughout, including old-slot End retirement. Visual phase advancement is independent of action/contact dispatch.",
+    "retained_failures": [
+      {
+        "report": {
+          "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/attempt01-scope-correction.json",
+          "sha256": "abafede3e3878fbb106e699d6baefd5bc3c75b6b620f3f16e169f9fe13e6b1aa"
+        },
+        "original_verification": {
+          "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/verification01.json",
+          "sha256": "d6dfd43e6aa45b20a3c3be5ede5203dd211377939511397a15a88535a4523af8"
+        },
+        "reason": "Probe01 mislabeled ordinary right21 as power and supplied3 keys to subtype4. Excluded from final acceptance; probe02 asserts group22/subtype5/key cardinality and includes live007F."
+      }
+    ],
+    "fixed_cpp_observations": {
+      "path": "apps/openmw_tests/mwworld/staggerprefixoracle.hpp",
+      "sha256": "ce9a83aac9919b87d1b83e515da7fb42c70fd40ba93615ddb9981edbdb14cb52"
+    }
   },
   "counter_dispatch": {
     "verification": {
@@ -96,9 +118,10 @@
     ]
   },
   "production_implications": [
-    "Replace manager-only passive advancement with native visual phase/speed/End processing, while preserving consumed contact authority.",
+    "Passive phase/speed/End correction is verified separately in M15-PASSIVE-SLOT3-PHASE-CORRECTION-VERIFICATION.json.",
     "Normal counter initiation/dispatch, target acquisition, Stagger resource selection, slot0 replacement and full runtime acceptance remain unimplemented or unverified."
   ],
   "runtime_acceptance": false,
-  "full_M15S4_acceptance": false
+  "full_M15S4_acceptance": false,
+  "source_scope": "Checkout identity for the latest phase-prefix probe; original executable hash and harness/corpus pins identify the independent expectations."
 }
