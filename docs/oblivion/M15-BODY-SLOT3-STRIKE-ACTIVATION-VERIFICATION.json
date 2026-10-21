@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "status": "Body-only NPC strike activation from passive/pending slot3 verified in engine/service tests; rendered NPC readmission course is in progress.",
+  "tested_source": {
+    "head": "2b55750d1da8090557b5c2756b1411183b928209",
+    "source_fingerprint": "c8144603ba04045361347094fb17ee9ef6be3a049c877431287c485567d06e76"
+  },
+  "implementation": [
+    "Activation packet first-person view is optional for nonplayers and mandatory for Player packets. Foreign/absent view ownership rejects before allocation.",
+    "NPC controller prepares actual resident slot3 captured/outgoing history rather than dropping it or overwriting fresh timing after admission.",
+    "Body-only ordinary/power frame adapters carry saved captured destination to the manager and release the snapshot when easing completes.",
+    "Zero-additional-duration frame projection includes captured body strikes and their own group metadata, preserving one body clock advancement per controller frame."
+  ],
+  "coverage": {
+    "test": "OblivionWorldTest.BodyStrikeActivationReplacesPassiveOrPendingNpcSourcesAtomically",
+    "contexts": 24,
+    "passive_contexts": 16,
+    "pending_primary_contexts": 8,
+    "passive_protocols": [
+      "ordinary",
+      "standing power",
+      "BlockHit",
+      "Recoil"
+    ],
+    "primary_protocols": [
+      "ordinary",
+      "standing power"
+    ],
+    "incoming": [
+      "ordinary Right",
+      "standing power"
+    ],
+    "source_capture_states": [
+      "steady",
+      "captured"
+    ],
+    "same_cached_power_capture": true,
+    "raw_saved_predecessor_timing_comparison": true,
+    "restart_checkpoints": 96,
+    "checks": [
+      "Actual typed Stagger frame/prefix recovery in passive contexts.",
+      "Missing timing, malformed timing/outgoing and unexpected FP view/history reject with exact whole-binary preservation.",
+      "No-packet replacement rejects; Player body-only explicit packet rejects in the paired ownership test.",
+      "One new pending action; prior canceled/pending cause consumed exactly once; old cause cannot contact again.",
+      "Body-only controller order: strike advance, zero-duration outgoing/captured projection; clock not advanced twice.",
+      "Frame/restart checkpoints preserve applied native values, pre-admission bases/RNG and action ledger; pose/outgoing histories finish; explicit cancellation consumes new action."
+    ]
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-normal-03/verification.json",
+      "sha256": "d3404e428ed5c40ca10839e201097fe32e1942a69c3edc94d7cc716456f51e98",
+      "result": {
+        "executed": 1785,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "33dd2b4eb9ac41d0f3af71625c56b60999d2901084eed3765a7a5416286ff2fe",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "961c99fb93e6dc3332d5e8290d9e1599509be268e8c88fe95998dbd59e0db41e",
+        "inventory_sha256": "e22908b9f1562b9830fb6ff54c3abe17857d52c1f7f4d04467675f0c390968b3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-sanitized-03/verification.json",
+      "sha256": "33a44ba8d55a436cfcbe271bc60616bd21442a941be836fb92a262778dc5aefa",
+      "result": {
+        "executed": 1785,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "00806ffd4d751198b18f4b388c83fbc924e5a6b2a72a0f71be42bfe3590ec386",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "e5bb6cbd7489dd292c24f5208c7d6ee01b43f6bf81d2c22d82e8151f2825edf6",
+        "inventory_sha256": "e22908b9f1562b9830fb6ff54c3abe17857d52c1f7f4d04467675f0c390968b3",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "1647d671427ca4086ae40fbdcf855f64fa794a2ff442badd8d39a2564403bc98"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "8033acd0605c7e2efb46688dcf97f0e88823ba346216ec0ad9330174513e9491"
+    }
+  },
+  "sanitizer": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-normal-01/diagnostic.json",
+      "reason": "Build deliberately stopped after review found fixture seed/pre-recovery timing comparison; corrected to raw saved predecessor timing."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-sanitized-01/diagnostic.json",
+      "reason": "Build deliberately stopped after review found fixture seed/pre-recovery timing comparison; corrected to raw saved predecessor timing."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-normal-02/diagnostic.json",
+      "reason": "Normal1784/1785 passed; new test had38 exception-subtype mismatches only. Existing validators throw runtime_error. Sanitizer build stopped; test now uses established std::exception rejection contract with all state/numeric assertions retained."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-body-slot3-strike-activation-sanitized-02/diagnostic.json",
+      "reason": "Normal1784/1785 passed; new test had38 exception-subtype mismatches only. Existing validators throw runtime_error. Sanitizer build stopped; test now uses established std::exception rejection contract with all state/numeric assertions retained."
+    }
+  ],
+  "warnings": [
+    "Existing engine warnings and the prior optional-pose fixture compiler warning remain as already triaged. No warning-free or leak-coverage claim."
+  ],
+  "native_provenance": [
+    "Reuses the existing original474530 slot3 capture/crossfade source table and original6CA950 captured-destination manager behavior. No new formula, native default or original-executable experiment is claimed.",
+    "Existing Stagger slot0/slot3 separation and consumed resident cause evidence remains in M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json."
+  ],
+  "limits": [
+    "Packet/controller wiring rebuilt, but rendered NPC readmission/restart acceptance has not yet been achieved at this checkpoint.",
+    "No additional Creature normal-input acceptance from this nonplayer packet change.",
+    "Normal Stagger slot0 activation/cached replacement, broader input/gamepad/FPS/audio/cancellation and full M15S4 E2E remain open."
+  ],
+  "full_M15S4_acceptance": false
+}

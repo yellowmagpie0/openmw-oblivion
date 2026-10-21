@@ -1659,7 +1659,8 @@ namespace MWMechanics
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
         const auto active = [](const auto* state) {
-            return state && (state->mReaction || state->mPassiveSequence || !state->mRetiringSequences.empty()
+            return state && (state->mReaction || state->mPassiveSequence
+                || (state->mStrike && state->mStrike->mPoseSnapshot) || !state->mRetiringSequences.empty()
                 || (state->mFirstPerson && (state->mFirstPerson->mReaction || state->mFirstPerson->mStrike
                     || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty())));
         };
@@ -1679,6 +1680,7 @@ namespace MWMechanics
         if (!active(state)) return false;
         std::array<std::set<std::string_view>, 2> groups;
         if (state->mReaction) groups[0].insert(state->mReaction->mAnimationGroup);
+        if (state->mStrike) groups[0].insert(state->mStrike->mAnimationGroup);
         for (const auto& sequence : state->mRetiringSequences) groups[0].insert(sequence.mAnimationGroup);
         if (state->mFirstPerson && state->mFirstPerson->mReaction)
             groups[1].insert(state->mFirstPerson->mReaction->mAnimationGroup);
@@ -1945,13 +1947,15 @@ namespace MWMechanics
                 const auto frame = ESM4::advancePowerMeleeFrame(
                     {service->animationClock(actor), current.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start),
                         *current.mSequenceTiming}, duration, current.mPlaybackSpeed, metadata->mFrequency,
-                    metadata->mBegin, metadata->mEnd, metadata->mPowerKeys);
+                    metadata->mBegin, metadata->mEnd, metadata->mPowerKeys, false,
+                    current.mPoseSnapshot ? std::optional(current.mPoseSnapshot->mDestinationFrame) : std::nullopt);
                 return {frame.mClock, unsigned(frame.mPhase), frame.mTiming};
             }
             const auto frame = ESM4::advanceOrdinaryMeleeFrame(
                 {service->animationClock(actor), current.mOrdinaryPhase, *current.mSequenceTiming},
                 duration, current.mPlaybackSpeed, metadata->mFrequency, metadata->mBegin,
-                metadata->mEnd, metadata->mKeys);
+                metadata->mEnd, metadata->mKeys, false,
+                current.mPoseSnapshot ? std::optional(current.mPoseSnapshot->mDestinationFrame) : std::nullopt);
             return {frame.mClock, unsigned(frame.mPhase), frame.mTiming};
         }();
         const float target = metadata->rendererTime(next.mTiming.mOutputTime);
@@ -2483,47 +2487,50 @@ namespace MWMechanics
                                 if (const auto* metadata = mAnimation->getControllerSequenceMetadata(prior))
                                     priorFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
                             nativeEase = ESM4::meleeBlendDuration(priorFrames, nativePlayback->mBlendFrames, .1f);
+                            const auto* current = service->findMeleeState(actor);
+                            const auto prepareView = [&](MWRender::Animation& view, const NativeMeleePlayback& playback,
+                                    const OblivionMeleeSlot3Source& old,
+                                    std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
+                                ESM4::RuntimeMeleeStrike incoming{1, *selected, weaponBase, group, speed,
+                                    playback.mTimelineBegin, false};
+                                if (*selected >= ESM4::MeleeStrikeKind::StandingPower)
+                                    incoming.mPowerPhase = ESM4::PowerMeleePhase::Start;
+                                incoming.mSequenceTiming = ESM4::MeleeSequenceTiming{};
+                                std::optional<std::uint8_t> oldFrames;
+                                if (old && !old.mInactive)
+                                    if (const auto* metadata = view.getControllerSequenceMetadata(old.mGroup))
+                                        oldFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
+                                const float ease = ESM4::meleeBlendDuration(oldFrames, playback.mBlendFrames, .1f);
+                                incoming.mSequenceTiming->mEasing = ease > 0;
+                                incoming.mSequenceTiming->mEaseEnd = ease;
+                                if (ease > 0)
+                                {
+                                    if (old && !old.mInactive && old.mTiming && old.mTiming->mOffset
+                                        && !old.mTiming->mEasing && !old.mPose && old.mGroup != group)
+                                        outgoing = ESM4::RuntimeRetiringMeleeSequence{old.mCause,
+                                            std::string(old.mGroup), old.mAnimationTime, *old.mTiming, {ease, {}}};
+                                    else
+                                    {
+                                        incoming.mPoseSnapshot = view.captureNativeSequencePose(group, 0);
+                                        if (!incoming.mPoseSnapshot) throw std::invalid_argument("missing native strike pose");
+                                        incoming.mSequenceTiming->mOffset = 0.f;
+                                    }
+                                }
+                                incoming.validate();
+                                return incoming;
+                            };
+                            if (player || oblivionMeleeSlot3Source(current))
+                            {
+                                views.emplace();
+                                views->mBody = prepareView(*mAnimation, *nativePlayback,
+                                    oblivionMeleeSlot3Source(current), views->mBodyOutgoing);
+                            }
                             if (player)
                             {
                                 auto* first = mAnimation->getPlaybackPeer();
                                 firstPlayback = first ? nativeMeleePlayback(*first, group,
                                     *selected >= ESM4::MeleeStrikeKind::StandingPower) : std::nullopt;
                                 if (!firstPlayback) throw std::invalid_argument("missing paired native strike resource");
-                                const auto* current = service->findMeleeState(actor);
-                                views.emplace();
-                                const auto prepareView = [&](MWRender::Animation& view, const NativeMeleePlayback& playback,
-                                        const OblivionMeleeSlot3Source& old,
-                                        std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
-                                    ESM4::RuntimeMeleeStrike incoming{1, *selected, weaponBase, group, speed,
-                                        playback.mTimelineBegin, false};
-                                    if (*selected >= ESM4::MeleeStrikeKind::StandingPower)
-                                        incoming.mPowerPhase = ESM4::PowerMeleePhase::Start;
-                                    incoming.mSequenceTiming = ESM4::MeleeSequenceTiming{};
-                                    std::optional<std::uint8_t> oldFrames;
-                                    if (old && !old.mInactive)
-                                        if (const auto* metadata = view.getControllerSequenceMetadata(old.mGroup))
-                                            oldFrames = ESM4::meleeBlendFrames(nativeRawKeys(*metadata));
-                                    const float ease = ESM4::meleeBlendDuration(oldFrames, playback.mBlendFrames, .1f);
-                                    incoming.mSequenceTiming->mEasing = ease > 0;
-                                    incoming.mSequenceTiming->mEaseEnd = ease;
-                                    if (ease > 0)
-                                    {
-                                        if (old && !old.mInactive && old.mTiming && old.mTiming->mOffset
-                                            && !old.mTiming->mEasing && !old.mPose && old.mGroup != group)
-                                            outgoing = ESM4::RuntimeRetiringMeleeSequence{old.mCause,
-                                                std::string(old.mGroup), old.mAnimationTime, *old.mTiming, {ease, {}}};
-                                        else
-                                        {
-                                            incoming.mPoseSnapshot = view.captureNativeSequencePose(group, 0);
-                                            if (!incoming.mPoseSnapshot) throw std::invalid_argument("missing native strike pose");
-                                            incoming.mSequenceTiming->mOffset = 0.f;
-                                        }
-                                    }
-                                    incoming.validate();
-                                    return incoming;
-                                };
-                                views->mBody = prepareView(*mAnimation, *nativePlayback,
-                                    oblivionMeleeSlot3Source(current), views->mBodyOutgoing);
                                 const auto firstClock = current && current->mFirstPerson
                                     ? current->mFirstPerson->mClock : service->animationClock(actor);
                                 views->mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{firstClock, {},
@@ -2546,6 +2553,7 @@ namespace MWMechanics
                     // A rejected replacement must not cancel the current strike.
                     const std::string oldGroup = active ? saved->mStrike->mAnimationGroup : std::string{};
                     if (active && !views) interrupt();
+                    const bool nativeActivation = views.has_value();
                     std::uint64_t id;
                     try { id = service->beginMeleeStrike(actor, *selected, group, speed, weaponBase, std::move(views)); }
                     catch (const std::invalid_argument& error)
@@ -2560,7 +2568,7 @@ namespace MWMechanics
                     mOblivionRenderedStrike = id;
                     try
                     {
-                        if (nativePlayback && !firstPlayback)
+                        if (nativePlayback && !firstPlayback && !nativeActivation)
                         {
                             service->advanceAnimationClock(actor, 0);
                             ESM4::MeleeSequenceTiming timing;

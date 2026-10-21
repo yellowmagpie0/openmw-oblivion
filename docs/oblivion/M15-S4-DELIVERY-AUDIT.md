@@ -9878,3 +9878,41 @@ an earlier binary; a uniform-revision full camera/build matrix is not claimed.
 Sound remains disabled and FPS is configured rather than measured. This does
 not accept normal passive-to-reaction contact, Stagger activation or the full
 M15S4 gamepad/audio/FPS/cancellation/E2E gates. M15S4 remains incomplete.
+
+### Body-only strike activation from resident slot3
+
+NPC strike activation can now submit the same captured/outgoing slot3 history
+as Player activation, with an absent first-person view. Explicit Player packets
+still require a mirror; NPC packets reject one and reject FP outgoing history.
+The controller prepares history from its actual primary/passive predecessor
+and preserves the prepared incoming timing. Body-only ordinary/power frame
+adapters carry the captured destination through activation and clear the
+snapshot when easing completes. Their zero-additional-duration projection now
+includes the body strike and its captured layer without a second clock step.
+No schema or native wire-format change is involved.
+
+A 24-context engine/service matrix covers16 passive predecessors (ordinary,
+power, BlockHit, Recoil; steady/captured; ordinary/power incoming) and8 pending
+primary strike predecessors. It runs actual typed Stagger recovery for passive
+sources, compares outgoing timing against raw saved history, rejects malformed
+and foreign-view packets without any binary change, and checks96 frame/restart
+checkpoints with one new action, consumed old cause, independent clock
+advancement, snapshot/outgoing completion and cancellation. The paired ownership
+test additionally rejects a Player packet lacking its mirror. Full normal and
+ASan/UBSan inventories each pass1,785 tests across125 suites with no failures or
+skips. Leak detection is disabled.
+
+The first builds were deliberately stopped after review found a fixture timing
+comparison used the seed before manager recovery. A later normal run passed
+1,784/1,785 cases: the new test incorrectly demanded invalid_argument where
+existing typed validators throw runtime_error. All38 failures were exception
+subtype expectations; whole-state and positive assertions passed. The corrected
+matrix uses the established std::exception rejection contract while retaining
+all state, action, timing and resource comparisons. Both attempts remain
+retained in
+[`M15-BODY-SLOT3-STRIKE-ACTIVATION-VERIFICATION.json`](M15-BODY-SLOT3-STRIKE-ACTIVATION-VERIFICATION.json).
+
+Rendered NPC admission/restart is being pursued separately; this checkpoint
+claims engine/service verification only. Normal Stagger slot0 activation,
+active/cached replacement, the complete input/gamepad/audio/FPS/cancellation
+matrix and full M15S4 E2E acceptance remain open. M15S4 is incomplete.

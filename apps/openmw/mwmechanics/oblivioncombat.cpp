@@ -1466,22 +1466,28 @@ namespace MWMechanics
         if (views)
         {
             const auto* values = findActorValues(actor);
-            if (!values || values->mOwner != ESM4::ActorValueOwner::Player || views->mFirstPerson.mReaction
-                || !views->mFirstPerson.mStrike || views->mFirstPerson.mPassiveSequence
-                || !views->mFirstPerson.mRetiringSequences.empty())
-                throw std::invalid_argument("native paired strike requires fresh Player view ownership");
+            const bool player = values && values->mOwner == ESM4::ActorValueOwner::Player;
+            if (!values || views->mFirstPerson.has_value() != player
+                || (!player && (candidate.mFirstPerson || views->mFirstPersonOutgoing)))
+                throw std::invalid_argument("native strike activation changed actor view ownership");
             fresh(views->mBody);
-            fresh(*views->mFirstPerson.mStrike);
             if (views->mBody.mAnimationGroup != animationGroup)
-                throw std::invalid_argument("native paired strike changed selected body group");
-            const float clock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock : animationClock(actor);
-            if (std::bit_cast<std::uint32_t>(views->mFirstPerson.mClock) != std::bit_cast<std::uint32_t>(clock))
-                throw std::invalid_argument("native paired strike changed first-person clock");
-            views->mFirstPerson.validate();
-            if (candidate.mFirstPerson) views->mFirstPerson.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
+                throw std::invalid_argument("native strike activation changed selected body group");
+            if (views->mFirstPerson)
+            {
+                auto& first = *views->mFirstPerson;
+                if (first.mReaction || !first.mStrike || first.mPassiveSequence || !first.mRetiringSequences.empty())
+                    throw std::invalid_argument("native paired strike requires fresh Player view ownership");
+                fresh(*first.mStrike);
+                const float clock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock : animationClock(actor);
+                if (std::bit_cast<std::uint32_t>(first.mClock) != std::bit_cast<std::uint32_t>(clock))
+                    throw std::invalid_argument("native paired strike changed first-person clock");
+                first.validate();
+                if (candidate.mFirstPerson) first.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
+                outgoing(oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
+                    *first.mStrike, views->mFirstPersonOutgoing, first.mRetiringSequences);
+            }
             outgoing(oblivionMeleeSlot3Source(previous), views->mBody, views->mBodyOutgoing, candidate.mRetiringSequences);
-            outgoing(oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
-                *views->mFirstPerson.mStrike, views->mFirstPersonOutgoing, views->mFirstPerson.mRetiringSequences);
             candidate.mStrike = std::move(views->mBody);
             candidate.mFirstPerson = std::move(views->mFirstPerson);
             candidate.mPassiveSequence.reset();
@@ -1557,19 +1563,22 @@ namespace MWMechanics
             throw std::invalid_argument("ordinary sequence frame requires its actor clock");
         const auto next = ESM4::advanceOrdinaryMeleeFrame(
             {clock->second, strike.mOrdinaryPhase, *strike.mSequenceTiming}, duration,
-            strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+            strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock,
+            strike.mPoseSnapshot ? std::optional(strike.mPoseSnapshot->mDestinationFrame) : std::nullopt);
         const std::optional<float> firstClock = found->second.mFirstPerson
             ? std::optional(ESM4::advanceMeleeAnimationClock(found->second.mFirstPerson->mClock,
                 freezeClock ? 0.f : duration)) : std::nullopt;
         auto candidate = strike;
         candidate.mOrdinaryPhase = next.mPhase;
         candidate.mSequenceTiming = next.mTiming;
+        if (!next.mTiming.mEasing) candidate.mPoseSnapshot.reset();
         candidate.validate();
         static_assert(std::is_nothrow_copy_assignable_v<ESM4::MeleeSequenceTiming>);
         clock->second = next.mClock;
         if (firstClock) found->second.mFirstPerson->mClock = *firstClock;
         strike.mOrdinaryPhase = next.mPhase;
         strike.mSequenceTiming = next.mTiming;
+        if (!next.mTiming.mEasing) strike.mPoseSnapshot.reset();
         return true;
     }
 
@@ -1603,7 +1612,8 @@ namespace MWMechanics
             throw std::invalid_argument("power sequence frame requires its actor clock");
         const auto next = ESM4::advancePowerMeleeFrame(
             {clock->second, strike.mPowerPhase.value_or(ESM4::PowerMeleePhase::Start), *strike.mSequenceTiming},
-            duration, strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock);
+            duration, strike.mPlaybackSpeed, frequency, begin, end, keyTimes, freezeClock,
+            strike.mPoseSnapshot ? std::optional(strike.mPoseSnapshot->mDestinationFrame) : std::nullopt);
         const std::optional<float> firstClock = found->second.mFirstPerson
             ? std::optional(ESM4::advanceMeleeAnimationClock(found->second.mFirstPerson->mClock,
                 freezeClock ? 0.f : duration)) : std::nullopt;
@@ -1613,12 +1623,14 @@ namespace MWMechanics
         // native power timing; discard it when adopting the three-stage path.
         candidate.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
         candidate.mSequenceTiming = next.mTiming;
+        if (!next.mTiming.mEasing) candidate.mPoseSnapshot.reset();
         candidate.validate();
         clock->second = next.mClock;
         if (firstClock) found->second.mFirstPerson->mClock = *firstClock;
         strike.mPowerPhase = next.mPhase;
         strike.mOrdinaryPhase = candidate.mOrdinaryPhase;
         strike.mSequenceTiming = next.mTiming;
+        if (!next.mTiming.mEasing) strike.mPoseSnapshot.reset();
         return true;
     }
 
@@ -1749,7 +1761,8 @@ namespace MWMechanics
         const auto* state = findMeleeState(actor);
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
-        if (!state || (!state->mReaction && !state->mPassiveSequence && state->mRetiringSequences.empty()
+        if (!state || (!state->mReaction && !state->mPassiveSequence
+                && !(state->mStrike && state->mStrike->mPoseSnapshot) && state->mRetiringSequences.empty()
                 && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
                     && !state->mFirstPerson->mStrike && !state->mStrike && !state->mFirstPerson->mPassiveSequence
                     && state->mFirstPerson->mRetiringSequences.empty()))) || !values || !life

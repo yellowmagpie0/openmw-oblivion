@@ -58,10 +58,12 @@ namespace MWMechanics
         void validate() const;
     };
 
+    // NPC/creature activations own only the body. Player activations must
+    // supply the first-person mirror; missing or foreign mirrors reject.
     struct OblivionMeleeStrikeViews
     {
         ESM4::RuntimeMeleeStrike mBody;
-        ESM4::RuntimeFirstPersonMeleeState mFirstPerson;
+        std::optional<ESM4::RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mBodyOutgoing = std::nullopt;
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mFirstPersonOutgoing = std::nullopt;
     };
