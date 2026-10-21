@@ -9972,3 +9972,37 @@ first-person same-cached source with authored speed20. Instrumented/third-person
 NPC courses, normal Stagger activation, other protocols and the complete
 input/gamepad/FPS/audio/cancellation/E2E matrix remain open. FPS is configured,
 not measured; sound is disabled. M15S4 remains incomplete.
+
+
+### Native counter dispatch and correction to the passive-phase assumption
+
+Independent execution of the pinned original executable now covers1,024 counter
+branch contexts and160 paired Stagger/slot3 phase-prefix contexts. The counter
+branch uses BlockAttack29/action2, attempts its target at AnimData phase1, calls
+disarm then Stagger when a target exists regardless of the disarm result, and
+immediately recovers action6 with the same sequence, including on acquisition
+miss. The next action6 switch takes its generic default. Range-factor, target,
+disarm, Stagger activation and sound remain explicit supplied boundaries in
+that branch probe. Two harness failures are retained: an incorrectly guessed
+action6 table entry and an incorrect armor-getter calling convention.
+
+The phase-prefix probe exposes an earlier interpretation error. The previous
+manager-only evidence never executed the AnimData prefix and cannot justify
+freezing ordinary/power phases, speed correction or reaction Start/End. Actual
+Stagger activation leaves the freeze selector FF and speed unchanged; all80
+activated contexts match the80 baseline slot3 histories through phase changes
+and End retirement, while process action stays8. Actual metadata lookup, slot
+reset, retirement/deactivation and controller updates execute on supplied
+fixtures. No complete original actor frame or live normal-input result is
+claimed.
+
+Consequently, earlier statements in the passive service/projection/runtime
+receipts about frozen phases or retention beyond End describe the implemented
+behavior at those historical revisions; they are **not native correctness
+acceptance**. Those engine/runtime passes remain evidence for their stated
+state ownership, restart and input comparisons. The passive animation path
+requires correction and revalidation before normal Stagger activation proceeds.
+The editable manifest, exact instruction scope, hashes and retained failures
+are recorded in
+[`M15-STAGGER-NATIVE-DISPATCH-VERIFICATION.json`](M15-STAGGER-NATIVE-DISPATCH-VERIFICATION.json).
+M15S4 remains incomplete.

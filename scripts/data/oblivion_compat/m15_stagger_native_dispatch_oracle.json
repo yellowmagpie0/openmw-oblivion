@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "stagger_slot3_prefix": {
+    "activation": [
+      false,
+      true
+    ],
+    "groups": [
+      20,
+      21,
+      28,
+      30
+    ],
+    "phases": [
+      0,
+      1,
+      2
+    ],
+    "phase_domain": "only indices below supplied key count",
+    "playback_speeds": [
+      0.7,
+      1,
+      2,
+      20
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "initial_clock": 0.5,
+    "frame_durations": [
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1
+    ],
+    "ordinary_keys": [
+      0,
+      0.2,
+      0.6,
+      1
+    ],
+    "power_keys": [
+      0,
+      0.2,
+      1
+    ],
+    "reaction_keys": [
+      0,
+      1
+    ],
+    "entries": {
+      "activation": "005F4FD0",
+      "clock_prefix": "00476F95",
+      "select_slot3": "00476FA6",
+      "stop_before_next_slot": "004774BD",
+      "controller_manager": "006CA950"
+    },
+    "comparison": "For every supplied context, compare all slot3 snapshots with and without original Stagger activation, excluding only actor process action."
+  },
+  "counter_dispatch": {
+    "scope": "Same counter phase/action/contact-order gates plus actual armor-flag query and both heavy/light inputs.",
+    "retained_failure": "Attempt02 incorrectly stubbed4B4C70 as ret8 with value2. Original instructions read item+6A high bit and RET with no arguments. Run actual getter and preserve the two already-pushed trailing sound arguments.",
+    "cases": 1024
+  },
+  "scope": "Instruction execution with supplied fixtures and explicit boundary stubs; no full actor frame, original-game live run, engine implementation or normal-input acceptance."
+}

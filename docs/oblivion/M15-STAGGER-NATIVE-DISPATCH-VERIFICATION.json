@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "status": "Independent original-instruction evidence; passive phase-freeze assumption falsified. Production correction remains required.",
+  "tested_head": "6adb640869",
+  "manifest": {
+    "path": "scripts/data/oblivion_compat/m15_stagger_native_dispatch_oracle.json",
+    "sha256": "d120b618b644c9c428493b8ee315a334dbd83596f6c070cd19fdd6948e149aee"
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "phase_prefix": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/verification01.json",
+      "sha256": "d6dfd43e6aa45b20a3c3be5ede5203dd211377939511397a15a88535a4523af8"
+    },
+    "harness": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/probe-01.py",
+      "sha256": "5df0bf2dd3899a706a51b8661e2466b7f7cae6fe9475dbd33aed9c0ae9da1f98"
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/corpus01.json",
+      "sha256": "8804f76714bc49f2e4a7aa99209362c104314a6a4b7d8e20df14869849a46141"
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot3-phase-prefix-oracle-01/preregistered.json",
+      "sha256": "ce1f4c36156eabfb20c93ff5a697ad24132859565159c05155ee6560bdf7d948"
+    },
+    "result": {
+      "passed": true,
+      "cases": 160,
+      "matched_activation_baseline_pairs": 80,
+      "stagger_cases_with_phase_change": 80,
+      "stagger_cases_with_end_retirement": 80,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "8804f76714bc49f2e4a7aa99209362c104314a6a4b7d8e20df14869849a46141",
+      "harness_sha256": "5df0bf2dd3899a706a51b8661e2466b7f7cae6fe9475dbd33aed9c0ae9da1f98",
+      "scope": "Actual Stagger helper then original slot3 AnimData clock/phase/speed/retirement prefix and NI manager; supplied controller/cache/metadata fixture, not full actor frame or normal input.",
+      "conclusion": "All 80 Stagger cases exactly match baseline slot3 state apart from actor process action. Earlier manager-only probe does not justify freezing AnimData phases, speed or End retirement."
+    },
+    "executed_paths": [
+      "Actual5F4FD0 and its resource/activation/action-writing helpers with existing cache fixtures.",
+      "Actual476F95 clock prefix with slot3 selected at476FA6 through4774BD.",
+      "Actual51AA00 group decoding,51AE20 supplied metadata time lookup,4733A0 End retirement,470FC0 slot reset,6C9CB0 deactivation and6CA950 controller manager."
+    ],
+    "boundaries": [
+      "Same cache/variant, scene-update and actor notifications as original native-stagger-parallel-slot3-oracle-01 fixture.",
+      "Only slot3 phase prefix executes; no other slots or complete actor frame.",
+      "Metadata key times and playback-speed storage are supplied, not extracted from game animation assets."
+    ],
+    "finding": "Stagger leaves the freeze selector FF and speed storage unchanged. All80 activated contexts advance and retire identically to baseline. Gameplay action remains8 throughout, including old-slot End retirement. Visual phase advancement is independent of action/contact dispatch."
+  },
+  "counter_dispatch": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/verification03.json",
+      "sha256": "2fb23960ba9c64ea652ea29d8e58096c5be246eb0e67e1604bc8112f962ea528"
+    },
+    "harness": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/probe-03.py",
+      "sha256": "b0fa36a81cc1804afc4aee88302989cfdca68a09369f7eddccd3580a042b05eb"
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/corpus03.json",
+      "sha256": "61a85201bc674a53acfe86a1afa9898ffcf40a96ad11d08abe04e18203e6ff52"
+    },
+    "result": {
+      "passed": true,
+      "cases": 1024,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "61a85201bc674a53acfe86a1afa9898ffcf40a96ad11d08abe04e18203e6ff52",
+      "harness_sha256": "b0fa36a81cc1804afc4aee88302989cfdca68a09369f7eddccd3580a042b05eb",
+      "scope": "Original Player counter action2 branch5FCC05 through5FD7DE, original5E5640/action writer5EFFD0/628220, then actual action switch5FCBEE. Actual4B4C70 reads the supplied armor heavy flag. Group29 actual slot3/subtype6; supplied phase values. Contact acquisition, disarm, Stagger activation, source range-factor virtual, equipment entry and sound are explicit supplied boundaries. No full actor frame, physical contact or resource activation claim."
+    },
+    "findings": [
+      "Blocked melee defensive mastery query5F3C30 feeds5F4E10(true): counter BlockAttack29/action2, rather than immediate Stagger31.",
+      "Actual action2 branch requires native slot3, AnimData phase1, group subtype6. Prefix variants behave identically.",
+      "Source actor virtual+EC supplies a float factor multiplied by GMST B36F20, stored as float, then passed to6156C0 target acquisition.",
+      "On target acquisition,5FC2B0 disarm is followed by5F4FD0 Stagger regardless of disarm boolean. Acquisition miss still recovers.",
+      "5E5640 tests process action2..5, so current action2 immediately requests action6 with the same counter sequence through5EFFD0/628220.",
+      "Following actual5FCBEE action6 switch takes generic default5FD7DE, not action5 branch5FD106.",
+      "Actual4B4C70 is a no-argument armor-heavy bit getter. Sound6AF880 has9 cdecl arguments; supplied light/heavy values0/1."
+    ],
+    "retained_failures": [
+      {
+        "attempt": {
+          "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/attempt01.json",
+          "sha256": "56e9ab0458699197cb110046c09339e5a5624325d79bff18dc60d73dcefe77ea"
+        },
+        "reason": "Harness guessed action6 dispatch as5FD106. Actual executable switch table maps action6 to5FD7DE."
+      },
+      {
+        "attempt": {
+          "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/attempt02.json",
+          "sha256": "56a105ebcef78fa300e118519acf9feb0f6f483bc2248e1acb60ba617b6b4fea"
+        },
+        "reason": "Harness assigned4B4C70 a guessed ret8/material interface. Actual callee returns with RET and reads object+6A bit7."
+      }
+    ]
+  },
+  "production_implications": [
+    "Replace manager-only passive advancement with native visual phase/speed/End processing, while preserving consumed contact authority.",
+    "Normal counter initiation/dispatch, target acquisition, Stagger resource selection, slot0 replacement and full runtime acceptance remain unimplemented or unverified."
+  ],
+  "runtime_acceptance": false,
+  "full_M15S4_acceptance": false
+}
