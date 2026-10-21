@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 59
+CURRENT_VERSION = 60
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1544,7 +1544,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Invalid TES4 reaction pose transition")
             melee_pose(pose, timing)
         reaction_actors.add(actor)
-    def melee_strike(strike, actor, unique, passive=False):
+    def melee_strike(strike, actor, unique, passive=False, view_clock=None):
         strike_fields = {"id", "kind", "weapon_base", "animation_group", "playback_speed", "animation_time", "contact_committed"}
         if version >= 22:
             strike_fields.add("ordinary_phase")
@@ -1554,6 +1554,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             strike_fields.add("power_phase")
         if version >= 58:
             strike_fields.add("pose_snapshot")
+        if version >= 60 and isinstance(strike, dict) and strike.get("kind") == 7:
+            strike_fields.update({"retirement", "inactive"})
         if not isinstance(strike, dict) or set(strike) != strike_fields:
             raise RuntimeStateError("Invalid TES4 melee strike")
         if version >= 22 and (type(strike["ordinary_phase"]) is not int or not 0 <= strike["ordinary_phase"] <= 3):
@@ -1578,13 +1580,35 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             melee_pose(strike["pose_snapshot"], strike["sequence_timing"])
         identity, kind, committed = strike["id"], strike["kind"], strike["contact_committed"]
         if (type(identity) is not int or not 0 < identity < next_action or (unique and identity in melee_ids)
-                or type(kind) is not int or not 0 <= kind <= 6 or type(committed) is not bool
+                or type(kind) is not int or not 0 <= kind <= (7 if version >= 60 else 6) or type(committed) is not bool
                 or native_float(strike["animation_time"]) < 0 or native_float(strike["playback_speed"]) <= 0):
             raise RuntimeStateError("Invalid or duplicate TES4 melee strike state")
         if version >= 49 and strike["power_phase"] is not None:
             phase = strike["power_phase"]
             if type(phase) is not int or not 0 <= phase <= 2 or kind < 2 or strike["ordinary_phase"] != 0:
                 raise RuntimeStateError("Invalid TES4 power melee phase")
+        if kind == 7 and (strike.get("power_phase") is None or strike.get("sequence_timing") is None
+                          or strike["playback_speed"] != 1):
+            raise RuntimeStateError("Invalid TES4 counter protocol or speed")
+        if kind == 7:
+            span, inactive = strike["retirement"], strike["inactive"]
+            timing = strike["sequence_timing"]
+            if (type(inactive) is not bool or (strike["power_phase"] == 2) != (span is not None or inactive)
+                    or ((span is not None or inactive) and (timing["offset"] is None or timing["easing"]
+                        or strike["pose_snapshot"] is not None)) or (passive and (span is not None or inactive))):
+                raise RuntimeStateError("Invalid TES4 counter retirement ownership")
+            if span is not None:
+                if (not isinstance(span, dict) or set(span) != {"duration", "start_clock"}
+                        or native_float(span["duration"]) <= 0):
+                    raise RuntimeStateError("Invalid TES4 counter retirement")
+                start = span["start_clock"]
+                if start is not None:
+                    if native_float(start) < 0:
+                        raise RuntimeStateError("Invalid TES4 counter retirement clock")
+                    native_float(native_float(start) + native_float(span["duration"]))
+                clock = clock_values.get(actor, 0) if view_clock is None else view_clock
+                if inactive and (start is None or clock < native_float(native_float(start) + native_float(span["duration"]))):
+                    raise RuntimeStateError("Premature TES4 counter deactivation")
         group = strike["animation_group"]
         if not isinstance(group, str) or not group or "\0" in group or len(group.encode("utf-8")) > MAX_STRING:
             raise RuntimeStateError("Invalid TES4 melee animation group")
@@ -1593,6 +1617,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if (identity in seen_actions if passive else
                 (committed and identity in seen_actions) or (not committed and owner_map.get(identity) != actor)):
             raise RuntimeStateError("Replaying or unowned TES4 melee action")
+        if kind == 7 and unique and (native_value_states[actor]["process"] != 1
+                                     or native_value_states[actor]["process_action"] != (6 if committed else 2)):
+            raise RuntimeStateError("Mismatched TES4 counter action")
         if unique: melee_ids.add(identity)
 
     def passive_sequence(sequence, actor, clock, strike, reaction):
@@ -1603,7 +1630,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 or actor not in clock_actors or native_value_states[actor]["process"] != 1):
             raise RuntimeStateError("Invalid or conflicting TES4 passive slot3 sequence")
         if "strike" in sequence:
-            melee_strike(sequence["strike"], actor, False, passive=True)
+            melee_strike(sequence["strike"], actor, False, passive=True, view_clock=clock)
             if sequence["strike"]["sequence_timing"] is None:
                 raise RuntimeStateError("Passive TES4 strike requires native timing")
         else:
@@ -1677,7 +1704,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     retiring_sequence(sequence, actor)
             first_strike = first_person.get("strike")
             if first_strike is not None:
-                melee_strike(first_strike, actor, False)
+                melee_strike(first_strike, actor, False, view_clock=first_person["clock"])
                 if first_strike["sequence_timing"] is None or mirror is not None:
                     raise RuntimeStateError("Invalid TES4 first-person strike ownership")
                 if strike is None:
@@ -2272,6 +2299,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 strike["power_phase"] = reader.unpack("<B") if melee_boolean() else None
             if version >= 58:
                 strike["pose_snapshot"] = read_melee_pose() if melee_boolean() else None
+            if version >= 60 and strike["kind"] == 7:
+                strike["retirement"] = ({"duration": reader.unpack("<f"),
+                    "start_clock": reader.unpack("<f") if melee_boolean() else None} if melee_boolean() else None)
+                strike["inactive"] = melee_boolean()
             return strike
         def read_retiring_sequences():
             sequences = []
@@ -2850,6 +2881,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 pose = strike["pose_snapshot"]
                 writer.pack("<B", int(pose is not None))
                 if pose is not None: write_melee_pose(pose)
+            if version >= 60 and strike["kind"] == 7:
+                span = strike["retirement"]
+                writer.pack("<B", int(span is not None))
+                if span is not None:
+                    writer.pack("<f", span["duration"])
+                    writer.pack("<B", int(span["start_clock"] is not None))
+                    if span["start_clock"] is not None: writer.pack("<f", span["start_clock"])
+                writer.pack("<B", int(strike["inactive"]))
 
         def write_retiring_sequences(sequences):
             writer.pack("<I", len(sequences))
@@ -3283,10 +3322,26 @@ def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
                 entry["strike"]["power_phase"] = None
 
 
+def _upgrade_counter_melee(state: dict[str, Any]) -> None:
+    # v60 only extends the kind domain. Never reinterpret an invalid old tag7
+    # as a newly supported counter merely by rewriting its version header.
+    if state.get("schema_version", 1) >= 60:
+        return
+    for entry in state.get("native_melee_states", []):
+        for view in (entry, entry.get("first_person")):
+            if view is None:
+                continue
+            passive = view.get("passive_sequence") or {}
+            for strike in (view.get("strike"), passive.get("strike")):
+                if strike is not None and strike.get("kind") == 7:
+                    raise RuntimeStateError("Legacy TES4 save cannot carry a counter strike")
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
     state = copy.deepcopy(state)
+    _upgrade_counter_melee(state)
     _upgrade_melee_phases(state)
     _upgrade_power_melee_phases(state)
     _upgrade_melee_reactions(state)
@@ -3373,6 +3428,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_melee_retirement(result)
     _upgrade_melee_pose_snapshots(result)
     _upgrade_first_person_melee(result)
+    _upgrade_counter_melee(result)
     _upgrade_passive_melee(result)
     _upgrade_melee_timing(result)
     _upgrade_melee_ai(result)

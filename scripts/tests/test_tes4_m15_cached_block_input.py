@@ -40,7 +40,7 @@ class CachedBlockInputTests(unittest.TestCase):
             output = folder / 'new' / 'staged.omwsave'
             report = stage(source, output, recipe)
             actual = runtime.load_save(output)
-            self.assertEqual(actual['schema_version'], 59)
+            self.assertEqual(actual['schema_version'], runtime.CURRENT_VERSION)
             self.assertEqual(actual['script_instances'][0]['unit'], recipe['new_unit'])
             actual['schema_version'] = before['schema_version']
             actual['script_instances'][0]['unit'] = recipe['old_unit']
@@ -54,7 +54,7 @@ class CachedBlockInputTests(unittest.TestCase):
             self.assertTrue(report['structural_write_success'])
             self.assertTrue(report['semantic_reinspection_passed'])
             self.assertFalse(report['runtime_acceptance'])
-            self.assertEqual(report['target_schema'], 59)
+            self.assertEqual(report['target_schema'], runtime.CURRENT_VERSION)
             self.assertEqual(json.loads(output.with_suffix('.staging.json').read_text()), report)
 
     def test_stale_hash_schema_and_foreign_script_recipe_reject_before_output(self):

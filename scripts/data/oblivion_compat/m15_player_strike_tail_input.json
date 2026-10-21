@@ -4,7 +4,7 @@
   "source": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/cached-idle59.omwsave",
   "source_sha256": "e0139d9bb46773eaad83d5645c902a968eb920ba8f5a14386d8a8b39e274de03",
   "source_schema": 59,
-  "target_schema": 59,
+  "target_schema": 60,
   "weapon_base": "content:oblivion.esm:090615",
   "restrained_actors": [
     "content:oblivion.esm:01fc43",

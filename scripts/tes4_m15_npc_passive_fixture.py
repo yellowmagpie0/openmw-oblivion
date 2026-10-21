@@ -21,8 +21,8 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
               'physical_actions', 'process_action', 'content_override'}
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
-            or type(recipe['target_schema']) is not int or recipe['target_schema'] != 59
-            or runtime.CURRENT_VERSION != 59 or not isinstance(recipe['actor'], str)
+            or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
+            or runtime.CURRENT_VERSION not in (59, 60) or not isinstance(recipe['actor'], str)
             or not recipe['actor'].startswith('content:')
             or type(recipe['actor_draw_state']) is not int or recipe['actor_draw_state'] != 1
             or type(recipe['process_action']) is not int or recipe['process_action'] != -1
@@ -62,6 +62,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
             or not melee.get('passive_sequence')):
         raise ValueError('NPC fixture requires recovered body-only passive history')
     state = copy.deepcopy(original)
+    state['schema_version'] = recipe['target_schema']
     next(v for v in state['references'] if v['key'] == actor)['actor_draw_state'] = 1
     next(v for v in state['content'] if v['plugin'].lower() == override['plugin'])['fingerprint'] = override['replacement_fingerprint']
     if previous:

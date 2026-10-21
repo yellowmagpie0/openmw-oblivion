@@ -3355,6 +3355,79 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertIsNone(legacy["native_melee_states"][0]["passive_sequence"])
         self.assertIsNone(legacy["native_melee_states"][0]["first_person"]["passive_sequence"])
 
+    def test_counter60_preserves_independent_three_key_views_and_action_binding(self):
+        for committed in (False, True):
+            for body_phase in range(3):
+                for first_phase in range(3):
+                    state = self.first_person_strike_state()
+                    state_io._upgrade_passive_melee(state)
+                    state["schema_version"] = 60
+                    actor = state["player"]["reference"]
+                    melee = state["native_melee_states"][0]
+                    for view, phase in [(melee, body_phase), (melee["first_person"], first_phase)]:
+                        view["strike"].update(kind=7, animation_group="handtohandblockattack", playback_speed=1,
+                                              contact_committed=committed, ordinary_phase=0, power_phase=phase,
+                                              retirement={"duration": .1, "start_clock": view.get("clock", .75)} if phase == 2 else None,
+                                              inactive=False)
+                    values = next(x for x in state["native_actor_values"] if x["actor"] == actor)
+                    values["process_action"] = 6 if committed else 2
+                    if not committed:
+                        state["physical_actions"]["pending"].append(3)
+                        state["physical_actions"]["pending"].sort()
+                        state["physical_action_owners"].append({"id": 3, "actor": actor})
+                        state["physical_action_owners"].sort(key=lambda x: x["id"])
+                    payload = state_io.encode_payload(state)
+                    self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+                    legacy = copy.deepcopy(state); legacy["schema_version"] = 59
+                    with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_counter_melee(legacy)
+                    for view in (legacy["native_melee_states"][0], legacy["native_melee_states"][0]["first_person"]):
+                        view["strike"]["kind"] = 2
+                        view["strike"].pop("retirement"); view["strike"].pop("inactive")
+                    next(x for x in legacy["native_actor_values"] if x["actor"] == actor)["process_action"] = 3 if committed else 2
+                    old_payload = state_io.encode_payload(legacy)
+                    self.assertEqual(len(payload), len(old_payload) + 4 + 9 * ((body_phase == 2) + (first_phase == 2)))
+                    for field, value in [("playback_speed", .7), ("power_phase", None),
+                                         ("sequence_timing", None), ("kind", 8)]:
+                        bad = copy.deepcopy(state); bad["native_melee_states"][0]["strike"][field] = value
+                        with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError):
+                            state_io.encode_payload(bad)
+                    bad = copy.deepcopy(state); bad["schema_version"] = 59
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+                    bad = copy.deepcopy(state)
+                    next(x for x in bad["native_actor_values"] if x["actor"] == actor)["process_action"] = 3
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+                    if committed:
+                        melee["strike"] = None; values["process_action"] = -1
+                        state_io.encode_payload(state)
+                        state["schema_version"] = 59
+                        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_counter60_inactive_intervals_and_both_view_wire_flags_are_strict(self):
+        state = self.first_person_strike_state(); state_io._upgrade_passive_melee(state)
+        state["schema_version"] = 60; actor = state["player"]["reference"]
+        m = state["native_melee_states"][0]
+        clock = next(x["clock"] for x in state["native_animation_clocks"] if x["actor"] == actor)
+        for view, current in [(m, clock), (m["first_person"], m["first_person"]["clock"])]:
+            view["strike"].update(kind=7, animation_group="handtohandblockattack", playback_speed=1,
+                                  ordinary_phase=0, power_phase=2, inactive=True,
+                                  retirement={"duration": .1, "start_clock": current - .25})
+        next(x for x in state["native_actor_values"] if x["actor"] == actor)["process_action"] = 6
+        payload = state_io.encode_payload(state)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        for first in (False, True):
+            bad = copy.deepcopy(state); view = bad["native_melee_states"][0]
+            if first: view = view["first_person"]
+            view["strike"]["retirement"]["start_clock"] = view["clock"] if first else clock
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        marker = b"handtohandblockattack"
+        positions = [i + len(marker) for i in range(len(payload)) if payload.startswith(marker, i)]
+        self.assertEqual(len(positions), 2)
+        for offset in positions:
+            for flag in (42, 47, 52):
+                self.assertEqual(payload[offset + flag], 1)
+                bad = bytearray(payload); bad[offset + flag] = 2
+                with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+
     def first_person_strike_state(self):
         state = self.first_person_melee_state()
         state_io._upgrade_first_person_melee(state)

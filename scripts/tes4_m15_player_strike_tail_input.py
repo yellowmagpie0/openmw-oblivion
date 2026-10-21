@@ -21,8 +21,8 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58, 59)
-            or type(recipe['target_schema']) is not int or recipe['target_schema'] != 59
-            or runtime.CURRENT_VERSION != 59 or recipe['restrained_actors'] != actors
+            or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
+            or runtime.CURRENT_VERSION not in (59, 60) or recipe['restrained_actors'] != actors
             or recipe['weapon_base'] != 'content:oblivion.esm:090615'):
         raise ValueError('unsupported Player strike-tail input recipe')
     if output.exists():
@@ -53,7 +53,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime.write_save(source, output, state)
     expected = copy.deepcopy(state)
     runtime._upgrade_passive_melee(expected)
-    expected['schema_version'] = 59
+    expected['schema_version'] = runtime.CURRENT_VERSION
     if runtime.load_save(output) != expected:
         raise ValueError('Player strike-tail output differs outside declared fixture fields')
     if hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
@@ -61,7 +61,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     report = dict(structural_write_success=True, semantic_reinspection_passed=True,
                   source=str(source), source_sha256=source_hash,
                   output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
-                  source_schema=recipe['source_schema'], target_schema=59,
+                  source_schema=recipe['source_schema'], target_schema=runtime.CURRENT_VERSION,
                   mutations=dict(player_weapon_equipped_slots=[65536, 0], npc_restrained=changes),
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False)

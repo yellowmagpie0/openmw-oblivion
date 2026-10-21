@@ -479,6 +479,11 @@ namespace ESM4
         return meleeKeyTimes(textKeys, std::array<std::string_view, 3>{"start", "hit", "end"});
     }
 
+    PowerMeleeKeys counterMeleeKeyTimes(std::span<const MeleeTextKey> textKeys)
+    {
+        return meleeKeyTimes(textKeys, std::array<std::string_view, 3>{"start", "attack", "end"});
+    }
+
     ReactionKeys reactionKeyTimes(std::span<const MeleeTextKey> textKeys)
     {
         return meleeKeyTimes(textKeys, std::array<std::string_view, 2>{"start", "end"});
@@ -753,6 +758,79 @@ namespace ESM4
     {
         return advanceMeleeFrame(frame, duration, speed, frequency, begin, end, keyTimes, freezeClock,
             advancePowerMeleePhase, transitionFrame);
+    }
+
+    CounterMeleeFrame advanceCounterMeleeFrame(const CounterMeleeFrame& frame,
+        float duration, float frequency, float begin, float end,
+        const std::array<float, 3>& keyTimes, bool freezeClock, std::optional<float> transitionFrame,
+        float retirementDuration)
+    {
+        nonnegative(duration);
+        finite(retirementDuration);
+        for (float value : {frequency, begin, end, frame.mTiming.mEaseEnd,
+                 frame.mTiming.mWeightedTime, frame.mTiming.mOutputTime}) finite(value);
+        if (frequency <= 0 || end < begin || !std::isfinite(end - begin))
+            throw std::invalid_argument("invalid native counter sequence bounds");
+        const bool capture = transitionFrame && frame.mTiming.mEasing && frame.mTiming.mOffset
+            && !frame.mTiming.mEaseStart && !frame.mTiming.mLastInput;
+        if (!capture && (frame.mTiming.mOffset.has_value() != frame.mTiming.mEaseStart.has_value()
+                || frame.mTiming.mOffset.has_value() != frame.mTiming.mLastInput.has_value()))
+            throw std::invalid_argument("partial native counter timing");
+        for (const auto value : {frame.mTiming.mOffset, frame.mTiming.mEaseStart, frame.mTiming.mLastInput})
+            if (value) finite(*value);
+        if (frame.mRetirement && (!std::isfinite(frame.mRetirement->mDuration)
+                || frame.mRetirement->mDuration <= 0 || frame.mPhase != PowerMeleePhase::End
+                || !frame.mTiming.mOffset || frame.mTiming.mEasing || transitionFrame))
+            throw std::invalid_argument("invalid native counter retirement");
+        if (frame.mInactive && (frame.mPhase != PowerMeleePhase::End || !frame.mTiming.mOffset
+                || frame.mTiming.mEasing || transitionFrame))
+            throw std::invalid_argument("invalid native inactive counter");
+        if ((frame.mPhase == PowerMeleePhase::End) != bool(frame.mRetirement || frame.mInactive))
+            throw std::invalid_argument("incoherent native counter End ownership");
+        if (frame.mRetirement && frame.mRetirement->mStartClock)
+        {
+            nonnegative(*frame.mRetirement->mStartClock);
+            const float stop = rounded(double(*frame.mRetirement->mStartClock) + frame.mRetirement->mDuration);
+            finite(stop);
+            if (frame.mInactive && frame.mClock < stop)
+                throw std::invalid_argument("premature native counter deactivation");
+        }
+        else if (frame.mRetirement && frame.mInactive)
+            throw std::invalid_argument("unanchored inactive native counter");
+        (void)advancePowerMeleePhase(frame.mPhase, 0, 0, keyTimes);
+        auto next = frame;
+        next.mClock = advanceMeleeAnimationClock(frame.mClock, freezeClock ? 0.f : duration);
+        if (!next.mInactive && !next.mRetirement && !freezeClock
+            && !frame.mTiming.mEasing && frame.mTiming.mOffset)
+        {
+            next.mPhase = advancePowerMeleePhase(frame.mPhase, *frame.mTiming.mOffset, next.mClock, keyTimes);
+            // End detachment is independent of the one-step phase advance.
+            if (rounded(double(*frame.mTiming.mOffset) + next.mClock) >= keyTimes.back())
+            {
+                next.mPhase = PowerMeleePhase::End;
+                if (retirementDuration > 0) next.mRetirement = MeleeSequenceRetirement{retirementDuration, {}};
+                else next.mInactive = true;
+            }
+        }
+        if (next.mInactive) return next;
+        if (next.mRetirement)
+        {
+            auto& span = *next.mRetirement;
+            if (!std::isfinite(span.mDuration) || span.mDuration <= 0 || !next.mTiming.mOffset
+                || next.mPhase != PowerMeleePhase::End || transitionFrame)
+                throw std::invalid_argument("invalid native counter retirement");
+            if (!span.mStartClock) span.mStartClock = next.mClock;
+            finite(*span.mStartClock);
+            const float stop = rounded(double(*span.mStartClock) + span.mDuration);
+            finite(stop);
+            if (next.mClock >= stop) { next.mInactive = true; return next; }
+            auto manager = next.mTiming;
+            manager.mEasing = true; manager.mEaseStart = span.mStartClock; manager.mEaseEnd = stop;
+            next.mTiming = updateMeleeSequenceTiming(manager, next.mClock, frequency, begin, end);
+            next.mTiming.mEasing = false;
+        }
+        else next.mTiming = updateMeleeSequenceTiming(next.mTiming, next.mClock, frequency, begin, end, transitionFrame);
+        return next;
     }
 
     bool actorWaterProbe(float positionZ, float height, float ratio, float waterLevel)

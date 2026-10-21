@@ -6206,3 +6206,90 @@ TEST(ESM4PhysicalCombat, NativeSlot0NamesExcludeParallelSpecialIdlesAndAttacks)
     EXPECT_THROW(ESM4::nativeLocomotionSequenceGroup("Idle", "path/idle.kf"), std::invalid_argument);
     EXPECT_EQ(ESM4::nativeReactionSequenceGroup("Stagger", "onehandstagger.kf"), 0x21fu);
 }
+
+TEST(ESM4PhysicalCombat, CounterUsesAttackKeyInsteadOfPowerHitKey)
+{
+    // Original51B688..51BA50 group29, all three x87 precision words.
+    const std::array<ESM4::MeleeTextKey, 7> stock{{{0, "start"}, {.03333330154418945f, "Blend: 0"},
+        {.16666650772094727f, "Enum: Left"}, {.5999999046325684f, "Attack"},
+        {.6000099182128906f, "Enum: Left\r\nSound: WPNHitHand"}, {.9666666984558105f, "Enum: Right"}, {1, "end"}}};
+    const auto parsed = ESM4::counterMeleeKeyTimes(stock);
+    EXPECT_EQ(parsed.mMatchedCount, 3u);
+    EXPECT_EQ(parsed.mTimes, (std::array<float, 3>{0, .5999999046325684f, 1}));
+    EXPECT_EQ(ESM4::powerMeleeKeyTimes(stock).mMatchedCount, 1u);
+    for (const auto text : {"Attack", "ATTACK", "attacker", "Attack ", "attack:", "Attack\r\nHit",
+             " attack", "Hit", "hit"})
+    {
+        const bool accepted = text[0] != ' ' && text[0] != 'H' && text[0] != 'h';
+        const std::array<ESM4::MeleeTextKey, 3> keys{{{0, "Start"}, {.25f, text}, {1, "End"}}};
+        const auto result = ESM4::counterMeleeKeyTimes(keys);
+        EXPECT_EQ(result.mMatchedCount, accepted ? 3u : 1u);
+        EXPECT_EQ(result.mTimes, (accepted ? std::array<float, 3>{0, .25f, 1} : std::array<float, 3>{}));
+    }
+    for (const auto text : {"Start\r\nAttack\r\nEnd", "Start\nAttack\nEnd", "Start\rAttack\rEnd"})
+    {
+        const std::array<ESM4::MeleeTextKey, 1> keys{{{.25f, text}}};
+        const auto result = ESM4::counterMeleeKeyTimes(keys);
+        const bool lineFeed = std::string_view(text).find('\n') != std::string_view::npos;
+        EXPECT_EQ(result.mMatchedCount, lineFeed ? 3u : 1u);
+        EXPECT_EQ(result.mTimes, (lineFeed ? std::array<float, 3>{.25f, .25f, .25f}
+                                         : std::array<float, 3>{.25f, 0, 0}));
+    }
+}
+
+TEST(ESM4PhysicalCombat, CounterSubtype6SharesThreeKeyPhaseAtUnitWeaponSpeed)
+{
+    // Original477248/6CA950 group29, CW007F. Other weapon-speed storage
+    // values and Stagger activation produced the same native history.
+    constexpr std::array<std::array<std::uint32_t, 8>, 4> expected{{
+        {0x3f19999au, 0x00000001u, 0x3f19999au, 0x3f19999au, 0x3f19999au, 0x80000000u, 0x3f000000u, 0x00000000u},
+        {0x3f333334u, 0x00000001u, 0x3f333334u, 0x3f333334u, 0x3f333334u, 0x80000000u, 0x3f19999au, 0x00000000u},
+        {0x3f4cccceu, 0x00000001u, 0x3f4cccceu, 0x3f4cccceu, 0x3f4cccceu, 0x80000000u, 0x3f333334u, 0x00000000u},
+        {0x3f666668u, 0x00000001u, 0x3f666668u, 0x3f666668u, 0x3f666668u, 0x80000000u, 0x3f4cccceu, 0x00000000u},
+    }};
+    const std::array<float, 3> keys{0, .2f, 1};
+    ESM4::CounterMeleeFrame frame{.5f, ESM4::PowerMeleePhase::Start,
+        {.mOffset = -0.f, .mEaseStart = 0.f, .mLastInput = .5f, .mWeightedTime = .5f, .mOutputTime = .5f}};
+    for (const auto& sample : expected)
+    {
+        frame = ESM4::advanceCounterMeleeFrame(frame, .1f, 1, 0, 1, keys);
+        const auto& t = frame.mTiming;
+        const std::array<std::uint32_t, 8> actual{std::bit_cast<std::uint32_t>(frame.mClock), unsigned(frame.mPhase),
+            std::bit_cast<std::uint32_t>(*t.mLastInput), std::bit_cast<std::uint32_t>(t.mWeightedTime),
+            std::bit_cast<std::uint32_t>(t.mOutputTime), std::bit_cast<std::uint32_t>(*t.mOffset),
+            std::bit_cast<std::uint32_t>(*t.mEaseStart), std::bit_cast<std::uint32_t>(t.mEaseEnd)};
+        EXPECT_EQ(actual, sample);
+    }
+    frame = ESM4::advanceCounterMeleeFrame(frame, .1f, 1, 0, 1, keys);
+    EXPECT_EQ(frame.mPhase, ESM4::PowerMeleePhase::End); // Native slot pointer retires at this boundary.
+}
+
+TEST(ESM4PhysicalCombat, CounterEndDetachesInclusivelyBeforeActorContactDispatch)
+{
+    const std::array<float, 3> keys{0, .5999999046325684f, 1};
+    const ESM4::CounterMeleeFrame frame{.5f, ESM4::PowerMeleePhase::Start,
+        {.mOffset = -0.f, .mEaseStart = 0.f, .mLastInput = .5f, .mWeightedTime = .5f, .mOutputTime = .5f}};
+    for (const float dt : {.5f, .75f})
+        EXPECT_EQ(ESM4::advanceCounterMeleeFrame(frame, dt, 1, 0, 1, keys).mPhase, ESM4::PowerMeleePhase::End);
+    const auto equal = ESM4::advanceCounterMeleeFrame(frame, .09999990463256836f, 1, 0, 1, keys);
+    EXPECT_EQ(equal.mPhase, ESM4::PowerMeleePhase::Start);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*equal.mTiming.mOffset), 0x80000000u);
+    EXPECT_EQ(ESM4::advanceCounterMeleeFrame(frame, .09999996423721313f, 1, 0, 1, keys).mPhase,
+        ESM4::PowerMeleePhase::Contact);
+}
+
+TEST(ESM4PhysicalCombat, CounterRetirementKeepsState3UntilItsInclusiveStop)
+{
+    const std::array<float, 3> keys{0, .5999999046325684f, 1};
+    ESM4::CounterMeleeFrame frame{.5f, ESM4::PowerMeleePhase::Contact,
+        {.mOffset = -0.f, .mEaseStart = 0.f, .mLastInput = .5f, .mWeightedTime = .5f, .mOutputTime = .5f}};
+    frame = ESM4::advanceCounterMeleeFrame(frame, .5f, 1, 0, 1, keys);
+    ASSERT_TRUE(frame.mRetirement); EXPECT_FALSE(frame.mInactive);
+    EXPECT_EQ(frame.mRetirement->mStartClock, 1.f);
+    EXPECT_EQ(*frame.mTiming.mEaseStart, 1.f);
+    frame = ESM4::advanceCounterMeleeFrame(frame, .1f, 1, 0, 1, keys);
+    EXPECT_TRUE(frame.mInactive);
+    const auto timing = frame.mTiming;
+    frame = ESM4::advanceCounterMeleeFrame(frame, 1.f, 1, 0, 1, keys);
+    EXPECT_EQ(frame.mTiming, timing); // Native state0 performs no further NI sampling.
+}

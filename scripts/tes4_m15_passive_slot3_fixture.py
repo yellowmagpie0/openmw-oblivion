@@ -23,7 +23,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
-            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION != 59
+            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60)
             or recipe['actor'] != actor or type(recipe['process_action']) is not int or recipe['process_action'] != 8
             or type(recipe['shared_player_draw_state']) is not int or recipe['shared_player_draw_state'] != 1
             or type(recipe['camera_first_person']) is not bool
@@ -57,6 +57,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                    or v['input']['held_seconds'] for v in previous)):
         raise ValueError('passive slot3 source must have the declared idle Player clock and action')
     state = copy.deepcopy(original)
+    state['schema_version'] = recipe['target_schema']
     next(v for v in state['native_actor_values'] if v['actor'] == actor)['process_action'] = 8
     state['native_melee_states'] = [v for v in state['native_melee_states'] if v['actor'] != actor]
     state['native_melee_states'].append(copy.deepcopy(recipe['melee_state']))
@@ -78,7 +79,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     report = dict(structural_write_success=True, semantic_reinspection_passed=True,
                   source=str(source), source_sha256=source_hash,
                   output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
-                  source_schema=59, target_schema=59,
+                  source_schema=59, target_schema=runtime.CURRENT_VERSION,
                   mutations=['Player process action -1 -> 8', 'declared Player melee state installed'],
                   shared_camera=dict(source_first_person=True, output_first_person=recipe['camera_first_person']),
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,

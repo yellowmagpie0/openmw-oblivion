@@ -21,7 +21,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or recipe['target_schema'] != 59):
+            or runtime.CURRENT_VERSION not in (59, 60)):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)

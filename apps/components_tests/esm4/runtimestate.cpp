@@ -4673,3 +4673,113 @@ TEST(ESM4RuntimeState, Passive59RejectsPendingCausesForeignOwnershipAndSlotConfl
     EXPECT_FALSE(loaded.mNativeMeleeStates.begin()->second.mFirstPerson->mPassiveSequence);
     EXPECT_EQ(loaded.canonicalJson().find("passive_sequence"), std::string::npos);
 }
+
+TEST(ESM4RuntimeState, Counter60RetainsThreeKeyViewsAndDistinctConsumedAction)
+{
+    for (const bool committed : {false, true})
+    for (unsigned bodyPhase = 0; bodyPhase < 3; ++bodyPhase)
+    for (unsigned firstPhase = 0; firstPhase < 3; ++firstPhase)
+    {
+        auto state = firstPersonStrikeState(); state.mVersion = 60;
+        const auto actor = state.mPlayer.mReference;
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        for (auto* strike : {&*melee.mStrike, &*melee.mFirstPerson->mStrike})
+        {
+            strike->mKind = ESM4::MeleeStrikeKind::Counter;
+            strike->mAnimationGroup = "handtohandblockattack";
+            strike->mPlaybackSpeed = 1;
+            strike->mContactCommitted = committed;
+            strike->mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+        }
+        melee.mStrike->mPowerPhase = static_cast<ESM4::PowerMeleePhase>(bodyPhase);
+        melee.mFirstPerson->mStrike->mPowerPhase = static_cast<ESM4::PowerMeleePhase>(firstPhase);
+        if (bodyPhase == 2) melee.mStrike->mRetirement = ESM4::RuntimeReactionRetirement{.1f,
+            state.mNativeAnimationClocks.at(actor)};
+        if (firstPhase == 2) melee.mFirstPerson->mStrike->mRetirement = ESM4::RuntimeReactionRetirement{.1f,
+            melee.mFirstPerson->mClock};
+        state.mNativeActorValues.back().mProcessAction = committed ? 6 : 2;
+        if (!committed)
+        {
+            state.mPhysicalActions.mPending.push_back(3);
+            std::sort(state.mPhysicalActions.mPending.begin(), state.mPhysicalActions.mPending.end());
+            state.mPhysicalActionOwners.emplace(3, actor);
+        }
+        const auto bytes = state.serializeBinary();
+        auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(melee.mStrike->processAction(), committed ? 6 : 2);
+        auto bodyOnly = state;
+        bodyOnly.mNativeMeleeStates.at(actor).mFirstPerson.reset();
+        const auto bodyBytes = bodyOnly.serializeBinary();
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bodyBytes).serializeBinary(), bodyBytes);
+        auto legacy = state; legacy.mVersion = 59;
+        auto& oldMelee = legacy.mNativeMeleeStates.at(actor);
+        oldMelee.mStrike->mKind = oldMelee.mFirstPerson->mStrike->mKind = ESM4::MeleeStrikeKind::StandingPower;
+        oldMelee.mStrike->mRetirement.reset(); oldMelee.mFirstPerson->mStrike->mRetirement.reset();
+        legacy.mNativeActorValues.back().mProcessAction = committed ? 3 : 2;
+        const auto oldBytes = legacy.serializeBinary();
+        EXPECT_EQ(bytes.size(), oldBytes.size() + 4 + 9 * ((bodyPhase == 2) + (firstPhase == 2)));
+        const auto reject = [&](auto mutate) {
+            auto bad = state; mutate(bad, bad.mNativeMeleeStates.at(actor));
+            EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        };
+        reject([](auto& x, auto&) { x.mVersion = 59; });
+        reject([](auto& x, auto&) { x.mNativeActorValues.back().mProcessAction = 3; });
+        reject([](auto&, auto& m) { m.mStrike->mPlaybackSpeed = .7f; });
+        reject([](auto&, auto& m) { m.mStrike->mPowerPhase.reset(); });
+        reject([](auto&, auto& m) { m.mStrike->mSequenceTiming.reset(); });
+        reject([](auto&, auto& m) { m.mStrike->mKind = static_cast<ESM4::MeleeStrikeKind>(8); });
+        reject([](auto&, auto& m) { m.mFirstPerson->mStrike->mPowerPhase.reset(); });
+        if (committed)
+        {
+            loaded.mNativeMeleeStates.at(actor).mStrike.reset();
+            loaded.mNativeActorValues.back().mProcessAction = -1;
+            EXPECT_NO_THROW(loaded.serializeBinary());
+            loaded.mVersion = 59;
+            EXPECT_THROW(loaded.serializeBinary(), std::runtime_error); // FP-only tag7 is versioned too.
+        }
+    }
+}
+
+TEST(ESM4RuntimeState, Counter60InactiveIntervalsAndBothViewWireFlagsAreStrict)
+{
+    auto state = firstPersonStrikeState(); state.mVersion = 60;
+    const auto actor = state.mPlayer.mReference;
+    auto& melee = state.mNativeMeleeStates.at(actor);
+    for (const bool first : {false, true})
+    {
+        auto& strike = first ? *melee.mFirstPerson->mStrike : *melee.mStrike;
+        const float clock = first ? melee.mFirstPerson->mClock : state.mNativeAnimationClocks.at(actor);
+        strike.mKind = ESM4::MeleeStrikeKind::Counter; strike.mPlaybackSpeed = 1;
+        strike.mAnimationGroup = "handtohandblockattack";
+        strike.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start; strike.mPowerPhase = ESM4::PowerMeleePhase::End;
+        strike.mRetirement = ESM4::RuntimeReactionRetirement{.1f, clock - .25f}; strike.mInactive = true;
+    }
+    state.mNativeActorValues.back().mProcessAction = 6;
+    const auto bytes = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mNativeMeleeStates, state.mNativeMeleeStates);
+    for (const bool first : {false, true})
+    {
+        auto bad = state; auto& m = bad.mNativeMeleeStates.at(actor);
+        auto& strike = first ? *m.mFirstPerson->mStrike : *m.mStrike;
+        strike.mRetirement->mStartClock = first ? m.mFirstPerson->mClock : bad.mNativeAnimationClocks.at(actor);
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    const std::string marker = "handtohandblockattack";
+    auto from = bytes.begin(); unsigned views = 0;
+    while (true)
+    {
+        const auto at = std::search(from, bytes.end(), marker.begin(), marker.end());
+        if (at == bytes.end()) break;
+        ++views; const auto tail = std::size_t(at - bytes.begin()) + marker.size();
+        for (const auto flag : {42u, 47u, 52u})
+        {
+            ASSERT_EQ(bytes.at(tail + flag), 1);
+            auto bad = bytes; bad.at(tail + flag) = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+        }
+        from = at + marker.size();
+    }
+    EXPECT_EQ(views, 2u);
+}

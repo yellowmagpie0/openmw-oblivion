@@ -43,7 +43,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
         for idle in (False, True):
             with tempfile.TemporaryDirectory() as folder:
                 source, recipe, plugin, opaque = self.source(Path(folder), idle)
-                original = source.read_bytes(); before = runtime.load_save(source)
+                original = source.read_bytes(); before = runtime.load_save(source); before['schema_version'] = runtime.CURRENT_VERSION
                 output = Path(folder) / 'new/staged.omwsave'
                 report = stage(source, output, recipe, plugin); after = runtime.load_save(output)
                 self.assertEqual(after['native_melee_states'], [recipe['melee_state']])

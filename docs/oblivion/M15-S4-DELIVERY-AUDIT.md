@@ -10151,3 +10151,63 @@ selection, normal counter/Stagger triggering, and the wider S4 input/mastery/
 effect/E2E gates remain open. M15S4 remains incomplete. See the
 [verification record](M15-STAGGER-SLOT0-ADOPTION-VERIFICATION.json) and
 [editable oracle manifest](../../scripts/data/oblivion_compat/m15_stagger_slot0_adoption_oracle.json).
+
+## Counter phase, owned fade and schema 60 checkpoint
+
+Counter is now a distinct strike protocol (kind 7), with pending action 2 and
+consumed action 6. Its raw keys are Start/Attack/End; ordinary powers continue
+to use Start/Hit/End. It skips weapon-speed correction, preserving negative
+zero. End detaches inclusively even when one frame skips Attack, so no late
+contact can fire. Its state 3 fade retains logical action ownership until NI
+state 0. A consumed Counter can then transfer action 6 to a resident native
+BlockIdle 27 in slot 1; an undispatched Counter clears to -1. Explicit cancellation
+consumes and clears immediately. Body and first-person timing, retirement and
+inactive flags persist independently; the first-person tail can outlive body
+recovery. Schema 60 appends the new fields only for Counter. Ordinary/power wire
+packets and legacy 1..59 decoding retain their existing layouts.
+
+Independent original execution covers 42 raw-key cases, 288 phase contexts with
+624 samples, and 36 action/state/BlockIdle recovery contexts. The production
+helper matches all 624 samples, including all six NI timing fields in 480
+nonzero-state samples; raw-key comparison matches all 42 cases. A separate
+24-context original-helper reference establishes empty-slot state 1 versus
+steady-source state 2 activation independently in the two views, for future
+factory work. These probes supply synthetic object/cache/scene boundaries and
+do not execute a complete original actor frame.
+
+The normal check passes 2,984 component tests, all 1,794 engine tests and 380
+Python tests. ASan/UBSan passes 837 ESM4* component tests and all 1,794 engine
+tests, on the same source fingerprint, without failures or skips. Leak checks
+are disabled. New tests cover body-only and paired Counter packets, malformed
+wire flags in both views, phase/action binding, inclusive End and state 0,
+24 owner/contact/cancel/recovery combinations, three pending cancellation
+stages, stale/replayed consequence rejection, and binary restart checkpoints.
+
+Normal and instrumented rendered courses inject an already consumed Counter
+at End with synthetic eight-second body and ten-second first-person fades.
+Each saves while both tails own their state, finishes normally, then starts a
+fresh process from that exact early save. All six saved/live pairs and four
+load-state/clock comparisons match. Resources, bases, combat RNG, ledger,
+all 36,762 initial inventories and all 37,365 early-save inventories are
+unchanged or match the uninterrupted completion exactly. Completed Player
+fields match. All six captures were directly reviewed; arms and NPC body remain
+visible without torso obstruction or exploding geometry. All four epochs exit
+with draw workers joined. The instrumented course uses a longer wall-clock
+observation deadline; its fixture and semantic requirements are unchanged.
+
+Retained attempts include a wrong two-key native fixture, the renderer's wrong
+Hit-key parser, an injected prior-NI-input error, and the body-only validator's
+missing actor-value index. The first instrumented course's 180-second observer
+deadline expired before FP recovery; its incomplete reference save is excluded.
+All failures, corrections, binary/source identities and evidence pins are in
+[the verification record](M15-COUNTER-PROTOCOL-VERIFICATION.json). Editable
+oracle and runtime inputs are preserved under scripts/data/oblivion_compat.
+
+This accepts a bounded persisted Counter protocol and End/fade restart path.
+Normal Counter resource preparation/triggering, atomic mastery-proc action
+allocation, target acquisition/disarm consequences, failed mirror playback,
+complete first-person action dispatch and cached reactivation remain open.
+The wider Stagger/Creature/mastery/effect/input/gamepad/FPS/audio/E2E gates
+remain open. These courses disable sound, configure 1 FPS without claiming an
+FPS matrix, and inject history rather than trigger a Counter through gameplay.
+M15S4 remains incomplete.

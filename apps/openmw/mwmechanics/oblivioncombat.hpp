@@ -551,11 +551,11 @@ namespace MWMechanics
             const std::array<float, 4>& keyTimes, bool freezeClock = false);
         bool advancePowerMeleeSequence(std::uint64_t id, const ESM::FormKey& actor,
             float duration, float frequency, float begin, float end,
-            const std::array<float, 3>& keyTimes, bool freezeClock = false);
+            const std::array<float, 3>& keyTimes, bool freezeClock = false, float retirementDuration = .1f);
         // Read the prior animation phase before its next frame update.
         bool isOrdinaryMeleeContactPending(std::uint64_t id, const ESM::FormKey& actor) const;
         bool isMeleeContactPending(std::uint64_t id, const ESM::FormKey& actor) const;
-        bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);
+        bool finishMeleeStrike(std::uint64_t id, const ESM::FormKey& actor, bool blockIdlePresent = false);
         // Hard interruption clears held/queued input as well as the owned strike.
         // It is distinct from normal animation completion, which retains queues.
         bool cancelMeleeStrike(std::uint64_t id, const ESM::FormKey& actor);

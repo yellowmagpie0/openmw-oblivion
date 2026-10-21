@@ -41,7 +41,8 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 59;
+    // v60 adds Counter strike tag7, three-stage phase and detached NI retirement.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 60;
 
     struct RuntimeContentIdentity
     {
@@ -496,7 +497,7 @@ namespace ESM4
     // Logical strike kinds, with stock native group selection owned by the
     // controller adapter. These values are save enums, not raw TES4 group IDs.
     enum class MeleeStrikeKind : std::uint8_t
-    { Left, Right, StandingPower, ForwardPower, BackwardPower, LeftPower, RightPower };
+    { Left, Right, StandingPower, ForwardPower, BackwardPower, LeftPower, RightPower, Counter };
     enum class MeleeQueuedStrike : std::uint8_t { None, Ordinary, Power };
     // Owned draw/attachment/release protocol. No renderer handles or projectile
     // pointers are serialized; release acknowledgment is distinct from spawning.
@@ -543,6 +544,7 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeMeleePoseSnapshot&, const RuntimeMeleePoseSnapshot&) = default;
     };
+    using RuntimeReactionRetirement = MeleeSequenceRetirement;
     struct RuntimeMeleeStrike
     {
         std::uint64_t mActionId = 0;
@@ -556,10 +558,15 @@ namespace ESM4
         // inferring it from a renderer time or changing contact consumption.
         OrdinaryMeleePhase mOrdinaryPhase = OrdinaryMeleePhase::Start;
         std::optional<MeleeSequenceTiming> mSequenceTiming = std::nullopt;
+        // Three-key protocol: powers (subtype5) and Counter (subtype6).
         // Absent on old saves until power playback adopts native timing.
         std::optional<PowerMeleePhase> mPowerPhase = std::nullopt;
         // v58: owned Player activation can capture a pose in either view.
         std::optional<RuntimeMeleePoseSnapshot> mPoseSnapshot = std::nullopt;
+        // v60 Counter: detached state3 keeps native action2/6 until state0.
+        std::optional<RuntimeReactionRetirement> mRetirement = std::nullopt;
+        bool mInactive = false;
+        std::int16_t processAction() const;
         void validate() const;
         friend bool operator==(const RuntimeMeleeStrike&, const RuntimeMeleeStrike&) = default;
     };
@@ -573,14 +580,6 @@ namespace ESM4
     // Clamp subtype0/1 reactions. BlockAttack is an attack protocol, not one
     // of these non-damaging sequences. Enum values are private save tags.
     enum class MeleeReactionKind : std::uint8_t { BlockHit, Recoil, Stagger };
-    struct RuntimeReactionRetirement
-    {
-        float mDuration = 0;
-        // Native deactivation anchors the interval on the next manager update.
-        // Absence preserves a save taken between the request and that update.
-        std::optional<float> mStartClock = std::nullopt;
-        friend bool operator==(const RuntimeReactionRetirement&, const RuntimeReactionRetirement&) = default;
-    };
     struct RuntimeMeleeReaction
     {
         // The already consumed contact, shared by both participants if needed.

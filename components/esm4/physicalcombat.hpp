@@ -99,6 +99,7 @@ namespace ESM4
     // Missing/unwritten slots retain the original zero initialization.
     OrdinaryMeleeKeys ordinaryMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
     PowerMeleeKeys powerMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
+    PowerMeleeKeys counterMeleeKeyTimes(std::span<const MeleeTextKey> textKeys);
     // Native subtype0/1 slots consume Start/End without an attack Hit key.
     ReactionKeys reactionKeyTimes(std::span<const MeleeTextKey> textKeys);
     // Original436DA0/51B490: internal name before its first underscore is
@@ -195,6 +196,21 @@ namespace ESM4
         std::optional<float> transitionFrame = std::nullopt,
         MeleeSequenceCycle cycle = MeleeSequenceCycle::Clamp);
 
+    struct MeleeSequenceRetirement
+    {
+        float mDuration = 0;
+        std::optional<float> mStartClock = std::nullopt;
+        friend bool operator==(const MeleeSequenceRetirement&, const MeleeSequenceRetirement&) = default;
+    };
+    struct CounterMeleeFrame
+    {
+        float mClock;
+        PowerMeleePhase mPhase;
+        MeleeSequenceTiming mTiming;
+        std::optional<MeleeSequenceRetirement> mRetirement = std::nullopt;
+        bool mInactive = false;
+        friend bool operator==(const CounterMeleeFrame&, const CounterMeleeFrame&) = default;
+    };
     struct OrdinaryMeleeFrame
     {
         float mClock;
@@ -220,6 +236,13 @@ namespace ESM4
         float duration, float speed, float frequency, float begin, float end,
         const std::array<float, 3>& keyTimes, bool freezeClock = false,
         std::optional<float> transitionFrame = std::nullopt);
+
+    // BlockAttack subtype6 shares the three-key phase switch, but skips
+    // the weapon-speed offset write entirely (including its zero sign).
+    CounterMeleeFrame advanceCounterMeleeFrame(const CounterMeleeFrame& frame,
+        float duration, float frequency, float begin, float end,
+        const std::array<float, 3>& keyTimes, bool freezeClock = false,
+        std::optional<float> transitionFrame = std::nullopt, float retirementDuration = .1f);
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
     struct PowerAttackSettings

@@ -27941,6 +27941,187 @@ TEST(OblivionWorldTest, PlayerContactReactionsReplaceIndependentStrikeSourcesAto
     }
 }
 
+TEST(OblivionWorldTest, CounterCancellationConsumesPendingWindowsWithoutWaitingForItsFade)
+{
+    for (unsigned stage = 0; stage < 3; ++stage)
+    {
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mAttacker.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+        const std::array<float, 3> keys{0, .5999999046325684f, 1};
+        if (stage)
+        {
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, 0, 1, 0, 1, keys));
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, 1, 1, 0, 1, keys));
+            if (stage == 2) ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, .2f, 1, 0, 1, keys));
+        }
+        const auto before = fixture.snapshot();
+        service.restore(ESM4::RuntimeState::deserializeBinary(before.serializeBinary()), world.getStore());
+        ASSERT_TRUE(service.cancelMeleeStrike(id, actor));
+        EXPECT_FALSE(service.cancelMeleeStrike(id, actor));
+        EXPECT_TRUE(service.isActionConsumed(id)); EXPECT_EQ(service.getProcessAction(actor), -1);
+        EXPECT_FALSE(service.findMeleeState(actor)->mStrike);
+        const auto after = fixture.snapshot();
+        auto values = before.mNativeActorValues;
+        for (auto& value : values) if (value.mActor == actor) value.mProcessAction = -1;
+        EXPECT_EQ(after.mNativeActorValues, values); EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+    }
+}
+
+TEST(OblivionWorldTest, CounterSkippedToEndCannotDispatchLateStaggerAfterRestart)
+{
+    PlayerReactionViewsFixture fixture;
+    auto& world = fixture.mFixture.mWorld;
+    auto& service = *world.getOblivionCombatService();
+    const auto actor = fixture.mPlayerKey;
+    const auto id = service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+    const std::array<float, 3> keys{0, .5999999046325684f, 1};
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, 0, 1, 0, 1, keys));
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, 1, 1, 0, 1, keys));
+    ASSERT_EQ(service.findMeleeState(actor)->mStrike->mPowerPhase, ESM4::PowerMeleePhase::End);
+    const auto before = fixture.snapshot();
+    service.restore(ESM4::RuntimeState::deserializeBinary(before.serializeBinary()), world.getStore());
+    MWMechanics::OblivionPhysicalContactDeltas request;
+    request.mVictimReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Stagger, "stagger"};
+    EXPECT_THROW(world.prepareOblivionPhysicalContact(id, fixture.mPlayer, fixture.mAttacker, request), std::invalid_argument);
+    EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+    EXPECT_FALSE(service.finishMeleeStrike(id, actor)); // Detached state3 still owns action2.
+    EXPECT_EQ(service.getProcessAction(actor), 2);
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, .05f, 1, 0, 1, keys));
+    EXPECT_FALSE(service.findMeleeState(actor)->mStrike->mInactive);
+    const auto retiring = fixture.snapshot();
+    service.restore(ESM4::RuntimeState::deserializeBinary(retiring.serializeBinary()), world.getStore());
+    ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, .1f, 1, 0, 1, keys));
+    EXPECT_TRUE(service.findMeleeState(actor)->mStrike->mInactive);
+    const auto inactive = fixture.snapshot();
+    service.restore(ESM4::RuntimeState::deserializeBinary(inactive.serializeBinary()), world.getStore());
+    EXPECT_TRUE(service.findMeleeState(actor)->mStrike->mInactive);
+    ASSERT_TRUE(service.finishMeleeStrike(id, actor, true)); // Undispatched action2 never transfers to BlockIdle.
+
+    EXPECT_TRUE(service.isActionConsumed(id)); EXPECT_EQ(service.getProcessAction(actor), -1);
+    EXPECT_EQ(service.findMeleeState(fixture.mAttacker.getCellRef().getFormKey()), nullptr);
+}
+
+TEST(OblivionWorldTest, CounterProtocolConsumesOnceIntoAction6AndRetainsIndependentViewsAcrossRestart)
+{
+    for (unsigned owner = 0; owner < 3; ++owner)
+    for (const bool hit : {false, true})
+    for (const bool cancel : {false, true})
+    for (const bool blockIdle : {false, true})
+    {
+        SCOPED_TRACE(owner);
+        SCOPED_TRACE(hit);
+        SCOPED_TRACE(cancel);
+        SCOPED_TRACE(blockIdle);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto source = owner ? fixture.mPlayer : fixture.mAttacker;
+        const auto victim = owner ? fixture.mAttacker : fixture.mPlayer;
+        const auto actor = owner ? fixture.mPlayerKey : source.getCellRef().getFormKey();
+        const auto target = owner ? victim.getCellRef().getFormKey() : fixture.mPlayerKey;
+        std::optional<MWMechanics::OblivionMeleeStrikeViews> views;
+        if (owner == 2)
+        {
+            ESM4::RuntimeMeleeStrike body{1, ESM4::MeleeStrikeKind::Counter, {}, "handtohandblockattack"};
+            body.mSequenceTiming.emplace(); body.mPowerPhase = ESM4::PowerMeleePhase::Start;
+            auto seed = fixture.snapshot();
+            seed.mNativeMeleeStates.at(actor).mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{10.5f, {}};
+            service.restore(seed, world.getStore());
+            views = MWMechanics::OblivionMeleeStrikeViews{body, ESM4::RuntimeFirstPersonMeleeState{10.5f, {}, body}};
+        }
+        const auto id = service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Counter,
+            "handtohandblockattack", 1, {}, views);
+        EXPECT_EQ(service.getProcessAction(actor), 2);
+        ASSERT_TRUE(service.bindMeleePlayback(id, actor));
+        const auto checkpoint = [&] {
+            const auto state = fixture.snapshot();
+            service.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), world.getStore());
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), state.serializeBinary());
+        };
+        checkpoint();
+        // The native actor dispatcher cannot apply the counter before phase1.
+        const auto before = fixture.snapshot().serializeBinary();
+        EXPECT_THROW(world.prepareOblivionPhysicalContact(id, source, {}, {}), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        const std::array<float, 3> keys{0, .5999999046325684f, 1};
+        std::vector<MWMechanics::OblivionMeleeSequenceMetadata> metadata;
+        for (const bool first : {false, true})
+        {
+            if (first && owner != 2) continue;
+            MWMechanics::OblivionMeleeSequenceMetadata m{"handtohandblockattack", 1, 0, 1, 0, 1};
+            m.mPowerKeys = keys; m.mFirstPerson = first; m.mRetirementDuration = .1f; metadata.push_back(m);
+        }
+        const auto advance = [&](float dt) {
+            if (owner == 2)
+            {
+                auto frame = service.prepareMeleeReactionFrame(actor, dt, metadata);
+                ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+            }
+            else ASSERT_TRUE(service.advancePowerMeleeSequence(id, actor, dt, 1, 0, 1, keys));
+        };
+        for (const float dt : {0.f, .2f, .2f, .2f}) { advance(dt); checkpoint(); }
+        ASSERT_TRUE(service.isMeleeContactPending(id, actor));
+        const auto pending = fixture.snapshot();
+        MWMechanics::OblivionPhysicalContactDeltas request;
+        if (hit) request.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::Stagger, "handtohandstagger"};
+        const auto reject = [&](auto invalid) {
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(id, source, victim, invalid), std::invalid_argument);
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), pending.serializeBinary());
+        };
+        auto invalid = request; invalid.mVictimHealth = -1; reject(invalid);
+        invalid = request; invalid.mAttackerFatigue = -1; reject(invalid);
+        invalid = request; invalid.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"}; reject(invalid);
+        auto contact = world.prepareOblivionPhysicalContact(id, source, hit ? victim : MWWorld::Ptr{}, request);
+        ASSERT_TRUE(contact); ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
+        EXPECT_TRUE(service.isActionConsumed(id)); EXPECT_FALSE(service.isMeleeContactPending(id, actor));
+        EXPECT_EQ(service.getProcessAction(actor), 6);
+        const auto blockedPosture = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(service.beginBlocking(actor));
+        EXPECT_FALSE(service.endBlocking(actor)); // Action6 is owned by Counter until native state0 recovery.
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), blockedPosture);
+        ASSERT_TRUE(service.findMeleeState(actor)->mStrike->mContactCommitted);
+        if (owner == 2) EXPECT_TRUE(service.findMeleeState(actor)->mFirstPerson->mStrike->mContactCommitted);
+        ASSERT_TRUE(service.bindMeleePlayback(id, actor)); EXPECT_EQ(service.getProcessAction(actor), 6);
+        auto expectedValues = pending.mNativeActorValues;
+        for (auto& value : expectedValues)
+        {
+            if (value.mActor == actor) value.mProcessAction = 6;
+            if (hit && value.mActor == target) value.mProcessAction = 8;
+        }
+        EXPECT_EQ(fixture.snapshot().mNativeActorValues, expectedValues);
+        EXPECT_EQ(fixture.snapshot().mCombatRngState, pending.mCombatRngState);
+        checkpoint();
+        if (cancel) ASSERT_TRUE(service.cancelMeleeStrike(id, actor));
+        else
+        {
+            advance(.2f); advance(.2f); advance(.2f);
+            ASSERT_EQ(service.findMeleeState(actor)->mStrike->mPowerPhase, ESM4::PowerMeleePhase::End);
+            ASSERT_TRUE(service.findMeleeState(actor)->mStrike->mInactive);
+            checkpoint();
+            ASSERT_TRUE(service.finishMeleeStrike(id, actor, blockIdle));
+            if (owner == 2 && service.findMeleeState(actor)->mFirstPerson->mStrike)
+            {
+                // FP rounding can reach End one frame later than the body;
+                // its detached tail must survive body action recovery.
+                checkpoint();
+                auto tail = service.prepareMeleeReactionFrame(actor, .2f, metadata);
+                ASSERT_TRUE(tail); ASSERT_TRUE(service.commitMeleeReactionFrame(*tail));
+                ASSERT_TRUE(service.finishFirstPersonMeleeStrike(actor));
+                EXPECT_FALSE(service.findMeleeState(actor)->mFirstPerson->mStrike);
+            }
+        }
+        EXPECT_EQ(service.getProcessAction(actor), !cancel && blockIdle ? 6 : -1);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        if (hit) EXPECT_EQ(service.getProcessAction(target), 8);
+        checkpoint();
+    }
+}
+
 TEST(OblivionWorldTest, FreshStaggerViewsActivateImmediatelyOnlyWhenTheirSlot0IsEmpty)
 {
     // Original helper24-case presence/absence oracle: each view independently

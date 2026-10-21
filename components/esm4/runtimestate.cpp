@@ -1068,18 +1068,40 @@ namespace ESM4
                 throw std::runtime_error("Nonfinite TES4 melee sequence timing");
     }
 
+    std::int16_t RuntimeMeleeStrike::processAction() const
+    {
+        if (mKind > MeleeStrikeKind::Counter)
+            throw std::runtime_error("Invalid TES4 melee strike kind");
+        return mContactCommitted ? (mKind == MeleeStrikeKind::Counter ? 6 : 3) : 2;
+    }
+
+    static void validateMeleeRetirement(const RuntimeReactionRetirement& retirement);
+
     void RuntimeMeleeStrike::validate() const
     {
         if (mActionId == 0 || mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
             || mAnimationGroup.find('\0') != std::string::npos || !std::isfinite(mPlaybackSpeed) || mPlaybackSpeed <= 0
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0
-            || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::RightPower)
+            || static_cast<unsigned>(mKind) > static_cast<unsigned>(MeleeStrikeKind::Counter)
             || static_cast<unsigned>(mOrdinaryPhase) > static_cast<unsigned>(OrdinaryMeleePhase::End))
             throw std::runtime_error("Invalid TES4 melee strike state");
         if (mPowerPhase && (mKind < MeleeStrikeKind::StandingPower
                 || static_cast<unsigned>(*mPowerPhase) > static_cast<unsigned>(PowerMeleePhase::End)
                 || mOrdinaryPhase != OrdinaryMeleePhase::Start))
             throw std::runtime_error("Invalid TES4 power melee phase");
+        // BlockAttack29 shares the three-key phase branch with powers, but
+        // lies outside the17..26 weapon-speed correction range.
+        if (mKind == MeleeStrikeKind::Counter && (mPlaybackSpeed != 1 || !mPowerPhase || !mSequenceTiming))
+            throw std::runtime_error("Invalid TES4 counter protocol or speed");
+        if (mKind != MeleeStrikeKind::Counter && (mRetirement || mInactive))
+            throw std::runtime_error("Only TES4 counters carry owned strike retirement");
+        if (mKind == MeleeStrikeKind::Counter)
+        {
+            if ((*mPowerPhase == PowerMeleePhase::End) != bool(mRetirement || mInactive)
+                || ((mRetirement || mInactive) && (!mSequenceTiming->mOffset || mSequenceTiming->mEasing || mPoseSnapshot)))
+                throw std::runtime_error("Invalid TES4 counter retirement ownership");
+            if (mRetirement) validateMeleeRetirement(*mRetirement);
+        }
         if (mSequenceTiming) validateMeleeTiming(*mSequenceTiming, mPoseSnapshot.has_value());
         if (mPoseSnapshot)
         {
@@ -1204,8 +1226,8 @@ namespace ESM4
         std::visit([](const auto& sequence) { sequence.validate(); }, mSequence);
         if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&mSequence))
         {
-            if (!strike->mSequenceTiming)
-                throw std::runtime_error("Passive TES4 strike requires native timing");
+            if (!strike->mSequenceTiming || strike->mRetirement || strike->mInactive)
+                throw std::runtime_error("Passive TES4 strike requires a resident native sequence");
         }
         else if (std::get<RuntimeMeleeReaction>(mSequence).mKind == MeleeReactionKind::Stagger)
             throw std::runtime_error("Passive TES4 slot3 cannot contain Stagger slot0");
@@ -1568,7 +1590,8 @@ namespace ESM4
         std::map<ESM::FormKey, const RuntimeActorValues*> reactionValues;
         if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mReaction || entry.second.mFirstPerson
-                    || entry.second.mPassiveSequence || !entry.second.mRetiringSequences.empty(); }))
+                    || entry.second.mPassiveSequence || !entry.second.mRetiringSequences.empty()
+                    || (entry.second.mStrike && entry.second.mStrike->mKind == MeleeStrikeKind::Counter); }))
             for (const auto& values : mNativeActorValues) reactionValues.emplace(values.mActor, &values);
         std::set<std::uint64_t> meleeIds;
         for (const auto& [actor, melee] : mNativeMeleeStates)
@@ -1577,8 +1600,26 @@ namespace ESM4
             const auto life = lives.find(actor);
             if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive)
                 throw std::runtime_error("Dangling or incapacitated TES4 melee state owner");
+            const auto validateCounter = [&](const RuntimeMeleeStrike& strike, bool primary, float counterClock) {
+                if (strike.mKind != MeleeStrikeKind::Counter) return;
+                const auto values = reactionValues.find(actor);
+                if (mVersion < 60 || (primary && (values == reactionValues.end()
+                        || values->second->mProcess != ActorValueProcess::Active
+                        || values->second->mProcessAction != strike.processAction())))
+                    throw std::runtime_error("Unsupported or mismatched TES4 counter action");
+                if (strike.mInactive && strike.mRetirement && (!strike.mRetirement->mStartClock
+                        || counterClock < static_cast<float>(double(*strike.mRetirement->mStartClock)
+                            + strike.mRetirement->mDuration)))
+                    throw std::runtime_error("Premature TES4 counter deactivation");
+            };
+            if (melee.mStrike) validateCounter(*melee.mStrike, true,
+                mNativeAnimationClocks.contains(actor) ? mNativeAnimationClocks.at(actor) : 0.f);
+            if (melee.mFirstPerson && melee.mFirstPerson->mStrike)
+                validateCounter(*melee.mFirstPerson->mStrike, false, melee.mFirstPerson->mClock);
             const auto validatePassive = [&](const std::optional<RuntimePassiveMeleeSequence>& passive, float clock) {
                 if (!passive) return;
+                if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&passive->mSequence))
+                    validateCounter(*strike, false, clock);
                 const auto values = reactionValues.find(actor);
                 if (mVersion < 59 || !mNativeAnimationClocks.contains(actor)
                     || passive->cause() >= mPhysicalActions.mNext || pendingActions.contains(passive->cause())
@@ -2522,6 +2563,17 @@ namespace ESM4
                     {
                         writer.integer<std::uint8_t>(strike.mPoseSnapshot.has_value());
                         if (strike.mPoseSnapshot) writeMeleePose(writer, *strike.mPoseSnapshot);
+                    }
+                    if (mVersion >= 60 && strike.mKind == MeleeStrikeKind::Counter)
+                    {
+                        writer.integer<std::uint8_t>(strike.mRetirement.has_value());
+                        if (strike.mRetirement)
+                        {
+                            writer.floating(strike.mRetirement->mDuration);
+                            writer.integer<std::uint8_t>(strike.mRetirement->mStartClock.has_value());
+                            if (strike.mRetirement->mStartClock) writer.floating(*strike.mRetirement->mStartClock);
+                        }
+                        writer.integer<std::uint8_t>(strike.mInactive);
                     }
                 };
                 if (melee.mStrike) writeStrike(*melee.mStrike);
@@ -3478,6 +3530,16 @@ namespace ESM4
                     if (result.mVersion >= 49 && boolean())
                         strike.mPowerPhase = static_cast<PowerMeleePhase>(reader.integer<std::uint8_t>());
                     if (result.mVersion >= 58 && boolean()) strike.mPoseSnapshot = readMeleePose(reader);
+                    if (result.mVersion >= 60 && strike.mKind == MeleeStrikeKind::Counter)
+                    {
+                        if (boolean())
+                        {
+                            RuntimeReactionRetirement span{reader.float32(), {}};
+                            if (boolean()) span.mStartClock = reader.float32();
+                            strike.mRetirement = span;
+                        }
+                        strike.mInactive = boolean();
+                    }
                     return strike;
                 };
                 if (boolean()) melee.mStrike = readStrike();
@@ -4560,6 +4622,24 @@ namespace ESM4
                             stream << ",\"pose_snapshot\":";
                             if (strike.mPoseSnapshot) writeMeleePoseJson(stream, *strike.mPoseSnapshot);
                             else stream << "null";
+                        }
+                        if (mVersion >= 60 && strike.mKind == MeleeStrikeKind::Counter)
+                        {
+                            const auto floating = [&](float value) {
+                                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                                else stream << std::setprecision(17) << value;
+                            };
+                            stream << ",\"retirement\":";
+                            if (!strike.mRetirement) stream << "null";
+                            else
+                            {
+                                stream << "{\"duration\":"; floating(strike.mRetirement->mDuration);
+                                stream << ",\"start_clock\":";
+                                if (strike.mRetirement->mStartClock) floating(*strike.mRetirement->mStartClock);
+                                else stream << "null";
+                                stream << '}';
+                            }
+                            stream << ",\"inactive\":" << (strike.mInactive ? "true" : "false");
                         }
                         stream << '}';
                     }
