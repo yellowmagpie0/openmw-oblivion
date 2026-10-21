@@ -1673,6 +1673,9 @@ namespace MWMechanics
             || mTimelineEnd <= mTimelineBegin || !std::isfinite(mEnd - mBegin)
             || !std::isfinite(mTimelineEnd - mTimelineBegin))
             throw std::invalid_argument("invalid native melee sequence metadata");
+        if ((mCycle != ESM4::MeleeSequenceCycle::Clamp && mCycle != ESM4::MeleeSequenceCycle::Loop)
+            || (mCycle == ESM4::MeleeSequenceCycle::Loop && (mReactionKeys || mOrdinaryKeys || mPowerKeys)))
+            throw std::invalid_argument("unsupported native melee metadata cycle or phase protocol");
         if (mReactionKeys) (void)ESM4::advanceReactionSlot(false, 0, 0, *mReactionKeys);
         if (mOrdinaryKeys) (void)ESM4::advanceOrdinaryMeleePhase(ESM4::OrdinaryMeleePhase::Start, 0, 0, *mOrdinaryKeys);
         if (mPowerKeys) (void)ESM4::advancePowerMeleePhase(ESM4::PowerMeleePhase::Start, 0, 0, *mPowerKeys);
@@ -1846,10 +1849,11 @@ namespace MWMechanics
             manager.mEaseStart = retirement.mStartClock;
             manager.mEaseEnd = end;
             timing = ESM4::updateMeleeSequenceTiming(manager, viewClock,
-                source.mFrequency, source.mBegin, source.mEnd);
+                source.mFrequency, source.mBegin, source.mEnd, {}, source.mCycle);
             timing.mEasing = false;
             const float target = source.rendererTime(timing.mOutputTime);
-            if (target < animationTime) throw std::invalid_argument("native retiring sequence renderer rewind");
+            if (target < animationTime && source.mCycle != ESM4::MeleeSequenceCycle::Loop)
+                throw std::invalid_argument("native retiring sequence renderer rewind");
             animationTime = target;
             return true;
         };

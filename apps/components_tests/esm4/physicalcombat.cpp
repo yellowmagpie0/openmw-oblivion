@@ -6133,3 +6133,58 @@ TEST(ESM4PhysicalCombat, PlayerReactionResourceSelectionRejectsMalformedResolved
             {Collection::Single, bad}, 1), std::invalid_argument);
     }
 }
+
+TEST(ESM4PhysicalCombat, NativeLoopTimingPreservesFirstEndAndWrapsLaterLaps)
+{
+    // Original6CA950/6C5FC0,007F, supplied empty-controller fixtures.
+    // Full1740-sample comparison is pinned in M15-SLOT0-LOOP-TIMING-VERIFICATION.json.
+    struct Sample { float mClock; std::uint32_t mWeighted, mOutput; };
+    struct Case { bool mEasing; float mFrequency, mBegin, mEnd; std::array<Sample, 10> mSamples; };
+    const std::array<Case, 2> cases{{
+        {true, 0.7f, 0.25f, 1.25f, {{
+            {0.0f, 0x00000000u, 0x3f800000u},
+            {0.125f, 0x3db33333u, 0x3f8b3333u},
+            {0.5f, 0x3eb33333u, 0x3eb33333u},
+            {0.9999999403953552f, 0x3f333332u, 0x3f333332u},
+            {1.0f, 0x3f333333u, 0x3f333333u},
+            {1.0000001192092896f, 0x3f333334u, 0x3f333334u},
+            {1.5f, 0x3f866666u, 0x3f866666u},
+            {2.0f, 0x3fb33333u, 0x3eccccccu},
+            {3.0f, 0x40066666u, 0x3f8cccccu},
+            {4.0f, 0x40333333u, 0x3f4cccccu},
+        }}},
+        {false, 1.0f, 0.0f, 1.0f, {{
+            {0.0f, 0x00000000u, 0x00000000u},
+            {0.125f, 0x3e000000u, 0x3e000000u},
+            {0.5f, 0x3f000000u, 0x3f000000u},
+            {0.9999999403953552f, 0x3f7fffffu, 0x3f7fffffu},
+            {1.0f, 0x3f800000u, 0x3f800000u},
+            {1.0000001192092896f, 0x3f800001u, 0x34000000u},
+            {1.5f, 0x3fc00000u, 0x3f000000u},
+            {2.0f, 0x40000000u, 0x00000000u},
+            {3.0f, 0x40400000u, 0x00000000u},
+            {4.0f, 0x40800000u, 0x00000000u},
+        }}},
+    }};
+    for (const auto& expected : cases)
+    {
+        ESM4::MeleeSequenceTiming state;
+        state.mEasing = expected.mEasing;
+        state.mEaseEnd = expected.mEasing ? 1.f : 0.f;
+        for (const auto& sample : expected.mSamples)
+        {
+            const auto prior = state;
+            state = ESM4::updateMeleeSequenceTiming(prior, sample.mClock,
+                expected.mFrequency, expected.mBegin, expected.mEnd, {}, ESM4::MeleeSequenceCycle::Loop);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(state.mWeightedTime), sample.mWeighted);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(state.mOutputTime), sample.mOutput);
+        }
+    }
+    for (const auto cycle : {static_cast<ESM4::MeleeSequenceCycle>(1), static_cast<ESM4::MeleeSequenceCycle>(3)})
+        EXPECT_THROW(ESM4::updateMeleeSequenceTiming({}, 0, 1, 0, 1, {}, cycle), std::invalid_argument);
+    EXPECT_EQ(ESM4::updateMeleeSequenceTiming({}, 5, 1, .25f, .25f, {},
+        ESM4::MeleeSequenceCycle::Loop).mOutputTime, .25f);
+    const float maximum = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::updateMeleeSequenceTiming({}, 0, 1, -maximum, maximum, {},
+        ESM4::MeleeSequenceCycle::Loop), std::invalid_argument);
+}

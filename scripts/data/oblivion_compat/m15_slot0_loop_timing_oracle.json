@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "timing": {
+    "question": "Original NI loop/clamp timing and End-boundary convention while steady, easing and retiring, needed for outgoing locomotion0 besideStagger.",
+    "cases": 630,
+    "cycle_modes": [
+      0,
+      2
+    ],
+    "frequencies": [
+      0.5,
+      0.7,
+      1,
+      1.5,
+      2
+    ],
+    "bounds": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0.25,
+        1.25
+      ],
+      [
+        10,
+        11
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        -2,
+        -1
+      ],
+      [
+        0.0,
+        2.1999998092651367
+      ]
+    ],
+    "states": [
+      "steady",
+      "easing1s",
+      "retiring4s"
+    ],
+    "x87_control_words": [
+      127,
+      639,
+      895
+    ],
+    "clock_samples": [
+      0,
+      0.125,
+      0.5,
+      0.9999999403953552,
+      1,
+      1.0000001192092896,
+      1.5,
+      2,
+      3,
+      4
+    ],
+    "scope": "Actual6C9BA0 activation,6C9CB0 deactivation,6CA950 manager and6C5FC0 time normalizer/CRT on supplied sequences with empty controller arrays. No full actor frame, transform projection or normalStagger activation.",
+    "extension": "Include actual installed body/FP handtohandidle KF End from hash-pinned bounded metadata read."
+  },
+  "stagger_composition": {
+    "cases": 18,
+    "question": "Actual5F4FD0 with steady looping idle0 in both Player views, rather than absent first-person slot0.",
+    "initial_body_clock": 0.5,
+    "first_clocks": [
+      0.5,
+      10.5
+    ],
+    "old_process_actions": [
+      2,
+      6,
+      7
+    ],
+    "x87_control_words": [
+      127,
+      639,
+      895
+    ],
+    "idle_period": 2.1999998092651367,
+    "expected": "Both old idles deactivate to3, both incomingStaggers ease in as2, processaction8, old slot3 histories preserved. Separate manager clocks retire sources and settle incoming by.125s.",
+    "scope": "Original helper/selection/activation/action writes and unsynchronized NI updates; supplied cache resources and empty controllers, scene update/notifications at inherited boundaries. No transforms or live input.",
+    "fixture": "Original native-stagger-parallel-slot3-oracle-01 with an added independently clocked first-person idle0."
+  },
+  "scope": "Supplied original-instruction fixtures and declared boundaries; no original-game live run or normalStagger activation. Slot3 pointers are checked at activation only; this probe does not claim frozen slot3 phases."
+}

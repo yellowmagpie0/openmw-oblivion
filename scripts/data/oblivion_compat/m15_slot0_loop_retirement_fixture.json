@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "purpose": "Injected ongoing8s slot0 crossfade: steady looping handtohandidle source retires under easing handtohandstagger destination in both Player views. Declared8s blend is synthetic. Verifies loop timing/projection and restart, not normalStagger activation or resource selection.",
+  "source": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/first/snapshots/save-3.omwsave",
+  "source_sha256": "ab2615819388931e614aa5aa76302434b1ad562325426a3660c0cd6c134d5564",
+  "target_schema": 59,
+  "actor": "dynamic:player:0000000000000001",
+  "actor_clock": 7.859997272491455,
+  "physical_actions": {
+    "next": 2,
+    "pending": []
+  },
+  "process_action": 8,
+  "melee_state": {
+    "actor": "dynamic:player:0000000000000001",
+    "input": {
+      "held_seconds": 0.0,
+      "input_held": false,
+      "prefer_left": false,
+      "queued": 0
+    },
+    "strike": null,
+    "ai_intent": null,
+    "reaction": {
+      "contact_id": 1,
+      "kind": 2,
+      "animation_group": "handtohandstagger",
+      "animation_time": 0.25,
+      "started": false,
+      "sequence_timing": {
+        "easing": true,
+        "offset": -7.609997272491455,
+        "ease_start": 7.859997272491455,
+        "last_input": 0.25,
+        "ease_end": 15.859996795654297,
+        "weighted_time": 0.25,
+        "output_time": 0.25
+      },
+      "retirement": null,
+      "inactive": false,
+      "pose_snapshot": null
+    },
+    "retiring_sequences": [
+      {
+        "contact_id": 1,
+        "animation_group": "handtohandidle",
+        "animation_time": 0.5,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -7.359997272491455,
+          "ease_start": 7.859997272491455,
+          "ease_end": 15.859996795654297,
+          "last_input": 0.5,
+          "weighted_time": 0.5,
+          "output_time": 0.5
+        },
+        "retirement": {
+          "duration": 8.0,
+          "start_clock": 7.859997272491455
+        }
+      }
+    ],
+    "first_person": {
+      "clock": 17.859996795654297,
+      "reaction": {
+        "contact_id": 1,
+        "kind": 2,
+        "animation_group": "handtohandstagger",
+        "animation_time": 0.25,
+        "started": false,
+        "sequence_timing": {
+          "easing": true,
+          "offset": -17.609996795654297,
+          "ease_start": 17.859996795654297,
+          "last_input": 0.25,
+          "ease_end": 25.859996795654297,
+          "weighted_time": 0.25,
+          "output_time": 0.25
+        },
+        "retirement": null,
+        "inactive": false,
+        "pose_snapshot": null
+      },
+      "retiring_sequences": [
+        {
+          "contact_id": 1,
+          "animation_group": "handtohandidle",
+          "animation_time": 0.5,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -17.359996795654297,
+            "ease_start": 17.859996795654297,
+            "ease_end": 25.859996795654297,
+            "last_input": 0.5,
+            "weighted_time": 0.5,
+            "output_time": 0.5
+          },
+          "retirement": {
+            "duration": 8.0,
+            "start_clock": 17.859996795654297
+          }
+        }
+      ],
+      "strike": null,
+      "passive_sequence": null
+    },
+    "passive_sequence": null
+  },
+  "shared_player_draw_state": 1,
+  "camera_first_person": true
+}

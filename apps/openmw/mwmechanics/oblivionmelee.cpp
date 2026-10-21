@@ -38,8 +38,8 @@ namespace MWMechanics
         MWRender::Animation& animation, std::string_view group, bool reaction)
     {
         const auto* source = animation.getControllerSequenceMetadata(group);
-        if (!source || source->mCycleType != 2)
-            throw std::invalid_argument("native reaction requires a clamp sequence");
+        if (!source || (source->mCycleType != 2 && (reaction || source->mCycleType != 0)))
+            throw std::invalid_argument("native reaction requires clamp; outgoing sequence requires loop or clamp");
         std::vector<ESM4::MeleeTextKey> raw;
         raw.reserve(source->mTextKeys.size());
         for (const auto& [time, text] : source->mTextKeys) raw.push_back({time, text});
@@ -51,6 +51,7 @@ namespace MWMechanics
         OblivionMeleeSequenceMetadata result{group, source->mFrequency,
             source->mStartTime, source->mStopTime, source->mTimelineStart, source->mTimelineStop, {}, retirement};
         result.mBlendFrames = frames;
+        result.mCycle = source->mCycleType == 0 ? ESM4::MeleeSequenceCycle::Loop : ESM4::MeleeSequenceCycle::Clamp;
         if (reaction)
         {
             const auto keys = ESM4::reactionKeyTimes(raw);

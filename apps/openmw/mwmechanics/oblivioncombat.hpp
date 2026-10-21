@@ -54,6 +54,7 @@ namespace MWMechanics
         bool mFirstPerson = false;
         std::optional<std::array<float, 4>> mOrdinaryKeys = std::nullopt;
         std::optional<std::array<float, 3>> mPowerKeys = std::nullopt;
+        ESM4::MeleeSequenceCycle mCycle = ESM4::MeleeSequenceCycle::Clamp;
         float rendererTime(float time) const;
         void validate() const;
     };

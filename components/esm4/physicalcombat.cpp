@@ -612,7 +612,8 @@ namespace ESM4
     }
 
     MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
-        float animationClock, float frequency, float begin, float end, std::optional<float> transitionFrame)
+        float animationClock, float frequency, float begin, float end, std::optional<float> transitionFrame,
+        MeleeSequenceCycle cycle)
     {
         finite(animationClock);
         finite(frequency);
@@ -630,8 +631,9 @@ namespace ESM4
         for (const auto value : {state.mOffset, state.mEaseStart, state.mLastInput})
             if (value)
                 finite(*value);
-        if (frequency <= 0 || end < begin)
-            throw std::invalid_argument("unsupported native melee sequence bounds or frequency");
+        if (frequency <= 0 || end < begin
+            || (cycle != MeleeSequenceCycle::Clamp && cycle != MeleeSequenceCycle::Loop))
+            throw std::invalid_argument("unsupported native melee sequence bounds, frequency or cycle");
         auto result = state;
         if (!result.mOffset)
             result.mOffset = initialMeleeSequenceOffset(animationClock);
@@ -666,7 +668,25 @@ namespace ESM4
         const float weightedDelta = rounded(double(frequency) * delta);
         result.mWeightedTime = rounded(double(weightedDelta) + previous);
         result.mLastInput = input;
-        result.mOutputTime = std::clamp(result.mWeightedTime, begin, end);
+        float output = result.mWeightedTime;
+        if (cycle == MeleeSequenceCycle::Loop)
+        {
+            const float span = rounded(double(end) - begin);
+            if (span == 0) output = begin;
+            else
+            {
+                const float relative = rounded(double(output) - begin);
+                // Original6C6041 preserves the first End sample exactly.
+                // Later exact multiples wrap to Begin; zero also stays Begin.
+                if (relative == span) output = end;
+                else
+                {
+                    output = rounded(double(std::fmod(relative, span)) + begin);
+                    if (output < begin) output = rounded(double(output) + span);
+                }
+            }
+        }
+        result.mOutputTime = std::clamp(output, begin, end);
         return result;
     }
 

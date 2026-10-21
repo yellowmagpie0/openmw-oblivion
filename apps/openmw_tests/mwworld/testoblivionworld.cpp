@@ -27941,6 +27941,71 @@ TEST(OblivionWorldTest, PlayerContactReactionsReplaceIndependentStrikeSourcesAto
     }
 }
 
+TEST(OblivionWorldTest, LoopingRetirementWrapsAndRestartsWithoutContactAuthority)
+{
+    for (const bool paired : {false, true})
+    {
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        const auto cause = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(cause, fixture.mAttacker, {}, {}));
+        auto seed = fixture.snapshot();
+        auto& state = seed.mNativeMeleeStates.at(actor);
+        const auto install = [&](auto& view, float clock) {
+            view.mRetiringSequences.push_back({cause, "handtohandidle", 0,
+                {.mOffset = -clock, .mEaseStart = 0.f, .mLastInput = 0.f}, {4, {}}});
+        };
+        install(state, .5f);
+        if (paired)
+        {
+            state.mFirstPerson.emplace(); state.mFirstPerson->mClock = 10.5f;
+            install(*state.mFirstPerson, 10.5f);
+        }
+        service.restore(seed, world.getStore());
+        MWMechanics::OblivionMeleeSequenceMetadata source{"handtohandidle", 1, 0, 1, 0, 1};
+        source.mCycle = ESM4::MeleeSequenceCycle::Loop;
+        std::vector<MWMechanics::OblivionMeleeSequenceMetadata> sources{source};
+        if (paired) { source.mFirstPerson = true; sources.push_back(source); }
+        auto invalid = sources; invalid.front().mReactionKeys = std::array<float, 2>{0, 1};
+        EXPECT_THROW(service.prepareMeleeReactionFrame(actor, 0, invalid), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), seed.serializeBinary());
+        invalid = sources; invalid.front().mCycle = static_cast<ESM4::MeleeSequenceCycle>(1);
+        EXPECT_THROW(service.prepareMeleeReactionFrame(actor, 0, invalid), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), seed.serializeBinary());
+        // Original loop manager at unweighted times0,1,2,3:0,1,0,0.
+        // Retirement completes at4 before advancing the controller again.
+        for (unsigned tick = 0; tick < 5; ++tick)
+        {
+            auto frame = service.prepareMeleeReactionFrame(actor, tick ? 1.f : 0.f, sources);
+            ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+            const auto* current = service.findMeleeState(actor);
+            const auto verify = [&](const auto& view, float initialClock) {
+                ASSERT_EQ(view.mRetiringSequences.size(), tick == 4 ? 0u : 1u);
+                if (tick == 4) return;
+                const auto& layer = view.mRetiringSequences.front();
+                EXPECT_EQ(layer.mRetirement.mStartClock, initialClock);
+                EXPECT_EQ(layer.mAnimationTime, tick == 1 ? 1.f : 0.f);
+                EXPECT_EQ(layer.mSequenceTiming.mWeightedTime, float(tick));
+                EXPECT_FALSE(view.mReaction); EXPECT_FALSE(view.mStrike); EXPECT_FALSE(view.mPassiveSequence);
+            };
+            verify(*current, .5f);
+            if (paired) verify(*current->mFirstPerson, 10.5f);
+            const auto checkpoint = fixture.snapshot();
+            EXPECT_EQ(checkpoint.mPhysicalActions, seed.mPhysicalActions);
+            EXPECT_EQ(checkpoint.mCombatRngState, seed.mCombatRngState);
+            EXPECT_EQ(checkpoint.mNativeActorValues, seed.mNativeActorValues);
+            EXPECT_TRUE(service.isActionConsumed(cause));
+            service.restore(ESM4::RuntimeState::deserializeBinary(checkpoint.serializeBinary()), world.getStore());
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), checkpoint.serializeBinary());
+        }
+        const auto completed = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(service.prepareMeleeReactionFrame(actor, .1f, sources));
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), completed);
+    }
+}
+
 TEST(OblivionWorldTest, PassiveSlot3MatchesOriginalPhaseSpeedAndEndRetirement)
 {
     for (const auto& expected : StaggerPrefixOracle::sCases)

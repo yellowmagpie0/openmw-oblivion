@@ -10066,3 +10066,58 @@ eight-second Stagger interval are injected, sound is disabled and FPS is
 configured rather than measured. Normal Stagger/counter triggering, outgoing
 slot0/cached replacement and the broader mastery/input/cancellation/E2E gates
 remain open. M15S4 remains incomplete.
+
+
+### Looping outgoing slot0 timing and restart
+
+Outgoing locomotion can now retain native loop0 timing during a crossfade.
+The updater defaults to the previous clamp2 behavior, preserves unwrapped
+weighted time and normalizes only the output. Original6C5FC0 preserves the
+first exact End sample; later whole laps wrap to Begin. It handles zero spans
+and negative remainders explicitly and rejects unsupported cycles. Retirement
+metadata retains the KF cycle, so valid loop wraparound no longer raises a
+renderer rewind error. Reactions and phase protocols still require clamp
+sequences. No save-schema change is needed because cycle is immutable KF data.
+
+Independent original execution covers630 contexts and6,300 samples across
+seven intervals, five frequencies, three lifecycle states and three x87 words.
+The intervals include the actual installed idle End2.1999998092651367.
+A standalone C++ comparison matches all six timing fields in2,030 live007F
+samples exactly. The initial540-context/1,740-comparison corpus also passes;
+the extension adds the installed idle period without changing any gate.
+A separate18-context original-helper composition confirms that steady idles in
+both Player slot0 views retire as state3 while incomingStaggers ease as state2,
+publish action8 and preserve slot3 pointers at activation. That probe does not
+execute the full actor phase loop or establish frozen slot3 behavior.
+
+The normal full component inventory passes2,977 tests across280 suites.
+The instrumented native component selection ESM4* passes830 tests across64
+suites. Full engine inventories pass1,787 tests across125 suites in each build
+with no failures or skips, on the same source fingerprint. New engine coverage
+checks body-only and independently clocked paired loop retirement, exact
+0/1/0/0 outputs, ten binary restart checkpoints, atomic metadata rejection and
+unchanged resource/RNG/action ownership through completion.
+
+Normal and ASan/UBSan rendered courses each load an injected ongoing eight-second
+idle-toStagger crossfade, save after both idle samples have wrapped, continue
+to recovery, then restart a fresh process from that exact early save. The loop
+outputs match original normalization; all six whole saved/live pairs and four
+load-state/clock comparisons match. Every completed Player field, native
+resource/base, combat RNG and ledger matches its uninterrupted reference.
+All36,762 initial inventories are unchanged and all37,365 early-save inventories
+match each reference. No strike/contact occurs. All six captures were directly
+inspected: Player arms and NPC body are visible without torso obstruction or
+exploding geometry. All four epochs are gone after draw-thread joins and
+peaceful shutdown. Leak detection is disabled.
+
+The first fixture recipe failed strict reinspection because two clock+8 values
+had not been rounded to binary32. No engine ran on that attempt. The corrected
+editable recipe preserves every existing guard and comparison. Original
+observations, source/binary hashes, exact inventories, manifests, staging
+failure and rendered comparisons are pinned in
+[`M15-SLOT0-LOOP-TIMING-VERIFICATION.json`](M15-SLOT0-LOOP-TIMING-VERIFICATION.json).
+This accepts loop retirement and its bounded restart path, including actual
+rendering in both builds. It does not admit fresh Stagger through the normal
+resource factory or contact path. Live slot0 source adoption, active/cached
+replacement, normal counter/Stagger triggering and the remaining mastery,
+input/cancellation/FPS/audio/E2E gates remain open. M15S4 is incomplete.

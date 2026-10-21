@@ -168,7 +168,8 @@ namespace ESM4
         float playbackSpeed, float frameDuration);
 
 
-    // Timing for an unsynchronized clamp-cycle sequence (native states1/2/5).
+    enum class MeleeSequenceCycle : std::uint8_t { Loop = 0, Clamp = 2 };
+    // Timing for an unsynchronized loop/clamp sequence (native states1/2/5).
     // Optional values represent the original uninitialized sentinel, without
     // importing a magic float into supported runtime data.
     struct MeleeSequenceTiming
@@ -188,7 +189,8 @@ namespace ESM4
     // body/FP manager entry. Does not change its input state.
     MeleeSequenceTiming updateMeleeSequenceTiming(const MeleeSequenceTiming& state,
         float animationClock, float frequency, float begin, float end,
-        std::optional<float> transitionFrame = std::nullopt);
+        std::optional<float> transitionFrame = std::nullopt,
+        MeleeSequenceCycle cycle = MeleeSequenceCycle::Clamp);
 
     struct OrdinaryMeleeFrame
     {
