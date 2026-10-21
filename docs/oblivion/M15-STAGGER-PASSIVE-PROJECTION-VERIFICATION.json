@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "status": "Passive slot3 renderer projection and explicit visual cancellation verified in headless engine tests; actual rendered restart and normal-input Stagger remain open.",
+  "tested_source": {
+    "head": "091946d776393aa51ef364363939b543ab90563c",
+    "source_fingerprint": "efab9c1b9dbe680ba7842b6f4d99b02bcaef468f96a178a2dd440edca4749727"
+  },
+  "implementation": [
+    "Character frame admission and metadata collection include body/first-person passive groups, including after primary Stagger recovery.",
+    "The renderer projects passive ordinary/power strike or BlockHit/Recoil records using saved sampled times, per-view resource weights/priorities, activation/retirement ease and captured source poses.",
+    "Passive projection never plays an animation event track or assigns process/contact ownership. Resident visual phase End does not recreate an attack.",
+    "Captured pose bindings remain stable across successive frames and are reconstructed from saved pose values after a fresh renderer bind.",
+    "Explicit combat-input cancellation clears outgoing and passive visual history and releases both pose bindings. The service operation is named clearMeleeVisualHistory to expose this scope."
+  ],
+  "new_tests": {
+    "PhysicalPoseAnimationTest.PassiveMeleeLayersKeepPerViewPrioritiesAndDoNotPlayContactTracks": {
+      "protocols": [
+        "ordinary strike",
+        "standing power strike",
+        "BlockHit",
+        "Recoil"
+      ],
+      "assertions": [
+        "Independent body/first-person frames and priorities.",
+        "Stagger0 can mask body slot3 while first-person slot3 wins its own priority comparison.",
+        "Removing Stagger reveals retained slot3 at its saved time.",
+        "No event playback state or text-key callbacks are created."
+      ]
+    },
+    "PhysicalPoseAnimationTest.PassiveMeleeCapturedLayersReuseBindingsAndReconstructSavedPoses": {
+      "protocols": 4,
+      "samples_per_protocol": 5,
+      "fresh_renderer_rebindings": 20,
+      "assertions": [
+        "Original one-block captured-pose interpolation goldens remain exact.",
+        "Pose binding and controller callback identity stay stable across easing samples.",
+        "Fresh renderer fixtures reproduce the same complete bone matrix from retained pose values.",
+        "Removing passive history releases the pose binding."
+      ]
+    },
+    "PhysicalPoseAnimationTest.PassiveMeleeLayersRejectUnanchoredAndMissingSourcesAndReleaseInactiveBindings": {
+      "assertions": [
+        "Unanchored retirement rejected.",
+        "Anchored retirement projects the expected ease.",
+        "Missing native resource rejected.",
+        "Inactive history releases its pose binding.",
+        "Negative clock and untimed strike rejected.",
+        "Fresh unanchored captured activation rejected before projection."
+      ]
+    },
+    "OblivionWorldTest.StaggerContactRetainsIndependentSlot3WithoutContactAuthority": {
+      "existing_contexts_extended": 16,
+      "assertion": "clearMeleeVisualHistory changes only passive/outgoing fields in the complete binary snapshot; actor cancellation still removes the complete owner."
+    }
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-projection-normal-02/verification.json",
+      "sha256": "3108a981e354e9af6a93d515a7d157afb79de5a7316fa6d5bb7fdf2e153311c4",
+      "result": {
+        "executed": 1781,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2a5af2280e61f50c8ce689094c0a5a9dd345bdb99dcdb872406536c3a54c3056",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "ca8fb48a0b89dbbf5a1659eae3a4dc95f2837dc07412530108151fb48484298b",
+        "inventory_sha256": "706ce1dbd528a7d6af8e556985c750bc85580ae89c1c7a86e22e986f63d81f70",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-projection-sanitized-02/verification.json",
+      "sha256": "3189e1d167af8ee2587e04b9f32556da53fa9aab4cf732401b2bf873194be29f",
+      "result": {
+        "executed": 1781,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "cd3a79a30f0e880cbfb7b5cce5c809b03d0c1d4f86be30856ef91a8d3fff6295",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "4a2d5a140bd56b5da19fdd474b2f3515031ab44fab8a99848d12cf289b143936",
+        "inventory_sha256": "706ce1dbd528a7d6af8e556985c750bc85580ae89c1c7a86e22e986f63d81f70",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125,
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "built_applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "287ec8620be0efa5049c6a4b85d24890315a47224ff35fb4439e90a23ad03f92"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "f5ec9e3b27e9d5156339d86024ba4c7cade06e38d18df1a6ed8346c5cbb8f2bf"
+    },
+    "scope": "Rebuilt applications, not actual game-session evidence."
+  },
+  "prior_checkpoint": {
+    "path": "docs/oblivion/M15-STAGGER-PASSIVE-SERVICE-VERIFICATION.json",
+    "sha256": "f1dcf66758355735420e50dc47f6e59d66004f4d251ea17352e204d0898c456e"
+  },
+  "native_blend_provenance": {
+    "path": "docs/oblivion/M15-POSE-SNAPSHOT-VERIFICATION.json",
+    "sha256": "f16b19514209ca86c1ff202927c35014e298fb81ef1254da4f8da701c851cc7f"
+  },
+  "retained_attempts": {
+    "normal01": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-projection-normal-01/verification.json",
+      "sha256": "c325c60c1ab261fc95096b1925209721324b1e39fb32c6c351a44329f0a1dd21",
+      "result": "1780/1781 engine tests passed. Negative retirement fixture lacked the native timing offset; validation rejected that malformed fixture before the intended anchor check."
+    },
+    "sanitized01": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-passive-projection-sanitized-01/verification.json",
+      "sha256": "a9a3e475759a25d3c119c1d1fe7ac6475ef00fbaa7d86d00ba8227943a7815e7",
+      "result": "Build deliberately stopped after review identified the same fixture defect. No sanitizer test pass claimed."
+    },
+    "correction": "Initialized only the negative fixture native offset/ease-start/last-input fields before setting its retirement. No production behavior was changed to satisfy the test."
+  },
+  "warnings": "Build logs retain aggregate-initializer and existing warnings; these are not warning-free claims.",
+  "remaining_work": [
+    "Run actual rendered saved-passive active/recovered Stagger courses and fresh-process continuation in both camera modes and builds.",
+    "Implement native slot0-aware world resource/factory activation; the current factory still admits only BlockHit/Recoil.",
+    "Complete active/cached Stagger slot0 replacement and native outgoing slot0 source handling.",
+    "Replace resident passive slot3 correctly on subsequent strike/reaction re-admission.",
+    "Verify full input/equipment/death/load/cancellation and FPS matrices plus the required complete M15S4 normal-input/E2E courses."
+  ],
+  "leak_coverage": false,
+  "rendered_runtime_acceptance": false,
+  "normal_input_Stagger_acceptance": false,
+  "full_M15S4_acceptance": false
+}

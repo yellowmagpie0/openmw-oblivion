@@ -9608,3 +9608,37 @@ and semantic restart checks, not actual game sessions. Character rendering
 still needs passive group/pose projection; the world resource factory still
 rejects Stagger. Active/cached slot0 replacement, passive slot3 re-admission and
 the full input/runtime/E2E matrix remain open. M15S4 is not complete.
+
+### Passive slot3 projection and explicit visual cancellation
+
+Character frames now collect and project passive body/first-person groups,
+including after primary Stagger recovery. The new renderer adapter uses the
+retained sampled time, each view's resource weight and bone priorities, easing
+or retirement interval, and captured pose. It creates no event playback owner.
+Captured pose bindings remain stable during easing and can be rebuilt from the
+saved values. Explicit combat-input cancellation releases passive and outgoing
+history through the renamed `clearMeleeVisualHistory` operation, then clears
+both renderer pose bindings so the next frame cannot resurrect those slots.
+
+Three new renderer tests cover ordinary/power strikes and BlockHit/Recoil,
+independent view times/priorities, Stagger coexistence and removal, suppression
+of playback/text-key callbacks, exact original captured-pose interpolation
+goldens,20 fresh renderer rebindings and stable controller identities. Negative
+cases cover missing resources, invalid clocks/timing, unanchored activation or
+retirement, and inactive binding release. The16-context service matrix also
+checks the complete binary result of explicit visual-history cancellation.
+
+Full normal and ASan/UBSan engine suites each pass1781 tests across125 suites,
+with exact inventories, no failures and no skips, at source fingerprint
+`efab9c1b9dbe680ba7842b6f4d99b02bcaef468f96a178a2dd440edca4749727`.
+Leak detection is disabled. An initial negative fixture omitted its required
+native timing offset; its1780/1781 diagnostic result and deliberately stopped
+sanitizer build remain recorded. The corrected final02 checks use one frozen
+source and require no production change to satisfy that fixture.
+
+[`M15-STAGGER-PASSIVE-PROJECTION-VERIFICATION.json`](M15-STAGGER-PASSIVE-PROJECTION-VERIFICATION.json)
+pins the source, applications and verification. These are headless bone/scene
+and service checks. Actual rendered save/restart courses remain open, as do
+slot0-aware world factory/resource handling, active/cached Stagger replacement,
+passive slot3 re-admission and the full normal-input/E2E matrix. M15S4 remains
+incomplete.

@@ -1930,13 +1930,18 @@ namespace MWMechanics
         return true;
     }
 
-    void OblivionCombatService::clearRetiringMeleeSequences(const ESM::FormKey& actor) noexcept
+    void OblivionCombatService::clearMeleeVisualHistory(const ESM::FormKey& actor) noexcept
     {
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end())
         {
             found->second.mRetiringSequences.clear();
-            if (found->second.mFirstPerson) found->second.mFirstPerson->mRetiringSequences.clear();
+            found->second.mPassiveSequence.reset();
+            if (found->second.mFirstPerson)
+            {
+                found->second.mFirstPerson->mRetiringSequences.clear();
+                found->second.mFirstPerson->mPassiveSequence.reset();
+            }
         }
     }
 

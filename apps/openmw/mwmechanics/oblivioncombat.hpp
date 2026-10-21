@@ -549,7 +549,9 @@ namespace MWMechanics
         // Actor prefix, before this frame's animation manager. No new contact
         // or ledger consumption. BlockHit can keep an actual cached BlockIdle.
         bool recoverInactiveMeleeReaction(const ESM::FormKey& actor, bool blockIdlePresent);
-        void clearRetiringMeleeSequences(const ESM::FormKey& actor) noexcept;
+        // Explicit input/equipment cancellation releases resident visual slots
+        // as well as outgoing fades; it does not create or consume an action.
+        void clearMeleeVisualHistory(const ESM::FormKey& actor) noexcept;
         // No allocation or Alive precondition: safe after death/life cancellation.
         void clearMeleeInput(const ESM::FormKey& actor) noexcept;
         std::uint64_t allocateAction();

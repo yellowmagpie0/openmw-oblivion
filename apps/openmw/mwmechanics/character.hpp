@@ -229,10 +229,12 @@ namespace MWMechanics
         std::uint64_t mOblivionRenderedReaction = 0;
         std::string mOblivionReactionGroup;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionPoseSnapshot;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionPassivePoseSnapshot;
         bool mOblivionMeleeProjection = false;
         std::uint64_t mOblivionFirstPersonRenderedReaction = 0;
         std::string mOblivionFirstPersonReactionGroup;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionFirstPersonPoseSnapshot;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionFirstPersonPassivePoseSnapshot;
         bool mOblivionFirstPersonMeleeProjection = false;
         std::uint64_t mOblivionFirstPersonRenderedStrike = 0;
         std::string mOblivionFirstPersonStrikeGroup;

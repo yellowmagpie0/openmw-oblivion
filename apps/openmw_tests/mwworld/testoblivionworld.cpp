@@ -28128,6 +28128,18 @@ TEST(OblivionWorldTest, StaggerContactRetainsIndependentSlot3WithoutContactAutho
         current = service.findMeleeState(actor);
         EXPECT_EQ(current->mPassiveSequence, retained.mPassiveSequence);
         if (paired) EXPECT_EQ(current->mFirstPerson->mPassiveSequence, retained.mFirstPerson->mPassiveSequence);
+        const auto beforeVisualCancel = fixture.snapshot();
+        auto visualCanceled = beforeVisualCancel;
+        auto& canceledView = visualCanceled.mNativeMeleeStates.at(actor);
+        canceledView.mPassiveSequence.reset(); canceledView.mRetiringSequences.clear();
+        if (canceledView.mFirstPerson)
+        {
+            canceledView.mFirstPerson->mPassiveSequence.reset();
+            canceledView.mFirstPerson->mRetiringSequences.clear();
+        }
+        service.clearMeleeVisualHistory(actor);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), visualCanceled.serializeBinary());
+        service.restore(beforeVisualCancel, world.getStore());
         EXPECT_EQ(service.cancelActorActions(actor), 0u);
         EXPECT_FALSE(service.findMeleeState(actor));
         EXPECT_EQ(service.findActorValues(actor)->mProcessAction, -1);

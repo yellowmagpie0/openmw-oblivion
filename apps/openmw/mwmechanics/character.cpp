@@ -43,6 +43,7 @@
 #include <components/sceneutil/keyframe.hpp>
 
 #include "../mwrender/animation.hpp"
+#include "../mwrender/oblivionmeleeprojection.hpp"
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
@@ -1563,7 +1564,8 @@ namespace MWMechanics
         const bool firstFinished = firstStrike && (firstStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
             ? firstStrike->mPowerPhase == ESM4::PowerMeleePhase::End
             : firstStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
-        if (!peer && (firstStrike || (state && state->mFirstPerson && !state->mFirstPerson->mRetiringSequences.empty())))
+        if (!peer && (firstStrike || (state && state->mFirstPerson
+                && (state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty()))))
             throw std::invalid_argument("native first-person strike has no renderer view");
         if (peer && mOblivionFirstPersonRenderedStrike && (!firstStrike || firstFinished
                 || firstStrike->mActionId != mOblivionFirstPersonRenderedStrike
@@ -1657,9 +1659,9 @@ namespace MWMechanics
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
         const auto active = [](const auto* state) {
-            return state && (state->mReaction || !state->mRetiringSequences.empty()
+            return state && (state->mReaction || state->mPassiveSequence || !state->mRetiringSequences.empty()
                 || (state->mFirstPerson && (state->mFirstPerson->mReaction || state->mFirstPerson->mStrike
-                    || !state->mFirstPerson->mRetiringSequences.empty())));
+                    || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty())));
         };
         const auto* state = service->findMeleeState(actor);
         auto* peer = mAnimation->getPlaybackPeer();
@@ -1668,6 +1670,8 @@ namespace MWMechanics
             if (mOblivionMeleeProjection) mAnimation->setNativeSequenceLayers({});
             if (peer && mOblivionFirstPersonMeleeProjection) peer->setNativeSequenceLayers({});
             mOblivionMeleeProjection = mOblivionFirstPersonMeleeProjection = false;
+            mOblivionPassivePoseSnapshot.reset();
+            mOblivionFirstPersonPassivePoseSnapshot.reset();
             return false;
         }
         bindOblivionMeleeReaction();
@@ -1686,6 +1690,9 @@ namespace MWMechanics
         if (state->mFirstPerson)
             for (const auto& sequence : state->mFirstPerson->mRetiringSequences)
                 groups[1].insert(sequence.mAnimationGroup);
+        if (state->mPassiveSequence) groups[0].insert(state->mPassiveSequence->group());
+        if (state->mFirstPerson && state->mFirstPerson->mPassiveSequence)
+            groups[1].insert(state->mFirstPerson->mPassiveSequence->group());
         std::vector<OblivionMeleeSequenceMetadata> metadata;
         for (unsigned view = 0; view < groups.size(); ++view)
             for (const auto group : groups[view])
@@ -1711,9 +1718,14 @@ namespace MWMechanics
         const auto project = [&](MWRender::Animation& view, const auto& reaction,
                                  std::span<const ESM4::RuntimeRetiringMeleeSequence> retiring,
                                  const ESM4::RuntimeMeleeStrike* strike, float clock,
-                                 const auto& pose, const auto& excludedGroups) {
+                                 const auto& pose, const auto& excludedGroups,
+                                 const ESM4::RuntimePassiveMeleeSequence* passive, auto& passivePose) {
             std::vector<MWRender::Animation::NativeSequenceLayer> layers;
-            if ((!reaction || reaction->mInactive) && retiring.empty() && !strike) return layers;
+            if ((!reaction || reaction->mInactive) && retiring.empty() && !strike && !passive)
+            {
+                passivePose.reset();
+                return layers;
+            }
             std::vector<std::string_view> excluded(excludedGroups.begin(), excludedGroups.end());
             if (strike) excluded.push_back(strike->mAnimationGroup);
             layers = view.nativePlayingSequenceLayers(excluded);
@@ -1731,6 +1743,9 @@ namespace MWMechanics
             };
             for (const auto& sequence : retiring)
                 append(sequence.mAnimationGroup, sequence.mAnimationTime, retirementEase(sequence.mRetirement));
+            auto passiveLayers = MWRender::oblivionPassiveMeleeLayers(view, passive, clock, passivePose);
+            layers.insert(layers.end(), std::make_move_iterator(passiveLayers.begin()),
+                std::make_move_iterator(passiveLayers.end()));
             if (reaction && !reaction->mInactive)
             {
                 if (reaction->mPoseSnapshot)
@@ -1758,7 +1773,8 @@ namespace MWMechanics
             return layers;
         };
         auto bodyLayers = project(*mAnimation, next.mReaction, next.mRetiringSequences,
-            next.mStrike ? &*next.mStrike : nullptr, prepared->clock(), mOblivionPoseSnapshot, groups[0]);
+            next.mStrike ? &*next.mStrike : nullptr, prepared->clock(), mOblivionPoseSnapshot, groups[0],
+            next.mPassiveSequence ? &*next.mPassiveSequence : nullptr, mOblivionPassivePoseSnapshot);
         const auto firstReaction = next.mFirstPerson ? next.mFirstPerson->mReaction : std::nullopt;
         std::vector<MWRender::Animation::NativeSequenceLayer> firstLayers;
         const auto* firstStrike = next.mFirstPerson && next.mFirstPerson->mStrike ? &*next.mFirstPerson->mStrike : nullptr;
@@ -1766,10 +1782,14 @@ namespace MWMechanics
                 ? firstStrike->mPowerPhase == ESM4::PowerMeleePhase::End
                 : firstStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End)) firstStrike = nullptr;
         const bool firstRetiring = next.mFirstPerson && !next.mFirstPerson->mRetiringSequences.empty();
-        if (firstReaction || firstStrike || firstRetiring)
+        const auto* firstPassive = next.mFirstPerson && next.mFirstPerson->mPassiveSequence
+            ? &*next.mFirstPerson->mPassiveSequence : nullptr;
+        if (firstReaction || firstStrike || firstRetiring || firstPassive)
             firstLayers = project(*peer, firstReaction, next.mFirstPerson->mRetiringSequences, firstStrike, next.mFirstPerson->mClock,
-                mOblivionFirstPersonPoseSnapshot, groups[1]);
-        const bool paired = peer && (firstReaction || firstStrike || firstRetiring || mOblivionFirstPersonMeleeProjection);
+                mOblivionFirstPersonPoseSnapshot, groups[1], firstPassive, mOblivionFirstPersonPassivePoseSnapshot);
+        else mOblivionFirstPersonPassivePoseSnapshot.reset();
+        const bool paired = peer && (firstReaction || firstStrike || firstRetiring || firstPassive
+            || mOblivionFirstPersonMeleeProjection);
         if (!(paired ? mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers)
                      : mAnimation->setNativeSequenceLayers(bodyLayers)))
             throw std::invalid_argument("native melee sequence projection could not bind");
@@ -1851,9 +1871,9 @@ namespace MWMechanics
                 if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
                 return;
             }
-            if (state && !state->mStrike && (state->mReaction || !state->mRetiringSequences.empty()
+            if (state && !state->mStrike && (state->mReaction || state->mPassiveSequence || !state->mRetiringSequences.empty()
                     || (state->mFirstPerson && (state->mFirstPerson->mReaction
-                        || !state->mFirstPerson->mRetiringSequences.empty()))))
+                        || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty()))))
             {
                 if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
                 return;
@@ -2036,13 +2056,15 @@ namespace MWMechanics
             peer->disable(mOblivionFirstPersonStrikeGroup, MWRender::Animation::PlaybackScope::ThisView);
         mOblivionFirstPersonRenderedStrike = 0;
         mOblivionFirstPersonStrikeGroup.clear();
-        service->clearRetiringMeleeSequences(actor);
+        service->clearMeleeVisualHistory(actor);
         const auto reactionGroup = std::exchange(mOblivionReactionGroup, {});
         const auto firstReactionGroup = std::exchange(mOblivionFirstPersonReactionGroup, {});
         mOblivionRenderedReaction = 0;
         mOblivionFirstPersonRenderedReaction = 0;
         mOblivionPoseSnapshot.reset();
         mOblivionFirstPersonPoseSnapshot.reset();
+        mOblivionPassivePoseSnapshot.reset();
+        mOblivionFirstPersonPassivePoseSnapshot.reset();
         if (mOblivionMeleeProjection) mAnimation->setNativeSequenceLayers({});
         auto* peer = mAnimation->getPlaybackPeer();
         if (peer && mOblivionFirstPersonMeleeProjection) peer->setNativeSequenceLayers({});

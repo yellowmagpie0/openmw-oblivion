@@ -1,4 +1,5 @@
 #include <apps/openmw/mwrender/animation.hpp>
+#include <apps/openmw/mwrender/oblivionmeleeprojection.hpp>
 #include <components/esm4/runtimestate.hpp>
 #include <components/misc/osguservalues.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
@@ -1593,6 +1594,141 @@ namespace
         void handleTextKey(std::string_view, SceneUtil::TextKeyMap::ConstIterator,
             const SceneUtil::TextKeyMap&) override { ++mCalls; }
     };
+
+    ESM4::RuntimePassiveMeleeSequence passiveMelee(unsigned protocol, float time)
+    {
+        if (protocol < 2)
+        {
+            ESM4::RuntimeMeleeStrike strike{12, protocol ? ESM4::MeleeStrikeKind::StandingPower
+                : ESM4::MeleeStrikeKind::Left, {}, "resident", 1, time, true};
+            strike.mSequenceTiming = ESM4::MeleeSequenceTiming{};
+            if (protocol) strike.mPowerPhase = ESM4::PowerMeleePhase::End;
+            else strike.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::End;
+            return {strike};
+        }
+        ESM4::RuntimeMeleeReaction reaction{12, protocol == 2 ? ESM4::MeleeReactionKind::BlockHit
+            : ESM4::MeleeReactionKind::Recoil, "resident", time};
+        return {reaction};
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, PassiveMeleeLayersKeepPerViewPrioritiesAndDoNotPlayContactTracks)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto bodyTrack = nativeTrack({3, 0, 0}), firstTrack = nativeTrack({11, 0, 0});
+        bodyTrack->mVelocity = firstTrack->mVelocity = {4, 0, 0};
+        mAnimation->addNativeSource("resident", bodyTrack, 20);
+        peer.mAnimation->addNativeSource("resident", firstTrack, 80);
+        mAnimation->addNativeSource("stagger", nativeTrack({20, 0, 0}), 50);
+        peer.mAnimation->addNativeSource("stagger", nativeTrack({30, 0, 0}), 50);
+        PlaybackKeys bodyKeys, firstKeys;
+        mAnimation->setTextKeyListener(&bodyKeys); peer.mAnimation->setTextKeyListener(&firstKeys);
+        for (unsigned protocol = 0; protocol < 4; ++protocol)
+        {
+            SCOPED_TRACE(protocol);
+            auto body = passiveMelee(protocol, .25f), first = passiveMelee(protocol, .75f);
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> bodyPose, firstPose;
+            auto bodyLayers = MWRender::oblivionPassiveMeleeLayers(*mAnimation, &body, 1, bodyPose);
+            auto firstLayers = MWRender::oblivionPassiveMeleeLayers(*peer.mAnimation, &first, 11, firstPose);
+            ASSERT_EQ(bodyLayers.size(), 1u); ASSERT_EQ(firstLayers.size(), 1u);
+            EXPECT_EQ(bodyLayers[0].mTime, .25f); EXPECT_EQ(firstLayers[0].mTime, .75f);
+            EXPECT_FALSE(bodyLayers[0].mFollowAnimationTime); EXPECT_FALSE(firstLayers[0].mFollowAnimationTime);
+            bodyLayers.push_back({"stagger"}); firstLayers.push_back({"stagger"});
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers));
+            mRoot->accept(mVisitor); peer.mRoot->accept(mVisitor);
+            EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 20);
+            EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation.x(), 14);
+            // Slot3 remains visible when its higher-priority slot0 is removed.
+            bodyLayers.pop_back(); firstLayers.pop_back();
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers));
+            mRoot->accept(mVisitor); peer.mRoot->accept(mVisitor);
+            EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 4);
+            EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation.x(), 14);
+            mAnimation->runAnimation(.25f); peer.mAnimation->runAnimation(.25f);
+            EXPECT_FALSE(mAnimation->getInfo("resident")); EXPECT_FALSE(peer.mAnimation->getInfo("resident"));
+            EXPECT_EQ(bodyKeys.mCalls, 0u); EXPECT_EQ(firstKeys.mCalls, 0u);
+        }
+        mAnimation->setTextKeyListener(nullptr); peer.mAnimation->setTextKeyListener(nullptr);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, PassiveMeleeCapturedLayersReuseBindingsAndReconstructSavedPoses)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        mAnimation->addNativeSource("resident", nativeTrack({100, 200, 300}, 3), 9);
+        for (unsigned protocol = 0; protocol < 4; ++protocol)
+        {
+            SCOPED_TRACE(protocol);
+            auto passive = passiveMelee(protocol, 0);
+            std::visit([](auto& sequence) {
+                ESM4::MeleeSequenceTiming timing{.mEasing = true, .mOffset = 0.f,
+                    .mEaseStart = 1.f, .mEaseEnd = 2.f, .mLastInput = 0.f};
+                sequence.mSequenceTiming = timing;
+                sequence.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+                    {{"Pelvis", {11, 22, 33}, {1, 0, 0, 0}, 2, 9}}};
+            }, passive.mSequence);
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> pose;
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> firstBinding;
+            osg::ref_ptr<osg::Callback> controller;
+            for (unsigned i = 0; i <= 4; ++i)
+            {
+                const float clock = 1 + i * .25f;
+                auto layers = MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, clock, pose);
+                ASSERT_EQ(layers.size(), 2u); ASSERT_TRUE(pose);
+                if (i == 0) firstBinding = pose;
+                EXPECT_EQ(pose, firstBinding);
+                ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+                if (i == 0) controller = mBone->getUpdateCallback();
+                EXPECT_EQ(mBone->getUpdateCallback(), controller);
+                mFrameStamp->setFrameNumber(i); traverse();
+                const auto local = mBone->getControllerTransform();
+                // Same original one-block interpolation goldens as the direct
+                // captured-pose test, now reached through the persisted union.
+                EXPECT_EQ(local.mTranslation.x(), 11 + i * 22.25f);
+                EXPECT_EQ(local.mTranslation.y(), 22 + i * 44.5f);
+                EXPECT_EQ(local.mTranslation.z(), 33 + i * 66.75f);
+                EXPECT_EQ(local.mScale, 2 + i * .25f);
+                PlaybackPeerView fresh;
+                fresh.mAnimation->addNativeSource("resident", nativeTrack({100, 200, 300}, 3), 9);
+                std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> rebound;
+                const auto restored = passive;
+                const auto rebuilt = MWRender::oblivionPassiveMeleeLayers(*fresh.mAnimation, &restored, clock, rebound);
+                ASSERT_TRUE(fresh.mAnimation->setNativeSequenceLayers(rebuilt));
+                fresh.mRoot->accept(mVisitor);
+                EXPECT_EQ(fresh.mBone->getMatrix(), mBone->getMatrix());
+            }
+            EXPECT_TRUE(MWRender::oblivionPassiveMeleeLayers(*mAnimation, nullptr, 2, pose).empty());
+            EXPECT_FALSE(pose);
+        }
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, PassiveMeleeLayersRejectUnanchoredAndMissingSourcesAndReleaseInactiveBindings)
+    {
+        mAnimation->addNativeSource("resident", nativeTrack({3, 0, 0}), 9);
+        auto passive = passiveMelee(2, .25f);
+        auto& reaction = std::get<ESM4::RuntimeMeleeReaction>(passive.mSequence);
+        reaction.mSequenceTiming = {.mOffset = 0.f, .mEaseStart = 0.f, .mLastInput = 0.f};
+        reaction.mRetirement = ESM4::RuntimeReactionRetirement{1, {}};
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> pose;
+        EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, 1, pose), std::invalid_argument);
+        reaction.mRetirement->mStartClock = 1;
+        auto layers = MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, 1.25f, pose);
+        ASSERT_EQ(layers.size(), 1u); EXPECT_EQ(layers[0].mEase, .75f);
+        reaction.mAnimationGroup = "missing";
+        EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, 1.25f, pose), std::invalid_argument);
+        reaction.mInactive = true;
+        pose = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>();
+        EXPECT_TRUE(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, 2, pose).empty()); EXPECT_FALSE(pose);
+        EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &passive, -1, pose), std::invalid_argument);
+        auto malformed = passiveMelee(0, 0);
+        std::get<ESM4::RuntimeMeleeStrike>(malformed.mSequence).mSequenceTiming.reset();
+        EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &malformed, 0, pose), std::runtime_error);
+        auto fresh = passiveMelee(0, 0);
+        auto& strike = std::get<ESM4::RuntimeMeleeStrike>(fresh.mSequence);
+        strike.mSequenceTiming = ESM4::MeleeSequenceTiming{.mEasing = true, .mEaseEnd = 1};
+        strike.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
+        EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &fresh, 0, pose), std::invalid_argument);
+    }
 
     TEST_F(PhysicalPoseAnimationTest, PlaybackPeerKeepsOwnResourcesAndSuppressesDuplicateKeyAndEndEvents)
     {
