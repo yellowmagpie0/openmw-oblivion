@@ -9092,3 +9092,41 @@ failures. These are structural/readback checks; runtime acceptance remains open.
 [`M15-PLAYER-STRIKE-DURATION-FIXTURE-VERIFICATION.json`](M15-PLAYER-STRIKE-DURATION-FIXTURE-VERIFICATION.json)
 pins the source, extraction, Python inventory and byte/NIF evidence. Engine source
 and the prior tested runtime binaries are unchanged.
+
+### Normal asymmetric strike-tail restart acceptance
+
+Four fresh normal courses now exercise both ordinary strike finish orders in
+first/third cameras. Each baseline uses 16 fixed normal quicksave observations
+and a final settled save. The first completed save satisfying the preregistered
+tail predicate is selected, without choosing by damage or retrying numeric
+outcomes. Its exact disk hash is preserved alongside independently serialized
+live state; a fresh process resumes that save without attack input.
+
+When the body is longer, the first-person head reaches End while body contact 2
+is pending. The restart commits exactly one body contact. When first-person is
+longer, the body has completed and consumed contact 2 while the captured
+first-person head remains active. That restart commits no contact. In both
+cases, final native actor values, life state, bases, ledger, RNG, bow state and
+loose weapons match the same-process continuation exactly. All eight processes
+exit successfully; all 72 completed save/live pairs match. Action history settles
+to next3/pending[], RNG505908858, and both view heads recover. Actual ObScript
+compilation has zero failures, and observation streams end without errors or
+unsupported commands. Eight settled images are directly reviewed. Third-person
+uses normal `r` input with a read-only Lua camera observer.
+
+An editable input recipe and staging helper reproduce the whole runtime input
+save byte for byte (SHA2566182819ef8cbbeaa96f83d920def92ff2432aa093bc15605f965c81f7e3a02fd).
+Only the declared weapon equipped slot and three restrained flags change from
+the pinned idle schema57 source; all other decoded state is preserved through
+schema58 promotion. A fresh full Python check passes356 tests. Canonical public
+manifests parameterize fixture paths; concrete executed manifests remain pinned.
+The initial normal first-camera courses predate the extra read-only camera Lua
+observer included in the public manifests.
+
+[`M15-PLAYER-STRIKE-TAIL-NORMAL-VERIFICATION.json`](M15-PLAYER-STRIKE-TAIL-NORMAL-VERIFICATION.json)
+pins every process, input, selection, save/live verification, compiler layer and
+image. The baseline's scheduling includes its normal saves; this is not original
+uninterrupted motion parity. Sound is disabled, and the configured60 FPS cap is
+not measured60 FPS. Sanitized runtime courses remain a separate running matrix.
+Queued power, mixed captured/outgoing runtime transitions, Player Recoil,
+parallel Stagger and the broader milestone gates remain open. M15S4 is incomplete.

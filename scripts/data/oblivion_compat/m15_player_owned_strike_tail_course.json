@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "purpose": "Normal keyboard ordinary Player body/FP strike ownership and asymmetric tail restart matrix; first/third cameras and normal/ASan+UBSan builds. Sound disabled; no audio/FPS/motion-parity acceptance.",
+  "canonical_idle_source": {
+    "path": "build/oblivion-compat/m15/S4/native-player-asymmetric-owners-assets-02/body-long/staged-input.omwsave",
+    "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8",
+    "schema": 57
+  },
+  "declared_staging": [
+    "Unequip carried-right Player RustySword by changing equipped_slots65536 to0; keep item and condition",
+    "Set restrained=true for01fc43/026be1/15985a; preserve all other decoded state except schema58 version upgrade"
+  ],
+  "fixed_course": {
+    "ordinary_tap": "u down until bind action2; u up immediately",
+    "observations": 16,
+    "spacing_seconds": 0.4,
+    "final_settled_save": true,
+    "camera_toggle": "normal r key for third; read-only Lua camera observation",
+    "configured_fps_cap": 60,
+    "measured_fps": false
+  },
+  "fixtures": [
+    "m15_player_strike_tail_input.json",
+    "m15_player_strike_duration_fixture.json",
+    "m15_stationary_opponent_fixture.json",
+    "m15_cached_block_opponent_fixture.json",
+    "m15_fatigue_expenditure_fixture.json"
+  ],
+  "tail_cases": [
+    {
+      "long_view": "body",
+      "selection": "first completed save with body ordinary2 before End and FP ordinary2 End marker",
+      "tail_pending": [
+        2
+      ],
+      "baseline_contacts": 1,
+      "restart_contacts": 1
+    },
+    {
+      "long_view": "first",
+      "selection": "first completed save with body strike absent and FP ordinary2 before End",
+      "tail_pending": [],
+      "baseline_contacts": 1,
+      "restart_contacts": 0
+    }
+  ],
+  "exact_settled_baseline_keys": [
+    "physical_actions",
+    "combat_rng_state",
+    "native_actor_values",
+    "native_actor_life",
+    "native_actor_bases",
+    "native_bow_states",
+    "native_loose_weapons"
+  ],
+  "expected_ledger": {
+    "next": 3,
+    "pending": []
+  },
+  "expected_rng": 505908858,
+  "limits": [
+    "Synthetic hold and blend; no original motion parity",
+    "Many normal saves may affect scheduling; baseline uses those same observations",
+    "Preserve every completed save and live-state hash; no numeric retries or selection by resulting damage",
+    "Independent capture/retirement, power/contact, equipment and broader input/cancellation cases remain separate"
+  ],
+  "full_M15S4_acceptance": false
+}
