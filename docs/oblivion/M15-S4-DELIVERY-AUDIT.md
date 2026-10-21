@@ -9760,3 +9760,33 @@ third-person mouse courses, other protocols/crossfades, a restart of the new
 windup, normal Stagger activation and the complete M15S4 input/audio/FPS/E2E
 matrix remain open. Sound is disabled and FPS is configured, not measured.
 M15S4 remains incomplete.
+
+### Restart of a mouse-admitted windup
+
+A second normal first-person course now compares uninterrupted completion
+against a fresh process loaded from the exact first completed windup save.
+The initial process uses one SDL left press and saves paired strike2 before
+contact, then completes and saves again. The second process loads that windup,
+receives no attack input, completes strike2 and saves. Each process commits
+one hit by action2, consumes it and recovers both views without passive history
+or an extra allocated action. Cause1 never contacts again.
+
+All three complete saved/live pairs match. Both load-owned state and clock
+comparisons match their inputs. Completed native actor values/bases, RNG,
+ledger, Player inventory and all 39,111 original reference inventories match
+between the uninterrupted and restarted paths exactly. Observed Damage slots
+are NPC Health -1.4199999570846558, NPC Fatigue -1.7100000381469727 and Player
+Fatigue -7 in both continuations. These are observed reference values for
+restart equivalence, not an independent original-game numerical oracle.
+Both fresh process epochs are gone, with draw threads stopped before peaceful
+exit. Both completed images were directly inspected; arms and opponent remain
+visible without foreground torso obstruction or exploding geometry.
+
+Editable first/continuation manifests and a saved/live comparison verifier are
+versioned. All 374 Python tests pass at the recorded frozen source.
+[`M15-PASSIVE-SLOT3-MOUSE-RESTART-VERIFICATION.json`](M15-PASSIVE-SLOT3-MOUSE-RESTART-VERIFICATION.json)
+pins the recipes, binary, captures and observed deltas. The initial passive
+history remains injected/recovered, and this checkpoint covers one normal
+first-person same-cached Left attack. Sanitized/third-person/gamepad crosses,
+other predecessor protocols, normal Stagger activation, audio, measured FPS
+and the full M15S4 acceptance matrix remain open. M15S4 remains incomplete.

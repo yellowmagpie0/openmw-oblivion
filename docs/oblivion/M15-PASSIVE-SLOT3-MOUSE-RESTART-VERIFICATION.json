@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "status": "One normal first-person mouse windup restart matches uninterrupted contact and recovery; full M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "aae66c4aa5997ebcb3e00f5eed5e979f9e2c9add",
+    "source_fingerprint": "0c0f8f6f207af79d697ac45a5cb6ea422c0f92906b400f07c34066fbbd9f5851"
+  },
+  "python": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-python-01/verification.json",
+    "sha256": "2265437c6976a378d06650157242d33b34aea96c26c99e24667e2161004ab511",
+    "result": {
+      "executed": 374,
+      "passed": true,
+      "log_sha256": "e474ee6734873cc56a5aba75157d8800d689aeba6c71c2e305262dce60d77b28"
+    }
+  },
+  "runtime": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/mouse-restart-verification.json",
+    "sha256": "0bb65a6fcb16d3059c0a8aaa3a5412a2b77f3646139e4edd317cf24b86b1c469",
+    "result": {
+      "passed": true,
+      "scope": "One normal first-person same-cached Left mouse attack, save in windup, uninterrupted completion versus fresh-process continuation of that exact first save.",
+      "saves": [
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/first/snapshots/save-3.omwsave",
+          "sha256": "5b0ea536316699a157157269422e45cfa7eba028af771314f3f32d8d1cbc695a"
+        },
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/first/snapshots/save-4.omwsave",
+          "sha256": "af14d3e23524da09b98a86702fcc4e104a817115ce994ff36e9a346b7175a1aa"
+        },
+        {
+          "phase": "second",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/second/snapshots/save-3.omwsave",
+          "sha256": "6e6538535cdc64b065b0213459caeab748868f138878ab6f1fef5e1e8483b2aa"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_and_clock_comparisons": 2,
+      "fresh_process_epochs": 2,
+      "both_views_windup_and_recovery": true,
+      "old_cause_consumed": true,
+      "exactly_one_action2_hit_per_process": true,
+      "resources_rng_ledger_and_inventories_match": true,
+      "original_reference_inventories_compared": 39111,
+      "original_game_numeric_parity": false,
+      "audio_acceptance": false,
+      "measured_fps": false,
+      "full_M15S4_acceptance": false
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/preregistered.json",
+      "sha256": "af4ed29eed10845f3186b5c04f79099040ed47680cafd3d0607b44c5d26e58c6"
+    },
+    "restart_selection": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/restart-selection.json",
+      "sha256": "7b78571a8a323136c0dfd49b9fffa9fd23ed6a8e2538444ac9ea4ac50792c733"
+    },
+    "launcher_first": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/first/launcher.json",
+      "sha256": "ac9ef75cb6fd3ce1b5a0feeaf09a0d036181b8a52b5e80b1e160667b959390eb"
+    },
+    "launcher_second": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/second/launcher.json",
+      "sha256": "ad8085553176d0a0273e7609c68d39a544d21d09cc26996f52afb1a7287f9ed3"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "0da134f56f2a6e6c2750b51a7bbd146851193850a103a4e524d279f5f9639592"
+    }
+  },
+  "source_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart.json",
+      "sha256": "09d4c58e941f3278b01a3c5d233ad7a69bfea6e1f6675cbc9c27c969574da27a"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart_continuation.json",
+      "sha256": "1cd45829624738da36437fef9a8b7fe5f70d150eb21497db2bd95404a3834db7"
+    }
+  ],
+  "verifier": {
+    "path": "scripts/tes4_m15_mouse_restart_verify.py",
+    "sha256": "5377dcad68a19c4c68462ea660fae2396addeaff190e23d874bdf35f3b845207"
+  },
+  "observed_reference_resource_deltas": {
+    "scope": "Observed uninterrupted reference; not original-game oracle expectations.",
+    "rows": [
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "actor_value": 8,
+        "before": [
+          16.0,
+          null,
+          null,
+          null
+        ],
+        "after": [
+          16.0,
+          null,
+          null,
+          -1.4199999570846558
+        ],
+        "after_float32_bits": [
+          1098907648,
+          null,
+          null,
+          3216360079
+        ]
+      },
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "actor_value": 10,
+        "before": [
+          155.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after": [
+          155.0,
+          0.0,
+          0.0,
+          -1.7100000381469727
+        ],
+        "after_float32_bits": [
+          1125842944,
+          0,
+          0,
+          3218792776
+        ]
+      },
+      {
+        "actor": "dynamic:player:0000000000000001",
+        "actor_value": 10,
+        "before": [
+          140.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "after": [
+          140.0,
+          0.0,
+          0.0,
+          -7.0
+        ],
+        "after_float32_bits": [
+          1124859904,
+          0,
+          0,
+          3235905536
+        ]
+      }
+    ]
+  },
+  "visual_review": {
+    "directly_viewed": 2,
+    "paths": [
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/first/uninterrupted-completed-first.png",
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-first-01/second/restarted-completed-first.png"
+    ],
+    "scope": "Both first-person completed scenes show arms and opponent without torso obstruction or exploding geometry. Different idle samples; no quantitative original appearance equivalence."
+  },
+  "limits": [
+    "Reference comparison proves restart equivalence; does not independently prove original-game damage numeric parity.",
+    "Injected/recovered initial passive source; one normal first-person same-cached attack, sound disabled, FPS unmeasured.",
+    "No sanitized or third-person mouse restart course claimed.",
+    "No gamepad, measured FPS, audio or normal Stagger activation acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}
