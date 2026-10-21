@@ -1,0 +1,448 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Sanitized counterpart to accepted normal ordinary Player independent strike tail restarts; both finish orders in both cameras. Historical binary preceding paired contact reaction changes.",
+  "implementation_commit": "1d89099eb4",
+  "normal_receipt": {
+    "path": "docs/oblivion/M15-PLAYER-STRIKE-TAIL-NORMAL-VERIFICATION.json",
+    "sha256": "c15d0e19cace2aaca1d7aae5f8fe70848590a16143e215690ad2530859bf8f7a"
+  },
+  "cases": [
+    {
+      "long_view": "body",
+      "camera": "first",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/verification.json",
+        "sha256": "a5979c2b5bbbd4d7cda3b70606b1da1c47ed4ac4088460777d8d139054848cf3"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/preregistered.json",
+        "sha256": "1df2070a3d6ec87fdea006bcda6ba88724255fb42f665ee6d0547baa1115beea"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/manifest.json",
+        "sha256": "d7366418a105f4d3a168ad26186e18c46473f5f068e987a39ec8af8f5585e975"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/continuation.json",
+        "sha256": "b85a7b47148e0332c22b2e7e09b7f1f40a03cd5ffa981329734f5fa0631832b8"
+      },
+      "selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/tail-selection.json",
+        "sha256": "5352f9e1bd528fe2a61a8a171d73ce743a3980fa30c8fd81e727f9e8d3815277"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 956197,
+            "start_ticks": 28803393,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/launcher.json",
+            "sha256": "d64721318f0917fd626bc5317b804a424f6033cd1a2e75405a07b7c029d3b985"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/actual-engine-environment.json",
+            "sha256": "784afc27544e046395eb1d3bcf6b8649f26093201be763fa4a55292dd1346c32"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/events.jsonl",
+            "sha256": "1fdd9a5641a1f86b42ffc37e9a91c5cbca12fdfc6f12d0bcfdbd971cdc804d9a"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/first/settled.png",
+            "sha256": "44869e4e60ae43ac66baee537cda8eb8e23e7d2a4a44e6e4c92509bc6536a8f2"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 957066,
+            "start_ticks": 28855529,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/launcher.json",
+            "sha256": "a32fc900ea716821150a0c669193a034c3cfd5cd9c3baac6629be3da22828f4d"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/actual-engine-environment.json",
+            "sha256": "561f068ca6e4f4ecffd2d1be4993eab585e1582c9a812e145ebf43e3c23c810e"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/events.jsonl",
+            "sha256": "f3f413abe78af6244ab11494cd141a17e3f811215cead81fa02e490352b6c411"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-first-02/second/settled.png",
+            "sha256": "94f9860e637cc554fd30f1c07a51a5200cdd4c832c46e2822249f06cf869274b"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        }
+      ]
+    },
+    {
+      "long_view": "body",
+      "camera": "third",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/verification.json",
+        "sha256": "8c9ea473ae23a1fad8c461c23ef2f776faacf823adb46998d5297461eb51251f"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/preregistered.json",
+        "sha256": "94f064c7489dab795d08f22b945178ae786081e83fe113edd61d30ea2c1a55c2"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/manifest.json",
+        "sha256": "e76cb9db2c178bacd33ec63f00b44af915517e9714a886330cb3691786981d34"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/continuation.json",
+        "sha256": "c701cdb025f57f13d5a10bfeb0291438c2b22bbddc3aa539ce0f8f4ffa2f2dbc"
+      },
+      "selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/tail-selection.json",
+        "sha256": "f798d048496d1357dd61d369b3806cea50824afde703517fad9785cbef72321b"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 958407,
+            "start_ticks": 28978658,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/launcher.json",
+            "sha256": "49e96cc775526b3bf766101824dc114b28afa998232a04f7c0246481efe80089"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/actual-engine-environment.json",
+            "sha256": "f0a99004235995a155b58cafa66b70183f542e7d06f30a5ab611566b7dcc8921"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/events.jsonl",
+            "sha256": "a6681b4d6032cae97f627f939a459dcde1b77b2625506e37b8275b9b5ec77ef2"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/first/settled.png",
+            "sha256": "9a02b540449e01438ec0d9478260055d8d5b58ad49d026fae5c5e7865e204a73"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 959468,
+            "start_ticks": 29031403,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/launcher.json",
+            "sha256": "0e5b4555bb2b8fccb44621de8cab27965c5613aee51b70f4c0bb84afe7fb3303"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/actual-engine-environment.json",
+            "sha256": "97ff8eb5b1731e6e9149add5313a48bbec0c8761c63d2c8b82040c3e16df8402"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/events.jsonl",
+            "sha256": "a1df62a8792943536aebe5733f2df07dde4aef5d0605a119f15b4a4e258fc02f"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-body-third-02/second/settled.png",
+            "sha256": "015bc245397f6c7527c7a04d0e3363fe7d763b607d17318590fa5b26fdd607e4"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        }
+      ]
+    },
+    {
+      "long_view": "first",
+      "camera": "first",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/verification.json",
+        "sha256": "5d16ca96159418942f418c8cf8caf0eef022a5bf4ca78e8c153f39cd91b154d8"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/preregistered.json",
+        "sha256": "0c51e313eb5c5d3739cc167f3c878207a8f44ab1a89a153c5418af90b33c9603"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/manifest.json",
+        "sha256": "cb4be3e5591e4fc49264a20a4572866c9ccd880e868b32f316c0da47d377f828"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/continuation.json",
+        "sha256": "125c0cf1a3c4ac75a1b931d8c8d48dc3ebdff6f465fb0037c52a60544b1149e7"
+      },
+      "selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/tail-selection.json",
+        "sha256": "cf163334d47668576371f1ba132570ce45f96b64c1948c8fce0900bc28cd1e56"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 957866,
+            "start_ticks": 28893259,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/launcher.json",
+            "sha256": "08312c086493d3678b3b11756b2fe59d8d9b83103abcb672a58907498b09f503"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/actual-engine-environment.json",
+            "sha256": "6a45b0894f4ad01ad098cb9be352c76548cbdd1e3b416b0d36196d53f7b6e101"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/events.jsonl",
+            "sha256": "1a2463a797b2a4e127c7f6016787a218441fa62065812a6969199790a9900bae"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/first/settled.png",
+            "sha256": "68c8ac539f40aa420e3631ed56364f2d8de0a005f231060dd637d290dcf7e9f4"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 958181,
+            "start_ticks": 28943270,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/launcher.json",
+            "sha256": "c596bb77589a5ddfae521e8d2b2ae9c26aaee11457ce026aaf17dce86fc523c4"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/actual-engine-environment.json",
+            "sha256": "047905c056e37b810f5f2e438caab2c518ff58fd4d3807c292919382d4c68c30"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/events.jsonl",
+            "sha256": "b82e004cac559b328adbfdd442d3cee1f55fc3178e6804e223046ec85e674e82"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-first-02/second/settled.png",
+            "sha256": "c2f33f673d5b271f4eb218276484f38ccbe85465255332d45c167580e514b06d"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        }
+      ]
+    },
+    {
+      "long_view": "first",
+      "camera": "third",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/verification.json",
+        "sha256": "7adcdb1f0bc2221b5a64d63c22fb2895439e61328813c7073c686933aa8daa83"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/preregistered.json",
+        "sha256": "c21a6942578ae73dfa189281dd562444537e8a3591463ee73b50e211337eebc3"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/manifest.json",
+        "sha256": "466617758ebb947c03e1c3e277e2f7bd9ecf7de5f295be9725a05e5c6ff6a457"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/continuation.json",
+        "sha256": "13f8b1d7a5fdbb6d488e0efc3791e76b013450df1808d7001135e1bf15dc55e9"
+      },
+      "selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/tail-selection.json",
+        "sha256": "aa82a98a7e28f46a35f0f54ddd9b740ccfcea5b9b71f23f47c9d30a9edb09626"
+      },
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 960033,
+            "start_ticks": 29069418,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/launcher.json",
+            "sha256": "8835ee558651f5f65be5eedeb7b53dbb66080b724e7205b62e0192b43c99543f"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/actual-engine-environment.json",
+            "sha256": "c31eb676e260610d7b93202191b81eade9d28c2c8cc233c1333e9e4fedccfe73"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/events.jsonl",
+            "sha256": "2cd24dd7e1e85e9de9fa91f4988f9eaec4cd179e61b1a1666ffc19b4a0bb9d9e"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/first/settled.png",
+            "sha256": "303b67486f791d75113ab541188a2657146d4f62b8740da8d7a07eb76dcc019a"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 963221,
+            "start_ticks": 29124680,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/launcher.json",
+            "sha256": "149345a78ac5847d7c83dad1656525fb4172c0acc8d9f4369ab78ff955fbb8ca"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/actual-engine-environment.json",
+            "sha256": "c1f81c086b92d929a6ef0574e384fdcdd540aab89174b13b8456425a96fff489"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/events.jsonl",
+            "sha256": "d866201359eee59409c657926ad86f69f8e480b3ea6d4da3204a814d028e1634"
+          },
+          "image": {
+            "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-asymmetric-sanitized-first-third-02/second/settled.png",
+            "sha256": "9424d59a22705730d5cfaf0833b44b8c254e249d197ac92a991b2a37afada8fb"
+          },
+          "compiled_obscript_units": 9993,
+          "compilation_failures": 0
+        }
+      ]
+    }
+  ],
+  "processes": 8,
+  "completed_save_live_equal_pairs": 72,
+  "leak_coverage": false,
+  "image_review": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/tail-images-reviewed-01.json",
+    "sha256": "23e8b4703ad2065f35365a4c6c02921e843bae488d8897258f6f6327856c1388"
+  },
+  "all_eight_courses_inventory_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/tail-inventory-audit-01.json",
+    "sha256": "51dfe7d7dac53a088563e86e53aa6048492447bf80ced56912c73b8d5e7d75c9"
+  },
+  "sanitized_epochs_terminated": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/sanitized-matrix-termination-02.json",
+    "sha256": "f648991e2b93866fbc4b1770420949728554dccea29503262bc736d6915888a6"
+  },
+  "preserved_sanitized_binary": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/openmw-sanitized-owned-strike-03",
+    "sha256": "c2e1b912d75bcc7ed7c7bfb7faa952c9bba3f038740a2144577d02dd7c6e3da8"
+  },
+  "retained_first_timeout_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-player-owned-strike-review-01/sanitized-runtime-timeout-failure-01.json",
+    "sha256": "b2c501bebc93b4ab9642abf11d5c7cd259c1ec3c34b2e65b09a97e38f1bd07ed"
+  },
+  "normal_and_sanitized_totals": {
+    "courses": 8,
+    "engine_processes": 16,
+    "completed_save_live_equal_pairs": 144,
+    "settled_images_reviewed": 16
+  },
+  "limits": [
+    "Sound disabled; no audio acceptance. Configured60 cap is not measured FPS.",
+    "Synthetic holds and declared blend keys; no original skin or uninterrupted motion parity.",
+    "First sanitized attempt failed declared startup/input deadlines before attack; retained. Successful02 changes timeouts only.",
+    "Queued power, mixed capture/outgoing runtime, paired reactions and wider M15S4 requirements remain separate gates."
+  ]
+}

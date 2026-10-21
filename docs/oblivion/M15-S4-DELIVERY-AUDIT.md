@@ -9158,3 +9158,30 @@ pins these sources, original corpora, independent comparison and component check
 The existing strike runtime matrix remains pinned to its earlier unchanged engine
 binaries. Player Recoil integration, paired reaction replacement and normal
 blocked-contact acceptance remain open, as do the wider M15S4 requirements.
+
+### Sanitized asymmetric strike-tail restart acceptance
+
+The sanitized counterpart now passes all four declared ordinary strike-tail
+courses: body/first-person finish orders in first/third cameras. Eight fresh
+engine processes complete, and all72 preserved save/live pairs agree exactly.
+Final native values, life, bases, ledger, RNG, bow and loose-weapon state match
+the respective same-process baseline. An additional audit verifies complete
+Player and target inventories, including condition, charge and equipped slots,
+across all eight normal/sanitized courses. All16 settled images are directly
+reviewed. Actual instrumented process environments record ASan halt-on-error,
+disabled leak checking and UBSan halt-on-error with stack traces. Each original
+process epoch has exited; the tested sanitized binary is separately preserved.
+
+The first sanitized attempt exceeded startup/input deadlines before attack and
+remains failed evidence. Successful02 courses increase those deadlines without
+changing input predicates or numerical expectations. Across both profiles,
+16processes supply144 exact completed save/live pairs. The configured60 cap is
+not measured FPS; sound is disabled. These historical binaries precede the
+subsequent paired contact-reaction integration.
+
+[`M15-PLAYER-STRIKE-TAIL-SANITIZED-VERIFICATION.json`](M15-PLAYER-STRIKE-TAIL-SANITIZED-VERIFICATION.json)
+pins every sanitized course, actual process environment, preserved binary,
+selection, restart, image audit and the retained timeout failure. This closes
+the declared ordinary asymmetric strike-tail runtime matrix. Queued power,
+mixed capture/outgoing transitions, paired reactions and the wider M15S4 gates
+remain separate requirements. M15S4 remains incomplete.
