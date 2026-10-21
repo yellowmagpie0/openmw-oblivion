@@ -1362,6 +1362,48 @@ namespace MWMechanics
             found->second.mInput = input;
     }
 
+    namespace
+    {
+        template <class View>
+        OblivionMeleeSlot3Source slot3Source(const View* view, bool first)
+        {
+            if (!view) return {};
+            const auto strikeSource = [&](const ESM4::RuntimeMeleeStrike& strike, bool passive) {
+                return OblivionMeleeSlot3Source{strike.mActionId, strike.mAnimationGroup, strike.mAnimationTime,
+                    strike.mSequenceTiming ? &*strike.mSequenceTiming : nullptr,
+                    strike.mPoseSnapshot ? &*strike.mPoseSnapshot : nullptr, passive || strike.mContactCommitted,
+                    !passive && first && (strike.mKind >= ESM4::MeleeStrikeKind::StandingPower
+                        ? strike.mPowerPhase == ESM4::PowerMeleePhase::End
+                        : strike.mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End)};
+            };
+            const auto reactionSource = [](const ESM4::RuntimeMeleeReaction& reaction) {
+                return OblivionMeleeSlot3Source{reaction.mContactId, reaction.mAnimationGroup, reaction.mAnimationTime,
+                    &reaction.mSequenceTiming, reaction.mPoseSnapshot ? &*reaction.mPoseSnapshot : nullptr,
+                    true, reaction.mInactive || reaction.mRetirement.has_value()};
+            };
+            if (view->mPassiveSequence)
+                return std::visit([&](const auto& sequence) {
+                    if constexpr (std::is_same_v<std::decay_t<decltype(sequence)>, ESM4::RuntimeMeleeStrike>)
+                        return strikeSource(sequence, true);
+                    else return reactionSource(sequence);
+                }, view->mPassiveSequence->mSequence);
+            if (view->mStrike) return strikeSource(*view->mStrike, false);
+            if (view->mReaction && view->mReaction->mKind != ESM4::MeleeReactionKind::Stagger)
+                return reactionSource(*view->mReaction);
+            return {};
+        }
+    }
+
+    OblivionMeleeSlot3Source oblivionMeleeSlot3Source(const ESM4::RuntimeMeleeState* view)
+    {
+        return slot3Source(view, false);
+    }
+
+    OblivionMeleeSlot3Source oblivionMeleeSlot3Source(const ESM4::RuntimeFirstPersonMeleeState* view)
+    {
+        return slot3Source(view, true);
+    }
+
     std::uint64_t OblivionCombatService::beginMeleeStrike(const ESM::FormKey& actor,
         ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
         const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views)
@@ -1378,6 +1420,9 @@ namespace MWMechanics
         if (!views && previous && (previous->mStrike
                 || (previous->mFirstPerson && previous->mFirstPerson->mStrike)))
             throw std::invalid_argument("native melee strike must finish or cancel before replacement");
+        if (!views && previous && (previous->mPassiveSequence
+                || (previous->mFirstPerson && previous->mFirstPerson->mPassiveSequence)))
+            throw std::invalid_argument("native passive slot3 requires an activation packet before replacement");
         auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
         const auto fresh = [&](ESM4::RuntimeMeleeStrike& incoming) {
             incoming.mActionId = 1;
@@ -1394,16 +1439,13 @@ namespace MWMechanics
                 || timing.mEasing != (timing.mEaseEnd > 0))
                 throw std::invalid_argument("native paired strike requires fresh playback history");
         };
-        const auto outgoing = [&](const ESM4::RuntimeMeleeStrike* old, const ESM4::RuntimeMeleeStrike& incoming,
+        const auto outgoing = [&](const OblivionMeleeSlot3Source& old, const ESM4::RuntimeMeleeStrike& incoming,
                                   const std::optional<ESM4::RuntimeRetiringMeleeSequence>& requested,
-                                  std::vector<ESM4::RuntimeRetiringMeleeSequence>& retiring, bool first) {
-            if (old && (old->mContactCommitted ? !isActionConsumed(old->mActionId) : !isActionPending(old->mActionId, actor)))
+                                  std::vector<ESM4::RuntimeRetiringMeleeSequence>& retiring) {
+            if (old && (old.mCauseConsumed ? !isActionConsumed(old.mCause) : !isActionPending(old.mCause, actor)))
                 throw std::invalid_argument("native outgoing strike lost its causal action");
-            const bool inactive = old && first && (old->mKind >= ESM4::MeleeStrikeKind::StandingPower
-                ? old->mPowerPhase == ESM4::PowerMeleePhase::End : old->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
-            const bool steady = old && !inactive && old->mSequenceTiming && old->mSequenceTiming->mOffset
-                && !old->mSequenceTiming->mEasing && !old->mPoseSnapshot
-                && old->mAnimationGroup != incoming.mAnimationGroup;
+            const bool steady = old && !old.mInactive && old.mTiming && old.mTiming->mOffset
+                && !old.mTiming->mEasing && !old.mPose && old.mGroup != incoming.mAnimationGroup;
             const bool crossfade = steady && incoming.mSequenceTiming->mEasing;
             if (requested.has_value() != crossfade || (incoming.mSequenceTiming->mEasing
                     && incoming.mPoseSnapshot.has_value() == crossfade))
@@ -1414,8 +1456,8 @@ namespace MWMechanics
                     throw std::invalid_argument("native strike activation collides with an outgoing sequence");
             if (requested)
             {
-                const ESM4::RuntimeRetiringMeleeSequence expected{old->mActionId, old->mAnimationGroup,
-                    old->mAnimationTime, *old->mSequenceTiming, {incoming.mSequenceTiming->mEaseEnd, {}}};
+                const ESM4::RuntimeRetiringMeleeSequence expected{old.mCause, std::string(old.mGroup),
+                    old.mAnimationTime, *old.mTiming, {incoming.mSequenceTiming->mEaseEnd, {}}};
                 if (*requested != expected)
                     throw std::invalid_argument("native outgoing strike changed owned history");
                 retiring.push_back(expected);
@@ -1425,7 +1467,8 @@ namespace MWMechanics
         {
             const auto* values = findActorValues(actor);
             if (!values || values->mOwner != ESM4::ActorValueOwner::Player || views->mFirstPerson.mReaction
-                || !views->mFirstPerson.mStrike || !views->mFirstPerson.mRetiringSequences.empty())
+                || !views->mFirstPerson.mStrike || views->mFirstPerson.mPassiveSequence
+                || !views->mFirstPerson.mRetiringSequences.empty())
                 throw std::invalid_argument("native paired strike requires fresh Player view ownership");
             fresh(views->mBody);
             fresh(*views->mFirstPerson.mStrike);
@@ -1436,13 +1479,12 @@ namespace MWMechanics
                 throw std::invalid_argument("native paired strike changed first-person clock");
             views->mFirstPerson.validate();
             if (candidate.mFirstPerson) views->mFirstPerson.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
-            outgoing(previous && previous->mStrike ? &*previous->mStrike : nullptr, views->mBody,
-                views->mBodyOutgoing, candidate.mRetiringSequences, false);
-            outgoing(previous && previous->mFirstPerson && previous->mFirstPerson->mStrike
-                    ? &*previous->mFirstPerson->mStrike : nullptr, *views->mFirstPerson.mStrike,
-                views->mFirstPersonOutgoing, views->mFirstPerson.mRetiringSequences, true);
+            outgoing(oblivionMeleeSlot3Source(previous), views->mBody, views->mBodyOutgoing, candidate.mRetiringSequences);
+            outgoing(oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
+                *views->mFirstPerson.mStrike, views->mFirstPersonOutgoing, views->mFirstPerson.mRetiringSequences);
             candidate.mStrike = std::move(views->mBody);
             candidate.mFirstPerson = std::move(views->mFirstPerson);
+            candidate.mPassiveSequence.reset();
         }
         else candidate.mStrike = std::move(strike);
         candidate.validate();

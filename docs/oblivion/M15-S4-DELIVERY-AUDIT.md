@@ -9696,3 +9696,36 @@ Slot0-aware world factory/activation, active/cached Stagger replacement, passive
 slot3 replacement by subsequent input, captured/other-protocol runtime crosses
 and the complete normal-input/audio/FPS/cancellation/E2E matrix remain open.
 M15S4 is still incomplete.
+
+### Paired strike replacement of recovered passive slot3
+
+Player strike preparation now queries the actual slot3 predecessor in each
+view, including passive ordinary/power strikes and BlockHit/Recoil. Stagger
+slot0 is excluded. Consumed/canceled passive causes retain visual residence
+without pending contact authority, even when a former strike phase is End.
+Primary first-person End and inactive/retiring reaction sources keep their
+existing capture rules. Both the controller and service use this shared query.
+
+Paired strike admission validates outgoing/captured activation against that
+history, clears passive fields in its candidate, and allocates one new action
+after validation. The old cause remains consumed; outgoing spans retain its
+timing and sampled time. A body-only call without an activation packet rejects
+a passive predecessor before allocating an action.
+
+A 32-context typed world/service matrix covers four predecessor protocols,
+four per-view capture masks and incoming ordinary/power strikes, including
+same-cached power capture. It recovers both Stagger views through the service,
+checks a fixed activation-state table and original saved predecessor history,
+rejects stale/altered requests without binary changes, and verifies 128
+frame/restart checkpoints, one new pending action, unchanged resources/RNG and
+completion of the outgoing spans. A separate source-query test distinguishes
+primary first-person End, explicit passive residence, retiring Recoil and
+Stagger slot0.
+
+Full normal and ASan/UBSan engine suites each pass 1,783 cases across 125 suites,
+with exact inventories, no failures and no skips. Leak detection is disabled.
+[`M15-PASSIVE-SLOT3-READMISSION-VERIFICATION.json`](M15-PASSIVE-SLOT3-READMISSION-VERIFICATION.json)
+pins the frozen source, rebuilt applications, checks and warning triage. This
+is service/engine verification, not yet actual normal-input re-admission.
+Body-only activation, reaction re-admission, Stagger slot0 factory/activation
+and the full M15S4 runtime/input/audio/FPS/cancellation/E2E gates remain open.

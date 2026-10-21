@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "status": "Paired Player strike replacement of recovered passive slot3 verified in service/engine tests; actual normal-input re-admission remains open.",
+  "tested_source": {
+    "head": "66733ac2f4795b44ca366e5c1cb5a87a8b367ef7",
+    "source_fingerprint": "fbf66d72a296291fda3fe871b8b187370b71127f30469927216751858395668e"
+  },
+  "implementation": [
+    "One borrowed slot3-source query excludes Stagger slot0 and exposes resident strike/BlockHit/Recoil timing, sampled time, pose and causal lease independently in both views.",
+    "A passive strike uses its consumed/canceled cause even when contact_committed is false; its former End phase does not make the resident slot inactive. Primary first-person End and inactive/retiring reactions keep their established activation distinction.",
+    "Paired strike admission uses the actual resident source for outgoing/captured activation, clears passive fields only in the prepared candidate, preserves source timing in outgoing history and allocates one new action after validation.",
+    "The controller uses the same source query and existing native capture/crossfade rules when preparing Player view packets. Body-only activation without a packet rejects a passive predecessor before allocation."
+  ],
+  "coverage": {
+    "new_tests": [
+      "OblivionWorldTest.PairedStrikeReadmissionReplacesRecoveredPassiveSlot3Atomically",
+      "OblivionWorldTest.Slot3SourceDistinguishesPrimaryFirstPersonEndFromPassiveResidenceAndStaggerSlot0"
+    ],
+    "contexts": 32,
+    "protocols": [
+      "ordinary strike",
+      "standing power strike",
+      "BlockHit",
+      "Recoil"
+    ],
+    "captured_source_masks": [
+      "neither",
+      "body",
+      "first person",
+      "both"
+    ],
+    "incoming": [
+      "ordinary Right",
+      "standing power"
+    ],
+    "same_cached_power_capture_included": true,
+    "checks": [
+      "Actual typed service frame/prefix recovery of both primary Stagger views before admission.",
+      "Fixed activation-state table and outgoing history compared against the original saved predecessor.",
+      "Stale view clock, initialized incoming manager and altered/unexpected outgoing requests reject without any binary state change.",
+      "Body-only activation without a view packet rejects before allocation.",
+      "Exactly one pending new action; old cause remains consumed.",
+      "Both passive records are replaced, with independent outgoing durations or captured activation.",
+      "Four frame/restart checkpoints per context retain the new action without contact/resource/RNG changes.",
+      "Native actor values differ only by the newly bound action2; bases remain equal.",
+      "Both outgoing histories complete and explicit new-strike cancellation consumes its action."
+    ]
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-readmission-normal-01/verification.json",
+      "sha256": "d46d577d278b9987bbbbc7b64fb2ec9a7ade68790c06e80b747eed08df32befd",
+      "result": {
+        "executed": 1783,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a83cf514b3e104de83bc70977bbfd2c3cbc4cc998b375e0b2c43cb5caefec623",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "09a12ebe216418c4c275c5df961333ca8d8843a7e5ffa8b9c2d7f96fb7450d4b",
+        "inventory_sha256": "c5374bde3ab4ed8c9c2160e8aaf8939d727f076ce1c65691bf31cab962babc0a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-readmission-sanitized-01/verification.json",
+      "sha256": "c3e0157d3a18c6b0b6d0c951d5d900d994d9bee2ca5e35700c3fab130e870452",
+      "result": {
+        "executed": 1783,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "74312bbae143332fe8da0b4c08eb478e5d899478bd7d27d04ff00dde8580b650",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "6319d17ded24c730f703314dbdb1c3c60ca4e92a36f6b3cbc18f3b6e151a9d5c",
+        "inventory_sha256": "c5374bde3ab4ed8c9c2160e8aaf8939d727f076ce1c65691bf31cab962babc0a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "suites": 125,
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "built_applications": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "0da134f56f2a6e6c2750b51a7bbd146851193850a103a4e524d279f5f9639592"
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "493008df09d1e3a789f5b65a262b29ec677d0575b9077756f16c159143764544"
+    }
+  },
+  "warning_triage": "Logs retain existing and aggregate-initializer warnings. GCC also emits a dangling-pointer warning for the fixture optional-pose ternary. The optional, pose vector and tracks are owned values copied into state; no temporary pointer is retained there. All captured variants execute under ASan/UBSan without diagnostics. No warning-free claim.",
+  "remaining_work": [
+    "Normal-input controller/resource and rendered save/restart validation of this re-admission path.",
+    "Body-only NPC activation packets and other supported actor routes.",
+    "Reaction replacement of resident passive slot3.",
+    "Native Stagger slot0-aware factory/activation, repeated/cached slot0 histories and complete M15S4 runtime/input/FPS/cancellation/audio/E2E gates."
+  ],
+  "leak_coverage": false,
+  "normal_input_readmission_acceptance": false,
+  "full_M15S4_acceptance": false
+}

@@ -66,6 +66,23 @@ namespace MWMechanics
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mFirstPersonOutgoing = std::nullopt;
     };
 
+    // Borrowed native slot3 history for activation preflight. Stagger slot0 is
+    // excluded. A passive strike's former logical phase does not deactivate
+    // its resident visual slot or restore pending contact authority.
+    struct OblivionMeleeSlot3Source
+    {
+        std::uint64_t mCause = 0;
+        std::string_view mGroup;
+        float mAnimationTime = 0;
+        const ESM4::MeleeSequenceTiming* mTiming = nullptr;
+        const ESM4::RuntimeMeleePoseSnapshot* mPose = nullptr;
+        bool mCauseConsumed = false;
+        bool mInactive = false;
+        explicit operator bool() const { return mCause != 0; }
+    };
+    OblivionMeleeSlot3Source oblivionMeleeSlot3Source(const ESM4::RuntimeMeleeState* view);
+    OblivionMeleeSlot3Source oblivionMeleeSlot3Source(const ESM4::RuntimeFirstPersonMeleeState* view);
+
     // Keeps first-time lifecycle adoption inside a writer's transaction.
     // Prepare before adoption; commit only after the native writer succeeds.
     class OblivionActorLifeAdoption
