@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "scope": "Sound-enabled ordinary Player blocked Recoil course in first/third cameras; one mixed stock Blade+Hand contact cue before restart, zero after.",
+  "base_course": "m15_player_blocked_recoil_course.json",
+  "manifest_changes": {
+    "command_remove": [
+      "--no-sound=1"
+    ],
+    "environment_add": {
+      "ALSOFT_CONF": "{output}/config/alsoft.conf",
+      "ALSOFT_DRIVERS": "wave",
+      "ALSOFT_LOGLEVEL": "3",
+      "ALSOFT_LOGFILE": "{output}/openal.log"
+    },
+    "files_append": [
+      {
+        "path": "config/alsoft.conf",
+        "content": "[general]\ndrivers = wave\n[wave]\nfile = {output}/mixed-output.wav\n"
+      }
+    ],
+    "baseline_expected_log_append": [
+      "M15 melee hit sound requested: actor=dynamic:player:0000000000000001 id=2 sound=WPNBlockHand played=1",
+      "M15 melee hit sound requested: actor=dynamic:player:0000000000000001 id=2 sound=WPNBlockBlade played=1"
+    ]
+  },
+  "analysis": {
+    "analysis_rate": 12000,
+    "maximum_relative_voice_start_samples": 300,
+    "minimum_normalized_stock_mixture_correlation": 0.75,
+    "minimum_component_gain_fraction": 0.2,
+    "audio_method": "Two-template matched filter using independently read native static attenuation, mean-corrected joint correlation and positive component gains. Candidate anchors from individual stock correlations>=.2 with local maxima and2-sample jitter; relative voice offset searched within25ms. All valid above.75 events cluster within1s; exactly one before restart and zero after."
+  },
+  "asset_directory_input": "Supply the six independently extracted stock mono PCM WAVs by exact basename and hash; proprietary bytes stay outside Git.",
+  "source_archive_sha256": "f11e92315666b7e6ee5f6936fa68300fb5234215c59d5e3836375f262fba05ec",
+  "assets": [
+    {
+      "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642",
+      "kind": "blade",
+      "native_static_attenuation": 308,
+      "native_gain": 0.7014552984199712,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.6414965986394557,
+      "weighted_energy": 983458398179.3951,
+      "filename": "wpn_block_blade_01.wav"
+    },
+    {
+      "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269",
+      "kind": "blade",
+      "native_static_attenuation": 308,
+      "native_gain": 0.7014552984199712,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.7197959183673469,
+      "weighted_energy": 1042186290824.6039,
+      "filename": "wpn_block_blade_02.wav"
+    },
+    {
+      "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d",
+      "kind": "blade",
+      "native_static_attenuation": 308,
+      "native_gain": 0.7014552984199712,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.6584353741496599,
+      "weighted_energy": 1359811425385.7961,
+      "filename": "wpn_block_blade_03.wav"
+    },
+    {
+      "sha256": "1a7f2b8ff37a127c911e363d5dc46b1db828f8b0e22080a16667d30de248e9f5",
+      "kind": "hand",
+      "native_static_attenuation": 705,
+      "native_gain": 0.44411966136558895,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.4964172335600907,
+      "weighted_energy": 1031188650194.6069,
+      "filename": "wpn_block_hand_01.wav"
+    },
+    {
+      "sha256": "e61d9b1ccc07e021ef4369d1fc8d6f9586ac016a021d2b4ca9e0174dbd7cc8d2",
+      "kind": "hand",
+      "native_static_attenuation": 705,
+      "native_gain": 0.44411966136558895,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.4636734693877551,
+      "weighted_energy": 635220643753.1044,
+      "filename": "wpn_block_hand_02.wav"
+    },
+    {
+      "sha256": "c4138c8ad6e01b549ce2e4a6a23f96416348509dff44536d418115b29db60282",
+      "kind": "hand",
+      "native_static_attenuation": 705,
+      "native_gain": 0.44411966136558895,
+      "rate": 44100,
+      "channels": 1,
+      "duration": 0.4556916099773243,
+      "weighted_energy": 835610390241.618,
+      "filename": "wpn_block_hand_03.wav"
+    }
+  ],
+  "expected": {
+    "baseline_clusters": 1,
+    "restart_clusters": 0,
+    "baseline_sound_requests": [
+      "WPNBlockHand",
+      "WPNBlockBlade"
+    ],
+    "restart_sound_requests": []
+  },
+  "method_provenance": {
+    "path": "build/oblivion-compat/m15/S4/native-defensive-weapon-break-runtime-normal-01/preregistered-acceptance.json",
+    "sha256": "d451ecfb8a57002fb84fe3f0fafa1968c016c129510a9fe9bc09c68a1a0b7e12"
+  },
+  "limits": [
+    "Actual OpenAL wave mixer output; no hardware listening or original pitch/reverb equivalence.",
+    "All state, no-replay, inventory and process-epoch checks from the base course still apply.",
+    "No broader M15S4 audio or camera acceptance."
+  ]
+}

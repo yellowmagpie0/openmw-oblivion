@@ -9255,3 +9255,26 @@ sound-enabled courses are being checked. The stationary scripted block controls
 do not establish production blocking AI. Missing-resource/zero-blend contracts,
 other contact branches, queued-power/mixed transitions, parallel Stagger and the
 wider M15S4 requirements remain open.
+
+### Paired Player Recoil contact audio acceptance
+
+Sound-enabled normal first/third-camera counterparts now pass the same exact
+state and restart checks. Each baseline plays one WPNBlockHand and one
+WPNBlockBlade request. Captured OpenAL mixer PCM contains exactly one joint stock
+Blade+Hand mixture, using the previously accepted method and unchanged 0.75
+correlation, 0.2 positive component-gain fraction and 25 ms relative-start limits.
+Each fresh-process continuation has zero contact requests and zero mixtures.
+No audio-based save selection or numerical retry is used. Four processes exit,
+six completed save/live pairs match, and six images are directly reviewed.
+
+The new editable audio recipe transforms the existing three public recoil
+manifests into valid sound-enabled scenarios and records stock asset identities,
+static gains, method and exact criteria. Concrete executions and analyzer source
+remain pinned under ignored evidence. This accepts actual mixer output for this
+contact; it does not claim hardware listening, original pitch/reverb parity or
+the entire milestone sound matrix.
+
+[`M15-PLAYER-RECOIL-AUDIO-VERIFICATION.json`](M15-PLAYER-RECOIL-AUDIO-VERIFICATION.json)
+pins those layers. Production sources and previously accepted normal/sanitizer
+checks are unchanged. Other contacts, parallel Stagger, mastery/effects,
+creatures and the wider input/FPS/cancellation gates keep M15S4 incomplete.

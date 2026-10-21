@@ -1,0 +1,268 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Actual normal OpenAL Blade+Hand block cue mixture during paired Player Recoil in both cameras, exact state baseline/restart and zero replayed audio.",
+  "implementation_commit": "0fee234ac3",
+  "implementation_receipt": {
+    "path": "docs/oblivion/M15-PLAYER-PAIRED-REACTION-VERIFICATION.json",
+    "sha256": "faea30bda4ea8edaa62362eede3d90b3e62a86c26c4b9478a37b34472c5a1f9b"
+  },
+  "editable_audio_course": {
+    "path": "scripts/data/oblivion_compat/m15_player_blocked_recoil_audio_course.json",
+    "sha256": "070a755b10871e2894f0145a95b431d7afacea99ae665d4dbf14cc97e46386a8"
+  },
+  "cases": [
+    {
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/verification.json",
+        "sha256": "bc27aedac3fc825697d6bd91e97c99f9b4e785001a4525f0ade6e984aa951803"
+      },
+      "pin_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/epoch-input-pin-audit.json",
+        "sha256": "fb201181783a62c98f39cbc6ade1fd847a60770e5f3397e5685a6ba7183c9225"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/manifest.json",
+        "sha256": "b95f83927d9beb41614ba3948518fbbd922a699a1a356a51310b68259c1fbe71"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/continuation.json",
+        "sha256": "5d81770b7fdea19692baa7c0871ad42b56a4d79c4e58bc5e919726728a24a4da"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/preregistered.json",
+        "sha256": "c5b4cfda8035f4b1c7d67860f2d5e0f074c7d72a410c8521d9cac55a68183057"
+      },
+      "audio_preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/preregistered-acceptance.json",
+        "sha256": "7c2a37ae29cc899a10aa6706d8e5769f5dd676642de66f912a2ad788f5f384f9"
+      },
+      "stock_assets": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/stock-assets.json",
+        "sha256": "6c30a6a0cd5595631748f77ed7885b311235407ade73c15c346909a11f9d2f45"
+      },
+      "analysis_source": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/match-audio.py",
+        "sha256": "5e30a5e0b717a50e9548472dcf733c3196f6b6a277dc6e3ca06ca2d6c5c88ae5"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/restart-selection.json",
+        "sha256": "c66124818fb84a9346ae037453d6f29d923be45bed6da02c60539c4707ef3e84"
+      },
+      "camera": "first",
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 978970,
+            "start_ticks": 29529459,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/first/launcher.json",
+            "sha256": "0341dc1d90a2a6f95f57f33871dadfcf4dc49695fb2aa15d2debe5e1b6657d6a"
+          },
+          "waveform_verification": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/first/audio-mixture-verification-1.json",
+            "sha256": "5ec513c8cd892aac4f234aa10adfdb15d8d88fe84ebcf8965f9436656fe99ccf"
+          },
+          "clusters": [
+            {
+              "first": 35.39758333333333,
+              "last": 35.4,
+              "maximum_correlation": 0.960426573535062,
+              "blade": "wpn_block_blade_03.wav",
+              "hand": "wpn_block_hand_02.wav"
+            }
+          ],
+          "played_requests": [
+            "WPNBlockHand played=1",
+            "WPNBlockBlade played=1"
+          ],
+          "openal_log": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/first/openal.log",
+            "sha256": "f070745a6098e7d1354bd4fbc29a2f69fae0f46b5a13283b6887dffbc7b301e8"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 979232,
+            "start_ticks": 29547210,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/second/launcher.json",
+            "sha256": "05ecf2ea1a06ac425049968de6982adf1d2c6caabee1dde5d4671aaaa64e3fe5"
+          },
+          "waveform_verification": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/second/audio-mixture-verification-0.json",
+            "sha256": "f8c784093f0aff5616fd2f73b1b7fb192cad1ae9b530a64bf09ffb33b8e26959"
+          },
+          "clusters": [],
+          "played_requests": [],
+          "openal_log": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-first-01/second/openal.log",
+            "sha256": "8b77a6435d8823de36e0020287bcd7dfedefb6e01b627c89b1605bdf0990164e"
+          }
+        }
+      ]
+    },
+    {
+      "state_verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/verification.json",
+        "sha256": "10d6743405d95132540bc4c64679cfcd8800ea4296f224fb8951973a5f82aa19"
+      },
+      "pin_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/epoch-input-pin-audit.json",
+        "sha256": "fb201181783a62c98f39cbc6ade1fd847a60770e5f3397e5685a6ba7183c9225"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/manifest.json",
+        "sha256": "23c1a81ace874cd75dd27932025f677e005b898c249f9d3dc5c2685f42f6e522"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/continuation.json",
+        "sha256": "8007eb83bbe05855e899a3e229a97d22563b2193b74a4c220d638f5693b9c20c"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/preregistered.json",
+        "sha256": "cb6c0692f5a07cf45116f0bb2c13b72d7aa563df7b411e366ef31df9cb29ba9e"
+      },
+      "audio_preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/preregistered-acceptance.json",
+        "sha256": "7c2a37ae29cc899a10aa6706d8e5769f5dd676642de66f912a2ad788f5f384f9"
+      },
+      "stock_assets": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/stock-assets.json",
+        "sha256": "6c30a6a0cd5595631748f77ed7885b311235407ade73c15c346909a11f9d2f45"
+      },
+      "analysis_source": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/match-audio.py",
+        "sha256": "5e30a5e0b717a50e9548472dcf733c3196f6b6a277dc6e3ca06ca2d6c5c88ae5"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/restart-selection.json",
+        "sha256": "80919638ff1878fd8bd23a924328cb24a13c4d0673ef68d870f66630f1a1be63"
+      },
+      "camera": "third",
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 979572,
+            "start_ticks": 29568500,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/first/launcher.json",
+            "sha256": "0740bf319a454a80b51a2d0abe8fea2f8c05def8372198a47e00f20a5db30762"
+          },
+          "waveform_verification": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/first/audio-mixture-verification-1.json",
+            "sha256": "15f8cd440c8e76b8741391f3365dba7e136d407e2c8be10eb36e4fc101fc5edf"
+          },
+          "clusters": [
+            {
+              "first": 35.977916666666665,
+              "last": 35.98,
+              "maximum_correlation": 0.9839544966435553,
+              "blade": "wpn_block_blade_01.wav",
+              "hand": "wpn_block_hand_02.wav"
+            }
+          ],
+          "played_requests": [
+            "WPNBlockHand played=1",
+            "WPNBlockBlade played=1"
+          ],
+          "openal_log": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/first/openal.log",
+            "sha256": "fd4651cb9a2e48e7f3e82cf55932db557a64cb5277d7f8aa8a3451fa68a45a87"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 980099,
+            "start_ticks": 29595731,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/second/launcher.json",
+            "sha256": "6c7778fc8d8eff06f365f840d3eba291573e6d94ca9e9c3b95070dc635e33403"
+          },
+          "waveform_verification": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/second/audio-mixture-verification-0.json",
+            "sha256": "c4dca260fed235b2b93efebd89d7a5a86fd4bb5ff3bb90744a0a66cc7e85a626"
+          },
+          "clusters": [],
+          "played_requests": [],
+          "openal_log": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-audio-normal-third-01/second/openal.log",
+            "sha256": "0d96e8c5a3a61f798dc660267089a12c4109ecb384d43b54f817e370168789e9"
+          }
+        }
+      ]
+    }
+  ],
+  "engine_processes": 4,
+  "completed_save_live_equal_pairs": 6,
+  "waveform_analysis": "Unchanged inherited two-template stock mixture method; fixed correlation .75, positive gain fraction .2, relative voice offset25ms, one baseline cluster and zero restart.",
+  "leak_coverage": false,
+  "image_review": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/audio-images-reviewed-01.json",
+    "sha256": "b06103b4edc13a384ed1614f4d48a0ca7d707aa07270847ed837129414be3dfa"
+  },
+  "limits": [
+    "Actual OpenAL wave mixer output; no hardware listening or original pitch/reverb equivalence.",
+    "All state, no-replay, inventory and process-epoch checks from the base course still apply.",
+    "No broader M15S4 audio or camera acceptance.",
+    "Normal wave sink only; sanitized runtime was separately accepted without sound. NPC block uses fixture normal controls.",
+    "Parallel Stagger, mastery, other contacts and wider input/FPS/cancellation gates remain open."
+  ],
+  "public_recipe_validation": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/audio-public-recipe-validation.json",
+    "sha256": "edfc5a9ab9ec9a466138e1135cd1149bde279f750b700d349a7a7fcd473272bf"
+  }
+}
