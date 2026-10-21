@@ -9839,3 +9839,42 @@ are not a uniform-revision complete camera/build matrix. This ordinary attack
 course does not exercise the new passive-to-reaction path. The initial passive
 history remains injected/recovered, sound is disabled and FPS is unmeasured.
 Normal Stagger activation and the full M15S4 runtime/input gates remain open.
+
+### Instrumented first-person mouse windup continuation
+
+The ASan/UBSan first-person course now passes uninterrupted-versus-fresh-process
+continuation with the reaction-readmission tested application. Its first save
+has paired Left strike2 at windup with only action2 pending. Each process
+commits exactly one action2 hit, consumes it, and recovers both views.
+All three whole saved/live pairs and both input-owned state/clock comparisons
+match. Completed native resources/bases, combat RNG, ledger, Player inventory
+and all 39,111 initial source reference inventories match the uninterrupted
+reference exactly. An additional audit includes all 39,286 inventories in the
+actual saved windup, including newly captured references; all match in both
+completed paths too.
+
+Both live process environments explicitly record ASan halt-on-error with
+leak detection disabled, UBSan halt-on-error/stacktrace, libasan first in the
+preload chain and DrawThreadPerContext. Both process epochs are gone after
+threaded peaceful shutdown, with no reported sanitizer error. All three saved
+camera flags remain first person and DRAW remains1. Input receipts show one
+mouse down/up in the initial process and none on restart. Both completed images
+were directly reviewed: arms and opponent remain visible without foreground
+torso obstruction or exploding geometry. No original appearance parity is
+claimed.
+
+The first attempted course passed its game scenario but failed the process
+monitor, which was mistakenly hardcoded to the normal executable. It remains
+rejected and retained. A fresh course corrected the monitor's executable with
+unchanged gameplay/numeric gates. An additional inventory-audit script initially
+used the wrong epoch filename; its failed script is retained, and the corrected
+audit reads the immutable captured event paths without changing comparisons.
+[`M15-PASSIVE-SLOT3-MOUSE-SANITIZED-RESTART-VERIFICATION.json`](M15-PASSIVE-SLOT3-MOUSE-SANITIZED-RESTART-VERIFICATION.json)
+pins the final course and both diagnostics.
+
+This is one instrumented first-person same-cached ordinary attack from
+injected/recovered history. The earlier normal first-person checkpoint used
+an earlier binary; a uniform-revision full camera/build matrix is not claimed.
+Sound remains disabled and FPS is configured rather than measured. This does
+not accept normal passive-to-reaction contact, Stagger activation or the full
+M15S4 gamepad/audio/FPS/cancellation/E2E gates. M15S4 remains incomplete.

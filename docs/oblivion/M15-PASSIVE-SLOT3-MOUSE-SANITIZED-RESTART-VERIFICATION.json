@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "status": "ASan/UBSan first-person mouse windup restart matches uninterrupted contact/recovery; full M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "089d03b6cd98819dd7af28c2d0e94905a9c0edd2",
+    "source_fingerprint": "ac5243bb7be7408d70d24745ae7cf3c0c752a08a0d44ccf0bb81c497a96b8671"
+  },
+  "engine_checks": "M15-PASSIVE-SLOT3-REACTION-READMISSION-VERIFICATION.json",
+  "runtime": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/mouse-restart-verification.json",
+    "sha256": "a1f0aae7e05f7da27d5dd72a99b521936060f71603c928d395a8c165613cea77",
+    "result": {
+      "passed": true,
+      "scope": "One ASan/UBSan first-person same-cached Left mouse attack, save in windup, uninterrupted completion versus fresh-process continuation of that exact first save.",
+      "saves": [
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/snapshots/save-3.omwsave",
+          "sha256": "44f402829a9b2d82870ca69e883e5985a332d05a94d9ab57ee438e8374828cbe"
+        },
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/snapshots/save-4.omwsave",
+          "sha256": "371f1207b34b5ff9d33ad5f4f32cef4821df607eebf7d96f0d1770b144ec375b"
+        },
+        {
+          "phase": "second",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/second/snapshots/save-3.omwsave",
+          "sha256": "8eac4fa261ace625dfe80151ada4380e192c7b75c153704e37982605d2b2093f"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_and_clock_comparisons": 2,
+      "fresh_process_epochs": 2,
+      "both_views_windup_and_recovery": true,
+      "old_cause_consumed": true,
+      "exactly_one_action2_hit_per_process": true,
+      "resources_rng_ledger_and_inventories_match": true,
+      "original_reference_inventories_compared": 39111,
+      "original_game_numeric_parity": false,
+      "audio_acceptance": false,
+      "measured_fps": false,
+      "full_M15S4_acceptance": false
+    },
+    "camera_input_environment": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/camera-input-and-environment-verification.json",
+      "sha256": "9b2c3b60636aa4270eff7ec2924ede5d631d90165c152067dcaa46cfec70f7b4",
+      "result": {
+        "passed": true,
+        "rows": [
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/snapshots/save-3.omwsave",
+            "camera": "first",
+            "shared_draw": 1
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/snapshots/save-4.omwsave",
+            "camera": "first",
+            "shared_draw": 1
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/second/snapshots/save-3.omwsave",
+            "camera": "first",
+            "shared_draw": 1
+          }
+        ],
+        "environments": [
+          {
+            "pid": 1046405,
+            "start_ticks": 34000762,
+            "environment": {
+              "OSG_THREADING": "DrawThreadPerContext",
+              "OSG_NOTIFY_LEVEL": "INFO",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          },
+          {
+            "pid": 1046567,
+            "start_ticks": 34028220,
+            "environment": {
+              "OSG_THREADING": "DrawThreadPerContext",
+              "OSG_NOTIFY_LEVEL": "INFO",
+              "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/second/sdl-input.so",
+              "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+              "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+            },
+            "leak_coverage": false
+          }
+        ],
+        "mouse_down_up_exactly_once_first": true,
+        "no_mouse_attack_on_restart": true,
+        "no_reported_sanitizer_error": true,
+        "leak_coverage": false
+      }
+    },
+    "all_windup_inventories": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/all-windup-inventories-verification.json",
+      "sha256": "a3d867ec193fe1043e25484a193d346d46f7321f9bd106003bc3cd8898a5ab58",
+      "result": {
+        "passed": true,
+        "windup_reference_inventories": 39286,
+        "scope": "Every inventory in the actual saved windup, including references newly captured after the initial passive source, matches in both completed paths."
+      }
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/preregistered.json",
+      "sha256": "98ee8019af060c5d347bf593782faf735aff2e092b0042b4e48ce1f9dcbcf737"
+    },
+    "selection": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/restart-selection.json",
+      "sha256": "7cbeb40f40d5940b9f0e8f905ec56ccba5630968aa2e00eaea0553b257bfa346"
+    },
+    "first_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/launcher.json",
+      "sha256": "9a55a1d08a1cb3fb33505bf64b65f84db6b0c30c62e521db8aa06cc6bf30fce7"
+    },
+    "second_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/second/launcher.json",
+      "sha256": "537190c8187b5d9431e5778cf6a2da2b53f29a3d6777ea2f392ef869f8249bbd"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+      "sha256": "a940f1f6a66bc53c0ca2ad7de14f30202b54f2ede0a299d21434a59b22673b18"
+    }
+  },
+  "recipes": {
+    "editable_base": [
+      "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart.json",
+      "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart_continuation.json"
+    ],
+    "base_preparation": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/prepare-base.py",
+      "sha256": "8df994aba978954ef5a5952248aa17485e629ba21d710d909fa11dda8eb2c1bd"
+    },
+    "corrected_epoch_monitor": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/epoch-monitor.py",
+      "sha256": "ebc88b8b927d12805f5b564e48a676c011f698bb91777c12c40971a23fe55652"
+    },
+    "restart_selector": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/select-and-run-second.py",
+      "sha256": "e58f7709613c7de72f8bfba71935fd41708b31c95d0512cd30aa412629d10d90"
+    },
+    "first": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/manifest.json",
+      "sha256": "36c029690c742c60e68bf55beaacb3245467096b6d4d57d7aa44a405bc1af692"
+    },
+    "second": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/continuation.json",
+      "sha256": "16224962844eff3081d1dcf729c732f508ec085f6020790e61e95b5052b93f10"
+    },
+    "verifier": {
+      "path": "scripts/tes4_m15_mouse_restart_verify.py",
+      "sha256": "5377dcad68a19c4c68462ea660fae2396addeaff190e23d874bdf35f3b845207"
+    },
+    "extra_verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/verify-all.py",
+      "sha256": "18863eaf4300a599d4cbaa601614175ed2c84578dcad7790af75274dfb18869a"
+    },
+    "environment_camera_verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/verify-environment-camera.py",
+      "sha256": "b60629076363efee0ddf43268a70edeff848b7b18f0267390d05da376741fc31"
+    }
+  },
+  "visual_review": {
+    "directly_viewed": 2,
+    "paths": [
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/first/uninterrupted-completed-first.png",
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/second/restarted-completed-first.png"
+    ],
+    "scope": "Arms and opponent visible without foreground torso obstruction or exploding geometry. No original motion/lighting/appearance parity."
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-01/diagnostic.json",
+      "sha256": "3a66b022771c75ea93829af083151b20492927a53cc51a912b911c51492e1577",
+      "reason": "Initial copied monitor matched normal executable, so sanitizer process/environment evidence was missing. Scenario passed but full course rejected; fresh02 corrected monitor with unchanged gameplay gates."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-sanitized-first-02/inventory-audit-attempt01.json",
+      "sha256": "16cea3203c0668ffdbab2ac0894d40ff8f91a520eff61d34f1912f33497cf744",
+      "reason": "Extra inventory audit assumed epoch1 live filename for second process. Main restart/camera/environment gates passed. Retained initial script, then used immutable event live paths for unchanged comparisons."
+    }
+  ],
+  "authoring_validation": {
+    "structural": "Existing editable JSON manifests plus declared per-course profile and binary configuration.",
+    "compiler": "No new plugin compilation in this checkpoint; existing pinned fixture plugins reused.",
+    "semantic": "Whole binary-save decode/live equality, input state/clocks, exact native/resource/inventory comparisons.",
+    "runtime": "Two actual instrumented engine processes; exact windup selected for fresh-process continuation."
+  },
+  "limits": [
+    "Injected/recovered starting passive history; one same-cached Left attack.",
+    "Leak detection disabled, sound disabled, FPS configured60 but unmeasured.",
+    "New sanitizer-first and normal-third courses pin the same tested implementation snapshot; earlier normal-first checkpoint pins its earlier binary. No uniform-revision complete camera/build matrix claimed.",
+    "No normal-input passive-to-BlockHit/Recoil contact or normal Stagger activation acceptance.",
+    "Body-only activation and full gamepad/FPS/audio/cancellation/M15S4 E2E gates remain open."
+  ],
+  "full_M15S4_acceptance": false
+}
