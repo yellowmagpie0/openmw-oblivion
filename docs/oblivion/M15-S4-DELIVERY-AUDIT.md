@@ -9916,3 +9916,59 @@ Rendered NPC admission/restart is being pursued separately; this checkpoint
 claims engine/service verification only. Normal Stagger slot0 activation,
 active/cached replacement, the complete input/gamepad/audio/FPS/cancellation
 matrix and full M15S4 E2E acceptance remain open. M15S4 is incomplete.
+
+### NPC body-only admission through normal activation and windup restart
+
+A normal first-person course now exercises body-only admission in the actual
+controller. The pinned source declares consumed passive NPC Left history and
+drawn state. Normal activation runs an authored script that releases the
+fixture restraint and calls StartCombat. The existing deterministic stationary
+production policy selects Left strike2; no script selects an attack or writes
+hits, damage or resources. The first completed save has only action2 pending,
+no NPC FP/passive fields and an easing captured pose with64 tracks.
+
+The initial process continues to two real contacts (actions2 and3), then its
+script stops combat after Fatigue spending. The production intent cleanup
+cancels remaining playback. A fresh process loads the exact first windup save,
+receives no activation input, produces the same two contacts and cancels in
+the same way. Both end with next4, no pending actions, no owned NPC strike,
+reaction, FP, passive or AI intent. The old cause1 never contacts.
+
+All three complete saved/live pairs and both load-owned state/clock comparisons
+match. Windup native resources/bases, combat RNG, Player inventory and all
+39,111 initial reference inventories are unchanged. Completed native values,
+bases, combat RNG, ledger, Player inventory and all39,286 inventories captured
+in the actual windup match the uninterrupted reference exactly. The observed
+NPC Fatigue Damage is -15.600000381469727 and Player Health Damage is
+-1.9907171726226807 in both paths; NPC weapon condition is55.400001525878906.
+These are observed continuation values, not a new original-game damage oracle.
+The saved script fighting local is1 at windup and2 at completion in both paths.
+Both process epochs are gone after threaded peaceful shutdown. Both completed
+images were directly reviewed: NPC sword/body and Player arms are visible
+without torso obstruction or exploding geometry.
+
+Editable overlay/script, saved-state and runtime manifests plus a strict staging
+helper are versioned. Its tests cover whole-wire/opaque preservation, input and
+view rejection, source/target plugin hashes, stale clocks, cause replay and
+existing destination preservation. All378 Python tests pass. The inspected
+replacement SCPT compiles with zero fork diagnostics and keeps its saved local
+layout. The helper reproduces the accepted input byte-for-byte. This is TES4
+fixture generation/readback, fork SCTX compilation, semantic save reinspection
+and actual two-process runtime admission; it is not TES3 OpenMW-CS MCP support
+or a general compiler/world-validator claim.
+
+Setup failures remain explicit: invalid raw phase4 rejected before writing;
+inherited restraint prevented attack policy; an unused walking seed failed its
+declared geometry gate; changed plugin bytes correctly triggered saved content
+fingerprint rejection; and one driver raced incomplete staging before launching
+an engine. The final recipe declares the inspected old/new content identity,
+retains original geometry, releases restraint through normal activation and
+verifies staged bytes before launching. No engine guard or gameplay/numeric
+comparison was relaxed. Sources, final gates and diagnostics are pinned in
+[`M15-NPC-PASSIVE-STRIKE-RUNTIME-VERIFICATION.json`](M15-NPC-PASSIVE-STRIKE-RUNTIME-VERIFICATION.json).
+
+Initial passive history remains injected/recovered. This is one normal-build,
+first-person same-cached source with authored speed20. Instrumented/third-person
+NPC courses, normal Stagger activation, other protocols and the complete
+input/gamepad/FPS/audio/cancellation/E2E matrix remain open. FPS is configured,
+not measured; sound is disabled. M15S4 remains incomplete.

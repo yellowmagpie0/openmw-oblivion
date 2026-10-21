@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "purpose": "Injected recovered NPC slot3 residence. Actual native stationary policy starts attacks after normal activation; not normal Stagger activation.",
+  "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/second/snapshots/save-3.omwsave",
+  "source_sha256": "896c4a0ba19ada4086f5344f1c2eae76157f9de62a915e2a415c7158999e7ea6",
+  "target_schema": 59,
+  "actor": "content:oblivion.esm:01fc43",
+  "actor_clock": 16.99001693725586,
+  "actor_draw_state": 1,
+  "melee_state": {
+    "actor": "content:oblivion.esm:01fc43",
+    "input": {
+      "held_seconds": 0.0,
+      "input_held": false,
+      "prefer_left": true,
+      "queued": 0
+    },
+    "strike": null,
+    "ai_intent": null,
+    "reaction": null,
+    "retiring_sequences": [],
+    "first_person": null,
+    "passive_sequence": {
+      "strike": {
+        "id": 1,
+        "kind": 0,
+        "weapon_base": "content:oblivion.esm:090615",
+        "animation_group": "onehandattackleft",
+        "playback_speed": 20,
+        "animation_time": 0.25,
+        "contact_committed": true,
+        "ordinary_phase": 3,
+        "power_phase": null,
+        "sequence_timing": {
+          "easing": false,
+          "offset": -16.74001693725586,
+          "ease_start": 0.25,
+          "ease_end": 0,
+          "last_input": 0.25,
+          "weighted_time": 0.25,
+          "output_time": 0.25
+        },
+        "pose_snapshot": null
+      }
+    }
+  },
+  "physical_actions": {
+    "next": 2,
+    "pending": []
+  },
+  "process_action": -1,
+  "content_override": {
+    "plugin": "m15cachedblockopponent.esp",
+    "source_fingerprint": "sha256:36f7bc01390da1a303230b5eee216b8d6bed41e1fc27a26e1f1a03d4d28fd8bb",
+    "replacement_fingerprint": "sha256:7f58d3158b9b9491778daed3b13f18cb4061bf3b3ffcc84191736a2c00679ae5"
+  }
+}

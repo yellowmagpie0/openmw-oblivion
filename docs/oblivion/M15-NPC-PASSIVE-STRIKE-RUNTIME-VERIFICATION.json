@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "status": "Body-only NPC passive-strike admission and fresh-process windup continuation accepted for one normal first-person fixture; M15S4 remains incomplete.",
+  "engine_verification": "M15-BODY-SLOT3-STRIKE-ACTIVATION-VERIFICATION.json",
+  "python": {
+    "path": "build/oblivion-compat/m15/S4/native-npc-passive-fixture-python-02/verification.json",
+    "sha256": "127a540e79e345c6faa4c98280c76fb31fa19f76869022914b66458359f0f82c",
+    "tested_source": {
+      "head": "c3aa9a4a6d448053634287334b6f422721e83c3a",
+      "source_fingerprint": "f91ec1105c509aab13dc3097b4de32c4df0aef0735cea24f43ba0e29d6114375"
+    },
+    "result": {
+      "executed": 378,
+      "passed": true,
+      "log_sha256": "8218a1312e2373e9d1d142b4a844193ffa48ff8b69753f86035e74022e006cfb"
+    }
+  },
+  "authoring_validation": {
+    "structural": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-activation-assets-01/fixture-report.json",
+      "sha256": "a4bd076bbb73256256253bdd7cd2d9f5f9856e23b65b0627cb06acdbf1d9d1a7"
+    },
+    "source_script": {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_opponent.obscript",
+      "sha256": "afc327866eb2fc897bd834034823102379854df78c11fd4674a70051192d903e"
+    },
+    "source_overlay_recipe": {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_opponent_fixture.json",
+      "sha256": "378d113e218b28eca1bf719912092d079f7b07492e35d023ce67c10fc849204f"
+    },
+    "compiler_report": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-activation-assets-01/obscript-report.json",
+      "sha256": "5c81d3007e9a9d2555e42fb4fd25a56daaeb59079992d5dcfac15672d341f56e"
+    },
+    "new_unit": {
+      "id": "content:m15stationaryopponent.esp:000881@m15cachedblockopponent.esp/object/unit=0",
+      "diagnostics": [],
+      "static_calls": [
+        "setrestrained",
+        "startcombat",
+        "getav",
+        "stopcombat"
+      ]
+    },
+    "compiler_scope": "Fork TES4 SCTX compilation; no OpenMW-CS MCP/TES3 authoring or general compiler/world-validator claim.",
+    "semantic": "Existing TES4 builder verifies NPC/style/local-layout preservation and weapon speed20. Saved-state helper changes only NPC draw/history and declared exact plugin fingerprint.",
+    "source_state_recipe": {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json",
+      "sha256": "31b6506a600ca1f59f043eada555780f46772b6393fe58678531ebde0b9a9dff"
+    },
+    "staging": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/staged-input.staging.json",
+      "sha256": "1370720127d45667f9ce477869390df936a5e570fbbcd36a06e75c7574ac58ac"
+    },
+    "reproduction": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/input-reproduction-verification.json",
+      "sha256": "ea0ec2413dee6b95b7ca9aca677bacce9535b0cae52c0fa6c6681f7cc3956d9c",
+      "result": {
+        "passed": true,
+        "canonical_recipe": "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json",
+        "sha256": "4b706dca5ed76687133f68b5b16457f3648b14e1ffb0aaff2758dc9c9fde63eb",
+        "byte_identical_to_runtime_input": true
+      }
+    }
+  },
+  "runtime": {
+    "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/npc-passive-restart-verification.json",
+    "sha256": "7b41a6f7b6f305ff31332550aea75969f3cbe7895f89d5ac313dfc00d34d7ee6",
+    "result": {
+      "passed": true,
+      "scope": "Normal interaction activates the existing stationary NPC production policy after injected/recovered passive Left history; compare uninterrupted two-contact completion against exact first windup restart.",
+      "saves": [
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/snapshots/save-3.omwsave",
+          "sha256": "d97548aac993767319be43f7775ded8517af60169065b8d694003ccc246d0376"
+        },
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/snapshots/save-4.omwsave",
+          "sha256": "7be27e54e6e1fa9453a49d6702c604860778f3bed632b77f73855d04bfbbde03"
+        },
+        {
+          "phase": "second",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/second/snapshots/save-3.omwsave",
+          "sha256": "f8b3e3e0be638a89d61cbb94f6ed600da8315ecc93be1623940401f581462ded"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_clock_comparisons": 2,
+      "body_only_captured_windup_tracks": 64,
+      "normal_activation_first_only": true,
+      "production_policy_two_contacts_per_process": true,
+      "old_cause_never_contacts": true,
+      "windup_native_resources_bases_rng_inventories_exact": true,
+      "completed_resources_rng_ledger_inventories_equal_reference": true,
+      "source_inventories": 39111,
+      "all_windup_inventories": 39286,
+      "observed_resource_deltas": [
+        {
+          "actor": "content:oblivion.esm:01fc43",
+          "actor_value": 10,
+          "before": [
+            155.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "after": [
+            155.0,
+            0.0,
+            0.0,
+            -15.600000381469727
+          ]
+        },
+        {
+          "actor": "dynamic:player:0000000000000001",
+          "actor_value": 8,
+          "before": [
+            80.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "after": [
+            80.0,
+            0.0,
+            0.0,
+            -1.9907171726226807
+          ]
+        }
+      ],
+      "stopcombat_cancels_remaining_playback": true,
+      "draw_threads_stopped_before_peaceful_exit": true,
+      "both_epochs_gone": true,
+      "original_game_numeric_parity": false,
+      "full_M15S4_acceptance": false
+    },
+    "script_and_weapon": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/script-and-weapon-verification.json",
+      "sha256": "2283118cbceb6fabecdc4547dd60d57f4bf73b905a8345472b7853c9d5a8f83b",
+      "result": {
+        "passed": true,
+        "rows": [
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/snapshots/save-3.omwsave",
+            "fighting_local": 1,
+            "weapon_condition": 56
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/snapshots/save-4.omwsave",
+            "fighting_local": 2,
+            "weapon_condition": 55.400001525878906
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/second/snapshots/save-3.omwsave",
+            "fighting_local": 2,
+            "weapon_condition": 55.400001525878906
+          }
+        ],
+        "source_of_weapon_expectation": "Observed uninterrupted reference and existing fixture wear checkpoint; not a new original-game numerical oracle."
+      }
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/preregistered.json",
+      "sha256": "089ff0322e430112a0bd93ab26dcfbc7d122110bb4a59de79de9b0bdb0f92e01"
+    },
+    "selection": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/restart-selection.json",
+      "sha256": "319fa78fd47333dc7ff85f46bd327d21a0c50b96fd9570553f2079d2a507d005"
+    },
+    "first_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/launcher.json",
+      "sha256": "2b0342ec2ceae74cfb70888f06395456132e13fb9299ab63df472120c850bf11"
+    },
+    "second_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/second/launcher.json",
+      "sha256": "797301b99ad6f8ee819e0950e553fc2bc0d2b606d37eef434292856c79eba5ed"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "1647d671427ca4086ae40fbdcf855f64fa794a2ff442badd8d39a2564403bc98"
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/verify.py",
+      "sha256": "5f96a0035bd126dce9f41b4606082b3fc7a876deba96bb788453215f2547f980"
+    }
+  },
+  "source_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_passive_strike.json",
+      "sha256": "d27925c8ca7bbe2a5920309fda2ad3d69df1dcc13ea1178ba4ba5a999dc5a6d4"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_passive_strike_continuation.json",
+      "sha256": "6c5387af96d8f62f15c090a4bf8e78b7ae09acd45079cab7af81c4011b76df27"
+    }
+  ],
+  "visual_review": {
+    "directly_viewed": 2,
+    "paths": [
+      "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/first/npc-uninterrupted-completed-first.png",
+      "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-05/second/npc-restarted-completed-first.png"
+    ],
+    "scope": "NPC sword/body and first-person arms visible without torso obstruction or exploding geometry; no quantitative original motion/lighting/appearance parity."
+  },
+  "retained_diagnostics": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-01/diagnostic.json",
+      "sha256": "0c9f7074203f44e68c3b27a583c515396df6de4c5d5f003522a2e6b3b3327382"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-02/diagnostic.json",
+      "sha256": "e127ff473836101a1ea2318ea9ef84563c7643dc083e91098690cf3a957e4a3a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-03/diagnostic.json",
+      "sha256": "f72d170586438fd6b8cff8098738f9775c4250c4d3cbd25113539fe563255356"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-strike-runtime-normal-first-04/diagnostic.json",
+      "sha256": "3fa39dc36f3a01be87603ebe41fed319020c01b222cec108887b6b6c159595ba"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-npc-passive-near-seed-normal-01/diagnostic.json",
+      "sha256": "aa05799faf7c0e3071b2442d73fc0687ed280e02056aed66b6eff998b637dd4b"
+    }
+  ],
+  "diagnostic_summary": [
+    "Prototype01 encoder rejected invalid raw phase4; named End is3. No runtime launch.",
+    "Prototype02 inherited restrained=true, so normal StartCombat did not enter attack policy. Diagnostic F5/quit; not accepted.",
+    "Unused normal-walk seed failed its declared90-unit center-distance gate. Not selected. Native acquisition uses collision radii, so original geometry was retained.",
+    "Prototype03 correctly rejected old saved content fingerprint after private SCPT changed. Explicit declared replacement fingerprint in the fixture resolves this without weakening engine validation.",
+    "Prototype04 driver raced incomplete staging and failed before an engine launch. Final05 required staging readback/hash before launch."
+  ],
+  "limits": [
+    "NPC old passive strike/drawn state and consumed cause are injected. No normal Stagger activation or historical original cause-chain proof.",
+    "One normal first-person same-cached Left source; no sanitized/third-person NPC runtime matrix or Creature acceptance claimed.",
+    "Authored speed20 deterministic stationary style; activation only releases restraint and starts combat, with no scripted hits, damage, resources or attack selection.",
+    "StopCombat cancels remaining playback after two real contacts; not natural animation recovery of the final strike.",
+    "Sound disabled, configured60-FPS cap unmeasured; no audio or original-game numeric/appearance parity.",
+    "Normal Stagger slot0 activation/cached replacement and full input/gamepad/FPS/audio/cancellation/M15S4 E2E matrix remain open."
+  ],
+  "full_M15S4_acceptance": false
+}
