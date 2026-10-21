@@ -41,7 +41,7 @@ namespace ESM4
     // v47 carries exact native dropped-item relation extras on references.
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 58;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 59;
 
     struct RuntimeContentIdentity
     {
@@ -614,6 +614,16 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeRetiringMeleeSequence&, const RuntimeRetiringMeleeSequence&) = default;
     };
+    // A resident native slot3 can outlive its process/contact ownership when
+    // Stagger takes slot0. Retain its protocol, not an invented ease-out.
+    struct RuntimePassiveMeleeSequence
+    {
+        std::variant<RuntimeMeleeStrike, RuntimeMeleeReaction> mSequence;
+        std::uint64_t cause() const;
+        std::string_view group() const;
+        void validate() const;
+        friend bool operator==(const RuntimePassiveMeleeSequence&, const RuntimePassiveMeleeSequence&) = default;
+    };
     struct RuntimeFirstPersonMeleeState
     {
         // The Player mirror owns its clock even between reactions. Its direct
@@ -624,6 +634,7 @@ namespace ESM4
         // strike. Contact authority and process action remain on the body.
         std::optional<RuntimeMeleeStrike> mStrike = std::nullopt;
         std::vector<RuntimeRetiringMeleeSequence> mRetiringSequences = {};
+        std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
     };
@@ -640,6 +651,7 @@ namespace ESM4
         // v57: separate Player first-person ownership; legacy saves have no
         // invented mirror or clock. The body alone owns the process action.
         std::optional<RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
+        std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

@@ -2249,6 +2249,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_melee_retirement(migrated)
         state_io._upgrade_melee_pose_snapshots(migrated)
         state_io._upgrade_first_person_melee(migrated)
+        state_io._upgrade_passive_melee(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
@@ -3264,6 +3265,95 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         corrupt["schema_version"] = 56
         with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_first_person_melee(corrupt)
 
+
+    def passive_sequence_state(self, protocol=0):
+        state = self.first_person_strike_state()
+        state_io._upgrade_passive_melee(state)
+        state["schema_version"] = 59
+        melee = state["native_melee_states"][0]
+        for view in (melee, melee["first_person"]):
+            source = view["strike"]
+            source["playback_speed"] = struct.unpack("<f", struct.pack("<f", source["playback_speed"]))[0]
+            view["strike"] = None
+            view["reaction"] = {"contact_id": 4, "kind": 2, "animation_group": "stagger",
+                "animation_time": 0., "started": False, "inactive": False, "pose_snapshot": None,
+                "sequence_timing": {"easing": False, "offset": None, "ease_start": None,
+                    "last_input": None, "ease_end": 0., "weighted_time": 0., "output_time": 0.},
+                "retirement": None}
+            if protocol in (0, 3):
+                source["contact_committed"] = False
+                if protocol == 3:
+                    source.update(animation_time=0., ordinary_phase=0,
+                        sequence_timing={"easing": True, "offset": 0., "ease_start": None, "last_input": None,
+                            "ease_end": .125, "weighted_time": 0., "output_time": 0.},
+                        pose_snapshot={"destination_frame": 0., "tracks": [{"bone": "Bip01",
+                            "translation": [1., 2., 3.], "rotation": [1., 0., 0., 0.], "scale": 1., "priority": 9}]})
+                view["passive_sequence"] = {"strike": source}
+            else:
+                reaction = copy.deepcopy(view["reaction"])
+                reaction.update(contact_id=3, kind=0 if protocol in (1, 4) else 1,
+                    animation_group="blockhit" if protocol in (1, 4) else "recoil", started=True,
+                    animation_time=source["animation_time"], sequence_timing=source["sequence_timing"])
+                if protocol == 4:
+                    reaction.update(started=False, animation_time=0.,
+                        sequence_timing={"easing": True, "offset": 0., "ease_start": None, "last_input": None,
+                            "ease_end": .125, "weighted_time": 0., "output_time": 0.},
+                        pose_snapshot={"destination_frame": 0., "tracks": [{"bone": "Bip01",
+                            "translation": [1., 2., 3.], "rotation": [1., 0., 0., 0.], "scale": 1., "priority": 9}]})
+                view["passive_sequence"] = {"reaction": reaction}
+        next(x for x in state["native_actor_values"] if x["actor"] == state["player"]["reference"])["process_action"] = 8
+        return state
+
+    def test_passive59_roundtrip_retains_slot3_protocols_and_independent_views(self):
+        for protocol in range(5):
+            for mask in range(1, 4):
+                for recovered in (False, True):
+                    with self.subTest(protocol=protocol, mask=mask, recovered=recovered):
+                        state = self.passive_sequence_state(protocol)
+                        melee = state["native_melee_states"][0]
+                        if not mask & 1: melee["passive_sequence"] = None
+                        if not mask & 2: melee["first_person"]["passive_sequence"] = None
+                        if recovered:
+                            melee["reaction"] = melee["first_person"]["reaction"] = None
+                            next(x for x in state["native_actor_values"] if x["actor"] == state["player"]["reference"])["process_action"] = -1
+                        loaded = state_io.decode_payload(state_io.encode_payload(state))
+                        self.assertEqual(loaded["native_melee_states"], state["native_melee_states"])
+                        self.assertEqual(loaded["physical_actions"], state["physical_actions"])
+                        self.assertEqual(loaded["physical_action_owners"], state["physical_action_owners"])
+
+    def test_passive59_rejects_replay_bad_union_slot_conflict_and_wire_tags(self):
+        changes = [
+            lambda s, m: m["passive_sequence"]["strike"].update(id=2),
+            lambda s, m: m["first_person"]["passive_sequence"]["strike"].update(id=5),
+            lambda s, m: m["passive_sequence"]["strike"].update(sequence_timing=None),
+            lambda s, m: m.update(passive_sequence={"reaction": copy.deepcopy(m["reaction"])}),
+            lambda s, m: m["first_person"].update(passive_sequence={"reaction": copy.deepcopy(m["first_person"]["reaction"])}),
+            lambda s, m: m.update(strike=copy.deepcopy(m["passive_sequence"]["strike"])),
+            lambda s, m: m["first_person"].update(strike=copy.deepcopy(m["first_person"]["passive_sequence"]["strike"])),
+            lambda s, m: m["passive_sequence"].update(reaction=copy.deepcopy(m["reaction"])),
+            lambda s, m: m.update(passive_sequence={}),
+            lambda s, m: m.update(passive_sequence={"strike": None}),
+            lambda s, m: s.update(native_animation_clocks=[]),
+            lambda s, m: s.update(schema_version=58),
+        ]
+        for change in changes:
+            state = self.passive_sequence_state()
+            change(state, state["native_melee_states"][0])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.passive_sequence_state()
+        payload = state_io.encode_payload(state)
+        # Two distinct passive records begin with tag1 / cause3 / kind0.
+        marker = struct.pack("<BQB", 1, 3, 0) + struct.pack("<I", 4) + b"null"
+        positions = [i for i in range(len(payload)) if payload.startswith(marker, i)]
+        self.assertEqual(len(positions), 2)
+        for offset in positions:
+            bad = bytearray(payload); bad[offset] = 3
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        legacy = self.first_person_strike_state()
+        self.assertNotIn("passive_sequence", state_io.decode_payload(state_io.encode_payload(legacy))["native_melee_states"][0])
+        state_io._upgrade_passive_melee(legacy)
+        self.assertIsNone(legacy["native_melee_states"][0]["passive_sequence"])
+        self.assertIsNone(legacy["native_melee_states"][0]["first_person"]["passive_sequence"])
 
     def first_person_strike_state(self):
         state = self.first_person_melee_state()

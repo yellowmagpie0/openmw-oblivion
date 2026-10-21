@@ -9536,3 +9536,41 @@ ownership; retiring/ease-out history alone does not model a retained state1 slot
 [`M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json`](M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json)
 pins the independent probes and concrete source gaps. No production schema or
 parallel-Stagger acceptance is claimed by this checkpoint. M15S4 remains open.
+
+### Passive slot3 schema59 contract
+
+The save contract now separates a resident slot3 protocol from its former
+process/contact authority. Each body and first-person view can retain an optional
+passive strike or BlockHit/Recoil record, including its complete timing, phase,
+sampled time and captured pose. Stagger remains the primary slot0 reaction;
+passive slot3 can remain after that primary owner recovers. A passive cause must
+already be consumed/canceled and cannot be pending. It grants no new action.
+
+Schema59 appends explicit absent/strike/reaction tags after the existing melee
+record, with the first-person tag present only when that view exists. Earlier
+versions retain their exact layout and JSON key set. Migration adds absent
+passive defaults without inventing history. Validation rejects future/pending
+causes, absent clocks, inactive/dead owners, untimed strikes, Stagger in slot3,
+primary slot3 conflicts, premature inactive retirement, bow conflicts, bad tags
+and unsupported legacy fields.
+
+Full normal checks pass2976 component and364 Python tests; the separate ASan/UBSan
+ESM4 selection passes829 cases, all with exact inventories and frozen sources.
+Thirty complete C++ payloads and JSON states independently decode, validate and
+reencode byte for byte in Python. They cover ordinary, BlockHit, Recoil, captured
+strike and captured reaction, either/both views, and active/recovered Stagger.
+Initial helper-promotion and binary32 fixture errors are retained; the final
+checks include the corrected migration boundaries and captured variants.
+
+The editable cached-idle and strike-tail recipes now target59. Actual current
+46->59->unarmed59 and historical57/58->unarmed59 paths produce byte-identical
+strike-tail saves, preserving all other decoded resources/inventories apart
+from the declared fixture changes and empty defaults. This is structural write
+and semantic reinspection, not compiler/world or runtime acceptance.
+
+[`M15-PASSIVE-SLOT3-SCHEMA59-VERIFICATION.json`](M15-PASSIVE-SLOT3-SCHEMA59-VERIFICATION.json)
+pins the contract, checks, wire proof, regenerated inputs and remaining work.
+Service contact publication, passive clock/renderer advancement, replacement,
+cancellation and actual schema59 engine/runtime acceptance remain to be wired.
+The successful torso-filter matrix used schema58 applications. Full M15S4 is
+still incomplete; this checkpoint establishes its needed persisted state model.

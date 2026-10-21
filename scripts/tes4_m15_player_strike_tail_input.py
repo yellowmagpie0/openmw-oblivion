@@ -20,9 +20,9 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     actors = ['content:oblivion.esm:01fc43', 'content:oblivion.esm:026be1', 'content:oblivion.esm:15985a']
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
-            or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58)
-            or type(recipe['target_schema']) is not int or recipe['target_schema'] != 58
-            or runtime.CURRENT_VERSION != 58 or recipe['restrained_actors'] != actors
+            or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58, 59)
+            or type(recipe['target_schema']) is not int or recipe['target_schema'] != 59
+            or runtime.CURRENT_VERSION != 59 or recipe['restrained_actors'] != actors
             or recipe['weapon_base'] != 'content:oblivion.esm:090615'):
         raise ValueError('unsupported Player strike-tail input recipe')
     if output.exists():
@@ -34,6 +34,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (original['schema_version'] != recipe['source_schema'] or original['physical_actions'] != {'next': 2, 'pending': []}
             or any(a['process_action'] != -1 for a in original['native_actor_values'])
             or any(a['strike'] or a['reaction'] or a['retiring_sequences'] or a['first_person']
+                   or a.get('passive_sequence')
                    for a in original['native_melee_states'])):
         raise ValueError('Player strike-tail source must have known idle native state')
     state = copy.deepcopy(original)
@@ -51,7 +52,8 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     output.parent.mkdir(parents=True, exist_ok=True)
     runtime.write_save(source, output, state)
     expected = copy.deepcopy(state)
-    expected['schema_version'] = 58
+    runtime._upgrade_passive_melee(expected)
+    expected['schema_version'] = 59
     if runtime.load_save(output) != expected:
         raise ValueError('Player strike-tail output differs outside declared fixture fields')
     if hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
@@ -59,7 +61,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     report = dict(structural_write_success=True, semantic_reinspection_passed=True,
                   source=str(source), source_sha256=source_hash,
                   output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
-                  source_schema=recipe['source_schema'], target_schema=58,
+                  source_schema=recipe['source_schema'], target_schema=59,
                   mutations=dict(player_weapon_equipped_slots=[65536, 0], npc_restrained=changes),
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False)

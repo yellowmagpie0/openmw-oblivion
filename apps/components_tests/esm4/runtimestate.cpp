@@ -4551,3 +4551,125 @@ TEST(ESM4RuntimeState, CapturedReactionRetainsRequestedOffsetBeforeBothViewAncho
             }
     }
 }
+
+namespace
+{
+    ESM4::RuntimeState passiveSequenceState(unsigned protocol)
+    {
+        auto state = firstPersonStrikeState();
+        state.mVersion = 59;
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        const auto body = *melee.mStrike;
+        const auto first = *melee.mFirstPerson->mStrike;
+        melee.mStrike.reset();
+        melee.mFirstPerson->mStrike.reset();
+        melee.mReaction = ESM4::RuntimeMeleeReaction{4, ESM4::MeleeReactionKind::Stagger, "stagger"};
+        melee.mFirstPerson->mReaction = melee.mReaction;
+        const auto passive = [&](const ESM4::RuntimeMeleeStrike& source) {
+            if (protocol == 0 || protocol == 3)
+            {
+                auto strike = source;
+                strike.mContactCommitted = false; // Canceled, not granted a new contact.
+                if (protocol == 3)
+                {
+                    strike.mAnimationTime = 0;
+                    strike.mOrdinaryPhase = ESM4::OrdinaryMeleePhase::Start;
+                    strike.mSequenceTiming = ESM4::MeleeSequenceTiming{.mEasing = true, .mOffset = 0.f, .mEaseEnd = .125f};
+                    strike.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+                        {{"Bip01", {1, 2, 3}, {1, 0, 0, 0}, 1, 9}}};
+                }
+                return ESM4::RuntimePassiveMeleeSequence{strike};
+            }
+            const bool block = protocol == 1 || protocol == 4;
+            ESM4::RuntimeMeleeReaction reaction{3, block ? ESM4::MeleeReactionKind::BlockHit
+                : ESM4::MeleeReactionKind::Recoil, block ? "blockhit" : "recoil"};
+            reaction.mStarted = true;
+            reaction.mAnimationTime = source.mAnimationTime;
+            reaction.mSequenceTiming = *source.mSequenceTiming;
+            if (protocol == 4)
+            {
+                reaction.mStarted = false;
+                reaction.mAnimationTime = 0;
+                reaction.mSequenceTiming = {.mEasing = true, .mOffset = 0.f, .mEaseEnd = .125f};
+                reaction.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+                    {{"Bip01", {1, 2, 3}, {1, 0, 0, 0}, 1, 9}}};
+            }
+            return ESM4::RuntimePassiveMeleeSequence{reaction};
+        };
+        melee.mPassiveSequence = passive(body);
+        melee.mFirstPerson->mPassiveSequence = passive(first);
+        state.mNativeActorValues.back().mProcessAction = 8;
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, Passive59PreservesSlot3ProtocolsIndependentOfStaggerAndRecovery)
+{
+    for (unsigned protocol = 0; protocol < 5; ++protocol)
+        for (unsigned mask = 1; mask < 4; ++mask)
+            for (bool recovered : {false, true})
+            {
+                auto state = passiveSequenceState(protocol);
+                auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+                if (!(mask & 1)) melee.mPassiveSequence.reset();
+                if (!(mask & 2)) melee.mFirstPerson->mPassiveSequence.reset();
+                if (recovered)
+                {
+                    melee.mReaction.reset();
+                    melee.mFirstPerson->mReaction.reset();
+                    state.mNativeActorValues.back().mProcessAction = -1;
+                }
+                const auto bytes = state.serializeBinary();
+                auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+                EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+                EXPECT_EQ(loaded.mPhysicalActions, state.mPhysicalActions);
+                EXPECT_EQ(loaded.mPhysicalActionOwners, state.mPhysicalActionOwners);
+                std::string wire;
+                constexpr char hex[] = "0123456789abcdef";
+                for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+                const auto key = std::to_string(protocol) + "_" + std::to_string(mask) + "_" + std::to_string(recovered);
+                RecordProperty("passive59_hex_" + key, wire);
+                RecordProperty("passive59_json_" + key, state.canonicalJson());
+            }
+}
+
+TEST(ESM4RuntimeState, Passive59RejectsPendingCausesForeignOwnershipAndSlotConflicts)
+{
+    const auto valid = passiveSequenceState(0);
+    const auto reject = [&](auto change) {
+        auto state = valid;
+        auto& melee = state.mNativeMeleeStates.at(state.mPlayer.mReference);
+        change(state, melee);
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto& s, auto&) { s.mVersion = 58; });
+    reject([](auto& s, auto&) { s.mNativeAnimationClocks.clear(); });
+    reject([](auto& s, auto&) { s.mNativeActorValues.back().mProcess = ESM4::ActorValueProcess::Low; });
+    reject([](auto&, auto& m) { std::get<ESM4::RuntimeMeleeStrike>(m.mPassiveSequence->mSequence).mActionId = 2; });
+    reject([](auto& s, auto& m) { std::get<ESM4::RuntimeMeleeStrike>(m.mPassiveSequence->mSequence).mActionId = s.mPhysicalActions.mNext; });
+    reject([](auto&, auto& m) { std::get<ESM4::RuntimeMeleeStrike>(m.mFirstPerson->mPassiveSequence->mSequence).mActionId = 5; });
+    reject([](auto&, auto& m) { std::get<ESM4::RuntimeMeleeStrike>(m.mPassiveSequence->mSequence).mSequenceTiming.reset(); });
+    reject([](auto&, auto& m) { m.mPassiveSequence->mSequence = *m.mReaction; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mPassiveSequence->mSequence = *m.mFirstPerson->mReaction; });
+    reject([](auto&, auto& m) { m.mStrike = std::get<ESM4::RuntimeMeleeStrike>(m.mPassiveSequence->mSequence); });
+    reject([](auto&, auto& m) { m.mFirstPerson->mStrike = std::get<ESM4::RuntimeMeleeStrike>(m.mFirstPerson->mPassiveSequence->mSequence); });
+    reject([](auto&, auto& m) { m.mReaction->mKind = ESM4::MeleeReactionKind::Recoil; });
+    reject([](auto&, auto& m) { m.mFirstPerson->mReaction->mKind = ESM4::MeleeReactionKind::BlockHit; });
+    const auto bytes = valid.serializeBinary();
+    const std::array<std::uint8_t, 18> marker{1, 3,0,0,0,0,0,0,0, 0, 4,0,0,0, 'n','u','l','l'};
+    unsigned tags = 0;
+    for (auto it = std::search(bytes.begin(), bytes.end(), marker.begin(), marker.end()); it != bytes.end();
+         it = std::search(it + 1, bytes.end(), marker.begin(), marker.end()))
+    {
+        auto corrupt = bytes;
+        corrupt[it - bytes.begin()] = 3;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+        ++tags;
+    }
+    EXPECT_EQ(tags, 2u);
+    auto legacy = firstPersonStrikeState();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+    EXPECT_FALSE(loaded.mNativeMeleeStates.begin()->second.mPassiveSequence);
+    EXPECT_FALSE(loaded.mNativeMeleeStates.begin()->second.mFirstPerson->mPassiveSequence);
+    EXPECT_EQ(loaded.canonicalJson().find("passive_sequence"), std::string::npos);
+}

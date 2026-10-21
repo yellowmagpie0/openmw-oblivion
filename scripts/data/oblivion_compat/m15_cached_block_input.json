@@ -4,7 +4,7 @@
   "source": "build/oblivion-compat/m15/S4/equipped-block-runtime-normal-02/staged-input.omwsave",
   "source_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
   "source_schema": 46,
-  "target_schema": 58,
+  "target_schema": 59,
   "old_unit": "content:m15stationaryopponent.esp:000881@m15stationaryopponent.esp/object/unit=0",
   "new_unit": "content:m15stationaryopponent.esp:000881@m15cachedblockopponent.esp/object/unit=0",
   "context": "content:oblivion.esm:01fc43",

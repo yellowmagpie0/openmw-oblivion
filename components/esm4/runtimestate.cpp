@@ -1188,6 +1188,29 @@ namespace ESM4
             throw std::runtime_error("Uninitialized TES4 retiring sequence with anchored retirement");
     }
 
+    std::uint64_t RuntimePassiveMeleeSequence::cause() const
+    {
+        if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&mSequence)) return strike->mActionId;
+        return std::get<RuntimeMeleeReaction>(mSequence).mContactId;
+    }
+
+    std::string_view RuntimePassiveMeleeSequence::group() const
+    {
+        return std::visit([](const auto& sequence) -> std::string_view { return sequence.mAnimationGroup; }, mSequence);
+    }
+
+    void RuntimePassiveMeleeSequence::validate() const
+    {
+        std::visit([](const auto& sequence) { sequence.validate(); }, mSequence);
+        if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&mSequence))
+        {
+            if (!strike->mSequenceTiming)
+                throw std::runtime_error("Passive TES4 strike requires native timing");
+        }
+        else if (std::get<RuntimeMeleeReaction>(mSequence).mKind == MeleeReactionKind::Stagger)
+            throw std::runtime_error("Passive TES4 slot3 cannot contain Stagger slot0");
+    }
+
     void RuntimeFirstPersonMeleeState::validate() const
     {
         if (!std::isfinite(mClock) || mClock < 0)
@@ -1195,6 +1218,12 @@ namespace ESM4
         if (mRetiringSequences.size() > sMaximumCollectionSize)
             throw std::runtime_error("Too many TES4 first-person retiring sequences");
         for (const auto& sequence : mRetiringSequences) sequence.validate();
+        if (mPassiveSequence)
+        {
+            mPassiveSequence->validate();
+            if (mStrike || (mReaction && mReaction->mKind != MeleeReactionKind::Stagger))
+                throw std::runtime_error("Conflicting TES4 first-person slot3 ownership");
+        }
         if (mStrike)
         {
             mStrike->validate();
@@ -1218,6 +1247,12 @@ namespace ESM4
         if (mAiIntent) mAiIntent->validate();
         if (mReaction) mReaction->validate();
         if (mFirstPerson) mFirstPerson->validate();
+        if (mPassiveSequence)
+        {
+            mPassiveSequence->validate();
+            if (mStrike || (mReaction && mReaction->mKind != MeleeReactionKind::Stagger))
+                throw std::runtime_error("Conflicting TES4 slot3 ownership");
+        }
         if (mRetiringSequences.size() > sMaximumCollectionSize)
             throw std::runtime_error("Too many TES4 retiring melee sequences");
         for (const auto& sequence : mRetiringSequences) sequence.validate();
@@ -1533,7 +1568,7 @@ namespace ESM4
         std::map<ESM::FormKey, const RuntimeActorValues*> reactionValues;
         if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mReaction || entry.second.mFirstPerson
-                    || !entry.second.mRetiringSequences.empty(); }))
+                    || entry.second.mPassiveSequence || !entry.second.mRetiringSequences.empty(); }))
             for (const auto& values : mNativeActorValues) reactionValues.emplace(values.mActor, &values);
         std::set<std::uint64_t> meleeIds;
         for (const auto& [actor, melee] : mNativeMeleeStates)
@@ -1542,6 +1577,23 @@ namespace ESM4
             const auto life = lives.find(actor);
             if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive)
                 throw std::runtime_error("Dangling or incapacitated TES4 melee state owner");
+            const auto validatePassive = [&](const std::optional<RuntimePassiveMeleeSequence>& passive, float clock) {
+                if (!passive) return;
+                const auto values = reactionValues.find(actor);
+                if (mVersion < 59 || !mNativeAnimationClocks.contains(actor)
+                    || passive->cause() >= mPhysicalActions.mNext || pendingActions.contains(passive->cause())
+                    || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active)
+                    throw std::runtime_error("Unowned, replaying or unsupported TES4 passive sequence");
+                if (const auto* reaction = std::get_if<RuntimeMeleeReaction>(&passive->mSequence);
+                    reaction && reaction->mInactive && reaction->mRetirement
+                    && clock < static_cast<float>(double(*reaction->mRetirement->mStartClock)
+                        + reaction->mRetirement->mDuration))
+                    throw std::runtime_error("Premature TES4 passive reaction deactivation");
+            };
+            const auto clock = mNativeAnimationClocks.find(actor);
+            validatePassive(melee.mPassiveSequence, clock == mNativeAnimationClocks.end() ? 0.f : clock->second);
+            if (melee.mFirstPerson)
+                validatePassive(melee.mFirstPerson->mPassiveSequence, melee.mFirstPerson->mClock);
             if (melee.mAiIntent)
             {
                 const auto& target = melee.mAiIntent->mTarget;
@@ -1633,8 +1685,9 @@ namespace ESM4
             if (!nativeActors.contains(actor) || life == lives.end()
                 || life->second->mPhase != ActorLifePhase::Alive || !mNativeAnimationClocks.contains(actor)
                 || (melee != mNativeMeleeStates.end() && (melee->second.mStrike || melee->second.mReaction
+                    || melee->second.mPassiveSequence
                     || (melee->second.mFirstPerson && (melee->second.mFirstPerson->mReaction
-                        || melee->second.mFirstPerson->mStrike))))
+                        || melee->second.mFirstPerson->mStrike || melee->second.mFirstPerson->mPassiveSequence))))
                 || !meleeIds.insert(bow.mActionId).second || bow.mActionId >= mPhysicalActions.mNext
                 || (bow.mReleaseCommitted ? pending
                     : !pending || owner == mPhysicalActionOwners.end() || owner->second != actor))
@@ -2472,6 +2525,13 @@ namespace ESM4
                     }
                 };
                 if (melee.mStrike) writeStrike(*melee.mStrike);
+                const auto writePassive = [&](const std::optional<RuntimePassiveMeleeSequence>& passive) {
+                    writer.integer<std::uint8_t>(!passive ? 0
+                        : std::holds_alternative<RuntimeMeleeStrike>(passive->mSequence) ? 1 : 2);
+                    if (!passive) return;
+                    if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&passive->mSequence)) writeStrike(*strike);
+                    else writeMeleeReaction(writer, std::get<RuntimeMeleeReaction>(passive->mSequence), mVersion);
+                };
                 if (mVersion >= 28)
                 {
                     writer.integer<std::uint8_t>(melee.mAiIntent.has_value());
@@ -2525,6 +2585,11 @@ namespace ESM4
                             writeRetiring(melee.mFirstPerson->mRetiringSequences);
                         }
                     }
+                }
+                if (mVersion >= 59)
+                {
+                    writePassive(melee.mPassiveSequence);
+                    if (melee.mFirstPerson) writePassive(melee.mFirstPerson->mPassiveSequence);
                 }
             }
         }
@@ -3452,6 +3517,20 @@ namespace ESM4
                     if (result.mVersion >= 58 && boolean()) firstPerson.mStrike = readStrike();
                     if (result.mVersion >= 58) firstPerson.mRetiringSequences = readRetiring();
                     melee.mFirstPerson = std::move(firstPerson);
+                }
+                if (result.mVersion >= 59)
+                {
+                    const auto readPassive = [&]() -> std::optional<RuntimePassiveMeleeSequence> {
+                        switch (reader.integer<std::uint8_t>())
+                        {
+                            case 0: return {};
+                            case 1: return RuntimePassiveMeleeSequence{readStrike()};
+                            case 2: return RuntimePassiveMeleeSequence{readMeleeReaction(reader, result.mVersion)};
+                            default: throw std::runtime_error("Invalid TES4 passive sequence tag");
+                        }
+                    };
+                    melee.mPassiveSequence = readPassive();
+                    if (melee.mFirstPerson) melee.mFirstPerson->mPassiveSequence = readPassive();
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
@@ -4486,6 +4565,20 @@ namespace ESM4
                     }
                 };
                 writeStrikeJson(melee.mStrike);
+                const auto writePassiveJson = [&](const std::optional<RuntimePassiveMeleeSequence>& passive) {
+                    if (!passive) { stream << "null"; return; }
+                    if (const auto* strike = std::get_if<RuntimeMeleeStrike>(&passive->mSequence))
+                    {
+                        stream << "{\"strike\":";
+                        writeStrikeJson(*strike);
+                    }
+                    else
+                    {
+                        stream << "{\"reaction\":";
+                        writeMeleeReactionJson(stream, std::get<RuntimeMeleeReaction>(passive->mSequence), mVersion);
+                    }
+                    stream << '}';
+                };
                 if (mVersion >= 54)
                 {
                     stream << ",\"reaction\":";
@@ -4551,8 +4644,18 @@ namespace ESM4
                             stream << ",\"retiring_sequences\":";
                             writeRetiringJson(melee.mFirstPerson->mRetiringSequences);
                         }
+                        if (mVersion >= 59)
+                        {
+                            stream << ",\"passive_sequence\":";
+                            writePassiveJson(melee.mFirstPerson->mPassiveSequence);
+                        }
                         stream << '}';
                     }
+                }
+                if (mVersion >= 59)
+                {
+                    stream << ",\"passive_sequence\":";
+                    writePassiveJson(melee.mPassiveSequence);
                 }
                 stream << '}';
             }

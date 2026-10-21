@@ -21,7 +21,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or recipe['target_schema'] != 58):
+            or recipe['target_schema'] != 59):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)
@@ -59,6 +59,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
         melee.setdefault('reaction', None)
         melee.setdefault('retiring_sequences', [])
         melee.setdefault('first_person', None)
+        melee.setdefault('passive_sequence', None)
     actual = runtime.load_save(output)
     canonical = lambda value: json.dumps(value, sort_keys=True, separators=(',', ':'))
     if canonical(actual) != canonical(expected):
@@ -75,6 +76,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   schema_defaults={'reference.dropper': None, 'reference.dropped_items': None,
                                    'inventory.extra_scale': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
+                                   'melee.passive_sequence': None,
                                    'native_loose_weapons': []})
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')
     return report

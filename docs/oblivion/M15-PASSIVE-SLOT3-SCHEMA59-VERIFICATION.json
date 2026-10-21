@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "status": "Schema59 passive slot3 contract and C++/Python wire support verified. Live service/renderer adoption and end-to-end parallel Stagger acceptance remain incomplete.",
+  "source_parent": "ffb81bb77479145f1d1be2fc1b49ff84cd8b4038",
+  "native_provenance": {
+    "path": "docs/oblivion/M15-STAGGER-PARALLEL-SLOT-VERIFICATION.json",
+    "sha256": "322e157ec565cf0030f24277d57d014a6996bb8b6f3b67a1b7b27a0b3fdeae9d"
+  },
+  "contract": "Each body/first-person view can retain a passive native slot3 strike or BlockHit/Recoil protocol with full timing, phase, sampled time and captured pose. It carries an already consumed/canceled cause and grants no pending action. Primary Stagger slot0 may coexist or finish independently.",
+  "wire": "At the end of each schema59 melee record, after existing first-person fields, append body passive tag0/1/2; append first-person passive tag only when that view exists. Tags: absent/strike/reaction. Reuse the exact existing full strike/reaction encoding. JSON is null or a single-key strike/reaction object. Earlier versions add no wire bytes or JSON keys.",
+  "validation": [
+    "Reject pending/future causes, absent actor clocks or inactive processes, dead/dangling actor ownership and legacy versions containing passive state.",
+    "Reject an untimed passive strike, Stagger stored in passive slot3, simultaneous primary strike/slot3 reaction, and premature inactive reaction retirement.",
+    "Captured-pose and protocol validation reuse the authoritative existing fields. Bow and passive melee ownership conflict.",
+    "Legacy migration adds explicit absent defaults; it does not invent resident sequence history or consume new actions."
+  ],
+  "checks": [
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-normal-02/verification.json",
+        "sha256": "23a9f8de5a788f751a2c248c47e4a40848be339daec23f1ea05f49829ab01ed8"
+      },
+      "source": {
+        "head": "ffb81bb77479145f1d1be2fc1b49ff84cd8b4038",
+        "source_fingerprint": "b1ee851ba5598ff98e131c1e5dc9275e6cf64da36fadc88418033d18caf0106d"
+      },
+      "results": {
+        "components": {
+          "executed": 2976,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0184b8135a31b2c051750c0ad428acd8570b439a2434f0ee46d99d4b24ff16b1",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "b29684e62fb2e3814fba7e73fb7162d59c76db4891343646da8dd10e33fa5a6f",
+          "inventory_sha256": "6cbf8ea3efccc61ad2b743847d950cf2754a6da8e40b05f9b9fbe72f2c041e01",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 364,
+          "passed": true,
+          "log_sha256": "2953c543e56283eafd7e5e19a81e81bfe2c369a3907ffc67dc8cf2137743e4d3"
+        }
+      }
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-sanitized-02/verification.json",
+        "sha256": "4903791e97082e624a3ae9088a1a4eaf325f28a2ee0963e76ea7da33d3be5767"
+      },
+      "source": {
+        "head": "ffb81bb77479145f1d1be2fc1b49ff84cd8b4038",
+        "source_fingerprint": "b1ee851ba5598ff98e131c1e5dc9275e6cf64da36fadc88418033d18caf0106d"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 829,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "af56c3fd9092f64e4415afe184a377c15abd4572965b69321306a9d2ef543e76",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "849ed60fbe0aff8a474c2f45ea4637f23f0fc0ecfc242db03d187206372a2ab5",
+          "inventory_sha256": "110eb2df3ddc3df095be4d65a8389cda430131a5e41ca10a7c33d3eb4260f988",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "cpp_python_parity": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/passive59-wire-verification-02.json",
+    "sha256": "1648eb3ac1b38a299aa55a866e5cc89785e66f951dded362a306224a619e9cc1"
+  },
+  "test_scope": "30 full C++ payload/JSON pairs: ordinary strike, BlockHit, Recoil, captured strike and captured reaction; one/both views and active Stagger or recovered process. Both decoders reject unknown union tags; negative tests cover replay, slot conflicts, missing clocks/timing, foreign process and legacy fields.",
+  "input_chain": {
+    "cached_idle59": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/cached-idle59.omwsave",
+      "sha256": "e0139d9bb46773eaad83d5645c902a968eb920ba8f5a14386d8a8b39e274de03"
+    },
+    "cached_idle_staging": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/cached-idle59.staging.json",
+      "sha256": "1e0fa67516864ed6d8ea67c9370deb3aefbc2225d4f9f217d5b0509e43792db7"
+    },
+    "current_tail59": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/player-tail59.omwsave",
+      "sha256": "c640faed9307826f4179f2be06f76cc351ba03bf5e024f04240ff17000eddf1e"
+    },
+    "current_tail_staging": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/player-tail59.staging.json",
+      "sha256": "3ca14675832c07725cd4928b2688828e27cb3cf3f5212d6e8092c89cb9736ba1"
+    },
+    "legacy57_58_byte_equality": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/legacy-input-chain-verification-01.json",
+      "sha256": "2551491341057536b732d7e01ec120f95aec87499bd29acc3ad1ad528ff857d9"
+    },
+    "meaning": "Current46->59->unarmed59 and historical idle57/58->unarmed59 produce byte-identical tail outputs. Other decoded state and inventories are preserved except declared script origin/equipment/restraint/default changes. Structural writing and semantic reinspection only; compiler/world/runtime acceptance not inferred."
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "1d1722b1afc9c18630a495ee2b616cda561d186e90be663b4f1e2727ffcab178"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "3347c993c5b8f56c0f7b8864656dc623e71700ed2197cb746161105e7a96f077"
+    },
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "c65d37963a8ad22396a31e3c2db80b427b2082ab16d4ed45a747c29c0a1a5a89"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "4e9079b913790644fbd55a256ae9ee864c48295bcb3db548f371eb175f65e9a7"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "265bddfe687951f3f87e028bc64b06030e692068e80c8f8b640cdbefb2b127fd"
+    },
+    {
+      "path": "scripts/tes4_m15_cached_block_input.py",
+      "sha256": "688a075ac9f2bf9715d28d3a56ff8bb10d47bc43cae0409fed18a2bf0c61a887"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_cached_block_input.py",
+      "sha256": "cbfe8bb398fddd19486e2c2ede0701aa2c0c21ee2da0c94b136904cbe580afe0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+      "sha256": "cb35363c84a93ae9a86d7bed49c6158c62d6867ef229f0e717b260114e8d02b3"
+    },
+    {
+      "path": "scripts/tes4_m15_player_strike_tail_input.py",
+      "sha256": "d64b09480c46d8a6d2ae18b4c4f282c2a250019b732436aa1c85880a61bcd87f"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_strike_tail_input.json",
+      "sha256": "e4738365f49c6c76303e7a515034230bffbc00102333eb402fa67a83cc7d51c4"
+    }
+  ],
+  "retained_attempts": {
+    "initial_full_python": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/schema59-python-diagnostic-01.log",
+    "initial_focused_float_fixture": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/schema59-focused-python-01.log",
+    "intermediate_migration_test": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/schema59-runtime-python-02.log",
+    "intermediate_cached_target_negative": "build/oblivion-compat/m15/S4/native-stagger-contact-path-review-01/schema59-cached-input-python-02.log",
+    "initial_18_case_full_checks": [
+      "native-passive-slot3-schema59-normal-01",
+      "native-passive-slot3-schema59-sanitized-01"
+    ],
+    "corrections": "Use a separate passive migration helper so historical57/58 promotion helpers retain their scope; add current promotion to the manual23 test; revise the cached recipe to reviewed59 and its negative case to58; normalize fixture playback speed to its declared binary32 store. Final tests additionally cover nested captured-pose variants."
+  },
+  "remaining": [
+    "Contact preparation must transfer old slot3 ownership and cancel an outstanding logical strike once in the atomic contact publication.",
+    "Advance passive protocols/clocks and render them without contact dispatch or process ownership.",
+    "Handle independent view restoration/recovery, replacement by a new strike, equipment/control/death/load cancellation and all native resource factories.",
+    "Rebuild actual engine applications and complete normal-input/camera/sanitizer/in-flight restart courses. Existing torso-filter runtime evidence used schema58 applications and does not establish schema59 runtime behavior."
+  ],
+  "production_service_renderer_wiring": false,
+  "runtime_acceptance": false,
+  "leak_coverage": false,
+  "full_M15S4_acceptance": false
+}
