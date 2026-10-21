@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "empty_slot0_activation": {
+    "source_absent": "NI state1, immediate activation",
+    "steady_source_present": "NI state2, crossfade",
+    "independent_views": true,
+    "original_cases": 24
+  },
+  "native_group_table": {
+    "address": "0xB102E0",
+    "stride": 36,
+    "name_offset": 0,
+    "slot_offset": 8,
+    "subtype_offset": 12,
+    "observations": [
+      {
+        "group": 0,
+        "name": "Idle",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 1,
+        "name": "DynamicIdle",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 2,
+        "name": "SpecialIdle",
+        "slot": 4,
+        "subtype": 0
+      },
+      {
+        "group": 3,
+        "name": "Forward",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 4,
+        "name": "Backward",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 5,
+        "name": "Left",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 6,
+        "name": "Right",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 7,
+        "name": "FastForward",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 8,
+        "name": "FastBackward",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 9,
+        "name": "FastLeft",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 10,
+        "name": "FastRight",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 11,
+        "name": "DodgeForward",
+        "slot": 0,
+        "subtype": 0
+      },
+      {
+        "group": 12,
+        "name": "DodgeBack",
+        "slot": 0,
+        "subtype": 0
+      },
+      {
+        "group": 13,
+        "name": "DodgeLeft",
+        "slot": 0,
+        "subtype": 0
+      },
+      {
+        "group": 14,
+        "name": "DodgeRight",
+        "slot": 0,
+        "subtype": 0
+      },
+      {
+        "group": 15,
+        "name": "TurnLeft",
+        "slot": 0,
+        "subtype": 1
+      },
+      {
+        "group": 16,
+        "name": "TurnRight",
+        "slot": 0,
+        "subtype": 1
+      }
+    ]
+  },
+  "contract": [
+    "Classify slot0 from authored sequence names and resource prefixes. SpecialIdle2 is slot4 and cannot replace locomotion adoption.",
+    "The legacy renderer supplies a sampled phase, not NI lap history. Rebase its sampled native phase at the contact clock, then preserve future weighted history in existing schema59.",
+    "Canonicalize the native-to-renderer roundtrip before the first monotonic clamp frame.",
+    "Each Player view supplies its own sampled phase, frequency, coordinates and clock."
+  ],
+  "rounding_regression": {
+    "native_bounds": [
+      0,
+      2
+    ],
+    "renderer_bounds": [
+      0,
+      3
+    ],
+    "raw_sample": 0.0017000000225380063,
+    "canonical_sample": 0.0016999999061226845
+  },
+  "scope": "Original group-table read plus explicitly bounded legacy phase-adoption contract. Original activation/crossfade behavior is covered by the prior slot0 composition oracle; no reconstruction of private historical NI state."
+}

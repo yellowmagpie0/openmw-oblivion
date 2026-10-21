@@ -292,8 +292,9 @@ namespace ESM4
             || characterState == 2;
     }
 
-    std::optional<std::uint16_t> nativeReactionSequenceGroup(
-        std::string_view sequenceName, std::string_view resourceBasename)
+    static std::optional<std::uint16_t> nativeSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename,
+        std::span<const std::pair<std::string_view, std::uint16_t>> names)
     {
         const auto prefix = [](std::string_view text, std::string_view expected) {
             if (text.size() < expected.size()) return false;
@@ -306,9 +307,8 @@ namespace ESM4
         };
         sequenceName = sequenceName.substr(0, sequenceName.find('\0'));
         sequenceName = sequenceName.substr(0, sequenceName.find('_'));
-        std::uint16_t base = 0;
-        for (const auto& [name, group] : std::array<std::pair<std::string_view, std::uint16_t>, 3>{
-                 {{"blockhit", 28}, {"recoil", 30}, {"stagger", 31}}})
+        std::optional<std::uint16_t> base;
+        for (const auto& [name, group] : names)
             if (sequenceName.size() == name.size() && prefix(sequenceName, name)) base = group;
         if (!base) return {};
         resourceBasename = resourceBasename.substr(0, resourceBasename.find('\0'));
@@ -330,7 +330,27 @@ namespace ESM4
                 family = i;
                 break;
             }
-        return static_cast<std::uint16_t>((movement << 12) | (family << 8) | base);
+        return static_cast<std::uint16_t>((movement << 12) | (family << 8) | *base);
+    }
+
+    std::optional<std::uint16_t> nativeReactionSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename)
+    {
+        constexpr std::array<std::pair<std::string_view, std::uint16_t>, 3> names{{
+            {"blockhit", 28}, {"recoil", 30}, {"stagger", 31}}};
+        return nativeSequenceGroup(sequenceName, resourceBasename, names);
+    }
+
+    std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename)
+    {
+        // Original B102E0 table: SpecialIdle2 belongs to slot4, not slot0.
+        constexpr std::array<std::pair<std::string_view, std::uint16_t>, 16> names{{
+            {"idle", 0}, {"dynamicidle", 1}, {"forward", 3}, {"backward", 4},
+            {"left", 5}, {"right", 6}, {"fastforward", 7}, {"fastbackward", 8},
+            {"fastleft", 9}, {"fastright", 10}, {"dodgeforward", 11}, {"dodgeback", 12},
+            {"dodgeleft", 13}, {"dodgeright", 14}, {"turnleft", 15}, {"turnright", 16}}};
+        return nativeSequenceGroup(sequenceName, resourceBasename, names);
     }
 
     std::uint16_t nativeNpcBlockHitGroup(const NativeNpcBlockHitGroupInput& input)

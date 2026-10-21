@@ -146,6 +146,7 @@ namespace
             resetActiveGroups();
         }
         void rebuildControllers() { resetActiveGroups(); }
+        void usePassivePlayback() { mPassivePlayback = true; }
         void bindRoots(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
         { bindNativeReactionRoot(sequences); }
         void replaceBoundRoot(osg::Group* root) { mObjectRoot = root; }
@@ -381,6 +382,38 @@ namespace
         mFrameStamp->setFrameNumber(2); traverse();
         EXPECT_EQ(first->mObserved->mSamples, samples);
         EXPECT_EQ(mBone->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, Slot0SourceSelectionAndSuppressionPreserveParallelSlots)
+    {
+        // Source selection does not require gameplay notifications. This
+        // renderer fixture has no Lua manager for animation-end callbacks.
+        mAnimation->usePassivePlayback();
+        const auto add = [&](const std::string& group, const std::string& name, int priority, int mask) {
+            auto holder = mAnimation->addNativeSource(group, nativeTrack({0, 0, 0}), 20);
+            holder->mControllerSequences.front().mSequenceName = name;
+            mAnimation->play(group, MWRender::AnimPriority{priority}, mask, false, 1, "start", "stop", 0, 0, false);
+        };
+        add("handtohandidle", "Idle", 1, MWRender::BlendMask_All);
+        add("handtohandwalkforward", "Forward", 2, MWRender::BlendMask_All);
+        add("handtohandattackleft", "AttackLeft", 10, MWRender::BlendMask_All);
+        add("specialidle", "SpecialIdle", 20, MWRender::BlendMask_All);
+        mAnimation->runAnimation(.25f);
+        const auto source = mAnimation->nativeLocomotionSource();
+        ASSERT_TRUE(source);
+        EXPECT_EQ(source->mGroup, "handtohandwalkforward");
+        EXPECT_EQ(source->mTime, .25f);
+        EXPECT_FALSE(source->mFollowAnimationTime);
+        const auto background = mAnimation->nativePlayingSequenceLayers({}, true);
+        ASSERT_EQ(background.size(), 2u);
+        EXPECT_EQ(background[0].mGroup, "handtohandattackleft");
+        EXPECT_EQ(background[1].mGroup, "specialidle");
+        EXPECT_EQ(mAnimation->nativePlayingSequenceLayers({}).size(), 4u);
+        mAnimation->disable("handtohandwalkforward");
+        ASSERT_TRUE(mAnimation->nativeLocomotionSource());
+        EXPECT_EQ(mAnimation->nativeLocomotionSource()->mGroup, "handtohandidle");
+        mAnimation->disable("handtohandidle");
+        EXPECT_FALSE(mAnimation->nativeLocomotionSource());
     }
 
     TEST_F(PhysicalPoseAnimationTest, NativeBackgroundLayersFollowSharedClockWithoutAdvancingOwnedSamples)

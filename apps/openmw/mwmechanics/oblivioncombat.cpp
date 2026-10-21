@@ -1689,6 +1689,38 @@ namespace MWMechanics
         return mTimelineBegin + fraction * (mTimelineEnd - mTimelineBegin);
     }
 
+    void OblivionMeleeSlot0Source::validate() const
+    {
+        OblivionMeleeSequenceMetadata source{mGroup, mFrequency, mBegin, mEnd, mTimelineBegin, mTimelineEnd};
+        source.mCycle = mCycle;
+        source.validate();
+        if (!ESM4::nativeLocomotionSequenceGroup(mSequenceName, mGroup)
+            || !std::isfinite(mClock) || mClock < 0 || !std::isfinite(mAnimationTime)
+            || mAnimationTime < mTimelineBegin || mAnimationTime > mTimelineEnd)
+            throw std::invalid_argument("invalid native slot0 adoption sample");
+    }
+
+    ESM4::RuntimeRetiringMeleeSequence OblivionMeleeSlot0Source::retire(std::uint64_t cause, float duration) const
+    {
+        validate();
+        // The legacy adapter exposes the current sampled phase, not NI's past
+        // lap count. Adopt that actual phase as a canonical unwrapped baseline.
+        // All following offset/input/weighted history is retained across saves.
+        const float fraction = (mAnimationTime - mTimelineBegin) / (mTimelineEnd - mTimelineBegin);
+        const float nativeTime = mAnimationTime <= mTimelineBegin ? mBegin
+            : mAnimationTime >= mTimelineEnd ? mEnd : mBegin + fraction * (mEnd - mBegin);
+        ESM4::MeleeSequenceTiming timing{.mOffset = ESM4::initialMeleeSequenceOffset(mClock),
+            .mEaseStart = nativeTime, .mLastInput = 0.f, .mWeightedTime = nativeTime, .mOutputTime = nativeTime};
+        timing = ESM4::updateMeleeSequenceTiming(timing, mClock, mFrequency, mBegin, mEnd, {}, mCycle);
+        const OblivionMeleeSequenceMetadata source{mGroup, mFrequency, mBegin, mEnd, mTimelineBegin, mTimelineEnd};
+        // Canonicalize the coordinate roundtrip before enforcing monotonic
+        // clamp playback; inverse remapping can otherwise lose one float step.
+        ESM4::RuntimeRetiringMeleeSequence result{cause, mGroup, source.rendererTime(timing.mOutputTime),
+            timing, {duration, {}}};
+        result.validate();
+        return result;
+    }
+
     struct OblivionCombatService::PreparedMeleeReactionFrame::Data
     {
         OblivionCombatService* mOwner = nullptr;
@@ -2536,7 +2568,9 @@ namespace MWMechanics
         {
             if (deltas.mAttackerReaction || deltas.mVictimReaction
                 || deltas.mAttackerRetiringSequence || deltas.mVictimRetiringSequence
-                || deltas.mAttackerFirstPerson || deltas.mVictimFirstPerson)
+                || deltas.mAttackerFirstPerson || deltas.mVictimFirstPerson
+                || deltas.mAttackerSlot0Source || deltas.mVictimSlot0Source
+                || deltas.mAttackerFirstPersonSlot0Source || deltas.mVictimFirstPersonSlot0Source)
                 throw std::invalid_argument("native missed swing cannot start contact reactions");
             if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
@@ -2678,11 +2712,14 @@ namespace MWMechanics
         const auto prepareReaction = [&](const std::optional<ESM4::RuntimeMeleeReaction>& request,
                                          const std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing,
                                          const std::optional<ESM4::RuntimeFirstPersonMeleeState>& firstPerson,
+                                         const std::optional<OblivionMeleeSlot0Source>& slot0,
+                                         const std::optional<OblivionMeleeSlot0Source>& firstSlot0,
                                          ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorLife& life) {
             const auto* previous = findMeleeState(values.mActor);
             if (!request)
             {
-                if (outgoing) throw std::invalid_argument("native outgoing sequence requires a replacement reaction");
+                if (outgoing || slot0 || firstSlot0)
+                    throw std::invalid_argument("native outgoing sequence requires a replacement reaction");
                 if (firstPerson) throw std::invalid_argument("native first-person mirror requires a body reaction");
                 // Equipment consequences can withdraw action6 independently
                 // of starting another sequence. Retire its old ownership in
@@ -2707,7 +2744,9 @@ namespace MWMechanics
                 // It does not deactivate the ordinary/BlockHit/Recoil slot3.
                 // The consumed logical action and the retained visual protocol
                 // therefore have distinct ownership after this publication.
-                const auto fresh = [&](const ESM4::RuntimeMeleeReaction& reaction) {
+                const auto fresh = [&](const ESM4::RuntimeMeleeReaction& reaction,
+                                       const ESM4::RuntimeRetiringMeleeSequence* detached,
+                                       const std::optional<OblivionMeleeSlot0Source>& source, float clock) {
                     reaction.validate();
                     const auto& frame = reaction.mSequenceTiming;
                     const bool capturedOffset = reaction.mPoseSnapshot && frame.mOffset
@@ -2717,11 +2756,22 @@ namespace MWMechanics
                         || frame.mOffset.has_value() != capturedOffset || frame.mEaseStart || frame.mLastInput
                         || frame.mWeightedTime != 0 || frame.mOutputTime != 0 || frame.mEaseEnd < 0
                         || frame.mEasing != (frame.mEaseEnd > 0)
-                        || (frame.mEasing && !reaction.mPoseSnapshot))
+                        || (frame.mEasing && !reaction.mPoseSnapshot && !source))
                         throw std::invalid_argument("invalid fresh native Stagger slot0 activation");
+                    if (source)
+                    {
+                        source->validate();
+                        if (std::bit_cast<std::uint32_t>(source->mClock) != std::bit_cast<std::uint32_t>(clock)
+                            || !frame.mEasing || reaction.mPoseSnapshot || !detached
+                            || source->mGroup == reaction.mAnimationGroup
+                            || *detached != source->retire(id, frame.mEaseEnd))
+                            throw std::invalid_argument("stale or invalid Stagger slot0 crossfade source");
+                    }
+                    else if (detached)
+                        throw std::invalid_argument("Stagger outgoing slot0 requires its adoption sample");
                 };
-                fresh(*request);
-                if (outgoing || values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
+                fresh(*request, outgoing ? &*outgoing : nullptr, slot0, animationClock(values.mActor));
+                if (values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
                     || values.mProcessAction == 8
                     || life.mPhase != ESM4::ActorLifePhase::Alive || mBowStates.contains(values.mActor))
                     throw std::invalid_argument("unsupported native Stagger contact owner or slot0 source");
@@ -2729,9 +2779,10 @@ namespace MWMechanics
                 {
                     firstPerson->validate();
                     if (values.mOwner != ESM4::ActorValueOwner::Player || !firstPerson->mReaction
-                        || firstPerson->mStrike || firstPerson->mPassiveSequence || !firstPerson->mRetiringSequences.empty())
+                        || firstPerson->mStrike || firstPerson->mPassiveSequence || firstPerson->mRetiringSequences.size() > 1)
                         throw std::invalid_argument("invalid native Stagger first-person activation packet");
-                    fresh(*firstPerson->mReaction);
+                    fresh(*firstPerson->mReaction, firstPerson->mRetiringSequences.empty() ? nullptr
+                        : &firstPerson->mRetiringSequences.front(), firstSlot0, firstPerson->mClock);
                     const float expected = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
                         : animationClock(values.mActor);
                     if (std::bit_cast<std::uint32_t>(firstPerson->mClock) != std::bit_cast<std::uint32_t>(expected)
@@ -2739,7 +2790,7 @@ namespace MWMechanics
                             && previous->mFirstPerson->mReaction->mKind == ESM4::MeleeReactionKind::Stagger))
                         throw std::invalid_argument("stale or unsupported native Stagger first-person slot0 source");
                 }
-                else if (previous && previous->mFirstPerson)
+                else if (firstSlot0 || (previous && previous->mFirstPerson))
                     throw std::invalid_argument("native Stagger requires its existing first-person view packet");
                 auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
                 const auto retainSlot3 = [&](auto& view, bool body) {
@@ -2762,6 +2813,14 @@ namespace MWMechanics
                         view.mReaction.reset();
                     }
                 };
+                const auto appendSlot0 = [&](auto& history, const auto& source, const auto& incoming) {
+                    for (const auto& old : history)
+                        if (old.mAnimationGroup == incoming.mAnimationGroup
+                            || (source && old.mAnimationGroup == source->mGroup))
+                            throw std::invalid_argument("Stagger activation collides with a retiring cached resource");
+                    if (source) history.push_back(source->retire(id, incoming.mSequenceTiming.mEaseEnd));
+                };
+                appendSlot0(candidate.mRetiringSequences, slot0, *request);
                 retainSlot3(candidate, true);
                 candidate.mInput = {};
                 candidate.mReaction = *request;
@@ -2769,6 +2828,7 @@ namespace MWMechanics
                 {
                     auto mirror = candidate.mFirstPerson.value_or(ESM4::RuntimeFirstPersonMeleeState{});
                     mirror.mClock = firstPerson->mClock;
+                    appendSlot0(mirror.mRetiringSequences, firstSlot0, *firstPerson->mReaction);
                     retainSlot3(mirror, false);
                     mirror.mReaction = firstPerson->mReaction;
                     candidate.mFirstPerson = std::move(mirror);
@@ -2782,6 +2842,8 @@ namespace MWMechanics
                 values.mProcessAction = request->processAction();
                 return;
             }
+            if (slot0 || firstSlot0)
+                throw std::invalid_argument("slot0 adoption requires fresh Stagger activation");
             if (values.mOwner == ESM4::ActorValueOwner::Player && firstPerson
                 && request->mKind != ESM4::MeleeReactionKind::Stagger)
             {
@@ -2980,11 +3042,14 @@ namespace MWMechanics
             values.mProcessAction = request->processAction();
         };
         prepareReaction(deltas.mAttackerReaction, deltas.mAttackerRetiringSequence, deltas.mAttackerFirstPerson,
+            deltas.mAttackerSlot0Source, deltas.mAttackerFirstPersonSlot0Source,
             attacking, *findActorLife(attackerKey));
-        if ((deltas.mVictimReaction || deltas.mVictimFirstPerson) && !receiving)
+        if ((deltas.mVictimReaction || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence
+                || deltas.mVictimSlot0Source || deltas.mVictimFirstPersonSlot0Source) && !receiving)
             throw std::invalid_argument("native missed swing cannot start a victim reaction");
         if (receiving) prepareReaction(deltas.mVictimReaction, deltas.mVictimRetiringSequence,
-            deltas.mVictimFirstPerson, *receiving, *receivingLife);
+            deltas.mVictimFirstPerson, deltas.mVictimSlot0Source, deltas.mVictimFirstPersonSlot0Source,
+            *receiving, *receivingLife);
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);

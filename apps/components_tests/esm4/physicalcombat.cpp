@@ -6188,3 +6188,21 @@ TEST(ESM4PhysicalCombat, NativeLoopTimingPreservesFirstEndAndWrapsLaterLaps)
     EXPECT_THROW(ESM4::updateMeleeSequenceTiming({}, 0, 1, -maximum, maximum, {},
         ESM4::MeleeSequenceCycle::Loop), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NativeSlot0NamesExcludeParallelSpecialIdlesAndAttacks)
+{
+    constexpr std::array<std::string_view, 17> names{"Idle", "DynamicIdle", "SpecialIdle", "Forward",
+        "Backward", "Left", "Right", "FastForward", "FastBackward", "FastLeft", "FastRight",
+        "DodgeForward", "DodgeBack", "DodgeLeft", "DodgeRight", "TurnLeft", "TurnRight"};
+    for (unsigned i = 0; i < names.size(); ++i)
+    {
+        const auto code = ESM4::nativeLocomotionSequenceGroup(names[i], "swimonehandwalkforward.kf");
+        if (i == 2) EXPECT_FALSE(code);
+        else EXPECT_EQ(code, 0x2200u | i);
+    }
+    EXPECT_EQ(ESM4::nativeLocomotionSequenceGroup("iDLe_variant", "handtohandidle.kf"), 0x100u);
+    for (const auto name : {"AttackLeft", "AttackPower", "BlockIdle", "BlockHit", "Recoil", "Stagger", "IdleX"})
+        EXPECT_FALSE(ESM4::nativeLocomotionSequenceGroup(name, "handtohandidle.kf"));
+    EXPECT_THROW(ESM4::nativeLocomotionSequenceGroup("Idle", "path/idle.kf"), std::invalid_argument);
+    EXPECT_EQ(ESM4::nativeReactionSequenceGroup("Stagger", "onehandstagger.kf"), 0x21fu);
+}

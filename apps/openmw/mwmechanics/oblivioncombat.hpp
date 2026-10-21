@@ -59,6 +59,21 @@ namespace MWMechanics
         void validate() const;
     };
 
+    // Adopt a steady legacy slot0 sample at a clock-stamped transition.
+    // Its subsequent NI timing is service-owned and saved in the outgoing layer.
+    struct OblivionMeleeSlot0Source
+    {
+        std::string mGroup;
+        std::string mSequenceName;
+        float mClock = 0, mAnimationTime = 0;
+        float mFrequency = 1, mBegin = 0, mEnd = 0;
+        float mTimelineBegin = 0, mTimelineEnd = 0;
+        ESM4::MeleeSequenceCycle mCycle = ESM4::MeleeSequenceCycle::Clamp;
+        std::uint8_t mBlendFrames = 0;
+        void validate() const;
+        ESM4::RuntimeRetiringMeleeSequence retire(std::uint64_t cause, float duration) const;
+    };
+
     // NPC/creature activations own only the body. Player activations must
     // supply the first-person mirror; missing or foreign mirrors reject.
     struct OblivionMeleeStrikeViews
@@ -283,6 +298,10 @@ namespace MWMechanics
         std::optional<ESM4::RuntimeRetiringMeleeSequence> mVictimRetiringSequence{};
         std::optional<ESM4::RuntimeFirstPersonMeleeState> mAttackerFirstPerson{};
         std::optional<ESM4::RuntimeFirstPersonMeleeState> mVictimFirstPerson{};
+        std::optional<OblivionMeleeSlot0Source> mAttackerSlot0Source{};
+        std::optional<OblivionMeleeSlot0Source> mVictimSlot0Source{};
+        std::optional<OblivionMeleeSlot0Source> mAttackerFirstPersonSlot0Source{};
+        std::optional<OblivionMeleeSlot0Source> mVictimFirstPersonSlot0Source{};
     };
 
     struct OblivionPassiveEffectIdentity

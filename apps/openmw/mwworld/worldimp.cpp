@@ -2649,11 +2649,14 @@ namespace MWWorld
         auto& requested = attacking ? deltas.mAttackerReaction : deltas.mVictimReaction;
         auto& retiring = attacking ? deltas.mAttackerRetiringSequence : deltas.mVictimRetiringSequence;
         auto& firstPerson = attacking ? deltas.mAttackerFirstPerson : deltas.mVictimFirstPerson;
-        if (kind != ESM4::MeleeReactionKind::BlockHit && kind != ESM4::MeleeReactionKind::Recoil) return false;
+        auto& slot0 = attacking ? deltas.mAttackerSlot0Source : deltas.mVictimSlot0Source;
+        auto& firstSlot0 = attacking ? deltas.mAttackerFirstPersonSlot0Source : deltas.mVictimFirstPersonSlot0Source;
+        if (kind != ESM4::MeleeReactionKind::BlockHit && kind != ESM4::MeleeReactionKind::Recoil
+            && kind != ESM4::MeleeReactionKind::Stagger) return false;
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
         if ((!player && actor.getType() != ESM::REC_NPC_4)
-            || requested || retiring || firstPerson)
+            || requested || retiring || firstPerson || slot0 || firstSlot0)
             return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
         // Native group resolution can fail without suppressing the numerical
@@ -2674,10 +2677,10 @@ namespace MWWorld
             const bool weaponDrawn = player
                 ? actor.getClass().getCreatureStats(actor).getDrawState() == MWMechanics::DrawState::Weapon
                 : captureOblivionActorDrawState(actor) == ESM4::ActorDrawState::Weapon;
-            if (!weaponDrawn) return false;
+            if (!weaponDrawn && kind != ESM4::MeleeReactionKind::Stagger) return false;
             auto& inventory = actor.getClass().getInventoryStore(actor);
             ESM4::NativeNpcBlockHitGroupInput groupInput;
-            groupInput.mWeaponDrawn115 = true;
+            groupInput.mWeaponDrawn115 = weaponDrawn;
             const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
             if (right != inventory.end() && right->getType() == ESM::REC_WEAP)
             {
@@ -2697,6 +2700,34 @@ namespace MWWorld
             const auto& catalog = animation->getNativeReactionCatalog();
             std::vector<std::uint16_t> available;
             for (const auto& entry : catalog) available.push_back(entry.mNativeGroup);
+            const auto prepareStaggerView = [&](MWRender::Animation& view, const std::string& group, float clock,
+                                                 std::optional<MWMechanics::OblivionMeleeSlot0Source>& adopted,
+                                                 std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
+                const auto incoming = MWMechanics::captureOblivionMeleeSequenceMetadata(view, group, true);
+                const auto* destination = view.getControllerSequenceMetadata(group);
+                if (!destination || destination->mWeight != 1)
+                    throw std::invalid_argument("unsupported Stagger destination weight");
+                if (const auto old = view.nativeLocomotionSource())
+                {
+                    const auto source = MWMechanics::captureOblivionMeleeSequenceMetadata(view, old->mGroup, false);
+                    const auto* authored = view.getControllerSequenceMetadata(old->mGroup);
+                    if (!authored) throw std::invalid_argument("Stagger source lost its metadata");
+                    adopted = MWMechanics::OblivionMeleeSlot0Source{old->mGroup, authored->mSequenceName,
+                        clock, old->mTime, source.mFrequency, source.mBegin, source.mEnd,
+                        source.mTimelineBegin, source.mTimelineEnd, source.mCycle, source.mBlendFrames};
+                    adopted->validate();
+                }
+                // Original474530 activates immediately when slot0 is empty;
+                // a steady source takes the ordinary NI crossfade instead.
+                const float duration = adopted
+                    ? ESM4::meleeBlendDuration(adopted->mBlendFrames, incoming.mBlendFrames, .1f) : 0.f;
+                ESM4::RuntimeMeleeReaction result{id, ESM4::MeleeReactionKind::Stagger, group};
+                result.mSequenceTiming.mEasing = duration > 0;
+                result.mSequenceTiming.mEaseEnd = duration;
+                if (adopted) outgoing = adopted->retire(id, duration);
+                result.validate();
+                return result;
+            };
             if (player)
             {
                 auto* first = animation->getPlaybackPeer();
@@ -2707,7 +2738,8 @@ namespace MWWorld
                 for (const auto& item : activeCatalog) activeAvailable.push_back(item.mNativeGroup);
                 const auto selected = ESM4::resolveNativeReactionSequenceGroup(
                     static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00)
-                        | (kind == ESM4::MeleeReactionKind::BlockHit ? 28 : 30)), activeAvailable);
+                        | (kind == ESM4::MeleeReactionKind::BlockHit ? 28
+                            : kind == ESM4::MeleeReactionKind::Recoil ? 30 : 31)), activeAvailable);
                 if (!selected) return true;
                 const auto find = [&](const auto& resources) {
                     return std::find_if(resources.begin(), resources.end(), [&](const auto& item) {
@@ -2780,13 +2812,20 @@ namespace MWWorld
                     return incoming;
                 };
                 std::optional<ESM4::RuntimeRetiringMeleeSequence> bodyOutgoing, firstOutgoing;
-                auto body = prepareView(*animation, bodyEntry->mGroups[selection.mBodyIndex],
-                    MWMechanics::oblivionMeleeSlot3Source(previous), bodyOutgoing);
-                auto mirror = prepareView(*first, firstEntry->mGroups[selection.mFirstPersonIndex],
-                    MWMechanics::oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
-                    firstOutgoing);
+                std::optional<MWMechanics::OblivionMeleeSlot0Source> bodyAdopted, firstAdopted;
                 const float clock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
                     : mOblivionCombat->animationClock(key);
+                auto body = kind == ESM4::MeleeReactionKind::Stagger
+                    ? prepareStaggerView(*animation, bodyEntry->mGroups[selection.mBodyIndex],
+                        mOblivionCombat->animationClock(key), bodyAdopted, bodyOutgoing)
+                    : prepareView(*animation, bodyEntry->mGroups[selection.mBodyIndex],
+                        MWMechanics::oblivionMeleeSlot3Source(previous), bodyOutgoing);
+                auto mirror = kind == ESM4::MeleeReactionKind::Stagger
+                    ? prepareStaggerView(*first, firstEntry->mGroups[selection.mFirstPersonIndex],
+                        clock, firstAdopted, firstOutgoing)
+                    : prepareView(*first, firstEntry->mGroups[selection.mFirstPersonIndex],
+                        MWMechanics::oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
+                        firstOutgoing);
                 ESM4::RuntimeFirstPersonMeleeState firstState{clock, std::move(mirror)};
                 if (firstOutgoing) firstState.mRetiringSequences.push_back(*firstOutgoing);
                 Log(Debug::Verbose) << "M15 Player reaction resources selected: actor=" << key.serialize()
@@ -2808,12 +2847,15 @@ namespace MWWorld
                 requested = std::move(body);
                 retiring = std::move(bodyOutgoing);
                 firstPerson = std::move(firstState);
+                slot0 = std::move(bodyAdopted);
+                firstSlot0 = std::move(firstAdopted);
                 deltas.mRandomTransition = random;
                 return true;
             }
             const auto selected = ESM4::resolveNativeReactionSequenceGroup(
                 static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00)
-                    | (kind == ESM4::MeleeReactionKind::BlockHit ? 28 : 30)), available);
+                    | (kind == ESM4::MeleeReactionKind::BlockHit ? 28
+                            : kind == ESM4::MeleeReactionKind::Recoil ? 30 : 31)), available);
             if (!selected) return true;
             const auto entry = std::find_if(catalog.begin(), catalog.end(), [&](const auto& candidate) {
                 return candidate.mNativeGroup == *selected;
@@ -2842,12 +2884,24 @@ namespace MWWorld
                 if (random->mNextState != playback.mNextState) return false;
             }
             const std::string group = entry->mGroups[playback.mIndex];
-            Log(Debug::Verbose) << (kind == ESM4::MeleeReactionKind::Recoil
-                    ? "M15 NPC recoil resource selected: actor="
+            Log(Debug::Verbose) << (kind == ESM4::MeleeReactionKind::Stagger
+                    ? "M15 NPC Stagger resource selected: actor="
+                    : kind == ESM4::MeleeReactionKind::Recoil ? "M15 NPC recoil resource selected: actor="
                     : player ? "M15 Player block resource selected: actor=" : "M15 NPC block resource selected: actor=")
                                 << key.serialize() << " cause=" << id << " native_group=" << *selected
                                 << " group=" << group << " selection_draws=" << extraDraws
                                 << " variant=" << playback.mIndex;
+            if (kind == ESM4::MeleeReactionKind::Stagger)
+            {
+                std::optional<MWMechanics::OblivionMeleeSlot0Source> adopted;
+                std::optional<ESM4::RuntimeRetiringMeleeSequence> outgoing;
+                auto result = prepareStaggerView(*animation, group, mOblivionCombat->animationClock(key), adopted, outgoing);
+                requested = std::move(result);
+                retiring = std::move(outgoing);
+                slot0 = std::move(adopted);
+                deltas.mRandomTransition = random;
+                return true;
+            }
             const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(*animation, group, true);
             const auto* source = animation->getControllerSequenceMetadata(group);
             if (!source || source->mWeight != 1) return false;

@@ -600,7 +600,9 @@ namespace MWRender
         // Validate both view plans before changing either published projection.
         bool setNativeSequenceLayersForViews(std::span<const NativeSequenceLayer> body,
             std::span<const NativeSequenceLayer> firstPerson);
-        std::vector<NativeSequenceLayer> nativePlayingSequenceLayers(std::span<const std::string_view> excluded);
+        std::vector<NativeSequenceLayer> nativePlayingSequenceLayers(
+            std::span<const std::string_view> excluded, bool excludeLocomotion = false);
+        std::optional<NativeSequenceLayer> nativeLocomotionSource();
         std::optional<ESM4::RuntimeMeleePoseSnapshot> captureNativeSequencePose(
             std::string_view group, float destinationFrame);
 

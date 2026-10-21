@@ -1738,7 +1738,9 @@ namespace MWMechanics
             }
             std::vector<std::string_view> excluded(excludedGroups.begin(), excludedGroups.end());
             if (strike) excluded.push_back(strike->mAnimationGroup);
-            layers = view.nativePlayingSequenceLayers(excluded);
+            const bool ownsSlot0 = reaction && reaction->mKind == ESM4::MeleeReactionKind::Stagger
+                && !reaction->mRetirement && !reaction->mInactive;
+            layers = view.nativePlayingSequenceLayers(excluded, ownsSlot0);
             const auto retirementEase = [&](const auto& span) {
                 const float end = static_cast<float>(double(*span.mStartClock) + span.mDuration);
                 return ESM4::sequenceBlendEase(clock, *span.mStartClock, end, true);

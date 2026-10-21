@@ -106,6 +106,9 @@ namespace ESM4
     // This bounded parser recognizes BlockHit28, Recoil30 and Stagger31.
     std::optional<std::uint16_t> nativeReactionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
+    // Slot0 locomotion names from the native table, excluding SpecialIdle2/slot4.
+    std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename);
     struct NativeNpcBlockHitGroupInput
     {
         std::optional<std::uint8_t> mWeaponType;

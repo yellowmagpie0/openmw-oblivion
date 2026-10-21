@@ -10121,3 +10121,33 @@ rendering in both builds. It does not admit fresh Stagger through the normal
 resource factory or contact path. Live slot0 source adoption, active/cached
 replacement, normal counter/Stagger triggering and the remaining mastery,
 input/cancellation/FPS/audio/E2E gates remain open. M15S4 is incomplete.
+
+
+## Fresh Stagger slot0 adoption checkpoint
+
+Fresh NPC/Player Stagger resource preparation now adopts the legacy renderer's
+sampled locomotion phase and publishes its outgoing NI timing atomically with
+the incoming reaction. Player views retain independent clocks and coordinates.
+Legacy locomotion background layers stay suppressed while Stagger owns slot0;
+parallel slot3 visual phases continue after their logical contact is consumed.
+The original executable's 24-case source-presence probe distinguishes immediate
+state1 activation for an empty slot from state2 crossfade for a steady source,
+independently in each view. A canonical coordinate roundtrip avoids a one-float-
+step false clamp rewind on frame zero. Schema59 storage is unchanged.
+
+The normal check passes all 2,978 component and 1,791 engine tests. ASan/UBSan
+passes the 831-case ESM4* component selection and all 1,791 engine tests, without
+failures or skips; leak checks are disabled. Typed tests cover 36 source/prior-
+slot3 contexts, four independent view-presence cases, malformed/stale packet
+rejection, one-time consumption, and binary restart. Both current binaries also
+pass rendered two-process outgoing-loop recovery courses with exact saved/live,
+resource, RNG, ledger and inventory comparisons; all six captures were reviewed.
+Those runtime courses inject an ongoing eight-second crossfade and do not prove
+fresh World factory selection or normal-input Stagger triggering.
+
+The source adoption baseline is the actual renderer sample, not reconstructed
+private NI lap history. Active/cached Stagger replacement, Creature reaction
+selection, normal counter/Stagger triggering, and the wider S4 input/mastery/
+effect/E2E gates remain open. M15S4 remains incomplete. See the
+[verification record](M15-STAGGER-SLOT0-ADOPTION-VERIFICATION.json) and
+[editable oracle manifest](../../scripts/data/oblivion_compat/m15_stagger_slot0_adoption_oracle.json).

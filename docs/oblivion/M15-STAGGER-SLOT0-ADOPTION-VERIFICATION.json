@@ -1,0 +1,526 @@
+{
+  "schema_version": 1,
+  "status": "Fresh NPC/Player Stagger resource preparation and sampled locomotion adoption implemented. Typed/renderer tests and a rendered ongoing-crossfade restart regression pass. Normal gameplay triggering remains unimplemented; M15S4 remains incomplete.",
+  "tested_source": {
+    "normal": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-05/verification.json",
+        "sha256": "6ca40e0b1c7bdd4ace00c048275c5f200b17baf021e5d2ffe0f879de9d9b636b"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 0.818
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-05/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.253
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "4"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 406.075
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.165
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-05/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 29.441
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 2978,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "d87dff8d73c7f5f9243e7887f1df36aa624d0e123046fa39448f4415ea7098a7",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "5eda5f6cb5ec5a5096252c627583e25c810d42eb6fdcba2ffe6e471f43fb4993",
+            "inventory_sha256": "a8878c8b3f88896e5b5779fc87ac721ef4768bd8738a9a0e537e15831190639c",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1791,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "71f970de7b2ea6aab0f2db2cbd2d3e3e8748bc72a358c9e6f5e0687422e53fdc",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "02fae575335d4251cbad77c4847a88a8f2cae7bae2f4596e399b029e3f5bece6",
+            "inventory_sha256": "cbda274735469df07ffcb0f8e0b026c032db168f4d5f2e4342f0644a20873fc9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "7eb1fa229e2be1b660cab00af48d28222e844484",
+          "source_fingerprint": "fdf9d41a61cb82ee4e4e0656b691c7bece58e434e0f7a5f10f8251d0febc4a21"
+        },
+        "source_after": {
+          "head": "7eb1fa229e2be1b660cab00af48d28222e844484",
+          "source_fingerprint": "fdf9d41a61cb82ee4e4e0656b691c7bece58e434e0f7a5f10f8251d0febc4a21"
+        }
+      }
+    },
+    "sanitized": {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-05/verification.json",
+        "sha256": "a679f7bce75b1a46e4a31f2777a5c9631796b0118891097bbd9321fff42ca6cc"
+      },
+      "result": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "2"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 0.967
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.316
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-05/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 33.766
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "openmw",
+              "openmw-tests",
+              "esmtool",
+              "-j",
+              "2"
+            ],
+            "log": "engine-build.log",
+            "returncode": 0,
+            "seconds": 1329.141
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "engine-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.667
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-05/engine.xml"
+            ],
+            "log": "engine.log",
+            "returncode": 0,
+            "seconds": 186.469
+          }
+        ],
+        "results": {
+          "sanitize": {
+            "executed": 831,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "9a0dc74bda55f0f238788ebd3523dca40f71d4d58b56fbae7a603e17c3b8e099",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "960fa61e957a327cda24d413c97b6aef912d112f83d3969d3263d5f46da2feae",
+            "inventory_sha256": "77789b4e3091d3ac528e0bc9ec9f8aeb4f58d9a3ce94a02f1c17ea5d18042d78",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "engine": {
+            "executed": 1791,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "c71fc5a00a86501440895f9de4a2167792217caed82e0b9259ef1230e9a8e097",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "8f26936492de84495616df3ad49b580611159abeb7768cc51cd65d44aeb39190",
+            "inventory_sha256": "cbda274735469df07ffcb0f8e0b026c032db168f4d5f2e4342f0644a20873fc9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "7eb1fa229e2be1b660cab00af48d28222e844484",
+          "source_fingerprint": "fdf9d41a61cb82ee4e4e0656b691c7bece58e434e0f7a5f10f8251d0febc4a21"
+        },
+        "source_after": {
+          "head": "7eb1fa229e2be1b660cab00af48d28222e844484",
+          "source_fingerprint": "fdf9d41a61cb82ee4e4e0656b691c7bece58e434e0f7a5f10f8251d0febc4a21"
+        }
+      }
+    }
+  },
+  "implementation": [
+    "World prepares Stagger31 resources for NPC and paired Player views, including sheathed actors. Each source descriptor captures actual locomotion coordinates, frequency, cycle and view clock. A view with no slot0 source activates immediately in NI state1; a steady source crossfades in state2.",
+    "Typed contact publication rejects stale/malformed descriptors and requires canonical outgoing histories atomically. Existing slot3 attack/reaction phases remain independent; canceled pending contacts are consumed once.",
+    "Renderer selects lower-body locomotion ahead of an upper-body idle, excludes slot3/4 tracks from adoption, and suppresses legacy slot0 background while Stagger owns it.",
+    "Canonicalized clamp phase adoption avoids a one-float-step false rewind at frame zero. Existing schema59 storage is unchanged."
+  ],
+  "tests": [
+    "ESM4PhysicalCombat.NativeSlot0NamesExcludeParallelSpecialIdlesAndAttacks",
+    "PhysicalPoseAnimationTest.Slot0SourceSelectionAndSuppressionPreserveParallelSlots",
+    "OblivionWorldTest.FreshStaggerAdoptsSlot0AndPreservesConsumedSlot3Atomically",
+    "OblivionWorldTest.AdoptedClampCoordinateRoundtripDoesNotRejectItsFirstFrame",
+    "OblivionWorldTest.FreshStaggerViewsActivateImmediatelyOnlyWhenTheirSlot0IsEmpty"
+  ],
+  "fresh_adoption_matrix": {
+    "contexts": 36,
+    "owners": [
+      "NPC body",
+      "legacy Player body",
+      "paired Player body/first person"
+    ],
+    "prior_slot3": [
+      "none",
+      "pending strike",
+      "BlockHit"
+    ],
+    "source": [
+      "loop Forward",
+      "clamp DodgeForward"
+    ],
+    "samples": [
+      0.5,
+      1.5
+    ],
+    "frames": [
+      0,
+      0.05,
+      0.075,
+      0.1
+    ],
+    "checks": [
+      "reject stale/malformed body and mirror packets with saved bytes unchanged",
+      "commit once and consume old pending attack once",
+      "preserve passive slot3, resources, RNG, and action ledger",
+      "binary restart at activation and every frame"
+    ]
+  },
+  "empty_slot0_matrix": {
+    "contexts": 4,
+    "body_source": [
+      false,
+      true
+    ],
+    "first_person_source": [
+      false,
+      true
+    ],
+    "checks": [
+      "frame0 initializes timing before phase dispatch",
+      "next positive frame crosses Start only for immediately activated views",
+      "binary restart and unchanged action/resource data"
+    ]
+  },
+  "slot0_source_absence": {
+    "result": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-absence-oracle-01/verification02.json",
+      "sha256": "8ab215654b55567ce3593f1eeb0315d499ba32a98f4f72b9ffbf0242c3359cb1"
+    },
+    "harness": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-absence-oracle-01/probe-02.py",
+      "sha256": "4f0a4fa73dfc30677cf9c4e93bc8f05cee3b2fea11e1e9f8a928ad1b9ea15192"
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-absence-oracle-01/corpus02.json",
+      "sha256": "24704725bcbfc8972f90c11a7bc87e9883cfff346d3d90fec1fdd7d69a8a2434"
+    },
+    "reviewed_expectations": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-absence-oracle-01/reviewed-expectations.json",
+      "sha256": "ec62803da5afdae963fad2631b53f9c1add63bc75d631b2ee118d8afeba2c86f"
+    },
+    "retained_falsified_hypothesis": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-absence-oracle-01/attempt01.json",
+      "sha256": "394c32f554359212c40cea106a07cac9880adbf56f4a2d71c42093bbcee2ed80"
+    }
+  },
+  "native_group_table": {
+    "path": "build/oblivion-compat/m15/S4/native-slot0-group-table-01/verification.json",
+    "sha256": "87f7e84d303b7eb51f7768ba904b2afe5773b8bd8dfbb9698868f63324d65e03"
+  },
+  "editable_oracle": {
+    "path": "scripts/data/oblivion_compat/m15_stagger_slot0_adoption_oracle.json",
+    "sha256": "3d2e35570c7da9d7b0583ec59b38c4c22788bc6c80e04954a94fb4688828cb21"
+  },
+  "rendered_sanitizer_regression": {
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/preregistered.json",
+      "sha256": "e1d844bbe751c9f77e71b49f4b40e174981078e37a19c451e747252a346bf7f4"
+    },
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/slot0-loop-restart-verification.json",
+      "sha256": "7c30e9d02932ed09cac00f313653c30e7143562c206ffde915f03f2383c101e9"
+    },
+    "visual_review": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/visual-review.json",
+      "sha256": "acefe6f601a13a1967317447af21248ee73cad2b09dfddf8fdd4b5181b8ba5c8"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+      "sha256": "227fe36f18d658b1e7717fc42ebaae56a042c51b8602b0df5cc6c3b6eab9bb7e"
+    },
+    "manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/manifest.json",
+      "sha256": "eb89da1a74809379a9a79aadfd1b290093ffedc2f2235dd372d04645b36c500f"
+    },
+    "continuation": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/continuation.json",
+      "sha256": "f10fc3bdba62269a673ab57ba3269ab50509bc4e8290f362b83d54ba9afe380f"
+    },
+    "result": {
+      "passed": true,
+      "scope": "Current ASan/UBSan Stagger slot0 locomotion-background suppression regression using the injected ongoing8s loop/crossfade fixture. Fresh adoption and gameplay triggering are not exercised.",
+      "saves": [
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/first/snapshots/save-3.omwsave",
+          "sha256": "71add1b543c4435dec287b5b840b71116febb2d508118828d725e2e6a1c11165"
+        },
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/first/snapshots/save-4.omwsave",
+          "sha256": "90efffa80be52be4c83931492903c3b9987b986d2f6c9df8dcf93bb3fb06bd72"
+        },
+        {
+          "phase": "second",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-sanitized-01/second/snapshots/save-3.omwsave",
+          "sha256": "fc3781261282fdf2fe27525eac2ac270f40331d16cb61a37e56f2f4cc38512e0"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_clock_comparisons": 2,
+      "outgoing_idle_wraps_under_easing_stagger": true,
+      "early_loop_output_matches_original_rule": true,
+      "resources_bases_rng_ledger_inventories_exact": true,
+      "source_inventories": 36762,
+      "all_early_inventories": 37365,
+      "completed_player_fields_exact": true,
+      "both_epochs_gone": true,
+      "draw_threads_joined_before_exit": true,
+      "normal_Stagger_activation": false,
+      "full_M15S4_acceptance": false
+    },
+    "scope": "Injected ongoing8s crossfade, current ASan/UBSan engine; live projection, completion and fresh-process continuation. No fresh World factory or normal gameplay triggering claim. Leak coverage disabled."
+  },
+  "rendered_regression": {
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "693663ca58ba9dd8a867ebec0213415ac70ee937595a135b6660f3053340dad6"
+    },
+    "manifest": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/manifest.json",
+      "sha256": "47897d0c74658e345c89f8341cf2e532810d2ade4883b303789291d19b23d670"
+    },
+    "continuation": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/continuation.json",
+      "sha256": "34c07cfd26380f024376070cd78b4a5895e901b9ca4de39584b02e2c57ac3ee4"
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/preregistered.json",
+      "sha256": "5d3345197f08da971a729887d0e9fe3d0d12f56ebbd230a7a07fe95be046564d"
+    },
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/slot0-loop-restart-verification.json",
+      "sha256": "0d0f928375122cc6ca8bcbe69c76994e94e93db0d38c3ec54bdfd55879f34b19"
+    },
+    "visual_review": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/visual-review.json",
+      "sha256": "36249850fb6104458bcd729968a4362a8fb52e338b9e9b9f21552632fb03e816"
+    },
+    "result": {
+      "passed": true,
+      "scope": "Current Stagger slot0 locomotion-background suppression regression using the prior injected ongoing8s loop/crossfade fixture. Fresh adoption and gameplay triggering are not exercised.",
+      "saves": [
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/first/snapshots/save-3.omwsave",
+          "sha256": "3221b06559518cf8d2760e529e7bc119b0a549974668a2e86b82ebd20ae738b4"
+        },
+        {
+          "phase": "first",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/first/snapshots/save-4.omwsave",
+          "sha256": "2319775ab2c3d307752976ca14862462bb5b5098b0ccdb60fcf35c8c6ff02e76"
+        },
+        {
+          "phase": "second",
+          "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-stagger-slot0-projection-runtime-normal-02/second/snapshots/save-3.omwsave",
+          "sha256": "109e88ea275dde81ba77c4ed8fc7e94363b2983731b5b7adbbf9febb85633d85"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_clock_comparisons": 2,
+      "outgoing_idle_wraps_under_easing_stagger": true,
+      "early_loop_output_matches_original_rule": true,
+      "resources_bases_rng_ledger_inventories_exact": true,
+      "source_inventories": 36762,
+      "all_early_inventories": 37365,
+      "completed_player_fields_exact": true,
+      "both_epochs_gone": true,
+      "draw_threads_joined_before_exit": true,
+      "normal_Stagger_activation": false,
+      "full_M15S4_acceptance": false
+    },
+    "scope": "Injected ongoing8s crossfade reused from prior loop-timing course; current background suppression, live projection, completion and fresh-process continuation only. Does not exercise fresh World factory or normal gameplay triggering."
+  },
+  "retained_attempts": {
+    "summary": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-review-01/retained-attempts.json",
+      "sha256": "52a0383b8f38d2a98014f41474156d7cd04e79c3d9c1622964a9547fa85fc76a"
+    },
+    "reports": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-01/verification.json",
+        "sha256": "3f02a1957c01a9cb72c708139934fe409f77bd27fa82a773c0e5748c2a5717d8"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-02/verification.json",
+        "sha256": "3fda1fbb16e35474758183adee31b1af74a4ea7795767cb5f3755e5c82f34380"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-03/verification.json",
+        "sha256": "d339e87e2038f2bd2ab7fb46737aae0f8df5ec5979ee9273c890f225fd15de6d"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-normal-04/verification.json",
+        "sha256": "b782a975889a1fcae7ba58cc73aac8013690be52788a358836d4fe912832d6e3"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-01/verification.json",
+        "sha256": "604565319d81ba56b9e31c026200ba52ea8897f1ca018cf6f915784edad97923"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-02/verification.json",
+        "sha256": "536209521c0721a7f89e8b34c517c7757266fa9779daf80068ba3b50e49af65c"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-03/verification.json",
+        "sha256": "45b299d138c566c79b07836424e9af04a72dcebe599f287077414918bbcbb88a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-slot0-adoption-sanitized-04/verification.json",
+        "sha256": "9381cd4fc094fa419dc9cedd548a5f61f135c9ff161853c13810609d789cb339"
+      }
+    ]
+  },
+  "limits": [
+    "Legacy source phase is adopted as a new baseline; original private prior NI lap history is unavailable.",
+    "Active/cached Stagger reactivation and Creature reaction resource selection remain unsupported.",
+    "No normal-input Stagger/counter activation claim; production callers still select only BlockHit/Recoil.",
+    "Sanitizer leak coverage is disabled.",
+    "Full input/view/gamepad/FPS/audio/mastery/effect and M15S4 E2E gates remain open."
+  ],
+  "full_M15S4_acceptance": false
+}

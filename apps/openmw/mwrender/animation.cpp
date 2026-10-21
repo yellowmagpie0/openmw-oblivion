@@ -1877,7 +1877,7 @@ namespace MWRender
     }
 
     std::vector<Animation::NativeSequenceLayer> Animation::nativePlayingSequenceLayers(
-        std::span<const std::string_view> excluded)
+        std::span<const std::string_view> excluded, bool excludeLocomotion)
     {
         std::vector<NativeSequenceLayer> result;
         for (const auto& [group, state] : mStates)
@@ -1885,9 +1885,36 @@ namespace MWRender
             if (std::find(excluded.begin(), excluded.end(), group) != excluded.end()) continue;
             const auto* metadata = getControllerSequenceMetadata(group);
             if (!metadata) throw std::invalid_argument("shared animation has no native sequence metadata");
+            if (excludeLocomotion && ESM4::nativeLocomotionSequenceGroup(metadata->mSequenceName, group)) continue;
             result.push_back({group, state.mBlendMask, state.getTime(), metadata->mWeight, 1, true});
         }
         return result;
+    }
+
+    std::optional<Animation::NativeSequenceLayer> Animation::nativeLocomotionSource()
+    {
+        // The legacy adapter can retain an upper-body idle beside movement.
+        // Select the actual lower-body locomotion source, excluding slot3/4
+        // even when their tracks currently have higher legacy priority.
+        auto selected = mStates.end();
+        bool selectedLower = false;
+        for (auto state = mStates.begin(); state != mStates.end(); ++state)
+        {
+            if (!state->second.mPlaying && state->second.mAutoDisable) continue;
+            const auto* metadata = getControllerSequenceMetadata(state->first);
+            if (!metadata || !ESM4::nativeLocomotionSequenceGroup(metadata->mSequenceName, state->first)) continue;
+            const bool lower = state->second.blendMaskContains(static_cast<std::size_t>(BoneGroup_LowerBody));
+            const auto mask = lower ? BoneGroup_LowerBody : BoneGroup_Torso;
+            if (selected == mStates.end() || (lower && !selectedLower)
+                || (lower == selectedLower && selected->second.mPriority[mask] < state->second.mPriority[mask]))
+            {
+                selected = state;
+                selectedLower = lower;
+            }
+        }
+        if (selected == mStates.end()) return {};
+        const auto* metadata = getControllerSequenceMetadata(selected->first);
+        return NativeSequenceLayer{selected->first, BlendMask_All, selected->second.getTime(), metadata->mWeight, 1};
     }
 
     std::optional<std::array<float, 4>> Animation::nativeReactionWorldBound(const osg::Node& sceneRoot) const
