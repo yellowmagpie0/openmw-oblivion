@@ -11,6 +11,10 @@ namespace Resource { class ResourceSystem; class SceneManager; }
 
 namespace MWRender
 {
+    // Original47B090 removes geometry named UpperBody* from first-person
+    // instances. Bone nodes and other geometry, including Arms, remain.
+    std::size_t filterOblivionBodyParts(osg::Node& instance, bool firstPerson);
+
     // Exact native-string search, independent of the folded animation map.
     osg::ref_ptr<osg::Node> findOblivionSkeletonNode(osg::Node& skeleton, std::string_view name);
 

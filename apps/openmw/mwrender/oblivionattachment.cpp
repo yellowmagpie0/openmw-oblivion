@@ -1,18 +1,53 @@
 #include "oblivionattachment.hpp"
 
 #include <components/misc/osguservalues.hpp>
+#include <components/misc/strings/algorithm.hpp>
 #include <components/nif/extra.hpp>
 #include <components/nif/niffile.hpp>
 #include <components/nif/node.hpp>
 #include <components/resource/niffilemanager.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
+#include <components/sceneutil/riggeometry.hpp>
+#include <components/sceneutil/riggeometryosgaextension.hpp>
 #include <osg/MatrixTransform>
+#include <osg/Geometry>
 #include <osg/NodeVisitor>
 #include <stdexcept>
+#include <vector>
 
 namespace MWRender
 {
+    std::size_t filterOblivionBodyParts(osg::Node& instance, bool firstPerson)
+    {
+        if (!firstPerson) return 0;
+        struct Visitor : osg::NodeVisitor
+        {
+            Visitor() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) { setNodeMaskOverride(~0u); }
+            void apply(osg::Drawable& drawable) override
+            {
+                // Match native geometry names, not skeleton bones or a TES3
+                // "Tri " alias. Original47B198 compares the first nine bytes.
+                const bool geometry = drawable.asGeometry()
+                    || dynamic_cast<SceneUtil::RigGeometry*>(&drawable)
+                    || dynamic_cast<SceneUtil::RigGeometryHolder*>(&drawable);
+                if (geometry && Misc::StringUtils::ciStartsWith(drawable.getName(), "UpperBody"))
+                {
+                    const auto& path = getNodePath();
+                    if (path.size() > 1)
+                        if (auto* parent = path[path.size() - 2]->asGroup())
+                            mGeometry.emplace_back(parent, &drawable);
+                }
+            }
+            std::vector<std::pair<osg::ref_ptr<osg::Group>, osg::ref_ptr<osg::Drawable>>> mGeometry;
+        } visitor;
+        instance.accept(visitor);
+        std::size_t removed = 0;
+        for (const auto& [parent, geometry] : visitor.mGeometry)
+            removed += parent->removeChild(geometry);
+        return removed;
+    }
+
     namespace
     {
         std::string_view nativeString(std::string_view value)

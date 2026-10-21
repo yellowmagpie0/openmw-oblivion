@@ -697,6 +697,7 @@ namespace MWRender
                     ? attachOblivionRigidPart(*mResourceSystem, path, *mObjectRoot)
                     : attach(path, bone, {}, false, attitude);
                 isolateTes4ActorGeometry(*node);
+                filterOblivionBodyParts(*node, mViewMode == VM_FirstPerson);
                 if (!texture.empty())
                     overrideAllTextures(VFS::Path::Normalized(texture), mResourceSystem, *node);
                 if (faceGen)

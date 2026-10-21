@@ -9441,3 +9441,44 @@ pins every course, process, manifest, restart selection, verifier and image.
 The editable acceptance contract records exact actions and separate state,
 lifecycle and visual gates. Structural fixture reading, runtime state/restart
 acceptance and failed visual acceptance remain distinct. Full M15S4 is incomplete.
+
+### Native first-person torso exclusion
+
+The large contact-view polygons came from the attached UpperBody torso shape.
+A diagnostic overlay changes only that shape's native hidden flag, preserving
+Arms and all animation data. Its two save/live pairs, exact native resource
+arrays, complete Player inventory and all36289 original reference inventories
+pass; the foreground polygons disappear. A broader cross-course comparison of
+all final streamed reference keys failed and is retained: the courses loaded
+different additional references, while shared inventories and declared original
+inventories agree. That comparison is separate from the contact acceptance gate.
+
+Independent execution of the hash-identified original47B090 geometry binding
+function supplies the production rule. Its first-person branch compares geometry
+names against the nine-byte UpperBody prefix case-insensitively, using the actual
+original CRT implementation, and removes matching shapes. Twenty supplied
+geometry cases across both view flags include case variants, longer prefixes,
+short names, Arms/Hand and nonprefix/Tri names. Scene allocation/child removal,
+empty skin-array maintenance, absent extra-data queries and reference operations
+are declared boundaries; this is original rule evidence, not original gameplay.
+
+NpcAnimation now applies that filter to attached first-person instances before
+FaceGen registration. It removes ordinary and skinned drawables after traversal,
+preserving bone nodes and transforms, source templates, other instances, Arms and
+Hand geometry. Third-person bodies retain torso geometry. The passive first-person
+peer uses the same first-person view flag while either camera is active.
+
+Two tests exercise60 original-case/drawable-class comparisons and hidden nested
+parents, bone preservation, idempotence and instance isolation. Full normal and
+explicit ASan/UBSan engine checks each pass1777 tests from125 suites, with exact
+inventories and no failures/skips. Leak checking is disabled. Initial focused
+checks covered ordinary geometry; review caught the native skinned Drawable
+wrappers before production acceptance, and the corrected full runs cover both.
+
+The first stock-mesh normal baseline now shows the contact sword arm and opponent
+without foreground torso polygons, followed by correct ready recovery. The full
+fresh-process/camera/sanitizer runtime matrix is still running; those remaining
+courses are not inferred from unit checks or the diagnostic overlay.
+[`M15-FIRST-PERSON-TORSO-FILTER-VERIFICATION.json`](M15-FIRST-PERSON-TORSO-FILTER-VERIFICATION.json)
+pins the native probe, diagnostic, implementation, full checks and bounded image
+review. Full M15S4 remains incomplete.

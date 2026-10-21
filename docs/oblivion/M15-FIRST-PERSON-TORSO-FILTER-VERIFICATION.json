@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "status": "Original first-person torso exclusion implemented; full normal and ASan/UBSan engine checks pass. Normal stock-mesh baseline images show corrected contact and ready poses. Remaining fresh-process/camera runtime matrix pending. Full M15S4 incomplete.",
+  "source_parent": "60be28aa4796d3344dc0b41a950c342d04d7057a",
+  "source_files": [
+    {
+      "path": "apps/openmw/mwrender/oblivionattachment.hpp",
+      "sha256": "ca9d3fbbf5ce9f0e4a7a4f2f39025657388115a2d73196a0921d20c3c09537b4"
+    },
+    {
+      "path": "apps/openmw/mwrender/oblivionattachment.cpp",
+      "sha256": "89457eeab24a47c48b570e7086c7db5a841a0eb70d1f79a2243dd0360a7d1689"
+    },
+    {
+      "path": "apps/openmw/mwrender/npcanimation.cpp",
+      "sha256": "282ef3dfab3f2a8909257669e5e8beca66e7a26d05c266d4544f7f5589144422"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testoblivionattachment.cpp",
+      "sha256": "000482717b5bc9d385bcec2b35105eb91f82eaaa6e0c047bcb7739c826a115c5"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_first_person_torso_expected.json",
+      "sha256": "a399c195a8ba15911a253a45b590429d10b6ded4ad578bdbc767c00efd0eda52"
+    }
+  ],
+  "original_rule": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-visual-review-01/original-torso-filter-verification.json",
+      "sha256": "54803c1bbb6e5fd37ca44c5fca70cc07cfcc6ad6e5a28811cd282d070bf15923"
+    },
+    "harness": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-visual-review-01/original-torso-filter.py",
+      "sha256": "d49ee2f06fbd2cfa3a037f4de2fef85ffc24775a870f1bb5a85db50a2b5989f1"
+    },
+    "contexts": 2,
+    "geometry_cases": 20,
+    "actual_comparison": "Full original47B090 binding function, first-person gate47B16E and actual9864D9/996B50 CRT prefix comparison remove UpperBody* geometry case-insensitively. No TES3 Tri alias; short/nonprefix names retained.",
+    "caller": "47B811..47B847 tests owner against Player and uses actual65D770 first-person biped pointer identity before supplying first-person flag. Static caller analysis, no full original gameplay acceptance.",
+    "boundaries": [
+      "4784A0/477F90 empty internal skin-array maintenance no-ops.",
+      "Supplied geometry cast returns itself; parent RemoveChild records/removes slot and returns reference.",
+      "707530 extra-data query returns null; actual47AC20 enters/returns without extras.",
+      "Imported interlocked decrement returns1, retaining supplied objects."
+    ]
+  },
+  "diagnostic": {
+    "overlay": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-visual-review-01/diagnostic-overlay.json",
+      "sha256": "6ae8bc243a7f1a7d3189e190317aa1e5754c63172158db50fda5e0f7afdda1d0"
+    },
+    "runtime": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-hide-torso-normal-first-01/diagnostic-verification.json",
+      "sha256": "8f4e596c537e0c42b01e65c440890284a2c4f0b27d59898ddd1819473926c2d9"
+    },
+    "meaning": "One-byte NiTriShape hidden flag change on stock UpperBody isolates foreground polygons; production code/animation arithmetic unchanged in diagnostic. Stock-mesh production application check is separate.",
+    "retained_cross_course_failure": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-hide-torso-normal-first-01/diagnostic-comparison-failure-01.json",
+      "sha256": "b320d5ce3c7ffa97d26b9c1226e2fdad10f9f97845d7e405941ddb0b8e503a6d"
+    }
+  },
+  "implementation": "Filter detached per-instance geometry after attachment isolation, before FaceGen registration. Plain, native RigGeometry and RigGeometryHolder dispatch covered. Geometry removal is staged after traversal. Bones, Arms/Hand, source templates, other actors and third-person geometry remain. NpcAnimation first-person peer applies same rule in either active camera.",
+  "checks": [
+    {
+      "profile": "normal",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-02/verification.json",
+        "sha256": "810e891b39776ee674996d5582f71841938d41003402c5b43c736db627a10a3c"
+      },
+      "source": {
+        "head": "60be28aa4796d3344dc0b41a950c342d04d7057a",
+        "source_fingerprint": "af6527a830861d5a7a9618823eef0778ce0c27854d49391399603fadefa7ec31"
+      },
+      "engine_tests": 1777,
+      "suites": 125,
+      "filter": "*",
+      "application_sha256": "1336ce4db58bb8cf653055ecd32f0c0a45f3f2a3f9c0763817a6473d5b663a93"
+    },
+    {
+      "profile": "sanitized",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-02/verification.json",
+        "sha256": "af6cddb1acb705e2620a6132fce8b102643524241c78634958882737faea21d4"
+      },
+      "source": {
+        "head": "60be28aa4796d3344dc0b41a950c342d04d7057a",
+        "source_fingerprint": "af6527a830861d5a7a9618823eef0778ce0c27854d49391399603fadefa7ec31"
+      },
+      "engine_tests": 1777,
+      "suites": 125,
+      "filter": "*",
+      "application_sha256": "947b49c252449de8f352423324a8fbaa21f38f2262e19a6e0a1c0c52f46eecb1"
+    }
+  ],
+  "test_scope": "20 original geometry cases crossed with three actual drawable classes =60 comparisons, plus nested hidden-parent traversal, bone transform preservation, idempotence and distinct-instance/template isolation. Full inventories pass1777 tests each.",
+  "retained_initial_checks": "-01 normal/sanitized focused7 tests passed for plain geometry; review found native skinned Drawable wrappers require explicit type admission. No production runtime acceptance claimed for -01. Corrected -02 includes both wrappers and full suites; sanitizer environment explicit.",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "leak_coverage": false,
+  "normal_baseline": {
+    "launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/launcher.json",
+      "sha256": "42b072cf2c1904a24cc6da1f221a3f05e2a46df756b24a55f5b1f655b6a84cb2"
+    },
+    "scenario": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/scenario.json",
+      "sha256": "9a318fb422eeb6752cef6aea489bab65d9a623d7e6a74c85e010d5cc6b3377c7"
+    },
+    "exact_pairs_captured": 2,
+    "images": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/player-blockhit-first.png",
+        "sha256": "b860050dbed11a24f3148f782cdfe1b068e532468adca34d60d4cf609b773f1f",
+        "finding": "Contact sword arm and NPC remain visible with no torso polygons across foreground; final ready pose recovers."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/settled.png",
+        "sha256": "e4f4353c877dae734534cd59dadfea86af4dbc8afe17b94cb00cf4660dd9c9ff",
+        "finding": "Recovered ready sword pose remains visible."
+      }
+    ],
+    "limits": "Images directly reviewed. Full resource/restart and remaining camera/build acceptance awaits matrix verification."
+  },
+  "runtime_matrix": {
+    "driver": {
+      "path": "build/oblivion-compat/m15/S4/native-firstperson-block-visual-review-01/run-production-torso-matrix-01.py",
+      "sha256": "56af41f8d71c04f4af3c532cd6ff7c9c207cf2a48398ca77257014f48f676816"
+    },
+    "cases": "native-firstperson-torso-filter-{normal,sanitized}-{first,third}-01",
+    "status": "In progress; no final matrix acceptance claimed."
+  },
+  "full_M15S4_acceptance": false
+}

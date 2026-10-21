@@ -6,13 +6,83 @@
 #include <components/nif/niffile.hpp>
 #include <components/nif/node.hpp>
 #include <components/resource/resourcesystem.hpp>
+#include <components/sceneutil/riggeometry.hpp>
+#include <components/sceneutil/riggeometryosgaextension.hpp>
 #include <components/vfs/manager.hpp>
 #include <gtest/gtest.h>
+#include <boost/property_tree/json_parser.hpp>
+#include <filesystem>
+#include <osg/Geometry>
 #include <osg/Group>
 #include <osg/MatrixTransform>
 
 namespace
 {
+    TEST(OblivionAttachmentTest, FirstPersonGeometryFilterMatchesOriginalBinding)
+    {
+        boost::property_tree::ptree oracle;
+        boost::property_tree::read_json((std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR)
+            / "scripts/data/oblivion_compat/m15_native_first_person_torso_expected.json").string(), oracle);
+        unsigned count = 0;
+        for (const auto& row : oracle.get_child("cases"))
+        {
+            const auto& value = row.second;
+            const auto name = value.get<std::string>("name");
+            for (unsigned kind = 0; kind < 3; ++kind)
+            {
+                osg::ref_ptr<osg::Group> instance = new osg::Group;
+                // Native NIF skinning uses Drawable wrappers rather than
+                // osg::Geometry. Exercise those actual visitor dispatches.
+                osg::ref_ptr<osg::Drawable> geometry;
+                if (kind == 0) geometry = new osg::Geometry;
+                else if (kind == 1) geometry = new SceneUtil::RigGeometry;
+                else geometry = new SceneUtil::RigGeometryHolder;
+                geometry->setName(name);
+                instance->addChild(geometry);
+                const bool removed = value.get<bool>("removed");
+                EXPECT_EQ(MWRender::filterOblivionBodyParts(*instance, value.get<bool>("first_person")),
+                    removed ? 1u : 0u) << name << ':' << kind;
+                EXPECT_EQ(instance->getNumChildren(), removed ? 0u : 1u) << name << ':' << kind;
+                ++count;
+            }
+        }
+        EXPECT_EQ(count, 60u);
+    }
+
+    TEST(OblivionAttachmentTest, FirstPersonFilterPreservesBonesAndOtherInstances)
+    {
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        osg::ref_ptr<osg::MatrixTransform> bone = new osg::MatrixTransform;
+        bone->setName("UpperBody");
+        bone->setMatrix(osg::Matrix::translate(1, 2, 3));
+        model->addChild(bone);
+        osg::ref_ptr<osg::Group> shapes = new osg::Group;
+        shapes->setNodeMask(0);
+        bone->addChild(shapes);
+        for (const char* name : {"UpperBody", "Arms", "Hand"})
+        {
+            osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+            geometry->setName(name);
+            shapes->addChild(geometry);
+        }
+        osg::ref_ptr<osg::Node> first = osg::clone(model.get(), osg::CopyOp::DEEP_COPY_NODES);
+        osg::ref_ptr<osg::Node> third = osg::clone(model.get(), osg::CopyOp::DEEP_COPY_NODES);
+        EXPECT_EQ(MWRender::filterOblivionBodyParts(*first, true), 1u);
+        EXPECT_EQ(MWRender::filterOblivionBodyParts(*first, true), 0u);
+        EXPECT_EQ(MWRender::filterOblivionBodyParts(*third, false), 0u);
+        auto* firstBone = dynamic_cast<osg::MatrixTransform*>(first->asGroup()->getChild(0));
+        ASSERT_NE(firstBone, nullptr);
+        EXPECT_EQ(firstBone->getName(), "UpperBody");
+        EXPECT_EQ(firstBone->getMatrix(), bone->getMatrix());
+        auto* firstShapes = firstBone->getChild(0)->asGroup();
+        ASSERT_EQ(firstShapes->getNumChildren(), 2u);
+        EXPECT_EQ(firstShapes->getChild(0)->getName(), "Arms");
+        EXPECT_EQ(firstShapes->getChild(1)->getName(), "Hand");
+        EXPECT_EQ(firstShapes->getNodeMask(), 0u);
+        EXPECT_EQ(shapes->getNumChildren(), 3u);
+        EXPECT_EQ(third->asGroup()->getChild(0)->asGroup()->getChild(0)->asGroup()->getNumChildren(), 3u);
+    }
+
     struct AttachmentFixture
     {
         Nif::NIFFile mFile{ VFS::Path::NormalizedView("shield.nif") };

@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Complete original47B090 geometry-child binding/first-person prefix filtering with actual original CRT string comparison. Supplied no-skin geometry fixtures; no gameplay/render acceptance.",
+  "evidence": "build/oblivion-compat/m15/S4/native-firstperson-block-visual-review-01/original-torso-filter-verification.json",
+  "oracle_sha256": "d49ee2f06fbd2cfa3a037f4de2fef85ffc24775a870f1bb5a85db50a2b5989f1",
+  "boundaries": [
+    "4784A0/477F90 empty internal skin-array maintenance no-ops.",
+    "Supplied geometry cast returns itself; parent RemoveChild records/removes slot and returns reference.",
+    "707530 extra-data query returns null; actual47AC20 enters/returns without extras.",
+    "Imported interlocked decrement returns1, retaining supplied objects."
+  ],
+  "cases": [
+    {
+      "name": "UpperBody",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "upperbody",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "UPPERBODY:0",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "UpperBodySleeves",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "UpperBod",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "Arms",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "Hand",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "Other UpperBody",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "Tri UpperBody",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "UpperBodyArmor",
+      "first_person": false,
+      "removed": false
+    },
+    {
+      "name": "UpperBody",
+      "first_person": true,
+      "removed": true
+    },
+    {
+      "name": "upperbody",
+      "first_person": true,
+      "removed": true
+    },
+    {
+      "name": "UPPERBODY:0",
+      "first_person": true,
+      "removed": true
+    },
+    {
+      "name": "UpperBodySleeves",
+      "first_person": true,
+      "removed": true
+    },
+    {
+      "name": "UpperBodyArmor",
+      "first_person": true,
+      "removed": true
+    },
+    {
+      "name": "UpperBod",
+      "first_person": true,
+      "removed": false
+    },
+    {
+      "name": "Arms",
+      "first_person": true,
+      "removed": false
+    },
+    {
+      "name": "Hand",
+      "first_person": true,
+      "removed": false
+    },
+    {
+      "name": "Other UpperBody",
+      "first_person": true,
+      "removed": false
+    },
+    {
+      "name": "Tri UpperBody",
+      "first_person": true,
+      "removed": false
+    }
+  ]
+}
