@@ -9482,3 +9482,31 @@ courses are not inferred from unit checks or the diagnostic overlay.
 [`M15-FIRST-PERSON-TORSO-FILTER-VERIFICATION.json`](M15-FIRST-PERSON-TORSO-FILTER-VERIFICATION.json)
 pins the native probe, diagnostic, implementation, full checks and bounded image
 review. Full M15S4 remains incomplete.
+
+### Stock-mesh torso-filter runtime matrix
+
+The production filter now passes the complete bounded cached BlockHit matrix:
+normal and ASan/UBSan, first and third cameras, baseline plus captured fresh-process
+continuation. All eight processes exit0; twelve complete save/live pairs match.
+Every first completed cause3 save retains64 body and66 first-person pose tracks.
+Exact preregistered PC24 Health damage, weapon wear, all36289 original reference
+inventories, complete Player inventory, RNG773150046 and ledger next4/pending[]
+pass. Fresh loads recover both Player heads without new selections or contacts.
+Final native resource/action arrays and complete Player inventories also agree
+across all four profile/camera courses. Each actual threaded environment records
+last thread stop before peaceful exit; sanitizer options are observed in-process.
+
+Direct review of all twelve images confirms that the previous first-person
+foreground torso polygons are absent in both builds, the sword arm/opponent are
+visible, third-person torso/guard presentation remains present, and both baseline
+and restart return to the ready pose. Stock body meshes are used: the diagnostic
+hidden-torso overlay is absent from every manifest. Synthetic BlockHit timing
+holds remain declared. This closes that specific foreground-occlusion defect,
+not full original motion, lighting or character rendering parity. Audio, measured
+FPS and leak coverage are absent.
+
+[`M15-FIRST-PERSON-TORSO-RUNTIME-VERIFICATION.json`](M15-FIRST-PERSON-TORSO-RUNTIME-VERIFICATION.json)
+pins the four courses, all process environments, byte-identical pristine inputs,
+first-save selection, verifiers and image hashes. It supplements the earlier
+implementation receipt's then-pending runtime matrix. The historical failed
+visual matrix remains unchanged. Full M15S4 remains incomplete.

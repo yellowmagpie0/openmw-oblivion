@@ -1,0 +1,513 @@
+{
+  "schema_version": 1,
+  "status": "Stock-mesh production torso filter passes four state/restart/lifecycle courses and direct review of twelve images. Former first-person foreground torso occlusion resolved in both builds. Full M15S4 incomplete.",
+  "implementation_commit": "8f8d4009ae",
+  "prior_failure": {
+    "path": "docs/oblivion/M15-PLAYER-PAIRED-CACHED-BLOCK-RUNTIME-VERIFICATION.json",
+    "sha256": "047bbe79afc04216c3eb0b325af64952b767f0b6ce3bb2ec8a5c9b45ffb311ab"
+  },
+  "implementation_and_checks": {
+    "path": "docs/oblivion/M15-FIRST-PERSON-TORSO-FILTER-VERIFICATION.json",
+    "sha256": "0b6a99742e36b0894093597405d74e32c95316ffb6987a7286b2ec65302b8d95"
+  },
+  "acceptance_contract": {
+    "path": "scripts/data/oblivion_compat/m15_player_paired_cached_block_acceptance.json",
+    "sha256": "f7d8f901edd7037678662b1ca0973c4e578d7b66e22278ac0d92fc4036bc5c07"
+  },
+  "scope": "Inherited exact two-contact same-cached paired BlockHit replacement, first completed captured restart, declared PC24 Health/wear/RNG/inventories and no replay. Stock body meshes; synthetic four-second BlockHit holds and one-second authored blends retained.",
+  "completed_processes": 8,
+  "exact_save_live_pairs": 12,
+  "original_reference_inventories_per_final_save": 36289,
+  "cross_profile_camera_final_native_arrays_equal": {
+    "physical_actions": true,
+    "combat_rng_state": true,
+    "native_actor_values": true,
+    "native_actor_life": true,
+    "native_actor_bases": true,
+    "native_bow_states": true,
+    "native_loose_weapons": true
+  },
+  "cross_profile_camera_complete_player_inventories_equal": true,
+  "cases": [
+    {
+      "profile": "normal",
+      "camera": "first",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/verification.json",
+        "sha256": "015145ec291d2c0021e16f4f5b2d6cae91a6476f6e18e93f1fa45d135e8f150d"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/threaded-shutdown-verification.json",
+        "sha256": "eb29e0bad97e58b1f9d8af840c5f3ce271408940b0ad597f689012e84024ed9e"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/preregistered.json",
+        "sha256": "033dc17e29c6f8871ca6ef5e36eb16554f2db302f09b0a9e4a58becdac59def3"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/manifest.json",
+        "sha256": "257223874bbd868e8127a6f00de20c0e376436bf8abb759f106eb8114ecb7c18"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/continuation.json",
+        "sha256": "909eefc1120e45766e83eeb9498329b5081298c1b754f6d8ac1b875d6278bd8e"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/restart-selection.json",
+        "sha256": "00d52adc94e3ce6f9cfeba6feeae83caf2f3c7804e4b5cd86ac9eaecfa686e4b"
+      },
+      "body_first_person_captured_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 991655,
+            "start_ticks": 30401670,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1336ce4db58bb8cf653055ecd32f0c0a45f3f2a3f9c0763817a6473d5b663a93"
+          },
+          "environment": {
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO",
+            "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/sdl-input.so"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/launcher.json",
+            "sha256": "42b072cf2c1904a24cc6da1f221a3f05e2a46df756b24a55f5b1f655b6a84cb2"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/scenario.json",
+            "sha256": "9a318fb422eeb6752cef6aea489bab65d9a623d7e6a74c85e010d5cc6b3377c7"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 994271,
+            "start_ticks": 30412389,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1336ce4db58bb8cf653055ecd32f0c0a45f3f2a3f9c0763817a6473d5b663a93"
+          },
+          "environment": {
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO",
+            "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/sdl-input.so"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/launcher.json",
+            "sha256": "1652a74173e1b8af6058beab2a16c481b6ff1b94307201475fd7fd23591aaf72"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/scenario.json",
+            "sha256": "f2129f44fd06e7f031510674a550bed903d26b545781f3b3bfe0c0cb026fe96c"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/player-blockhit-first.png",
+          "sha256": "b860050dbed11a24f3148f782cdfe1b068e532468adca34d60d4cf609b773f1f",
+          "finding": "First-person contact sword arm and clothed opponent visible; former foreground UpperBody polygons absent."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/first/settled.png",
+          "sha256": "e4f4353c877dae734534cd59dadfea86af4dbc8afe17b94cb00cf4660dd9c9ff",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-first-01/second/settled.png",
+          "sha256": "746524254ee9b6d51a1203003425bc32d56e2813561cf61ff696a31fed77a3d6",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        }
+      ]
+    },
+    {
+      "profile": "normal",
+      "camera": "third",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/verification.json",
+        "sha256": "88b850ba6c9e04df6101c54dd36ec2681bf747b1878ee1f5ba2ab8e0a2f62cbc"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/threaded-shutdown-verification.json",
+        "sha256": "f35b52e7babbd1c11dfedc357045a0d11c08c1614a884b0f377b6efe4985b81d"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/preregistered.json",
+        "sha256": "3aaf052482d982251497b17efd08704c74c3afad0b800d3c3cef3e93a2289931"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/manifest.json",
+        "sha256": "6edd496fa9bce77a310cf6dd09ce7189280de010112b932fb658c4360426370a"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/continuation.json",
+        "sha256": "ee609444cd595ef1b2dd71a88b3d7008d988e1b334b25e22664d5c3f826c5d18"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/restart-selection.json",
+        "sha256": "39fe713ed884a2b61dc3671ffba45c30bc1751343c956183ebe94987aab9128d"
+      },
+      "body_first_person_captured_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 994364,
+            "start_ticks": 30420974,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1336ce4db58bb8cf653055ecd32f0c0a45f3f2a3f9c0763817a6473d5b663a93"
+          },
+          "environment": {
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO",
+            "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/sdl-input.so"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/launcher.json",
+            "sha256": "6d23391869268c734c725874ec156b11b6b11b412ed45a85952fc4c150f35d82"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/scenario.json",
+            "sha256": "15a7f847b37c22f31cb122d0d3c5b7b6afbf0e512506d7e26c62ed57e54932ad"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 994641,
+            "start_ticks": 30431556,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1336ce4db58bb8cf653055ecd32f0c0a45f3f2a3f9c0763817a6473d5b663a93"
+          },
+          "environment": {
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO",
+            "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/sdl-input.so"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/launcher.json",
+            "sha256": "e6b6a9d9b505365847861304be468698b6abe8a3c175c60f0def24f6b93ea36b"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/scenario.json",
+            "sha256": "0e42a235ba6612efb42668d29efb9391661d2cc10d43460a5365c47b4eacde81"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/player-blockhit-first.png",
+          "sha256": "0d124051dc215f24d9c9b4f2bf2bdf50f8e90b85f9ae8f7c267802c5b1b9de8b",
+          "finding": "Third-person avatar retains torso and raised guard; opponent visible."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/first/settled.png",
+          "sha256": "84de6f51938fc7723533149fc76bb8f2b22fb36f6f7a8987c8a497c25edd09f7",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-normal-third-01/second/settled.png",
+          "sha256": "abef13ba1d64e488138535bc7e43e5a917b406ee4c501933fc0460cf225c008b",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "camera": "first",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/verification.json",
+        "sha256": "92656f4cd447e6d4887e3f3513bfe73bfeb49c6bb3ec273acf084f55c24c9027"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/threaded-shutdown-verification.json",
+        "sha256": "485ce33d64541b30baa599a7c8ce122c96ebd9b0ed7ae9a0400ff2d761db824a"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/preregistered.json",
+        "sha256": "b8da5ed970910fc782dbc663a535f4c8bc3bbd2a376d5eda0d4a579d7e59ede4"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/manifest.json",
+        "sha256": "05d7c693605d70859cb3ea29f8ce3f364f0aa2c84d7882947838a603532a4557"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/continuation.json",
+        "sha256": "fe7d3983b2c0ba2c39e4e247844e82b6a1a9658c5532dcbfa1954cfd1b618de6"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/restart-selection.json",
+        "sha256": "78abf64aba95e6b2e6f36e43af4e19a226d3d8d29a36c5d97d57d3a1fe3f1f4a"
+      },
+      "body_first_person_captured_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 994732,
+            "start_ticks": 30440138,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "947b49c252449de8f352423324a8fbaa21f38f2262e19a6e0a1c0c52f46eecb1"
+          },
+          "environment": {
+            "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/sdl-input.so",
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/launcher.json",
+            "sha256": "939e5ab2392ba522aa88b75225c196e0f7fbe0b6c45fefaac1db810b43010a95"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/scenario.json",
+            "sha256": "cba3197a18d7eb8b208432ce0f855f41d25bd277d1ce4dfcaafa96ee7f34fd5a"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 994964,
+            "start_ticks": 30488971,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "947b49c252449de8f352423324a8fbaa21f38f2262e19a6e0a1c0c52f46eecb1"
+          },
+          "environment": {
+            "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/sdl-input.so",
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/launcher.json",
+            "sha256": "7e62335fa11b9340d029433eb4054fd2a590dadbc93ba62c17d32e7ad4ecf8de"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/scenario.json",
+            "sha256": "9cee871e3a8b47a351da8a7a6131967148d2866f7c8783c7466e934f4ee59b45"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/player-blockhit-first.png",
+          "sha256": "b9c485da1f584b4579e597ee703c2f708a8cd09fd80a9bf7faf557ee9e452f32",
+          "finding": "First-person contact sword arm and clothed opponent visible; former foreground UpperBody polygons absent."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/first/settled.png",
+          "sha256": "22613649d3ca7a632313429de64e7e36cfe667affd7a4d954de11130b792d31b",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-first-01/second/settled.png",
+          "sha256": "2b193d0b393f6b19c47c690febc7cfa27a150842ea7fa90048c41cc0d58f85b7",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        }
+      ]
+    },
+    {
+      "profile": "sanitized",
+      "camera": "third",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/verification.json",
+        "sha256": "0448dd571671c26d994ed2ea909a4542eba292a344262e7f2f59477c22d4afdf"
+      },
+      "threaded_shutdown": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/threaded-shutdown-verification.json",
+        "sha256": "9d5632fac447c3a2e3733779248de2a2d5015eb2231d224de8802934675353df"
+      },
+      "preregistered": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/preregistered.json",
+        "sha256": "54e749224bb5db61f7263eebc73c996952a6f266719058f183355e81148fc7fa"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/manifest.json",
+        "sha256": "d46c110e39977b3ee36bedbf7ded0c00e7ff620f31de569a500cef5e8f8361a1"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/continuation.json",
+        "sha256": "f98be5cf48a2a8f381a446d85436f95b6b309dbbf1a43e55eeee0c4eb1e5e7c5"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/restart-selection.json",
+        "sha256": "3646efe18b0c2e377efe0db4eadbb4e5ca18c82ac009acb51ef2e950361549f1"
+      },
+      "body_first_person_captured_tracks": [
+        64,
+        66
+      ],
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 995088,
+            "start_ticks": 30525946,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "947b49c252449de8f352423324a8fbaa21f38f2262e19a6e0a1c0c52f46eecb1"
+          },
+          "environment": {
+            "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/sdl-input.so",
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/launcher.json",
+            "sha256": "aef2b6dd690eec6f4b217fdcade9b02bb2907c1b022d93bf780cea38d02ae4fb"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/scenario.json",
+            "sha256": "8ecdf7c3fe6f52f2152b48f9729e8d734729c755d97a4a333480481777d43c52"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 995239,
+            "start_ticks": 30574541,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--no-sound=1",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "947b49c252449de8f352423324a8fbaa21f38f2262e19a6e0a1c0c52f46eecb1"
+          },
+          "environment": {
+            "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/sdl-input.so",
+            "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+            "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+            "OSG_THREADING": "DrawThreadPerContext",
+            "OSG_NOTIFY_LEVEL": "INFO"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/launcher.json",
+            "sha256": "0afeac068eb8fb9c24e9f04d74484b47fc2f26437f78c6873426207451f2cfac"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/scenario.json",
+            "sha256": "065da59735adb3d32b6f44299ae1161148e95ce2f52dfa12802bffb3d1baabd1"
+          }
+        }
+      ],
+      "visual_review": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/player-blockhit-first.png",
+          "sha256": "e5b8459a897dcc4bd3c692e3d8bd4a7216040b05c51ffcac209c5c3f9fed0769",
+          "finding": "Third-person avatar retains torso and raised guard; opponent visible."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/first/settled.png",
+          "sha256": "d5c785663a5c9b36e06222a590ef4bdcff9224570cdcfe4c5ec4ea8f98e66672",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-firstperson-torso-filter-sanitized-third-01/second/settled.png",
+          "sha256": "73f2d10b98991bdde84c8ea21449062fe75ff9e5264788901a9c0728fbbd160c",
+          "finding": "Ready sword posture recovered after baseline release or fresh-process continuation in intended camera."
+        }
+      ]
+    }
+  ],
+  "state_restart_acceptance": true,
+  "threaded_shutdown_acceptance": true,
+  "first_person_torso_occlusion_resolved": true,
+  "full_visual_motion_acceptance": false,
+  "audio_acceptance": false,
+  "leak_coverage": false,
+  "full_M15S4_acceptance": false,
+  "limits": [
+    "Static image review closes the foreground UpperBody polygon defect for this admitted Player/stock-mesh course; no full original motion/lighting/character parity claim.",
+    "Sound disabled. Configured60FPS is not measured60FPS. Leak checking disabled.",
+    "Complete directional/mastery/effect/creature and input/view/FPS/cancellation/restart requirements remain open."
+  ]
+}
