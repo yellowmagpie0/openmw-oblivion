@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Two fresh paired Player BlockHit activations against production stationary NPC ordinary attacks. NPC Recoil separates contacts; StopCombat cancels its second reaction. Not same-cached runtime acceptance.",
+  "implementation_commit": "0fee234ac3",
+  "verification": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/verification.json",
+    "sha256": "58e3cd9c0cf0189dfbca80789a33935f5eb915e68b664b650681428b81845309"
+  },
+  "preregistration": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/preregistered.json",
+    "sha256": "39521db090b234b7cadebd6bbacc6db9101752ed60c7e84bf69aa0cf66af08b3"
+  },
+  "baseline_manifest": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/manifest.json",
+    "sha256": "ee45eea68798a3ad13c78c4a7064ad0aecb938a623223ea7515af9d927112e23"
+  },
+  "continuation_manifest": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/continuation.json",
+    "sha256": "0ddd46ef7456dd58bf1362b0fb1baed3c4b8ffd3068b2458a2c38c5ab3faceb3"
+  },
+  "restart_selection": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/restart-selection.json",
+    "sha256": "c8b816d1e3a8f52ee65e9162d8688244b3506909181a972f6e57162d2915cc97"
+  },
+  "input_and_restart_hashes_match": true,
+  "public_manifests": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_fresh_block_regression.json",
+      "sha256": "2e623814976fcb8cc265c2e98960809ad396314492fbe132b483ed43930029b4"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_fresh_block_regression_continuation.json",
+      "sha256": "1745814ea378f404dd76215c8b3c003a4d9bd7e920b3e1758fb5f422306ef533"
+    }
+  ],
+  "public_course": {
+    "path": "scripts/data/oblivion_compat/m15_player_fresh_block_regression_course.json",
+    "sha256": "84bdbabf0c2f0f920d3d7fda644784df19f42ad848a793cd66958d3d390aef90"
+  },
+  "verifier_source": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-fresh-block-regression.py",
+    "sha256": "c76b1e8597c87793e46c9c21dc977d8540702debc341ba4eb013edbb5217745f"
+  },
+  "independent_health_proof": {
+    "path": "docs/oblivion/M15-BLOCK-HEALTH-PRECISION-VERIFICATION.json",
+    "sha256": "6d77c4633a2c8fc4d7828b8d978c82d72063cdf076c3ee9d4a7a3b5afd4eb18e"
+  },
+  "engine_processes": 2,
+  "completed_save_live_equal_pairs": 3,
+  "phases": [
+    {
+      "phase": "first",
+      "epoch": {
+        "pid": 979992,
+        "start_ticks": 29587310,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--no-sound=1",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+      },
+      "launcher": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/launcher.json",
+        "sha256": "bbe43f66ed46c0dee37039361e0409ceb164e873c2e95f8935a3ba2a439d5387"
+      },
+      "events": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/events.jsonl",
+        "sha256": "b59d0bd49ebd2966eb9f4380e4ce88c655b6b464d5330821763120d2a5b745de"
+      },
+      "compiler_report": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/script-report.json",
+        "sha256": "d3b264492be51b991abf46fd44e63cb1ad51129457cb1fc68b0e25835454c597"
+      }
+    },
+    {
+      "phase": "second",
+      "epoch": {
+        "pid": 980174,
+        "start_ticks": 29600342,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--no-sound=1",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "fc05e0b61ff569af6829d95c28764ba8b05ca7791d85135d7e511b82046d6a35"
+      },
+      "launcher": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/launcher.json",
+        "sha256": "f0241f1ad3ddb763e77d02c7928d6d6210d3c8fcaafa74fb1a2e92db90bfa655"
+      },
+      "events": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/events.jsonl",
+        "sha256": "c13dc4d066e0951768f5cda528d6d17f8b7a6d65e906f27ab4ee88c21f3c4307"
+      },
+      "compiler_report": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/script-report.json",
+        "sha256": "644fa89e9f8d788144913a8c110d5f69f4eaaed4910bb4129af519ce8ab3bbea"
+      }
+    }
+  ],
+  "images": [
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/player-blockhit-first.png",
+        "sha256": "4d08f795e854bc5cc363d0f600fa59cd1affdcc86ecfedd424eaac6eb1b2f9bf"
+      },
+      "directly_reviewed": true,
+      "finding": "Contact guard pose and ready sword posture visible in intended first camera. Final baseline/restart recover; prior held-block skin/interpolation issue is outside this bounded regression."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/first/settled.png",
+        "sha256": "35b0752bb559824fb4f91be389a79fcbef7aeef67ab9bf7fae54a7f2fc5ea7ea"
+      },
+      "directly_reviewed": true,
+      "finding": "Contact guard pose and ready sword posture visible in intended first camera. Final baseline/restart recover; prior held-block skin/interpolation issue is outside this bounded regression."
+    },
+    {
+      "image": {
+        "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-fresh-block-regression-normal-first-04/second/settled.png",
+        "sha256": "fdc38120470855d15fb2064207ca7e3bb847e8e51de8faa196db8fdb65b1d3b0"
+      },
+      "directly_reviewed": true,
+      "finding": "Contact guard pose and ready sword posture visible in intended first camera. Final baseline/restart recover; prior held-block skin/interpolation issue is outside this bounded regression."
+    }
+  ],
+  "retained_failed_harness_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/block-regression-harness-counterexample-01.json",
+      "sha256": "dcc542fd2ad7b1cb40997a6a0f12fc5e25ab3af602258b5186b641bcf791f173"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/block-regression-manual-interruptions.json",
+      "sha256": "e0a888a2067898cf88748bd4a8e4b19c99ec8d9bced1eee5d14372c0cc7188ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/block-regression-obsolete-health-expectation-03.json",
+      "sha256": "06ed202e76c85f158f7a53f86846c90943d96fced949bd98627be3a5fbf46b87"
+    }
+  ],
+  "limits": [
+    "First-camera normal source57 only; no new cached/asymmetric replacement, sanitizer, audio or full block visual acceptance.",
+    "Interrupted01 expected action-1 during held block; interrupted02 expected natural NPC recovery despite explicit StopCombat. Both have authoritative failed scenario reports and exited engine epochs.",
+    "Attempt03 structurally passed but used obsolete pre-PC24 Health expectation. Preserved as failed numerical expectation.04 uses prior independent original007F corpus value; no production arithmetic changed.",
+    "Other M15S4 reactions, mastery, effects, creatures and input/FPS/cancellation gates remain open."
+  ]
+}

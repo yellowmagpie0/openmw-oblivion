@@ -9278,3 +9278,34 @@ the entire milestone sound matrix.
 pins those layers. Production sources and previously accepted normal/sanitizer
 checks are unchanged. Other contacts, parallel Stagger, mastery/effects,
 creatures and the wider input/FPS/cancellation gates keep M15S4 incomplete.
+
+### Fresh Player BlockHit regression after paired factory integration
+
+A normal first-camera regression now passes two fresh paired Player BlockHits,
+an in-flight save and fresh-process recovery through the new factory. Production
+NPC Recoil separates the attacks; the fixture's explicit StopCombat cancels its
+second reaction. All three completed disk/live states agree exactly. Final
+native arrays and complete inventories agree with the same-process baseline,
+including exact PC24 Health damage -1.9427038431167603, Player/NPC weapon
+conditions 55.826988220214844/55.400001525878906, empty next4 ledger and RNG773150046.
+All 36,289 original reference inventories remain unchanged except declared target
+weapon wear. Player process action returns to -1 after release and recovery.
+Two baseline contacts become zero replayed contacts/selections; both processes
+exit and three images are directly reviewed.
+
+The first reused harness expected action-1 during held block; the second added
+an impossible natural-NPC-recovery wait after StopCombat. Both are manually
+interrupted through their owned scenario deadline handler and retain failed
+reports. A third structural pass used an obsolete pre-PC24 Health expectation;
+that numerical criterion remains failed. The fourth course declares the already
+independently proven original007F PC24 result before launch. No production
+arithmetic or tolerance changes are made. New NPC Recoil also adds two native
+resource draws per contact; its final state is independently preregistered from
+the CRT recurrence, rather than reusing the obsolete no-Recoil RNG baseline.
+
+[`M15-PLAYER-FRESH-BLOCK-REGRESSION-VERIFICATION.json`](M15-PLAYER-FRESH-BLOCK-REGRESSION-VERIFICATION.json)
+pins source input, strict state/inventory checks, independent Health proof,
+editable manifests, images and failures. This is fresh activation, not runtime
+same-cached replacement. Historical source57 staging is identified explicitly;
+source regeneration with the current schema requires a separate fixture update.
+Sound is disabled. Other reaction branches and the wider M15S4 gates remain open.

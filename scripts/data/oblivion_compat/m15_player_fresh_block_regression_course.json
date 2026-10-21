@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "Two fresh paired Player BlockHit activations against production stationary NPC ordinary attacks. NPC Recoil separates contacts; StopCombat cancels its second reaction. Not same-cached runtime acceptance.",
+  "baseline_manifest": "oblivion_m15_player_fresh_block_regression.json",
+  "continuation_manifest": "oblivion_m15_player_fresh_block_regression_continuation.json",
+  "historical_idle_input": {
+    "sha256": "f6ad52cc97627e00f6f43ce90a7ab631da4edefd1d0bfd8b4be6b20c7663e7c8",
+    "schema": 57,
+    "staging_recipe": "m15_cached_block_input.json",
+    "recipe_at_commit": "0fee234ac3",
+    "source_save_sha256": "3df65b608a554946112029cc36dd91283797c40e1951b3bfc604254020e9b402",
+    "scope": "Pinned historical typed46->57 idle origin-only staging; newer schema staging is a separate fixture revision."
+  },
+  "expected": {
+    "npc_contacts": [
+      2,
+      3
+    ],
+    "next": 4,
+    "pending": [],
+    "player_weapon_condition": 55.826988220214844,
+    "opponent_weapon_condition": 55.400001525878906,
+    "player_health_damage": -1.9427038431167603,
+    "rng": 773150046,
+    "combat_random_draws_per_contact": 2,
+    "player_health_damage_bits": 3220744837
+  },
+  "health_proof": {
+    "path": "docs/oblivion/M15-BLOCK-HEALTH-PRECISION-VERIFICATION.json",
+    "sha256": "6d77c4633a2c8fc4d7828b8d978c82d72063cdf076c3ee9d4a7a3b5afd4eb18e",
+    "meaning": "Prior actual original blocked contacts observed007F, original-instruction PC24 corpus and four strict composed runtime courses already require exact cumulative damage bits3220744837. Supersedes obsolete pre-PC24 cached-block receipt used in attempts01..03."
+  },
+  "rng_derivation": {
+    "source": 505908858,
+    "draws": 4,
+    "recurrence": "(state*214013+2531011) mod 2^32; independently computed Python integer stores; native CRT recurrence already proven in original resource-selection corpora",
+    "final": 773150046
+  },
+  "restart_selection": "First completed post-contact3 normal save, both Player BlockHit roots active. No new combat input after fresh-process load.",
+  "required_checks": [
+    "Every completed save equals independent live serialization.",
+    "Same-process and restart final native arrays, values, life, bases, full inventories including condition/charge/equipped slots, ledger and RNG match exactly.",
+    "Player native process_action -1 after block release and recovery; NPC state canceled by fixture StopCombat.",
+    "Two baseline contacts2/3, zero continuation contacts or selections.",
+    "All original36289 reference inventories unchanged except declared target weapon wear; full Player inventory unchanged except declared blocking weapon wear."
+  ],
+  "audio_acceptance": false,
+  "full_M15S4_acceptance": false
+}
