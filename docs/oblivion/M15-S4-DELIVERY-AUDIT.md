@@ -9818,3 +9818,24 @@ This rebuilds the resource factory wiring but does not yet provide a rendered
 normal-input passive-to-reaction contact course. Body-only activation,
 Stagger slot0 factory/activation and the complete M15S4 input, audio, measured
 FPS, cancellation and E2E acceptance matrix remain open. M15S4 is incomplete.
+
+### Third-person mouse windup continuation
+
+A normal third-person course with the reaction-readmission tested application
+now passes the same uninterrupted-versus-restarted ordinary Left comparison.
+All three saved/live pairs and both load-owned state/clock comparisons match.
+Each process commits one action2 hit and recovers both views. Completed
+resources, bases, RNG, ledger, Player inventory and all 39,111 source reference
+inventories match the uninterrupted reference exactly. All three saved camera
+flags remain third person, DRAW remains1, and receipts show exactly one mouse
+down/up in the initial process and none in the restarted process. Both process
+epochs are gone after threaded peaceful shutdown. Both completed images were
+directly inspected; Player and opponent are visible without exploding geometry.
+
+[`M15-PASSIVE-SLOT3-MOUSE-THIRD-RESTART-VERIFICATION.json`](M15-PASSIVE-SLOT3-MOUSE-THIRD-RESTART-VERIFICATION.json)
+pins this course's distinct source, later binary, preparation and comparisons.
+The earlier normal first-person checkpoint pins its own earlier binary; these
+are not a uniform-revision complete camera/build matrix. This ordinary attack
+course does not exercise the new passive-to-reaction path. The initial passive
+history remains injected/recovered, sound is disabled and FPS is unmeasured.
+Normal Stagger activation and the full M15S4 runtime/input gates remain open.

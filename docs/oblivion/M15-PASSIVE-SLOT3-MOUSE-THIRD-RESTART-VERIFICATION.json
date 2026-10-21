@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "status": "Normal third-person mouse windup restart matches uninterrupted contact/recovery at the reaction-readmission tested source; M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "089d03b6cd98819dd7af28c2d0e94905a9c0edd2",
+    "source_fingerprint": "ac5243bb7be7408d70d24745ae7cf3c0c752a08a0d44ccf0bb81c497a96b8671"
+  },
+  "engine_checks": "M15-PASSIVE-SLOT3-REACTION-READMISSION-VERIFICATION.json",
+  "runtime": {
+    "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/mouse-restart-verification.json",
+    "sha256": "e47db80acf63ca68359c244f2c3fe460934a99bd4400db71858042a040d2dc4c",
+    "result": {
+      "passed": true,
+      "scope": "One normal third-person same-cached Left mouse attack, save in windup, uninterrupted completion versus fresh-process continuation of that exact first save.",
+      "saves": [
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/snapshots/save-3.omwsave",
+          "sha256": "52c2d24d6c0a1caad053524d23fd6c1f09b34e694453fab50b3f68f258ae3deb"
+        },
+        {
+          "phase": "first",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/snapshots/save-4.omwsave",
+          "sha256": "3e3fe7d260aa4a9ce078f774806d50ded5af152e6925ea8ba132e750e2173616"
+        },
+        {
+          "phase": "second",
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/second/snapshots/save-3.omwsave",
+          "sha256": "01c2a592181355e8d912984b8ecd295909acc77af54e84bacbe4071e19826e49"
+        }
+      ],
+      "whole_save_live_pairs": 3,
+      "fresh_load_owned_state_and_clock_comparisons": 2,
+      "fresh_process_epochs": 2,
+      "both_views_windup_and_recovery": true,
+      "old_cause_consumed": true,
+      "exactly_one_action2_hit_per_process": true,
+      "resources_rng_ledger_and_inventories_match": true,
+      "original_reference_inventories_compared": 39111,
+      "original_game_numeric_parity": false,
+      "audio_acceptance": false,
+      "measured_fps": false,
+      "full_M15S4_acceptance": false
+    },
+    "camera_and_input": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/camera-and-input-verification.json",
+      "sha256": "16ae9491124ffff9974761d8c7efbf56b1286c3b0439526260cf26b7f7815356",
+      "result": {
+        "passed": true,
+        "rows": [
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/snapshots/save-3.omwsave",
+            "camera": "third",
+            "shared_draw": 1
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/snapshots/save-4.omwsave",
+            "camera": "third",
+            "shared_draw": 1
+          },
+          {
+            "save": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/second/snapshots/save-3.omwsave",
+            "camera": "third",
+            "shared_draw": 1
+          }
+        ],
+        "mouse_down_up_exactly_once_first": true,
+        "no_mouse_attack_on_restart": true
+      }
+    },
+    "preregistered": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/preregistered.json",
+      "sha256": "1a586f51266b07b3b2bee4caf63e70b96882ec664fddd65c40d39bf4cf169251"
+    },
+    "selection": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/restart-selection.json",
+      "sha256": "d46800fce05ef6a07631a3fd6a7bf47d3201c2a17202db14d254263c05cc06e5"
+    },
+    "first_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/launcher.json",
+      "sha256": "7e75de8ec931e21ca99b83fee360830a8778dc670be9cf3ead55b7fb3b96d738"
+    },
+    "second_launcher": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/second/launcher.json",
+      "sha256": "f997cb29992da17f5d7414a1d3f17f231b28d5663eaaeb3ee17c0c4f386509bb"
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "4f5abcfde2648960e8087fb48744841ab9ac8667519ece8af214076176bf3647"
+    }
+  },
+  "recipes": {
+    "editable_base": [
+      "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart.json",
+      "scripts/data/oblivion_compat/oblivion_m15_passive_slot3_mouse_restart_continuation.json"
+    ],
+    "preparation": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/prepare.py",
+      "sha256": "54499931025cbe48e54a8f0f22992c51bb5e99a363b567bd83b1321e47821d6c"
+    },
+    "first": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/manifest.json",
+      "sha256": "2dc7e169a22f22314dc30e2274d8560b9a810d31642b44d56d2f29ce71bd3389"
+    },
+    "second": {
+      "path": "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/continuation.json",
+      "sha256": "8386d4ae20fc5f296774b5aad1912dfee4b6e39f00314ece4a09d23cbc9b3519"
+    },
+    "verifier": {
+      "path": "scripts/tes4_m15_mouse_restart_verify.py",
+      "sha256": "5377dcad68a19c4c68462ea660fae2396addeaff190e23d874bdf35f3b845207"
+    }
+  },
+  "visual_review": {
+    "directly_viewed": 2,
+    "paths": [
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/first/uninterrupted-completed-third.png",
+      "build/oblivion-compat/m15/S4/native-passive-slot3-mouse-restart-normal-third-01/second/restarted-completed-third.png"
+    ],
+    "scope": "Third-person Player and opponent visible without exploding geometry. Different idle samples; no original motion/lighting/appearance parity."
+  },
+  "limits": [
+    "Injected/recovered initial passive history; one same-cached Left attack.",
+    "This new normal-third course uses the later reaction-readmission tested binary. Earlier normal-first checkpoint pins its own earlier binary; no uniform-revision full camera/build matrix claimed.",
+    "No rendered passive-to-BlockHit/Recoil contact acceptance; this remains an ordinary strike restart course.",
+    "No gamepad, measured FPS, audio or normal Stagger activation acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}
