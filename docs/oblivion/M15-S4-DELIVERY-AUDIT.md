@@ -9232,3 +9232,26 @@ Sanitized runtime remains a separate running course. Missing-resource/zero-blend
 contracts, legacy body-only history, breaking/fatal contacts, blocking AI,
 queued-power/mixed runtime transitions, parallel Stagger, mastery/effects,
 creatures and the wider input/FPS/cancellation matrix keep M15S4 incomplete.
+
+### Sanitized paired Player Recoil runtime acceptance
+
+The same ordinary blocked Player contact now passes both sanitizer camera
+courses and their in-flight fresh-process continuations. All four instrumented
+engine processes exit, all six completed save/live pairs agree exactly, and both
+Player Recoil views plus the NPC captured BlockHit recover without replaying
+contact2. Actual process environments record ASan/UBSan halt-on-error with leak
+checking disabled. Six images are directly reviewed.
+
+An additional audit matches preregistered executable hashes, preserved restart
+input hashes, event PID/epochs, actual environment epochs and unchanged production
+source files for all four normal/sanitized courses. Final native actor values,
+life, bases, ledger, RNG, bow and loose-weapon state plus complete Player/target
+inventories also agree exactly across all four camera/profile baselines. The
+combined matrix has eight engine processes and twelve exact saved/live pairs.
+
+[`M15-PLAYER-RECOIL-SANITIZED-VERIFICATION.json`](M15-PLAYER-RECOIL-SANITIZED-VERIFICATION.json)
+pins these additional layers. Sound remains disabled for this matrix; separate
+sound-enabled courses are being checked. The stationary scripted block controls
+do not establish production blocking AI. Missing-resource/zero-blend contracts,
+other contact branches, queued-power/mixed transitions, parallel Stagger and the
+wider M15S4 requirements remain open.

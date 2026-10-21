@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "ASan/UBSan actual paired Player Recoil and captured NPC BlockHit, both cameras, in-flight fresh-process recovery and exact resource baselines.",
+  "implementation_commit": "0fee234ac3",
+  "implementation_receipt": {
+    "path": "docs/oblivion/M15-PLAYER-PAIRED-REACTION-VERIFICATION.json",
+    "sha256": "faea30bda4ea8edaa62362eede3d90b3e62a86c26c4b9478a37b34472c5a1f9b"
+  },
+  "cases": [
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/verification.json",
+        "sha256": "5443864bfeadb848c7baedf3b88d338ea5b74fe16ae78dba2661021e3fe775a1"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/preregistered.json",
+        "sha256": "7a116f0d7e48eb349615ec31b269b55a883cc24beafc7945f33a6fcbbaa01449"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/manifest.json",
+        "sha256": "7a2b5936c6d87d3ce59408ec3bb646209c935b1eeb0bf1ade51bec26aee4b222"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/continuation.json",
+        "sha256": "9a03b9535c216db4a6a8291f70d88e681b4bceee28b1eec4481d724c40edea2b"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/restart-selection.json",
+        "sha256": "d6371b6899143fc9ce351ef147455b389f2622c6c3f7480aa21650315fb3b30f"
+      },
+      "epoch_input_source_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/epoch-input-pin-audit.json",
+        "sha256": "4bb8ce5a1351e63fc3086f0b0e62085a5fece21fac2a7c3bcf14eda5c8d7fb80"
+      },
+      "camera": "first",
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 978107,
+            "start_ticks": 29463661,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a4a51a2e60ba546b137f3ae5d5ff595b080dee42a3651e27f96e04a8dd04c73b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/first/launcher.json",
+            "sha256": "12ea7759242d2fb60b996b8afec35c5aa6c21142744768fb9c3e41afeb1f28d1"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/first/actual-engine-environment.json",
+            "sha256": "12d75a08e2557256c472927244d051ddae407d33ee3c1fa9de31cef020b96c37"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/first/events.jsonl",
+            "sha256": "e3698da7d679476efd56dd1014c558c2ff05d54243dea0f24886d86faa566691"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 978526,
+            "start_ticks": 29495669,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a4a51a2e60ba546b137f3ae5d5ff595b080dee42a3651e27f96e04a8dd04c73b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/second/launcher.json",
+            "sha256": "3fea9b1f1dcf21def8565d662cfac863b36363c495d23a6468eed964a76cc0c8"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/second/actual-engine-environment.json",
+            "sha256": "dbda495ddd7a6b942348ed3ea4c978e00127569b581c2ed1ccba1d3f69ee5a98"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-first-01/second/events.jsonl",
+            "sha256": "a09eb8a02a89835152b358a25eb6958430dd37a510a148f18993dd3ea3bc61ad"
+          }
+        }
+      ]
+    },
+    {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/verification.json",
+        "sha256": "73b34fd26a265c80b60ea8a401d3acae8894de3eda01876c99e109137e49eaff"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/preregistered.json",
+        "sha256": "e75e10921d01c4b57ad22af0adab1ffef91532c7274b29db8f92fcd051b61e11"
+      },
+      "manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/manifest.json",
+        "sha256": "855821853022eca9f46dd589e9526568af8bf6b72f418964a11e7c678258c2e9"
+      },
+      "continuation": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/continuation.json",
+        "sha256": "c83db0e13f3184f69698c50e474e5f4c0eb6ec32ea03661da239d172efc92a6a"
+      },
+      "restart_selection": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/restart-selection.json",
+        "sha256": "b88b31bbc09b14ee1d4ccdb27bd7f1a727f928b2772c97d062dc4b4f1322ecfd"
+      },
+      "epoch_input_source_audit": {
+        "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/epoch-input-pin-audit.json",
+        "sha256": "4bb8ce5a1351e63fc3086f0b0e62085a5fece21fac2a7c3bcf14eda5c8d7fb80"
+      },
+      "camera": "third",
+      "phases": [
+        {
+          "phase": "first",
+          "epoch": {
+            "pid": 978827,
+            "start_ticks": 29521454,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a4a51a2e60ba546b137f3ae5d5ff595b080dee42a3651e27f96e04a8dd04c73b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/first/launcher.json",
+            "sha256": "28e7a4d69584979a657a70298a6d7b9b7d153085c1e6d4857eb23162616adc54"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/first/actual-engine-environment.json",
+            "sha256": "c2849d546e9cb4605034c7aa857e0d6ee7de23e0faddc5d4eed4f2ca7a51f56b"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/first/events.jsonl",
+            "sha256": "130a4c1bba0fe2c3e790aad92d43b2f2deb285f85fcfb3ddae423a1ca6b8b7bb"
+          }
+        },
+        {
+          "phase": "second",
+          "epoch": {
+            "pid": 979334,
+            "start_ticks": 29553513,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a4a51a2e60ba546b137f3ae5d5ff595b080dee42a3651e27f96e04a8dd04c73b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/second/launcher.json",
+            "sha256": "732ea1d115f95c9a473e60ca1d0dbccbfb85e871aadbd4f66c9953caee0f4b6d"
+          },
+          "actual_sanitizer_environment": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/second/actual-engine-environment.json",
+            "sha256": "f05f8e5354e2b05908afd22bc9d90c3b00d592009c30e91dc4750b9d25776aa4"
+          },
+          "events": {
+            "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-sanitized-third-01/second/events.jsonl",
+            "sha256": "11ee3af890431f9e05f45ccda52abef9e4ea244d4e633a87b1bd56a8d9457f06"
+          }
+        }
+      ]
+    }
+  ],
+  "leak_coverage": false,
+  "engine_processes": 4,
+  "completed_save_live_equal_pairs": 6,
+  "direct_image_review": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/sanitized-images-reviewed-01.json",
+    "sha256": "2282df0e60794e78abeac1fb88a46c46e708dd65a52288816ff7eb7c2c1aecf7"
+  },
+  "cross_profile_resource_audit": {
+    "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/recoil-cross-profile-resource-audit.json",
+    "sha256": "4d43cf7fc3c98cee87d1abbc42d8db5ef8bf292e5e4583131059646bc0ca4f51"
+  },
+  "normal_epoch_input_source_audits": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-first-03/epoch-input-pin-audit.json",
+      "sha256": "fb201181783a62c98f39cbc6ade1fd847a60770e5f3397e5685a6ba7183c9225"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-blocked-recoil-pilot-normal-third-01/epoch-input-pin-audit.json",
+      "sha256": "fb201181783a62c98f39cbc6ade1fd847a60770e5f3397e5685a6ba7183c9225"
+    }
+  ],
+  "verification_scripts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-reaction-course.py",
+      "sha256": "d8fd27f8d1c2a231e9368a73dea21f6ce95fa766b22005c4c6d9822f746c13a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/run-sanitized-reaction-matrix.py",
+      "sha256": "0b57ea9935270b817369d2686525ecbc7ea18f53cfa7f8369e78c64ffba56f59"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/verify-reaction-course.py",
+      "sha256": "4601109419bb33ac69d0a2becfa7df202b4df6392bc35e6c271e73654e3b21f4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-paired-reactions-review-01/audit-reaction-pins.py",
+      "sha256": "1558508e041dffe2aeee9d05cb127b5c5710340081e63a7a7bd076059fcad5df"
+    }
+  ],
+  "combined_normal_sanitized_totals": {
+    "engine_processes": 8,
+    "completed_save_live_equal_pairs": 12,
+    "directly_reviewed_images": 12
+  },
+  "result": "One positively absorbed Player contact2 reaches body/first-person Recoil and NPC captured BlockHit; both natural recoveries survive fresh process without another hit, selection, debit, condition write or RNG draw. All native values/life/bases/ledger/RNG/bow/loose weapons and complete Player/target inventories match each same-process baseline and across all four normal/sanitized camera baselines.",
+  "limits": [
+    "Sound disabled; audio courses are separate ongoing evidence. No leak coverage or measured FPS.",
+    "Opponent Lua controls stance/movement/block only; no production blocking AI acceptance.",
+    "Stock sequence resources and ordinary unarmed nonlethal contact only; no missing-resource, zero-blend, breaking/fatal or mastery claims.",
+    "Queued power/mixed transitions, parallel Stagger, creatures and wider input/FPS/cancellation requirements keep M15S4 incomplete."
+  ]
+}
