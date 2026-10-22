@@ -1,0 +1,748 @@
+{
+  "schema_version": 1,
+  "status": "Bounded actual NPC held NI5 save/restart and completion verified in normal and ASan/UBSan builds; normal false-input NI5 release deferral and inactive restart verified. Full M15S4 remains incomplete.",
+  "implementation_checkpoint": "5710d7ded2",
+  "unchanged_cpp": [
+    {
+      "path": "apps/openmw/mwmechanics/character.cpp",
+      "sha256": "e6daea71e3416b85a81bf0782fd214b82bc03a4acfd8f1d4e1f7f9706b217c69"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "2b849738b9f5f33b105eacfa84d28954e1326fd091a8cf36432baca4dbb37630"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "33f7c9fa96df169074607c597934fa67ba2fa92e63003b49c102f14ea45dca06"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "92cc27d48ec7e8d629da215a5e4f1bcf3c9e31a54aa0598ea6d9e9029015207e"
+    }
+  ],
+  "previous_implementation_verification": {
+    "path": "docs/oblivion/M15-HELD-BLOCK-WORLD-VERIFICATION.json",
+    "sha256": "ee5e751f4ce9d987199ed06d9d0a0cb91afb514e073e42bc4c7845d181683d36"
+  },
+  "held_asset_manifest": {
+    "path": "scripts/data/oblivion_compat/m15_counter_block_release_asset.json",
+    "sha256": "9390bc32d25bac38ac2e25dadcfb20297f7158d4bf17ee3938945758aba4aeda"
+  },
+  "held_asset": {
+    "path": "build/oblivion-compat/m15/S4/native-counter-block-release-runtime-inputs-02/fixture/meshes/characters/_male/handtohandblockidle.kf",
+    "sha256": "ddf251e2a7fa0d3eb19cb181b41ed04d724416c04a1e0696aacae8e1c3df5a88"
+  },
+  "fixture_basis": {
+    "path": "docs/oblivion/M15-COUNTER-BLOCK-RELEASE-VERIFICATION.json",
+    "sha256": "c333cfd69afc54d1485a87e7c16d1d04b0506dc696d3cb837fce1ae9762b5df4"
+  },
+  "test_reuse": "No new C++/codec/Python implementation. Exact four C++ hashes match the preceding full 1,829 normal and 1,829 ASan/UBSan engine inventories; preceding 382 Python tests retained. New editable JSON is parsed and its exact Lua/input content exercised in these runtime courses. No redundant rebuild or unit rerun.",
+  "native_basis": [
+    {
+      "path": "docs/oblivion/M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
+      "sha256": "b9e1a461b51feef9d01b30ce27910c9b77f537087dcfe71a69d420eaa1e89fc0"
+    },
+    {
+      "path": "docs/oblivion/M15-HELD-BLOCK-SERVICE-VERIFICATION.json",
+      "sha256": "493947c8ac3cb1e45fd62beb37e013b51467c9ed47de228ac774b8d25599c134"
+    },
+    {
+      "path": "docs/oblivion/M15-HELD-BLOCK-PROJECTION-VERIFICATION.json",
+      "sha256": "d95a0d2be7c2c2bd48a26c3f55153f5437afc43c1cf59c15bcd4f49d6a220c05"
+    }
+  ],
+  "runtime": {
+    "normal_windup": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/windup-verification.json",
+        "sha256": "5b9219ac88f26d468e0f0f6ec8d8e2fe3d19b6ed983f3697b2c9a7b6fe26ae29"
+      },
+      "semantic_verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/verify.py",
+        "sha256": "f42a27c7f4c4e97b09ec1dd34c3cb79b15bc50df64368e7eb1030d59fea906f8"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/preregistered.json",
+        "sha256": "b39d65047931be218eb519adc3bfdac5adb2bd35015adfe4032374e2da5c916c"
+      },
+      "binary_pin": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/binary-pin.json",
+        "sha256": "2b9b0bbdbc51561cd52e6effe090c9e67649768a907bccd464e62e39e7803397"
+      },
+      "result": {
+        "held_NI5_windup_restart_passed": true,
+        "epochs": [
+          {
+            "phase": "first",
+            "pid": 1336166,
+            "binary_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_begin_count": 1,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5",
+                "pose_tracks": 64,
+                "held_time": 0.0,
+                "clock": 11.180004119873047
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          },
+          {
+            "phase": "second",
+            "pid": 1336305,
+            "binary_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_begin_count": 0,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5",
+                "pose_tracks": 64,
+                "held_time": 0.0,
+                "clock": 11.346004486083984
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "phase": "NI1",
+                "pose_tracks": 0,
+                "held_time": 0.6920042037963867,
+                "clock": 14.002010345458984
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          }
+        ],
+        "full_M15S4_acceptance": false
+      },
+      "epochs": [
+        {
+          "phase": "first",
+          "process": {
+            "pid": 1336166,
+            "start_ticks": 42808747,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/scenario.json",
+            "sha256": "5bb05055c937e65bbd1ac413cdebfe64d9e8c2a80480c5dfefbf6aa6c7566a34"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/launcher.json",
+            "sha256": "6a69938b5b021d134f3c888422bacbd600bd8eb1ac3795ed200f3d1cc6b81146"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/input-pristine.omwsave",
+            "sha256": "5166e58ed8915690fafda4f612616ebae97b9d84300d680369c68aa5b318840a"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/manifest.json",
+            "sha256": "1ed06bb9a270738a73d000e130dac1d3b8dc8abe3344a03258de895b92b52a6e"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/process.log",
+            "sha256": "ccfa7b258d0d28eda677f7ca1c5a8a926b1e8c5b62e15c9b237bfbece4729a98"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/snapshot-index.json",
+            "sha256": "c42873c21539facce97df409259b633ec37167307d70a853226a90620315ab59"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/held-windup.png",
+            "sha256": "2e668bedf20f2c6faf505e198f8bc30002beb3c4580db77f0b2aba2eb2e733d0"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/snapshots/save-3.omwsave",
+                "sha256": "8404b0f1427ef41243013b9a9f2465b999d8d6c8106a777f2ff7966553065e95"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/first/live-1-3.json",
+                "sha256": "489985a669613ced2630b01292caca8c20963f09a8599a176f24a00a1b237452"
+              }
+            }
+          ]
+        },
+        {
+          "phase": "second",
+          "process": {
+            "pid": 1336305,
+            "start_ticks": 42827527,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/scenario.json",
+            "sha256": "80d1f2fbb3e8e5c2973b50ac62c36fd2bfb110e2ea26e41e9aa308c15eb0195b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/launcher.json",
+            "sha256": "7a03e559cbf43f094b23b3afa899ab3d04934b361bd1fe4e4bb96192b3c9dfe6"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/input-pristine.omwsave",
+            "sha256": "8404b0f1427ef41243013b9a9f2465b999d8d6c8106a777f2ff7966553065e95"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/continuation.json",
+            "sha256": "d397060a790d8bc0972ad658de91557bd0c6d9abc36478f0bda14c6448941d59"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/process.log",
+            "sha256": "fe7a1a0cf6c2ad9d3efc886645065297ae0a98632be374ac44e962180a94d1c8"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/snapshot-index.json",
+            "sha256": "759a2ca09895cc14578d986e9aa7454c5ad49a398173942e672db22ef670eec1"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/held-windup-restored-late.png",
+            "sha256": "e2463f9efa57a4f83405f64fe3981f3dd72eb61543914f3c919fe6676ec0442f"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/snapshots/save-3.omwsave",
+                "sha256": "3b9ae2aec510738e1f00c8b92349ff675b24dfbd4e4eb94c22f689979cf7342a"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/live-2-3.json",
+                "sha256": "ce1b7631223ca9c3158633c9d28abdb8387236a669dc41bf2321f085d5f5fca2"
+              }
+            },
+            {
+              "sequence": "4",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/snapshots/save-4.omwsave",
+                "sha256": "7bb9ecb0d9487657dda69a650938d96abef7ec4477c9181c9c79d67317f59b61"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-normal-01/second/live-2-4.json",
+                "sha256": "94dfb238e492a3f1aefe040c3dcd4018066af67dee242b3abd03bf1cbc023981"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "sanitized_windup": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/windup-verification.json",
+        "sha256": "d03573a850ea093876fd4c2ab31c7ee8e384b4b5ed35b063f9c11c0f250b1aca"
+      },
+      "semantic_verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/verify.py",
+        "sha256": "f42a27c7f4c4e97b09ec1dd34c3cb79b15bc50df64368e7eb1030d59fea906f8"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/preregistered.json",
+        "sha256": "b39d65047931be218eb519adc3bfdac5adb2bd35015adfe4032374e2da5c916c"
+      },
+      "binary_pin": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/binary-pin.json",
+        "sha256": "75c5c076eb6f3b2e64cc279844d0c3c5eec42eedb33f60f3b3f0b4ee49201503"
+      },
+      "result": {
+        "held_NI5_windup_restart_passed": true,
+        "epochs": [
+          {
+            "phase": "first",
+            "pid": 1336323,
+            "binary_sha256": "b476d3d94638cf39a72b9f43bdaa4cd290998f1163a3dd86435f0708cb0cf3c9",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_begin_count": 1,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5",
+                "pose_tracks": 64,
+                "held_time": 0.0,
+                "clock": 11.01400375366211
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          },
+          {
+            "phase": "second",
+            "pid": 1336598,
+            "binary_sha256": "b476d3d94638cf39a72b9f43bdaa4cd290998f1163a3dd86435f0708cb0cf3c9",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_begin_count": 0,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5",
+                "pose_tracks": 64,
+                "held_time": 0.0,
+                "clock": 11.180004119873047
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "phase": "NI1",
+                "pose_tracks": 0,
+                "held_time": 0.5260038375854492,
+                "clock": 13.836009979248047
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          }
+        ],
+        "full_M15S4_acceptance": false
+      },
+      "epochs": [
+        {
+          "phase": "first",
+          "process": {
+            "pid": 1336323,
+            "start_ticks": 42827941,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "b476d3d94638cf39a72b9f43bdaa4cd290998f1163a3dd86435f0708cb0cf3c9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/scenario.json",
+            "sha256": "b6adefbd0db86779d5679e9caf9cd8215dc252caee84e443c0a5c4d64db6a03b"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/launcher.json",
+            "sha256": "68d4b26471a2b7172e07d96995dc9c1e22fd75cc64974fc0ea9d513daf7e2f5c"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/input-pristine.omwsave",
+            "sha256": "5166e58ed8915690fafda4f612616ebae97b9d84300d680369c68aa5b318840a"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/manifest.json",
+            "sha256": "fc33dca24e95469b55aaf990591fd46a99254d6af04a7ad464d4b4df6a5380cd"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/process.log",
+            "sha256": "fc2eb17f139fabd535af51fcfed63002955eb6df250c07343a681891024ff51e"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/snapshot-index.json",
+            "sha256": "854c4bb9fc3cf58a5cad4a71adae1f3115c1caab1a52aa12395d8c1c945c818d"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/held-windup.png",
+            "sha256": "9e9412763c72fde912e42ae9b03252befe1f4ad47484a088cd359391508c35d7"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/snapshots/save-3.omwsave",
+                "sha256": "79ae4d3dc884ceadee32c0bb62a536c961b092fd3c4d3ff6c8b97396bc4973f2"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/first/live-1-3.json",
+                "sha256": "6b8ea0d0472b80e82c13171ab5ebdec72a75f24998d7cb04d9b94bab54042f6f"
+              }
+            }
+          ]
+        },
+        {
+          "phase": "second",
+          "process": {
+            "pid": 1336598,
+            "start_ticks": 42856785,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "b476d3d94638cf39a72b9f43bdaa4cd290998f1163a3dd86435f0708cb0cf3c9"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/scenario.json",
+            "sha256": "de6ede8879f885bc76cdf15e52eadd411a9308485615fcc94beb47e2b0a4c396"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/launcher.json",
+            "sha256": "078c595e3e09d72081f5b05f84ebaef371443ed5664112760825f4e9e5e8ecb3"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/input-pristine.omwsave",
+            "sha256": "79ae4d3dc884ceadee32c0bb62a536c961b092fd3c4d3ff6c8b97396bc4973f2"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/continuation.json",
+            "sha256": "1292beebc350f82e4c201e05667f2e9d5ee46ac49d1d6dcf8b67bb6cb90912db"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/process.log",
+            "sha256": "f421fa7921b80c34ecc65c2897751abd36c784f3afe2cf6e72c4cfd6681595b8"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/snapshot-index.json",
+            "sha256": "ab09190c7a379d3cd01bc9d2e31208191b5f2b98c374d60ee30fca093faebf64"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/held-windup-restored-late.png",
+            "sha256": "581646ede6cd008c9f0aa5fdea272c3c5920a531cfdd007b4009907508c12a1e"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/snapshots/save-3.omwsave",
+                "sha256": "c7f787ca1e79d3a3ceca8aa53b4caf8f0acf629b7407268eba4938c1c598666f"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/live-2-3.json",
+                "sha256": "e0b1caac3160661d753a135405b14004f194ef18e3fdbcf75c736fecdcaa9085"
+              }
+            },
+            {
+              "sequence": "4",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/snapshots/save-4.omwsave",
+                "sha256": "028d698c0a42966a9ddd762f7751141f82b8db3bb17ff8ea10544e72184330ea"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-runtime-sanitized-01/second/live-2-4.json",
+                "sha256": "1177931aee184ee159669c69b1f0b25597dfe5a8fadfa86e6dc34c72ca09a8ec"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "normal_release_deferral": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/bounded-verification.json",
+        "sha256": "dfae33facaff5b93b8db47a92fc703ffa1fd713e7a7ff302fc2b1389d18b1db0"
+      },
+      "semantic_verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/verify.py",
+        "sha256": "f763e8d1a6e2a7675bb289889789651cf989ee1a61f61695741ee3ceaa26933d"
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/preregistered.json",
+        "sha256": "4781e1cf225e40f063c5b0857ac38d16e7fb08ace88bc1b63f824db6ad07a3c6"
+      },
+      "binary_pin": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/binary-pin.json",
+        "sha256": "2b9b0bbdbc51561cd52e6effe090c9e67649768a907bccd464e62e39e7803397"
+      },
+      "result": {
+        "held_NI5_release_deferral_passed": true,
+        "epochs": [
+          {
+            "phase": "first",
+            "pid": 1336382,
+            "binary_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_release_count": 1,
+            "accepted_begin_count": 0,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "ease_end": 11.848003387451172,
+                "retirement_start": null,
+                "held_time": 0.0,
+                "NI5": true,
+                "tick": 2,
+                "held_easing": true,
+                "inactive": false,
+                "pose_present": true,
+                "passive_counter_present": false
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "ease_end": 13.176006317138672,
+                "retirement_start": 12.176006317138672,
+                "held_time": 1.1620025634765625,
+                "NI5": false,
+                "tick": 20,
+                "held_easing": false,
+                "inactive": true,
+                "pose_present": false,
+                "passive_counter_present": false
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          },
+          {
+            "phase": "second",
+            "pid": 1336498,
+            "binary_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538",
+            "initial_NPC_cache_clock_exact": true,
+            "accepted_release_count": 0,
+            "accepted_begin_count": 0,
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "ease_end": 13.176006317138672,
+                "retirement_start": 12.176006317138672,
+                "held_time": 1.1620025634765625,
+                "NI5": false,
+                "tick": 1,
+                "held_easing": false,
+                "inactive": true,
+                "pose_present": false,
+                "passive_counter_present": false
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "ease_end": 13.176006317138672,
+                "retirement_start": 12.176006317138672,
+                "held_time": 1.1620025634765625,
+                "NI5": false,
+                "tick": 20,
+                "held_easing": false,
+                "inactive": true,
+                "pose_present": false,
+                "passive_counter_present": false
+              }
+            ],
+            "ledger_owners_RNG_nine_AV_arrays_life_inventories_unchanged": true,
+            "inventory_count": 2151
+          }
+        ],
+        "full_M15S4_acceptance": false
+      },
+      "epochs": [
+        {
+          "phase": "first",
+          "process": {
+            "pid": 1336382,
+            "start_ticks": 42831434,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/scenario.json",
+            "sha256": "1a427557ae1018e37cc25453d62c1be830e8556265c242341ecca77d0b2f0d9c"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/launcher.json",
+            "sha256": "d439f8710e7984e36c251dd8be64697f20ef243771fd32d2eeab7e39cbc5748a"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/input-pristine.omwsave",
+            "sha256": "8404b0f1427ef41243013b9a9f2465b999d8d6c8106a777f2ff7966553065e95"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/manifest.json",
+            "sha256": "d7605fb2160e090baed48b06386df3774b627142b65c2030d1bf5b1124bf21b5"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/process.log",
+            "sha256": "b469eb6ea22d23021674691f36bf5a499c41fc01c5957592c93d24ddd0e7fc86"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/snapshot-index.json",
+            "sha256": "af59d5be92d99b5cb6f0ad2c0f946791163a3b48b1f63a36ea0b56970539a27a"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/reblock-late.png",
+            "sha256": "70de4506000d7821b613c1da3b4b85a0f54ef817321b3611a8cc388783b54eed"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/snapshots/save-3.omwsave",
+                "sha256": "8648d0664df2ccab6171607a19761827c658e08bbc16a5c4385329b9c9ca0c01"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/live-1-3.json",
+                "sha256": "34c88e9e343a0054fa5c543e3d37f8db43b783b62bab162eb6ca8a0cad1e3c1a"
+              }
+            },
+            {
+              "sequence": "4",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/snapshots/save-4.omwsave",
+                "sha256": "3819345495c997779ded62d6e24c0668791b6d5d59efc37376ba43544d4678c7"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/first/live-1-4.json",
+                "sha256": "938a5a55e421fa0b1e88ee78a934a6ba78a1df716a87b4b0b43194450e0e2da1"
+              }
+            }
+          ]
+        },
+        {
+          "phase": "second",
+          "process": {
+            "pid": 1336498,
+            "start_ticks": 42844309,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/config",
+              "--no-sound=1",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "1dbcb668f87dbc23740ca1c61f6272fa7976daf13d2083447931c907789ba538"
+          },
+          "scenario": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/scenario.json",
+            "sha256": "7eb5a3b14c07de2edc7a995d86f0d26c20309ae2c1f0471e2c98a710179bacf3"
+          },
+          "launcher": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/launcher.json",
+            "sha256": "a7ba82fb4ba018759e9efb8760344e849eb6238701247caaf47a142f0160bc94"
+          },
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/input-pristine.omwsave",
+            "sha256": "3819345495c997779ded62d6e24c0668791b6d5d59efc37376ba43544d4678c7"
+          },
+          "manifest": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/continuation.json",
+            "sha256": "d41a0a66d46871019ccfe2ef4f866ea3bba0d8409297561485753ae59aff20c9"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/process.log",
+            "sha256": "10a42da014fa4355211746ec4b20ffa4aa0b4545acce333fe158d82af793ef14"
+          },
+          "snapshot_index": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/snapshot-index.json",
+            "sha256": "5893d827ca020d440ae4755f9724b0a62b5e42a95495766cb83d1a554ad30574"
+          },
+          "reviewed_screenshot": {
+            "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/reblock-late.png",
+            "sha256": "e8ad1ae800738d65bb85f882e0dddeff9be57f366beb8ad5a8f17f1e55326770"
+          },
+          "pairs": [
+            {
+              "sequence": "3",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/snapshots/save-3.omwsave",
+                "sha256": "9e9795bc0f4c82a04fc09d307f2016221c1631b7b7611ea5d0e4036d3a13440e"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/live-2-3.json",
+                "sha256": "96a98a94d14758e380eacf3fa03e41f053466e9eb7a456f18d04f75605b1dda5"
+              }
+            },
+            {
+              "sequence": "4",
+              "save": {
+                "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/snapshots/save-4.omwsave",
+                "sha256": "233e9aff16c5b83979586feeced3237d5de8d408e308ebbb3d518e49673f0473"
+              },
+              "live": {
+                "path": "build/oblivion-compat/m15/S4/native-held-block-windup-release-runtime-normal-01/second/live-2-4.json",
+                "sha256": "bf2cfeef551e302b1334b886c3906d81851d3de5a8639d266751c8a40ea0a3ba"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "editable_cases": {
+    "path": "scripts/data/oblivion_compat/m15_held_block_windup_runtime_cases.json",
+    "sha256": "c22c2cdb57261e982b669b823917212a64bdd7a57211ed61d6d78006d60e5ef8"
+  },
+  "editable_scenarios": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_block_windup.json",
+      "sha256": "1ed06bb9a270738a73d000e130dac1d3b8dc8abe3344a03258de895b92b52a6e"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_block_windup_continuation.json",
+      "sha256": "d397060a790d8bc0972ad658de91557bd0c6d9abc36478f0bda14c6448941d59"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_block_windup_release.json",
+      "sha256": "d7605fb2160e090baed48b06386df3774b627142b65c2030d1bf5b1124bf21b5"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_block_windup_release_continuation.json",
+      "sha256": "d41a0a66d46871019ccfe2ef4f866ea3bba0d8409297561485753ae59aff20c9"
+    }
+  ],
+  "acceptance_scope": [
+    "Only normal Lua stance/movement/block intent, keyboard F5 and actual private upstream saves. No action/pose/AV/contact outcome injection.",
+    "Delayed activation after camera setup actually captures 64 source tracks as NI5 with requested destination 0 and native ease duration 1; first save freezes target time 0.",
+    "Fresh processes load the actual early NI5 saves and restore whole NPC melee/cache and clock exactly. Early continuation saves retain exactly the original 64-track captured pose; late saves have steady NI1 with cleared pose and no new begin/release.",
+    "Normal false-input course starts from an actual saved NI5. Early snapshot follows at least two Lua updates, retains action 6 / NI5 and its original pose. The one subsequent release starts native duration 1 retirement at or after the saved NI5 ease end, then expires inactive.",
+    "Inactive continuation retains every held field exactly and has no new release or begin.",
+    "Ten actual binary/live pairs across six distinct process epochs; whole payload decode/re-encode/live equality and pinned save/binary hashes checked.",
+    "Combat ledger/owners/RNG, all nine actor AV arrays/life and 2,151 original nonempty reference inventories plus Player inventory unchanged.",
+    "All six final screenshots inspected directly for transitional/held versus lowered stance; no original visual equivalence claim."
+  ],
+  "limits": [
+    "NPC body only, Player first-person camera, configured 10 FPS and keyboard/offscreen save input. Full view/input/FPS/equipment/contact/mastery/effects matrices remain open.",
+    "Schema60 source has no persistent held slot1 history. Its old generic fade expires during the delay; unknown lost cached laps are not reconstructed or claimed exact.",
+    "This is bounded actual saved-state/phase continuation and release-deferral evidence. Matched uninterrupted trajectory comparison, Player asymmetric views and original-game manager/skin interpolation remain open.",
+    "No new independent original-executable run in this checkpoint; referenced native proofs retain their declared scene/cache/INI/proxy boundaries.",
+    "ASan leak detection disabled; no leak coverage. No ASan/UBSan diagnostic in accepted instrumented runtime.",
+    "Existing TES4 fixtures/assets reused from pinned declarative sources; no new plugin/compiler/world authoring validation or TES4 MCP claim.",
+    "Full M15S4 remains incomplete."
+  ],
+  "full_M15S4_acceptance": false
+}

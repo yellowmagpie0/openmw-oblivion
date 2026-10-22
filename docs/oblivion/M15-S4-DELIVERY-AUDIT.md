@@ -11034,3 +11034,48 @@ disarm, contact-driven typed reaction, full input/FPS/mastery/effects or origina
 visual parity acceptance follows. Custom INI and initial FP clock/root policy
 remain open. Existing TES4 fixtures were reused: no new plugin/compiler/world
 validation or TES4 MCP capability claim. Full M15S4 remains incomplete.
+
+
+## Actual held NI5 persistence and release deferral
+
+Delayed normal block input now exercises the captured-pose World branch after
+camera setup. Both normal and ASan/UBSan courses actually save resident NI5 with
+64 captured tracks, requested destination zero and a one-second native ease
+span. Neither script supplies pose or animation outcomes. A distinct process
+loads that exact early save: initial NPC melee/cache and clock are exact, the
+early continuation save retains every original captured track, and the late
+save reaches steady NI1 with the pose cleared and no new begin or release.
+
+A normal false-input course starts from the actual saved NI5. After at least
+two Lua updates supplying block=false, the early keyboard save still has
+action6/NI5 and the original captured pose. One subsequent release anchors its
+one-second retirement at or after the saved NI5 ease end, then expires inactive.
+A separate process preserves every inactive held field through two further
+saves, without another release or begin. This extends the previous steady
+release course to the pending-transition input gate.
+
+The three two-process courses provide ten exact actual binary/live pairs.
+Independent decode/re-encode, initial cache/clock comparisons, process epochs,
+actual prior-save hashes and executable pins pass. Combat action ledger/owners,
+combat RNG, all nine actor AV arrays/life and 2,151 original nonempty reference
+inventories plus Player inventory stay exact. All six final screenshots were
+inspected directly for transition/guard-up versus lowered stance. The authored
+`Blend: 30` held KF and its editable asset source are pinned in the new receipt.
+
+No C++ or save-format change was needed after `5710d7ded2`. The four exact C++
+hashes and both runtime executable pins match the preceding full 1,829-test
+engine inventories; the preceding 382 Python tests remain their recorded scope.
+New editable JSON parses and its exact Lua/input content ran in the recorded
+courses. Builds and unchanged unit tests were not repeated. No ASan/UBSan
+diagnostic observed; leak detection disabled.
+
+[M15-HELD-BLOCK-WINDUP-RUNTIME-VERIFICATION.json](M15-HELD-BLOCK-WINDUP-RUNTIME-VERIFICATION.json)
+pins the preregistrations, semantic verifiers, inputs, saves/live data, reviewed
+images and editable cases. The schema60 source lacks persistent slot1 history;
+its old generic held fade expires during the delay, and lost cached laps are
+not reconstructed. These are NPC body persistence, phase completion and release
+deferral observations at configured 10 FPS, not a matched uninterrupted
+trajectory comparison, Player asymmetric view/input matrix or original-game
+skin interpolation proof. Equipment/contact/mastery/effects and the remaining
+S4 gates stay open. Existing fixtures were reused; no new plugin/compiler/world
+authoring validation or TES4 MCP capability claim. Full M15S4 remains incomplete.

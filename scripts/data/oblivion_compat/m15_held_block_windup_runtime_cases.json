@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "implementation_checkpoint": "5710d7ded2",
+  "native_basis": [
+    "docs/oblivion/M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
+    "docs/oblivion/M15-HELD-BLOCK-SERVICE-VERIFICATION.json",
+    "docs/oblivion/M15-HELD-BLOCK-WORLD-VERIFICATION.json"
+  ],
+  "cases": [
+    {
+      "scenario": "oblivion_m15_held_block_windup.json",
+      "continuation": "oblivion_m15_held_block_windup_continuation.json",
+      "intent": "After 1.0 Lua seconds at block=false, hold block=true; continuation holds true immediately.",
+      "expected": [
+        "Actual early save is resident NI5 with nonempty captured pose, requested destination 0, native ease duration 1 and no generic held fade",
+        "Exactly one initial accepted begin and no restart begin or release",
+        "Fresh process loads actual early save, preserves whole initial NPC melee/clock and every captured pose track",
+        "Early restart save NI5; late save steady NI1, cleared pose, same resident held cache",
+        "Three exact actual binary decode/re-encode/live pairs",
+        "Ledgers/owners/combat RNG/nine AV arrays/life/inventories unchanged"
+      ]
+    },
+    {
+      "scenario": "oblivion_m15_held_block_windup_release.json",
+      "continuation": "oblivion_m15_held_block_windup_release_continuation.json",
+      "intent": "Continuous block=false from an actual prior NI5 save; early F5 after at least two Lua updates.",
+      "expected": [
+        "Early snapshot remains action 6 / NI5 with exact original captured pose despite false input processed by simulation",
+        "Exactly one later release and no begin",
+        "Native retirement starts at or after the saved NI5 ease end; duration 1 fade finishes inactive",
+        "Separate process preserves every inactive held field through two saves",
+        "Four exact binary/live pairs; unrelated authority and inventories unchanged"
+      ]
+    }
+  ],
+  "limits": [
+    "NPC body only at configured 10 FPS, keyboard saves/offscreen rendering; Player view/input/FPS/equipment/contact matrices open",
+    "Schema60 source lacks persistent held slot1 history. Its old generic fade expires during delay; no lost cached loop history is reconstructed",
+    "These courses prove bounded actual persistence/phase completion and release deferral, not a matched uninterrupted trajectory comparison or original-game skin interpolation parity",
+    "No new C++ or save-schema change; reuse the exact already tested World/controller implementation"
+  ],
+  "full_M15S4_acceptance": false
+}
