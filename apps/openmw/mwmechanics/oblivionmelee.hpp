@@ -79,7 +79,7 @@ namespace MWMechanics
 
     // After a surviving blocked-contact preview, append the Expert defensive
     // query to this packet's wear RNG. Resource preparation chooses Counter
-    // instead of BlockHit/Recoil. Master immediate disarm remains guarded.
+    // instead of BlockHit/Recoil; a Master miss can append immediate disarm.
     bool prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
         OblivionPhysicalContactDeltas& deltas);
@@ -125,6 +125,7 @@ namespace MWMechanics
         bool mWeaponBlockSound = false;
         std::optional<std::array<std::string_view, 3>> mBlockSounds{};
         std::int32_t mHitArmorClass = -1; // Native contact-selected material, independent of condition writes.
+        bool mRequestsAttackerRecoil = false;
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
@@ -149,6 +150,7 @@ namespace MWMechanics
         std::optional<std::array<std::string_view, 3>> mBlockSounds{};
         std::int32_t mHitArmorClass = -1;
         OblivionWeaponBreakDisposition mBreakDisposition = OblivionWeaponBreakDisposition::None;
+        bool mRequestsAttackerRecoil = false;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

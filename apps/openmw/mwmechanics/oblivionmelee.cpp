@@ -579,6 +579,7 @@ namespace MWMechanics
         std::int32_t hitArmorClass = -1;
         float preArmorDamage = 0;
         bool blockAccepted = false;
+        bool requestsAttackerRecoil = false;
         bool weaponBlockSound = false;
         OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
@@ -596,6 +597,7 @@ namespace MWMechanics
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 blockAccepted = damage->mBlockAccepted;
+                requestsAttackerRecoil = damage->mRequestsAttackerRecoil;
                 weaponBlockSound = damage->mWeaponBlockSound;
                 result.mHitSounds = damage->mBlockSounds;
                 hitArmorClass = damage->mHitArmorClass;
@@ -633,6 +635,7 @@ namespace MWMechanics
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 blockAccepted = damage->mBlockAccepted;
+                requestsAttackerRecoil = damage->mRequestsAttackerRecoil;
                 weaponBlockSound = damage->mWeaponBlockSound;
                 result.mHitSounds = damage->mBlockSounds;
                 hitArmorClass = damage->mHitArmorClass;
@@ -666,17 +669,13 @@ namespace MWMechanics
             result.mHitSoundPosition = position;
         }
         deltas.mVictimHealth = -result.mDamage.mHealth;
-        const bool removedBlockingShield = blockAccepted && !result.mHitSounds
-            && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
-                return change.mOwner == *contact && change.mItem.getType() == ESM::REC_ARMO
-                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
-            });
         if (!contact->isEmpty() && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
                 || contact->getType() == ESM::REC_CREA4)
-            && (!blockAccepted || removedBlockingShield))
+            && !result.mHitSounds)
         {
-            // Original5FFB05 re-reads the shield after blocking wear. A removed shield
-            // uses general hit layers even when the contact was blocked.
+            // Original5FFB05 re-reads the shield after blocking wear. With
+            // neither weapon-block nor shield sound,5FFB96..5FFD61 uses the
+            // general hit layers, including unarmed blocks and removed shields.
             // Original5FFCE5 uses the armor selected by this contact's wear
             // path;5FFD61 uses no material even if other armor is equipped.
             // Model initialization projects Creature Actor byte104 as
@@ -688,8 +687,11 @@ namespace MWMechanics
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
+        // Original600528 blocked dispatch bypasses5FFF99's general-hit force,
+        // including its advanced unarmed zero-absorption route.
         if (!contact->isEmpty() && (contact->getType() == ESM::REC_NPC_4 || contact->getType() == ESM::REC_CREA4)
-            && result.mBlockAbsorbedFraction == 0 && oblivionKnockedState(world, *contact) == 0
+            && result.mBlockAbsorbedFraction == 0 && !requestsAttackerRecoil
+            && oblivionKnockedState(world, *contact) == 0
             && service->getNonPlayerIntegerValue(*contact, 4) > 0)
         {
             const auto* physics = dynamic_cast<const MWPhysics::PhysicsSystem*>(world.getRayCasting());
@@ -712,8 +714,9 @@ namespace MWMechanics
         // Original600528..60056A requests nonprojectile Recoil after a
         // Counter miss even when earlier wear removed the incoming weapon.
         // Resource discovery uses the projected empty Right slot in that case.
-        // Zero-absorption unarmed reactions retain their separate admission.
-        const bool attackerRecoil = blockHit && result.mBlockAbsorbedFraction > 0
+        // Advanced unarmed weapon blocks also reach that dispatcher at zero
+        // absorption. Preparation keeps this decision separate from damage.
+        const bool attackerRecoil = blockHit && requestsAttackerRecoil
             && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4);
         auto prepared = nativeWorld->prepareOblivionPhysicalContact(
             actionId, attacker, *contact, deltas, blockHit, attackerRecoil);
@@ -958,6 +961,7 @@ namespace MWMechanics
             bool mAccepted = false;
             bool mUnarmed = true;
             bool mWeaponBlockSound = false;
+            bool mRequestsAttackerRecoil = false;
             std::optional<std::array<std::string_view, 3>> mSounds{};
             std::vector<OblivionPhysicalConditionChange> mConditions{};
         };
@@ -1036,14 +1040,16 @@ namespace MWMechanics
                 : weapon ? ESM4::BlockEquipment::Weapon : ESM4::BlockEquipment::Unarmed;
             const auto disposition = ESM4::blockContactDisposition(
                 {true, false, false, true, equipment, attackerWeaponType >= 0, false});
-            if (disposition == ESM4::BlockContactDisposition::ReactionOnly)
-                return std::nullopt; // Zero-absorption unarmed mastery/recoil remains a separate branch.
             const bool player = victim == world.getPlayerPtr();
             const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
             const auto integer = [&](std::uint8_t av) { return player ? service.getPlayerIntegerValue(av)
                 : service.getNonPlayerIntegerValue(victim, av); };
             const auto base = [&](std::uint8_t av) { return player ? service.getPlayerBaseValue(av)
                 : service.getNonPlayerBaseValue(key, av, world.getStore()); };
+            const bool reactionOnly = disposition == ESM4::BlockContactDisposition::ReactionOnly;
+            if (reactionOnly && ESM4::combatMastery(base(17), ESM4::buildCombatMasterySettings(settings))
+                    < ESM4::CombatMastery::Journeyman)
+                return std::nullopt; // Lower Hand to Hand continues through the separate general-hit branch.
             // Counter-first selection and immediate Master disarm join the
             // World contact after this numeric preparation and armor-wear RNG.
             double itemCondition = 0;
@@ -1072,9 +1078,19 @@ namespace MWMechanics
                     static_cast<std::int32_t>(weapon->mData.type));
                 result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
             }
-            result.mFraction = ESM4::blockFraction({integer(15), integer(7),
+            else if (ESM4::combatMastery(base(15), ESM4::buildCombatMasterySettings(settings))
+                >= ESM4::CombatMastery::Journeyman)
+            {
+                // Original5FFA21..5FFAFB selects the unarmed block pair at
+                // Journeyman Block, independently of the incoming weapon type.
+                result.mWeaponBlockSound = true;
+                const auto layers = ESM4::nativeMeleeBlockSounds(-1, -1);
+                result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
+            }
+            result.mFraction = reactionOnly ? 0.f : ESM4::blockFraction({integer(15), integer(7),
                 ESM4::combatFatigueRatio(fatigue, base(10)), equipment},
                 ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
+            result.mRequestsAttackerRecoil = reactionOnly || result.mFraction > 0;
             const auto costs = ESM4::blockContactCosts(base(15), integer(15), remaining,
                 result.mFraction, !item.isEmpty(), ESM4::buildBlockCostSettings(settings),
                 ESM4::buildCombatMasterySettings(settings));
@@ -1193,7 +1209,8 @@ namespace MWMechanics
         }
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
             incoming.mHealth, std::move(wear.mConditions), wear.mRandom,
-            block->mAccepted, block->mWeaponBlockSound, block->mSounds, wear.mHitArmorClass};
+            block->mAccepted, block->mWeaponBlockSound, block->mSounds, wear.mHitArmorClass,
+            block->mRequestsAttackerRecoil};
     }
 
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
@@ -1396,7 +1413,7 @@ namespace MWMechanics
             return std::nullopt;
         return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
-            wear->mHitArmorClass, breakDisposition};
+            wear->mHitArmorClass, breakDisposition, block->mRequestsAttackerRecoil};
     }
 
     static float weaponContactDamage(MWBase::World& world,

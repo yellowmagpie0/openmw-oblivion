@@ -1,0 +1,64 @@
+{
+  "scope": "Real Player unarmed HTH100/Block25 defense against NPC weapon: zero absorption, full damage, Counter87 miss, disarm5 inclusive success, final-wear NPC drop/H2H Recoil and ordinary hit sounds. Fixture StopCombat interrupts Recoil; fresh-process persistence.",
+  "input": {
+    "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-inputs-01/staged-input.omwsave",
+    "sha256": "1ffc1e07250f889b295f30381ed974fed4ac929c122dd4be9c4670dae22bdab5"
+  },
+  "input_recipe": "build/oblivion-compat/m15/S4/native-advanced-unarmed-inputs-01/input-recipe.json",
+  "expected": {
+    "contact_id": 2,
+    "action_next": 3,
+    "Counter_percentile": 87,
+    "disarm_percentile": 5,
+    "combat_draws": 2,
+    "final_rng": 334604033,
+    "drop_count": 1,
+    "dropped_condition": 55.70000076293945,
+    "Player_block_fraction": 0,
+    "Player_block_fatigue": 0,
+    "Player_handtohand_base": 100,
+    "Player_block_base": 25,
+    "combat_rng_seed": 15,
+    "armor_selection_draws": 0,
+    "Counter_threshold": 25,
+    "Master_disarm_threshold": 5,
+    "recoil_variant_draws": 0,
+    "weapon": "content:oblivion.esm:090615",
+    "model": "meshes/weapons/iron/shortsword.nif",
+    "source_condition_before_contact": 56,
+    "source_weapon_retained_count": 0,
+    "next_dynamic_serial": 2,
+    "pending": [],
+    "contacts_per_epoch": [
+      1,
+      0
+    ],
+    "wire_pairs_per_course": 3
+  },
+  "rng_oracle": "build/oblivion-compat/m15/S4/native-advanced-unarmed-inputs-01/rng-verification.json",
+  "hit_sound_oracle": "build/oblivion-compat/m15/S4/native-unarmed-block-hit-sound-oracle-01/verification04.json",
+  "expected_hit_sounds": [
+    "PHYDamageFlesh",
+    "WPNHitBladeFlesh"
+  ],
+  "expected_break_drop": false,
+  "expected_health_scope": "One positive full-damage Player Health debit at most1.1 and exact persisted Damage; no new numeric damage-oracle acceptance",
+  "limits": "No lower HTH general-hit branch, no Player/Creature selected drops or spare replacement, uninterrupted Recoil, matched trajectory/original skin, PCM mixture or full input/view/FPS matrix acceptance.",
+  "full_M15S4_acceptance": false,
+  "schema_version": 1,
+  "implementation_parent": "d61c3d755e",
+  "first": "oblivion_m15_advanced_unarmed_block.json",
+  "continuation": "oblivion_m15_advanced_unarmed_block_continuation.json",
+  "unit_coverage": [
+    "54 Player/NPC defender contexts: base HTH49/50/74/75/99/100 plus modified-vs-base thresholds, Block5/25/50, full damage16, zero absorption, Block-based costs and original sound-rank split; query is read only",
+    "Owned NPC bare defense: Counter miss then inclusive Master disarm, one drop, full damage, explicit H2H reactions and exact binary restoration",
+    "Ordinary selected-target dispatcher with real actor collision bodies: full damage, general hit sound layers, no general-hit force, one Counter roll and binary restoration; headless fixture does not create renderer resources"
+  ],
+  "independent_references": [
+    "M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json",
+    "M15-UNARMED-BLOCK-SOUND-ORACLE-VERIFICATION.json",
+    "M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json"
+  ],
+  "interruption": "Fixture StopCombat calls cancelActorActions after contact, interrupting Recoil. No natural recovery or in-reaction restart claim.",
+  "input_policy": "Only Player Block base/raw/facade100->25, Hand to Hand10->100, existing sword/shield equipped slots->0, combat RNG4->15. No actions, poses, contacts, drops or outcomes injected. Source references otherwise unchanged."
+}

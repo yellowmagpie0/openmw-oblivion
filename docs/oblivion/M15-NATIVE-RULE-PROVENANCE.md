@@ -16926,5 +16926,59 @@ controller/Recoil sinks remain boundaries. No damage, actual item removal,
 ordinary general-hit consequences or runtime acceptance is claimed. Two loader
 setup failures precede execution and remain retained. The editable protocol and
 [M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json](M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json)
-pin the matrix, scripts, inputs and result. Production zero-absorption admission
-remains guarded until its integration; full M15S4 remains incomplete.
+pin the matrix, scripts, inputs and result. The bounded production integration
+below admits advanced Hand to Hand; lower-rank general-hit processing and full
+M15S4 remain incomplete.
+
+
+### Advanced unarmed zero-absorption contact integration
+
+The original zero-absorption routing above now has a bounded production path:
+an unarmed defender with base Hand to Hand at least Journeyman can block an
+incoming weapon without absorbing Health damage. A separate ephemeral request
+carries blocked-attacker Recoil admission into the ordinary caller. Full Health
+damage and the existing Block-based Fatigue costs remain independent of that
+request. Counter-first selection and conditional Master disarm join the same
+owned contact transaction after wear. No save schema or default changes.
+
+Original sound selection has its own skill threshold. A 216-case original
+instruction composition executes 5FF914..5FFD69, actual5F23B0/56A300 rank,
+and actual6AFFF0 block palette or6AF880..6AFD28 general-hit selector. Below
+Journeyman Block the no-weapon/no-shield contact uses PHYDamageFlesh plus the
+incoming Hand/BladeFlesh/BluntFlesh layer. At or above Journeyman Block, both
+6AFFF0 type arguments are -1: two WPNBlockHand layers, including when the
+incoming weapon is a blade or blunt weapon. NPC/Player roles, two absorbed
+fractions and x87 words 127/639/895 all pass. Base AV, process equipment/flags
+and absent SOUN lookups are declared boundaries; original actor base/position
+getters execute. There is no armor absorption/wear or selection RNG in this
+sound probe. It establishes selection, not actual audio playback or PCM.
+Three initial harness attempts reached uninitialized base-AV caches; none
+completed a profile. The corrected base-read boundary and rank-split protocol
+are retained with the failures in the sound-oracle receipt.
+
+The ordinary caller now uses the general hit palette whenever no specific
+block palette exists. Its general-hit force branch is skipped for advanced
+zero-absorption defense because the original routes directly into600528.
+Lower Hand to Hand remains guarded pending the separate general-hit route.
+The full normal and ASan/UBSan engine inventories each pass 1,845 tests in 125
+suites with leak detection disabled, including 54 base-rank/modifier/cost/sound contexts, owned Master disarm
+publication, and a real selected-target collision-body dispatcher test.
+Headless unit fixtures do not claim renderer resource acceptance.
+
+Real normal/instrumented input courses use bare Player Hand to Hand 100 and
+Block 25 against the existing stationary NPC sword policy. No worn armor means
+no armor-selection draws. Independently executed original CRT seed 15 yields
+Counter 87 miss, then inclusive disarm 5 hit: two draws and RNG 334604033.
+The contact retains zero absorption and full Health debit, uses ordinary flesh
+and blade-hit sounds, requests H2H Recoil, and drops one final-wear NPC
+shortsword at 55.70000076293945. Three live/save wire pairs per course and fresh
+process continuation preserve the one drop, native body, equipment, contact
+consumption and RNG without replay. The course bounds one positive Health
+debit<=1.1 and preserves exact Damage; this is not a new exact real-content
+damage oracle. Fixture StopCombat interrupts Recoil, so natural recovery and
+in-reaction restart remain open. The full M15S4 gate remains incomplete.
+
+[M15-UNARMED-BLOCK-SOUND-ORACLE-VERIFICATION.json](M15-UNARMED-BLOCK-SOUND-ORACLE-VERIFICATION.json)
+pins the independent sound composition.
+[M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json](M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json)
+pins the tested C++ fingerprint, full inventories and runtime artifacts.

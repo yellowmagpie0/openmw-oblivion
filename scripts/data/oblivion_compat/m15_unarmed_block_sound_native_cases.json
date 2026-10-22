@@ -1,0 +1,53 @@
+{
+  "scope": "Original unarmed/no-equipped-weapon/shield hit-sound caller5FF914..5FFD69: actual Block-rank split and actual native block/general hit palette; no numerical damage or gameplay acceptance.",
+  "base_block": [
+    25,
+    49,
+    50,
+    100
+  ],
+  "cases": 216,
+  "expected_below50": [
+    "PHYDamageFlesh",
+    "WPNHitHand/BladeFlesh/BluntFlesh"
+  ],
+  "expected_at_above50": [
+    "WPNBlockHand",
+    "WPNBlockHand"
+  ],
+  "supplied": "Base AV15, empty process equipment/position flags, and absent SOUN lookup; actual rank and actor base/position getters execute. No armor absorption/wear; selector/RNG visits rejected.",
+  "schema_version": 1,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "full_M15S4_acceptance": false,
+  "receipt": "M15-UNARMED-BLOCK-SOUND-ORACLE-VERIFICATION.json",
+  "victim": [
+    "npc",
+    "player"
+  ],
+  "attacker": [
+    "npc",
+    "player"
+  ],
+  "exclude": "both Player",
+  "weapon_type": [
+    -1,
+    0,
+    2
+  ],
+  "fraction": [
+    0,
+    0.25
+  ],
+  "cw": [
+    127,
+    639,
+    895
+  ],
+  "boundaries": "Equipped/position flags zero; absent SOUN lookup. No actual playback or gameplay acceptance.",
+  "instructions": [
+    "5FF914..5FFD69 caller",
+    "5F23B0/56A300 rank",
+    "6AFFF0 block palette",
+    "6AF880..6AFD28 hit palette"
+  ]
+}

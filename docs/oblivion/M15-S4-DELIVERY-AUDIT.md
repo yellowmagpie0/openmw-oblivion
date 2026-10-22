@@ -11394,5 +11394,49 @@ into general-hit processing, which remains outside this campaign's boundary.
 All asserted route/call/draw and stack/register conventions pass. Counts and
 source are pinned in
 [M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json](M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json).
-This adds no production admission or runtime acceptance. The advanced route
-requires integration, and the lower-rank general-hit path remains open.
+The oracle itself adds no production admission or runtime acceptance. Its
+advanced-route integration is recorded below; lower-rank general hit remains open.
+
+
+## Advanced unarmed block integration
+
+Bare defenders with base Hand to Hand at least Journeyman now retain full
+Health damage at zero absorption while entering blocked Counter-first dispatch.
+A separate ephemeral Recoil request keeps reaction admission independent of
+absorption. Original Block-derived Fatigue costs remain intact. Below Journeyman
+Block, the caller uses ordinary flesh/incoming-weapon hit sounds; at or above
+that rank it uses two Hand block layers. A separate 216-case original instruction
+composition verifies this sound split. General-hit force is skipped on the
+advanced blocked route. No schema or default changes.
+
+The normal and ASan/UBSan full engine suites each pass 1,845 tests in 125 suites,
+with no failures/skips; leak detection is disabled. Three new tests cover 54
+base-skill/modifier/cost/sound contexts, atomic full-damage Master disarm and
+owned reactions, and ordinary selected-target dispatch without general-hit
+force. Headless unit fixtures do not establish renderer resource acceptance.
+
+Normal and instrumented runtime courses each pass two processes and three
+exact live/save wire pairs. Actual bare Player HTH 100/Block 25 defends against
+one stationary NPC sword attack: fraction 0, block Fatigue 0, two draws, ordinary
+flesh/blade sounds and H2H Recoil. Original CRT seed 15 supplies Counter 87 miss
+and inclusive Master disarm 5 hit, final RNG 334604033. One final-wear shortsword
+drop retains condition 55.70000076293945. Fresh load preserves native actor and
+body state, equipment, consumed contact and RNG without replay. Supplemental
+exact-token/sound verifiers pass both courses. All four captures were reviewed;
+the sword lies below the viewport, so the native drop/body and inventory checks
+establish its consequence.
+
+The bounded real-content Health debit and exact persisted Damage do not supply
+a new exact numeric damage oracle. StopCombat interrupts Recoil, leaving natural
+recovery and in-reaction restart open. Earlier facing/charge fixture failures,
+const-accessor compile failures and intentional sanitizer interruptions remain
+retained; they are distinct from the passing checks in attempt 04.
+
+[M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json](M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json)
+pins tested parent d61c3d755e and C++ fingerprint
+0ed2a5395cae77c1f51fd62a15fe29e37fa3c28168eb516eefa52743718f9710,
+full checks and 105 runtime/input artifacts. The independent sound receipt and
+editable native/runtime case protocols accompany it. Lower HTH general-hit
+processing, selected Player/Creature disarms, spare replacement, directional
+power/effect paths, and the complete input/view/FPS/interruption matrix remain
+open. **Full M15S4 remains incomplete.**
