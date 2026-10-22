@@ -10903,3 +10903,28 @@ masks100/101 in save validation. This is headless renderer/controller-source
 verification, with no new actual runtime, visual, authoring/compiler/world or
 fresh-process acceptance. The double-begin runtime regression remains open,
 and M15S4 remains incomplete.
+
+
+## Original held-slot interruption and pending-pose cancellation
+
+The original full helpers passed 96 steady held NI1 cases: BlockHit/Counter retain
+both held objects byte-for-byte, while Recoil/Stagger clear NPC body or Player
+both slot1 pointers and apply the exact zero-deactivation field changes.
+A further 192 cases execute full eligible held activation asNI5, then incoming
+Recoil/Stagger before any manager update. They assert complete 0x70-byte held
+sequence changes, including the one-store offset correction and clearing state,
+link and requested destination. Incoming and old Counter resources are distinct
+in every accepted tuple. Unselected NPC FP/Player body caches remain unchanged.
+
+The inactive cache may retain a known offset with no easeStart and either a
+retained or absent lastInput: masks101/100. These values must be represented,
+not filled in or discarded. A further 96 detached-cache cases show that full Recoil/Stagger leaves already
+detached NI3/inactive0 bytes unchanged; the fade continues on its own NI clock.
+Production save validation and atomic cancellation need the pending masks and
+resident-only policy before normal-input typed held activation is enabled.
+[M15-HELD-BLOCK-INTERRUPTION-VERIFICATION.json](M15-HELD-BLOCK-INTERRUPTION-VERIFICATION.json)
+pins the original image, accepted02/04/05 tools, preregistrations, corpora and
+editable cases; exploratory01 and the weaker repeated-resource03 are retained.
+Scene/root/render/cache/INI/proxy boundaries remain supplied. No actual manager
+traversal, game process, production cancellation or full M15S4 acceptance is
+claimed by these instruction probes.

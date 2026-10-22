@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "blockhit_and_counter": "0x5F4E10",
+    "recoil": "0x5F4F00",
+    "stagger": "0x5F4FD0",
+    "reset_slot": "0x470FC0",
+    "zero_deactivate": "0x6C9CB0"
+  },
+  "detached": {
+    "cases": 96,
+    "helpers": [
+      "recoil",
+      "stagger"
+    ],
+    "prior_release_elapsed": [
+      0,
+      0.25
+    ],
+    "expected": "Full incoming helper preserves complete held NI3/inactive0 bytes and null slot pointers. A subsequent explicit update continues live NI3 from.75 to.875, while inactive0 remains unchanged."
+  },
+  "steady": {
+    "cases": 96,
+    "helpers": [
+      "blockhit",
+      "counter",
+      "recoil",
+      "stagger"
+    ],
+    "expected": "BlockHit/Counter preserve complete held sequence bytes and pointers. Recoil/Stagger zero-deactivate NPC body or Player both held slots; unselected NPC FP remains unchanged."
+  },
+  "pending_pose": {
+    "cases": 192,
+    "helpers": [
+      "recoil",
+      "stagger"
+    ],
+    "fresh_or_cached": true,
+    "prior_release_elapsed": [
+      0,
+      0.25
+    ],
+    "blend_frames": 9,
+    "expected": "Full eligible held NI5 activation followed immediately by direct-branch incoming Recoil/Stagger, before first manager update. Selected held cache becomes NI0, retains offset, missing easeStart, prior or missing lastInput, weighted/output/easeEnd. Clear link and requested destination; apply offset correction only if lastInput known.",
+    "inactive_timing_masks": [
+      "100: offset present, easeStart absent, lastInput absent",
+      "101: offset present, easeStart absent, lastInput retained"
+    ]
+  },
+  "matrix": {
+    "actor": [
+      "npc",
+      "player"
+    ],
+    "camera_byte": [
+      0,
+      1
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87_control_word": [
+      "0x7f",
+      "0x27f",
+      "0x37f"
+    ]
+  },
+  "offset_rule": "One f32 store of weighted/frequency -lastInput +offset, retaining native sign of zero; fields0x44/0x54/0x58 become state0/sentinel/null and all other0x70 bytes remain exact.",
+  "boundaries": [
+    "Hash-identified original helpers/reset/deactivation execute.",
+    "Synthetic cache hash/equality/single-variant lookup and scene/INI/notification boundaries supplied.",
+    "Pending held pose uses eligible root/manager branch and supplied preallocated proxy; incoming reaction rendering/root branch supplied direct.",
+    "No original-game process, actual manager traversal, arbitrary-frequency arithmetic or production interruption acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}
