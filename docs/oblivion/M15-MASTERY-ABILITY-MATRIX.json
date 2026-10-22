@@ -783,7 +783,7 @@
         "setting": "iPerkBlockDisarmChance",
         "compiled": 5,
         "installed": 5,
-        "draw": "0..99 inclusive <=; quest item/drawn checks occur after draw"
+        "draw": "Counter-first 0..99 inclusive <=25; on miss actual target weapon/quest/drawn/Player-byte admission precedes separate disarm0..99 inclusive <=5; source drawn follows disarm roll"
       },
       "duration_seconds": null,
       "save_fields_required": [
@@ -792,8 +792,8 @@
         "RNG state"
       ],
       "implementation_owner": "S2 pure rules; S4/S5/S7/S8 native actions and persistence",
-      "rule_implementation": "blockMasteryDisarm tested; actual drop and contact eligibility pending",
-      "verification_status": "pending",
+      "rule_implementation": "blockMasteryDisarm, composed original Counter-first caller and World atomic final-wear NPC drop integrated; bounded normal/sanitized interruption/restart courses pass",
+      "verification_status": "bounded-world-runtime",
       "required_cases": [
         "base skill threshold -1 / at / +1",
         "modified skill crosses threshold without changing base",
@@ -804,10 +804,11 @@
         "fixed-seed distribution with predeclared tolerance"
       ],
       "open_questions": [
-        "trace original execution prerequisites and numeric consequences",
-        "native normal-input and restart evidence missing"
+        "Player target drop policy and spare weapon replacement remain explicitly guarded",
+        "Uninterrupted post-disarm reaction, full input/view/FPS and recovery/restart matrices remain open",
+        "Ordinary attacker weapon-break Recoil dispatch remains guarded despite projected World resource support"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/mastery/block-05/"
+      "evidence": "M15-MASTER-BLOCK-DISARM-VERIFICATION.json"
     },
     {
       "id": "M15-MASTERY-MARKSMAN-01",

@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "scope": "Master defensive Counter-first and conditional immediate NPC weapon disarm, projected post-disarm H2H Recoil, final-condition physical drop and StopCombat-interrupted restart",
+  "full_M15S4_acceptance": false,
+  "original_oracle": "m15_master_block_dispatch_native_cases.json",
+  "first": "oblivion_m15_master_immediate_disarm.json",
+  "continuation": "oblivion_m15_master_immediate_disarm_continuation.json",
+  "inputs": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/master-immediate-disarm.omwsave",
+      "sha256": "ae47958c8ca4798aa04590817db94cc48bf95c1d6d941d159915af0a3e564643",
+      "mutation": "Only combat RNG62->4 from preserved input01",
+      "expected_contact_draws": 6,
+      "expected_final_rng": 1802518722
+    }
+  ],
+  "input_authoring": "Schema61 baseline migration then native Player Block base/raw/facade100, Player sword55.875, one carried-left Iron Shield condition100; RNG4. Incoming break variant only NPC sword0.01f. No contact, action, reaction, pose, drop or outcome injection.",
+  "rng": {
+    "seed": 4,
+    "shield_only_native_armor_draws": 4,
+    "armor_final": 2172805640,
+    "counter_percentile": 45,
+    "counter_threshold": 25,
+    "counter_next": 1136761003,
+    "disarm_percentile": 4,
+    "disarm_threshold": 5,
+    "disarm_next": 1802518722,
+    "disarm_draws": 6,
+    "incoming_break_draws": 5,
+    "recoil_variant_draws": 0
+  },
+  "expected": {
+    "contact_id": 2,
+    "action_next": 3,
+    "player_block_fraction": 0.75,
+    "player_block_fatigue": 0,
+    "dropped_condition": 55.70000076293945,
+    "drop_reference": "dynamic:native-reference:0000000000000001",
+    "weapon": "content:oblivion.esm:090615",
+    "model": "meshes/weapons/iron/shortsword.nif",
+    "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+    "unbroken_drop_count": 1,
+    "health": "One positive Player debit<=1.1, exact persisted Damage across restart; no new numeric damage-oracle claim.",
+    "reaction": "Post-disarm H2H Recoil selected with zero variant draws. Authored fixture StopCombat cancels it after contact; no natural recovery claim.",
+    "precontact_implicit_full_weapon_condition": 56
+  },
+  "unit_coverage": [
+    "24 paired Player/NPC defender contexts across ranks, modifiers, gear, prior RNG and inclusive boundaries",
+    "Six target weapon/quest/drawn/source-drawn/projected-break modes",
+    "Selected Player and spare-weapon rejection without staged RNG/disarm leaks",
+    "Automatic selected disarm cannot publish without drop factory",
+    "Owned NIF/physics final-wear drop plus resource/action/RNG atomic publication and binary restore"
+  ],
+  "limits": [
+    "Selected Player disarm and spare weapon replacement remain explicitly guarded.",
+    "Creature defensive reactions, zero-absorption unarmed-versus-weapon and projected Counter activation after defender break remain guarded.",
+    "Uninterrupted post-disarm Recoil recovery, fully autonomous replacement/pickup and full input/view/FPS matrices remain open.",
+    "No original actor skin/update parity, settled-body or matched uninterrupted trajectory, or PCM mixture claim.",
+    "Existing stationary TES4 fixture reused; no content-authoring support/MCP changes.",
+    "Ordinary incoming weapon break still suppresses attacker Recoil at dispatch, despite World projected-family support; first broken-weapon runtime retains the failing expectation. Fix and runtime acceptance are a subsequent chunk."
+  ],
+  "installed_weapon_record_audit": "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/weapon-record-audit.json"
+}

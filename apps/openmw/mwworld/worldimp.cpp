@@ -3031,12 +3031,17 @@ namespace MWWorld
             ESM4::NativeNpcBlockHitGroupInput groupInput;
             groupInput.mWeaponDrawn115 = weaponDrawn;
             const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
-            // Disarm precedes Stagger in the native Counter dispatcher. Resolve
-            // its resource family from the projected empty right-hand slot.
-            const bool disarmed = right != inventory.end()
-                && std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
-                    [&](const auto& request) { return request.mOwner == actor && request.mItem == *right; });
-            if (!disarmed && right != inventory.end() && right->getType() == ESM::REC_WEAP)
+            // Equipment removal precedes the incoming reaction. Both disarm
+            // and breakage must query the projected empty right-hand slot.
+            const bool removed = right != inventory.end()
+                && (std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
+                        [&](const auto& request) { return request.mOwner == actor && request.mItem == *right; })
+                    || std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
+                        [&](const auto& change) {
+                            return change.mOwner == actor && change.mItem == *right
+                                && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
+                        }));
+            if (!removed && right != inventory.end() && right->getType() == ESM::REC_WEAP)
             {
                 const auto item = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
                 const auto* form = item.getIf<ESM::FormId>();
@@ -3358,6 +3363,7 @@ namespace MWWorld
         std::optional<WorldModel::RegistryGuard> mRegistry;
         std::vector<ReactionBinding> mReactionBindings;
         std::optional<bool> mEquipmentFirstPerson;
+        std::vector<MWMechanics::OblivionPhysicalDisarm> mResolvedDisarms;
     };
 
     World::PreparedOblivionPhysicalContact::PreparedOblivionPhysicalContact(std::unique_ptr<Data> data)
@@ -3449,6 +3455,12 @@ namespace MWWorld
         validateOblivionContactDisarms(deltas);
         auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas, blockHit, attackerRecoil);
         if (!contact) return nullptr;
+        // Defensive mastery can select a disarm while resources are prepared.
+        // Its resolved request must reach the same drop factory as an explicit
+        // Counter request before any contact or RNG state can publish.
+        auto resolved = deltas;
+        resolved.mDisarms = contact->mData->mResolvedDisarms;
+        validateOblivionContactDisarms(resolved);
         std::vector<EquippedWeaponDrop> drops;
         for (const auto& change : deltas.mConditionChanges)
             if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
@@ -3458,12 +3470,12 @@ namespace MWWorld
                 if (!animation) return nullptr;
                 drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition});
             }
-        for (const auto& disarm : deltas.mDisarms)
+        for (const auto& disarm : resolved.mDisarms)
         {
             if (!mRendering || !mPhysics) return nullptr;
             auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(disarm.mOwner));
             if (!animation) return nullptr;
-            drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(deltas, disarm), true});
+            drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(resolved, disarm), true});
         }
         if (!drops.empty())
             contact->mData->mDrops = prepareEquippedWeaponDrops(*this, mRendering->getObjects(), *mPhysics, drops);
@@ -3664,6 +3676,7 @@ namespace MWWorld
         data->mGodMode = getGodModeState();
         data->mRandomDraws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws : 0;
         data->mContact = std::move(contact);
+        data->mResolvedDisarms = preparedDeltas.mDisarms;
         for (const auto& [owner, requested] : std::array<std::pair<Ptr, bool>, 2>{{
                  {attacker, preparedDeltas.mAttackerReaction.has_value()},
                  {victim, preparedDeltas.mVictimReaction.has_value() || preparedDeltas.mVictimCounter.has_value()}}})

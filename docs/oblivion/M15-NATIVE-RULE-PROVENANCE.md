@@ -16807,3 +16807,52 @@ Thresholds25/5 reuse the audited installed values; no new live GMST or runtime
 acceptance. Protocol `m15_master_block_dispatch_native_cases.json` and
 `M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json` pin the inputs and tools.
 Production Master ordinary contacts remain guarded pending integration.
+
+### Master blocking integration and resolved drop ownership
+
+Ordinary blocking now admits Master numerics and joins the independently
+verified Counter-first dispatcher after armor-selection RNG. A Counter miss
+queries the projected incoming weapon, target drawn/quest/Player guards and
+then the conditional disarm draw; source drawn remains a post-roll check.
+Preparation uses a private candidate, so selected unsupported Player/spare
+policies and other rejected resources leave the supplied packet unchanged.
+
+The World resource preparation can select this disarm after copying the original
+contact request. Its final resolved disarm list now reaches the outer owned
+weapon-drop factory before contact publication. The drop receives final contact
+wear. Resource discovery sees an empty Right slot after disarm or weapon break,
+selecting unarmed Recoil while preserving the original contact identity.
+No schema/default change is needed; current native state remains schema 61.
+
+Both complete engine inventories pass **1,840 tests in 125 suites**, with exact
+inventory/XML agreement and no failures/skips, normally and under ASan/UBSan
+(leak checks disabled). The tested parent is 754cfe110665aabd1ea5d4576054f9c0b69922bb,
+source fingerprint ef6c87b4bfe252aa52b7f2f06b2a90d22fd39607b6214cf3cbeaa6bbf560e5ee.
+New cases cover 24 paired defender contexts, six target admission modes,
+unsupported selected Player/spare policies, mandatory drop-factory ownership,
+and final-wear owned scene/physics publication plus binary restore.
+
+Selected Player disarms, spare weapon replacement, Creature defensive reactions,
+zero-absorption unarmed-versus-weapon reactions and projected Counter activation
+following defender equipment break remain explicit unsupported boundaries.
+This engine checkpoint does not complete the S4 gameplay/restart gate.
+
+The intact Master shield course now passes normal and instrumented two-process
+interruption/restart verification, with three exact live/save wire pairs each.
+The original armor selector independently confirms four draws for seed 4,
+then Counter 45 misses and disarm 4 succeeds: six total draws, final state
+1802518722. Single unarmed Recoil adds no variant draws. One NPC shortsword
+leaves inventory and owns one world reference/body at final condition
+55.70000076293945. Player shield and weapon remain equipped. The fixture calls
+StopCombat immediately after attack Fatigue is spent; the debugger traces its
+cancelActorActions/cancelMeleeReaction call. This verifies interruption and
+persistence, not natural Recoil recovery. Player Health is bounded to one
+positive debit at most 1.1 and exact persisted Damage, not a new damage oracle.
+
+Retained runtime input 62 incorrectly assumed a single armor draw. Full original
+5E5A00 instead consumes six: subsequent Counter 29 and disarm 34 miss, then
+armed Recoil uses two variant draws. The private incoming-break course also
+reveals ordinary dispatch still suppressing attacker Recoil after breakage;
+its provisional retention expectation conflicts with the established native
+NPC zero-condition drop policy. Those remain a subsequent dispatcher/runtime
+chunk. The public verification receipt pins accepted evidence and failures.

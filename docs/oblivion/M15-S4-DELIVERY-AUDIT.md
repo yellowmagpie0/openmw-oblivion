@@ -12,7 +12,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Spell-free, unarmed Creature ordinary strikes now reach the same contact owner through stationary AI and stock handtohand KFs. Spell-free Creature victims now accept bounded ordinary contacts and timed force; defensive/effect branches, armed sources and the complete input/view matrix remain open. Trace and verify every admitted actor route. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert/Master defensive procs and zero-absorption unarmed weapon-block reactions remain rejected. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; complete Player/Creature/spare policies and zero-absorption unarmed weapon-block reactions remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
@@ -11312,3 +11312,43 @@ source and results. No failures or production changes in this checkpoint, and
 no engine/component/Python suite rerun. Production still rejects Master ordinary
 blocking; integrating Counter-first and immediate disarm remains required.
 **M15S4 remains incomplete.**
+
+## Master defensive contact integration
+
+The Master ordinary-block guard is replaced by Counter-first preparation after
+armor-wear RNG. On a miss, eligible target equipment/drawn/quest admission
+precedes the separate disarm roll; source drawn is checked afterwards. Selected
+NPC disarms without spare weapons reach the outer World drop factory with final
+contact wear before values, actions, reactions or RNG publish. Both disarm and
+incoming weapon break project an empty Right slot for Recoil resource discovery.
+
+Five new tests cover 24 paired defender contexts, six target/source admission
+modes, selected Player/spare rejection without staging leaks, mandatory drop
+factory ownership and owned final-wear scene/physics publication/binary restore.
+Full normal and ASan/UBSan engine inventories each pass 1,840 tests / 125 suites,
+with no failures or skips; this is engine integration evidence.
+
+The selected Player/spare/Creature policies, zero-absorption unarmed defense,
+projected Counter activation after defender break and complete S4 input/view/
+recovery matrices remain open. **M15S4 remains incomplete.**
+
+The intact-weapon Master shield course passes normally and under ASan/UBSan:
+one contact, Counter miss, immediate NPC disarm, one shortsword body at final
+condition 55.70000076293945, and exact RNG 1802518722 after six draws. Two
+processes and three live/save wire pairs per build verify persistence without
+replayed contact. Player Health has a bounded positive debit and exact retained
+Damage; this is not a new exact numeric damage oracle. The authored StopCombat
+command cancels Recoil, so uninterrupted recovery remains a separate gate.
+
+The original armor selector independently verifies seed 4: four shield-only
+selection draws, Counter 45 miss and Master disarm 4 hit. The failed seed-62
+recipe, recovery-wait failure, debugger diagnosis and verifier corrections are
+retained. The incoming-weapon-break course additionally exposes an existing
+ordinary-dispatch Recoil suppression; World projected equipment support alone
+does not close that branch. Normal NPC breakage must use its zero-condition
+drop policy. The next chunk must fix and verify that dispatcher path.
+
+[M15-MASTER-BLOCK-DISARM-VERIFICATION.json](M15-MASTER-BLOCK-DISARM-VERIFICATION.json)
+pins the two accepted courses, full suites, source and 92 evidence artifacts.
+Editable scenarios and `m15_master_block_disarm_cases.json` retain inputs,
+expected values and boundaries. **M15S4 remains incomplete.**

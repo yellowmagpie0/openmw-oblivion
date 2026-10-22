@@ -436,7 +436,6 @@ namespace MWMechanics
         const bool master = hasWeapon || hasShield
             ? hasShield && ESM4::combatMastery(input.mBlock, mastery) >= ESM4::CombatMastery::Master
             : ESM4::combatMastery(input.mHandToHand, mastery) >= ESM4::CombatMastery::Master;
-        if (master) return false; // The no-Counter branch must include immediate Master disarm.
         const auto draw = ESM4::combatRandomDraw(deltas.mRandomTransition
             ? deltas.mRandomTransition->mNextState : service->combatRandomState());
         const auto proc = ESM4::blockMasteryStagger(input, draw.mValue % 100,
@@ -451,8 +450,57 @@ namespace MWMechanics
             return false; // Projected equipment-change Counter activation needs its own resource packet.
         const auto random = service->prepareCombatRandom((deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
         if (random.mNextState != draw.mNextState) return false;
-        deltas.mRandomTransition = random;
-        deltas.mVictimCounterRequested = proc.mTriggered;
+        auto candidate = deltas;
+        candidate.mRandomTransition = random;
+        candidate.mVictimCounterRequested = proc.mTriggered;
+        if (master && !proc.mTriggered)
+        {
+            // Original600528 first queries Counter even at Master. Only its
+            // false branch reaches5FC2B0, whose target query precedes the
+            // separate disarm roll and whose source-drawn check follows it.
+            auto& targetInventory = attacker.getClass().getInventoryStore(attacker);
+            const auto targetRight = targetInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            const bool targetHasWeapon = targetRight != targetInventory.end()
+                && targetRight->getType() == ESM::REC_WEAP
+                && std::none_of(candidate.mConditionChanges.begin(), candidate.mConditionChanges.end(),
+                    [&](const auto& change) {
+                        return change.mOwner == attacker && change.mItem == *targetRight
+                            && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+                    });
+            const ESM4::Weapon* targetWeapon = nullptr;
+            if (targetHasWeapon)
+            {
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                    world.getStore(), targetRight->getCellRef().getRefId());
+                const auto* form = id.getIf<ESM::FormId>();
+                targetWeapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+                if (!targetWeapon) return false;
+            }
+            const ESM4::DisarmTargetWeaponInput target{targetHasWeapon,
+                attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon,
+                targetWeapon && (targetWeapon->mFlags & ESM4::Rec_Persistent),
+                attacker == player && world.getGodModeState()};
+            const auto next = ESM4::combatRandomDraw(random.mNextState);
+            const auto disarm = ESM4::blockMasteryDisarm(input, true, target,
+                defender.getClass().getCreatureStats(defender).getDrawState() == DrawState::Weapon,
+                next.mValue % 100, ESM4::buildMasteryProcSettings(settings), mastery);
+            if (disarm.mConsumesDraw)
+            {
+                const auto combined = service->prepareCombatRandom(random.mDraws + 1);
+                if (combined.mNextState != next.mNextState) return false;
+                candidate.mRandomTransition = combined;
+            }
+            if (disarm.mTriggered)
+            {
+                // Player bound-centering and native spare-weapon replacement
+                // remain separate drop policies, as in Counter phase1.
+                if (attacker == player) return false;
+                for (auto item = targetInventory.begin(); item != targetInventory.end(); ++item)
+                    if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return false;
+                candidate.mDisarms.push_back({attacker, *targetRight});
+            }
+        }
+        deltas = std::move(candidate);
         return true;
     }
 
@@ -1000,11 +1048,8 @@ namespace MWMechanics
                 : service.getNonPlayerIntegerValue(victim, av); };
             const auto base = [&](std::uint8_t av) { return player ? service.getPlayerBaseValue(av)
                 : service.getNonPlayerBaseValue(key, av, world.getStore()); };
-            // Expert selection joins the World contact after armor-wear RNG.
-            // Master immediate-disarm publication remains a separate caller.
-            if (ESM4::combatMastery(base(item.isEmpty() ? 17 : 15),
-                    ESM4::buildCombatMasterySettings(settings)) >= ESM4::CombatMastery::Master)
-                return std::nullopt;
+            // Counter-first selection and immediate Master disarm join the
+            // World contact after this numeric preparation and armor-wear RNG.
             double itemCondition = 0;
             if (!item.isEmpty())
             {

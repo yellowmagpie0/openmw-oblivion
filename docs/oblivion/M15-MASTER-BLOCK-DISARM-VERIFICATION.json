@@ -1,0 +1,578 @@
+{
+  "schema_version": 1,
+  "scope": "Master block Counter-first immediate NPC disarm, final-wear physical drop, projected H2H Recoil and StopCombat-interrupted fresh-process persistence",
+  "full_M15S4_acceptance": false,
+  "tested_parent": "754cfe110665aabd1ea5d4576054f9c0b69922bb",
+  "tested_CPP_sha256": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "3ddf9ea77d72bddc0143c4427f1980c54d1aa81630263a07afa980f0a0b52726",
+    "apps/openmw/mwworld/worldimp.cpp": "e6d7f1d49bd14cc00bc0b125889d1ac03ad9b43dc109f4c2af688f299563f6e1",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "296c34be97582e967134b9f3ecba7df2b548ca8a5a3da2e7e409955a62adf699"
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-master-block-disarm-normal-02/verification.json",
+      "sha256": "74832b0c2050c686664dff5117e52a9cbea280b9e5ca36ed026611281419a770",
+      "bytes": 2144,
+      "source": {
+        "head": "754cfe110665aabd1ea5d4576054f9c0b69922bb",
+        "source_fingerprint": "ef6c87b4bfe252aa52b7f2f06b2a90d22fd39607b6214cf3cbeaa6bbf560e5ee"
+      },
+      "results": {
+        "engine": {
+          "executed": 1840,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "31a5def9ad1674b658d0fed0aa6301449aec746721a680d2a77a783385e91c50",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5c9000683f56b52bcb60c726b9fd1237421a5c56c3a8bcd746aec0f46384dc47",
+          "inventory_sha256": "45f86592f8bdd67245148e19f296327852531d74b454abc2fe888e60315bf502",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-master-block-disarm-sanitized-02/verification.json",
+      "sha256": "2cbe67c3cb6d6f678805b5d9bafc0b066df728e0bcec3485a15c1a2842671bc4",
+      "bytes": 2234,
+      "source": {
+        "head": "754cfe110665aabd1ea5d4576054f9c0b69922bb",
+        "source_fingerprint": "ef6c87b4bfe252aa52b7f2f06b2a90d22fd39607b6214cf3cbeaa6bbf560e5ee"
+      },
+      "results": {
+        "engine": {
+          "executed": 1840,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "53e2af2651f13dcead757ad5ba2ec111c75019e5cc5a242792f7846304179c68",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "b77e3e52cd263f48b3a681541debc498261cf26241794f369ffaacc934a84413",
+          "inventory_sha256": "45f86592f8bdd67245148e19f296327852531d74b454abc2fe888e60315bf502",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": [
+    {
+      "name": "native-master-immediate-disarm-runtime-normal-04",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/runtime-verification.json",
+        "sha256": "59eb0d8c78d0abf83093ea131e7f92fce57774fe8b5bfec46f629c4d6880677e",
+        "bytes": 1232
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Master shield Counter miss followed by immediate NPC disarm and final-wear drop",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1368185,
+            "binary_sha256": "d67ec4f628dcebb1a5de304179947d911118bdbedab0e57a2090e21193e82ccc",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": true,
+                "rng": 4,
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1802518722,
+                "loose_count": 1
+              }
+            ]
+          },
+          {
+            "phase": "second",
+            "pid": 1368297,
+            "binary_sha256": "d67ec4f628dcebb1a5de304179947d911118bdbedab0e57a2090e21193e82ccc",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1802518722,
+                "loose_count": 1
+              }
+            ]
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Single target without spare. Health bounded, no new exact damage oracle. No Player/Creature drop, autonomous replacement/pickup AI, settled body, original skin or uninterrupted trajectory parity. No PCM correlation."
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "d67ec4f628dcebb1a5de304179947d911118bdbedab0e57a2090e21193e82ccc"
+      }
+    },
+    {
+      "name": "native-master-immediate-disarm-runtime-sanitized-01",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/runtime-verification.json",
+        "sha256": "2c5e8a9a450dda9c9992e4c5a57195c3004a90460ec2d5a44170f6d99be14153",
+        "bytes": 1232
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Master shield Counter miss followed by immediate NPC disarm and final-wear drop",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1368403,
+            "binary_sha256": "a5053b6573641ebccbb4cba6ce661ebc29918c3b9d4830ad91b89a9ed98c5b39",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": true,
+                "rng": 4,
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1802518722,
+                "loose_count": 1
+              }
+            ]
+          },
+          {
+            "phase": "second",
+            "pid": 1368758,
+            "binary_sha256": "a5053b6573641ebccbb4cba6ce661ebc29918c3b9d4830ad91b89a9ed98c5b39",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1802518722,
+                "loose_count": 1
+              }
+            ]
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Single target without spare. Health bounded, no new exact damage oracle. No Player/Creature drop, autonomous replacement/pickup AI, settled body, original skin or uninterrupted trajectory parity. No PCM correlation."
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "a5053b6573641ebccbb4cba6ce661ebc29918c3b9d4830ad91b89a9ed98c5b39"
+      }
+    }
+  ],
+  "artifacts": {
+    "build/oblivion-compat/m15/S4/native-master-block-disarm-normal-02/verification.json": {
+      "sha256": "74832b0c2050c686664dff5117e52a9cbea280b9e5ca36ed026611281419a770",
+      "bytes": 2144
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-disarm-sanitized-02/verification.json": {
+      "sha256": "2cbe67c3cb6d6f678805b5d9bafc0b066df728e0bcec3485a15c1a2842671bc4",
+      "bytes": 2234
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/runtime-verification.json": {
+      "sha256": "59eb0d8c78d0abf83093ea131e7f92fce57774fe8b5bfec46f629c4d6880677e",
+      "bytes": 1232
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/launcher.py": {
+      "sha256": "6ced5719d4d0bd531e0da1cc24dc09a071ba0dfb9ab08ea2a39190bd26ba079c",
+      "bytes": 2011
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/monitor.py": {
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/audit-extra-content.py": {
+      "sha256": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb",
+      "bytes": 4476
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/verify.py": {
+      "sha256": "1b6b21a99f2a2db8ff3e34f6107b17491bd818840f640d4aefc61a1fdd164ccf",
+      "bytes": 7636
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/verify-01.py": {
+      "sha256": "1b6b21a99f2a2db8ff3e34f6107b17491bd818840f640d4aefc61a1fdd164ccf",
+      "bytes": 7636
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/verify-02.py": {
+      "sha256": "9533d7fd28b4319ce4b5228cf8336de38f1890a87eccb0e7cf499fe6aa88e643",
+      "bytes": 7736
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/verifier-01.log": {
+      "sha256": "3e44d399c9049318b7eedb06e95e5b1d13671accffc729acc72ec15018453647",
+      "bytes": 492
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/verifier-02.log": {
+      "sha256": "59eb0d8c78d0abf83093ea131e7f92fce57774fe8b5bfec46f629c4d6880677e",
+      "bytes": 1232
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/preregistration.json": {
+      "sha256": "a3de5f5bb8723f746adc8255840e693f61823702ada1658767c9ca73b131ee7a",
+      "bytes": 1657
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/binary-pin.json": {
+      "sha256": "3ca4cc77896f6a7357752e860ea1590f0e7075b968cf9cd8f0a5865158f0cbee",
+      "bytes": 154
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/manifest.json": {
+      "sha256": "b0e59bf19c1e4fa1aadc52fe3d8b38f586323c607890a9f2cd4314623d8cf8a2",
+      "bytes": 21909
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/continuation.json": {
+      "sha256": "fd4e3be97ab5f1fc5ebdd054ee80688dedaf9db14771ce900ad56ddc371ad468",
+      "bytes": 20365
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/staged-input.omwsave": {
+      "sha256": "ae47958c8ca4798aa04590817db94cc48bf95c1d6d941d159915af0a3e564643",
+      "bytes": 10340832
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/extra-content-reference-audit.json": {
+      "sha256": "dae0ed5c451c0b0347534d5447c9bdf3ccc38056b5e3ff73401df079a3092be1",
+      "bytes": 4678
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/launcher.json": {
+      "sha256": "4537a6b2046dad129050f8ee39e498191d772a79d33a3af03db21f0e02fd3f29",
+      "bytes": 988
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/scenario.json": {
+      "sha256": "1a718e0f20a3d6611320add22b040c2c328203e1a7c3b848ae3f5c1bbf5feeb4",
+      "bytes": 7660
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/process-epoch.json": {
+      "sha256": "bbe86f2fdf44e152f295250fcd08e10f818963dc3ba97d56017146dfb278738e",
+      "bytes": 704
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/actual-engine-environment.json": {
+      "sha256": "91ea954f7cdac1380da474b99bb9a0af6cddae78ac805f0e168b2b22ed4477b8",
+      "bytes": 332
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/events.jsonl": {
+      "sha256": "8c1fa357480ac856a3c3b6019e1afebd466c86ab7cb94a5975fb08a4f9ee0188",
+      "bytes": 2366
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/snapshot-index.json": {
+      "sha256": "e9c970007afe03742b1d194e41378a4a0e11b86c077b8d1bdc633bb6c2386781",
+      "bytes": 2240
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/process.log": {
+      "sha256": "29a94c556736834bddd9ee0b0271e28eb19db4f5157501b22966cc00092c73da",
+      "bytes": 870551
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/master-disarm-first.png": {
+      "sha256": "10c1d30cd5d20bc47b9316b9ea0a16a1f996292726bf33246df3798f3214b2c9",
+      "bytes": 1172367
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/snapshots/save-3.omwsave": {
+      "sha256": "79184b26cb00e3804cf43988b94065ed6dcda5ef6c989783cd2643e1eb2e6a77",
+      "bytes": 10861791
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/live-1-3.json": {
+      "sha256": "827c6221703befa601afcb67c8c8d9759ff0174778ebaf01cc348bf8994db4f9",
+      "bytes": 25886491
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/snapshots/save-4.omwsave": {
+      "sha256": "239427c063cd3068c8fb3580b24a7e0442fcf2525fff81a220f76deac720e78a",
+      "bytes": 11022858
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/first/live-1-4.json": {
+      "sha256": "2f97bfaa938701a05fe6ff0ee4845e7f69d176971ea6c7720cb92bcee82d6740",
+      "bytes": 26255663
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/launcher.json": {
+      "sha256": "7c1b402dc71123d4d14e1cb248bdb748f6941584580fcc3e169786b87595547c",
+      "bytes": 993
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/scenario.json": {
+      "sha256": "d1a51b53e5506196b75c8d004839820db1926c67d356552ed0079171fc654786",
+      "bytes": 4544
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/process-epoch.json": {
+      "sha256": "924c4bced18d8001b3b82dddec2d74ed490dbfe8890863237f94a26aaf21f935",
+      "bytes": 706
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/actual-engine-environment.json": {
+      "sha256": "a731d93ddba4ce12b28779c266f2bcb909c830a73a0eaa5324ea510d0cea48ff",
+      "bytes": 333
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/events.jsonl": {
+      "sha256": "d4c981cb79bb803c13cca1be94be7ecc293c590ad596816f17425f2ea0752b04",
+      "bytes": 1671
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/snapshot-index.json": {
+      "sha256": "48998a1429ac34e460376f0d311530e292ecc6576274d25abde9ccac53f379cb",
+      "bytes": 1113
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/process.log": {
+      "sha256": "66aadddd60ccfa60e4f51e2d442eedbeaa84c87bd4e0ebd8d6e6200993be9232",
+      "bytes": 475687
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/master-disarm-restart.png": {
+      "sha256": "05bedd82f06973b1bd54f62738304a1e225d8382ef8cf7caed6bd567a88bbac1",
+      "bytes": 1182820
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/snapshots/save-3.omwsave": {
+      "sha256": "4d70d4fa2c05c03d1aa1088ce51fd8a604c3ea9338fbcadddde36cc0e899499d",
+      "bytes": 11077892
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-04/second/live-2-3.json": {
+      "sha256": "a83a8d597e38c4d4a376abe86aa81c1eddb8273be064e9bf8c6826262cc3de4a",
+      "bytes": 26360926
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/runtime-verification.json": {
+      "sha256": "2c5e8a9a450dda9c9992e4c5a57195c3004a90460ec2d5a44170f6d99be14153",
+      "bytes": 1232
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/launcher.py": {
+      "sha256": "5f14b426fad97df188e68bda4dfc33f60423f8eafdd7e37039fa03f59e30cc6b",
+      "bytes": 2014
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/monitor.py": {
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/audit-extra-content.py": {
+      "sha256": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb",
+      "bytes": 4476
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/verify.py": {
+      "sha256": "1b6b21a99f2a2db8ff3e34f6107b17491bd818840f640d4aefc61a1fdd164ccf",
+      "bytes": 7636
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/verify-01.py": {
+      "sha256": "1b6b21a99f2a2db8ff3e34f6107b17491bd818840f640d4aefc61a1fdd164ccf",
+      "bytes": 7636
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/verify-02.py": {
+      "sha256": "9533d7fd28b4319ce4b5228cf8336de38f1890a87eccb0e7cf499fe6aa88e643",
+      "bytes": 7736
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/verifier-01.log": {
+      "sha256": "ad2674734f6eb714b20e603dc56c3822b1d0f6ef1dc703611c1f99f0c53435ea",
+      "bytes": 495
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/verifier-02.log": {
+      "sha256": "2c5e8a9a450dda9c9992e4c5a57195c3004a90460ec2d5a44170f6d99be14153",
+      "bytes": 1232
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/preregistration.json": {
+      "sha256": "a3de5f5bb8723f746adc8255840e693f61823702ada1658767c9ca73b131ee7a",
+      "bytes": 1657
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/binary-pin.json": {
+      "sha256": "7d135c9499c1cd8850e10f412c39e1c2d14dde6e218d05d4bd28364a0c48bfea",
+      "bytes": 167
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/manifest.json": {
+      "sha256": "dab8c136d0b97c90185daa6a33b787fb3d115b8ef0bd77e5a898ced5c53cd0ea",
+      "bytes": 22077
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/continuation.json": {
+      "sha256": "387c72f192be9fc4d28dc6d1d6dee01ec7f5d2c136225ce11836cfa2fc549e57",
+      "bytes": 20533
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/staged-input.omwsave": {
+      "sha256": "ae47958c8ca4798aa04590817db94cc48bf95c1d6d941d159915af0a3e564643",
+      "bytes": 10340832
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/extra-content-reference-audit.json": {
+      "sha256": "c892a600cd5d7396e256e5ae88fc1a6cbb2d33545050b21e2cb1edf125400d40",
+      "bytes": 908
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/launcher.json": {
+      "sha256": "ef6c17273631d1f51b208c3ff5e8ef2cd4d7f628b17d12e8c8c7719a955790d9",
+      "bytes": 1007
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/scenario.json": {
+      "sha256": "34453740fd4a46a5e9449eaff9701f1a89ae74dabce3052037f21787c3cf147c",
+      "bytes": 7757
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/process-epoch.json": {
+      "sha256": "918c59326b80fbf94e3298d0e276cd3427a4b0b127a339a818856ad7dc1a177e",
+      "bytes": 723
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/actual-engine-environment.json": {
+      "sha256": "5c393b06895fa8de4c3f89e149a7872b150cef8108ffd6de68f4ff3eef0c9318",
+      "bytes": 475
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/events.jsonl": {
+      "sha256": "33cc0cfb8f9fecbee2942fcf5279ed52bc93cd7553949274a7a21c48bc999a4c",
+      "bytes": 2389
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/snapshot-index.json": {
+      "sha256": "fcd5924e83dfbc44290362927bc3828f485c0b1921e1857838076c989ab05590",
+      "bytes": 2257
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/process.log": {
+      "sha256": "b1ce25fc3d9b0aefda38a0c378918f9d30b61fed9af8838eb960a7f9d466ff6f",
+      "bytes": 649719
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/master-disarm-first.png": {
+      "sha256": "6792d72fdb7ed9a5abe9f698663cafe2fc76f0544a84a41d29a2f75901afac81",
+      "bytes": 1061231
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/snapshots/save-3.omwsave": {
+      "sha256": "34ce41d82a6742b1c020f63ece7144938322b4e4f802ffc807df8959f08d6cd1",
+      "bytes": 10460418
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/live-1-3.json": {
+      "sha256": "f37f80740e62e93f1a4dd0e2f8c328c4dea996abf07e975f71fbed64aedbd4b5",
+      "bytes": 24895515
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/snapshots/save-4.omwsave": {
+      "sha256": "e31afd699486bb49eb94f9e8f81bb07e2311eded1a7dd67ba251fce3ceeda23f",
+      "bytes": 10603022
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/first/live-1-4.json": {
+      "sha256": "690ded748ee8f383fccd2b7ad0bf1b91d34a8ebb6251545fcd40973f2c3ecf51",
+      "bytes": 25239107
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/launcher.json": {
+      "sha256": "0d9f7979ee477d3a03884d927588de1cc170480b170a1bd68c0e52bc1100251a",
+      "bytes": 1012
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/scenario.json": {
+      "sha256": "2d74cc6a267656d1db9615374cb6332483ddf87735ab4d5a40c8362fb12d12b1",
+      "bytes": 4622
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/process-epoch.json": {
+      "sha256": "bc8dbd16aac151913967f8c234a8cb66acb89cb5bd8ad85e26655f730b75e9f6",
+      "bytes": 725
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/actual-engine-environment.json": {
+      "sha256": "16fc01b69c00e593d86de8e0d9e30acbff9d09e905cfb8514a623df7ef32afd2",
+      "bytes": 476
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/events.jsonl": {
+      "sha256": "2fdf214a9ba0e7d4946cafddf9e2c5fdcd15e8e39a61b86ac92a57de0ed095f4",
+      "bytes": 1689
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/snapshot-index.json": {
+      "sha256": "64be0a960a7d4f39d80479f4fa2d0778e6f6e1394b717ce582105a3a7b7e1676",
+      "bytes": 1122
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/process.log": {
+      "sha256": "b594a9a5342d79a20286d2245a3a039188aa30b41dc14666c5da6c061ea8d3bc",
+      "bytes": 471798
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/master-disarm-restart.png": {
+      "sha256": "2f4ac0eb0e5c7381eee7b7cb31cbd24508a878449238a5952a882950b2eab514",
+      "bytes": 1194514
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/snapshots/save-3.omwsave": {
+      "sha256": "09771a9bbaaff224a7f3c4e9c6e2e3eedfdfb0a638d770303c38ede347a73f4f",
+      "bytes": 10611721
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-sanitized-01/second/live-2-3.json": {
+      "sha256": "e2d82e68df492c62b74e6179253244d7f8938ddd0c393e022564adbe15d60885",
+      "bytes": 25243339
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-01/input-recipe.json": {
+      "sha256": "af9ffafc79c68254e1ba74b296401ce90e18e5b5e74fe0b5d45f78f75f34a09d",
+      "bytes": 2961
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/input-recipe.json": {
+      "sha256": "eb5ce61a18360f97444650c2f502a63e2040f84a7b1f701e65465310a019a621",
+      "bytes": 2114
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/weapon-record-audit.json": {
+      "sha256": "3f44591db2de10bbb7581d67acbc382becb8f6e4202dfeba1b290be2eb703155",
+      "bytes": 324
+    },
+    "build/oblivion-compat/m15/S4/native-master-armor-seed-oracle-01/probe.py": {
+      "sha256": "2aefc9feaa86da8eda5e5c33810c30c2b49caf9bb43033dd4fc34cfc24e16e83",
+      "bytes": 1768
+    },
+    "build/oblivion-compat/m15/S4/native-master-armor-seed-oracle-01/report.json": {
+      "sha256": "98bc1bbb337265307d0f4dd71edff6904f128dbb7a12faafda750601fa8706e7",
+      "bytes": 1267
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-01/preregistration.json": {
+      "sha256": "1514b88ea6957bf55f8e345bd1a3fe76911de8390b8479fab20b4b6d97b8142d",
+      "bytes": 1852
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-01/first/scenario.json": {
+      "sha256": "4744d6144d1f580e29f970f3bf68b92d91211bb0b72097cee9a76615c4f221d0",
+      "bytes": 8062
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-01/first/harness.log": {
+      "sha256": "4744d6144d1f580e29f970f3bf68b92d91211bb0b72097cee9a76615c4f221d0",
+      "bytes": 8062
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-02/preregistration.json": {
+      "sha256": "eeb1d65f5c8d95d1823541ff5ffa07f6ed50202be35b07a671919af27943588a",
+      "bytes": 1471
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-02/diagnostic-extra-input.json": {
+      "sha256": "45ae56cc2eb1749bb54076f0e0baef319a8c60aa3bf919d73f284523eaacd3b5",
+      "bytes": 263
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-02/first/scenario.json": {
+      "sha256": "dd44a071bbcc3cbc3cfa5dd4bd63c7de6c46aa983dedaa43b1c8c7a7987316ec",
+      "bytes": 7296
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-02/first/harness.log": {
+      "sha256": "dd44a071bbcc3cbc3cfa5dd4bd63c7de6c46aa983dedaa43b1c8c7a7987316ec",
+      "bytes": 7296
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-03/debug-protocol.json": {
+      "sha256": "ed07c31f68c0d977f8d3a85c3b5a66bd39ca1a3afa0ee92076920ce88c4cc198",
+      "bytes": 423
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-03/gdb-authority-trace.gdb": {
+      "sha256": "37076752da696dabdd10b554798fa684bba744a2f0310f6281146259f083726c",
+      "bytes": 445
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-03/first/gdb-authority-trace.log": {
+      "sha256": "d3b4085e7d8d795c7c1c91dcacec85ac39abe71baf0d2fdcc43da96b63ca8557",
+      "bytes": 657596
+    },
+    "build/oblivion-compat/m15/S4/native-master-immediate-disarm-runtime-normal-03/first/scenario.json": {
+      "sha256": "51b8dfa2d863ff3a4149f17ef6ad67e1acc368972636663f53ae7dee63ca8607",
+      "bytes": 7660
+    }
+  },
+  "tested_CPP_fingerprint": "ef6c87b4bfe252aa52b7f2f06b2a90d22fd39607b6214cf3cbeaa6bbf560e5ee",
+  "independent_references": [
+    "M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json",
+    "M15-NPC-BLOCKED-RECOIL-VERIFICATION.json",
+    "M15-NATIVE-LOOSE-RESTART-PROBE.json"
+  ],
+  "failures_retained": [
+    "normal/sanitized build01 SCOPED_TRACE macros sharing a line; split macro invocations, fresh02 full suites pass",
+    "runtime normal01 input62 incorrectly assumed one armor draw; original executable proves six, Counter29 miss, disarm34 miss, two armed-Recoil variant draws: ten total",
+    "runtime normal02 correct seed4 disarm succeeds but recovery wait fails: existing fixture StopCombat cancels actions. Additional normal F5 diagnostic retained",
+    "Incoming-break normal01 exposes existing ordinary-dispatch suppression of Recoil after weapon break; separate follow-up required; first private recipe also incorrectly expected retention rather than NPC zero-condition drop",
+    "normal03 debugger diagnostic traces cancelActorActions -> cancelMeleeReaction from StopCombat at oblivionscriptmanager.cpp:2156; no uninterrupted recovery claim",
+    "verifier01 precontact implicit condition wrongly expected-1, and unused later model assertion saidlongsword; independently decoded installed WEAP090615 is rusty shortsword/max56. verify02 corrects those expectations; gameplay code unchanged"
+  ],
+  "implementation": "Master eligible block numerics enabled. Counter query retains priority after armor RNG; miss conditionally queries target and separate disarm roll. Selected NPC no-spare drops join outer World factory before any publication; final wear carried to drop. Break/disarm projects empty Right for Recoil. Existing Player/spare/Creature/reaction boundaries remain guarded.",
+  "health_scope": "One positive debit<=1.1 and exact persisted Player Health Damage across restart; no new exact real-content damage-oracle acceptance.",
+  "limits": [
+    "StopCombat-interrupted Recoil, not uninterrupted natural recovery",
+    "Ordinary attacker weapon break still suppresses Recoil at dispatch; projected World family/query controls do not close this runtime gate",
+    "No selected Player disarm or spare replacement; no Creature defensive/projection or zero-absorption H2H-versus-weapon extension",
+    "No original skin/update parity, settled-body or matched uninterrupted trajectory, PCM mixture or full input/view/FPS coverage",
+    "Default blend setting remains compiled0.1; full INI adaptation and complete M15S4 remain open"
+  ],
+  "runtime_visual_review": "Four screenshots reviewed: normal post-contact/restart show NPC fists; sanitizer post-contact Player shield occludes the NPC, restart shows NPC fists. Saved equipment, one native drop/body and exact live/save/load checks establish the stated semantics. No visible original-model-update parity claim.",
+  "passed": true
+}
