@@ -1596,7 +1596,9 @@ namespace MWMechanics
             const float fraction = (firstStrike->mAnimationTime - playback->mTimelineBegin)
                 / (playback->mTimelineEnd - playback->mTimelineBegin);
             peer->play(firstStrike->mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
-                false, 0.f, "start", "stop", fraction, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+                false, 0.f, "start", "stop", fraction, 0, false, MWRender::Animation::PlaybackScope::ThisView,
+                firstStrike->mKind == ESM4::MeleeStrikeKind::Counter ? std::string_view(mOblivionBlockGroup)
+                    : std::string_view{});
             mOblivionFirstPersonRenderedStrike = firstStrike->mActionId;
             mOblivionFirstPersonStrikeGroup = firstStrike->mAnimationGroup;
             Log(Debug::Verbose) << "M15 first-person strike bind: actor=" << actor.serialize()
@@ -2424,7 +2426,9 @@ namespace MWMechanics
                             || strike.mKind == ESM4::MeleeStrikeKind::Counter)
                             mAnimation->play(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
                                 false, 0.f, "start", "stop", fraction, 0, false,
-                                MWRender::Animation::PlaybackScope::ThisView);
+                                MWRender::Animation::PlaybackScope::ThisView,
+                                strike.mKind == ESM4::MeleeStrikeKind::Counter ? std::string_view(mOblivionBlockGroup)
+                                    : std::string_view{});
                         else
                             playBlendedAnimation(strike.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
                                 false, strike.mPlaybackSpeed, "start", "stop", fraction, 0);

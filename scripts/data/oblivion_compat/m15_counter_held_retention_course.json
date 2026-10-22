@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scope": "Preserve an already resident held NPC BlockIdle while Counter takes slot3 and the block input remains held. Full M15S4 remains incomplete.",
+  "input_recipe": "m15_expert_counter_isolated_input.json",
+  "manifests": [
+    "oblivion_m15_counter_held_retention.json",
+    "oblivion_m15_counter_held_retention_sanitized.json"
+  ],
+  "required": [
+    "Exactly one NPC01fc43 block-begin, one Player2 contact and one Counter3 contact.",
+    "Counter recovers to action6 without a new BlockIdle start.",
+    "Real save3/4/5 T4ST payloads equal the corresponding parsed live JSON encodings byte-for-byte.",
+    "All9 native actor-value arrays and life states unchanged by Counter; no Counter RNG draw.",
+    "Inspect actual captures and sanitizer diagnostics/environment."
+  ],
+  "limits": [
+    "Uninterrupted first-person keyboard course, configured10FPS software renderer, sound disabled.",
+    "This course does not accept block release, complete native BlockIdle activation/loop timing, or held-slot save/restart continuity."
+  ],
+  "full_M15S4_acceptance": false
+}

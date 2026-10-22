@@ -22,6 +22,7 @@
 #include <osg/Geode>
 #include <osg/MatrixTransform>
 #include <osgUtil/UpdateVisitor>
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cstdint>
@@ -1761,6 +1762,77 @@ namespace
         strike.mSequenceTiming = ESM4::MeleeSequenceTiming{.mEasing = true, .mEaseEnd = 1};
         strike.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{};
         EXPECT_THROW(MWRender::oblivionPassiveMeleeLayers(*mAnimation, &fresh, 0, pose), std::invalid_argument);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, RetainedPlaybackGroupKeepsClockWhileOtherEqualPriorityStatesAreReplaced)
+    {
+        mAnimation->usePassivePlayback();
+        for (const auto* group : {"held-block", "old-slot3", "counter"})
+            mAnimation->addNativeSource(group, nativeTrack({1, 2, 3}), 9, 2);
+        const MWRender::AnimPriority priority{1};
+        const auto scope = MWRender::Animation::PlaybackScope::ThisView;
+        mAnimation->play("held-block", priority, MWRender::BlendMask_All, false, 1,
+            "start", "stop", 0, std::numeric_limits<std::uint32_t>::max(), true, scope);
+        mAnimation->runAnimation(.5f);
+        const auto* heldSource = mAnimation->getControllerSequenceMetadata("held-block");
+        mAnimation->play("old-slot3", priority, MWRender::BlendMask_All, false, 0,
+            "start", "stop", 0, 0, false, scope, "held-block");
+        mAnimation->play("counter", priority, MWRender::BlendMask_All, false, 0,
+            "start", "stop", 0, 0, false, scope, "held-block");
+        EXPECT_FALSE(mAnimation->getInfo("old-slot3"));
+        EXPECT_TRUE(mAnimation->getInfo("counter"));
+        EXPECT_TRUE(mAnimation->isPlaying("held-block"));
+        EXPECT_EQ(mAnimation->getControllerSequenceMetadata("held-block"), heldSource);
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("held-block"), .5f);
+        for (const float step : {.025f, .025f, .05f, .025f})
+            mAnimation->runAnimation(step);
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("held-block"), .625f);
+        const auto layers = mAnimation->nativePlayingSequenceLayers({});
+        ASSERT_EQ(layers.size(), 2u);
+        const auto held = std::find_if(layers.begin(), layers.end(), [](const auto& layer) {
+            return layer.mGroup == "held-block";
+        });
+        ASSERT_NE(held, layers.end());
+        EXPECT_FLOAT_EQ(held->mTime, .625f);
+        EXPECT_TRUE(held->mFollowAnimationTime);
+        mAnimation->disable("counter", scope);
+        EXPECT_TRUE(mAnimation->isPlaying("held-block"));
+        // The ordinary replacement contract still removes equal priorities
+        // when the caller has no separately resident native slot to retain.
+        mAnimation->play("old-slot3", priority, MWRender::BlendMask_All, false, 0,
+            "start", "stop", 0, 0, false, scope);
+        EXPECT_FALSE(mAnimation->getInfo("held-block"));
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, RetainedPlaybackGroupRespectsIndependentPeerClockAndViewScope)
+    {
+        PlaybackPeerView peer;
+        mAnimation->usePassivePlayback();
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        for (auto* view : {mAnimation.get(), peer.mAnimation.get()})
+        {
+            view->addNativeSource("held-block", nativeTrack({1, 2, 3}), 9, 2);
+            view->addNativeSource("counter", nativeTrack({1, 2, 3}), 9, 2);
+        }
+        const MWRender::AnimPriority priority{1};
+        const auto scope = MWRender::Animation::PlaybackScope::ThisView;
+        mAnimation->play("held-block", priority, MWRender::BlendMask_All, false, 1,
+            "start", "stop", .25f, 1, true, scope);
+        peer.mAnimation->play("held-block", priority, MWRender::BlendMask_All, false, 1,
+            "start", "stop", .125f, 1, true, scope);
+        mAnimation->play("counter", priority, MWRender::BlendMask_All, false, 0,
+            "start", "stop", 0, 0, false, scope, "held-block");
+        EXPECT_TRUE(mAnimation->getInfo("counter"));
+        EXPECT_FALSE(peer.mAnimation->getInfo("counter"));
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("held-block"), .5f);
+        EXPECT_FLOAT_EQ(peer.mAnimation->getCurrentTime("held-block"), .25f);
+        // Mirrored ordinary playback also passes retention to each view; it
+        // must not restart either resident sequence at the other's clock.
+        mAnimation->play("counter", priority, MWRender::BlendMask_All, false, 0,
+            "start", "stop", 0, 0, false, MWRender::Animation::PlaybackScope::AllViews, "held-block");
+        EXPECT_TRUE(peer.mAnimation->getInfo("counter"));
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("held-block"), .5f);
+        EXPECT_FLOAT_EQ(peer.mAnimation->getCurrentTime("held-block"), .25f);
     }
 
     TEST_F(PhysicalPoseAnimationTest, PlaybackPeerKeepsOwnResourcesAndSuppressesDuplicateKeyAndEndEvents)

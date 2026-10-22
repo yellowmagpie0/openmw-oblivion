@@ -1245,12 +1245,12 @@ namespace MWRender
 
     void Animation::play(std::string_view groupname, const AnimPriority& priority, int blendMask, bool autodisable,
         float speedmult, std::string_view start, std::string_view stop, float startpoint, uint32_t loops,
-        bool loopfallback, PlaybackScope scope)
+        bool loopfallback, PlaybackScope scope, std::string_view retainedGroup)
     {
         if (mPlaybackPeer && scope == PlaybackScope::AllViews
             && (groupname.empty() || mPlaybackPeer->hasAnimation(groupname)))
             mPlaybackPeer->play(groupname, priority, blendMask, autodisable, speedmult,
-                start, stop, startpoint, loops, loopfallback, PlaybackScope::ThisView);
+                start, stop, startpoint, loops, loopfallback, PlaybackScope::ThisView, retainedGroup);
         if (!mObjectRoot)
             return;
 
@@ -1273,7 +1273,8 @@ namespace MWRender
         AnimStateMap::iterator stateiter = mStates.begin();
         while (stateiter != mStates.end())
         {
-            if (stateiter->second.mPriority == priority && stateiter->first != groupname)
+            if (stateiter->second.mPriority == priority && stateiter->first != groupname
+                && stateiter->first != retainedGroup)
             {
                 animationEnded(stateiter->second);
                 stateiter = mStates.erase(stateiter);

@@ -536,9 +536,12 @@ namespace MWRender
         // Requires a private insertion group, as used for paired Player roots.
         void setPresentationVisible(bool visible);
 
+        // Native slots can share a legacy priority. Retain this resident group
+        // and its existing clock when replacing other states at that priority.
         void play(std::string_view groupname, const AnimPriority& priority, int blendMask, bool autodisable,
             float speedmult, std::string_view start, std::string_view stop, float startpoint, uint32_t loops,
-            bool loopfallback = false, PlaybackScope scope = PlaybackScope::AllViews);
+            bool loopfallback = false, PlaybackScope scope = PlaybackScope::AllViews,
+            std::string_view retainedGroup = {});
 
         /** Adjust the speed multiplier of an already playing animation.
          */

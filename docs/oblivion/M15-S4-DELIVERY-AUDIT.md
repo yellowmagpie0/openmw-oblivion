@@ -10501,3 +10501,39 @@ recipe, process/save/dump/binary hashes, checks and retained failure are in
 `M15-COUNTER-ISOLATED-RESTART-VERIFICATION.json`. Coverage remains first-person,
 keyboard, configured 10 FPS, software renderer, sound disabled. Held-slot
 persistence and the remaining S4 gates are still open.
+
+
+## Resident held BlockIdle retention through Counter
+
+Counter body/FP playback now asks the renderer to retain the existing held
+BlockIdle group when replacing legacy equal-priority states. Other states at
+the same priority are still removed, and ordinary calls keep their replacement behavior.
+Two renderer cases verify source/clock retention, replacement/default behavior,
+independent peer clocks and view scope. Both full engine runs pass **1,812 /125
+suites**, exact inventories, no failures/skips. Tested parent is
+`da5784f2ac6615ffcc18268aced505a6200f2233`, dirty fingerprint
+`ed422ec54020576b0b580213e6a0bb2e4b2a93011eca96f76ab1261388e226c5`.
+Components/Python are unchanged. No sanitizer diagnostics were observed; leak
+checks were disabled. Existing scripted-animation/test aggregate compiler
+warnings remain in the build logs.
+
+A hash-verified original Counter activation probe preserves both supplied
+steady body/FP slot1 sequences and metadata byte-for-byte in 24 cases. Real NI
+updates then advance 120 samples per view without reactivation. This supplies
+cache/scene/notification boundaries and is not a full original-game process or
+block activation proof. Both actual keyboard held-input runtime courses now
+recover Counter to **action6** with exactly one NPC BlockIdle start and no
+rebind. Each has three strict binary/live payload pairs, unchanged Counter AV,
+life/RNG checks and directly inspected Stagger/recovery captures. Scope remains
+first-person/configured 10 FPS/software renderer/sound disabled.
+
+A separate original5F4AE0(false) probe returns false without removing steady
+slot1 while action2 owns Counter. A retained normal-input red case releases only
+Lua block controls when real Counter playback appears; the engine loses held
+idle before Counter contact. That release discrepancy remains open. Its
+provisional final action6 expectation is not accepted: the post-contact input
+caller/release policy still needs tracing. Full native slot1 activation,
+release fade and cache/clock persistence through restart are also open.
+Exact checks, source/binary/epoch/save/tool hashes, editable courses and the
+retained red case are in `M15-COUNTER-HELD-RETENTION-VERIFICATION.json`.
+Full M15S4 remains incomplete.
