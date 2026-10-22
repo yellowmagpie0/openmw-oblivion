@@ -1199,7 +1199,8 @@ namespace ESM4
     }
 
     static void validateMeleeTiming(const MeleeSequenceTiming& timing, bool capturedPose = false,
-        bool cachedHistory = false, bool inactiveUnupdated = false, bool unanchoredRetirement = false)
+        bool cachedHistory = false, bool inactiveUnupdated = false, bool unanchoredRetirement = false,
+        bool cancelledPose = false)
     {
         const bool freshCapture = capturedPose && timing.mEasing && timing.mOffset
             && !timing.mEaseStart && !timing.mLastInput;
@@ -1210,7 +1211,8 @@ namespace ESM4
             && (timing.mEasing ? !timing.mEaseStart && (!capturedPose || timing.mOffset)
                 : !timing.mOffset))
             || (inactiveUnupdated && timing.mOffset && timing.mEaseStart && !timing.mLastInput)
-            || (unanchoredRetirement && !timing.mEasing && !timing.mEaseStart);
+            || (unanchoredRetirement && !timing.mEasing && !timing.mEaseStart)
+            || (cancelledPose && !timing.mEasing && timing.mOffset && !timing.mEaseStart);
         if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
             || !std::isfinite(timing.mOutputTime)
             || (!freshCapture && !pendingCache && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
@@ -1397,7 +1399,7 @@ namespace ESM4
         const bool expiredUnupdated = mInactive && mRetirement && mRetirement->mStartClock
             && mSequenceTiming.mOffset && mSequenceTiming.mEaseStart && !mSequenceTiming.mLastInput;
         validateMeleeTiming(mSequenceTiming, mPoseSnapshot.has_value(), pendingHistory, expiredUnupdated,
-            !mInactive && mRetirement && !mRetirement->mStartClock);
+            !mInactive && mRetirement && !mRetirement->mStartClock, mInactive && !mRetirement);
         if (mSequenceTiming.mEasing && mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f))
             throw std::runtime_error("Invalid TES4 held-block activation interval");
         if (mPoseSnapshot)

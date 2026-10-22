@@ -103,6 +103,14 @@
     {
       "phase": 22,
       "lifecycle": "peer fade expires before first input and clears pose"
+    },
+    {
+      "phase": 23,
+      "lifecycle": "inactive fresh NI5 cancellation before first input; offset known, easeStart/lastInput absent"
+    },
+    {
+      "phase": 24,
+      "lifecycle": "inactive reused NI5 cancellation before first new update; offset and prior lastInput known, easeStart absent"
     }
   ],
   "per_view": "Same resource alias in independent body/FP clocks; additional inactive resource retained.",
@@ -111,7 +119,7 @@
     "ASCII-case-insensitive unique resource aliases; at most one resident held slot per view.",
     "Same alias cannot also exist in legacy retiring vector.",
     "Finite samples/timing, positive activation/retirement interval, valid pose tracks and strict booleans.",
-    "Pending cached activation, immediate inactive caches, unanchored fades and expiry before first input retain the native partial timing masks. Other partial timing is rejected.",
+    "Cached activation, immediate inactivity, unanchored fades, expiry before first input, and canceled NI5 before first input preserve the native partial timing masks. Other partial timing is rejected.",
     "Inactive retirement requires anchored interval already elapsed in that view."
   ],
   "migration": "Versions1..60 add empty caches only. Never invent resident history from action6, or relabel a nonempty old-version held cache as valid. Older-version C++ service capture rejects before destination mutation.",
@@ -119,7 +127,8 @@
     "M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
     "M15-BLOCK-RELEASE-CALLER-VERIFICATION.json",
     "M15-HELD-BLOCK-SERVICE-VERIFICATION.json",
-    "M15-HELD-BLOCK-PEER-LIFECYCLE-VERIFICATION.json"
+    "M15-HELD-BLOCK-PEER-LIFECYCLE-VERIFICATION.json",
+    "M15-HELD-BLOCK-CANCELLATION-VERIFICATION.json"
   ],
   "full_M15S4_acceptance": false,
   "pose_lifecycle": "Captured source is retained during resident NI5 or a shared NI3 retirement span. Positive peer reset preserves requested destination frame and both frozen layers use the new fade. Immediate deactivation and expiry clear the pose; inactive caches never retain a live pose."

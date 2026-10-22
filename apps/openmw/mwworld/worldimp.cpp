@@ -3385,10 +3385,48 @@ namespace MWWorld
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
         if (blockHit && (victim.isEmpty() || (victim != getPlayerPtr() && victim.getType() != ESM::REC_NPC_4)))
             return nullptr;
-        auto contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, deltas, mPlayer.get(), essential,
+        auto preparedDeltas = deltas;
+        const auto prepareHeldCancellation = [&](const Ptr& actor, const auto& request, auto& sources) {
+            if (!request || (request->mKind != ESM4::MeleeReactionKind::Recoil
+                    && request->mKind != ESM4::MeleeReactionKind::Stagger) || !sources.empty()) return true;
+            const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            const auto* state = mOblivionCombat->findMeleeState(key);
+            if (!state) return true;
+            const auto hasResident = [](const auto& held) {
+                return std::any_of(held.begin(), held.end(), [](const auto& entry) { return entry.resident(); });
+            };
+            if (!hasResident(state->mHeldBlocks)
+                && (!state->mFirstPerson || !hasResident(state->mFirstPerson->mHeldBlocks))) return true;
+            auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+            if (!animation) return false;
+            const auto append = [&](MWRender::Animation& view, const auto& held, bool first) {
+                for (const auto& entry : held)
+                    if (entry.resident())
+                    {
+                        auto source = MWMechanics::captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                        source.mFirstPerson = first;
+                        sources.push_back(source);
+                    }
+            };
+            try
+            {
+                append(*animation, state->mHeldBlocks, false);
+                if (state->mFirstPerson && hasResident(state->mFirstPerson->mHeldBlocks))
+                {
+                    auto* peer = animation->getPlaybackPeer();
+                    if (!peer) return false;
+                    append(*peer, state->mFirstPerson->mHeldBlocks, true);
+                }
+                return true;
+            }
+            catch (const std::invalid_argument&) { return false; }
+        };
+        if (!prepareHeldCancellation(attacker, preparedDeltas.mAttackerReaction, preparedDeltas.mAttackerHeldSources)
+            || (!victim.isEmpty() && !prepareHeldCancellation(victim,
+                preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
+        auto contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(), essential,
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
         if (!contact) return nullptr;
-        auto preparedDeltas = deltas;
         const bool defensiveQuery = blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive();
         if (defensiveQuery && !MWMechanics::prepareOblivionDefensiveBlockConsequences(*this, attacker, victim, preparedDeltas))
             return nullptr;
@@ -3404,6 +3442,9 @@ namespace MWWorld
             return nullptr;
         if (preparedDeltas.mVictimCounterRequested && !preparedDeltas.mVictimCounter && contact->victimRemainsAlive()
             && !prepareOblivionCounterStrike(victim, preparedDeltas)) return nullptr;
+        if (!prepareHeldCancellation(attacker, preparedDeltas.mAttackerReaction, preparedDeltas.mAttackerHeldSources)
+            || (!victim.isEmpty() && !prepareHeldCancellation(victim,
+                preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
         if (defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
             contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),

@@ -341,6 +341,10 @@ namespace MWMechanics
         // Selected mastery consequence, independent of condition wear.
         // World owns the matching equipped-item removal/world-body publication.
         std::vector<OblivionPhysicalDisarm> mDisarms{};
+        // Recoil/Stagger clear resident slot1 in the same contact publication.
+        // Detached NI3 histories keep advancing independently.
+        std::vector<OblivionMeleeSequenceMetadata> mAttackerHeldSources{};
+        std::vector<OblivionMeleeSequenceMetadata> mVictimHeldSources{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -945,6 +949,8 @@ namespace MWMechanics
         bool activateHeldBlock(const ESM::FormKey& actor, bool firstPersonActive,
             const std::optional<OblivionHeldBlockActivation>& body,
             const std::optional<OblivionHeldBlockActivation>& first);
+        bool cancelResidentHeldBlocks(const ESM::FormKey& actor,
+            std::span<const OblivionMeleeSequenceMetadata> sources);
         bool releaseHeldBlock(const ESM::FormKey& actor, bool firstPersonActive, float duration,
             std::span<const OblivionMeleeSequenceMetadata> sources);
         // Original5F4AE0(false) after Counter contact. Resource preparation

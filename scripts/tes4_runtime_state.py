@@ -1673,10 +1673,12 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 and optional[1] is not None and optional[2] is None)
             unanchored_retirement = (sequence["inactive"] is False and isinstance(span, dict)
                 and span.get("start_clock") is None and not timing["easing"] and optional[1] is None)
+            cancelled_pose = (sequence["inactive"] is True and span is None and not timing["easing"]
+                and optional[0] is not None and optional[1] is None)
             pending = (pending_history and (
                 (timing["easing"] and optional[1] is None and (pose is None or optional[0] is not None))
                 or (not timing["easing"] and optional[0] is None)))
-            if not fresh and not pending and not expired_unupdated and not unanchored_retirement and any(v is None for v in optional) and not all(v is None for v in optional):
+            if not fresh and not pending and not expired_unupdated and not unanchored_retirement and not cancelled_pose and any(v is None for v in optional) and not all(v is None for v in optional):
                 raise RuntimeStateError("Partial TES4 held-block timing")
             for value in optional:
                 if value is not None: native_float(value)

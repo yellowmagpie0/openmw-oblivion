@@ -3517,11 +3517,17 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                     "last_input": None, "ease_end": clock, "weighted_time": 0., "output_time": 0.}
                 held["retirement"] = {"duration": struct.unpack("<f", struct.pack("<I", 1))[0], "start_clock": clock}
                 held["inactive"] = True
+            if phase in (23, 24):
+                held["sequence_timing"].update(offset=0., ease_start=None, ease_end=1.)
+                if phase == 23:
+                    held["animation_time"] = 0.
+                    held["sequence_timing"].update(last_input=None, weighted_time=0., output_time=0.)
+                held["inactive"] = True
             view["held_blocks"] = [held]
         return state
 
     def test_held_block61_preserves_independent_lifetimes_and_signed_zero(self):
-        for phase in range(23):
+        for phase in range(25):
             with self.subTest(phase=phase):
                 state = self.held_block_state(phase)
                 payload = state_io.encode_payload(state)

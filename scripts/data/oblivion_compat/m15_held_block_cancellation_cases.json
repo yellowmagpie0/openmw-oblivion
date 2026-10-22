@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "native_basis": "docs/oblivion/M15-HELD-BLOCK-INTERRUPTION-VERIFICATION.json",
+  "cases": [
+    {
+      "name": "standalone resident slot reset",
+      "count": 24,
+      "matrix": {
+        "view": [
+          "NPC body",
+          "Player body and FP",
+          "Player FP only"
+        ],
+        "activation": [
+          "direct",
+          "captured NI5"
+        ],
+        "history": [
+          "fresh",
+          "reused"
+        ],
+        "manager_frame": [
+          "before first update",
+          "anchored"
+        ]
+      },
+      "expected": [
+        "Only resident held entries become inactive; pose and easing ownership clear.",
+        "Prior input/weighted/output/ease fields and resource identity survive.",
+        "No action/contact allocation, owner-ledger change or combat RNG draw.",
+        "Slot reset itself leaves process action6; caller explicitly ends posture.",
+        "Binary service restore preserves the cache and it remains reusable.",
+        "Missing, duplicate alias or unowned source packets reject before publication."
+      ]
+    },
+    {
+      "name": "detached history survives resident cancellation",
+      "count": 1,
+      "expected": [
+        "Independent body/FP onehand NI3 caches and inactive twohand caches remain byte-identical.",
+        "Following frame advances both detached samples from.5 to.625 without reactivating a held slot."
+      ]
+    },
+    {
+      "name": "prepared contact publication and stale rejection",
+      "count": 16,
+      "matrix": {
+        "actor": [
+          "NPC",
+          "Player"
+        ],
+        "contact_role": [
+          "attacker",
+          "victim"
+        ],
+        "activation": [
+          "direct",
+          "pending NI5"
+        ],
+        "reaction": [
+          "Recoil",
+          "Stagger"
+        ]
+      },
+      "expected": [
+        "Bad held source rejects without live-state mutation.",
+        "Preparation is read-only. Cancellation after preparation invalidates contact commit.",
+        "After restoring the original state, contact/reaction and resident cancellation commit together.",
+        "Contact cause consumed once, correct reaction action7/8, pose ownership cleared in both Player views.",
+        "No added RNG draw; whole binary service restore exact."
+      ],
+      "scope": "Headless C++ packets supply literal held metadata and fresh reaction descriptors. These do not establish normal contact selection or actual KF/root acceptance."
+    }
+  ],
+  "full_M15S4_acceptance": false
+}

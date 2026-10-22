@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "status": "Resident held cancellation, inactive preupdate timing persistence and atomic Recoil/Stagger contact publication verified headlessly. World activation/release and other interruption adapters remain open.",
+  "full_M15S4_acceptance": false,
+  "native_basis": {
+    "path": "docs/oblivion/M15-HELD-BLOCK-INTERRUPTION-VERIFICATION.json",
+    "sha256": "a723c562487c033d91c1b444acab49c2a88c4b647e9bd3d11af64e511a26e50b"
+  },
+  "editable_cases": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_block_schema61_cases.json",
+      "sha256": "ea92e0697aaf0e340622d0f4c1608c06230546badc1653a6b7f770ec02e8f653"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_block_cancellation_cases.json",
+      "sha256": "a5a5b0b0063a85f587d03cdc841ba953bca93752f65c069e4a88d5ff612afb92"
+    }
+  ],
+  "implementation": [
+    "Zero-deactivate only resident held caches with prepared cyclic metadata, preserving native timing history and inactive resource identity. Detached NI3 and already inactive resources remain untouched.",
+    "Standalone slot reset leaves process action to its caller. Recoil/Stagger applies the reset to staged melee states in the same prepared contact publication. BlockHit/Counter do not accept cancellation packets.",
+    "World contact preparation collects held source metadata for new Recoil/Stagger requests; explicit prepared C++ metadata is validated by the service.",
+    "Preserve old first-person held cache history when replacing a legacy reaction mirror.",
+    "Schema61 admits inactive masks100/101 produced by pending NI5 cancellation, with no added fields or version change."
+  ],
+  "engine_checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-normal-02/verification.json",
+        "sha256": "d76bf12558e8eece2a6fadf4e722577157a196e8a1a5e1dcae9c4950491f2ab1"
+      },
+      "tested_source": {
+        "head": "599c0e23ad76a0d3a76faa2d5ebf3c2a03e4f885",
+        "source_fingerprint": "7709cc9b30aa708b712f5ee3a7096362882fc4556663d1355f635c70cd0c9f6b"
+      },
+      "results": {
+        "engine": {
+          "executed": 1828,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5e0c67f58e2065c6889df60256004f23012747266a1d66d76e4da595cd3ff378",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a3fdccfa726d6fb08515f92228e89ba7aaef31415a631a497cb48ff3379df2e9",
+          "inventory_sha256": "dc91b66a12adbd33811da54fa84b5c47a5516e467c93904cfafc4053b7c5f7c3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-sanitized-02/verification.json",
+        "sha256": "d121c9bafc7c36d448d40a3ce7f235c07a69e2c9419cb5b6020b674e79b1130d"
+      },
+      "tested_source": {
+        "head": "599c0e23ad76a0d3a76faa2d5ebf3c2a03e4f885",
+        "source_fingerprint": "7709cc9b30aa708b712f5ee3a7096362882fc4556663d1355f635c70cd0c9f6b"
+      },
+      "results": {
+        "engine": {
+          "executed": 1828,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "57fe97f7f3337dc6017abb1e1c49240750a2e3f1a89ed5155317788832f0792a",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "472c49359b3b5c096c89998b3794607af0d404285964d015eab8a74d23c5c4eb",
+          "inventory_sha256": "dc91b66a12adbd33811da54fa84b5c47a5516e467c93904cfafc4053b7c5f7c3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "completed_codec_checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-normal-01/verification.json",
+        "sha256": "cba8433159a967838e897771bdca728f25534402162efb2e30abbcab97c74fd2"
+      },
+      "tested_source": {
+        "head": "599c0e23ad76a0d3a76faa2d5ebf3c2a03e4f885",
+        "source_fingerprint": "5d1694d755aa450f3ea089a50577fe7bc2af55ee2e35bbf6bbc049e5fba7c5a7"
+      },
+      "completed_results": {
+        "python": {
+          "executed": 382,
+          "passed": true,
+          "log_sha256": "962caf367148df5e5cb020202b1550969899f2ef13ee37d0805702a6569a799b"
+        },
+        "components": {
+          "executed": 2995,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b7aa495fc3dcf3c7bdf3806e1acbe37a753691db7b0703bc3da6ea9bfe380da4",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "71cee6d6d92c2bc1817c3a0a6b81f0c8df6f8923615580bfe7a4d71815bf75c7",
+          "inventory_sha256": "64306551317706c2c4986fec80f59824bfdcd64457b98be61f15ead60fd4b37c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_report_passed": false,
+      "engine_status": "Build intentionally stopped before engine tests to separate same-line test trace declarations. This does not invalidate the earlier completed parser/component results; exact source relationship is pinned separately."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-sanitized-01/verification.json",
+        "sha256": "de4e5a418b7064abce47ca578db4f82a9c614b9bffaf63c4e7d46090d147dc60"
+      },
+      "tested_source": {
+        "head": "599c0e23ad76a0d3a76faa2d5ebf3c2a03e4f885",
+        "source_fingerprint": "5d1694d755aa450f3ea089a50577fe7bc2af55ee2e35bbf6bbc049e5fba7c5a7"
+      },
+      "completed_results": {
+        "sanitize": {
+          "executed": 848,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "3cb1e053bba907077d1c2f4277c1a949a655def27b281d80981e61b717214537",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "8987e3a1cdaaa5ecfc5350c4bd43645cc189cca617f84f9e646f9eb461c1f4cc",
+          "inventory_sha256": "0fd28012dd403bdf8cb127931116fae87346fc59485668779c3155a7d5fc7f13",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_report_passed": false,
+      "engine_status": "Build intentionally stopped before engine tests to separate same-line test trace declarations. This does not invalidate the earlier completed parser/component results; exact source relationship is pinned separately."
+    }
+  ],
+  "source_relationship": {
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-inputs-01/source-relationship.json",
+      "sha256": "36a5aa46d1a08e0dc04afd3e0d9e061537356c5e915bd7b2abb0e6af9c986a88"
+    },
+    "result": {
+      "passed": true,
+      "configurations": [
+        "normal",
+        "sanitized"
+      ],
+      "head": "599c0e23ad76a0d3a76faa2d5ebf3c2a03e4f885",
+      "reconstructed_initial_fingerprint": "5d1694d755aa450f3ea089a50577fe7bc2af55ee2e35bbf6bbc049e5fba7c5a7",
+      "final_fingerprint": "7709cc9b30aa708b712f5ee3a7096362882fc4556663d1355f635c70cd0c9f6b",
+      "only_change_after_component_python_checks": "Two groups of world-test SCOPED_TRACE declarations separated onto distinct lines. No production, codec or component/Python-test content changed.",
+      "current_source_files": {
+        "apps/components_tests/esm4/runtimestate.cpp": "58df421342306336a38a525f16179bc5e9d5b9b9f1300a7eb0e9b024fed30e80",
+        "apps/openmw/mwmechanics/oblivioncombat.cpp": "054d787e9c51029b0961f106063305852c93d51861d355cc8c9ed92c9f295e3f",
+        "apps/openmw/mwmechanics/oblivioncombat.hpp": "2e394ae4525698871fb5306df61fac0591d6f3700b4f68e3cd0dae846ad5685f",
+        "apps/openmw/mwworld/worldimp.cpp": "324566dfc05521bc4be5c246a85ff9af0eb63ee33c0b9cf1cceaaca7d79f6d4a",
+        "apps/openmw_tests/mwworld/testoblivionworld.cpp": "606d0dea05745be6e86ab58735fefdeab92a2968b0f83e30829d9f351384d156",
+        "components/esm4/runtimestate.cpp": "15ed006ab955edb6f01011ae57415f51dabeb3a78c70eec1f0e5589c46ef2681",
+        "scripts/tes4_runtime_state.py": "2791e4fdf48321d5c941a9c7ddac46008ea8e990aa80326b635b27923261fdae",
+        "scripts/tests/test_tes4_runtime_state.py": "0eb4df1c8803cffdc532fabb1db210ed98d809185a5a7145a496e38b19e204f9"
+      },
+      "initial_world_test_sha256": "613e57f6e84f8efcc71d78210405b99b91445a725dca95eded09a77d9ec5420d",
+      "scope": "Virtual Git index reconstructs the exact original source fingerprint from current sources with only the two trace formatting reversals. Real index and working sources unchanged. Does not claim interrupted engine builds passed."
+    },
+    "tool": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-inputs-01/verify-source-relationship.py",
+      "sha256": "a48dcb854a5780b90fc6a779b04aba75077de1ad001b1559c71ca604733abc84"
+    }
+  },
+  "wire_verification": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-inputs-01/normal-wire-verification.json",
+        "sha256": "e2f8f8d308c27fdc33700b51ef055fb61c9337c73d69aedc9ab8edfe4d9a7233"
+      },
+      "cases": 25,
+      "binary_cpp_json_python_exact": true,
+      "cpp_xml_sha256": "71cee6d6d92c2bc1817c3a0a6b81f0c8df6f8923615580bfe7a4d71815bf75c7"
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-inputs-01/sanitized-wire-verification.json",
+        "sha256": "3182897a39d1625dcd41c2c7ea24441099ed2fb512ac569c68dfb95f955086a0"
+      },
+      "cases": 25,
+      "binary_cpp_json_python_exact": true,
+      "cpp_xml_sha256": "8987e3a1cdaaa5ecfc5350c4bd43645cc189cca617f84f9e646f9eb461c1f4cc"
+    }
+  ],
+  "tools": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-cancellation-inputs-01/verify-wire.py",
+      "sha256": "f12eb4bef1058719a62c02aefcbdd61f731f3260ce1a9814c267e13f0841ed23"
+    }
+  ],
+  "validation_layers": {
+    "binary_structural_write_and_read": true,
+    "headless_service_semantic_reinspection": true,
+    "compiler_world_authoring_validation": false,
+    "actual_runtime_acceptance": false
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "diagnostics_observed": false,
+    "leak_coverage": false
+  },
+  "limits": [
+    "Character hard-interruption handling and World held begin/release factories still use legacy paths; the new API is not yet connected there.",
+    "World automatic metadata collection is implemented, but headless reaction tests supply explicit prepared packets. Actual KF/root and normal-input contact acceptance remains a runtime gate.",
+    "The recorded double-begin regression, actual typed windup/blocking/recovery save/restart and full camera/input/FPS/effects/mastery matrix remain open.",
+    "No authoring/compiler/world plugin validation or new windowed game process in this chunk.",
+    "The numerical cancellation rule retains the prior reviewed native domain and outstanding arbitrary-frequency/x87-control-word limits."
+  ]
+}

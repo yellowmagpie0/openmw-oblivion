@@ -10928,3 +10928,45 @@ editable cases; exploratory01 and the weaker repeated-resource03 are retained.
 Scene/root/render/cache/INI/proxy boundaries remain supplied. No actual manager
 traversal, game process, production cancellation or full M15S4 acceptance is
 claimed by these instruction probes.
+
+
+## Resident held cancellation and atomic contact publication
+
+The service now zero-deactivates only resident held resources using prepared
+cyclic source metadata. It clears pose/easing ownership and retains native
+input, weighted/output, ease and resource history. Detached NI3 and inactive
+cache entries survive untouched; the following frame continues their own view
+clocks. Standalone slot reset leaves the process-action write to its caller.
+
+Recoil/Stagger prepares the held reset in the same melee-state transaction as
+the reaction/contact consequence. World collects source metadata for resident
+held caches when preparing those requests. Invalid source packets fail before
+publication, and a later held cancellation makes an old prepared contact stale.
+BlockHit/Counter retain held ownership. A legacy mirror replacement also retains
+the old FP held cache rather than replacing it with an empty incoming packet.
+
+Schema61 now preserves the inactive 100/101 masks from original pending-NI5
+cancellation. Twenty-five C++ binary/JSON witnesses reproduce byte-exactly through
+Python under both configurations. 24 standalone cases cover view/history/pose/
+anchor combinations; another case retains independent detached/inactive caches;
+16 contact cases cover both participants, owner roles and Recoil/Stagger.
+
+Completed checks: 382 Python, 2995 normal components, 848 ESM4* sanitizer components,
+and 1828 engine tests in each configuration. The first engine builds were
+intentionally stopped to separate same-line SCOPED_TRACE declarations; their
+completed parser/component results are retained, without calling those overall
+runs passing. Both final engine inventories pass. Virtual-index reconstruction
+reproduces the exact initial fingerprint using only the two trace formatting
+reversals, linking the unchanged production/codec sources to the prior checks.
+No ASan/UBSan diagnostic observed; leaks disabled.
+
+Final engine source fingerprint: `7709cc9b30aa708b712f5ee3a7096362882fc4556663d1355f635c70cd0c9f6b`.
+
+[M15-HELD-BLOCK-CANCELLATION-VERIFICATION.json](M15-HELD-BLOCK-CANCELLATION-VERIFICATION.json)
+links exact scopes, configurations, inventories, source relationship, native
+basis and editable cases. Headless contact tests supply prepared metadata and
+fresh reaction packets; automatic normal-input resource selection is not claimed.
+Character hard interruption and World held begin/release wiring remain to be
+connected. No new authoring/compiler/world plugin validation, windowed gameplay
+or typed in-flight restart acceptance. The double-begin regression and full
+M15S4 remain open.

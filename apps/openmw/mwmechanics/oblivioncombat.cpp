@@ -1817,6 +1817,42 @@ namespace MWMechanics
         }
     }
 
+    static bool cancelHeldBlockResidents(ESM4::RuntimeMeleeState& state,
+        std::span<const OblivionMeleeSequenceMetadata> sources)
+    {
+        for (const auto& source : sources) source.validate();
+        std::vector<bool> used(sources.size(), false);
+        bool changed = false;
+        const auto cancel = [&](auto& view, bool first) {
+            for (auto& held : view.mHeldBlocks)
+            {
+                if (!held.resident()) continue;
+                std::optional<std::size_t> match;
+                for (std::size_t i = 0; i < sources.size(); ++i)
+                    if (sources[i].mFirstPerson == first
+                        && Misc::StringUtils::ciEqual(sources[i].mGroup, held.mAnimationGroup))
+                    {
+                        if (match || sources[i].mCycle != ESM4::MeleeSequenceCycle::Loop)
+                            throw std::invalid_argument("ambiguous resident held cancellation source");
+                        match = i;
+                    }
+                if (!match) throw std::invalid_argument("missing resident held cancellation source");
+                deactivateHeldBlockTiming(held.mSequenceTiming, sources[*match].mFrequency);
+                held.mSequenceTiming.mEasing = false;
+                held.mPoseSnapshot.reset();
+                held.mInactive = true;
+                used[*match] = true;
+                changed = true;
+            }
+        };
+        cancel(state, false);
+        if (state.mFirstPerson) cancel(*state.mFirstPerson, true);
+        if (std::find(used.begin(), used.end(), false) != used.end())
+            throw std::invalid_argument("unowned resident held cancellation source");
+        state.validate();
+        return changed;
+    }
+
     template <class Source>
     static ESM4::RuntimeRetiringMeleeSequence adoptRetiringMeleeSample(
         const Source& sample, std::uint64_t cause, float duration)
@@ -2760,7 +2796,8 @@ namespace MWMechanics
         if ((deltas.mVictimCounter && !deltas.mVictimCounterRequested)
             || (deltas.mVictimCounterRequested && (victim.isEmpty() || deltas.mVictimReaction
                 || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence || deltas.mVictimSlot0Source
-                || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction || !deltas.mDisarms.empty())))
+                || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction || !deltas.mDisarms.empty()
+                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty())))
             throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return nullptr;
@@ -2802,7 +2839,8 @@ namespace MWMechanics
                 || deltas.mAttackerRetiringSequence || deltas.mVictimRetiringSequence
                 || deltas.mAttackerFirstPerson || deltas.mVictimFirstPerson
                 || deltas.mAttackerSlot0Source || deltas.mVictimSlot0Source
-                || deltas.mAttackerFirstPersonSlot0Source || deltas.mVictimFirstPersonSlot0Source)
+                || deltas.mAttackerFirstPersonSlot0Source || deltas.mVictimFirstPersonSlot0Source
+                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty())
                 throw std::invalid_argument("native missed swing cannot start contact reactions");
             if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
@@ -3328,7 +3366,10 @@ namespace MWMechanics
                     || mirrorTiming.mEasing != mirror.mPoseSnapshot.has_value()
                     || (mirrorTiming.mEasing ? mirrorTiming.mEaseEnd <= 0 : mirrorTiming.mEaseEnd != 0))
                     throw std::invalid_argument("native first-person mirror requires fresh direct or captured-pose activation");
+                auto held = candidate.mFirstPerson ? candidate.mFirstPerson->mHeldBlocks
+                    : std::vector<ESM4::RuntimeHeldBlockSequence>{};
                 candidate.mFirstPerson = *firstPerson;
+                candidate.mFirstPerson->mHeldBlocks = std::move(held);
             }
             candidate.validate();
             reactionStates.insert_or_assign(values.mActor, std::move(candidate));
@@ -3344,6 +3385,20 @@ namespace MWMechanics
         if (receiving) prepareReaction(deltas.mVictimReaction, deltas.mVictimRetiringSequence,
             deltas.mVictimFirstPerson, deltas.mVictimSlot0Source, deltas.mVictimFirstPersonSlot0Source,
             *receiving, *receivingLife);
+        const auto cancelReactionHeld = [&](const auto& request, const auto& sources, const ESM::FormKey& actor) {
+            if (!request || (request->mKind != ESM4::MeleeReactionKind::Recoil
+                    && request->mKind != ESM4::MeleeReactionKind::Stagger))
+            {
+                if (!sources.empty()) throw std::invalid_argument("held cancellation requires Recoil or Stagger");
+                return;
+            }
+            const auto staged = reactionStates.find(actor);
+            if (staged == reactionStates.end())
+                throw std::invalid_argument("held cancellation lost its prepared reaction");
+            cancelHeldBlockResidents(staged->second, sources);
+        };
+        cancelReactionHeld(deltas.mAttackerReaction, deltas.mAttackerHeldSources, attackerKey);
+        cancelReactionHeld(deltas.mVictimReaction, deltas.mVictimHeldSources, victimKey);
         std::optional<PreparedPhysicalContact::Impl::CounterAllocation> counterAllocation;
         if (deltas.mVictimCounterRequested)
         {
@@ -5033,6 +5088,17 @@ namespace MWMechanics
         else mMeleeStates.insert(std::move(stateNode));
         if (!clocks.empty()) mAnimationClocks.insert(clocks.extract(clocks.begin()));
         values->second.mProcessAction = 6;
+        return true;
+    }
+
+    bool OblivionCombatService::cancelResidentHeldBlocks(const ESM::FormKey& actor,
+        std::span<const OblivionMeleeSequenceMetadata> sources)
+    {
+        const auto found = mMeleeStates.find(actor);
+        auto next = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
+        if (!cancelHeldBlockResidents(next, sources)) return false;
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        std::swap(found->second, next);
         return true;
     }
 
