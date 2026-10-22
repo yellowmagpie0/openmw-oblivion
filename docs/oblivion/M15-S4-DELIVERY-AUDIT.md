@@ -11383,3 +11383,16 @@ Damage, not a new numeric damage oracle. StopCombat interrupts Recoil.
 pins the tested source, full inventories and 85 evidence artifacts. Editable
 `m15_broken_incoming_recoil_cases.json` and the incoming-break scenarios retain
 normal-input expectations. **Full M15S4 remains incomplete.**
+
+## Advanced unarmed zero-absorption route
+
+A separate 46,080-case original-instruction composition verifies zero/positive
+absorption routing, actual rank queries and Counter-first immediate disarm.
+Unarmed Hand to Hand at least Journeyman routes into blocked dispatch even at
+zero absorbed fraction. Below that rank, the separate Block Recoil query leads
+into general-hit processing, which remains outside this campaign's boundary.
+All asserted route/call/draw and stack/register conventions pass. Counts and
+source are pinned in
+[M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json](M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json).
+This adds no production admission or runtime acceptance. The advanced route
+requires integration, and the lower-rank general-hit path remains open.

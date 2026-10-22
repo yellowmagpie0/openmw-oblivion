@@ -16899,3 +16899,32 @@ Damage, not a new numeric damage oracle. StopCombat interrupts Recoil.
 pins the tested source, full inventories and 85 evidence artifacts. Editable
 `m15_broken_incoming_recoil_cases.json` and the incoming-break scenarios retain
 normal-input expectations. **Full M15S4 remains incomplete.**
+
+### Zero-absorption route composed with Counter-first dispatch
+
+The pinned original image now executes 5FFEDF through actual rank query
+5F23B0/56A300 and, when selected, the complete previously verified
+600528..60056A Counter/disarm caller. The 46,080 contexts cover Player/NPC
+unarmed defenders, three target actor kinds, separate Hand to Hand and Block
+base thresholds, zero/positive absorbed fraction, target presence/drawn/quest,
+source drawn, supplied percentile boundaries, playback result and three x87
+control words. General-hit continuation stops before 5FFF52 consequences.
+ESP, ESI, EDI and EBP are checked at both exit boundaries.
+
+Positive absorbed fraction or unarmed Hand to Hand at least Journeyman routes
+into Counter-first blocked dispatch. Zero absorption below Journeyman Hand to
+Hand instead tests Block mastery and the separate inclusive Recoil roll, then
+continues into general hit processing. The campaign records 42,240 blocked
+routes and 3,840 general-hit routes, 11,520 Counter selections, 120 immediate
+disarms and 480 two-draw contexts. The general route consumes 960 rolls and
+requests Recoil 480 times. The corpus SHA256 is
+1a18bddb3ca98c33a4e8cbb73bcd054087b29b9ad3908c101952ac4fab98c474.
+
+Original instructions own the route, rank and Counter/disarm admission. Base AV
+reads, equipment entries, supplied raw draws and playback/drop/relation/action/
+controller/Recoil sinks remain boundaries. No damage, actual item removal,
+ordinary general-hit consequences or runtime acceptance is claimed. Two loader
+setup failures precede execution and remain retained. The editable protocol and
+[M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json](M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json)
+pin the matrix, scripts, inputs and result. Production zero-absorption admission
+remains guarded until its integration; full M15S4 remains incomplete.

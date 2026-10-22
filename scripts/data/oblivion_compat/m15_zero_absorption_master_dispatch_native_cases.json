@@ -1,0 +1,97 @@
+{
+  "scope": "Compose actual zero/positive absorbed-fraction routing5FFEDF with actual rank query5F23B0 and Counter-first/disarm caller600528..60056A. General hit continuation stops at5FFF52; no damage/general-hit reaction or gameplay acceptance.",
+  "source_kinds": [
+    "npc",
+    "player"
+  ],
+  "target_kinds": [
+    "npc",
+    "player",
+    "creature"
+  ],
+  "exclude": "both Player singleton",
+  "hand_to_hand": [
+    49,
+    50,
+    74,
+    75,
+    99,
+    100
+  ],
+  "block": [
+    49,
+    50
+  ],
+  "absorbed_fraction": [
+    0,
+    0.25
+  ],
+  "target_weapon": [
+    false,
+    true
+  ],
+  "quest": [
+    false,
+    true
+  ],
+  "target_drawn": [
+    false,
+    true
+  ],
+  "source_drawn": [
+    false,
+    true
+  ],
+  "stream": [
+    [
+      25,
+      5
+    ],
+    [
+      25,
+      6
+    ],
+    [
+      26,
+      5
+    ],
+    [
+      26,
+      6
+    ]
+  ],
+  "playback": [
+    false,
+    true
+  ],
+  "x87": [
+    127,
+    639,
+    895
+  ],
+  "expected": "Positive fraction or unarmed HTH rank>=Journeyman routes through Counter-first caller. Zero fraction with HTH below Journeyman routes through separate Block>=Journeyman recoil roll then general hit boundary. Base AV reads, equipped entries, supplied raw RNG, playback/drop/action/controller/Recoil sinks remain boundaries. Rank and all admission instructions execute.",
+  "cases": 46080,
+  "schema_version": 1,
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "fixed_inputs": {
+    "unarmed_byte74": 1,
+    "active_block_byte1e": 1,
+    "ranged_pointer24": 0,
+    "source_weapon": false,
+    "source_shield": false,
+    "target_action": 2,
+    "drop_success": true,
+    "combat_controller": true,
+    "player_gate_byte": 0,
+    "Block_Journeyman_threshold": 50,
+    "HTH_Journeyman_threshold": 50,
+    "Counter_threshold": 25,
+    "disarm_threshold": 5
+  },
+  "limits": [
+    "General-hit route stops before5FFF52 effects; no Health/Fatigue/armor or numerical mitigation expectation.",
+    "Target equipped entries and base AV reads are supplied; rank and complete Counter/disarm guards execute.",
+    "Playback/drop/relation/action/controller/Recoil are boundary sinks, not actual inventory, actor updates or animation acceptance.",
+    "No production zero-absorption branch change or new runtime acceptance."
+  ]
+}
