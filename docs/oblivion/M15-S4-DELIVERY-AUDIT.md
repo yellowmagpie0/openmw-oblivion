@@ -10550,7 +10550,7 @@ executes full5F4AE0(false). Release clears process action/pointer and held-slot
 pointers while cached Counter slot3 survives in NIstate1. NPC held body retires
 in3. Player camera0 ends with held body0/FP3, whereas camera1 has body3/FP3;
 active-view virtual+164 and nested action-clear resets account for the asymmetry.
-The GMST .25 and cache/scene/notification/device query boundaries are supplied.
+The INI value .25 and cache/scene/notification/device query boundaries are supplied.
 This is not a full original-game input/contact/process observation.
 
 Several retained attempts exposed missing group-code fixtures, an omitted
@@ -10568,3 +10568,10 @@ final action6 expectation remains unaccepted; a corrected release course must
 check action2 retention, postcontact action release and independent cached
 recovery separately. Editable cases, hashes, boundaries and retained failures
 are in `M15-BLOCK-RELEASE-CALLER-VERIFICATION.json`. Full S4 remains incomplete.
+
+
+The block-release evidence initially mislabeled B06538 as a GMST. Its registered
+name is `fAnimationDefaultBlend:General`, an INI global with compiled default
+float bits3DCCCCCD (.1). The probes supply .25. Reviewed helper/caller reports
+and the editable cases correct that provenance; raw execution artifacts and
+corpora remain unchanged. No numerical result or production code changed.

@@ -19,7 +19,7 @@
   },
   "helper_verification": {
     "path": "build/oblivion-compat/m15/S4/native-counter-held-slot1-oracle-01/verification08-reviewed.json",
-    "sha256": "d7835559b97e75c7a59fb46a65f831022bd8dd6893313de239e08925705feb7b"
+    "sha256": "0e4c55cbd80ec14a934292bc6d717082236991d22666f706cfa7da222822f598"
   },
   "helper_artifacts": [
     {
@@ -40,8 +40,8 @@
     }
   ],
   "caller_verification": {
-    "path": "build/oblivion-compat/m15/S4/native-block-input-caller-oracle-01/verification02.json",
-    "sha256": "d02f9b6860e584ca26e867e4377ae9ac7a7ff7e2204e3531bd3ec0db6c91f6cf"
+    "path": "build/oblivion-compat/m15/S4/native-block-input-caller-oracle-01/verification02-reviewed.json",
+    "sha256": "cddf5bf483257439ae49b4fbe70001625d1d94cde6d4f6e75e54aed3a075f5f3"
   },
   "caller_artifacts": [
     {
@@ -59,11 +59,19 @@
     {
       "path": "build/oblivion-compat/m15/S4/native-block-input-caller-oracle-01/corpus02.json",
       "sha256": "bde78e0ddf9725a463a30e81a188ee8d3a2d14042195e28dae5d344c262c1907"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-block-input-caller-oracle-01/verification02.json",
+      "sha256": "d02f9b6860e584ca26e867e4377ae9ac7a7ff7e2204e3531bd3ec0db6c91f6cf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-block-input-caller-oracle-01/setting-identity.json",
+      "sha256": "cf419232b93480a7b25f7df28b44aec42165642564b8819a903d18405cc9b95e"
     }
   ],
   "editable_cases": {
     "path": "scripts/data/oblivion_compat/m15_block_release_native_cases.json",
-    "sha256": "55e2f03800943e0154df5a597c1f687b0371b0d1d2d78ca8a10cc69846b26961"
+    "sha256": "ac333643ec4ac57da2bff6573ded8ef49e55dd0905be99887bf1f088a4bbfee1"
   },
   "findings": {
     "process_action": -1,
@@ -137,9 +145,10 @@
   },
   "limits": [
     "No full original input loop, hardware device state, full contact dispatch or original-game process.",
-    "Helper GMST .25 and cache/scene/notification boundaries are supplied; outer Player input eligibility branch is supplied.",
+    "Helper INI .25 and cache/scene/notification boundaries are supplied; outer Player input eligibility branch is supplied.",
     "Only steady held group27 and cached Counter29 are covered; selected resources/partial mirrors/other phases require their own cases.",
     "Existing red course final action6 expectation remains unaccepted; future released-input acceptance must distinguish action2 retention from postcontact process release and independent cached recovery.",
     "No production release fix, native held cache schema or L3 acceptance is added by this evidence checkpoint."
-  ]
+  ],
+  "setting_provenance_correction": "B06538 is the registered INI value fAnimationDefaultBlend:General, compiled default .1; the probe supplies .25. Raw ignored reports/comments retain the earlier GMST label. Reviewed reports correct the provenance without altering the executed source/assertions/corpora."
 }

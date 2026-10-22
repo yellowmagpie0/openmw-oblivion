@@ -29,7 +29,6 @@
     ],
     "animation_clock": 0.5,
     "steady_advance": 0.25,
-    "GMST_B06538": 0.25,
     "held_native_group": 27,
     "Counter_native_group": 285,
     "phase": "Actual Counter activation and native NI updates, then original5EFFD0(6,Counter) supplies postcontact action; full5F4AE0(false) release.",
@@ -43,7 +42,10 @@
         "player_camera0": "body0, first3",
         "player_camera1": "body3, first3"
       }
-    }
+    },
+    "INI_B06538": 0.25,
+    "INI_setting_name": "fAnimationDefaultBlend:General",
+    "INI_compiled_default": 0.1
   },
   "caller_cases": {
     "entry": "6727DD",
