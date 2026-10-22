@@ -10810,3 +10810,34 @@ and the broad S4 matrix remain open. The power-of-two numerical probes do not
 settle arbitrary-frequency deactivation under every original x87 control word.
 This checkpoint is service and persistence validation, with no new compiler/world
 authoring validation or actual runtime acceptance.
+
+
+## Asymmetric held peer release protocol
+
+Following service commit `0ec1d3fc9d`, the original full helper passed a
+288-case asymmetric Player matrix. With body frames 9/FP30 and body active,
+the completed body NI1 can release while FP held is NI5 and its source proxy
+is NI4. The full reset changes both live FP objects to NI3 and gives them the
+active body's new 9/30 fade. It does not retain the old NI4 interval. With the
+reverse frame pattern and FP active at release, body held and its live proxy
+are immediately deactivated; FP held receives the positive fade.
+
+Two independent clocks, three x87 control words, four prior retirement phases,
+two explicit individual update orders and three release times are covered.
+Five subsequent held/proxy states per tuple match an independent binary32 NI3
+model, including retained destination frame0 and frozen timing during the peer
+fade. Complete body/FP Counter objects remain byte-identical throughout.
+The 48-case exploratory 18 observations remain separate from accepted 19.
+
+This refines the earlier model inference: the bounded peer-release path shares
+one new fade between captured source and destination. The old NI4 lifetime need
+not remain independent. Existing service rejection is still in place; next work
+is to admit a held pose snapshot during NI3, preserve its requested destination
+frame through retirement, verify save/restore, and wire renderer/controller use.
+
+[M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json](M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json)
+pins the original executable, preregistration, probe, corpus and editable cases.
+All extracted instructions and bulky corpora remain ignored. Renderer/root,
+scene, cache, INI and proxy allocation are supplied. Explicit source/destination
+updates do not prove actual original manager traversal, and no game process or
+production runtime acceptance is claimed. M15S4 remains incomplete.

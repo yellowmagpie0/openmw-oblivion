@@ -184,5 +184,54 @@
     ],
     "expected": "Full helper release succeeds before the first direct activation update. Positive release resets easeStart while offset remains missing. Update initializes offset before expiry; a tiny fade may expire without assigning lastInput. Zero release retains missing timing. Second direct activation resets only offset and retains the other cache timing fields.",
     "boundaries": "Same supplied scene/render/cache/INI boundaries; no original-game process or runtime acceptance."
+  },
+  "asymmetric_peer_release": {
+    "cases": 288,
+    "patterns": [
+      {
+        "body_frames": 9,
+        "first_frames": 30,
+        "release_camera_byte": 1
+      },
+      {
+        "body_frames": 30,
+        "first_frames": 9,
+        "release_camera_byte": 0
+      }
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87_control_word": [
+      "0x7f",
+      "0x27f",
+      "0x37f"
+    ],
+    "prior_release_elapsed": [
+      0,
+      0.125,
+      0.25,
+      0.5
+    ],
+    "individual_NI_update_order": [
+      "source-first",
+      "destination-first"
+    ],
+    "release_after_activation": [
+      0.375,
+      0.5,
+      0.75
+    ],
+    "expected": {
+      "active_view": "NI1 while peer held remains NI5 and its proxy NI4",
+      "body_active_release": "Held body/FP and live FP proxy become NI3; all positive spans reset to active body blend9/30. Expired body proxy remains inactive.",
+      "first_active_release": "Body held and live body proxy become NI0 immediately; first held becomes NI3. Already inactive first proxy remains unchanged.",
+      "timing": "Positive reset retains offset/input/weighted/output/destinationFrame while easeStart becomes sentinel and easeEnd becomes9/30. Unfinished destination and frozen proxy keep requested frame0. Zero deactivation corrects offset and clears destinationFrame.",
+      "postrelease": "Each positive span anchors to its own view clock, then follows an independent NI3 model at relative0/.125/.25/.375/.625. Source pose and destination share the new fade; expiry retains sampled history in inactive cache.",
+      "counter": "Complete body/FP Counter sequence bytes remain unchanged by release and every postrelease update."
+    },
+    "boundaries": "Original full helper/reset/deactivation/update instructions execute. Renderer/root/scene/cache/INI/proxy allocation are supplied; two explicit individual update orders do not establish actual manager traversal or original-game process acceptance.",
+    "receipt": "docs/oblivion/M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json"
   }
 }

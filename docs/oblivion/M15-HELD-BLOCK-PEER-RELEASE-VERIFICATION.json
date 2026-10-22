@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "status": "Original asymmetric peer release protocol asserted; service and codec implementation remains pending.",
+  "full_M15S4_acceptance": false,
+  "source_parent": "0ec1d3fc9dbd182c8ed9a8901983d95b960c813d",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "editable_cases": {
+    "path": "scripts/data/oblivion_compat/m15_held_block_reactivation_native_cases.json",
+    "sha256": "4b7225cdf82d0ed98a31aef70d2767b253d51cf66e397526c8d3ae205c284fa1"
+  },
+  "accepted": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification19.json",
+      "sha256": "4b20942557c44193e881c15e14ca64a256a3fa908f56c1d4e975aeafa21bc68e"
+    },
+    "result": {
+      "passed": true,
+      "cases": 288,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "ee858d7715a0cc24544ddf66e9184f5a4920cebb2ff70db4163ff1d4c003b754",
+      "scope": "288 asymmetric Player held releases: body9/FP30 with body active, or body30/FP9 with FP active at release; independent clocks, three CWs, four prior fade phases, two explicit individual update orders, three release times. Full helper changes live peer NI4 proxy to NI3 with the active held duration while resetting both held spans; FP-active release immediately deactivates body held and its proxy. Exact timing/offset/destination bits follow an independent binary32 NI3 model for five postrelease updates, and complete Counter bytes remain unchanged. Root/render/scene/cache/INI/proxy boundaries supplied; actual manager traversal and game process not asserted."
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/corpus19.json",
+      "sha256": "ee858d7715a0cc24544ddf66e9184f5a4920cebb2ff70db4163ff1d4c003b754"
+    },
+    "preregistration": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered19.json",
+      "sha256": "a79148d12c99cf2dba1566957aaffde239b30ba2ff0ad01abd8a7f8e01ea6e4d"
+    },
+    "tool": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-19.py",
+      "sha256": "4a754d2d456dcf25f4fcab7b8b9b6f473f69e42e8a5d4985f88bfe4d41d80352"
+    }
+  },
+  "exploratory": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification18.json",
+      "sha256": "7fdadbc4863a60a0502cfe279585f26f8b9bb82bc7c56fe6fa6d9cb44b198f12"
+    },
+    "scope": "48 asymmetric observations; accepted19 adds the reverse camera/frame pattern, three release times and independent timing assertions."
+  },
+  "finding": "An active view that has completed NI5 can release while its peer remains NI5. Full reset converts the linked peer NI4 source proxy and its held destination to NI3 using the active view release duration. They share the new per-view fade; the prior pose span is replaced. First-person-active release immediately zero-deactivates body held and linked proxy.",
+  "model_implication": "The service currently rejects this case. Pose snapshots must remain representable during held NI3 and retain the requested destination frame until expiry. This bounded release path does not require preserving the old independent NI4 fade lifetime. Current validation requires a pose to be resident NI5, so extend that contract and its frame/projection rules before world wiring.",
+  "assertions": [
+    "Full helper succeeds and changes process6 to-1 with null process/held slots.",
+    "Different authored body/FP blend durations remain independent during activation.",
+    "Positive NI3 reset changes ease start/end while sampled history and destination frame are bit-exact.",
+    "Immediate body deactivation applies the original offset correction and clears destination frame.",
+    "Five subsequent per-view held/proxy states match the independent binary32 NI3 model, including frozen destination/proxy time and retained inactive history.",
+    "Complete0x70-byte Counter objects in body and FP remain unchanged."
+  ],
+  "limits": [
+    "This is original-instruction evidence with supplied scene/render/root/cache/INI/proxy boundaries. No original-game process, actual manager traversal or production runtime acceptance.",
+    "The independent model covers the declared frequency1, range0..2 and clock/frame matrix; arbitrary frequency/control-word arithmetic remains open.",
+    "Current production service rejection remains intentional until schema validation, advancement and projection support this lifecycle.",
+    "No new compiler/world authoring validation, C++ build or runtime course is claimed by this evidence-only chunk.",
+    "Full M15S4 remains incomplete."
+  ]
+}
