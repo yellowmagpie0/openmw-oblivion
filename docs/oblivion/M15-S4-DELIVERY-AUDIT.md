@@ -11215,3 +11215,72 @@ plugins are reused; no TES4 MCP authoring capability is implied. Normal-input
 shield/disarm controller paths, Player disarm, custom blend INI import,
 asymmetric views/camera, matched uninterrupted trajectories and the broader
 mastery/effects/input/FPS/interrupt gates remain open. **M15S4 remains incomplete.**
+
+## Actual NPC shield break during held windup
+
+The unchanged758138f20b implementation now has normal and instrumented
+normal-input NPC shield-break courses. Both use the existing pinned near-broken
+shield save, an ordinary Player keyboard unarmed strike and public NPC block
+intent with AI disabled. Only the original body BlockIdle Blend text changes
+from6 to240; the clip's transforms, End, StopTime and key count are unchanged.
+The eight-second captured interval supplies a precontact observation window,
+not stock timing or autonomous defensive-AI acceptance. Identical Lua sources
+are retained across each pair of process epochs.
+
+Each first process saves a64-track `blockidle` NI5 pose, commits contact id2,
+then saves the same cache inactive with its pose cleared and no retirement.
+Every timing field matches the independent native zero-history expectation,
+including unchanged old ease start/end. This happens before the saved NI5 end:
+normal clock10.516003 and sanitizer10.682003 versus end15.361998. The complete
+cache and NPC clock load exactly in a fresh process; inactive history remains
+unchanged on resave, with no new block begin or contact. Each course supplies
+three independently decoded binary/live pairs, six total. Exact Health damage
+bits1065809137, block fraction.25, zero block Fatigue, Player attack debit7,
+unchanged RNG505908858, next action3 and empty pending owners agree with the
+existing independent shield consequence contract. Saved Fatigue permits its
+declared real regeneration ranges; remaining raw AV channels and life entries
+are exact.
+
+One condition-zero Iron Shield is removed from NPC inventory and published as
+one native reference/body, serial2 and one dropper relation. The right sword
+stays equipped at condition55.875. Original populated inventories are compared
+with exact item fields/counts/slots, normalizing stack order only. Added content
+references independently match the pinned master identity, base and CELL.
+The finite moving shield remains inside the existing placement bounds; there
+is no settled-body, fixed cache-size or matched uninterrupted-trajectory claim.
+All six screenshots were directly reviewed. A low shield beside the actor can
+be a falling body, so those images alone are not attachment-removal proof;
+inventory, reference and physical-body checks establish the stated semantics.
+Original skin/model-update parity and new PCM correlation remain unclaimed.
+
+The loader preserves exact native packed velocity, pose, root and reference.
+Its redundant world-unit velocity is reconstructed by the existing packed
+restore contract: `float32(packedLinear * 6.999040126800537)`, with packed angular
+entries copied. One normal derived float changes by one ULP at load. The final
+verifier requires that exact conversion, without tolerance, together with
+unchanged packed data and held history. It does not call the redundant velocity
+byte-identical. The prior full engine suites already cover
+`PackedNativeVelocitySnapshotRestartsAndContinuesExactPhases`.
+
+The first scenario retained an obsolete historical `melee finished` wait;
+current owned Recoil replaces the strike and actually recovers the same cause
+into action-1. It times out with only a precontact save and is not accepted.
+Corrected02 waits for that actual same-cause recovery, with no gameplay change.
+Failed verifier01 assumed source inventory stack order survived native class
+storage; failed verifier02 assumed redundant world-unit velocity was the native
+authority. Both sources and their strict contract corrections are preserved.
+No production code changed in this checkpoint.
+
+[M15-HELD-SHIELD-BREAK-RUNTIME-VERIFICATION.json](M15-HELD-SHIELD-BREAK-RUNTIME-VERIFICATION.json)
+pins the four process epochs, six saves/live pairs, images, reusable tools,
+contracts and failures. Editable scenarios, asset and case declarations are
+under `scripts/data/oblivion_compat/m15_held_shield_break_cases.json`. Exact
+executables/source hashes match758138f20b's accepted1,835-test/125-suite normal
+and sanitizer checks and382-test Python run; those unchanged suites were reused,
+not rerun. Actual runtime sanitizer options and first libasan preload are
+verified; leak detection remains disabled. Structural KF edits, engine parser
+admission, semantic audits and actual runtime/restart evidence are separately
+recorded. Existing stationary plugins are reused, with no compiler/plugin
+change or TES4 MCP capability claim. Player/asymmetric shield views, other
+equipment/disarm, mastery/effects, input/FPS/interrupt matrices and full S4
+remain open. **M15S4 remains incomplete.**

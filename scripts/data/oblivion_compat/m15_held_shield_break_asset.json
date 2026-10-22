@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "purpose": "Eight-second authored NPC shield BlockIdle capture; change existing Blend:6 value only, no input outcomes edited.",
+  "source": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/extracted/meshes/characters/_male/blockidle.kf",
+  "source_sha256": "03706a0300bac98058fd624dfdda3c7814152c673ec99f4b623437652921d40c",
+  "output": "build/oblivion-compat/m15/S4/native-held-shield-break-inputs-01/fixture/meshes/characters/_male/blockidle.kf",
+  "output_sha256": "e31e627007465e218166e3c6dbd66722b32d4a7fa67d5c3d27e9517cc419d279",
+  "blend_text_offset": 11381,
+  "old_text": "Blend: 6",
+  "new_text": "Blend: 240",
+  "old_length": 8,
+  "new_length": 10,
+  "input_sha256": "4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb",
+  "structural_write_success": true,
+  "runtime_acceptance": "Normal02 and sanitized01 capture64-track body NI5 and require immediate native zero reset before its eight-second end.",
+  "source_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "reproduction": "Require source SHA256 and uint32 length8 immediately before blend_text_offset, replace only that length with10 and ASCII Blend: 6 with Blend: 240; preserve all other bytes and require output SHA256. Layer the single override over the unchanged declarative stationary opponent fixture."
+}

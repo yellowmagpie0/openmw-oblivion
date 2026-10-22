@@ -1,0 +1,713 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "NPC shield break zero-resets a saved pending64-track held pose; inactive history, native loose shield state and no replay through fresh process",
+  "full_M15S4_acceptance": false,
+  "implementation_commit": "758138f20b",
+  "unchanged_CPP_sha256": {
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "354dda6ab79e94603a46ca82f1695f8988b5be12939fa060bb5c25d6411020ee",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "f95d5945cca490a2d00e697414d39d29e2927294cf0a10e4bfabb5f6ae95e9ac",
+    "apps/openmw/mwmechanics/character.cpp": "1e7c16e93d6e48cb72bd30e21c92fbb0a17010fe0f9df8409b1d82f8d902bd61",
+    "apps/openmw/mwworld/worldimp.cpp": "e1494b3a38b9d8e005a10dfa11163e0962d47a0846d168c81aa30dd6231920cd",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "6e40b2097f31a50011f9ca7102b9677e8c39f9d63ed008806a2f68364fc2eefa"
+  },
+  "reused_engine_and_python_checks": {
+    "evidence": {
+      "path": "docs/oblivion/M15-HELD-BLOCK-EQUIPMENT-VERIFICATION.json",
+      "sha256": "6dea92fb2f561760a7cedff9a15278da71242ce7288e17b1af9afb4d7aee1d26"
+    },
+    "normal_and_sanitizer_engine_tests": 1835,
+    "engine_suites": 125,
+    "python_tests": 382,
+    "new_build_or_suite_run": false,
+    "reason": "No C++ or Python implementation changes; exact same pinned executables. New declarative scenarios are accepted by actual runtime courses and semantic validators."
+  },
+  "native_oracle": {
+    "path": "docs/oblivion/M15-HELD-BLOCK-EQUIPMENT-ORACLE-VERIFICATION.json",
+    "sha256": "59fa1a658cb1dec69bc1d3c9057c096e8c3d4ceade8af0e20a19cae49d4e0ed1"
+  },
+  "existing_shield_consequence_oracle": {
+    "path": "docs/oblivion/M15-SHIELD-DROP-VERIFICATION.json",
+    "sha256": "5becc66e7f356a757a39c13409630dfd7b423e992e9e9574ed72451867272198"
+  },
+  "sources": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_shield_break_cases.json",
+      "sha256": "0afa28c42403584493e292a9e8fe7783a898e23ce8684af8f61b4a7024208c33"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_shield_break_asset.json",
+      "sha256": "29c92d15c7932fb0a33f3643b30c7dc9b2e67a8d96575e0b75d227ab29ebc5b1"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_shield_break_windup.json",
+      "sha256": "e3ef427d95716d2200f6f7645889e1702a1e414486ebbdb440ea1e7b16b3cc59"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_held_shield_break_windup_continuation.json",
+      "sha256": "f37981d3ce8d8887f09bbd84b169f08064a5bad37ac65ac682fa6c03b98a5d6f"
+    }
+  ],
+  "runtime": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/runtime-verification.json",
+      "sha256": "1525da00cb2974f8a403b93db4863f790a1abf754c72d362f6dff1eed561ed79",
+      "summary": {
+        "passed": true,
+        "scope": "NPC pending held shield break zero reset and fresh-process inactive cache/body preservation",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1356832,
+            "binary_sha256": "0c9d5cbce9586dcc9cceee3ac550d99a74a309a67975929e3c23a5992c51ea0a",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5 before contact",
+                "pose_tracks": 64,
+                "clock": 7.859997272491455,
+                "held_timing": {
+                  "easing": true,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "phase": "native-zero inactive",
+                "pose_tracks": 0,
+                "clock": 10.516002655029297,
+                "held_timing": {
+                  "easing": false,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 1
+              }
+            ],
+            "one_shield_drop_preserved_sword_and_no_replay": true
+          },
+          {
+            "phase": "second",
+            "pid": 1356924,
+            "binary_sha256": "0c9d5cbce9586dcc9cceee3ac550d99a74a309a67975929e3c23a5992c51ea0a",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "native-zero inactive",
+                "pose_tracks": 0,
+                "clock": 11.67800521850586,
+                "held_timing": {
+                  "easing": false,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 1
+              }
+            ],
+            "one_shield_drop_preserved_sword_and_no_replay": true
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Authored public NPC block intent and Blend240; no full autonomous defense, original skin parity, settled body or uninterrupted trajectory equivalence."
+      },
+      "binary_pin": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "0c9d5cbce9586dcc9cceee3ac550d99a74a309a67975929e3c23a5992c51ea0a",
+        "engine_verification": "build/oblivion-compat/m15/S4/native-held-block-equipment-normal-02/verification.json"
+      },
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/manifest.json",
+          "sha256": "e3ef427d95716d2200f6f7645889e1702a1e414486ebbdb440ea1e7b16b3cc59"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/continuation.json",
+          "sha256": "f37981d3ce8d8887f09bbd84b169f08064a5bad37ac65ac682fa6c03b98a5d6f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/preregistration.json",
+          "sha256": "471804055c3737800b97d5f8d3cab38a05b35df63a4771dee739a0314f91f1a8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/verifier-correction.json",
+          "sha256": "a99dca7f91f89c9d997454415bb6aef61743e3ad2bc15e6323acfa9b901d6b1d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/extra-content-reference-audit.json",
+          "sha256": "2004d5ceac6de3cd469820c828a80cc994438094d968d567c360ec21d4d9a689"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/binary-pin.json",
+          "sha256": "b9e91c84ea55c518cfe66b8089cf3765989baa50a93599695996b169bb3f87c6"
+        }
+      ],
+      "phases": {
+        "first": {
+          "epoch": {
+            "pid": 1356832,
+            "start_ticks": 43609728,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "0c9d5cbce9586dcc9cceee3ac550d99a74a309a67975929e3c23a5992c51ea0a"
+          },
+          "artifacts": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/scenario.json",
+              "sha256": "837883f68537f7f828a765960eec31b25717487261a6927ed1fe764bf891d8b4"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/launcher.json",
+              "sha256": "b0af9f7b3dc5faa3f55ed781a09ab3a39f7018e8ad037eeadcc80dc362261614"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/process-epoch.json",
+              "sha256": "574cbeac40b4590dd4f0a8cc3a52b706ce32f20ce007dd2feef5e81bd7ac0fb1"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/actual-engine-environment.json",
+              "sha256": "53260e29c0a8c19ac2081f471f736f75db06394e1b9df6434cfd79ac21231480"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/events.jsonl",
+              "sha256": "8a6a072d445527e4c426155f23d6223158769d07b6a68bc053da341006cdb911"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/snapshot-index.json",
+              "sha256": "f7909c4a0e9bfd1f0cdde75425996bccb074f3d86b78910ca23c859afe027978"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/input-pristine.omwsave",
+              "sha256": "4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/process.log",
+              "sha256": "a3691988ae5a2971734db4f4cd3709fadbc4c322906380a66e673eb0bd316c43"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/npc-shield-before-contact.png",
+              "sha256": "5dfc14d0f35e45966f2e6b66e291ccabf862b4f41678433355635212816cfcb9"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/npc-shield-break-first.png",
+              "sha256": "3fef343f2962eefa750b0a199308f3b928c6aed838cf35242f7dcb5d759ecdf5"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/snapshots/save-3.omwsave",
+              "sha256": "1c9e12e15f8ce3b34128b7e715af3cf960b381d05ce3bf49c4ed1ef0f0e62de6"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/snapshots/save-4.omwsave",
+              "sha256": "001e39f83d86faabf549f80a56099c3fe657191c7400a872312326bf27d5a707"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/live-1-3.json",
+              "sha256": "735784443c99ee6a56524ea9652cbe68960316497ec282d26b2d76ce2d3ce156"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/live-1-4.json",
+              "sha256": "20b71c5e5d6e912d023443a6e292da3b946b829aa33064c253d42be93d385be8"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/live-1-2.json",
+              "sha256": "98087dfc8a8ccbf87b461a5064de6f24bca5478f4cdffc42b6d43a13f45d0337"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/test-data/scripts/m15_block_recovery.lua",
+              "sha256": "f8745d9b2e9f956dcc70cc67180e16022ad4dd4a67e8da12f32bc198e6d3fa88"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/first/test-data/scripts/m15_npc_defensive_block.lua",
+              "sha256": "e4ddf785536c59b428da939df39cfbef40d0571f11b10b26cfc5c834eca606cb"
+            }
+          ],
+          "visual_review": "Directly reviewed intended first-person scene, before/after shield contact and restart. Sword remains visible. Postcontact shield near actor is not treated as standalone attachment proof; moving loose-body data and inventory establish declared semantics."
+        },
+        "second": {
+          "epoch": {
+            "pid": 1356924,
+            "start_ticks": 43619215,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "0c9d5cbce9586dcc9cceee3ac550d99a74a309a67975929e3c23a5992c51ea0a"
+          },
+          "artifacts": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/scenario.json",
+              "sha256": "99e888f1a3393b9bb936edfa856d39d516c17334179fc3bafc7e0e338657276c"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/launcher.json",
+              "sha256": "4b35447f9059518a15c9ad9e6f3616d1f9c11e07d660865b0afd056b445c787b"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/process-epoch.json",
+              "sha256": "efd98fcaa8154b9639fe1c0938e5e924384c5819e98055a28f51695dda334b37"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/actual-engine-environment.json",
+              "sha256": "75f633543d99697c4b9b6a0966a187835a152718e930a3c67b0144236d98748f"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/events.jsonl",
+              "sha256": "755f3d21a6423bcd0565bf9e76eca2ba900a8add8d0333e100a19e1505d731a9"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/snapshot-index.json",
+              "sha256": "a2cb9ddf961d9d3ccbef1f58f8eab6d8f5ccef9f3d93281b230a5156025cf627"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/input-pristine.omwsave",
+              "sha256": "001e39f83d86faabf549f80a56099c3fe657191c7400a872312326bf27d5a707"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/process.log",
+              "sha256": "cb347769f7444aa8f8a07841d76cfeea8382cfcc64d1f67b8728127c95d37e5f"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/npc-shield-zero-restart.png",
+              "sha256": "613ee8295b89c5003c20d576a451ff8e9a448304836ce05a02cfce25202124ea"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/snapshots/save-3.omwsave",
+              "sha256": "20c4e4f1f1c7cb9568a4939d9106ae57627d3d965e91b6bcec80d0ab9c09b51f"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/live-2-3.json",
+              "sha256": "e1afa7de0fa25bc9d31be4a0ce8610219a779b1052582839f233ac284ed71ac2"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/live-2-2.json",
+              "sha256": "338a11b64783ac3d83510f002c4c486e9603a53f78308568caab49c043d03885"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/test-data/scripts/m15_block_recovery.lua",
+              "sha256": "f8745d9b2e9f956dcc70cc67180e16022ad4dd4a67e8da12f32bc198e6d3fa88"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/second/test-data/scripts/m15_npc_defensive_block.lua",
+              "sha256": "e4ddf785536c59b428da939df39cfbef40d0571f11b10b26cfc5c834eca606cb"
+            }
+          ],
+          "visual_review": "Directly reviewed intended first-person scene, before/after shield contact and restart. Sword remains visible. Postcontact shield near actor is not treated as standalone attachment proof; moving loose-body data and inventory establish declared semantics."
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/runtime-verification.json",
+      "sha256": "d91e4aab702588eb1a1c887e22cae12f9f4e6e3e6a71650f9ff2014d2eb5170e",
+      "summary": {
+        "passed": true,
+        "scope": "NPC pending held shield break zero reset and fresh-process inactive cache/body preservation",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1356990,
+            "binary_sha256": "29c73452150b1d8e0ac12b71b74b6afca8ebe24c7947a4a3d1a69ea3e58170b6",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "NI5 before contact",
+                "pose_tracks": 64,
+                "clock": 8.025997161865234,
+                "held_timing": {
+                  "easing": true,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "phase": "native-zero inactive",
+                "pose_tracks": 0,
+                "clock": 10.682003021240234,
+                "held_timing": {
+                  "easing": false,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 1
+              }
+            ],
+            "one_shield_drop_preserved_sword_and_no_replay": true
+          },
+          {
+            "phase": "second",
+            "pid": 1357281,
+            "binary_sha256": "29c73452150b1d8e0ac12b71b74b6afca8ebe24c7947a4a3d1a69ea3e58170b6",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "phase": "native-zero inactive",
+                "pose_tracks": 0,
+                "clock": 11.844005584716797,
+                "held_timing": {
+                  "easing": false,
+                  "offset": 0.0,
+                  "ease_start": 7.361997604370117,
+                  "last_input": 0.0,
+                  "ease_end": 15.361997604370117,
+                  "weighted_time": 0.0,
+                  "output_time": 0.0
+                },
+                "loose_count": 1
+              }
+            ],
+            "one_shield_drop_preserved_sword_and_no_replay": true
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Authored public NPC block intent and Blend240; no full autonomous defense, original skin parity, settled body or uninterrupted trajectory equivalence."
+      },
+      "binary_pin": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "29c73452150b1d8e0ac12b71b74b6afca8ebe24c7947a4a3d1a69ea3e58170b6",
+        "engine_verification": "build/oblivion-compat/m15/S4/native-held-block-equipment-sanitized-02/verification.json"
+      },
+      "artifacts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/manifest.json",
+          "sha256": "1191661348698b2bb4bc2698017958be2d1207b2b1bf8c6425c7fd3475599969"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/continuation.json",
+          "sha256": "2d40d2e610caf45be4d6c9852acb10caa4f17bcf032486021541920625b7fc19"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/preregistration.json",
+          "sha256": "471804055c3737800b97d5f8d3cab38a05b35df63a4771dee739a0314f91f1a8"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/verifier-correction.json",
+          "sha256": "a99dca7f91f89c9d997454415bb6aef61743e3ad2bc15e6323acfa9b901d6b1d"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/extra-content-reference-audit.json",
+          "sha256": "2004d5ceac6de3cd469820c828a80cc994438094d968d567c360ec21d4d9a689"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/binary-pin.json",
+          "sha256": "27c5708ba3f56777bcc695b471fb6511be2806261bfe86b8c4fd2e02a834e683"
+        }
+      ],
+      "phases": {
+        "first": {
+          "epoch": {
+            "pid": 1356990,
+            "start_ticks": 43622946,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "29c73452150b1d8e0ac12b71b74b6afca8ebe24c7947a4a3d1a69ea3e58170b6"
+          },
+          "artifacts": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/scenario.json",
+              "sha256": "a62924c01786d22fa676b39b75e58ee1a8db8ceba9806f1eef80e32276a5321f"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/launcher.json",
+              "sha256": "b5e482d058a946d5a6c69b3b18c680d8a7d3619dbeab7131032f77e2ae4ab071"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/process-epoch.json",
+              "sha256": "d6c443a97739ccbe1c46ec13600cc8a9ca6af5afa1912a674693a93c2ceffd1e"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/actual-engine-environment.json",
+              "sha256": "f7e851bc21a81c93dce84b0dc04ef9f406b5e8cc6b3341cdbc0c83f6ef20b771"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/events.jsonl",
+              "sha256": "dc02fdadea2fd916113126700d1d1f347c34128d478adc99befafb9543b3d1d4"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/snapshot-index.json",
+              "sha256": "1cd61385622b15e0ee25c0a9f92387df5864db13ccd1ea9c57cc72c92b6bfa7f"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/input-pristine.omwsave",
+              "sha256": "4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/process.log",
+              "sha256": "8f3124c0856e47adee8730bbdc6ee0bab95433da2c0dd67d4fccb94f3f127984"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/npc-shield-before-contact.png",
+              "sha256": "a77313f476481075f958d14298274a9c079c12f0b6c17fd11db796faffad8108"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/npc-shield-break-first.png",
+              "sha256": "020b17f771051a5a549630ccd7b07004a633c061274ddcf7b382296c1f966a77"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/snapshots/save-3.omwsave",
+              "sha256": "80b06c139922994345fa142bad9f49dec24d1c84e8fbffbf2acaa2e93440b6a2"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/snapshots/save-4.omwsave",
+              "sha256": "d3b5eb22635a9abc1436fef850df6e5d7312b556f5cd11ab65d263ee15f9c7a9"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/live-1-3.json",
+              "sha256": "f02951bd27c1e78f9d5ece7b8f617be1c766e566c77538743ca9a4adba96fd2a"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/live-1-4.json",
+              "sha256": "b39a45107c5546d108fe902da0da48104d3242ac93307c2f48911ad0f7aa8ada"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/live-1-2.json",
+              "sha256": "98087dfc8a8ccbf87b461a5064de6f24bca5478f4cdffc42b6d43a13f45d0337"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/test-data/scripts/m15_block_recovery.lua",
+              "sha256": "f8745d9b2e9f956dcc70cc67180e16022ad4dd4a67e8da12f32bc198e6d3fa88"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/first/test-data/scripts/m15_npc_defensive_block.lua",
+              "sha256": "e4ddf785536c59b428da939df39cfbef40d0571f11b10b26cfc5c834eca606cb"
+            }
+          ],
+          "visual_review": "Directly reviewed intended first-person scene, before/after shield contact and restart. Sword remains visible. Postcontact shield near actor is not treated as standalone attachment proof; moving loose-body data and inventory establish declared semantics."
+        },
+        "second": {
+          "epoch": {
+            "pid": 1357281,
+            "start_ticks": 43661109,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "29c73452150b1d8e0ac12b71b74b6afca8ebe24c7947a4a3d1a69ea3e58170b6"
+          },
+          "artifacts": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/scenario.json",
+              "sha256": "cc51a3e6d4b3001276ed73026a1579a852647979b9bbbf02c7603e5583e31ddd"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/launcher.json",
+              "sha256": "e232e923b0e09a3aed9344700733b631272f23210a0feea3ca853fb027225467"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/process-epoch.json",
+              "sha256": "76aed2f8ad5ff37db2da5015041b889140412d12a9128ddc2c233ae320c1c4da"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/actual-engine-environment.json",
+              "sha256": "06cebed0f4d23f5818c2664ce58734aaba0baffa317c86d748d6ef90fa3e6961"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/events.jsonl",
+              "sha256": "413e323aefb5c29e8a4812ba3d53ffd07ca033475f4e197e7ffea5d4f31172a0"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/snapshot-index.json",
+              "sha256": "cb9445c9483f3ff534f3888b4e46b6662118ee45406d0a5b90db1c257b9a06ed"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/input-pristine.omwsave",
+              "sha256": "d3b5eb22635a9abc1436fef850df6e5d7312b556f5cd11ab65d263ee15f9c7a9"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/process.log",
+              "sha256": "de288f4281b820ea72baad9f593ba2023ef47f9fb2f60c30627798b5fdfdd6e2"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/npc-shield-zero-restart.png",
+              "sha256": "06a178156cfe2d3c81d9f460c53d9c9c0c14e0e62c98e4befaa94cbc9ff78c06"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/snapshots/save-3.omwsave",
+              "sha256": "834c9afa74e0d8059abc391d8a2a9a94d99760df7b9fd52329b63e9f93d3b27a"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/live-2-3.json",
+              "sha256": "849b5487e959259de570d16fe84de778498518aa24e7f0e6c4eb9eff394a2fb5"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/live-2-2.json",
+              "sha256": "38316b8ab35be817bad00a54d990d9afd448deacb68e6960f57f99962a9147e0"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/test-data/scripts/m15_block_recovery.lua",
+              "sha256": "f8745d9b2e9f956dcc70cc67180e16022ad4dd4a67e8da12f32bc198e6d3fa88"
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/second/test-data/scripts/m15_npc_defensive_block.lua",
+              "sha256": "e4ddf785536c59b428da939df39cfbef40d0571f11b10b26cfc5c834eca606cb"
+            }
+          ],
+          "visual_review": "Directly reviewed intended first-person scene, before/after shield contact and restart. Sword remains visible. Postcontact shield near actor is not treated as standalone attachment proof; moving loose-body data and inventory establish declared semantics."
+        }
+      }
+    }
+  },
+  "tools": {
+    "normal/launcher.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/launcher.py",
+      "sha256": "3ce999a4af3cbe805a75cdd501a291975ba52aed333e5b1364ca8d4615936464",
+      "source": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path.cwd();base=Path(__file__).resolve().parent;phase=sys.argv[1];assert phase in ('first','second')\npin=json.loads((base/'binary-pin.json').read_text());binary=Path(pin['path']);assert hashlib.sha256(binary.read_bytes()).hexdigest()==pin['sha256']\nreport=json.loads((root/'build/oblivion-compat/m15/S4/native-held-block-equipment-normal-02/verification.json').read_text());assert report['passed']\nsource=base/'staged-input.omwsave'\nif phase=='second':\n index=json.loads((base/'first/snapshot-index.json').read_text());last=max(index,key=int);source=Path(index[last]['snapshot'])\nout=base/phase;out.mkdir(exist_ok=False);slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True)\nshutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',str(base/('manifest.json' if phase=='first' else 'continuation.json')),'--output',str(out),'--variable','openmw='+str(binary),'--variable','resources='+str(root/'build/resources'),'--variable','stationary_fixture='+str(root/'build/oblivion-compat/m15/S4/native-held-shield-break-inputs-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nwith (out/'harness.log').open('w') as log:\n process=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'monitor.py'),str(out),str(binary)],cwd=root,capture_output=True,text=True)\n (out/'monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=process.wait(timeout=700)\n(out/'launcher.json').write_text(json.dumps(dict(command=cmd,scenario_returncode=code,monitor_returncode=monitor.returncode,binary_sha256=pin['sha256']),indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256(binary.read_bytes()).hexdigest()==pin['sha256']\nprint(json.dumps({'phase':phase,'passed':True}))\n"
+    },
+    "normal/monitor.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "source": "from pathlib import Path\nimport time,json,sys,os,hashlib\nout=Path(sys.argv[1]).resolve(); binary=Path(sys.argv[2]).resolve(); deadline=time.monotonic()+900\nout.mkdir(parents=True,exist_ok=True); snapshots=out/'snapshots'; snapshots.mkdir(exist_ok=True)\nsha=lambda b:hashlib.sha256(b).hexdigest()\nepoch=None; saved={}; ended=False\nwhile time.monotonic()<deadline:\n if epoch is None:\n  for proc in Path('/proc').glob('[0-9]*'):\n   try:\n    if Path(os.readlink(proc/'exe')).resolve()!=binary:continue\n    args=(proc/'cmdline').read_bytes().split(b'\\0')\n    if str(out/'config').encode() not in args:continue\n    stat=(proc/'stat').read_text();fields=stat[stat.rfind(')')+2:].split()\n    epoch={'pid':int(proc.name),'start_ticks':int(fields[19]),'clock_ticks_per_second':os.sysconf('SC_CLK_TCK'),'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'command':[a.decode() for a in args if a],'executable_sha256':sha(binary.read_bytes())}\n    (out/'process-epoch.json').write_text(json.dumps(epoch,indent=2)+'\\n')\n    env=dict(x.split(b'=',1) for x in (proc/'environ').read_bytes().split(b'\\0') if b'=' in x)\n    keep=['ASAN_OPTIONS','UBSAN_OPTIONS','SDL_VIDEODRIVER','LD_PRELOAD','LIBGL_ALWAYS_SOFTWARE','OPENMW_M15_RUN_ID','OPENMW_M15_EPOCH']\n    (out/'actual-engine-environment.json').write_text(json.dumps({k:env[k.encode()].decode() for k in keep if k.encode() in env},indent=2)+'\\n')\n   except (FileNotFoundError,PermissionError,ProcessLookupError):continue\n events=out/'events.jsonl'\n if events.exists():\n  for line in events.read_text().splitlines():\n   try:e=json.loads(line)\n   except json.JSONDecodeError:continue\n   if e['event']=='save-complete' and e['sequence'] not in saved:\n    src=Path(e['save']); blob=src.read_bytes()\n    if sha(blob)!=e['save_sha256']:raise RuntimeError('save overwritten before snapshot: '+str(e['sequence']))\n    live=out/e['live']; assert sha(live.read_bytes())==e['live_sha256']\n    target=snapshots/f\"save-{e['sequence']}.omwsave\"\n    with target.open('xb') as f:f.write(blob)\n    saved[e['sequence']]={'event':e,'snapshot':str(target),'sha256':sha(blob)}\n    (out/'snapshot-index.json').write_text(json.dumps(saved,indent=2)+'\\n')\n   if e['event']=='run-end':ended=True\n if ended:break\n time.sleep(.02)\nassert epoch and ended and saved, (epoch,ended,saved)\nprint(json.dumps({'epoch':epoch,'snapshots':list(saved),'run_end':ended},indent=2))\n"
+    },
+    "normal/verify.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/verify.py",
+      "sha256": "42251081935f22754244a53a981dbb16d7d3afa0d92b0060dd771857894e5bbc",
+      "source": "from pathlib import Path\nimport copy, hashlib, json, math, struct, sys\nfrom scripts.tes4_runtime_state import load_save, encode_payload, _find_runtime_record\nbase=Path(sys.argv[1]).resolve(); npc='content:oblivion.esm:01fc43'; player='dynamic:player:0000000000000001';drop='dynamic:native-reference:0000000000000001';shield='content:oblivion.esm:0352c1'\nsha=lambda b:hashlib.sha256(b).hexdigest()\nfetch=lambda s,k,a=npc:next(x for x in s[k] if x['actor']==a)\nref=lambda s,k:next(x for x in s['references'] if x['key']==k)\nf32=lambda x:struct.unpack('<f',struct.pack('<f',x))[0]\nnormalize=lambda items:sorted(items,key=lambda x:(x['base'],json.dumps(x,sort_keys=True)))\noriginal=load_save(base/'staged-input.omwsave');assert original['schema_version']==53\nassert sha((base/'staged-input.omwsave').read_bytes())=='4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb'\nassert json.loads((base/'extra-content-reference-audit.json').read_text())['passed']\npre=None;post=None;epochs=[];reports=[]\nfor phase in ['first','second']:\n out=base/phase\n if not (out/'launcher.json').exists():break\n launcher=json.loads((out/'launcher.json').read_text());assert launcher['scenario_returncode']==launcher['monitor_returncode']==0\n assert json.loads((out/'scenario.json').read_text())['passed']\n epoch=json.loads((out/'process-epoch.json').read_text());epochs.append(epoch)\n pin=json.loads((base/'binary-pin.json').read_text());assert epoch['executable_sha256']==pin['sha256']==launcher['binary_sha256']\n if 'm15-sanitize' in pin['path']:\n  env=json.loads((out/'actual-engine-environment.json').read_text());assert env['ASAN_OPTIONS']=='detect_leaks=0:halt_on_error=1' and env['UBSAN_OPTIONS']=='halt_on_error=1:print_stacktrace=1';assert env['LD_PRELOAD'].split(':')[0]=='/usr/lib64/libasan.so.8.0.0'\n events=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()];assert all(x['pid']==epoch['pid'] for x in events)\n assert events[0]['event']=='run-start' and events[-1]['event']=='run-end'\n pristine=out/'input-pristine.omwsave';initial=load_save(pristine);load=next(x for x in events if x['event']=='load-complete');assert load['save_sha256']==sha(pristine.read_bytes())\n live_blob=(out/load['live']).read_bytes();assert sha(live_blob)==load['live_sha256'];loaded=json.loads(live_blob)\n if phase=='first':assert pristine.read_bytes()==(base/'staged-input.omwsave').read_bytes()\n else:\n  idx=json.loads((base/'first/snapshot-index.json').read_text());assert sha(pristine.read_bytes())==idx[max(idx,key=int)]['sha256']\n  candidate=copy.deepcopy(initial)\n  for key in ['native_melee_states','native_animation_clocks']:\n   candidate[key]=[copy.deepcopy(fetch(loaded,key)) if x['actor']==npc else x for x in candidate[key]]\n  candidate['native_loose_weapons']=copy.deepcopy(loaded['native_loose_weapons'])\n  candidate['references']=[copy.deepcopy(ref(loaded,x['key'])) if x['key']==drop else x for x in candidate['references']]\n  expected=copy.deepcopy(initial)\n  for loose in expected['native_loose_weapons']:\n   packed=loose['body']['native_packed_velocity']\n   loose['body']['linear_velocity']=[f32(x*6.999040126800537) for x in packed['linear'][:3]]\n   loose['body']['angular_velocity']=packed['angular'][:3]\n  assert encode_payload(candidate)==encode_payload(expected),'Exact inactive NPC cache/clock, native body state and prescribed packed-to-world projection'\n idx=json.loads((out/'snapshot-index.json').read_text());assert len(idx)==(2 if phase=='first' else 1)\n checks=[]\n for sequence,row in sorted(idx.items(),key=lambda kv:int(kv[0])):\n  blob=Path(row['snapshot']).read_bytes();assert sha(blob)==row['sha256']==row['event']['save_sha256']\n  live=(out/row['event']['live']).read_bytes();assert sha(live)==row['event']['live_sha256'];state=load_save(Path(row['snapshot']));assert _find_runtime_record(blob)[3]==encode_payload(state)==encode_payload(json.loads(live))\n  before_hit=phase=='first' and sequence==min(idx,key=int)\n  assert state['schema_version']==61\n  assert state['physical_actions']=={'next':2 if before_hit else 3,'pending':[]} and state['physical_action_owners']==[]\n  assert state['combat_rng_state']==original['combat_rng_state']==505908858\n  assert state['native_actor_life']==original['native_actor_life']\n  for av in state['native_actor_values']:\n   old=fetch(original,'native_actor_values',av['actor'])\n   for index,(a,b) in enumerate(zip(old['values'],av['values'])):\n    if not before_hit and index==8 and av['actor']==npc:\n     assert a[:3]==b[:3] and struct.pack('<f',-b[3])==struct.pack('<I',1065809137)\n    elif not before_hit and index==10 and av['actor'] in (npc,player):\n     debit=struct.unpack('<f',struct.pack('<I',1067615414))[0] if av['actor']==npc else 7\n     assert a[:3]==b[:3] and -debit-.0001<=b[3]<=0\n    else:assert a==b,(av['actor'],index,a,b)\n  assert state['player']['inventory']==original['player']['inventory']\n  inventories={x['key']:copy.deepcopy(x['inventory']) for x in original['references'] if x['inventory']}\n  if not before_hit:inventories[npc]=[x for x in inventories[npc] if x['base']!=shield]\n  assert {x['key']:normalize(x['inventory']) for x in state['references'] if x['key'] in inventories}=={k:normalize(v) for k,v in inventories.items()}\n  m=fetch(state,'native_melee_states');assert m['strike'] is None and m['reaction'] is None and m['first_person'] is None\n  assert len(m['held_blocks'])==1;held=m['held_blocks'][0];assert held['animation_group']=='blockidle'\n  if before_hit:\n   pre=state\n   assert fetch(state,'native_actor_values')['process_action']==6 and held['sequence_timing']['easing']\n   assert not held['inactive'] and held['retirement'] is None and len(held['pose_snapshot']['tracks'])==64\n   assert held['animation_time']==held['sequence_timing']['output_time']==0\n   assert abs(held['sequence_timing']['ease_end']-held['sequence_timing']['ease_start']-8)<.00001\n   assert state['next_dynamic_serial']==1 and state['native_loose_weapons']==[]\n  else:\n   assert pre is not None and fetch(state,'native_actor_values')['process_action']==-1\n   old=copy.deepcopy(fetch(pre,'native_melee_states')['held_blocks'][0]);timing=old['sequence_timing']\n   if timing['last_input'] is not None:timing['offset']=f32(float(timing['weighted_time'])-timing['last_input']+timing['offset'])\n   timing['easing']=False;old['inactive']=True;old['pose_snapshot']=None\n   candidate=copy.deepcopy(state);fetch(candidate,'native_melee_states')['held_blocks']=[old]\n   assert encode_payload(candidate)==encode_payload(state),'Complete native zero-history expectation, including float bits'\n   assert held['retirement'] is None\n   if phase=='first':\n    assert fetch(state,'native_animation_clocks')['clock']<old['sequence_timing']['ease_end'],'Reset must precede NI5 completion'\n    post=state\n   else:assert fetch(state,'native_melee_states')['held_blocks']==fetch(post,'native_melee_states')['held_blocks']\n   assert state['next_dynamic_serial']==2 and len(state['native_loose_weapons'])==1\n   loose=state['native_loose_weapons'][0];assert loose['reference']==drop and loose['base']==shield and loose['model']=='meshes/armor/iron/shield.nif'\n   assert loose['asset_hash']=='f76af90c081974c7cab30aa7b1403e30' and loose['body']['record']==5 and loose['body']['node_record']==0\n   d=ref(state,drop);assert d['base']==shield and d['item_condition']==0 and d['dropper']==npc and d['owner'] is None and not d['deleted'] and d['enabled'] and d['custom_state']['count']==1\n   assert ref(state,npc)['dropped_items']==[drop]\n   body=loose['body'];assert all(math.isfinite(x) for k in ['position','rotation','linear_velocity','angular_velocity'] for x in body[k])\n   origin=ref(state,npc)['position'];position=body['position'];assert math.hypot(position[0]-origin[0],position[1]-origin[1])<=256 and -64<=position[2]-origin[2]<=192\n   assert all(abs(a-b)<=.01 for a,b in zip(position,loose['root_local']['position']))\n   assert all(abs(a-b)<=.01 for a,b in zip(d['position'][:3],loose['root_local']['position']))\n  checks.append(dict(sequence=sequence,wire_exact=True,phase='NI5 before contact' if before_hit else 'native-zero inactive',pose_tracks=64 if before_hit else 0,clock=fetch(state,'native_animation_clocks')['clock'],held_timing=held['sequence_timing'],loose_count=len(state['native_loose_weapons'])))\n log=(out/'process.log').read_text();assert all(x not in log for x in ['ERROR: AddressSanitizer','runtime error:','Error in frame','onFrame failed'])\n assert log.count('M15 melee hit committed:')==(1 if phase=='first' else 0)\n assert log.count('M15 block begin: actor='+npc)==(1 if phase=='first' else 0)\n assert log.count('M15 block release: actor='+npc)==(1 if phase=='first' else 0)\n reports.append(dict(phase=phase,pid=epoch['pid'],binary_sha256=pin['sha256'],saves=checks,one_shield_drop_preserved_sword_and_no_replay=True))\nif len(epochs)==2:assert (epochs[0]['pid'],epochs[0]['start_ticks'])!=(epochs[1]['pid'],epochs[1]['start_ticks'])\nreport=dict(passed=len(reports)==2,scope='NPC pending held shield break zero reset and fresh-process inactive cache/body preservation',phases=reports,full_M15S4_acceptance=False,limits='Authored public NPC block intent and Blend240; no full autonomous defense, original skin parity, settled body or uninterrupted trajectory equivalence.')\n(base/'runtime-verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n"
+    },
+    "normal/audit-extra-content.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/audit-extra-content.py",
+      "sha256": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb",
+      "source": "from pathlib import Path\nimport json,hashlib,zlib,struct,sys,math\nroot=Path(__file__).resolve().parents[5];sys.path.insert(0,str(root))\nfrom scripts.tes4_runtime_state import load_save\np=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parent\nsource=load_save(p/'staged-input.omwsave');original={v['key'] for v in source['references']}\nstates=[load_save(p/phase/'userdata/saves/M15Review/Quicksave.omwsave') for phase in ('first','second')]\nextras=[{v['key']:v for v in s['references'] if v['key'] not in original and not v['key'].startswith('dynamic:')} for s in states]\nwanted=set().union(*(set(int(k.rsplit(':',1)[1],16) for k in group) for group in extras))\nmaster=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');data=master.read_bytes()\nassert hashlib.sha256(data).hexdigest()=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nfound={};cells={}\ndef walk(start,end,cell=None,world=None):\n pos=start\n while pos<end:\n  tag=data[pos:pos+4];size=struct.unpack_from('<I',data,pos+4)[0]\n  if tag==b'GRUP':\n   label,typ=struct.unpack_from('<II',data,pos+8);walk(pos+20,pos+size,label if typ==6 else cell,label if typ==1 else world);pos+=size;continue\n  flags,form=struct.unpack_from('<II',data,pos+8)\n  if tag==b'CELL' or (form in wanted and tag in (b'REFR',b'ACHR',b'ACRE')):\n   body=data[pos+20:pos+20+size]\n   if flags&0x40000:\n    length=struct.unpack_from('<I',body)[0];body=zlib.decompress(body[4:]);assert len(body)==length\n   q=0;fields={};extended=None\n   while q<len(body):\n    st=body[q:q+4];n=struct.unpack_from('<H',body,q+4)[0];q+=6\n    if st==b'XXXX':extended=struct.unpack_from('<I',body,q)[0];q+=n;continue\n    if extended is not None:n=extended;extended=None\n    fields[st]=body[q:q+n];q+=n\n   assert q==len(body)\n   if tag==b'CELL':\n    cells[form]={'world':world,'flags':flags,'interior':bool(fields[b'DATA'][0]&1),'coordinates':struct.unpack('<ii',fields[b'XCLC'][:8]) if b'XCLC' in fields else None}\n   else:\n    assert cell is not None\n    found[form]={'base':struct.unpack('<I',fields[b'NAME'])[0],'cell':cell,'world':world,'flags':flags,'tag':tag.decode(),'position':struct.unpack('<6f',fields[b'DATA'])}\n  pos+=20+size\n assert pos==end\nwalk(0,len(data));assert found.keys()==wanted\nrows=[];resolved=[]\nfor phase,group in zip(('first','second'),extras):\n for key,ref in group.items():\n  assert key.startswith('content:oblivion.esm:')\n  native=found[int(key.rsplit(':',1)[1],16)]\n  assert ref['base']==f\"content:oblivion.esm:{native['base']:06x}\"\n  if ref['cell']!=f\"content:oblivion.esm:{native['cell']:06x}\":\n   assert native['tag']=='REFR' and native['flags']&0x400\n   parent=cells[native['cell']];assert parent['flags']&0x400 and not parent['interior']\n   assert ref['cell'].startswith('content:oblivion.esm:')\n   target_id=int(ref['cell'].rsplit(':',1)[1],16);target=cells[target_id]\n   assert native['world'] is not None and parent['world']==native['world']==target['world']\n   assert not target['interior'] and not target['flags']&0x400\n   assert all(math.isfinite(x) for x in native['position'])\n   assert ref['position'][:3]==list(native['position'][:3])\n   physical_cell=tuple(math.floor(v/4096) for v in native['position'][:2]);assert target['coordinates']==physical_cell\n   resolved.append({'phase':phase,'reference':key,'base':ref['base'],'world':f\"content:oblivion.esm:{native['world']:06x}\",'persistent_storage_cell':f\"content:oblivion.esm:{native['cell']:06x}\",'saved_physical_cell':ref['cell'],'coordinates':physical_cell,'unchanged_master_position':native['position'][:3]})\n rows.append({'count':len(group),'identity_base_cell_sha256':hashlib.sha256(json.dumps(sorted((k,r['base'],r['cell']) for k,r in group.items()),separators=(',',':')).encode()).hexdigest()})\nr={'passed':True,'master_sha256':hashlib.sha256(data).hexdigest(),'counts':rows,'persistent_exterior_references':resolved,'scope':'Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim.'}\n(p/'extra-content-reference-audit.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r))\n"
+    },
+    "sanitized/launcher.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/launcher.py",
+      "sha256": "7b58510375341c70f0a9049b2717a215a3fea7b1febc3416d00dab2695fe08e8",
+      "source": "from pathlib import Path\nimport subprocess,json,sys,shutil,hashlib\nroot=Path.cwd();base=Path(__file__).resolve().parent;phase=sys.argv[1];assert phase in ('first','second')\npin=json.loads((base/'binary-pin.json').read_text());binary=Path(pin['path']);assert hashlib.sha256(binary.read_bytes()).hexdigest()==pin['sha256']\nreport=json.loads((root/'build/oblivion-compat/m15/S4/native-held-block-equipment-sanitized-02/verification.json').read_text());assert report['passed']\nsource=base/'staged-input.omwsave'\nif phase=='second':\n index=json.loads((base/'first/snapshot-index.json').read_text());last=max(index,key=int);source=Path(index[last]['snapshot'])\nout=base/phase;out.mkdir(exist_ok=False);slot=out/'userdata/saves/M15Review/Quicksave.omwsave';slot.parent.mkdir(parents=True)\nshutil.copyfile(source,slot);shutil.copyfile(source,out/'input-pristine.omwsave')\ncmd=[sys.executable,'scripts/oblivion_compat.py','scenario',str(base/('manifest.json' if phase=='first' else 'continuation.json')),'--output',str(out),'--variable','openmw='+str(binary),'--variable','resources='+str(root/'build/resources'),'--variable','stationary_fixture='+str(root/'build/oblivion-compat/m15/S4/native-held-shield-break-inputs-01/fixture'),'--variable','oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data']\nwith (out/'harness.log').open('w') as log:\n process=subprocess.Popen(cmd,cwd=root,stdout=log,stderr=subprocess.STDOUT)\n monitor=subprocess.run([sys.executable,str(base/'monitor.py'),str(out),str(binary)],cwd=root,capture_output=True,text=True)\n (out/'monitor.log').write_text(monitor.stdout+monitor.stderr)\n code=process.wait(timeout=700)\n(out/'launcher.json').write_text(json.dumps(dict(command=cmd,scenario_returncode=code,monitor_returncode=monitor.returncode,binary_sha256=pin['sha256']),indent=2)+'\\n')\nassert code==0 and monitor.returncode==0,(code,monitor.returncode)\nassert hashlib.sha256(binary.read_bytes()).hexdigest()==pin['sha256']\nprint(json.dumps({'phase':phase,'passed':True}))\n"
+    },
+    "sanitized/monitor.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "source": "from pathlib import Path\nimport time,json,sys,os,hashlib\nout=Path(sys.argv[1]).resolve(); binary=Path(sys.argv[2]).resolve(); deadline=time.monotonic()+900\nout.mkdir(parents=True,exist_ok=True); snapshots=out/'snapshots'; snapshots.mkdir(exist_ok=True)\nsha=lambda b:hashlib.sha256(b).hexdigest()\nepoch=None; saved={}; ended=False\nwhile time.monotonic()<deadline:\n if epoch is None:\n  for proc in Path('/proc').glob('[0-9]*'):\n   try:\n    if Path(os.readlink(proc/'exe')).resolve()!=binary:continue\n    args=(proc/'cmdline').read_bytes().split(b'\\0')\n    if str(out/'config').encode() not in args:continue\n    stat=(proc/'stat').read_text();fields=stat[stat.rfind(')')+2:].split()\n    epoch={'pid':int(proc.name),'start_ticks':int(fields[19]),'clock_ticks_per_second':os.sysconf('SC_CLK_TCK'),'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'command':[a.decode() for a in args if a],'executable_sha256':sha(binary.read_bytes())}\n    (out/'process-epoch.json').write_text(json.dumps(epoch,indent=2)+'\\n')\n    env=dict(x.split(b'=',1) for x in (proc/'environ').read_bytes().split(b'\\0') if b'=' in x)\n    keep=['ASAN_OPTIONS','UBSAN_OPTIONS','SDL_VIDEODRIVER','LD_PRELOAD','LIBGL_ALWAYS_SOFTWARE','OPENMW_M15_RUN_ID','OPENMW_M15_EPOCH']\n    (out/'actual-engine-environment.json').write_text(json.dumps({k:env[k.encode()].decode() for k in keep if k.encode() in env},indent=2)+'\\n')\n   except (FileNotFoundError,PermissionError,ProcessLookupError):continue\n events=out/'events.jsonl'\n if events.exists():\n  for line in events.read_text().splitlines():\n   try:e=json.loads(line)\n   except json.JSONDecodeError:continue\n   if e['event']=='save-complete' and e['sequence'] not in saved:\n    src=Path(e['save']); blob=src.read_bytes()\n    if sha(blob)!=e['save_sha256']:raise RuntimeError('save overwritten before snapshot: '+str(e['sequence']))\n    live=out/e['live']; assert sha(live.read_bytes())==e['live_sha256']\n    target=snapshots/f\"save-{e['sequence']}.omwsave\"\n    with target.open('xb') as f:f.write(blob)\n    saved[e['sequence']]={'event':e,'snapshot':str(target),'sha256':sha(blob)}\n    (out/'snapshot-index.json').write_text(json.dumps(saved,indent=2)+'\\n')\n   if e['event']=='run-end':ended=True\n if ended:break\n time.sleep(.02)\nassert epoch and ended and saved, (epoch,ended,saved)\nprint(json.dumps({'epoch':epoch,'snapshots':list(saved),'run_end':ended},indent=2))\n"
+    },
+    "sanitized/verify.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/verify.py",
+      "sha256": "42251081935f22754244a53a981dbb16d7d3afa0d92b0060dd771857894e5bbc",
+      "source": "from pathlib import Path\nimport copy, hashlib, json, math, struct, sys\nfrom scripts.tes4_runtime_state import load_save, encode_payload, _find_runtime_record\nbase=Path(sys.argv[1]).resolve(); npc='content:oblivion.esm:01fc43'; player='dynamic:player:0000000000000001';drop='dynamic:native-reference:0000000000000001';shield='content:oblivion.esm:0352c1'\nsha=lambda b:hashlib.sha256(b).hexdigest()\nfetch=lambda s,k,a=npc:next(x for x in s[k] if x['actor']==a)\nref=lambda s,k:next(x for x in s['references'] if x['key']==k)\nf32=lambda x:struct.unpack('<f',struct.pack('<f',x))[0]\nnormalize=lambda items:sorted(items,key=lambda x:(x['base'],json.dumps(x,sort_keys=True)))\noriginal=load_save(base/'staged-input.omwsave');assert original['schema_version']==53\nassert sha((base/'staged-input.omwsave').read_bytes())=='4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb'\nassert json.loads((base/'extra-content-reference-audit.json').read_text())['passed']\npre=None;post=None;epochs=[];reports=[]\nfor phase in ['first','second']:\n out=base/phase\n if not (out/'launcher.json').exists():break\n launcher=json.loads((out/'launcher.json').read_text());assert launcher['scenario_returncode']==launcher['monitor_returncode']==0\n assert json.loads((out/'scenario.json').read_text())['passed']\n epoch=json.loads((out/'process-epoch.json').read_text());epochs.append(epoch)\n pin=json.loads((base/'binary-pin.json').read_text());assert epoch['executable_sha256']==pin['sha256']==launcher['binary_sha256']\n if 'm15-sanitize' in pin['path']:\n  env=json.loads((out/'actual-engine-environment.json').read_text());assert env['ASAN_OPTIONS']=='detect_leaks=0:halt_on_error=1' and env['UBSAN_OPTIONS']=='halt_on_error=1:print_stacktrace=1';assert env['LD_PRELOAD'].split(':')[0]=='/usr/lib64/libasan.so.8.0.0'\n events=[json.loads(x) for x in (out/'events.jsonl').read_text().splitlines()];assert all(x['pid']==epoch['pid'] for x in events)\n assert events[0]['event']=='run-start' and events[-1]['event']=='run-end'\n pristine=out/'input-pristine.omwsave';initial=load_save(pristine);load=next(x for x in events if x['event']=='load-complete');assert load['save_sha256']==sha(pristine.read_bytes())\n live_blob=(out/load['live']).read_bytes();assert sha(live_blob)==load['live_sha256'];loaded=json.loads(live_blob)\n if phase=='first':assert pristine.read_bytes()==(base/'staged-input.omwsave').read_bytes()\n else:\n  idx=json.loads((base/'first/snapshot-index.json').read_text());assert sha(pristine.read_bytes())==idx[max(idx,key=int)]['sha256']\n  candidate=copy.deepcopy(initial)\n  for key in ['native_melee_states','native_animation_clocks']:\n   candidate[key]=[copy.deepcopy(fetch(loaded,key)) if x['actor']==npc else x for x in candidate[key]]\n  candidate['native_loose_weapons']=copy.deepcopy(loaded['native_loose_weapons'])\n  candidate['references']=[copy.deepcopy(ref(loaded,x['key'])) if x['key']==drop else x for x in candidate['references']]\n  expected=copy.deepcopy(initial)\n  for loose in expected['native_loose_weapons']:\n   packed=loose['body']['native_packed_velocity']\n   loose['body']['linear_velocity']=[f32(x*6.999040126800537) for x in packed['linear'][:3]]\n   loose['body']['angular_velocity']=packed['angular'][:3]\n  assert encode_payload(candidate)==encode_payload(expected),'Exact inactive NPC cache/clock, native body state and prescribed packed-to-world projection'\n idx=json.loads((out/'snapshot-index.json').read_text());assert len(idx)==(2 if phase=='first' else 1)\n checks=[]\n for sequence,row in sorted(idx.items(),key=lambda kv:int(kv[0])):\n  blob=Path(row['snapshot']).read_bytes();assert sha(blob)==row['sha256']==row['event']['save_sha256']\n  live=(out/row['event']['live']).read_bytes();assert sha(live)==row['event']['live_sha256'];state=load_save(Path(row['snapshot']));assert _find_runtime_record(blob)[3]==encode_payload(state)==encode_payload(json.loads(live))\n  before_hit=phase=='first' and sequence==min(idx,key=int)\n  assert state['schema_version']==61\n  assert state['physical_actions']=={'next':2 if before_hit else 3,'pending':[]} and state['physical_action_owners']==[]\n  assert state['combat_rng_state']==original['combat_rng_state']==505908858\n  assert state['native_actor_life']==original['native_actor_life']\n  for av in state['native_actor_values']:\n   old=fetch(original,'native_actor_values',av['actor'])\n   for index,(a,b) in enumerate(zip(old['values'],av['values'])):\n    if not before_hit and index==8 and av['actor']==npc:\n     assert a[:3]==b[:3] and struct.pack('<f',-b[3])==struct.pack('<I',1065809137)\n    elif not before_hit and index==10 and av['actor'] in (npc,player):\n     debit=struct.unpack('<f',struct.pack('<I',1067615414))[0] if av['actor']==npc else 7\n     assert a[:3]==b[:3] and -debit-.0001<=b[3]<=0\n    else:assert a==b,(av['actor'],index,a,b)\n  assert state['player']['inventory']==original['player']['inventory']\n  inventories={x['key']:copy.deepcopy(x['inventory']) for x in original['references'] if x['inventory']}\n  if not before_hit:inventories[npc]=[x for x in inventories[npc] if x['base']!=shield]\n  assert {x['key']:normalize(x['inventory']) for x in state['references'] if x['key'] in inventories}=={k:normalize(v) for k,v in inventories.items()}\n  m=fetch(state,'native_melee_states');assert m['strike'] is None and m['reaction'] is None and m['first_person'] is None\n  assert len(m['held_blocks'])==1;held=m['held_blocks'][0];assert held['animation_group']=='blockidle'\n  if before_hit:\n   pre=state\n   assert fetch(state,'native_actor_values')['process_action']==6 and held['sequence_timing']['easing']\n   assert not held['inactive'] and held['retirement'] is None and len(held['pose_snapshot']['tracks'])==64\n   assert held['animation_time']==held['sequence_timing']['output_time']==0\n   assert abs(held['sequence_timing']['ease_end']-held['sequence_timing']['ease_start']-8)<.00001\n   assert state['next_dynamic_serial']==1 and state['native_loose_weapons']==[]\n  else:\n   assert pre is not None and fetch(state,'native_actor_values')['process_action']==-1\n   old=copy.deepcopy(fetch(pre,'native_melee_states')['held_blocks'][0]);timing=old['sequence_timing']\n   if timing['last_input'] is not None:timing['offset']=f32(float(timing['weighted_time'])-timing['last_input']+timing['offset'])\n   timing['easing']=False;old['inactive']=True;old['pose_snapshot']=None\n   candidate=copy.deepcopy(state);fetch(candidate,'native_melee_states')['held_blocks']=[old]\n   assert encode_payload(candidate)==encode_payload(state),'Complete native zero-history expectation, including float bits'\n   assert held['retirement'] is None\n   if phase=='first':\n    assert fetch(state,'native_animation_clocks')['clock']<old['sequence_timing']['ease_end'],'Reset must precede NI5 completion'\n    post=state\n   else:assert fetch(state,'native_melee_states')['held_blocks']==fetch(post,'native_melee_states')['held_blocks']\n   assert state['next_dynamic_serial']==2 and len(state['native_loose_weapons'])==1\n   loose=state['native_loose_weapons'][0];assert loose['reference']==drop and loose['base']==shield and loose['model']=='meshes/armor/iron/shield.nif'\n   assert loose['asset_hash']=='f76af90c081974c7cab30aa7b1403e30' and loose['body']['record']==5 and loose['body']['node_record']==0\n   d=ref(state,drop);assert d['base']==shield and d['item_condition']==0 and d['dropper']==npc and d['owner'] is None and not d['deleted'] and d['enabled'] and d['custom_state']['count']==1\n   assert ref(state,npc)['dropped_items']==[drop]\n   body=loose['body'];assert all(math.isfinite(x) for k in ['position','rotation','linear_velocity','angular_velocity'] for x in body[k])\n   origin=ref(state,npc)['position'];position=body['position'];assert math.hypot(position[0]-origin[0],position[1]-origin[1])<=256 and -64<=position[2]-origin[2]<=192\n   assert all(abs(a-b)<=.01 for a,b in zip(position,loose['root_local']['position']))\n   assert all(abs(a-b)<=.01 for a,b in zip(d['position'][:3],loose['root_local']['position']))\n  checks.append(dict(sequence=sequence,wire_exact=True,phase='NI5 before contact' if before_hit else 'native-zero inactive',pose_tracks=64 if before_hit else 0,clock=fetch(state,'native_animation_clocks')['clock'],held_timing=held['sequence_timing'],loose_count=len(state['native_loose_weapons'])))\n log=(out/'process.log').read_text();assert all(x not in log for x in ['ERROR: AddressSanitizer','runtime error:','Error in frame','onFrame failed'])\n assert log.count('M15 melee hit committed:')==(1 if phase=='first' else 0)\n assert log.count('M15 block begin: actor='+npc)==(1 if phase=='first' else 0)\n assert log.count('M15 block release: actor='+npc)==(1 if phase=='first' else 0)\n reports.append(dict(phase=phase,pid=epoch['pid'],binary_sha256=pin['sha256'],saves=checks,one_shield_drop_preserved_sword_and_no_replay=True))\nif len(epochs)==2:assert (epochs[0]['pid'],epochs[0]['start_ticks'])!=(epochs[1]['pid'],epochs[1]['start_ticks'])\nreport=dict(passed=len(reports)==2,scope='NPC pending held shield break zero reset and fresh-process inactive cache/body preservation',phases=reports,full_M15S4_acceptance=False,limits='Authored public NPC block intent and Blend240; no full autonomous defense, original skin parity, settled body or uninterrupted trajectory equivalence.')\n(base/'runtime-verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report,indent=2))\n"
+    },
+    "sanitized/audit-extra-content.py": {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-sanitized-01/audit-extra-content.py",
+      "sha256": "e198c383b0eeaab6be9b717272371d375f6cd3fd67cfd175bd3c2ed3d6bbc6cb",
+      "source": "from pathlib import Path\nimport json,hashlib,zlib,struct,sys,math\nroot=Path(__file__).resolve().parents[5];sys.path.insert(0,str(root))\nfrom scripts.tes4_runtime_state import load_save\np=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parent\nsource=load_save(p/'staged-input.omwsave');original={v['key'] for v in source['references']}\nstates=[load_save(p/phase/'userdata/saves/M15Review/Quicksave.omwsave') for phase in ('first','second')]\nextras=[{v['key']:v for v in s['references'] if v['key'] not in original and not v['key'].startswith('dynamic:')} for s in states]\nwanted=set().union(*(set(int(k.rsplit(':',1)[1],16) for k in group) for group in extras))\nmaster=Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm');data=master.read_bytes()\nassert hashlib.sha256(data).hexdigest()=='a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70'\nfound={};cells={}\ndef walk(start,end,cell=None,world=None):\n pos=start\n while pos<end:\n  tag=data[pos:pos+4];size=struct.unpack_from('<I',data,pos+4)[0]\n  if tag==b'GRUP':\n   label,typ=struct.unpack_from('<II',data,pos+8);walk(pos+20,pos+size,label if typ==6 else cell,label if typ==1 else world);pos+=size;continue\n  flags,form=struct.unpack_from('<II',data,pos+8)\n  if tag==b'CELL' or (form in wanted and tag in (b'REFR',b'ACHR',b'ACRE')):\n   body=data[pos+20:pos+20+size]\n   if flags&0x40000:\n    length=struct.unpack_from('<I',body)[0];body=zlib.decompress(body[4:]);assert len(body)==length\n   q=0;fields={};extended=None\n   while q<len(body):\n    st=body[q:q+4];n=struct.unpack_from('<H',body,q+4)[0];q+=6\n    if st==b'XXXX':extended=struct.unpack_from('<I',body,q)[0];q+=n;continue\n    if extended is not None:n=extended;extended=None\n    fields[st]=body[q:q+n];q+=n\n   assert q==len(body)\n   if tag==b'CELL':\n    cells[form]={'world':world,'flags':flags,'interior':bool(fields[b'DATA'][0]&1),'coordinates':struct.unpack('<ii',fields[b'XCLC'][:8]) if b'XCLC' in fields else None}\n   else:\n    assert cell is not None\n    found[form]={'base':struct.unpack('<I',fields[b'NAME'])[0],'cell':cell,'world':world,'flags':flags,'tag':tag.decode(),'position':struct.unpack('<6f',fields[b'DATA'])}\n  pos+=20+size\n assert pos==end\nwalk(0,len(data));assert found.keys()==wanted\nrows=[];resolved=[]\nfor phase,group in zip(('first','second'),extras):\n for key,ref in group.items():\n  assert key.startswith('content:oblivion.esm:')\n  native=found[int(key.rsplit(':',1)[1],16)]\n  assert ref['base']==f\"content:oblivion.esm:{native['base']:06x}\"\n  if ref['cell']!=f\"content:oblivion.esm:{native['cell']:06x}\":\n   assert native['tag']=='REFR' and native['flags']&0x400\n   parent=cells[native['cell']];assert parent['flags']&0x400 and not parent['interior']\n   assert ref['cell'].startswith('content:oblivion.esm:')\n   target_id=int(ref['cell'].rsplit(':',1)[1],16);target=cells[target_id]\n   assert native['world'] is not None and parent['world']==native['world']==target['world']\n   assert not target['interior'] and not target['flags']&0x400\n   assert all(math.isfinite(x) for x in native['position'])\n   assert ref['position'][:3]==list(native['position'][:3])\n   physical_cell=tuple(math.floor(v/4096) for v in native['position'][:2]);assert target['coordinates']==physical_cell\n   resolved.append({'phase':phase,'reference':key,'base':ref['base'],'world':f\"content:oblivion.esm:{native['world']:06x}\",'persistent_storage_cell':f\"content:oblivion.esm:{native['cell']:06x}\",'saved_physical_cell':ref['cell'],'coordinates':physical_cell,'unchanged_master_position':native['position'][:3]})\n rows.append({'count':len(group),'identity_base_cell_sha256':hashlib.sha256(json.dumps(sorted((k,r['base'],r['cell']) for k,r in group.items()),separators=(',',':')).encode()).hexdigest()})\nr={'passed':True,'master_sha256':hashlib.sha256(data).hexdigest(),'counts':rows,'persistent_exterior_references':resolved,'scope':'Every added content reference has original master identity/base and parent CELL, or independently verified persistent exterior storage: original unchanged position resolves by floor(x/4096),floor(y/4096) to saved physical CELL in the same original worldspace. Both REFR and parent CELL must carry Persistent; target CELL must be nonpersistent exterior. Exactly one dynamic native-reference is checked separately. No unchanged whole-world cache-size claim.'}\n(p/'extra-content-reference-audit.json').write_text(json.dumps(r,indent=2)+'\\n');print(json.dumps(r))\n"
+    }
+  },
+  "load_velocity_contract": {
+    "authority": "Exact native packed velocity; world-unit duplicate reconstructed with native length scale.",
+    "scale": 6.999040126800537,
+    "operation": "linear_world[i] = float32(packed_linear[i] * scale); angular_world[i] = packed_angular[i]",
+    "sources": [
+      {
+        "path": "components/nifbullet/actorragdollphysics.hpp",
+        "sha256": "fccadf16eefa61c447e62e49ef1aabaf054c52473b69011523f11df7dfbc8633"
+      },
+      {
+        "path": "components/nifbullet/actorragdollphysics.cpp",
+        "sha256": "e1bb1a1771c21a05ab6327284f809211a4544b771f1b3eab350d8741985cac0d"
+      },
+      {
+        "path": "apps/openmw/mwphysics/mtphysics.cpp",
+        "sha256": "dd73ab9f107eeb66b972f8db06d7ebcab38709c4d8aab441c57e7ec356196a47"
+      },
+      {
+        "path": "apps/openmw_tests/mwphysics/testoblivionragdoll.cpp",
+        "sha256": "39b7feb4d6722789f46aed7dbe99c7026d9ffa8e65d3bc23f35b1d64a6eedbed"
+      }
+    ],
+    "unit_case": "NativeRagdollSnapshotTest.PackedNativeVelocitySnapshotRestartsAndContinuesExactPhases",
+    "raw_redundant_velocity_bit_preservation": false
+  },
+  "validation_layers": {
+    "structural": "Only original BlockIdle Blend text length/value changes; transforms, End, StopTime, count and plugins unchanged.",
+    "compiler_world": "Existing stationary plugin reused; no compiler/plugin authoring change. Actual engine NIF reader/renderer admits8-second authored NPC body capture.",
+    "semantic": "All save/live payload pairs identical. Exact precontact-to-native-zero timing history, NPC inactive load cache/clock, native pose/packed body state and exact derived velocity projection. Single drop, retained sword and tracked original inventories/AVs/ledger/RNG verified; added references match original master.",
+    "runtime": "Normal and sanitizer four processes, six wire pairs, six reviewed images. Actual draw/keyboard strike, public NPC block intent and one physical shield drop without replay."
+  },
+  "limits": [
+    "Public NPC block intent with AI disabled; not fully autonomous defense.",
+    "One NPC body view with synthetic eight-second capture and configured1FPS; no general input/view/FPS matrix.",
+    "One finite moving shield body within existing placement bounds; no settled-state or matched uninterrupted trajectory acceptance.",
+    "Screenshots reviewed, but a shield near the actor cannot alone distinguish a falling body from its old attachment. Inventory, drop/reference and body checks establish the stated semantics; no original skin/model-update parity.",
+    "No new compiler/plugin authoring or TES4 MCP support; unchanged declarative stationary fixture reused.",
+    "Other equipment/disarm, Player view asymmetry, mastery/effect/interrupt coverage and complete M15S4 remain open."
+  ],
+  "sanitizer": "Actual ASAN_OPTIONS=detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 and first LD_PRELOAD libasan verified. No leak coverage.",
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-01/failure-review.json",
+      "sha256": "0e2b6a4c4e2739ff3e17d1bb822a7e34ebdad2050d7d11930e8a0ded97a002a5",
+      "scenario": {
+        "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-01/first/scenario.json",
+        "sha256": "8c13cb0fe2fdaeea4eb0c000a3ca6695cfd8a40e780d75900c44e3263a1ef36f"
+      },
+      "reason": "Historical melee-finished wait obsolete after same-cause owned Recoil replacement; timed out with only precontact save. New02 waits actual same-cause reaction recovery, unchanged gameplay."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/verifier-correction.json",
+      "sha256": "a99dca7f91f89c9d997454415bb6aef61743e3ad2bc15e6323acfa9b901d6b1d",
+      "failed_sources": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/verify-01-inventory-order.py",
+          "sha256": "ced30c5e1e13f0a38668e2b1f1404c7e289bf926fe24ed38d69f12e6199a5ae9"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-shield-break-runtime-normal-02/verify-02-derived-velocity.py",
+          "sha256": "86bddc97a32e4825fb2114965ae9e2b82954fea291e844b432ca7b72626691b3"
+        }
+      ],
+      "reason": "Inventory class ordering and redundant derived velocity are distinct from exact item fields and authoritative native packed state. Strict revised contracts, not tolerances; no production change."
+    }
+  ]
+}

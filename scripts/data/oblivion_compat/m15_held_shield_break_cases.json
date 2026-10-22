@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scope": "NPC pending held shield break native zero-history and fresh-process inactive cache preservation",
+  "implementation_commit": "758138f20b",
+  "input_sha256": "4fa61d93a85c6184857ca7b9e593a7dee65776a610bc37d5aac0b57f60764dcb",
+  "source_schema": 53,
+  "first": "oblivion_m15_held_shield_break_windup.json",
+  "continuation": "oblivion_m15_held_shield_break_windup_continuation.json",
+  "asset": "m15_held_shield_break_asset.json",
+  "input_policy": "Existing near-broken NPC shield save unchanged; only body Blend text and public NPC control timing authored. Player normal draw/keyboard unarmed strike. No pose, contact, action, damage or RNG outcomes injected.",
+  "expected": {
+    "held_group": "blockidle",
+    "pose_tracks": 64,
+    "blend_seconds": 8,
+    "held_process_before": 6,
+    "held_process_after": -1,
+    "post_inactive": true,
+    "post_retirement": null,
+    "post_pose": null,
+    "zero_model": "Preserve all precontact timing fields; calculate native zero offset from weighted/input/offset at frequency1, clear easing and pose, mark inactive. Reset before saved NI5 end.",
+    "contact_id": 2,
+    "action_next": 3,
+    "combat_rng": 505908858,
+    "contact_random_draws": 0,
+    "npc_health_damage_bits": 1065809137,
+    "npc_contact_fatigue_bits": 1067615414,
+    "player_attack_fatigue": 7,
+    "block_fraction": 0.25,
+    "block_fatigue": 0,
+    "dynamic_serial": 2,
+    "dropped_reference": "dynamic:native-reference:0000000000000001",
+    "shield_base": "content:oblivion.esm:0352c1",
+    "shield_condition": 0,
+    "right_sword_condition": 55.875,
+    "wire_pairs": 3,
+    "contact_counts": [
+      1,
+      0
+    ],
+    "held_begin_counts": [
+      1,
+      0
+    ]
+  },
+  "load_contract": {
+    "exact": "NPC inactive held history/clock; native shield pose, packed velocity, root, identity and reference.",
+    "derived": "World-unit velocity must equal f32(nativePackedLinear*6.999040126800537), angular equals first3 packed angular entries. Redundant derived velocity need not retain its pre-load bit pattern.",
+    "source": "components/nifbullet/actorragdollphysics.cpp:packedWorldVelocity/preparePackedRestore",
+    "unit_contract": "NativeRagdollSnapshotTest.PackedNativeVelocitySnapshotRestartsAndContinuesExactPhases"
+  },
+  "limits": [
+    "Public NPC block intent with AI disabled; not fully autonomous defense.",
+    "One NPC body view with synthetic eight-second capture and configured1FPS; no general input/view/FPS matrix.",
+    "One finite moving shield body within existing placement bounds; no settled-state or matched uninterrupted trajectory acceptance.",
+    "Screenshots reviewed, but a shield near the actor cannot alone distinguish a falling body from its old attachment. Inventory, drop/reference and body checks establish the stated semantics; no original skin/model-update parity.",
+    "No new compiler/plugin authoring or TES4 MCP support; unchanged declarative stationary fixture reused.",
+    "Other equipment/disarm, Player view asymmetry, mastery/effect/interrupt coverage and complete M15S4 remain open."
+  ],
+  "full_M15S4_acceptance": false
+}
