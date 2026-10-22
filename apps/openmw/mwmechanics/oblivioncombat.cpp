@@ -1853,6 +1853,55 @@ namespace MWMechanics
         return changed;
     }
 
+    static bool releaseHeldBlockResidents(ESM4::RuntimeMeleeState& state, bool player, bool firstPersonActive,
+        float duration, std::span<const OblivionMeleeSequenceMetadata> sources)
+    {
+        if ((!player && (firstPersonActive || state.mFirstPerson)) || (firstPersonActive && !state.mFirstPerson))
+            return false;
+        const auto& active = firstPersonActive ? state.mFirstPerson->mHeldBlocks : state.mHeldBlocks;
+        const auto held = std::find_if(active.begin(), active.end(), [](const auto& entry) { return entry.resident(); });
+        if (held == active.end() || held->mSequenceTiming.mEasing) return false;
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native held-block release duration");
+        const auto sourceFor = [&](std::string_view group, bool first) -> const auto& {
+            const OblivionMeleeSequenceMetadata* match = nullptr;
+            for (const auto& source : sources)
+            {
+                source.validate();
+                if (!Misc::StringUtils::ciEqual(source.mGroup, group) || source.mFirstPerson != first) continue;
+                if (match || source.mCycle != ESM4::MeleeSequenceCycle::Loop)
+                    throw std::invalid_argument("ambiguous native held-block release source");
+                match = &source;
+            }
+            if (!match) throw std::invalid_argument("missing native held-block release source");
+            return *match;
+        };
+        const auto release = [&](auto& view, bool first) {
+            auto current = residentHeldBlock(view);
+            if (current == view.mHeldBlocks.end()) return;
+            // Original470FC0 resets the peer's NI4 source and NI5 destination
+            // to the same NI3 span. Retain the frozen pose through that fade.
+            const auto& source = sourceFor(current->mAnimationGroup, first);
+            if (duration == 0 || (player && firstPersonActive && !first))
+            {
+                deactivateHeldBlockTiming(current->mSequenceTiming, source.mFrequency);
+                current->mInactive = true;
+                current->mPoseSnapshot.reset();
+            }
+            else
+            {
+                current->mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+                current->mSequenceTiming.mEaseStart.reset();
+                current->mSequenceTiming.mEaseEnd = duration;
+            }
+            current->mSequenceTiming.mEasing = false;
+        };
+        release(state, false);
+        if (state.mFirstPerson) release(*state.mFirstPerson, true);
+        state.validate();
+        return true;
+    }
+
     template <class Source>
     static ESM4::RuntimeRetiringMeleeSequence adoptRetiringMeleeSample(
         const Source& sample, std::uint64_t cause, float duration)
@@ -2797,7 +2846,8 @@ namespace MWMechanics
             || (deltas.mVictimCounterRequested && (victim.isEmpty() || deltas.mVictimReaction
                 || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence || deltas.mVictimSlot0Source
                 || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction || !deltas.mDisarms.empty()
-                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty())))
+                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty()
+                || deltas.mAttackerHeldEquipment || deltas.mVictimHeldEquipment)))
             throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return nullptr;
@@ -2840,7 +2890,8 @@ namespace MWMechanics
                 || deltas.mAttackerFirstPerson || deltas.mVictimFirstPerson
                 || deltas.mAttackerSlot0Source || deltas.mVictimSlot0Source
                 || deltas.mAttackerFirstPersonSlot0Source || deltas.mVictimFirstPersonSlot0Source
-                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty())
+                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty()
+                || deltas.mAttackerHeldEquipment || deltas.mVictimHeldEquipment)
                 throw std::invalid_argument("native missed swing cannot start contact reactions");
             if (deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0)
                 throw std::invalid_argument("native missed swing cannot change victim resources");
@@ -2903,6 +2954,9 @@ namespace MWMechanics
             else
                 npcView = std::make_unique<PreparedNonPlayerView>(ptr, values, findActorBase(values.mBase), life);
         };
+        enum class HeldEquipmentEffect { WeaponRelease, ShieldReset };
+        std::vector<std::pair<ESM::FormKey, HeldEquipmentEffect>> heldEquipmentEffects;
+        std::set<ESM::FormKey> equipmentOwners;
         std::vector<PreparedPhysicalContact::Impl::Condition> conditions;
         conditions.reserve(deltas.mConditionChanges.size());
         std::vector<PreparedPhysicalContact::Impl::Unequip> unequips;
@@ -2965,13 +3019,15 @@ namespace MWMechanics
                 // Do not publish a god-mode break consequence when wear is suppressed.
                 if (found->mApply && request.mBreakDisposition == OblivionWeaponBreakDisposition::Unequip)
                     unequips.push_back({request.mItem, &inventory, inventory.prepareUnequip(slot)});
-                // Original5F5C84: a blocking weapon/shield reaching zero returns
-                // true from condition mutation, then5F4AE0(false) withdraws
-                // posture6. Publish that action with wear/equipment/resources;
-                // existing deferred equipment observers release the render binding.
-                if (found->mApply && request.mOwner == victim && receiving
-                    && receiving->mProcessAction == 6)
-                    receiving->mProcessAction = -1;
+                const auto owner = actorKey(request.mOwner);
+                equipmentOwners.insert(owner);
+                if (found->mApply)
+                {
+                    if (request.mItem.getType() == ESM::REC_ARMO)
+                        heldEquipmentEffects.emplace_back(owner, HeldEquipmentEffect::ShieldReset);
+                    else if (request.mOwner == victim)
+                        heldEquipmentEffects.emplace_back(owner, HeldEquipmentEffect::WeaponRelease);
+                }
             }
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
@@ -3003,6 +3059,91 @@ namespace MWMechanics
                 view.mReaction.reset();
             }
         };
+        const auto preserveEquipmentSlot3 = [&](auto& candidate) {
+            const auto preserve = [&](auto& view, bool body) {
+                if (view.mStrike && !view.mStrike->mSequenceTiming)
+                {
+                    if (body && view.mStrike->mActionId != id && !view.mStrike->mContactCommitted)
+                        reactionCanceledActions.push_back(view.mStrike->mActionId);
+                    view.mStrike.reset();
+                }
+                else retainSlot3(view, body);
+            };
+            preserve(candidate, true);
+            if (candidate.mFirstPerson) preserve(*candidate.mFirstPerson, false);
+        };
+        const auto equipmentPacket = [&](const ESM::FormKey& owner) -> const auto& {
+            return owner == attackerKey ? deltas.mAttackerHeldEquipment : deltas.mVictimHeldEquipment;
+        };
+        const auto stageHeldEquipment = [&](ESM4::RuntimeActorValues& values,
+                                            bool reset, bool fallbackReset) {
+            if (values.mProcessAction != 6) return false;
+            const auto staged = reactionStates.find(values.mActor);
+            const auto* previous = staged != reactionStates.end() ? &staged->second : findMeleeState(values.mActor);
+            if (!previous)
+            {
+                values.mProcessAction = -1; // Legacy posture has no recoverable sequence history.
+                return true;
+            }
+            auto candidate = *previous;
+            const bool typed = !candidate.mHeldBlocks.empty()
+                || (candidate.mFirstPerson && !candidate.mFirstPerson->mHeldBlocks.empty());
+            const bool resident = residentHeldBlock(candidate) != candidate.mHeldBlocks.end()
+                || (candidate.mFirstPerson
+                    && residentHeldBlock(*candidate.mFirstPerson) != candidate.mFirstPerson->mHeldBlocks.end());
+            if (resident)
+            {
+                const auto& packet = equipmentPacket(values.mActor);
+                if (!packet) throw std::invalid_argument("native held equipment change requires prepared sources");
+                const bool playerOwner = values.mOwner == ESM4::ActorValueOwner::Player;
+                if ((!playerOwner && packet->mFirstPersonActive)
+                    || !std::isfinite(packet->mDefaultBlend) || packet->mDefaultBlend < 0)
+                    throw std::invalid_argument("invalid native held equipment view or default blend");
+                if (!reset)
+                {
+                    float duration = packet->mDefaultBlend;
+                    const auto* active = packet->mFirstPersonActive
+                        ? (candidate.mFirstPerson ? &candidate.mFirstPerson->mHeldBlocks : nullptr)
+                        : &candidate.mHeldBlocks;
+                    if (active)
+                        for (const auto& held : *active)
+                            if (held.resident() && !held.mSequenceTiming.mEasing)
+                            {
+                                const OblivionMeleeSequenceMetadata* source = nullptr;
+                                for (const auto& entry : packet->mSequences)
+                                    if (entry.mFirstPerson == packet->mFirstPersonActive
+                                        && Misc::StringUtils::ciEqual(entry.mGroup, held.mAnimationGroup))
+                                    {
+                                        if (source) throw std::invalid_argument("ambiguous held equipment release source");
+                                        source = &entry;
+                                    }
+                                if (!source) throw std::invalid_argument("missing held equipment release source");
+                                duration = ESM4::meleeBlendDuration({}, source->mBlendFrames, packet->mDefaultBlend);
+                            }
+                    if (!releaseHeldBlockResidents(candidate, playerOwner, packet->mFirstPersonActive,
+                            duration, packet->mSequences))
+                    {
+                        if (!fallbackReset) return false;
+                        reset = true;
+                    }
+                }
+                if (reset) cancelHeldBlockResidents(candidate, packet->mSequences);
+            }
+            else if (typed && !reset && !fallbackReset)
+                return false; // Native release has no resident selected slot1.
+            preserveEquipmentSlot3(candidate);
+            candidate.mInput = {};
+            candidate.mAiIntent.reset();
+            candidate.validate();
+            reactionStates.insert_or_assign(values.mActor, std::move(candidate));
+            values.mProcessAction = -1;
+            return true;
+        };
+        for (const auto& [owner, effect] : heldEquipmentEffects)
+        {
+            auto& values = owner == attackerKey ? attacking : *receiving;
+            stageHeldEquipment(values, effect == HeldEquipmentEffect::ShieldReset, false);
+        }
         std::set<ESM::FormKey> disarmedOwners;
         for (const auto& request : deltas.mDisarms)
         {
@@ -3013,6 +3154,7 @@ namespace MWMechanics
                 || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>())
                 throw std::invalid_argument("native disarm requires a participant's equipped NPC weapon");
             const auto owner = actorKey(request.mOwner);
+            equipmentOwners.insert(owner);
             if (!disarmedOwners.insert(owner).second || mBowStates.contains(owner))
                 throw std::invalid_argument("duplicate or unsupported native disarm playback owner");
             auto& values = owner == attackerKey ? attacking : *receiving;
@@ -3034,28 +3176,28 @@ namespace MWMechanics
             if (life.mPhase != ESM4::ActorLifePhase::Alive || !action
                 || !((*action >= 0 && *action <= 5) || (*action == 6 && !shield)))
                 continue;
-            // Original5FC3C3..5FC406 clears attack actions, or block without
-            // a shield. The slot3 sequence keeps advancing independently.
+            if (*action == 6)
+            {
+                stageHeldEquipment(values, false, true);
+                continue;
+            }
+            // Old attack actions withdraw without resetting the independent held slot.
             values.mProcessAction = -1;
-            if (const auto* previous = findMeleeState(owner))
+            const auto staged = reactionStates.find(owner);
+            const auto* previous = staged != reactionStates.end() ? &staged->second : findMeleeState(owner);
+            if (previous)
             {
                 auto candidate = *previous;
-                const auto preserve = [&](auto& view, bool body) {
-                    if (view.mStrike && !view.mStrike->mSequenceTiming)
-                    {
-                        if (body && view.mStrike->mActionId != id && !view.mStrike->mContactCommitted)
-                            reactionCanceledActions.push_back(view.mStrike->mActionId);
-                        view.mStrike.reset(); // No live slot3 sequence was bound.
-                    }
-                    else retainSlot3(view, body);
-                };
-                preserve(candidate, true);
-                if (candidate.mFirstPerson) preserve(*candidate.mFirstPerson, false);
+                preserveEquipmentSlot3(candidate);
                 candidate.mInput = {};
                 candidate.validate();
-                reactionStates.emplace(owner, std::move(candidate));
+                reactionStates.insert_or_assign(owner, std::move(candidate));
             }
         }
+        if ((deltas.mAttackerHeldEquipment && !equipmentOwners.contains(attackerKey))
+            || (deltas.mVictimHeldEquipment && !equipmentOwners.contains(victimKey)))
+            throw std::invalid_argument("unowned held equipment source packet");
+
         const auto prepareReaction = [&](const std::optional<ESM4::RuntimeMeleeReaction>& request,
                                          const std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing,
                                          const std::optional<ESM4::RuntimeFirstPersonMeleeState>& firstPerson,
@@ -3063,6 +3205,12 @@ namespace MWMechanics
                                          const std::optional<OblivionMeleeSlot0Source>& firstSlot0,
                                          ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorLife& life) {
             const auto staged = reactionStates.find(values.mActor);
+            const auto preserveEquipmentHeld = [&](auto& candidate) {
+                if (staged == reactionStates.end()) return;
+                candidate.mHeldBlocks = staged->second.mHeldBlocks;
+                if (candidate.mFirstPerson && staged->second.mFirstPerson)
+                    candidate.mFirstPerson->mHeldBlocks = staged->second.mFirstPerson->mHeldBlocks;
+            };
             // Recoil/BlockHit replaces the original slot3 directly. Stagger
             // keeps the passive slot3 history already staged by disarm.
             const bool slot3Replacement = request && request->mKind != ESM4::MeleeReactionKind::Stagger;
@@ -3080,7 +3228,7 @@ namespace MWMechanics
                     && values.mProcessAction != previous->mReaction->processAction())
                 {
                     auto candidate = *previous;
-                    candidate.mReaction.reset();
+                    preserveEquipmentSlot3(candidate);
                     candidate.mInput = {};
                     reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 }
@@ -3168,6 +3316,7 @@ namespace MWMechanics
                 if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
                     && candidate.mAiIntent->mTarget == victimKey)
                     candidate.mAiIntent.reset();
+                preserveEquipmentHeld(candidate);
                 candidate.validate();
                 reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
@@ -3264,6 +3413,7 @@ namespace MWMechanics
                 if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
                     && candidate.mAiIntent->mTarget == victimKey)
                     candidate.mAiIntent.reset();
+                preserveEquipmentHeld(candidate);
                 candidate.validate();
                 reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
@@ -3371,6 +3521,7 @@ namespace MWMechanics
                 candidate.mFirstPerson = *firstPerson;
                 candidate.mFirstPerson->mHeldBlocks = std::move(held);
             }
+            preserveEquipmentHeld(candidate);
             candidate.validate();
             reactionStates.insert_or_assign(values.mActor, std::move(candidate));
             if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
@@ -3395,7 +3546,30 @@ namespace MWMechanics
             const auto staged = reactionStates.find(actor);
             if (staged == reactionStates.end())
                 throw std::invalid_argument("held cancellation lost its prepared reaction");
-            cancelHeldBlockResidents(staged->second, sources);
+            if (equipmentOwners.contains(actor))
+            {
+                std::vector<OblivionMeleeSequenceMetadata> residentSources;
+                const auto* original = findMeleeState(actor);
+                for (const auto& source : sources)
+                {
+                    const auto matches = [&](const ESM4::RuntimeMeleeState& state) {
+                        const auto* view = source.mFirstPerson
+                            ? (state.mFirstPerson ? &state.mFirstPerson->mHeldBlocks : nullptr) : &state.mHeldBlocks;
+                        return view && std::any_of(view->begin(), view->end(), [&](const auto& held) {
+                            return held.resident() && Misc::StringUtils::ciEqual(held.mAnimationGroup, source.mGroup);
+                        });
+                    };
+                    if (matches(staged->second)) residentSources.push_back(source);
+                    else
+                    {
+                        source.validate();
+                        if (source.mCycle != ESM4::MeleeSequenceCycle::Loop || !original || !matches(*original))
+                            throw std::invalid_argument("unowned equipment/reaction held source");
+                    }
+                }
+                cancelHeldBlockResidents(staged->second, residentSources);
+            }
+            else cancelHeldBlockResidents(staged->second, sources);
         };
         cancelReactionHeld(deltas.mAttackerReaction, deltas.mAttackerHeldSources, attackerKey);
         cancelReactionHeld(deltas.mVictimReaction, deltas.mVictimHeldSources, victimKey);
@@ -5114,26 +5288,6 @@ namespace MWMechanics
             return false;
         const bool player = values->second.mOwner == ESM4::ActorValueOwner::Player;
         const auto& state = found->second;
-        if ((!player && (firstPersonActive || state.mFirstPerson)) || (firstPersonActive && !state.mFirstPerson))
-            return false;
-        const auto& active = firstPersonActive ? state.mFirstPerson->mHeldBlocks : state.mHeldBlocks;
-        const auto held = std::find_if(active.begin(), active.end(), [](const auto& entry) { return entry.resident(); });
-        if (held == active.end() || held->mSequenceTiming.mEasing) return false;
-        if (!std::isfinite(duration) || duration < 0)
-            throw std::invalid_argument("invalid native held-block release duration");
-        const auto sourceFor = [&](std::string_view group, bool first) -> const auto& {
-            const OblivionMeleeSequenceMetadata* match = nullptr;
-            for (const auto& source : sources)
-            {
-                source.validate();
-                if (!Misc::StringUtils::ciEqual(source.mGroup, group) || source.mFirstPerson != first) continue;
-                if (match || source.mCycle != ESM4::MeleeSequenceCycle::Loop)
-                    throw std::invalid_argument("ambiguous native held-block release source");
-                match = &source;
-            }
-            if (!match) throw std::invalid_argument("missing native held-block release source");
-            return *match;
-        };
         const auto canDetach = [&](const auto& view) {
             return (!view.mStrike || (view.mStrike->mKind == ESM4::MeleeStrikeKind::Counter
                     && view.mStrike->mContactCommitted && isActionConsumed(view.mStrike->mActionId)))
@@ -5142,28 +5296,7 @@ namespace MWMechanics
         };
         if (!canDetach(state) || (state.mFirstPerson && !canDetach(*state.mFirstPerson))) return false;
         auto next = state;
-        const auto release = [&](auto& view, bool first) {
-            auto current = residentHeldBlock(view);
-            if (current == view.mHeldBlocks.end()) return;
-            // Original470FC0 resets the peer's NI4 source and NI5 destination
-            // to the same NI3 span. Retain the frozen pose through that fade.
-            const auto& source = sourceFor(current->mAnimationGroup, first);
-            if (duration == 0 || (player && firstPersonActive && !first))
-            {
-                deactivateHeldBlockTiming(current->mSequenceTiming, source.mFrequency);
-                current->mInactive = true;
-                current->mPoseSnapshot.reset();
-            }
-            else
-            {
-                current->mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
-                current->mSequenceTiming.mEaseStart.reset();
-                current->mSequenceTiming.mEaseEnd = duration;
-            }
-            current->mSequenceTiming.mEasing = false;
-        };
-        release(next, false);
-        if (next.mFirstPerson) release(*next.mFirstPerson, true);
+        if (!releaseHeldBlockResidents(next, player, firstPersonActive, duration, sources)) return false;
         const auto detach = [&](auto& view) {
             if (view.mStrike)
             {

@@ -2554,7 +2554,18 @@ namespace MWMechanics
         if ((equipmentChanged && hadEquippedState)
             || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
         {
-            if (hasResidentHeld(service->findMeleeState(actor))) interrupt();
+            if (hasResidentHeld(service->findMeleeState(actor)))
+            {
+                // A broken blocking weapon can leave native slot1 in NI5:
+                // its unequip callback preserves that cache and the wear
+                // caller's release attempt defers. Keep using the saved group
+                // until release succeeds, including after a fresh-process load.
+                if (service->getProcessAction(actor) == 6)
+                {
+                    if (!releaseBlock()) return false;
+                }
+                else interrupt();
+            }
             else releaseBlock();
         }
         const auto* blockState = service->findMeleeState(actor);

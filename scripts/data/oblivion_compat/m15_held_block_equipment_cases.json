@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "scope": "Atomic held equipment consequences and real Player NI5 weapon-break/restart; bounded S4 checkpoint",
+  "native_oracle": "m15_held_block_equipment_native_cases.json",
+  "engine_tests": [
+    {
+      "name": "EquipmentBreakAtomicallyUsesNativeHeldGateFadeOrShieldResetAndRetainsSlot3",
+      "cases": 60,
+      "coverage": "NPC/body Player/FP-only Player \u00d7 direct/fresh NI5/anchored NI5/mixed/steady \u00d7 weapon/shield \u00d7 absent/owned BlockHit slot3"
+    },
+    {
+      "name": "EquipmentBreakHeldSourcesRejectMissingOrStaleAuthorityWithoutPartialWear",
+      "cases": 2,
+      "coverage": "Missing sources, empty/invalid sources, foreign packets, stale prepared authority; no partial condition/equipment/action mutation"
+    },
+    {
+      "name": "GodModeSuppressedBreakPreservesTypedHeldWindupAndEquipment",
+      "cases": 8,
+      "coverage": "Player body/FP \u00d7 weapon/shield \u00d7 absent/provided source packet"
+    },
+    {
+      "name": "DisarmAtomicallyFadesSteadyHeldResetsWindupAndPreservesCounterHeldHistory",
+      "cases": 20,
+      "coverage": "Five phases \u00d7 shield/no shield \u00d7 old6/old Counter2; actual prepared NPC loose-body drop"
+    },
+    {
+      "name": "EquipmentHeldTransitionPrecedesStaggerAndKeepsDetachedFadeAndSlot3",
+      "cases": 4,
+      "coverage": "Direct/NI5 \u00d7 weapon/shield; old BlockHit slot3 passive and detached NI3 retained"
+    },
+    {
+      "name": "PairedPlayerRecoilPreservesEarlierEquipmentFadeAndResetsOnlyResidentHeld",
+      "cases": 8,
+      "coverage": "Body/FP-only \u00d7 weapon/shield \u00d7 direct/NI5; both reaction views and exact held cache histories"
+    }
+  ],
+  "runtime": {
+    "first": "oblivion_m15_held_weapon_break_windup.json",
+    "continuation": "oblivion_m15_held_weapon_break_windup_continuation.json",
+    "assets": "m15_held_weapon_break_assets.json",
+    "input_sha256": "53cd69d954b0620e0f3ce51a10c9b4e4cd70c530a000670f0601156ce67dd738",
+    "input_schema": 53,
+    "fixture_changes": "Retained near-broken Player sword condition1.000100016593933 and only two Blend:240 text keys; no outcomes injected",
+    "expected": {
+      "contact_id": 2,
+      "actions_next": 3,
+      "pending": [],
+      "combat_rng": 159719620,
+      "health_damage_bits": 1065087140,
+      "health_native_row": [
+        "3f813333",
+        "3ccccccc",
+        "3f7bf0a4"
+      ],
+      "npc_weapon_condition_bits": 1113509069,
+      "retained_player_weapon_condition": 0,
+      "player_weapon_equipped_slots": 0,
+      "first_action": 6,
+      "early_restart_action": 6,
+      "late_action": -1,
+      "windup_seconds": 8,
+      "release_seconds": 8,
+      "first_person_pose_tracks": 66,
+      "accepted_begin_counts": [
+        1,
+        0
+      ],
+      "accepted_release_counts": [
+        0,
+        1
+      ],
+      "accepted_contact_counts": [
+        1,
+        0
+      ],
+      "wire_pairs": 3
+    }
+  },
+  "limits": [
+    "Core explicit packets cover NPC/body Player/FP-only views; runtime is selected first-person Player only.",
+    "Shield break, NPC disarm and Counter cache retention have atomic headless/scene tests here; this checkpoint has no normal-input shield/disarm controller course.",
+    "Full subsequent original actor/model update, all ordinary equipment changes, Player disarm, matched uninterrupted trajectory, the input/view/FPS/mastery/effects matrices and complete S4 remain open.",
+    "The synthetic Blend key is a capture window, not stock animation timing or original skin interpolation parity.",
+    "Production resource preparation currently uses default blend .1; the core supplied-default .25 tests do not establish importing a custom native blend INI."
+  ],
+  "full_M15S4_acceptance": false
+}

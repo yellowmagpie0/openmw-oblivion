@@ -11129,3 +11129,89 @@ needs atomic held equipment effects and slot3 cache retention, followed by real
 break/disarm/restart coverage; the existing unconditional break withdrawal and
 generic hard equipment cancellation do not establish those native paths.
 Full M15S4 remains incomplete.
+
+## Atomic held equipment publication and weapon-break windup restart
+
+Physical-contact preparation now derives typed slot1 effects from the actual
+broken item or disarm, rather than unconditionally assigning action-1. Blocking
+weapon wear retains NI5/action6 until the selected view can release; steady NI1
+uses its native positive span and Player FP selection immediately resets body.
+Shield cleanup zero-resets resident body/Player FP even during NI5. NPC disarm
+without a remaining shield tries positive release, then zero-resets if NI5
+rejects it. Old Counter2 withdrawal preserves the independent held history;
+old6 with a remaining shield keeps its posture. Bound slot3 histories become
+passive without changing cached sequence bytes. Recoil/Stagger preparation
+preserves equipment effects already staged in either Player view and cancels
+only remaining residents, so a detached positive fade is not resurrected or
+zeroed by a later reaction in the same transaction.
+
+World prepares renderer metadata and selected-camera/root leases before
+publication. Missing, malformed, foreign or stale resources reject without
+partial wear, inventory or action changes. Suppressed Player god-mode wear
+requires no unused renderer sources. Unrelated legacy contacts do not query
+an unknown process action. The shared held-release implementation and new
+source packet add no persistent fields or save-schema change.
+
+A real normal-input course exposed a remaining controller defect: contact
+correctly retained action6 but the next equipment frame hard-canceled NI5 and
+began a new hand-to-hand block. The controller now attempts the native action6
+release and waits when the gate rejects it, retaining the saved group across
+a fresh-process load. This is tested for the blocking-weapon break below;
+complete original subsequent model-update behavior and every ordinary equip
+change are not inferred from the earlier bounded callback oracle.
+
+Both final full engine checks pass **1,835 tests / 125 suites**, with matching
+inventories/XML, zero failures and zero skips. Six new tests contain102 table
+contexts across NPC, body Player and FP-only Player, five held phases, shield
+and weapon break, god mode, old BlockHit/Counter, actual prepared NPC drops,
+Stagger and paired Player Recoil. They inspect exact caches, slot3 history,
+conditions, AV arrays, ledger/RNG and binary service restore. Tested parent is
+`6522b5fcb7bb4898d5fca230f3eda5889009e464`; both builds retain fingerprint
+`f139f9221b4b7c1f3aa06a60fc03ab441912a535fa1d28c54fd5c2c2fe98c65a`.
+All five changed C++ file hashes remain identical after those checks. Editable
+manifests/metadata were added afterwards; the full Python suite passes382 tests.
+Later documentation/status metadata does not change executable behavior.
+ASan/UBSan halt on errors; leak detection is disabled, not covered.
+
+Normal and instrumented two-process courses each pass three independent
+binary/live save comparisons: immediately after the contact during NI5, early
+after a fresh load still during NI5, then after deferred release during NI3.
+The existing pinned near-broken sword input is unchanged. Only two authored
+`Blend:240` KF keys create an eight-second observation window. Normal B block
+and Space opponent activation produce one production-policy NPC strike, id2,
+Fatigue cost7.8. The Player retains a broken, unequipped sword without a drop,
+serial allocation or new reference. The66-track first-person captured pose and
+its clock/cache load exactly, then release starts after the saved windup end.
+There is one begin before restart, no new begin after restart, one later
+release and no replayed contact. Exact Health damage is bits1065087140 from the
+existing original PC24 corpus row `{3f813333,3ccccccc,3f7bf0a4}`; RNG becomes
+159719620 after the two declared contact draws. Original populated inventories
+are preserved apart from the declared weapon wear; added reference identities,
+bases and CELLs independently match the pinned master. No fixed world-cache
+size or newly materialized inventory parity claim. Actual runtime sanitizer
+environments and executable hashes are retained. All four screenshots were
+directly reviewed: sword absent with prior grip, then unarmed release. Configured
+cap60 is not a measured60FPS or frame-rate matrix. No new PCM correlation or
+original skin-interpolation acceptance is claimed.
+
+The first normal/sanitizer suites retain two failures: the unnecessary legacy
+action query and an assertion that omitted consumption of the current contact.
+The exploratory runtime retains the controller failure and missing telemetry
+settings; its waiting monitor was terminated after scenario exit, and it has
+no accepted restart evidence. Fixture01 failed a footer-size assertion; fixture02
+used Blend900, whose low byte132 yields4.4 seconds. Corrected03 uses240. Failed
+verifier01 copied obsolete wider Health bits; the strict correction uses the
+preexisting original PC24 corpus, without tolerance. Verifier02 assumed every
+lazy inventory already existed in the source; its failure is retained with the
+explicit populated-inventory and original-reference audit correction.
+
+[M15-HELD-BLOCK-EQUIPMENT-VERIFICATION.json](M15-HELD-BLOCK-EQUIPMENT-VERIFICATION.json)
+pins checks, sources, tools, actual processes, saves/live payloads, images and
+failures. Editable cases and asset/scenario manifests are under
+`scripts/data/oblivion_compat/m15_held_block_equipment_cases.json`. Structural
+KF writes, engine parser/resource loading, semantic reinspection and actual
+runtime/restart acceptance are separate layers. Existing declarative stationary
+plugins are reused; no TES4 MCP authoring capability is implied. Normal-input
+shield/disarm controller paths, Player disarm, custom blend INI import,
+asymmetric views/camera, matched uninterrupted trajectories and the broader
+mastery/effects/input/FPS/interrupt gates remain open. **M15S4 remains incomplete.**

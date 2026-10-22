@@ -99,6 +99,15 @@ namespace MWMechanics
         void validate() const;
     };
 
+    // Prepared native resources for equipment-driven slot1 changes. The
+    // service derives release versus reset from the actual equipment/action.
+    struct OblivionHeldBlockEquipmentSources
+    {
+        bool mFirstPersonActive = false;
+        float mDefaultBlend = .1f;
+        std::vector<OblivionMeleeSequenceMetadata> mSequences;
+    };
+
     // NPC/creature activations own only the body. Player activations must
     // supply the first-person mirror; missing or foreign mirrors reject.
     struct OblivionMeleeStrikeViews
@@ -345,6 +354,8 @@ namespace MWMechanics
         // Detached NI3 histories keep advancing independently.
         std::vector<OblivionMeleeSequenceMetadata> mAttackerHeldSources{};
         std::vector<OblivionMeleeSequenceMetadata> mVictimHeldSources{};
+        std::optional<OblivionHeldBlockEquipmentSources> mAttackerHeldEquipment{};
+        std::optional<OblivionHeldBlockEquipmentSources> mVictimHeldEquipment{};
     };
 
     struct OblivionPassiveEffectIdentity

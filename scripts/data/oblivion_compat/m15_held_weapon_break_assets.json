@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "purpose": "Synthetic eight-second BlockIdle windup during normal NPC contact; only Blend modifier added. Input retains disclosed near-broken condition; no contact, pose, action, AV or RNG outcomes injected.",
+  "assets": [
+    {
+      "source": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/extracted/meshes/characters/_male/onehandblockidle.kf",
+      "source_sha256": "0338cda0f06d9c8f5206ea3306d0286b50cf6614130072792f3a30e28477a3d6",
+      "path": "build/oblivion-compat/m15/S4/native-held-weapon-break-inputs-03/fixture/meshes/characters/_male/onehandblockidle.kf",
+      "sha256": "8cfb3b886be93e32e5dbdf2072c1cf872541030915a2dabc925907b87c73dc6d",
+      "count_offset": 24319,
+      "insertion_offset": 24336,
+      "inserted_text": "Blend: 240",
+      "native_blend_seconds": 8,
+      "only_count_and_one_text_key_changed": true
+    },
+    {
+      "source": "build/oblivion-compat/m15/S4/native-sequence-blend-assets-01/extracted/meshes/characters/_1stperson/onehandblockidle.kf",
+      "source_sha256": "4597b74edbab410fb76ee4bf045e307889f49f78d259baaa272aeaa212a8c158",
+      "path": "build/oblivion-compat/m15/S4/native-held-weapon-break-inputs-03/fixture/meshes/characters/_1stperson/onehandblockidle.kf",
+      "sha256": "5d672d691957cc95998c1fdc80e1b67ca4859b0058e2d597ae293cb46be48d55",
+      "count_offset": 10049,
+      "insertion_offset": 10066,
+      "inserted_text": "Blend: 240",
+      "native_blend_seconds": 8,
+      "only_count_and_one_text_key_changed": true
+    }
+  ],
+  "input_sha256": "53cd69d954b0620e0f3ce51a10c9b4e4cd70c530a000670f0601156ce67dd738",
+  "structural_write_success": true,
+  "parser_and_runtime_acceptance": "Normal02 and sanitized01 accept asset loading and selected FP 8-second NI5. Does not assert inactive body manager advancement or original skin parity.",
+  "reproduction": {
+    "base_fixture": "native-stationary-matrix-seed0-cap60-01/fixture, using its existing editable stationary opponent recipe",
+    "per_asset_algorithm": "Require source SHA256 and count2/start/end/footer at count_offset. Copy all bytes, replace the uint32 count2 with3, insert float32(0)+uint32(10)+ASCII Blend: 240 at insertion_offset, retain every other byte, require output SHA256. Layer both overrides over the base fixture.",
+    "source_archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "structural_scope": "Only NiTextKeyExtraData count and one zero-time Blend key change; no transforms, StopTime, End, plugin or gameplay result edits."
+  }
+}

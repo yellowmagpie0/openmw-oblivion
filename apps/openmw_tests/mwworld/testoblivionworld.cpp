@@ -31264,3 +31264,450 @@ TEST(OblivionWorldTest, HeldWorldBridgeRejectsMissingSceneResourcesWithoutChangi
         EXPECT_TRUE(world.cancelOblivionHeldBlock(actorPtr));
     }
 }
+
+namespace
+{
+    MWWorld::Ptr installHeldBreakItem(PlayerReactionViewsFixture& fixture, const MWWorld::Ptr& actor, bool shield)
+    {
+        auto& world = fixture.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto key = addEquipmentWeapon(fixture.mFixture);
+        if (shield)
+        {
+            MWClass::Armor::registerSelf();
+            ESM4::Armor armor{};
+            armor.mId = {0x941, 0}; armor.mFlags = ESM4::Rec_Persistent;
+            armor.mArmorFlags = ESM4::Armor::TES4_Shield;
+            armor.mGeneralFlags = ESM4::Armor::TYPE_TES4 | ESM4::Armor::TES4_HeavyArmor;
+            armor.mData.health = 100;
+            key = ESM::FormKey::content("headless.esm", 0x941);
+            store.getWritable<ESM4::Armor>().insertStatic(armor, key);
+            ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(armor.mId);
+            projected.mData.mType = ESM::Armor::Shield; projected.mData.mHealth = 100;
+            store.insertStatic(projected);
+        }
+        else
+        {
+            auto weapon = *store.search<ESM4::Weapon>(key);
+            weapon.mFlags |= ESM4::Rec_Persistent;
+            store.getWritable<ESM4::Weapon>().insertStatic(weapon, key);
+        }
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = key; item.mCount = 1; item.mCondition = 1.125f;
+        item.mEquippedSlots = shield ? ESM4::Armor::TES4_Shield : ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture.mFixture, actor, {item});
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        return *inventory.getSlot(shield ? MWWorld::InventoryStore::Slot_CarriedLeft
+                                         : MWWorld::InventoryStore::Slot_CarriedRight);
+    }
+
+    MWMechanics::OblivionHeldBlockEquipmentSources prepareHeldEquipmentTestState(
+        MWMechanics::OblivionCombatService& service, const ESM::FormKey& actor,
+        bool player, bool firstActive, unsigned phase)
+    {
+        auto body = heldBlockActivation(service.animationClock(actor), phase != 0);
+        body.mSource.mBlendFrames = phase == 0 ? 0 : 9;
+        if (phase != 0) body.mDuration = .3f;
+        std::optional<MWMechanics::OblivionHeldBlockActivation> first;
+        if (player)
+        {
+            first = heldBlockActivation(10.75f, phase != 0);
+            first->mSource.mBlendFrames = phase == 0 ? 0 : 30;
+        }
+        if (!service.activateHeldBlock(actor, firstActive, firstActive ? std::nullopt : std::optional(body), first))
+            throw std::runtime_error("held equipment test activation");
+        MWMechanics::OblivionHeldBlockEquipmentSources result;
+        result.mFirstPersonActive = firstActive; result.mDefaultBlend = .25f;
+        result.mSequences = heldBlockMetadata(player);
+        if (firstActive) result.mSequences.erase(result.mSequences.begin());
+        for (auto& source : result.mSequences)
+            source.mBlendFrames = phase == 0 ? 0 : source.mFirstPerson ? 30 : 9;
+        const auto advance = [&](float dt) {
+            auto frame = service.prepareMeleeReactionFrame(actor, dt, result.mSequences);
+            if (!frame || !service.commitMeleeReactionFrame(*frame))
+                throw std::runtime_error("held equipment test frame");
+        };
+        if (phase >= 2) advance(0);
+        if (phase == 3) advance(.5f);
+        if (phase == 4) advance(1.25f);
+        return result;
+    }
+
+    ESM4::RuntimeHeldBlockSequence nativeZeroHeldEquipment(ESM4::RuntimeHeldBlockSequence held)
+    {
+        // Original6C9CEF/NI zero reset, independently checked by equipment06.
+        auto& timing = held.mSequenceTiming;
+        if (timing.mLastInput)
+        {
+            const float sentinel = -std::numeric_limits<float>::max();
+            const float offset = static_cast<float>(double(timing.mWeightedTime)
+                - *timing.mLastInput + timing.mOffset.value_or(sentinel));
+            timing.mOffset = offset == sentinel ? std::nullopt : std::optional(offset);
+        }
+        held.mInactive = true; held.mPoseSnapshot.reset(); timing.mEasing = false;
+        return held;
+    }
+}
+
+TEST(OblivionWorldTest, EquipmentBreakAtomicallyUsesNativeHeldGateFadeOrShieldResetAndRetainsSlot3)
+{
+    for (unsigned view = 0; view != 3; ++view)
+    for (unsigned phase = 0; phase != 5; ++phase)
+    for (const bool shield : {false, true})
+    for (const bool slot3 : {false, true})
+    {
+        SCOPED_TRACE(view);
+        SCOPED_TRACE(phase);
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(slot3);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const bool player = view != 0, firstActive = view == 2;
+        const auto owner = player ? fixture.mPlayer : fixture.mAttacker;
+        const auto other = player ? fixture.mAttacker : fixture.mPlayer;
+        const auto actor = player ? fixture.mPlayerKey : owner.getCellRef().getFormKey();
+        const auto item = installHeldBreakItem(fixture, owner, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto resources = prepareHeldEquipmentTestState(service, actor, player, firstActive, phase);
+        if (slot3)
+        {
+            const auto old = world.beginOblivionPhysicalAction(other);
+            MWMechanics::OblivionPhysicalContactDeltas reaction;
+            reaction.mVictimReaction = ESM4::RuntimeMeleeReaction{old,
+                ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"};
+            if (player) reaction.mVictimFirstPerson = ESM4::RuntimeFirstPersonMeleeState{
+                service.findMeleeState(actor)->mFirstPerson->mClock, *reaction.mVictimReaction};
+            ASSERT_TRUE(world.commitOblivionPhysicalContact(old, other, owner, reaction));
+        }
+        const auto id = world.beginOblivionPhysicalAction(other);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(owner, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mConditionChanges.push_back(change);
+        deltas.mVictimHeldEquipment = resources;
+        const auto before = fixture.snapshot();
+        auto plan = world.prepareOblivionPhysicalContact(id, other, owner, deltas);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        ASSERT_TRUE(plan->commit());
+        const auto after = fixture.snapshot();
+        const auto& original = before.mNativeMeleeStates.at(actor);
+        const auto& result = after.mNativeMeleeStates.at(actor);
+        const auto& selected = firstActive ? original.mFirstPerson->mHeldBlocks : original.mHeldBlocks;
+        const bool deferred = !shield && selected.front().mSequenceTiming.mEasing;
+        EXPECT_EQ(service.getProcessAction(actor), deferred ? 6 : -1);
+        const float duration = phase == 0 ? .25f : firstActive ? 1.f : .3f;
+        const auto check = [&](const auto& oldCache, const auto& cache, bool first) {
+            ASSERT_EQ(cache.size(), oldCache.size());
+            for (std::size_t i = 0; i < cache.size(); ++i)
+            {
+                auto expected = oldCache[i];
+                if (shield || (!deferred && firstActive && !first)) expected = nativeZeroHeldEquipment(expected);
+                else if (!deferred)
+                {
+                    expected.mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+                    expected.mSequenceTiming.mEaseStart.reset();
+                    expected.mSequenceTiming.mEaseEnd = duration;
+                    expected.mSequenceTiming.mEasing = false;
+                }
+                EXPECT_EQ(cache[i], expected);
+            }
+        };
+        check(original.mHeldBlocks, result.mHeldBlocks, false);
+        if (player) check(original.mFirstPerson->mHeldBlocks, result.mFirstPerson->mHeldBlocks, true);
+        if (slot3)
+        {
+            if (deferred)
+            {
+                EXPECT_EQ(result.mReaction, original.mReaction);
+            }
+            else
+            {
+                EXPECT_FALSE(result.mReaction); ASSERT_TRUE(result.mPassiveSequence);
+                EXPECT_EQ(std::get<ESM4::RuntimeMeleeReaction>(result.mPassiveSequence->mSequence), *original.mReaction);
+                if (player)
+                {
+                    ASSERT_TRUE(result.mFirstPerson->mPassiveSequence);
+                    EXPECT_EQ(std::get<ESM4::RuntimeMeleeReaction>(result.mFirstPerson->mPassiveSequence->mSequence),
+                        *original.mFirstPerson->mReaction);
+                }
+            }
+        }
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+        auto expectedOwners = before.mPhysicalActionOwners;
+        ASSERT_EQ(expectedOwners.erase(id), 1u);
+        EXPECT_EQ(after.mPhysicalActionOwners, expectedOwners);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        for (const auto& values : after.mNativeActorValues)
+        {
+            const auto found = std::find_if(before.mNativeActorValues.begin(), before.mNativeActorValues.end(),
+                [&](const auto& old) { return old.mActor == values.mActor; });
+            ASSERT_NE(found, before.mNativeActorValues.end());
+            EXPECT_EQ(values.mValues, found->mValues);
+        }
+        auto& inventory = owner.getClass().getInventoryStore(owner);
+        EXPECT_FALSE(inventory.isEquipped(item)); EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, EquipmentBreakHeldSourcesRejectMissingOrStaleAuthorityWithoutPartialWear)
+{
+    for (const bool shield : {false, true})
+    {
+        SCOPED_TRACE(shield);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto owner = fixture.mPlayer, other = fixture.mAttacker;
+        const auto actor = fixture.mPlayerKey;
+        const auto item = installHeldBreakItem(fixture, owner, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto resources = prepareHeldEquipmentTestState(service, actor, true, false, 3);
+        const auto id = world.beginOblivionPhysicalAction(other);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(owner, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mConditionChanges.push_back(change);
+        const auto before = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, other, owner, deltas)); // No scene to capture sources.
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        deltas.mVictimHeldEquipment = resources;
+        auto bad = deltas; bad.mVictimHeldEquipment->mSequences.clear();
+        EXPECT_THROW(world.prepareOblivionPhysicalContact(id, other, owner, bad), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        bad = deltas; bad.mVictimHeldEquipment->mSequences.front().mFrequency = 0;
+        EXPECT_THROW(world.prepareOblivionPhysicalContact(id, other, owner, bad), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        bad = deltas; bad.mConditionChanges.clear();
+        EXPECT_THROW(world.prepareOblivionPhysicalContact(id, other, owner, bad), std::invalid_argument);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        auto plan = world.prepareOblivionPhysicalContact(id, other, owner, deltas);
+        ASSERT_TRUE(plan); EXPECT_TRUE(plan->isValid());
+        ASSERT_TRUE(service.cancelResidentHeldBlocks(actor, resources.mSequences));
+        const auto changed = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(plan->isValid()); EXPECT_FALSE(plan->commit());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), changed);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 1.125f);
+        EXPECT_TRUE(owner.getClass().getInventoryStore(owner).isEquipped(item));
+        EXPECT_TRUE(service.isActionPending(id, other.getCellRef().getFormKey()));
+    }
+}
+
+TEST(OblivionWorldTest, GodModeSuppressedBreakPreservesTypedHeldWindupAndEquipment)
+{
+    for (const bool firstActive : {false, true})
+    for (const bool shield : {false, true})
+    for (const bool provideSources : {false, true})
+    {
+        SCOPED_TRACE(firstActive);
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(provideSources);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto item = installHeldBreakItem(fixture, fixture.mPlayer, shield);
+        seedHeldBlockOwner(fixture, fixture.mPlayerKey);
+        const auto sources = prepareHeldEquipmentTestState(service, fixture.mPlayerKey, true, firstActive, 1);
+        ASSERT_TRUE(world.toggleGodMode());
+        const auto id = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(fixture.mPlayer, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mConditionChanges.push_back(change);
+        if (provideSources) deltas.mVictimHeldEquipment = sources;
+        const auto before = fixture.snapshot();
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, deltas));
+        const auto after = fixture.snapshot();
+        EXPECT_EQ(after.mNativeMeleeStates, before.mNativeMeleeStates);
+        EXPECT_EQ(after.mNativeActorValues, before.mNativeActorValues);
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 1.125f);
+        EXPECT_TRUE(fixture.mPlayer.getClass().getInventoryStore(fixture.mPlayer).isEquipped(item));
+        EXPECT_EQ(service.getProcessAction(fixture.mPlayerKey), 6);
+    }
+}
+
+TEST(OblivionWorldTest, DisarmAtomicallyFadesSteadyHeldResetsWindupAndPreservesCounterHeldHistory)
+{
+    for (unsigned phase = 0; phase != 5; ++phase)
+    for (const bool shield : {false, true})
+    for (const bool counter : {false, true})
+    {
+        SCOPED_TRACE(phase);
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(counter);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, true, shield);
+        auto& world = fixture.mWorld;
+        const auto other = prepareNativeDropContactActors(fixture);
+        auto& inventory = fixture.mActor.getClass().getInventoryStore(fixture.mActor);
+        fixture.mItem = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mActor.getCellRef().getFormKey();
+        const auto sources = prepareHeldEquipmentTestState(service, actor, false, false, phase);
+        std::uint64_t counterId = 0;
+        if (counter)
+        {
+            counterId = service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Counter,
+                "handtohandblockattack", 1, ESM::FormKey::content("headless.esm", 0x940));
+            ASSERT_NE(counterId, 0u);
+            ASSERT_TRUE(service.bindMeleePlayback(counterId, actor));
+            ASSERT_TRUE(service.setMeleeSequenceTiming(counterId, actor, {}));
+        }
+        const auto id = world.beginOblivionPhysicalAction(other);
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mDisarms.push_back({fixture.mActor, fixture.mItem});
+        deltas.mVictimHeldEquipment = sources;
+        const std::array<MWWorld::EquippedWeaponDrop, 1> drops{{{
+            fixture.mActor, fixture.mItem, *fixture.mAnimation, {}, true}}};
+        const auto before = world.captureOblivionRuntimeState();
+        auto plan = world.prepareOblivionPhysicalContactWithWeaponDrops(id, other, fixture.mActor, deltas,
+            *fixture.mObjects, *fixture.mPhysics, drops);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        ASSERT_TRUE(plan->commit());
+        const auto after = world.captureOblivionRuntimeState();
+        const auto& original = before.mNativeMeleeStates.at(actor);
+        const auto& result = after.mNativeMeleeStates.at(actor);
+        auto expected = original.mHeldBlocks;
+        const bool stays = !counter && shield;
+        if (!counter && !shield)
+        {
+            for (auto& held : expected)
+                if (held.mSequenceTiming.mEasing) held = nativeZeroHeldEquipment(held);
+                else
+                {
+                    const float duration = phase == 0 ? .25f : .3f;
+                    held.mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+                    held.mSequenceTiming.mEaseStart.reset(); held.mSequenceTiming.mEaseEnd = duration;
+                }
+        }
+        EXPECT_EQ(result.mHeldBlocks, expected);
+        EXPECT_EQ(service.getProcessAction(actor), stays ? 6 : -1);
+        if (counter)
+        {
+            EXPECT_TRUE(service.isActionConsumed(counterId));
+            EXPECT_FALSE(result.mStrike); ASSERT_TRUE(result.mPassiveSequence);
+            EXPECT_EQ(std::get<ESM4::RuntimeMeleeStrike>(result.mPassiveSequence->mSequence), *original.mStrike);
+        }
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 50.f);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft) != inventory.end(), shield);
+        EXPECT_EQ(fixture.mPhysics->looseObjectOwners().size(), 1u);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, EquipmentHeldTransitionPrecedesStaggerAndKeepsDetachedFadeAndSlot3)
+{
+    for (const bool shield : {false, true})
+    for (unsigned phase : {0u, 1u})
+    {
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(phase);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto owner = fixture.mAttacker, other = fixture.mPlayer;
+        const auto actor = owner.getCellRef().getFormKey();
+        const auto item = installHeldBreakItem(fixture, owner, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto sources = prepareHeldEquipmentTestState(service, actor, false, false, phase);
+        const auto old = world.beginOblivionPhysicalAction(other);
+        MWMechanics::OblivionPhysicalContactDeltas blockHit;
+        blockHit.mVictimReaction = ESM4::RuntimeMeleeReaction{old,
+            ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"};
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(old, other, owner, blockHit));
+        const auto previous = *service.findMeleeState(actor)->mReaction;
+        const auto id = world.beginOblivionPhysicalAction(other);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(owner, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mConditionChanges.push_back(change); deltas.mVictimHeldEquipment = sources;
+        deltas.mVictimHeldSources = sources.mSequences;
+        deltas.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::Stagger, "handtohandstagger"};
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, other, owner, deltas));
+        const auto* state = service.findMeleeState(actor); ASSERT_TRUE(state);
+        ASSERT_TRUE(state->mReaction); EXPECT_EQ(state->mReaction->mKind, ESM4::MeleeReactionKind::Stagger);
+        ASSERT_TRUE(state->mPassiveSequence);
+        EXPECT_EQ(std::get<ESM4::RuntimeMeleeReaction>(state->mPassiveSequence->mSequence), previous);
+        const auto& held = state->mHeldBlocks.front();
+        const bool detached = !shield && phase == 0;
+        EXPECT_EQ(held.mRetirement.has_value(), detached);
+        EXPECT_EQ(held.mInactive, !detached);
+        if (detached)
+        {
+            EXPECT_EQ(held.mRetirement->mDuration, .25f);
+        }
+        EXPECT_EQ(service.getProcessAction(actor), 8);
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        const auto after = fixture.snapshot();
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, PairedPlayerRecoilPreservesEarlierEquipmentFadeAndResetsOnlyResidentHeld)
+{
+    for (const bool firstActive : {false, true})
+    for (const bool shield : {false, true})
+    for (unsigned phase : {0u, 1u})
+    {
+        SCOPED_TRACE(firstActive);
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(phase);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        const auto item = installHeldBreakItem(fixture, fixture.mPlayer, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto sources = prepareHeldEquipmentTestState(service, actor, true, firstActive, phase);
+        const auto before = *service.findMeleeState(actor);
+        const auto id = world.beginOblivionPhysicalAction(fixture.mAttacker);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(fixture.mPlayer, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas;
+        deltas.mConditionChanges.push_back(change);
+        deltas.mVictimHeldEquipment = sources;
+        deltas.mVictimHeldSources = sources.mSequences;
+        deltas.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::Recoil, "handtohandrecoil"};
+        deltas.mVictimFirstPerson = ESM4::RuntimeFirstPersonMeleeState{
+            before.mFirstPerson->mClock, *deltas.mVictimReaction};
+        ASSERT_TRUE(world.commitOblivionPhysicalContact(id, fixture.mAttacker, fixture.mPlayer, deltas));
+        const auto* state = service.findMeleeState(actor); ASSERT_TRUE(state);
+        ASSERT_TRUE(state->mReaction); ASSERT_TRUE(state->mFirstPerson->mReaction);
+        EXPECT_EQ(state->mReaction->mKind, ESM4::MeleeReactionKind::Recoil);
+        EXPECT_EQ(service.getProcessAction(actor), 7);
+        const auto check = [&](const auto& oldCache, const auto& cache, bool first) {
+            ASSERT_EQ(cache.size(), oldCache.size());
+            for (std::size_t i = 0; i < cache.size(); ++i)
+            {
+                auto expected = oldCache[i];
+                if (!shield && phase == 0 && (!firstActive || first))
+                {
+                    expected.mRetirement = ESM4::RuntimeReactionRetirement{.25f, {}};
+                    expected.mSequenceTiming.mEaseStart.reset();
+                    expected.mSequenceTiming.mEaseEnd = .25f;
+                    expected.mSequenceTiming.mEasing = false;
+                }
+                else expected = nativeZeroHeldEquipment(expected);
+                EXPECT_EQ(cache[i], expected);
+            }
+        };
+        check(before.mHeldBlocks, state->mHeldBlocks, false);
+        check(before.mFirstPerson->mHeldBlocks, state->mFirstPerson->mHeldBlocks, true);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_FALSE(fixture.mPlayer.getClass().getInventoryStore(fixture.mPlayer).isEquipped(item));
+        const auto after = fixture.snapshot();
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+    }
+}

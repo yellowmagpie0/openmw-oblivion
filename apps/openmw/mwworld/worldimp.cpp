@@ -3357,6 +3357,7 @@ namespace MWWorld
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
         std::optional<WorldModel::RegistryGuard> mRegistry;
         std::vector<ReactionBinding> mReactionBindings;
+        std::optional<bool> mEquipmentFirstPerson;
     };
 
     World::PreparedOblivionPhysicalContact::PreparedOblivionPhysicalContact(std::unique_ptr<Data> data)
@@ -3382,6 +3383,7 @@ namespace MWWorld
             && world.mOblivionCombat.get() == mData->mCombat && world.mPlayer.get() == mData->mPlayer
             && world.mPhysics.get() == mData->mPhysics && world.mWorldScene.get() == mData->mScene
             && world.getGodModeState() == mData->mGodMode
+            && (!mData->mEquipmentFirstPerson || world.isFirstPerson() == *mData->mEquipmentFirstPerson)
             && (!world.mRetainedSimulation || world.mRetainedSimulation->mDetached);
     }
 
@@ -3534,8 +3536,8 @@ namespace MWWorld
         const auto prepareHeldCancellation = [&](const Ptr& actor, const auto& request, auto& sources) {
             if (!request || (request->mKind != ESM4::MeleeReactionKind::Recoil
                     && request->mKind != ESM4::MeleeReactionKind::Stagger) || !sources.empty()) return true;
-            const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
-            const auto* state = mOblivionCombat->findMeleeState(key);
+            const auto heldActor = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+            const auto* state = mOblivionCombat->findMeleeState(heldActor);
             if (!state) return true;
             const auto hasResident = [](const auto& held) {
                 return std::any_of(held.begin(), held.end(), [](const auto& entry) { return entry.resident(); });
@@ -3566,9 +3568,63 @@ namespace MWWorld
             }
             catch (const std::invalid_argument&) { return false; }
         };
+        const auto prepareHeldEquipment = [&] {
+            for (auto [owner, packet] : std::array<std::pair<Ptr,
+                     std::optional<MWMechanics::OblivionHeldBlockEquipmentSources>*>, 2>{{
+                     {attacker, &preparedDeltas.mAttackerHeldEquipment},
+                     {victim, &preparedDeltas.mVictimHeldEquipment}}})
+            {
+                if (owner.isEmpty() || *packet) continue;
+                const auto heldActor = owner == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                    : owner.getCellRef().getFormKey();
+                const bool requested = std::any_of(preparedDeltas.mConditionChanges.begin(),
+                    preparedDeltas.mConditionChanges.end(), [&](const auto& change) {
+                        return change.mOwner == owner
+                            && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None
+                            && (change.mItem.getType() == ESM::REC_ARMO || owner == victim);
+                    }) || std::any_of(preparedDeltas.mDisarms.begin(), preparedDeltas.mDisarms.end(),
+                        [&](const auto& disarm) { return disarm.mOwner == owner; });
+                if (!requested) continue;
+                if (owner == getPlayerPtr() && getGodModeState()) continue;
+                const auto* state = mOblivionCombat->findMeleeState(heldActor);
+                const auto resident = [](const auto& held) {
+                    return std::any_of(held.begin(), held.end(), [](const auto& entry) { return entry.resident(); });
+                };
+                if (!state || (!resident(state->mHeldBlocks)
+                        && (!state->mFirstPerson || !resident(state->mFirstPerson->mHeldBlocks)))) continue;
+                if (mOblivionCombat->getProcessAction(heldActor) != 6) continue;
+                auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(owner));
+                if (!animation || !animation->getObjectRoot()) return false;
+                MWMechanics::OblivionHeldBlockEquipmentSources prepared;
+                prepared.mFirstPersonActive = owner == getPlayerPtr() && isFirstPerson();
+                const auto append = [&](MWRender::Animation& view, const auto& held, bool first) {
+                    for (const auto& entry : held)
+                        if (entry.resident())
+                        {
+                            auto source = MWMechanics::captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                            source.mFirstPerson = first;
+                            prepared.mSequences.push_back(source);
+                        }
+                };
+                try
+                {
+                    append(*animation, state->mHeldBlocks, false);
+                    if (state->mFirstPerson && resident(state->mFirstPerson->mHeldBlocks))
+                    {
+                        auto* peer = animation->getPlaybackPeer();
+                        if (!peer || !peer->getObjectRoot()) return false;
+                        append(*peer, state->mFirstPerson->mHeldBlocks, true);
+                    }
+                }
+                catch (const std::invalid_argument&) { return false; }
+                *packet = std::move(prepared);
+            }
+            return true;
+        };
         if (!prepareHeldCancellation(attacker, preparedDeltas.mAttackerReaction, preparedDeltas.mAttackerHeldSources)
             || (!victim.isEmpty() && !prepareHeldCancellation(victim,
                 preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
+        if (!prepareHeldEquipment()) return nullptr;
         auto contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(), essential,
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
         if (!contact) return nullptr;
@@ -3590,6 +3646,7 @@ namespace MWWorld
         if (!prepareHeldCancellation(attacker, preparedDeltas.mAttackerReaction, preparedDeltas.mAttackerHeldSources)
             || (!victim.isEmpty() && !prepareHeldCancellation(victim,
                 preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
+        if (!prepareHeldEquipment()) return nullptr;
         if (defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
             contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
@@ -3622,6 +3679,29 @@ namespace MWWorld
                         const auto* first = animation->getPlaybackPeer();
                         if (!first) return nullptr;
                         data->mReactionBindings.push_back({owner, first, first->getObjectRoot(), true});
+                    }
+                }
+        for (const auto& [owner, packet] : std::array<std::pair<Ptr,
+                 const std::optional<MWMechanics::OblivionHeldBlockEquipmentSources>*>, 2>{{
+                 {attacker, &preparedDeltas.mAttackerHeldEquipment},
+                 {victim, &preparedDeltas.mVictimHeldEquipment}}})
+            if (*packet)
+                if (const auto* animation = static_cast<const World&>(*this).getAnimation(owner))
+                {
+                    if (!animation->getObjectRoot()) return nullptr;
+                    data->mReactionBindings.push_back({owner, animation, animation->getObjectRoot()});
+                    if (owner == getPlayerPtr())
+                    {
+                        const bool first = isFirstPerson();
+                        if (first != (*packet)->mFirstPersonActive) return nullptr;
+                        data->mEquipmentFirstPerson = first;
+                    }
+                    if (std::any_of((*packet)->mSequences.begin(), (*packet)->mSequences.end(),
+                            [](const auto& source) { return source.mFirstPerson; }))
+                    {
+                        const auto* peer = animation->getPlaybackPeer();
+                        if (!peer || !peer->getObjectRoot()) return nullptr;
+                        data->mReactionBindings.push_back({owner, peer, peer->getObjectRoot(), true});
                     }
                 }
         for (const auto& condition : deltas.mConditionChanges)
