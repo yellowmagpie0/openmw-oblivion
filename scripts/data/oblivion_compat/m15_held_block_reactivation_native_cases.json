@@ -60,7 +60,7 @@
     "process_pointer": "same held object in active view",
     "counter": "Body/FP slot3 and all sampled NI fields unchanged by reblock",
     "held_state_before_reblock": "NI3 before elapsed .25; NI0 at/after .25",
-    "reactivation": "NI3 zero-deactivated then activated; NI0 directly activated; same cached object reused. Reset offset sentinel; preupdate last/weighted/output/ease fields retained.",
+    "reactivation": "Under supplied rendering/root gates: NI3 zero-deactivated then NI0 directly activated asNI1, reusing same cached object. Reset offset sentinel; prior sampled/ease fields retained until firstNIupdate. Other activation blend branches remain open.",
     "view_policy": "NPC body; Player camera0 FP only (body remains0/slot1 null); Player camera1 body and FP.",
     "repeat_result": false,
     "repeat_effect": "complete selected held sequence bytes and process6 unchanged",
@@ -94,7 +94,9 @@
     "Synthetic one-bucket cache hash/equality and one-variant source selection.",
     "Scene-update471230 and notifications supplied; real cache/sequence/action/helper internals execute.",
     "INI .25 supplied; production compiled default .1 identity established separately.",
-    "Postcontact action6, clocks and initial source state supplied; no actual contact, whole input loop or original-game process."
+    "Postcontact action6, clocks and initial source state supplied; no actual contact, whole input loop or original-game process.",
+    "Rendering eligibility47F7B0 suppliesfalse; Player model-root getter660110 supplies a mismatching root, and578F60 suppliesfalse. Together these select direct zero-duration activation. Activation blend duration in eligible/root-matching branches is unproved by this matrix.",
+    "Release403C00 supplies INI.25, whereas selection474852 directly reads pinned compiled B06538 .1, divided by compiled B06530 1. This distinction does not affect selected zero-duration branch."
   ],
   "full_M15S4_acceptance": false,
   "production_red_course": {

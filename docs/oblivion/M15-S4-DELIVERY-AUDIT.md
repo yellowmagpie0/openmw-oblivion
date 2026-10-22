@@ -10677,3 +10677,13 @@ Two save/live payload pairs are exact and nine AV arrays/life/RNG plus2151
 inventories remain unchanged. Editable manifest and pinned artifacts are in the
 reactivation receipt. This supplies a concrete before-case for resident slot1
 ownership/persistence work.
+
+Follow-up instruction review narrows the activation result above: supplied
+47F7B0=false, mismatching660110 model roots and578F60=false select direct
+zero-duration activation. The same-object reuse/clock-reset matrix proves that
+branch; it does not prove activation blend timing for eligible/root-matching
+actors. Selection474852 also directly reads compiled B06538 .1/B06530 1,
+whereas the release getter supplies .25. Raw07 results are retained unchanged;
+the reviewed receipt and editable cases now state these gates explicitly.
+Eligible manager activation is a required next proof before a universal slot1
+activation implementation.

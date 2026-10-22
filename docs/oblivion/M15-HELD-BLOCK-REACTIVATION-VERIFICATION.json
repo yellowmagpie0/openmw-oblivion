@@ -5,7 +5,7 @@
   "source_parent": "537af90b6f",
   "editable_cases": {
     "path": "scripts/data/oblivion_compat/m15_held_block_reactivation_native_cases.json",
-    "sha256": "d8c5ead8fd92ca55dc0d6025a762ee7d87db15185c71a66f73c5bda0c7684902"
+    "sha256": "63a8d2e3c64afe546f69ed3a83038810c653587b1794cfd8571771b567b19b52"
   },
   "accepted_result": {
     "passed": true,
@@ -115,7 +115,7 @@
     "process_pointer": "same held object in active view",
     "counter": "Body/FP slot3 and all sampled NI fields unchanged by reblock",
     "held_state_before_reblock": "NI3 before elapsed .25; NI0 at/after .25",
-    "reactivation": "NI3 zero-deactivated then activated; NI0 directly activated; same cached object reused. Reset offset sentinel; preupdate last/weighted/output/ease fields retained.",
+    "reactivation": "Under supplied rendering/root gates: NI3 zero-deactivated then NI0 directly activated asNI1, reusing same cached object. Reset offset sentinel; prior sampled/ease fields retained until firstNIupdate. Other activation blend branches remain open.",
     "view_policy": "NPC body; Player camera0 FP only (body remains0/slot1 null); Player camera1 body and FP.",
     "repeat_result": false,
     "repeat_effect": "complete selected held sequence bytes and process6 unchanged",
@@ -149,7 +149,9 @@
     "Synthetic one-bucket cache hash/equality and one-variant source selection.",
     "Scene-update471230 and notifications supplied; real cache/sequence/action/helper internals execute.",
     "INI .25 supplied; production compiled default .1 identity established separately.",
-    "Postcontact action6, clocks and initial source state supplied; no actual contact, whole input loop or original-game process."
+    "Postcontact action6, clocks and initial source state supplied; no actual contact, whole input loop or original-game process.",
+    "Rendering eligibility47F7B0 suppliesfalse; Player model-root getter660110 supplies a mismatching root, and578F60 suppliesfalse. Together these select direct zero-duration activation. Activation blend duration in eligible/root-matching branches is unproved by this matrix.",
+    "Release403C00 supplies INI.25, whereas selection474852 directly reads pinned compiled B06538 .1, divided by compiled B06530 1. This distinction does not affect selected zero-duration branch."
   ],
   "native_instruction_review": "4745DD..4745ED zero-deactivates selected NI3. 6C9BA0 requires NI0; zero-duration activation makes NI1 and resets offset when requested without clearing prior sampled/ease fields. First subsequent6CA950 establishes fresh view-clock offset and restarts cyclic phase. Actual post-reblock samples preserve exact End equality before wrapping.",
   "retained_attempts": [
@@ -164,7 +166,8 @@
   "limits": [
     "No original-game runtime proof or production acceptance of reblock yet.",
     "Supplied scene updates do not prove full pose mixer or camera transitions.",
-    "Complete resident slot1 activation/windup/blocking restart and BlockHit release remain open."
+    "Complete resident slot1 activation/windup/blocking restart and BlockHit release remain open.",
+    "The immediate-activation proof is selected by supplied rendering eligibility/model-root gates. Eligible/root-matching manager activation/blend timing must be established separately before a universal slot1 activation policy is implemented."
   ],
   "retained_runtime_red": {
     "editable_manifest": {
@@ -268,5 +271,6 @@
     "scope": "Fresh actual released Counter/held retirement save copied unchanged before launch. Lua sets only stance/movement/block controls and logs late legacy playing predicate. Keyboard F5 records actual snapshots. No AV/action/contact/animation outcome injection. Normal configured10 FPS/offscreen/software/sound disabled; not sanitizer or PlayerCounter coverage.",
     "direct_image_review": "Late capture shows recovered Player fists and NPC blocking again. Does not disprove intervening disable/rebind; event ordering records two block begins around the single old fade expiry.",
     "harness_vs_acceptance": "Scenario driver passed. Semantic regression remains false, expected_red_reproduced true. Fresh load cache/clock exact, both save/live payload pairs exact, all9 AV arrays/life/RNG and2151 inventories unchanged."
-  }
+  },
+  "review_addendum": "A follow-up read of474852..474A2F identifies selection direct INI reads and visibility/model-root branches. Accepted raw07 execution/corpus remains unchanged. Its immediate NI1 observation is bounded to the supplied zero-duration branch, not generalized to visible actors."
 }
