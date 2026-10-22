@@ -469,6 +469,8 @@ namespace MWWorld
         // animation request; unsupported live bindings reject before contact.
         bool prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
             MWMechanics::OblivionPhysicalContactDeltas& deltas);
+        bool prepareOblivionStaggerReaction(std::uint64_t id, const Ptr& victim,
+            MWMechanics::OblivionPhysicalContactDeltas& deltas);
         // Explicit owned render/animation context, also used by synthetic asset tests.
         // Requests must exactly match Drop dispositions and intact disarms.
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactWithWeaponDrops(

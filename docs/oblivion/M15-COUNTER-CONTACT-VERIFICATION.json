@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "status": "Counter phase1 contact dispatch and bounded NPC disarm preparation verified. Full M15S4 remains incomplete.",
+  "validation_layers": {
+    "structural_publication": "Counter helper selects a read-only packet. Owned-scene tests publish the selected NPC drop with RNG, Stagger and one contact consumption. No plugin generated.",
+    "compiler_and_world_validation": true,
+    "semantic_reinspection": "All72 AVs, draw/quest/mastery RNG guards, exact CRT transition, inventory/serial conservation and binary RuntimeState/service restore. A real collision capsule and the production dispatcher acquire and consume a physical miss.",
+    "normal_input_runtime_acceptance": false,
+    "fresh_process_restart_acceptance": false
+  },
+  "tested_source": {
+    "head": "3bb48ea33f934833c23570ef31d451f8f78f2938",
+    "source_fingerprint": "3c0bf0279849bb7d67b7bb18257eb7c9112a84041d6b4e1aabe0bd28e9697670"
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-contact-normal-03/verification.json",
+        "sha256": "e9fb4a0cd0345e9695d91495784e0ea54ddcdd4696e39e654325580ff388d73e"
+      },
+      "tested_source": {
+        "head": "3bb48ea33f934833c23570ef31d451f8f78f2938",
+        "source_fingerprint": "3c0bf0279849bb7d67b7bb18257eb7c9112a84041d6b4e1aabe0bd28e9697670"
+      },
+      "results": {
+        "engine": {
+          "executed": 1806,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b6598aaaa7ce7c15c104ef3637909218fa9b06f20d5bb3241d696caf1d90c993",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e38e78318b1bee2a20c4e8ff57376b71ab3314e5fff189f06f18a39d0bbb043f",
+          "inventory_sha256": "077db15aa10b5b4e6657bcc24655eec7ba3c35baccc2971088c985ca3616f01d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-contact-sanitized-03/verification.json",
+        "sha256": "cd3beb4e70916b3b8be704659956978f3206b2dc0829f88279f919b0d0064f61"
+      },
+      "tested_source": {
+        "head": "3bb48ea33f934833c23570ef31d451f8f78f2938",
+        "source_fingerprint": "3c0bf0279849bb7d67b7bb18257eb7c9112a84041d6b4e1aabe0bd28e9697670"
+      },
+      "results": {
+        "engine": {
+          "executed": 1806,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "095f64c3e45f9791a1ede2127dae41d6c1cd91542c43e8cc133ba7122c0520a3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "b96d152c9b64333c633c40a3845d3eef99101688712dab6a1cb4c245a44e56a4",
+          "inventory_sha256": "077db15aa10b5b4e6657bcc24655eec7ba3c35baccc2971088c985ca3616f01d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "check_scope": "Full engine inventory in both configurations. Components and Python sources are unchanged and were not rerun. Tests precede receipt/provenance/audit additions.",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_dispatch_reference": {
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/verification03.json",
+      "sha256": "2fb23960ba9c64ea652ea29d8e58096c5be246eb0e67e1604bc8112f962ea528"
+    },
+    "corpus": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/corpus03.json",
+      "sha256": "61a85201bc674a53acfe86a1afa9898ffcf40a96ad11d08abe04e18203e6ff52"
+    },
+    "harness": {
+      "path": "build/oblivion-compat/m15/S4/native-counter-stagger-dispatch-oracle-01/probe-03.py",
+      "sha256": "b0fa36a81cc1804afc4aee88302989cfdca68a09369f7eddccd3580a042b05eb"
+    },
+    "cases": 1024,
+    "scope": "Existing original Player action2 group29/subtype6 dispatcher probe: phase1 acquires at scale*fCombatDistance, disarm then Stagger independently of disarm return, action6 even on miss. Acquisition/disarm/Stagger/equipment/sound are recording boundaries, not full gameplay."
+  },
+  "prior_native_and_backend_receipts": [
+    {
+      "path": "docs/oblivion/M15-COUNTER-PROTOCOL-VERIFICATION.json",
+      "sha256": "6ac9dda3879f3f18b2c8e936638a4bcf26c3e8ec8f47e9ac4ba4b9121d3f7c1b"
+    },
+    {
+      "path": "docs/oblivion/M15-COUNTER-STARTUP-VERIFICATION.json",
+      "sha256": "f8a6a79258bc5f01965ca52e9721c9fdaf16296c92f4fbe425b2b98c30a30387"
+    },
+    {
+      "path": "docs/oblivion/M15-DISARM-TARGET-VERIFICATION.json",
+      "sha256": "5b9627c955992302474955b6f496e6b9d2523d3e1981e7041b7303220241d387"
+    },
+    {
+      "path": "docs/oblivion/M15-DISARM-CONTACT-VERIFICATION.json",
+      "sha256": "0e978251d99a0e4a4515f26ede1097b8584d68bdf0a51faaec1bd131cba16edb"
+    }
+  ],
+  "new_tests": [
+    "OblivionWorldTest.CounterContactPreparationOwnsTheMasterRollAndPublishesNoDamage",
+    "OblivionWorldTest.CounterSelectedDisarmRejectsUnresolvedReplacementWithoutSpendingItsRoll",
+    "OblivionWorldTest.CounterMissPreparationConsumesOnceWithoutDamageWearOrRandomDraws",
+    "OblivionWorldTest.CounterPhysicalMissAcquiresAndConsumesWithoutOrdinaryAttackFatigue"
+  ],
+  "boundaries": [
+    "Expert/Master ordinary blocked-hit proc selection remains guarded; normal-input activation is not yet wired.",
+    "Successful disarm is admitted only for the existing drawn, active NPC single-weapon drop backend; Player/Creature drops, owned bow state and unsupported equipment remain guarded.",
+    "An NPC with any other weapon rejects a selected disarm until native replacement selection joins the packet. A failed roll does not require replacement selection.",
+    "Stagger resource discovery uses projected disarm before the right-hand family query. The owned scene test supplies a separately reviewed Stagger packet; actual renderer resource discovery after disarm still needs runtime proof.",
+    "Creature Stagger, NPC combat-controller notification/replacement policy, complete first-person native action dispatch and partial mirror/cached cases remain open.",
+    "No normal-input, audio, FPS, gamepad or fresh-process gameplay acceptance is added by these unit/integration checks."
+  ],
+  "retained_attempts": [
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-counter-contact-normal-01",
+      "outcome": "Build failure: test passed an untyped braced initializer to a RefId lookup. Production compiled; corrected explicit RefId in02."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-counter-contact-sanitized-01",
+      "outcome": "Build failure: test passed an untyped braced initializer to a RefId lookup. Production compiled; corrected explicit RefId in02."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-counter-contact-normal-02",
+      "outcome": "Passed all1805 engine tests before the final spare-weapon guard/test. Superseded by03 for final-source acceptance."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-counter-contact-sanitized-02",
+      "outcome": "Passed all1805 engine tests before the final spare-weapon guard/test. Superseded by03 for final-source acceptance."
+    }
+  ]
+}

@@ -16745,3 +16745,38 @@ is unchanged; current disarm publication still admits NPCs only.
 Exact artifacts, failed/intermediate attempts, final normal/instrumented
 checks and boundaries are in `M15-DISARM-CONTACT-VERIFICATION.json`. Editable
 protocol: `scripts/data/oblivion_compat/m15_disarm_contact_native_probe.json`.
+
+
+### Counter phase1 contact dispatch integration
+
+The existing original action2 group29/subtype6 dispatcher probe executes
+1,024 contexts (`native-counter-stagger-dispatch-oracle-01/verification03.json`).
+Its corpus SHA256 is
+`61a85201bc674a53acfe86a1afa9898ffcf40a96ad11d08abe04e18203e6ff52`.
+At phase1,5FCC83..5FCCB0 acquires with resolved actor scale times
+fCombatDistance. It calls5FC2B0 then5F4FD0 regardless of the disarm return,
+and consumes into action6 even on miss. A present source shield requests the
+existing shield material/hand hit layers; a miss requests no ordinary swish.
+Acquisition, disarm, Stagger, equipment and sound are supplied recording
+boundaries in this instruction probe, not complete native gameplay.
+
+The production dispatcher now has a separate nondamaging Counter branch.
+It acquires untargeted, prepares the separate Master disarm roll, then requests
+Stagger before atomic contact publication. Quest/undrawn target entries consume
+no roll; the source drawn guard follows the roll. Resource selection sees the
+projected empty right slot after disarm. No attack Fatigue, Health/contact
+Fatigue, wear or knockback path is invoked.
+
+Native NPC DropItem5FC440 can select a replacement weapon after removal
+(5FC610..5FC671) before its caller requests Stagger. Until that policy is
+implemented, the live Counter helper rejects a selected disarm when another
+weapon remains. This is a conservative implementation boundary, not a native
+rejection rule. The typed NPC drop primitive itself remains a selected packet.
+Player/Creature drops and Creature Stagger remain unsupported here.
+
+Full normal/sanitized engine inventories pass1,806 tests each. Owned-scene
+publication and a capsule-backed production-dispatch miss have binary restore
+checks. No new normal-input, rendered post-disarm resource discovery, audio,
+camera/input/FPS or fresh-process gameplay acceptance is claimed. The exact
+source, checks, boundaries and retained failures are pinned in
+`M15-COUNTER-CONTACT-VERIFICATION.json`.

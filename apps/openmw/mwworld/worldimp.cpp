@@ -2643,6 +2643,12 @@ namespace MWWorld
         return prepareOblivionContactReaction(id, victim, ESM4::MeleeReactionKind::BlockHit, false, deltas);
     }
 
+    bool World::prepareOblivionStaggerReaction(std::uint64_t id, const Ptr& victim,
+        MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        return prepareOblivionContactReaction(id, victim, ESM4::MeleeReactionKind::Stagger, false, deltas);
+    }
+
     bool World::prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {
         if (!mOblivionCombat || actor.isEmpty() || !deltas.mVictimCounterRequested || deltas.mVictimCounter)
@@ -2823,7 +2829,12 @@ namespace MWWorld
             ESM4::NativeNpcBlockHitGroupInput groupInput;
             groupInput.mWeaponDrawn115 = weaponDrawn;
             const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
-            if (right != inventory.end() && right->getType() == ESM::REC_WEAP)
+            // Disarm precedes Stagger in the native Counter dispatcher. Resolve
+            // its resource family from the projected empty right-hand slot.
+            const bool disarmed = right != inventory.end()
+                && std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
+                    [&](const auto& request) { return request.mOwner == actor && request.mItem == *right; });
+            if (!disarmed && right != inventory.end() && right->getType() == ESM::REC_WEAP)
             {
                 const auto item = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
                 const auto* form = item.getIf<ESM::FormId>();

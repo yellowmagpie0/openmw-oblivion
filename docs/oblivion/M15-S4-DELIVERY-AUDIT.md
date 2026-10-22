@@ -10363,3 +10363,41 @@ projected post-disarm resource selection, replacement/controller/audio behavior
 and the wider input/effect/gamepad/FPS/E2E gates remain open. M15S4 remains
 incomplete. See [verification](M15-DISARM-CONTACT-VERIFICATION.json) and editable
 `m15_disarm_contact_native_probe.json` under scripts/data/oblivion_compat.
+
+
+## Counter phase1 contact dispatch checkpoint
+
+Counter now enters a dedicated nondamaging contact branch from the production
+controller/dispatcher. Reach is resolved actor scale times fCombatDistance;
+weapon reach and prior AI target are not used. A physical miss consumes once
+into6 without attack Fatigue, damage, wear, knockback, RNG or swish. On an
+acquired target the helper prepares the Master disarm roll before Stagger
+resource selection and publishes through the existing atomic World transaction.
+The Stagger family query observes the projected removed right-hand weapon.
+
+New tests cover inclusive chance40/41 with native CRT seed1/draw41, Expert
+versus Master, source drawn-after-roll and target quest/undrawn-before-roll
+ordering, missing physical drop backend, exact resources/inventory/RNG/serial
+publication, one-shot consumption and binary/service restore. A real capsule
+plus the production acquisition/dispatch path proves a physical miss with zero
+attack Fatigue despite a large supplied weapon weight. The owned scene test
+supplies its reviewed Stagger packet; it does not prove live post-disarm
+animation discovery. Another-weapon inventory rejects a selected proc without
+spending its RNG/contact, while a failed roll remains preparable.
+
+Both final full engine runs pass **1,806 tests /125 suites**, exact inventory,
+zero failed/skipped: `native-counter-contact-normal-03` and
+`native-counter-contact-sanitized-03` under build/oblivion-compat/m15/S4.
+The sanitizer environment disables leak detection and halts on ASan/UBSan;
+no diagnostics were observed. Tested parent is
+`3bb48ea33f934833c23570ef31d451f8f78f2938`, dirty source fingerprint
+`3c0bf0279849bb7d67b7bb18257eb7c9112a84041d6b4e1aabe0bd28e9697670`.
+Components/Python are unchanged and were not rerun. Both01 compile failures
+and passing intermediate02 runs remain retained. Exact hashes/scopes are in
+`M15-COUNTER-CONTACT-VERIFICATION.json`.
+
+S4 remains incomplete. Ordinary defensive proc selection/normal activation is
+still guarded. Player/Creature drops, Creature Stagger, NPC replacement and
+combat-controller policy, complete native first-person action dispatch, partial
+mirrors/cached sources, normal-input/save-restart and the camera/input/audio/FPS
+matrix remain open. The other canonical S4 gates are unchanged.

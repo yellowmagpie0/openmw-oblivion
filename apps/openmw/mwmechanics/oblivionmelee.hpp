@@ -70,6 +70,13 @@ namespace MWMechanics
         const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
         float normalizedDifficulty, bool sneaking);
 
+    // Read-only Counter phase1 consequence after geometric acquisition. The
+    // packet includes the separate Master disarm roll followed by Stagger
+    // resource selection. Unsupported drops/resources reject without spending.
+    std::optional<OblivionPhysicalContactDeltas> prepareOblivionCounterContactDeltas(
+        MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& victim);
+
     // Adapter for this fork's existing -100..100 GUI slider. Config values
     // outside that UI range saturate; this is not native INI deserialization.
     float oblivionNormalizedDifficulty(int difficultySetting);

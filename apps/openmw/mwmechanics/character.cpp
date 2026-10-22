@@ -1471,18 +1471,20 @@ namespace MWMechanics
         const auto* natural = creature ? mPtr.get<ESM4::Creature>()->mBase : nullptr;
         if (natural && !natural->mAttackReach)
             return;
-        const float reach = weapon ? ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings)
+        const bool counter = strike.mKind == ESM4::MeleeStrikeKind::Counter;
+        const float reach = counter ? ESM4::weaponMeleeReach(1.f, scale.z(), reachSettings)
+            : weapon ? ESM4::weaponMeleeReach(weapon->mData.reach, scale.z(), reachSettings)
             : natural ? ESM4::creatureMeleeReach(*natural->mAttackReach,
                 natural->mData.creatureType, scale.z(), reachSettings)
             : ESM4::unarmedMeleeReach(scale.z(), reachSettings);
-        const float cost = ESM4::attackFatigueCost(weaponWeight,
+        const float cost = counter ? 0.f : ESM4::attackFatigueCost(weaponWeight,
             !creature && strike.mKind >= ESM4::MeleeStrikeKind::StandingPower,
             ESM4::buildAttackFatigueSettings(settings));
         const auto fatigue = [&] { return mPtr == world->getPlayerPtr()
             ? service->getPlayerValue(10) : service->getNonPlayerValue(mPtr, 10); };
         const float before = fatigue();
         MWWorld::Ptr selectedTarget;
-        if (const auto* melee = service->findMeleeState(actor); melee && melee->mAiIntent)
+        if (const auto* melee = service->findMeleeState(actor); !counter && melee && melee->mAiIntent)
         {
             const auto key = melee->mAiIntent->mTarget;
             auto* ai = world->getOblivionAiService();
@@ -1498,7 +1500,7 @@ namespace MWMechanics
             if (auto* window = MWBase::Environment::get().getWindowManagerOrNull())
                 window->setEnemy(contact->mVictim);
         }
-        if (contact && contact->mVictim.isEmpty())
+        if (contact && contact->mVictim.isEmpty() && !counter)
         {
             // Stock TES4 melee KFs have no sound key. Emit after the contact
             // commits so repeated frames and restored completed strikes cannot replay it.

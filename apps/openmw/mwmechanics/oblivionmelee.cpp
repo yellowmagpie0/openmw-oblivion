@@ -14,6 +14,7 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/inventorystore.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
+#include <components/esm3/loadarmo.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
@@ -325,6 +326,78 @@ namespace MWMechanics
         return true;
     }
 
+    std::optional<OblivionPhysicalContactDeltas> prepareOblivionCounterContactDeltas(
+        MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
+        const MWWorld::Ptr& victim)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        const auto player = world.getPlayerPtr();
+        if (!service || attacker.isEmpty()
+            || (attacker != player && attacker.getType() != ESM::REC_NPC_4)) return std::nullopt;
+        const auto source = attacker == player ? ESM::FormKey::dynamic("player", 1)
+            : attacker.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(source);
+        if (!state || !state->mStrike || state->mStrike->mActionId != actionId
+            || state->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
+            || !service->isMeleeContactPending(actionId, source)
+            || service->getProcessAction(source) != 2) return std::nullopt;
+        OblivionPhysicalContactDeltas deltas;
+        if (victim.isEmpty()) return deltas; // A miss consumes phase1 without any draw or cost.
+        if (victim == attacker || (victim != player && victim.getType() != ESM::REC_NPC_4))
+            return std::nullopt; // Creature Stagger resources are not admitted yet.
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        auto& inventory = attacker.getClass().getInventoryStore(attacker);
+        const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        const bool hasWeapon = right != inventory.end() && right->getType() == ESM::REC_WEAP;
+        const bool hasShield = left != inventory.end() && left->getType() == ESM::REC_ARMO
+            && (left->get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield);
+        const auto base = [&](std::uint8_t av) { return attacker == player ? service->getPlayerBaseValue(av)
+            : service->getNonPlayerBaseValue(source, av, world.getStore()); };
+        const ESM4::BlockMasteryInput mastery{base(15), base(17), hasWeapon, hasShield};
+        auto& targetInventory = victim.getClass().getInventoryStore(victim);
+        const auto targetRight = targetInventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const bool targetHasWeapon = targetRight != targetInventory.end() && targetRight->getType() == ESM::REC_WEAP;
+        const ESM4::Weapon* targetWeapon = nullptr;
+        if (targetHasWeapon)
+        {
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                world.getStore(), targetRight->getCellRef().getRefId());
+            const auto* form = id.getIf<ESM::FormId>();
+            targetWeapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+            if (!targetWeapon) return std::nullopt;
+        }
+        const ESM4::DisarmTargetWeaponInput target{targetHasWeapon,
+            victim.getClass().getCreatureStats(victim).getDrawState() == DrawState::Weapon,
+            targetWeapon && (targetWeapon->mFlags & ESM4::Rec_Persistent),
+            victim == player && world.getGodModeState()};
+        const auto draw = ESM4::combatRandomDraw(service->combatRandomState());
+        const auto disarm = ESM4::blockMasteryDisarm(mastery, true, target,
+            attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon,
+            draw.mValue % 100, ESM4::buildMasteryProcSettings(settings), ESM4::buildCombatMasterySettings(settings));
+        if (disarm.mConsumesDraw) deltas.mRandomTransition = service->prepareCombatRandom(1);
+        if (disarm.mTriggered)
+        {
+            // Player centering and Creature drop policy require their own
+            // native implementation; do not consume a selected proc without it.
+            if (victim == player) return std::nullopt;
+            // NPC5FC440 can select replacement equipment before the caller
+            // requests Stagger. Until that native selection joins the packet,
+            // reject spare weapons rather than project an unarmed resource.
+            for (auto item = targetInventory.begin(); item != targetInventory.end(); ++item)
+                if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return std::nullopt;
+            deltas.mDisarms.push_back({victim, *targetRight});
+        }
+        if (!nativeWorld->prepareOblivionStaggerReaction(actionId, victim, deltas)) return std::nullopt;
+        return deltas;
+    }
+
     std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
         MWBase::World& world, std::uint64_t actionId,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
@@ -343,6 +416,43 @@ namespace MWMechanics
         const bool creature = attacker.getType() == ESM::REC_CREA4;
         if (creature && !service->findMeleeState(actor)->mStrike->mWeaponBase.isNull())
             return std::nullopt; // Armed Creature multipliers/wear remain a separate caller.
+        if (kind == ESM4::MeleeStrikeKind::Counter)
+        {
+            std::vector<const ESM4::GameSetting*> settings;
+            std::set<ESM::FormId> seen;
+            for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+                if (seen.insert(setting.mId).second)
+                    settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+            const float placed = attacker.getCellRef().getScale();
+            osg::Vec3f scale(placed, placed, placed);
+            attacker.getClass().adjustScale(attacker, scale, true);
+            // Original5FCC83..5FCCB0 uses reference/race scale times
+            // fCombatDistance, without weapon reach or a selected AI target.
+            const float counterReach = ESM4::weaponMeleeReach(1.f, scale.z(), ESM4::buildMeleeReachSettings(settings));
+            const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, {}, counterReach);
+            if (!contact) return std::nullopt;
+            const auto deltas = prepareOblivionCounterContactDeltas(world, actionId, attacker, *contact);
+            if (!deltas) return std::nullopt;
+            OblivionOrdinaryContactResult result{*contact};
+            if (!contact->isEmpty())
+            {
+                auto& inventory = attacker.getClass().getInventoryStore(attacker);
+                if (const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                    left != inventory.end() && left->getType() == ESM::REC_ARMO)
+                {
+                    const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), left->getCellRef().getRefId());
+                    const auto* form = id.getIf<ESM::FormId>();
+                    const auto* shield = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                    if (!shield || !(shield->mArmorFlags & ESM4::Armor::TES4_Shield)) return std::nullopt;
+                    result.mHitSounds = ESM4::nativeNpcMeleeHitSounds({-1, -1,
+                        (shield->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0});
+                }
+            }
+            auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, *deltas);
+            if (!prepared || !prepared->commit()) return std::nullopt;
+            result.mRandomDraws = prepared->randomDraws();
+            return result;
+        }
         // Directional unlocked mastery consequences must join this transaction
         // before those contacts are admitted. Standing power has no proc hook.
         if (kind > ESM4::MeleeStrikeKind::StandingPower)
