@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "scope": "Isolated normal-input Expert Counter restart course. Restrain background AI to prevent distant movement/materialized-cell differences between event-aligned captures at different game times. No contacts or combat outcomes injected.",
+  "source": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/expert-counter.omwsave",
+  "source_sha256": "d8081195239d69e5f590bfb9685c84f1826b8858cd7f0d3f81f18316ed92e210",
+  "output": "build/oblivion-compat/m15/S4/native-expert-counter-isolated-inputs-01/expert-counter-restrained.omwsave",
+  "output_sha256": "bb2d338c05b6e5327026c7c22f368e697b12bc8008dde7efdaa0aa5fe43967ff",
+  "mutation": "Set restrained=true in every actor_ai entry; preserve all other decoded state.",
+  "actor_ai_count": 3663,
+  "changed_count": 3660,
+  "structural_write_success": true,
+  "semantic_reinspection": true,
+  "runtime_acceptance_pending": true,
+  "prerequisite_recipe": "scripts/data/oblivion_compat/m15_expert_counter_input.json",
+  "changed_actor_keys_sha256": "031a939b5fc122b09e91beacf7c13a7efb26fc553a1bb69aa5341b9766bedd02"
+}

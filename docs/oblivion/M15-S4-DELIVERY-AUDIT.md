@@ -10472,3 +10472,32 @@ and bounds are in `M15-STATE-JSON-FIDELITY-VERIFICATION.json`. The earlier
 Expert checkpoint's diagnostic failure is fixed by this new checkpoint; its
 historical report is unchanged. Native held-slot continuity and all other
 listed S4 gaps remain open. Full M15S4 is not accepted.
+
+
+## Isolated Expert Counter three-process restart checkpoint
+
+The isolated input changes only `actor_ai.restrained` to true for all saved
+actors (3,660 additional changes among 3,663 entries). It retains the named
+NPC's existing stance/block controls and all combat state; no contacts or
+outcomes are injected. This prevents distant AI package progression from
+changing the materialized inventory set between event-aligned snapshots at
+different simulation times. The original unrestrained sanitizer failure remains
+retained and broader background-AI snapshot behavior remains unresolved.
+
+Both normal and instrumented three-process courses now pass all six strict
+binary/live payload pairs each, without normalization. Real pending save3 and
+consumed save4 start fresh processes: one Counter3 contact from pending and
+zero from consumed. Final combat core, Player inventory and all **2,151**
+nonempty reference inventories match within each course. Counter changes none
+of the nine native actor-value arrays or life states, spends no RNG, and requests
+paired Player Stagger3. The initial ordinary-hit regression values match the
+previous declared values. All ten captures were inspected, all six scenarios
+and snapshot monitors completed, and no sanitizer diagnostics were observed
+(leak checks disabled).
+
+These are the already-verified binaries at C++ source equivalent to
+`d294be7bd1`; uncommitted renderer retention changes are excluded. The new
+recipe, process/save/dump/binary hashes, checks and retained failure are in
+`M15-COUNTER-ISOLATED-RESTART-VERIFICATION.json`. Coverage remains first-person,
+keyboard, configured 10 FPS, software renderer, sound disabled. Held-slot
+persistence and the remaining S4 gates are still open.

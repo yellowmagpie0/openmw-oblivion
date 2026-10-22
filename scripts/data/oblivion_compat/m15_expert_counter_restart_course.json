@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "scope": "Normal-input Expert H2H NPC Counter followed by paired Player Stagger, with actual windup and consumed-contact fresh-process continuations. Full M15S4 remains incomplete.",
-  "input_recipe": "m15_expert_counter_input.json",
+  "input_recipe": "m15_expert_counter_isolated_input.json",
   "normal_manifests": [
     "oblivion_m15_expert_counter.json",
     "oblivion_m15_expert_counter_continuation.json",
@@ -38,5 +38,6 @@
     }
   },
   "value_provenance": "Incoming ordinary-hit values are fork regression values from the first accepted pilot, not a new independent original-game damage oracle. Counter zero-damage/cost and phase/order have separate original-instruction references.",
-  "full_M15S4_acceptance": false
+  "full_M15S4_acceptance": false,
+  "fixture_isolation": "The isolated input sets restrained=true on all saved actor_ai entries so distant background AI cannot change the materialized inventory set between event-aligned observations at different game times. Preserve and report the original unrestrained course failure separately."
 }
