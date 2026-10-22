@@ -1,0 +1,66 @@
+{
+  "scope": "Normal activation begins native NPC attack; hold bare Player block through natural H2H Recoil recovery after inclusive Master disarm; second normal activation stops combat only after recovered marker. No injected contacts/reactions/damage.",
+  "input_sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+  "fixture": "native-master-recovery-fixture-02",
+  "required_contact_count": 1,
+  "required_recovery_count": 1,
+  "required_order": [
+    "hit id2",
+    "reaction recovered cause2",
+    "second activation StopCombat"
+  ],
+  "limits": "Post-recovery restart only; no in-Recoil save or matched uninterrupted physical trajectory. No complete input/view/FPS/Player/Creature/spare/power/effect matrix.",
+  "input_recipe": {
+    "source": "build/oblivion-compat/m15/S4/native-advanced-unarmed-natural-recovery-normal-01/staged-input.omwsave",
+    "source_sha256": "1ffc1e07250f889b295f30381ed974fed4ac929c122dd4be9c4670dae22bdab5",
+    "output": "build/oblivion-compat/m15/S4/native-advanced-unarmed-natural-recovery-normal-02/staged-input.omwsave",
+    "output_sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+    "only_state_change": "content fingerprint for m15stationaryopponent.esp",
+    "previous_fingerprint": "sha256:bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+    "new_fingerprint": "sha256:a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+    "fixture_old_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+    "fixture_new_sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+    "record_changes": [
+      [
+        "SCPT",
+        16779393
+      ]
+    ],
+    "only_record_subfield_changed": "SCPT SCTX",
+    "script_sha256": "92c8a23ab313a099f75fe5b180f881a47c233dec89fed6907e52b4719efa3640",
+    "all_other_native_state_exact": true,
+    "no_actions_poses_contacts_outcomes_injected": true,
+    "full_M15S4_acceptance": false
+  },
+  "schema_version": 1,
+  "first": "oblivion_m15_advanced_unarmed_natural_recovery.json",
+  "continuation": "oblivion_m15_advanced_unarmed_natural_recovery_continuation.json",
+  "fixture_recipe": "m15_advanced_unarmed_natural_recovery_fixture.json",
+  "fixture_script": "m15_npc_recoil_opponent.obscript",
+  "fixture_builder": "scripts/tes4_m15_stationary_fixture.py",
+  "fixture_sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+  "expected": {
+    "contact": 2,
+    "combat_draws": 2,
+    "final_rng": 334604033,
+    "drop_count": 1,
+    "dropped_condition": 55.70000076293945,
+    "Player_recovery_action_while_B_held": 6,
+    "NPC_recovery_action": -1,
+    "next_windup": 3,
+    "next_windup_contacts": 0,
+    "final_ledger": {
+      "next": 4,
+      "pending": []
+    },
+    "final_actor_actions": -1,
+    "wire_pairs_per_course": 3,
+    "contacts_per_epoch": [
+      1,
+      0
+    ]
+  },
+  "independent_reference": "M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json",
+  "runtime_receipt": "M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json",
+  "full_M15S4_acceptance": false
+}

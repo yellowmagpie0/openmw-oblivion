@@ -17009,3 +17009,43 @@ result's old sentence saying eight frames is corrected by the receipt: the
 actual loop and corpus have 33 frames per sequence. Null world/cell gates and
 existing allocator/OS/change-mark boundaries remain explicit. No new gameplay,
 matched trajectory or complete S4 acceptance follows from this oracle alone.
+
+
+### Natural recovery after advanced unarmed Master disarm
+
+The bounded HTH 100/Block 25 course now keeps combat active through both
+reactions. Normal and ASan/UBSan runs each log Player BlockHit recovery into
+held block/action 6, followed by disarmed NPC H2H Recoil recovery into action -1.
+Only then does a second normal activation call StopCombat. The production
+opponent allocates action 3 in the recovery frame; activation cancels its
+windup before another contact, cost or combat draw. Final ledger next 4 has
+no pending actions, both actors have action -1 and no body/first-person
+reaction, and final combat RNG remains 334604033 with one final-wear drop.
+
+Each course completes a fresh process and three exact live/save wire pairs.
+Saved actor state, physical body/native packed velocities, reaction/held caches,
+contact consumption, RNG and the full published reference restore exactly at
+load; the second process commits no contact. Per-frame native callback semantics
+permit the physical root/reference drift described above. Health remains the
+bounded single debit with exact preserved Damage, not a new numeric oracle.
+All four captures were reviewed; sanitizer post-contact retains a retiring
+first-person release fade, while both restart captures show fists. No original
+skin/update or matched physical trajectory is established.
+
+The first setup was rejected before gameplay because its saved plugin hash
+still described the prior fixture. The corrected input changes only that
+fingerprint after a bytewise audit finds only SCPT SCTX changed; variable schema
+and all other records remain exact. The new script is the existing public
+`m15_npc_recoil_opponent.obscript`; the fixture recipe is editable and the
+existing stationary-fixture builder reproduces its plugin byte for byte from
+the committed recipe and public script. Retained verifier
+failures distinguish an input-schema mismatch from the invalid absolute
+reference/root closeness invariant. The passing verifier uses exact reference
+restoration and records drift. No engine code changed; the unchanged full
+normal/instrumented 1,845-test inventories are reused, not rerun.
+
+[M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json](M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json)
+pins both accepted courses and 106 runtime/fixture artifacts. This closes the
+bounded natural H2H Recoil recovery after NPC disarm and post-recovery restart.
+Save during active Recoil, matched in-reaction continuation and the complete
+M15S4 matrix remain open.

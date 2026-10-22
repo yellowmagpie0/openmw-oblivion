@@ -12,7 +12,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | --- | --- | --- |
 | 1. Input through contact for Player, NPC and creature | `CharacterController::updateOblivionWeaponState`, `dispatchOblivionMeleeContact`, `advanceOblivionMeleePlayback`; `Actors::update` handles paused input. Ordinary and standing-power Player/NPC contacts reach `commitOblivionMeleeContact`; the ordinary API remains a restricted wrapper. | Spell-free, unarmed Creature ordinary strikes now reach the same contact owner through stationary AI and stock handtohand KFs. Spell-free Creature victims now accept bounded ordinary contacts and timed force; defensive/effect branches, armed sources and the complete input/view matrix remain open. Trace and verify every admitted actor route. |
 | 2. Blade/blunt/unarmed/creature, normal/directional power, geometry | `oblivionmelee.cpp` acquires collision/LOS contacts and resolves ordinary and standing-power weapon/unarmed damage. Power owns three phases and schema49 persistence, independent of the ordinary queue phase. First-person keyboard unarmed/shortsword and restart courses pass; see the standing-power verification index. | Directional/mastery selection is explicitly unfinished in the controller; directional contacts remain rejected. Creature natural attackers have bounded integration and completed-strike restart coverage; Spell-free unblocked Creature victims have bounded resource/force integration; defensive/effect and remaining source domains are rejected. Complete those routes and the full geometry, weapon/view/input/FPS matrices. |
-| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; complete Player/Creature/spare policies and zero-absorption unarmed weapon-block reactions remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
+| 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; advanced unarmed zero-absorption defense now joins that route. Lower Hand to Hand general-hit reactions and complete Player/Creature/spare policies remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
@@ -11457,3 +11457,32 @@ new runtime acceptance is claimed here.
 [M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json](M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json)
 and `m15_reference_root_subthreshold_drift_native_cases.json` retain the evidence
 and editable protocol. **M15S4 remains incomplete.**
+
+
+## Advanced unarmed natural recovery and post-recovery restart
+
+Normal and ASan/UBSan courses now retain combat through natural Player BlockHit
+and disarmed NPC H2H Recoil recovery. The Player recovers into held block/action
+6; the NPC recovers into action -1. Second normal activation then stops combat
+and cancels the automatically allocated action 3 windup before another contact.
+Final ledger next 4 is empty, both reactions are absent, actor actions are -1,
+and two combat draws/RNG 334604033 plus the sole condition-55.7 drop persist.
+
+Each course passes two processes, three exact live/save wire pairs, native
+state/body/packed-velocity and full reference restoration, no contact replay,
+and exact contact/sound checks. All four captures were reviewed. Sanitizer
+post-contact has an inactive retiring first-person release fade; both restart
+captures show fists. The sword remains below the viewport and is established
+by native inventory/drop/body checks. No new exact numeric real-content damage,
+PCM, original skin or matched physical trajectory acceptance is claimed.
+
+The initial content-fingerprint rejection, input-hash reader mismatch and false
+absolute reference/root bound remain retained. Original callback evidence
+controls the corrected invariant. This chunk changes no engine code and reuses
+the unchanged full normal/sanitizer 1,845-test checks. Leak detection is disabled.
+Editable fixture recipe, existing public script and tested scenario manifests
+accompany
+[M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json](M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json).
+The receipt pins 106 artifacts. Active-Recoil save/restart and its uninterrupted
+comparison remain open, along with the other recorded S4 gaps. **M15S4 remains
+incomplete.**
