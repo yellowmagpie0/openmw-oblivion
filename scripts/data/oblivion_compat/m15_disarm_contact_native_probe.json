@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent native default drop placement and atomic NPC disarm contact inputs. Not normal-input acceptance.",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "placement_probe": {
+    "entry": "0x48b080",
+    "stop": "0x48b16a",
+    "actual_callees": [
+      "0x5f10e0 position getter",
+      "0x711580 Euler matrix",
+      "0x7100a0 matrix product",
+      "0x7101f0 vector transform"
+    ],
+    "callee_stubs": [],
+    "angles": "7^3 axis/mixed grid plus64 seeded triples in[-6.2,6.2]",
+    "random_seed": 591206,
+    "positions": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        100,
+        20,
+        30
+      ],
+      [
+        -4096,
+        2048,
+        -64
+      ]
+    ],
+    "extra_position": "[-0,smallest positive binary32 subnormal,negative subnormal]",
+    "explicit_position": [
+      false,
+      true
+    ],
+    "explicit_rotation": [
+      false,
+      true
+    ],
+    "x87": [
+      127,
+      639
+    ],
+    "cases": 13024,
+    "cpp_default_cases": 3256,
+    "expectation": "Default=actor position+Euler-rotated[0,50,30], unchanged actor angles. Explicit fields bypass their own defaults. Live007F arithmetic is production default;027F is independently checked via precision parameter.",
+    "stop_capture": "Position in stack locals; rotation words inECX/EDX/EAX before all stores complete. Stop before allocation/creation."
+  },
+  "world_cases": {
+    "publication": {
+      "cases": 8,
+      "axes": "Disarmed participant attacker/victim; intact/fractional wear; bound/unbound prior strike. Two victim/intact cases originate from an actual service Counter in phase1, use zero Health/Fatigue deltas, and consume once into action6; remaining cases use generic contacts. Attacker cases request Recoil, victim cases Stagger. Typed selected requests and RNG transitions are supplied, not computed by mastery/geometry."
+    },
+    "shield_retention": 2,
+    "failure_cases": [
+      "Scene rejection",
+      "Scene insertion exception",
+      "Stale equipment condition",
+      "Changed actor pitch zero sign"
+    ],
+    "rejections": [
+      "Duplicate disarm owner",
+      "Disarm plus break consequence on the same item",
+      "Wrong placement mode",
+      "Mismatched final wear",
+      "Miss",
+      "Undrawn owner",
+      "Unknown saved process action",
+      "Winning quest weapon"
+    ]
+  },
+  "tests": [
+    "OblivionWorldTest.NativeContactDisarmPreservesIntactConditionAndConsumesOwnedStrikeAtomically",
+    "OblivionWorldTest.NativeContactDisarmWithdrawsWeaponBlockUnlessShieldRemains",
+    "OblivionWorldTest.NativeContactDisarmRollsBackSceneFailuresAndRejectsStaleEquipment",
+    "OblivionWorldTest.NativeContactDisarmRejectsConflictingAndUnmatchedDropRequests"
+  ],
+  "factory_input": "NativeWeaponFactoryFixture authors whether the left shield is initially worn; it does not unequip during acceptance to arrange this precondition. Synthetic charged metadata has no ENCH definition for unrelated legacy restacking.",
+  "open": [
+    "New World tests supply typed contact/reaction packets and synthetic Counter keys0/.5/1. They use real owned NIF scene/physics assets but no normal input or collision acquisition. No normal proc/resource-factory activation, sound or rendered gameplay acceptance.",
+    "Current drop authority remains NPC-only, one equipped drop per owner, with owned bow playback rejected. Player/Creature default drop paths, multi-item drops on one actor, replacement policy and native combat-controller/audio behavior remain separate integration work.",
+    "Counter/ordinary callers still guard unsupported mastery consequences. This preparer does not itself compute a mastery roll, choose target geometry or automatically prepare Stagger from projected post-disarm equipment.",
+    "The default placement prefix proves argument arithmetic only, not full original inventory removal, object creation, physics or Player post-creation bound centering.",
+    "No schema bump: requests are transient and publication uses existing version60 fields. No fresh-process save/restart, gamepad, measured FPS, effect or complete E2E gate is claimed. M15S4 remains incomplete."
+  ],
+  "verification": "docs/oblivion/M15-DISARM-CONTACT-VERIFICATION.json"
+}

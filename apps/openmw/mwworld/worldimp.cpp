@@ -3190,10 +3190,48 @@ namespace MWWorld
         return true;
     }
 
+    namespace
+    {
+        std::optional<float> disarmConditionAfterWear(
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas,
+            const MWMechanics::OblivionPhysicalDisarm& disarm)
+        {
+            std::optional<float> result;
+            for (const auto& change : deltas.mConditionChanges)
+                if (change.mItem == disarm.mItem)
+                {
+                    if (change.mOwner != disarm.mOwner
+                        || change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None)
+                        throw std::invalid_argument("native disarm cannot duplicate equipment breakage");
+                    result = change.mCondition;
+                }
+            return result;
+        }
+    }
+
+    void World::validateOblivionContactDisarms(const MWMechanics::OblivionPhysicalContactDeltas& deltas) const
+    {
+        std::set<Ptr> owners;
+        for (const auto& request : deltas.mDisarms)
+        {
+            if (request.mOwner.isEmpty() || request.mItem.isEmpty()
+                || request.mOwner == getPlayerConstPtr() || request.mOwner.getType() != ESM::REC_NPC_4
+                || request.mItem.getType() != ESM::REC_WEAP || !owners.insert(request.mOwner).second)
+                throw std::invalid_argument("native disarm requires distinct NPC weapon owners");
+            const auto id = OblivionProfileServices::nativeItemId(mStore, request.mItem.getCellRef().getRefId());
+            const auto* form = id.getIf<ESM::FormId>();
+            const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
+            if (!weapon || (weapon->mFlags & ESM4::Rec_Persistent))
+                throw std::invalid_argument("native disarm cannot drop an unresolved or quest weapon");
+            (void)disarmConditionAfterWear(deltas, request);
+        }
+    }
+
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContact(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
     {
+        validateOblivionContactDisarms(deltas);
         auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas, blockHit, attackerRecoil);
         if (!contact) return nullptr;
         std::vector<EquippedWeaponDrop> drops;
@@ -3205,6 +3243,13 @@ namespace MWWorld
                 if (!animation) return nullptr;
                 drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition});
             }
+        for (const auto& disarm : deltas.mDisarms)
+        {
+            if (!mRendering || !mPhysics) return nullptr;
+            auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(disarm.mOwner));
+            if (!animation) return nullptr;
+            drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(deltas, disarm), true});
+        }
         if (!drops.empty())
             contact->mData->mDrops = prepareEquippedWeaponDrops(*this, mRendering->getObjects(), *mPhysics, drops);
         return contact;
@@ -3215,6 +3260,7 @@ namespace MWWorld
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, MWRender::Objects& objects,
         MWPhysics::PhysicsSystem& physics, std::span<const EquippedWeaponDrop> drops)
     {
+        validateOblivionContactDisarms(deltas);
         std::size_t expected = 0;
         for (const auto& change : deltas.mConditionChanges)
             if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
@@ -3222,12 +3268,22 @@ namespace MWWorld
                 ++expected;
                 const auto count = std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
                     return drop.mActor == change.mOwner && drop.mItem == change.mItem
-                        && drop.mConditionAfterWear == std::optional<float>(0.f);
+                        && drop.mConditionAfterWear == std::optional<float>(0.f) && !drop.mUseDefaultPlacement;
                 });
                 if (change.mCondition != 0 || change.mOwner.isEmpty() || change.mOwner == getPlayerPtr()
                     || change.mOwner.getType() != ESM::REC_NPC_4 || count != 1)
                     throw std::invalid_argument("native contact drop requires one matching broken NPC weapon");
             }
+        for (const auto& disarm : deltas.mDisarms)
+        {
+            ++expected;
+            const auto condition = disarmConditionAfterWear(deltas, disarm);
+            if (std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
+                    return drop.mActor == disarm.mOwner && drop.mItem == disarm.mItem
+                        && drop.mConditionAfterWear == condition && drop.mUseDefaultPlacement;
+                }) != 1)
+                throw std::invalid_argument("native contact disarm requires one matching intact weapon drop");
+        }
         if (expected == 0 || expected != drops.size())
             throw std::invalid_argument("native contact drop requests do not match contact dispositions");
         auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas);

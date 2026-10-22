@@ -387,6 +387,8 @@ namespace MWWorld
                         && reference.get<ESM4::Weapon>()->mBase == mWeapon;
             }
 
+            std::optional<ESM::Position> mDefaultPlacementSource = std::nullopt;
+
             bool baseCurrent(const ESMStore& store) const
             {
                 if (!mArmor)
@@ -440,6 +442,15 @@ namespace MWWorld
                 if (!e.mRemoval->isValid() || !e.mNotification->isValid()
                     || e.mCarried.mBody.mPose.mBindingIdentity.expired()) return false;
                 const auto& source = e.mItem.getCellRef();
+                if (e.mDefaultPlacementSource)
+                {
+                    const auto& current = e.mActor.getRefData().getPosition();
+                    for (unsigned axis = 0; axis < 3; ++axis)
+                        if (std::bit_cast<std::uint32_t>(current.pos[axis])
+                                != std::bit_cast<std::uint32_t>(e.mDefaultPlacementSource->pos[axis])
+                            || std::bit_cast<std::uint32_t>(current.rot[axis])
+                                != std::bit_cast<std::uint32_t>(e.mDefaultPlacementSource->rot[axis])) return false;
+                }
                 const auto& destination = mAdmission->references()[index].getCellRef();
                 const auto* placed = destination.getNativeReference();
                 const auto* expected = e.mDestination.getNativeReference();
@@ -610,6 +621,12 @@ namespace MWWorld
             placed.mFormKey = data->mKeys->keys()[i]; placed.mBaseObj = armor ? armor->mId : weapon->mId; placed.mBaseKey = *baseKey;
             placed.mParent = cell->mId; placed.mParentKey = *cellKey;
             placed.mPos = carried->mAnchor.getDropPlacement().mPosition;
+            if (request.mUseDefaultPlacement)
+            {
+                const auto placement = ESM4::defaultDroppedItemPlacement(actor.getRefData().getPosition());
+                if (!placement) throw std::invalid_argument("unsupported native default drop placement");
+                placed.mPos = *placement;
+            }
             placed.mScale = ESM4::droppedReferenceScale(source.getNativeItemScale());
             placed.mOwner = nativeOwner(source.getOwner());
             placed.mGlobal = nativeOwner(source.getNativeOwnershipGlobal());
@@ -688,6 +705,7 @@ namespace MWWorld
                 armor ? armor->mEnchantment : weapon->mEnchantment,
                 armor ? armor->mEnchantmentPoints : weapon->mEnchantmentPoints, std::move(removal), std::move(notification)};
             entry.mArmor = armor; entry.mShieldPose = std::move(shieldPose); entry.mWorldModel = std::move(worldModel);
+            if (request.mUseDefaultPlacement) entry.mDefaultPlacementSource = actor.getRefData().getPosition();
             entry.mWorldOwner = worldOwner; entry.mWorldNpcOwner = worldNpcOwner;
             entry.mWorldFactionOwner = store.get<ESM4::Faction>().search(ESM::RefId(worldOwner));
             entry.mWorldOwnerFlags = worldNpcOwner ? worldNpcOwner->mBaseConfig.tes4.flags : 0;

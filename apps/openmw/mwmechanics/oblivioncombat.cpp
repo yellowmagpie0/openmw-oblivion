@@ -2627,6 +2627,8 @@ namespace MWMechanics
                 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0
                 || !deltas.mConditionChanges.empty() || deltas.mKnockback || deltas.mAttackerReaction
                 || deltas.mVictimCounterRequested || deltas.mVictimCounter
+                || std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
+                    [&](const auto& request) { return request.mOwner != victim; })
                 || (deltas.mVictimReaction && deltas.mVictimReaction->mKind != ESM4::MeleeReactionKind::Stagger))
                 throw std::invalid_argument("native counter requires its nondamaging phase1 consequence");
         }
@@ -2634,7 +2636,7 @@ namespace MWMechanics
         if ((deltas.mVictimCounter && !deltas.mVictimCounterRequested)
             || (deltas.mVictimCounterRequested && (victim.isEmpty() || deltas.mVictimReaction
                 || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence || deltas.mVictimSlot0Source
-                || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction)))
+                || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction || !deltas.mDisarms.empty())))
             throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return nullptr;
@@ -2815,13 +2817,95 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> reactionStates;
         std::map<ESM::FormKey, float> reactionClocks;
         std::vector<std::uint64_t> reactionCanceledActions;
+        const auto retainSlot3 = [&](auto& view, bool body) {
+            if (view.mStrike)
+            {
+                if (view.mPassiveSequence)
+                    throw std::invalid_argument("native Stagger would overwrite a resident passive slot3");
+                auto strike = *view.mStrike;
+                if (strike.mActionId == id) strike.mContactCommitted = true;
+                else if (body && !strike.mContactCommitted)
+                    reactionCanceledActions.push_back(strike.mActionId);
+                if (strike.mRetirement && !strike.mInactive)
+                    view.mRetiringSequences.push_back({strike.mActionId, strike.mAnimationGroup,
+                        strike.mAnimationTime, *strike.mSequenceTiming, *strike.mRetirement});
+                else if (!strike.mInactive)
+                    view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{std::move(strike)};
+                view.mStrike.reset();
+            }
+            else if (view.mReaction)
+            {
+                if (view.mReaction->mKind == ESM4::MeleeReactionKind::Stagger || view.mPassiveSequence)
+                    throw std::invalid_argument("unsupported native Stagger slot0 replacement history");
+                view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{*view.mReaction};
+                view.mReaction.reset();
+            }
+        };
+        std::set<ESM::FormKey> disarmedOwners;
+        for (const auto& request : deltas.mDisarms)
+        {
+            if (victim.isEmpty() || (request.mOwner != attacker && request.mOwner != victim)
+                || request.mOwner.isEmpty() || request.mItem.isEmpty()
+                || request.mOwner == (player ? player->getPlayer() : MWWorld::Ptr{})
+                || request.mOwner.getType() != ESM::REC_NPC_4 || request.mItem.getType() != ESM::REC_WEAP
+                || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>())
+                throw std::invalid_argument("native disarm requires a participant's equipped NPC weapon");
+            const auto owner = actorKey(request.mOwner);
+            if (!disarmedOwners.insert(owner).second || mBowStates.contains(owner))
+                throw std::invalid_argument("duplicate or unsupported native disarm playback owner");
+            auto& values = owner == attackerKey ? attacking : *receiving;
+            const auto& life = owner == attackerKey ? *findActorLife(owner) : *receivingLife;
+            auto& inventory = request.mOwner.getClass().getInventoryStore(request.mOwner);
+            const auto carried = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (values.mProcess != ESM4::ActorValueProcess::Active || !values.mProcessAction
+                || request.mOwner.getClass().getCreatureStats(request.mOwner).getDrawState() != DrawState::Weapon
+                || carried == inventory.end() || *carried != request.mItem
+                || request.mItem.getContainerStore() != &inventory || request.mItem.getCellRef().getCount() != 1)
+                throw std::invalid_argument("native disarm lost its active action or drawn equipped weapon");
+            for (const auto& condition : deltas.mConditionChanges)
+                if (condition.mItem == request.mItem && condition.mBreakDisposition != OblivionWeaponBreakDisposition::None)
+                    throw std::invalid_argument("native disarm cannot duplicate a weapon break consequence");
+            const auto action = values.mProcessAction;
+            const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            const bool shield = left != inventory.end() && left->getType() == ESM::REC_ARMO
+                && left->get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield;
+            if (life.mPhase != ESM4::ActorLifePhase::Alive || !action
+                || !((*action >= 0 && *action <= 5) || (*action == 6 && !shield)))
+                continue;
+            // Original5FC3C3..5FC406 clears attack actions, or block without
+            // a shield. The slot3 sequence keeps advancing independently.
+            values.mProcessAction = -1;
+            if (const auto* previous = findMeleeState(owner))
+            {
+                auto candidate = *previous;
+                const auto preserve = [&](auto& view, bool body) {
+                    if (view.mStrike && !view.mStrike->mSequenceTiming)
+                    {
+                        if (body && view.mStrike->mActionId != id && !view.mStrike->mContactCommitted)
+                            reactionCanceledActions.push_back(view.mStrike->mActionId);
+                        view.mStrike.reset(); // No live slot3 sequence was bound.
+                    }
+                    else retainSlot3(view, body);
+                };
+                preserve(candidate, true);
+                if (candidate.mFirstPerson) preserve(*candidate.mFirstPerson, false);
+                candidate.mInput = {};
+                candidate.validate();
+                reactionStates.emplace(owner, std::move(candidate));
+            }
+        }
         const auto prepareReaction = [&](const std::optional<ESM4::RuntimeMeleeReaction>& request,
                                          const std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing,
                                          const std::optional<ESM4::RuntimeFirstPersonMeleeState>& firstPerson,
                                          const std::optional<OblivionMeleeSlot0Source>& slot0,
                                          const std::optional<OblivionMeleeSlot0Source>& firstSlot0,
                                          ESM4::RuntimeActorValues& values, const ESM4::RuntimeActorLife& life) {
-            const auto* previous = findMeleeState(values.mActor);
+            const auto staged = reactionStates.find(values.mActor);
+            // Recoil/BlockHit replaces the original slot3 directly. Stagger
+            // keeps the passive slot3 history already staged by disarm.
+            const bool slot3Replacement = request && request->mKind != ESM4::MeleeReactionKind::Stagger;
+            const auto* previous = staged == reactionStates.end() || slot3Replacement
+                ? findMeleeState(values.mActor) : &staged->second;
             if (!request)
             {
                 if (outgoing || slot0 || firstSlot0)
@@ -2836,7 +2920,7 @@ namespace MWMechanics
                     auto candidate = *previous;
                     candidate.mReaction.reset();
                     candidate.mInput = {};
-                    reactionStates.emplace(values.mActor, std::move(candidate));
+                    reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 }
                 return;
             }
@@ -2899,30 +2983,6 @@ namespace MWMechanics
                 else if (firstSlot0 || (previous && previous->mFirstPerson))
                     throw std::invalid_argument("native Stagger requires its existing first-person view packet");
                 auto candidate = previous ? *previous : ESM4::RuntimeMeleeState{};
-                const auto retainSlot3 = [&](auto& view, bool body) {
-                    if (view.mStrike)
-                    {
-                        if (view.mPassiveSequence)
-                            throw std::invalid_argument("native Stagger would overwrite a resident passive slot3");
-                        auto strike = *view.mStrike;
-                        if (strike.mActionId == id) strike.mContactCommitted = true;
-                        else if (body && !strike.mContactCommitted)
-                            reactionCanceledActions.push_back(strike.mActionId);
-                        if (strike.mRetirement && !strike.mInactive)
-                            view.mRetiringSequences.push_back({strike.mActionId, strike.mAnimationGroup,
-                                strike.mAnimationTime, *strike.mSequenceTiming, *strike.mRetirement});
-                        else if (!strike.mInactive)
-                            view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{std::move(strike)};
-                        view.mStrike.reset();
-                    }
-                    else if (view.mReaction)
-                    {
-                        if (view.mReaction->mKind == ESM4::MeleeReactionKind::Stagger || view.mPassiveSequence)
-                            throw std::invalid_argument("unsupported native Stagger slot0 replacement history");
-                        view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{*view.mReaction};
-                        view.mReaction.reset();
-                    }
-                };
                 const auto appendSlot0 = [&](auto& history, const auto& source, const auto& incoming) {
                     for (const auto& old : history)
                         if (old.mAnimationGroup == incoming.mAnimationGroup
@@ -2947,7 +3007,7 @@ namespace MWMechanics
                     && candidate.mAiIntent->mTarget == victimKey)
                     candidate.mAiIntent.reset();
                 candidate.validate();
-                reactionStates.emplace(values.mActor, std::move(candidate));
+                reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
                 values.mProcessAction = request->processAction();
                 return;
@@ -3043,7 +3103,7 @@ namespace MWMechanics
                     && candidate.mAiIntent->mTarget == victimKey)
                     candidate.mAiIntent.reset();
                 candidate.validate();
-                reactionStates.emplace(values.mActor, std::move(candidate));
+                reactionStates.insert_or_assign(values.mActor, std::move(candidate));
                 if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
                 values.mProcessAction = request->processAction();
                 return;
@@ -3147,7 +3207,7 @@ namespace MWMechanics
                 candidate.mFirstPerson = *firstPerson;
             }
             candidate.validate();
-            reactionStates.emplace(values.mActor, std::move(candidate));
+            reactionStates.insert_or_assign(values.mActor, std::move(candidate));
             if (!mAnimationClocks.contains(values.mActor)) reactionClocks.emplace(values.mActor, 0.f);
             values.mProcessAction = request->processAction();
         };
@@ -3196,6 +3256,9 @@ namespace MWMechanics
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
+        std::sort(reactionCanceledActions.begin(), reactionCanceledActions.end());
+        reactionCanceledActions.erase(std::unique(reactionCanceledActions.begin(), reactionCanceledActions.end()),
+            reactionCanceledActions.end());
         auto data = std::make_unique<PreparedPhysicalContact::Impl>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
         data->mOwner = this;

@@ -281,6 +281,12 @@ namespace MWMechanics
         ESM4::PhysicalCombatSettings mPhysical;
     };
 
+    struct OblivionPhysicalDisarm
+    {
+        MWWorld::Ptr mOwner;
+        MWWorld::Ptr mItem;
+    };
+
     struct OblivionPhysicalContactDeltas
     {
         float mAttackerFatigue = 0;
@@ -307,6 +313,9 @@ namespace MWMechanics
         // only a prepared playback packet allocates a new logical action.
         bool mVictimCounterRequested = false;
         std::optional<OblivionMeleeStrikeViews> mVictimCounter{};
+        // Selected mastery consequence, independent of condition wear.
+        // World owns the matching equipped-item removal/world-body publication.
+        std::vector<OblivionPhysicalDisarm> mDisarms{};
     };
 
     struct OblivionPassiveEffectIdentity

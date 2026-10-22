@@ -470,7 +470,7 @@ namespace MWWorld
         bool prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
             MWMechanics::OblivionPhysicalContactDeltas& deltas);
         // Explicit owned render/animation context, also used by synthetic asset tests.
-        // Requests must exactly match the Drop dispositions in the contact.
+        // Requests must exactly match Drop dispositions and intact disarms.
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactWithWeaponDrops(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, MWRender::Objects& objects,
@@ -1050,6 +1050,7 @@ namespace MWWorld
 
         void setActorActive(const MWWorld::Ptr& ptr, bool value) override;
     private:
+        void validateOblivionContactDisarms(const MWMechanics::OblivionPhysicalContactDeltas& deltas) const;
         bool prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         bool prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
             ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas);

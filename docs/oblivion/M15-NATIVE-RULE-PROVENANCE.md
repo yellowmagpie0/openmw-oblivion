@@ -16693,3 +16693,55 @@ All attempts remain retained. Actual drops, action/controller publication,
 Counter initiation/contact and normal-input/E2E acceptance remain open.
 Exact pins and limits are in `M15-DISARM-TARGET-VERIFICATION.json`; editable
 protocol: `scripts/data/oblivion_compat/m15_disarm_target_native_probe.json`.
+
+
+### Disarm default placement differs from broken-equipment placement
+
+Disarm5FC2B0 requests DropItem with null position and rotation. Following the
+shared removal path4D8760/48FBC0 reaches48B080 with those defaults. That prefix
+uses actor position plus Euler-rotated `(0,50,30)` and copies actor angles;
+compiled floats50/30 are not GMSTs. Breakage5F39D3 instead supplies the carried
+node's position/rotation. Reusing its placement for disarm was incorrect and
+was corrected before accepting the new contact implementation.
+
+Pinned executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes48B080..48B16A in13,024 contexts, with actual5F10E0 position getter,
+711580 Euler construction,7100A0 matrix multiplication,7101F0 vector transform
+and caller additions. There are no callee stubs in this prefix. The matrix
+covers7^3 axis/mixed triples plus64 seeded triples, four positions including
+minus zero/subnormals, independent explicit/default position and rotation,
+and x87 control007F/027F. Stop is before reference allocation/creation. Probe01
+read two rotation words from stack before their stores; corrected02 captures
+their actual ECX/EDX/EAX registers and retains the failed script.
+
+The new defaultDroppedItemPlacement helper uses existing native sin/cos and
+matrix/composition arithmetic. Its default precision models live007F. All3,256
+wholly default C++ results match original position and rotation bits in both
+supported modes, with zero mismatches. Eighteen independent goldens include
+precision-sensitive cases. Unsupported/nonfinite inputs reject. No actor or
+attachment scale is read by the original placement prefix. Corpus SHA256
+`15c97d2335b84cd4fe63591f3fbb7cc004d3ab8b7b5e2b9ef76b5f52da3f2b31`;
+comparison output SHA256
+`1dc7157833949a56bfc66061673c2b6d491733e240bada3cdfe382ca7f44a6e3`.
+
+The NPC equipped-drop transaction now selects this default explicitly for
+disarm and guards all source actor pose bits. Existing breakage keeps the
+carried pose. Owned-asset tests verify reference(100,70,60) from actor(100,20,30)
+with zero angles, intact/fractional condition and charge preservation,
+registry/physics publication, atomic resource/RNG/ledger changes, passive or
+retiring animation history, block retention with a shield, and rollback/stale
+leases. These use typed packets, not actual mastery/collision or normal input.
+Player/Creature publication, replacement/controller/audio integration and real
+normal-input/fresh-process acceptance remain open.
+
+Related target-query clarification:65D820/B3BB06 from the preceding disarm
+probe is the god-mode getter already independently verified by the earlier
+ModAV/ForceAV and drowning eligibility probes in this file, and identified in
+the pinned xOBSE GameAPI source. A live adapter should suppress that target
+lookup only for the god-mode Player. The generic caller-resolved lookup field
+is unchanged; current disarm publication still admits NPCs only.
+
+Exact artifacts, failed/intermediate attempts, final normal/instrumented
+checks and boundaries are in `M15-DISARM-CONTACT-VERIFICATION.json`. Editable
+protocol: `scripts/data/oblivion_compat/m15_disarm_contact_native_probe.json`.

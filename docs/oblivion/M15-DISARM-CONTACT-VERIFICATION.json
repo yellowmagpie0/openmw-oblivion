@@ -1,0 +1,309 @@
+{
+  "schema_version": 1,
+  "status": "Atomic intact NPC disarm contacts and native default placement verified. Live mastery/Counter dispatch and full M15S4 acceptance remain open.",
+  "validation_layers": {
+    "structural_publication": "Owned-asset World tests publish one native loose WEAP reference, scene/physics body and exact equipped inventory debit together. No new plugin was generated.",
+    "compiler_and_world_validation": true,
+    "semantic_reinspection": "Exact native position, condition/charge/dropper, resource/RNG/action-ledger checks; binary RuntimeState roundtrip and service restore after publication.",
+    "normal_input_runtime_acceptance": false,
+    "fresh_process_restart_acceptance": false
+  },
+  "tested_source": {
+    "head": "3166a98b3e39769aeb424e314eb34b20a21c5e88",
+    "source_fingerprint": "f2f5fe1be71420c35fc3b0f6ec1520684ff4d39d2df2f519a3cb5e032ae8caea"
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-03/verification.json",
+        "sha256": "50af6346d333b16a07893e01c05051eede3e7dba46a74a46d7ca20a0dd4e5edf"
+      },
+      "tested_source": {
+        "head": "3166a98b3e39769aeb424e314eb34b20a21c5e88",
+        "source_fingerprint": "285f47705c85e621d585eef40e383cc66483889679c13e12faadf47cacd54e87"
+      },
+      "results": {
+        "components": {
+          "executed": 2989,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "5aeca551d7f36e39d547fd55f3d039fc9dc9ae9e97b26d4bdc0a6d247493953d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "10d43ef6c3ddc29553eba06ad92370eaaee89b9bc1cb729f7f3d796cdd6f42e3",
+          "inventory_sha256": "948f2082668648999b03802fd5c0574d2f6e1a6867f13871f6cdd4b92d08773d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": false
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-03/verification.json",
+        "sha256": "4752cab7cf8c587d9788c6b4bc258e9e0ad34ca6fa5e4e06f8e2aeb1528a99af"
+      },
+      "tested_source": {
+        "head": "3166a98b3e39769aeb424e314eb34b20a21c5e88",
+        "source_fingerprint": "285f47705c85e621d585eef40e383cc66483889679c13e12faadf47cacd54e87"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 842,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "cb7885893b1c0b77eaaa524c7538aec02ef6bd68d823b8f6a6cf2de720fa6b03",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "685ed8adc9ea388d3e828c6a2fad1be100c7af35fc310dde3e9c190d494e3954",
+          "inventory_sha256": "0ebebd6ed798604351ec59838c7a9ef9029e35b1209428aceeb42248bfd19457",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": false
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-06/verification.json",
+        "sha256": "f3a670d5ef39c8e489160eb36c47de4dae596d66e8be20be5d784772e998b305"
+      },
+      "tested_source": {
+        "head": "3166a98b3e39769aeb424e314eb34b20a21c5e88",
+        "source_fingerprint": "f2f5fe1be71420c35fc3b0f6ec1520684ff4d39d2df2f519a3cb5e032ae8caea"
+      },
+      "results": {
+        "engine": {
+          "executed": 1802,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "070414adfd84305bb3fc6824341ff641612046eeee38e84f61b6e45f121ff1a5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "2ae079643eb90b6da2418aadf04f51824ebcf92925466d9d6b47876fab3d490a",
+          "inventory_sha256": "0531b36fb4b26e041c01570ff434e40aab4ed90b9bd7cacee6ec01cd37bf0f6b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": true
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-06/verification.json",
+        "sha256": "3db7c2f719ca17d3a51f2ea73a7002a2669499a0a59605dd44ac10e8e39f002c"
+      },
+      "tested_source": {
+        "head": "3166a98b3e39769aeb424e314eb34b20a21c5e88",
+        "source_fingerprint": "f2f5fe1be71420c35fc3b0f6ec1520684ff4d39d2df2f519a3cb5e032ae8caea"
+      },
+      "results": {
+        "engine": {
+          "executed": 1802,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f27e97095e75ced66405eb5c943f14a7856be9b8bff243307688fd5e56361fc9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "07b887d00c31a021d443f991fbe8dadf343442dc7f656770923597d51a260d01",
+          "inventory_sha256": "0531b36fb4b26e041c01570ff434e40aab4ed90b9bd7cacee6ec01cd37bf0f6b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": true
+    }
+  ],
+  "check_scope": "Full normal components and ESM4* sanitizer components precede only World/service and World-test changes. Component implementation/tests are unchanged since those accepted runs. Both final full engine runs have the same complete source fingerprint. Python sources did not change; Python was not rerun. Existing compiler warnings remain.",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "implementation": [
+    "A distinct transient disarm request identifies an exact equipped native NPC weapon without inventing zero condition or a break disposition. World validates winning quest status and pairs each request with one default-placement drop context.",
+    "The transaction preserves intact condition or the same contact's final fractional wear, ExtraScale and enchantment charge; existing drop publication provides registry identity, native drop relations, world body, inventory debit and deferred equipment observers.",
+    "For an Alive disarmed participant, known active process actions0..5 withdraw to-1; blocking6 withdraws without a shield and remains6 with a shield. Bound slot3 timing is retained independently; unbound logical strikes are consumed without inventing a sequence. Unknown process action rejects before publication.",
+    "A following Recoil replaces original slot3; Stagger preserves the disarm-staged passive source. Pending canceled actions are deduplicated before publication. Counter phase1 accepts only a victim disarm and retains its nondamaging contract.",
+    "Default disarm placement uses original48B080 actor position plus Euler-rotated[0,50,30] and unchanged actor angles. Existing breakage keeps carried-node placement. The new default mode guards all actor position/rotation bits, including signed zero."
+  ],
+  "world_test_cases": [
+    "OblivionWorldTest.NativeContactDisarmPreservesIntactConditionAndConsumesOwnedStrikeAtomically",
+    "OblivionWorldTest.NativeContactDisarmWithdrawsWeaponBlockUnlessShieldRemains",
+    "OblivionWorldTest.NativeContactDisarmRollsBackSceneFailuresAndRejectsStaleEquipment",
+    "OblivionWorldTest.NativeContactDisarmRejectsConflictingAndUnmatchedDropRequests"
+  ],
+  "world_matrix": {
+    "publication": {
+      "cases": 8,
+      "axes": "Disarmed participant attacker/victim; intact/fractional wear; bound/unbound prior strike. Two victim/intact cases originate from an actual service Counter in phase1, use zero Health/Fatigue deltas, and consume once into action6; remaining cases use generic contacts. Attacker cases request Recoil, victim cases Stagger. Typed selected requests and RNG transitions are supplied, not computed by mastery/geometry."
+    },
+    "shield_retention": 2,
+    "failure_cases": [
+      "Scene rejection",
+      "Scene insertion exception",
+      "Stale equipment condition",
+      "Changed actor pitch zero sign"
+    ],
+    "rejections": [
+      "Duplicate disarm owner",
+      "Disarm plus break consequence on the same item",
+      "Wrong placement mode",
+      "Mismatched final wear",
+      "Miss",
+      "Undrawn owner",
+      "Unknown saved process action",
+      "Winning quest weapon"
+    ]
+  },
+  "native_default_placement": {
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "result": {
+      "passed": true,
+      "cases": 13024,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "15c97d2335b84cd4fe63591f3fbb7cc004d3ab8b7b5e2b9ef76b5f52da3f2b31",
+      "scope": "Actual48B080..48B16A drop reference placement prefix, actual actor position getter5F10E0,711580 Euler rotation,7100A0 matrix products,7101F0 vector transform and caller float additions. No callee stubs. Stop before reference allocation/creation. Explicit/default position and rotation are independent. No inventory, scene/physics or gameplay acceptance."
+    },
+    "cpp_comparison": {
+      "passed": true,
+      "cases": 3256,
+      "mismatches": 0,
+      "examples": [],
+      "input_sha256": "b95766eb107c0bf9abaddb45b92c773819c5eb01f13a99d883fb987f29afb4f8",
+      "output_sha256": "1dc7157833949a56bfc66061673c2b6d491733e240bada3cdfe382ca7f44a6e3"
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/preregistered.json",
+        "sha256": "9607d62bc5f8d8fff08609edd65e02a930fd18f1372581accf9a1fdc65e6eff8"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/probe-01.py",
+        "sha256": "166a2a11c3603d8f4edcbe00ebb77f1fd7cabcc0b64c68957ff354128df84c84"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/probe-02.py",
+        "sha256": "9673f55c80fdae2a38df66da049ad2945455f7638f998f465f2848fb911354fc"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/corpus02.json",
+        "sha256": "15c97d2335b84cd4fe63591f3fbb7cc004d3ab8b7b5e2b9ef76b5f52da3f2b31"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/verification02.json",
+        "sha256": "ce4b63e1db7d881b5026c1406922b7b17919188e4d7f1fb006858ce1366a22c2"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/compare.cpp",
+        "sha256": "31ac18b8d8a64145b2e56a65df40ddda47d7cb491a739ba15f9f89f905823a6e"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/compare",
+        "sha256": "d1fee2e72770ebe32c64fc62533b030e2df8a46cb4948144e61cf1de1d2f5f77"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/comparison-input.tsv",
+        "sha256": "b95766eb107c0bf9abaddb45b92c773819c5eb01f13a99d883fb987f29afb4f8"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/comparison-output.tsv",
+        "sha256": "1dc7157833949a56bfc66061673c2b6d491733e240bada3cdfe382ca7f44a6e3"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/comparison.json",
+        "sha256": "2617b136baaa648c09aa4894c8448f70fd0b5c0c1eb45b273479212d8c8d6393"
+      }
+    ],
+    "finding": "Disarm5FC2B0 supplies null position/rotation through DropItem and48B080. Default position uses actual711580 Euler construction,7100A0 matrix products,7101F0 vector transform and float additions. Constants50/30 are compiled floats, not GMSTs. No actor or attachment scale is read by this placement prefix. Explicit position and rotation bypass their defaults independently. No callee stubs in the placement-prefix probe; it stops before reference creation."
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-review-02",
+      "reason": "Initial test syntax used two SCOPED_TRACE macros on one line; corrected separate identifiers. Production syntax passed."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-review-04",
+      "reason": "Test tried assigning an array whose element holds an animation reference. Corrected by changing mutable fields; production syntax passed."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-01",
+      "reason": "Build stopped to distinguish Recoil replacement from Stagger passive retention."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-01",
+      "reason": "Stopped for the same source-order correction."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-02",
+      "reason": "Build stopped after native inspection showed disarm uses default placement, unlike breakage carried placement. Pending incorrect placement was corrected before acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-02",
+      "reason": "Stopped for the same placement correction."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disarm-default-placement-oracle-01/probe-01.py",
+      "reason": "At stop48B16A two rotation words were still in registers, not the assumed stack slots. Probe02 captures the actual registers; failed script retained."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-03",
+      "reason": "Components2989 passed. Engine ran1802; two new fixtures failed: cloned content actor reference absent during restore, and shield setup queried an absent enchantment. Fixed fixture reference registration and authored initial shield worn state."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-03",
+      "reason": "ESM4* components842 passed. Engine build stopped for fixture corrections."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-04",
+      "reason": "Engine1802 executed; one shield setup test still queried missing ENCH through restacking, despite suppressing equipment notifications. Final fixture authors initial native worn state directly."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-04",
+      "reason": "Same single fixture failure;1801 other cases passed. No accepted final engine result from this attempt."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-normal-05",
+      "reason": "Full engine1802 passed before the final unknown-action rejection and explicit Counter-origin cases. Final06 reruns the full suite."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-disarm-sanitized-05",
+      "reason": "Full engine1802 passed at the same intermediate source; final06 reruns after guard/test additions."
+    }
+  ],
+  "limitations": [
+    "New World tests supply typed contact/reaction packets and synthetic ordinary keys0/.5/1/2 and Counter keys0/.5/1. They use real owned NIF scene/physics assets but no normal input or collision acquisition. No normal proc/resource-factory activation, sound or rendered gameplay acceptance.",
+    "Current drop authority remains NPC-only, one equipped drop per owner, with owned bow playback rejected. Player/Creature default drop paths, multi-item drops on one actor, replacement policy and native combat-controller/audio behavior remain separate integration work.",
+    "Counter/ordinary callers still guard unsupported mastery consequences. This preparer does not itself compute a mastery roll, choose target geometry or automatically prepare Stagger from projected post-disarm equipment.",
+    "The default placement prefix proves argument arithmetic only, not full original inventory removal, object creation, physics or Player post-creation bound centering.",
+    "No schema bump: requests are transient and publication uses existing version60 fields. No fresh-process save/restart, gamepad, measured FPS, effect or complete E2E gate is claimed. M15S4 remains incomplete."
+  ]
+}

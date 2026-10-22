@@ -10304,3 +10304,62 @@ action/controller publication, Counter triggering/dispatch and normal-input
 restart/E2E acceptance remain open. M15S4 remains incomplete. See
 [verification](M15-DISARM-TARGET-VERIFICATION.json) and the editable
 `m15_disarm_target_native_probe.json` protocol under scripts/data/oblivion_compat.
+
+
+## Atomic intact NPC disarm contact checkpoint
+
+Physical contacts now carry a selected disarm separately from condition wear.
+World matches each exact NPC carried weapon to one equipped-drop transaction,
+rejects winning quest items, duplicate/break conflicts and wrong placement or
+wear contexts, and uses native default placement. Publication includes the
+original contact, intact or final fractional condition/charge, dynamic native
+reference and dropper relation, scene/physics body, source inventory debit and
+prepared RNG/resource changes. Preparation leaves live simulation unchanged;
+scene failures and stale equipment/pose leases leave no partial drop or spent
+contact. Unknown saved process action rejects rather than assuming a result.
+
+Disarm withdraws Alive attack actions0..5 and weapon block6 without a remaining
+shield. An existing shield retains6. Bound slot3 history becomes passive;
+unbound intent is consumed without inventing a sequence. Recoil replaces the
+original slot3, whereas Stagger preserves the staged passive source. Canceled
+IDs are deduplicated. Eight owned-asset cases combine participant, wear and
+binding states, including phase1 Counter-origin zero-damage contacts that
+publish victim disarm/Stagger and consume the Counter into6. Typed packets,
+synthetic phase keys and selected RNG transitions are supplied; this is not
+normal-input, collision acquisition or mastery-proc acceptance.
+
+Independent original default-placement arithmetic passes13,024 contexts with
+no callee stubs; production C++ matches all3,256 wholly default observations
+exactly across007F/027F. Disarm uses actor position plus Euler-rotated(0,50,30)
+and unchanged angles; breakage uses its supplied carried pose. The pending
+implementation initially reused that carried pose and was corrected before
+acceptance. New unit goldens include precision-sensitive cases; invalid
+trigonometry/nonfinite inputs reject. A default drop guards even actor pitch
+zero-sign changes. No original full inventory/scene creation is inferred from
+the placement-prefix probe.
+
+All2,989 normal component tests and842 ESM4* sanitizer component tests pass.
+Both final engine runs pass all1,802 tests in125 suites with exact inventories
+and no failures/skips. Tested parent
+`3166a98b3e39769aeb424e314eb34b20a21c5e88`, final dirty fingerprint
+`f2f5fe1be71420c35fc3b0f6ec1520684ff4d39d2df2f519a3cb5e032ae8caea`.
+Component checks precede only World/service and World-test changes; component
+code/tests remain identical. ASan leak checks are disabled; UBSan halts.
+Python sources did not change and Python was not rerun. Existing compiler
+warnings remain. Early source-order/placement builds were interrupted and
+retained. Fixture failures included a missing winning clone reference during
+restore and a no-shield setup path restacking charged synthetic metadata whose
+ENCH definition is intentionally absent. The fixture now registers its cloned
+reference and authors native shield worn state initially. Passing intermediate
+engine runs precede the final unknown-action guard/Counter cases; final06
+reruns both complete engine inventories.
+
+This checkpoint uses existing schema60 publication fields and adds no new
+persistent request format. Semantic checks include binary RuntimeState and
+service restore, not fresh-process World load. Current drop authority remains
+NPC-only, one drop per owner, with owned bow playback rejected. Player/Creature
+drops, multi-drop composition on one owner, live mastery/Counter dispatch,
+projected post-disarm resource selection, replacement/controller/audio behavior
+and the wider input/effect/gamepad/FPS/E2E gates remain open. M15S4 remains
+incomplete. See [verification](M15-DISARM-CONTACT-VERIFICATION.json) and editable
+`m15_disarm_contact_native_probe.json` under scripts/data/oblivion_compat.

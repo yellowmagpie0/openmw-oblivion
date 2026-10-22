@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_ESM4_DROPPLACEMENT_H
 
 #include <components/esm/position.hpp>
+#include <components/nif/nativetransform.hpp>
 #include <array>
 #include <optional>
 
@@ -22,6 +23,13 @@ namespace ESM4
     // This narrower command limit does not apply to fresh dropped items.
     // Nonfinite command inputs reject without changing caller state.
     float scriptReferenceScale(float requestedScale);
+
+    // Original48B080 default when DropItem supplies no position/rotation:
+    // actor position + Euler-rotated(0,50,30), and unchanged actor angles.
+    // Neither actor scale nor a carried-node pose participates. Nonfinite or
+    // unsupported FSINCOS angles reject; live007F arithmetic is the default.
+    std::optional<ESM::Position> defaultDroppedItemPlacement(const ESM::Position& actor,
+        Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single) noexcept;
 
     struct DroppedItemPlacement
     {

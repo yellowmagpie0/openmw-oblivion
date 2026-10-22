@@ -20,6 +20,9 @@ namespace MWWorld
         // Final wear is prepared on source and reference together. A compound
         // contact may also publish the same condition before the source debit.
         std::optional<float> mConditionAfterWear;
+        // Native disarm passes null position/rotation, selecting48B080's
+        // actor-relative default. Breakage instead supplies the carried pose.
+        bool mUseDefaultPlacement = false;
     };
 
     class PreparedEquippedWeaponDrops

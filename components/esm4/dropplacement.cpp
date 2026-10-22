@@ -1,4 +1,5 @@
 #include "dropplacement.hpp"
+#include "placementsincos.hpp"
 
 #include <components/nif/niftypes.hpp>
 
@@ -28,6 +29,37 @@ namespace ESM4
         if (!std::isfinite(requestedScale))
             throw std::invalid_argument("Nonfinite script reference scale");
         return droppedReferenceScale(std::clamp(requestedScale, .5f, 2.f));
+    }
+
+    std::optional<ESM::Position> defaultDroppedItemPlacement(
+        const ESM::Position& actor, Nif::NativeTransformPrecision precision) noexcept
+    {
+        for (float value : actor.rot)
+            if (!std::isfinite(value) || std::abs(double(value)) >= 0x1p63) return std::nullopt;
+        for (float value : actor.pos)
+            if (!std::isfinite(value)) return std::nullopt;
+        const auto [sx, cx] = Detail::placementSinCos(actor.rot[0]);
+        const auto [sy, cy] = Detail::placementSinCos(actor.rot[1]);
+        const auto [sz, cz] = Detail::placementSinCos(actor.rot[2]);
+        auto x = Nif::NiTransform::getIdentity(), y = x, z = x;
+        x.mRotation.mValues[1][1] = x.mRotation.mValues[2][2] = cx;
+        x.mRotation.mValues[1][2] = sx; x.mRotation.mValues[2][1] = -sx;
+        y.mRotation.mValues[0][0] = y.mRotation.mValues[2][2] = cy;
+        y.mRotation.mValues[0][2] = -sy; y.mRotation.mValues[2][0] = sy;
+        z.mRotation.mValues[0][0] = z.mRotation.mValues[1][1] = cz;
+        z.mRotation.mValues[0][1] = sz; z.mRotation.mValues[1][0] = -sz;
+        const auto yz = Nif::tryMultiplyNativeMatrices(y.mRotation, z.mRotation, precision);
+        if (!yz) return std::nullopt;
+        const auto rotation = Nif::tryMultiplyNativeMatrices(x.mRotation, *yz, precision);
+        if (!rotation) return std::nullopt;
+        auto parent = Nif::NiTransform::getIdentity(), offset = parent;
+        parent.mRotation = *rotation; parent.mTranslation = actor.asVec3();
+        offset.mTranslation.set(0, 50, 30);
+        const auto world = Nif::tryComposeNativeTransform(parent, offset, precision);
+        if (!world) return std::nullopt;
+        auto result = actor;
+        for (unsigned i = 0; i < 3; ++i) result.pos[i] = world->mTranslation[i];
+        return result;
     }
 
     namespace

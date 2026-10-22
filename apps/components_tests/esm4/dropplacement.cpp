@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 #include <array>
 #include <bit>
+#include <cstdint>
 #include <limits>
 #include <cmath>
 #include <stdexcept>
@@ -332,4 +333,66 @@ namespace
             EXPECT_THROW(ESM4::scriptReferenceScale(invalid), std::invalid_argument);
     }
 
+}
+
+TEST(ESM4DropPlacement, DefaultDropUsesNativeEulerOffsetAndPreservesActorRotation)
+{
+    // Original48B080/711580/7101F0, independent CW007F/027F observations.
+    struct Golden
+    {
+        unsigned mControl;
+        std::array<std::uint32_t, 3> mAngles, mPosition, mExpected;
+    };
+    const Golden goldens[]{
+        {127, {0x0u, 0x0u, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42c80000u, 0x428c0000u, 0x42700000u}},
+        {639, {0x0u, 0x0u, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42c80000u, 0x428c0000u, 0x42700000u}},
+        {127, {0x0u, 0x0u, 0x3fc90fdbu}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x43160000u, 0x419fffffu, 0x42700000u}},
+        {639, {0x0u, 0x0u, 0x3fc90fdbu}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x43160000u, 0x419fffffu, 0x42700000u}},
+        {127, {0x3fc90fdbu, 0x0u, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42c80000u, 0x42480000u, 0xc1a00000u}},
+        {639, {0x3fc90fdbu, 0x0u, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42c80000u, 0x42480000u, 0xc1a00000u}},
+        {127, {0x0u, 0x3fc90fdbu, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x428c0000u, 0x428c0000u, 0x41efffffu}},
+        {639, {0x0u, 0x3fc90fdbu, 0x0u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x428c0000u, 0x428c0000u, 0x41efffffu}},
+        {127, {0x3e800000u, 0xbe800000u, 0x3fc90fdbu}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x431bde24u, 0x41c10c2du, 0x4238b660u}},
+        {639, {0x3e800000u, 0xbe800000u, 0x3fc90fdbu}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x431bde24u, 0x41c10c2du, 0x4238b660u}},
+        {127, {0xbe800000u, 0x3e800000u, 0xbe800000u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42a12f3au, 0x42720579u, 0x42865e40u}},
+        {639, {0xbe800000u, 0x3e800000u, 0xbe800000u}, {0x42c80000u, 0x41a00000u, 0x41f00000u}, {0x42a12f3au, 0x42720579u, 0x42865e40u}},
+        {127, {0xc0490fdbu, 0xc0490fdbu, 0xbfc90fdbu}, {0x0u, 0x0u, 0x0u}, {0x4247ffffu, 0xb4eaac88u, 0x41f00002u}},
+        {639, {0xc0490fdbu, 0xc0490fdbu, 0xbfc90fdbu}, {0x0u, 0x0u, 0x0u}, {0x4247ffffu, 0xb4eaac86u, 0x41f00002u}},
+        {127, {0xc0490fdbu, 0xc0490fdbu, 0xbfc90fdbu}, {0x80000000u, 0x1u, 0x80000001u}, {0x4247ffffu, 0xb4eaac88u, 0x41f00002u}},
+        {639, {0xc0490fdbu, 0xc0490fdbu, 0xbfc90fdbu}, {0x80000000u, 0x1u, 0x80000001u}, {0x4247ffffu, 0xb4eaac86u, 0x41f00002u}},
+        {127, {0xc0490fdbu, 0xc0490fdbu, 0x3fc90fdbu}, {0x0u, 0x0u, 0x0u}, {0xc2480001u, 0xb4eaac68u, 0x41effffeu}},
+        {639, {0xc0490fdbu, 0xc0490fdbu, 0x3fc90fdbu}, {0x0u, 0x0u, 0x0u}, {0xc2480001u, 0xb4eaac6du, 0x41effffeu}},
+    };
+    for (const auto& golden : goldens)
+    {
+        ESM::Position actor{};
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            actor.rot[i] = std::bit_cast<float>(golden.mAngles[i]);
+            actor.pos[i] = std::bit_cast<float>(golden.mPosition[i]);
+        }
+        const auto result = ESM4::defaultDroppedItemPlacement(actor, golden.mControl == 127
+            ? Nif::NativeTransformPrecision::Single : Nif::NativeTransformPrecision::Double);
+        ASSERT_TRUE(result);
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result->pos[i]), golden.mExpected[i]);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(result->rot[i]), golden.mAngles[i]);
+        }
+    }
+}
+
+TEST(ESM4DropPlacement, DefaultDropRejectsNonfiniteInputsAndUnsupportedTrigonometry)
+{
+    for (unsigned axis = 0; axis < 3; ++axis)
+    {
+        ESM::Position actor{};
+        actor.pos[axis] = std::numeric_limits<float>::infinity();
+        EXPECT_FALSE(ESM4::defaultDroppedItemPlacement(actor));
+        actor = {}; actor.rot[axis] = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_FALSE(ESM4::defaultDroppedItemPlacement(actor));
+        actor.rot[axis] = 0x1p63f;
+        EXPECT_FALSE(ESM4::defaultDroppedItemPlacement(actor));
+    }
+    EXPECT_FALSE(ESM4::defaultDroppedItemPlacement({}, static_cast<Nif::NativeTransformPrecision>(255)));
 }
