@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "helper_cases": {
+    "actors": [
+      "npc",
+      "player"
+    ],
+    "camera_bytes": [
+      0,
+      1
+    ],
+    "body_slot3_source": [
+      false,
+      true
+    ],
+    "first_slot3_source": [
+      false,
+      true
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87_control_words": [
+      127,
+      639,
+      895
+    ],
+    "animation_clock": 0.5,
+    "steady_advance": 0.25,
+    "GMST_B06538": 0.25,
+    "held_native_group": 27,
+    "Counter_native_group": 285,
+    "phase": "Actual Counter activation and native NI updates, then original5EFFD0(6,Counter) supplies postcontact action; full5F4AE0(false) release.",
+    "expected": {
+      "process_action": -1,
+      "process_sequence_pointer": 0,
+      "held_slot1_pointers": "cleared for owned views",
+      "Counter_slot3": "retained in NIstate1",
+      "held_NI_states": {
+        "npc": "body3; unrelated first-view fixture unchanged",
+        "player_camera0": "body0, first3",
+        "player_camera1": "body3, first3"
+      }
+    }
+  },
+  "caller_cases": {
+    "entry": "6727DD",
+    "stop": "672821",
+    "actors": [
+      "player"
+    ],
+    "camera_bytes": [
+      0,
+      1
+    ],
+    "input_query_mode2_results": [
+      false,
+      true
+    ],
+    "input_query_mode0_results": [
+      false,
+      true
+    ],
+    "process_actions": [
+      -1,
+      2,
+      6
+    ],
+    "x87_control_words": [
+      127,
+      639,
+      895
+    ],
+    "expected_helper_call": "(mode2 result true OR mode0 result false) AND process action6",
+    "expected_action2": "No release call; held state unchanged.",
+    "boundary": "Device queries and outer input eligibility branch are supplied, not proved."
+  },
+  "production_followup": [
+    "Defer block-slot release while Counter owns action2.",
+    "At supported release after contact, release process action/pointer separately from cached slot3 Counter lifetime; preserve consumed ledger/RNG.",
+    "Model slot1 NI retirement and active Player view asymmetry, rather than treating all owned held views identically.",
+    "Persist native slot1 cache/timing across restart; repeat real input courses with phase-specific checks."
+  ],
+  "full_M15S4_acceptance": false
+}

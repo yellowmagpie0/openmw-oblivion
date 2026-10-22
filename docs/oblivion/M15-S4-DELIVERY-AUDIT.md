@@ -10537,3 +10537,34 @@ release fade and cache/clock persistence through restart are also open.
 Exact checks, source/binary/epoch/save/tool hashes, editable courses and the
 retained red case are in `M15-COUNTER-HELD-RETENTION-VERIFICATION.json`.
 Full M15S4 remains incomplete.
+
+
+## Block-release caller and view-policy instruction checkpoint
+
+The original Player input slice6727DD..672821 gates release on process action6;
+action2 skips the block helper. With supplied device query results, the full
+caller/helper/action-setter composition passes **72 cases**. A separate **96-case**
+NPC/Player, camera, source and x87 matrix starts real Counter playback, advances
+its NI state, publishes supplied postcontact action6 through original5EFFD0 and
+executes full5F4AE0(false). Release clears process action/pointer and held-slot
+pointers while cached Counter slot3 survives in NIstate1. NPC held body retires
+in3. Player camera0 ends with held body0/FP3, whereas camera1 has body3/FP3;
+active-view virtual+164 and nested action-clear resets account for the asymmetry.
+The GMST .25 and cache/scene/notification/device query boundaries are supplied.
+This is not a full original-game input/contact/process observation.
+
+Several retained attempts exposed missing group-code fixtures, an omitted
+activation-clock manager update, and incorrect assumptions that both Player
+held views end in the same NI state. The accepted matrix is explicit rather
+than normalizing those differences. The raw08 report's inherited scope sentence
+is corrected by verification08-reviewed.json without altering its source,
+assertions or corpus. No C++/Python implementation changed and no tests were
+rerun for this evidence-only checkpoint.
+
+Production still releases held idle too early during action2 and lacks the
+postcontact separation of process ownership, cached Counter and held NI fade.
+Full held-slot persistence is also open. The earlier red course's provisional
+final action6 expectation remains unaccepted; a corrected release course must
+check action2 retention, postcontact action release and independent cached
+recovery separately. Editable cases, hashes, boundaries and retained failures
+are in `M15-BLOCK-RELEASE-CALLER-VERIFICATION.json`. Full S4 remains incomplete.
