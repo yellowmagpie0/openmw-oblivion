@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "block_helper": "0x5F4AE0",
+    "cache_play": "0x477B60",
+    "select_sequence": "0x474530",
+    "activate": "0x6C9BA0",
+    "deactivate": "0x6C9CB0",
+    "sequence_update": "0x6CA950"
+  },
+  "course": [
+    "Start real Counter with supplied steady held body and Player FP sequences.",
+    "Publish supplied postcontact action6 through original setter; execute full block helper false.",
+    "Anchor real held NI3 at release clock, then advance by elapsed time before reblocking.",
+    "Supply same held object at matching group0x11b cache key and metadata; execute full helper true.",
+    "Repeat helper true while action6 owns held; verify no reactivation or sequence mutation.",
+    "Execute six real NI updates for each selected held view and assert exact output/clock bits."
+  ],
+  "matrix": {
+    "actor": [
+      "npc",
+      "player"
+    ],
+    "camera_byte": [
+      0,
+      1
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87_control_word": [
+      "0x7f",
+      "0x27f",
+      "0x37f"
+    ],
+    "elapsed_since_release": [
+      0,
+      0.125,
+      0.25,
+      0.5
+    ],
+    "cases": 96
+  },
+  "supplied_source": {
+    "held_range": [
+      0,
+      2
+    ],
+    "held_frequency": 1,
+    "INI_fAnimationDefaultBlend_General": 0.25,
+    "drawn_process_byte": 1,
+    "cache_group": "0x11b",
+    "release_body_clock": 0.75
+  },
+  "expected": {
+    "reblock_result": true,
+    "process_action": 6,
+    "process_pointer": "same held object in active view",
+    "counter": "Body/FP slot3 and all sampled NI fields unchanged by reblock",
+    "held_state_before_reblock": "NI3 before elapsed .25; NI0 at/after .25",
+    "reactivation": "NI3 zero-deactivated then activated; NI0 directly activated; same cached object reused. Reset offset sentinel; preupdate last/weighted/output/ease fields retained.",
+    "view_policy": "NPC body; Player camera0 FP only (body remains0/slot1 null); Player camera1 body and FP.",
+    "repeat_result": false,
+    "repeat_effect": "complete selected held sequence bytes and process6 unchanged",
+    "first_update": "offset negative current independent view clock, lastInput/weighted/output0",
+    "update_deltas": [
+      0,
+      0.125,
+      0.25,
+      1,
+      2,
+      2.125
+    ],
+    "weighted_time": [
+      0,
+      0.125,
+      0.25,
+      1,
+      2,
+      2.125
+    ],
+    "output_time": [
+      0,
+      0.125,
+      0.25,
+      1,
+      2,
+      0.125
+    ]
+  },
+  "boundaries": [
+    "Synthetic one-bucket cache hash/equality and one-variant source selection.",
+    "Scene-update471230 and notifications supplied; real cache/sequence/action/helper internals execute.",
+    "INI .25 supplied; production compiled default .1 identity established separately.",
+    "Postcontact action6, clocks and initial source state supplied; no actual contact, whole input loop or original-game process."
+  ],
+  "full_M15S4_acceptance": false,
+  "production_red_course": {
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_held_block_reactivation_red.json",
+    "source_save": "build/oblivion-compat/m15/S4/native-counter-block-release-runtime-normal-01/first/snapshots/save-4.omwsave",
+    "source_sha256": "5166e58ed8915690fafda4f612616ebae97b9d84300d680369c68aa5b318840a",
+    "prepare": "Copy unchanged source save to OUTPUT/userdata/saves/M15Review/Quicksave.omwsave before running manifest, with authored held blend fixture from m15_counter_block_release_asset.json.",
+    "expected_regression": "Only one accepted block begin per continuous block request; old fade cannot remove/exclude newly activated held lifecycle.",
+    "observed_before_fix": "Two begins around old held expiry; final blocking stance masks rebind."
+  }
+}

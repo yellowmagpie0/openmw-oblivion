@@ -10630,3 +10630,50 @@ remain open. The isolated fixture's distant-AI restraint also does not close
 the broader background materialization snapshot issue. Exact artifacts, failed
 attempts, source and binary hashes, tool pins and editable manifests are in
 `M15-COUNTER-BLOCK-RELEASE-VERIFICATION.json`. Full M15S4 remains incomplete.
+
+## Held BlockIdle cache reactivation instruction checkpoint
+
+Full original5F4AE0(true) now executes after Counter release, real NI3 anchoring,
+and elapsed0/.125/.25/.5 updates in **96 cases**. The same held object is supplied
+under matching cache/sequence group11b. Before fade expiry it is zero-deactivated;
+after expiry it is already NI0. Activation publishes NI1 and process6 targeting
+the active held view while cached Counter stays byte-identical in sampled NI
+fields. A repeated true helper returns false and preserves complete selected
+sequence bytes. NPC selects body; Player camera0 selects FP only, camera1 also
+activates FP through its notification path. The scene-update boundary remains
+supplied, so this does not prove the complete pose mixer or camera transitions.
+
+**720 selected-view NI samples** establish a new clock origin and loop phase:
+the first update uses negative current independent view clock and output0;
+weighted time then follows0,.125,.25,1,2,2.125 while output preserves2 at exact
+End and wraps to.125 afterwards. Zero-duration activation resets the offset
+sentinel but retains prior sampled/ease fields until the first NI update.
+
+Exploratory attempts initially delayed retirement anchoring, used the wrong
+sentinel sign, assumed easeStart reset, and shadowed the hook-name map with a
+sample variable. Retained failures and instruction review exposed those
+assumptions; accepted07 corrects them and asserts the full matrix. Cache hash,
+equality/variant, notifications, scene updates and INI .25 are declared supplied
+boundaries. Postcontact state and clocks are fixtures, not an actual original
+game process/input/contact course.
+
+Production still lacks resident slot1 history and reactivation ownership. It
+must replace the old fade with the new native lifecycle without losing cached
+Counter or peer asymmetry; simply deleting retirement and restarting a legacy
+track would not satisfy persistence. Editable cases and exact tool/corpus hashes
+are in `M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json`. No production code changed
+for this checkpoint, and prior implementation tests were not repeated. Full
+M15S4 remains incomplete.
+
+A retained actual normal runtime reblock course now reproduces the production
+failure. It loads the unchanged released save4 with exact initial cache/clock,
+then Lua requests continuous block through ordinary controls. Save3 accepts
+action6 but still contains the old held retirement. Expiry disables the newly
+played same-group legacy track, and the controller logs a second block begin
+without a new input edge. The late capture shows blocking again; that visual
+alone would conceal the intervening lifecycle error. The driver passed, but
+semantic regression acceptance is **false**, expected-red reproduction **true**.
+Two save/live payload pairs are exact and nine AV arrays/life/RNG plus2151
+inventories remain unchanged. Editable manifest and pinned artifacts are in the
+reactivation receipt. This supplies a concrete before-case for resident slot1
+ownership/persistence work.
