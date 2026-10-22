@@ -16982,3 +16982,30 @@ in-reaction restart remain open. The full M15S4 gate remains incomplete.
 pins the independent sound composition.
 [M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json](M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json)
 pins the tested C++ fingerprint, full inventories and runtime artifacts.
+
+
+### Repeated subthreshold reference-root motion
+
+The registered-root frame proof now has a 2,112-case repeated-motion extension:
+64 sequences each execute 32 small translations followed by one larger jump.
+Full original 707370 traversal and 8978D0 writeback execute with the real
+4E2160 reference callback. Registration, physical conversion/matrix arithmetic,
+local/world stores, callback masks, reference lanes, caller stack and preserved
+registers are checked. Motion inputs are supplied; Havok dynamics are not stepped.
+
+Each small frame updates local while mask 0 suppresses reference publication.
+The original recomposes world from the prior local on the next traversal, so
+small deltas can accumulate. The reference/root X difference reaches at least
+.11198234558105469 without a position callback. The final larger jump sets
+mask 1 and publishes exact current-root coordinates. Thus an unconditional
+reference/root closeness bound of .01 is invalid even for correctly synchronized
+native behavior. The normal recovery-course verifier retained that mistaken
+assertion as a failure; its replacement requires exact saved-reference restore
+and records the physical-root/reference delta rather than altering the engine.
+
+[M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json](M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json)
+pins original executable identity, inputs, all source and corpus. The inherited
+result's old sentence saying eight frames is corrected by the receipt: the
+actual loop and corpus have 33 frames per sequence. Null world/cell gates and
+existing allocator/OS/change-mark boundaries remain explicit. No new gameplay,
+matched trajectory or complete S4 acceptance follows from this oracle alone.

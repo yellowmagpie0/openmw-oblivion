@@ -11440,3 +11440,20 @@ editable native/runtime case protocols accompany it. Lower HTH general-hit
 processing, selected Player/Creature disarms, spare replacement, directional
 power/effect paths, and the complete input/view/FPS/interruption matrix remain
 open. **Full M15S4 remains incomplete.**
+
+
+## Reference-root drift invariant corrected
+
+A fresh 2,112-case original-instruction campaign verifies 64 sequences of
+32 subthreshold position steps and one larger jump. Full scene traversal and
+reference callback execute. Every sequence has masks [0 x 32, 1]; small local
+movement accumulates beyond .1 while the published reference stays unchanged,
+then the larger step publishes the current root. The current engine already
+uses those per-frame masks. An unconditional .01 reference/root closeness
+assertion in the natural-Recoil verifier was therefore invalid; its failure is
+retained and exact reference restoration replaces it. No production change or
+new runtime acceptance is claimed here.
+
+[M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json](M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json)
+and `m15_reference_root_subthreshold_drift_native_cases.json` retain the evidence
+and editable protocol. **M15S4 remains incomplete.**
