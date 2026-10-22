@@ -30779,9 +30779,7 @@ TEST(OblivionWorldTest, HeldBlockActivationAndFramePreparationRejectBadSourcesWi
     ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
     frame = service.prepareMeleeReactionFrame(actor, 1, metadata);
     ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
-    const auto peerTransition = fixture.snapshot().serializeBinary();
-    EXPECT_THROW(service.releaseHeldBlock(actor, false, .25f, metadata), std::invalid_argument);
-    EXPECT_EQ(fixture.snapshot().serializeBinary(), peerTransition);
+    ASSERT_TRUE(service.findMeleeState(actor)->mFirstPerson->mHeldBlocks.front().mPoseSnapshot);
     frame = service.prepareMeleeReactionFrame(actor, 1, metadata);
     ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
     const auto steady = fixture.snapshot().serializeBinary();
@@ -30967,5 +30965,94 @@ TEST(OblivionWorldTest, HeldReleaseDetachesConsumedCounterAndBlockHitWhileRebloc
         EXPECT_EQ(after.mNativeActorValues, before.mNativeActorValues); // action6 -> -1 -> 6 only.
         service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
         EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, HeldReleaseSharesNewFadeWithUnfinishedPeerPoseAcrossRestore)
+{
+    // Original corpus19: body9/FP30 with body active, then body30/FP9
+    // with FP active at release. Active view completes before its peer.
+    for (const bool firstActive : {false, true})
+    for (const float elapsed : {.375f, .5f, .75f})
+    {
+        SCOPED_TRACE(firstActive);
+        SCOPED_TRACE(elapsed);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        seedHeldBlockOwner(fixture, actor);
+        const auto before = fixture.snapshot();
+        auto body = heldBlockActivation(.75f, true), first = heldBlockActivation(10.75f, true);
+        body.mDuration = firstActive ? 1.f : .3f;
+        first.mDuration = firstActive ? .3f : 1.f;
+        ASSERT_TRUE(service.activateHeldBlock(actor, false, body, first));
+        const auto metadata = heldBlockMetadata(true);
+        const auto restore = [&] {
+            const auto snapshot = fixture.snapshot();
+            service.restore(ESM4::RuntimeState::deserializeBinary(snapshot.serializeBinary()), world.getStore());
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), snapshot.serializeBinary());
+        };
+        const auto advance = [&](float dt) {
+            auto frame = service.prepareMeleeReactionFrame(actor, dt, metadata);
+            ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+            restore();
+        };
+        advance(0); advance(elapsed);
+        const auto* state = service.findMeleeState(actor);
+        const auto& active = firstActive ? state->mFirstPerson->mHeldBlocks.front() : state->mHeldBlocks.front();
+        const auto& peer = firstActive ? state->mHeldBlocks.front() : state->mFirstPerson->mHeldBlocks.front();
+        EXPECT_FALSE(active.mSequenceTiming.mEasing);
+        EXPECT_TRUE(peer.mSequenceTiming.mEasing);
+        ASSERT_TRUE(peer.mPoseSnapshot);
+        const auto pose = *peer.mPoseSnapshot;
+        ASSERT_TRUE(service.releaseHeldBlock(actor, firstActive, .3f, metadata));
+        EXPECT_EQ(service.getProcessAction(actor), -1);
+        restore();
+        state = service.findMeleeState(actor);
+        const auto& releasedBody = state->mHeldBlocks.front();
+        const auto& releasedFirst = state->mFirstPerson->mHeldBlocks.front();
+        EXPECT_FALSE(releasedBody.mSequenceTiming.mEasing);
+        EXPECT_FALSE(releasedFirst.mSequenceTiming.mEasing);
+        if (firstActive)
+        {
+            EXPECT_TRUE(releasedBody.mInactive);
+            EXPECT_FALSE(releasedBody.mPoseSnapshot);
+            EXPECT_FALSE(releasedFirst.mPoseSnapshot);
+        }
+        else
+        {
+            EXPECT_EQ(releasedFirst.mPoseSnapshot, pose);
+            ASSERT_TRUE(releasedFirst.mRetirement);
+            EXPECT_EQ(releasedFirst.mRetirement->mDuration, .3f);
+            EXPECT_FALSE(releasedFirst.mRetirement->mStartClock);
+        }
+        advance(0); advance(.125f);
+        state = service.findMeleeState(actor);
+        if (!firstActive)
+        {
+            const auto& fading = state->mFirstPerson->mHeldBlocks.front();
+            ASSERT_TRUE(fading.mPoseSnapshot);
+            EXPECT_EQ(fading.mPoseSnapshot, pose);
+            EXPECT_EQ(fading.mAnimationTime, 0);
+            EXPECT_EQ(fading.mSequenceTiming.mLastInput, 0);
+            EXPECT_EQ(fading.mSequenceTiming.mWeightedTime, 0);
+            EXPECT_EQ(fading.mSequenceTiming.mOutputTime, 0);
+        }
+        const auto& advancing = firstActive ? state->mFirstPerson->mHeldBlocks.front() : state->mHeldBlocks.front();
+        EXPECT_EQ(advancing.mAnimationTime, .125f);
+        advance(.25f);
+        state = service.findMeleeState(actor);
+        for (const auto* view : {&state->mHeldBlocks, &state->mFirstPerson->mHeldBlocks})
+        {
+            ASSERT_EQ(view->size(), 1u);
+            EXPECT_TRUE(view->front().mInactive);
+            EXPECT_FALSE(view->front().mPoseSnapshot);
+        }
+        EXPECT_FALSE(service.prepareMeleeReactionFrame(actor, 0, {}));
+        const auto after = fixture.snapshot();
+        EXPECT_EQ(after.mPhysicalActions, before.mPhysicalActions);
+        EXPECT_EQ(after.mPhysicalActionOwners, before.mPhysicalActionOwners);
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
     }
 }

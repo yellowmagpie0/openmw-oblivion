@@ -4883,7 +4883,7 @@ namespace
                 {.mOffset = -(clock - 2.125f), .mEaseStart = 2.f, .mEaseEnd = 1.f,
                  .mLastInput = 2.125f, .mWeightedTime = 2.125f, .mOutputTime = .125f}};
             if (phase == 0) { held.mAnimationTime = -0.f; held.mSequenceTiming = {}; }
-            if (phase == 2 || phase == 3 || phase == 9)
+            if (phase == 2 || phase == 3 || phase == 9 || (phase >= 19 && phase <= 21))
             {
                 held.mAnimationTime = -0.f;
                 held.mSequenceTiming = {.mEasing = true, .mOffset = -0.f, .mEaseStart = {},
@@ -4938,6 +4938,25 @@ namespace
                 held.mSequenceTiming = {.mOffset = {}, .mEaseStart = clock, .mEaseEnd = clock, .mLastInput = {}};
                 held.mInactive = phase == 18;
             }
+            if (phase >= 19 && phase <= 21)
+            {
+                held.mSequenceTiming.mEasing = false;
+                held.mSequenceTiming.mEaseEnd = .5f;
+                if (phase != 21) held.mSequenceTiming.mLastInput = -0.f;
+                held.mRetirement = ESM4::RuntimeReactionRetirement{.5f, {}};
+                if (phase == 20)
+                {
+                    held.mRetirement->mStartClock = clock - .25f;
+                    held.mSequenceTiming.mEaseStart = clock - .25f;
+                    held.mSequenceTiming.mEaseEnd = clock + .25f;
+                }
+            }
+            if (phase == 22)
+            {
+                held.mSequenceTiming = {.mOffset = -0.f, .mEaseStart = clock, .mEaseEnd = clock, .mLastInput = {}};
+                held.mRetirement = ESM4::RuntimeReactionRetirement{std::numeric_limits<float>::denorm_min(), clock};
+                held.mInactive = true;
+            }
             auto& cache = first ? melee.mFirstPerson->mHeldBlocks : melee.mHeldBlocks;
             cache.push_back(held);
             // Keep inactive resources too; the active slot need not own all caches.
@@ -4955,7 +4974,7 @@ namespace
 
 TEST(ESM4RuntimeState, HeldBlock61RetainsIndependentCacheLifecycleWithoutContactOwnership)
 {
-    for (unsigned phase = 0; phase != 19; ++phase)
+    for (unsigned phase = 0; phase != 23; ++phase)
     {
         SCOPED_TRACE(phase);
         const auto state = heldBlockState(phase);

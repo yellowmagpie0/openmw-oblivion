@@ -1459,11 +1459,11 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             start = native_float(start)
             if start < 0: raise RuntimeStateError("Invalid TES4 outgoing retirement clock")
             native_float(start + native_float(retirement["duration"]))
-    def melee_pose(pose, timing):
+    def melee_pose(pose, timing, retiring=False):
         if (not isinstance(pose, dict) or set(pose) != {"destination_frame", "tracks"}
-                or timing is None or not timing["easing"]
-                or native_float(timing["ease_end"]) <= (native_float(timing["ease_start"])
-                    if timing["ease_start"] is not None else 0)):
+                or timing is None or (not retiring and (not timing["easing"]
+                    or native_float(timing["ease_end"]) <= (native_float(timing["ease_start"])
+                        if timing["ease_start"] is not None else 0)))):
             raise RuntimeStateError("Invalid TES4 captured strike pose transition")
         native_float(pose["destination_frame"])
         bones = set()
@@ -1702,9 +1702,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     if start < 0 or start > clock or (inactive and clock < end):
                         raise RuntimeStateError("Invalid TES4 held-block retirement clock")
             if pose is not None:
-                if inactive or span is not None:
+                if inactive or (not timing["easing"] and span is None):
                     raise RuntimeStateError("Invalid TES4 held-block pose transition")
-                melee_pose(pose, timing)
+                melee_pose(pose, timing, retiring=span is not None)
             if not inactive and span is None: residents += 1
         if residents > 1 or any(canonical(x["animation_group"]) in groups for x in legacy_retiring):
             raise RuntimeStateError("Conflicting TES4 held-block cache history")

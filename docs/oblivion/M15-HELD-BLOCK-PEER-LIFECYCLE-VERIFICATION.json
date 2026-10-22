@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "status": "Service and schema61 support the verified asymmetric peer release handoff; controller/runtime integration remains open.",
+  "full_M15S4_acceptance": false,
+  "native_basis": {
+    "path": "docs/oblivion/M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json",
+    "sha256": "fce32f1f61daf7450fecf978e012600f6e23490ca3dd5fca54d7abef645a2139"
+  },
+  "editable_cases": {
+    "path": "scripts/data/oblivion_compat/m15_held_block_schema61_cases.json",
+    "sha256": "869f8412fb39e0c3bb430a1c3d193e3bda772246519c465c4f678988ebc92fa5"
+  },
+  "implementation": "A positive release converts peer NI5 destination and captured NI4 source to a shared NI3 fade. Keep its pose and requested destination frame through retirement, freeze the destination sample, and clear pose at expiry. First-person-active release immediately deactivates body held and source. No binary fields or schema version changed.",
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-peer-normal-01/verification.json",
+        "sha256": "1f84f5e62554f7d9de016ae04b99cf5e92b4076c0a09b639c1f1581c2d20acfd"
+      },
+      "tested_source": {
+        "head": "957c63813ec098ba6fcea60095db6d7267f8f9ba",
+        "source_fingerprint": "58057df07e33239e7618b502111f76804469ee173592f37d71de1f1e580121f0"
+      },
+      "results": {
+        "python": {
+          "executed": 382,
+          "passed": true,
+          "log_sha256": "d5d7dfffd2facabd827f1bb8d040d1cc28217d24f3f8db5d6d3fdd36938d20b4"
+        },
+        "components": {
+          "executed": 2995,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8ef5b6ac42855e18288b268d3fcc5a2b41cad6f77e27c0bc1822fb4fb4efea60",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5691fa23638f80a56e39de586e85b86da59e01a121038818f6ee6ad2720fd154",
+          "inventory_sha256": "6cdb336b01778310a1a188b629b6a159982f04a3d0c5198196f8c7776b2e1e94",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1821,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6b07f33ac694ee17ce2807bb4e8fce6a7555d9c6cd20f8304c4fd84a2054c9fc",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "79387175f1eb8d5dc2631e75cda54660abc38a6baa23e94e7c5f31bb7ccd7d10",
+          "inventory_sha256": "9f472d576f3e34705a1d0fb59c4213bbe57db59bc262a899fb8d7fb695c47b30",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-peer-sanitized-01/verification.json",
+        "sha256": "058d80b2f0d1bab818e729ae01dadeb417933b816e0dfa33a61f7d6b1b3ce518"
+      },
+      "tested_source": {
+        "head": "957c63813ec098ba6fcea60095db6d7267f8f9ba",
+        "source_fingerprint": "58057df07e33239e7618b502111f76804469ee173592f37d71de1f1e580121f0"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 848,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "0ebb7d032d9cd3d739d3d9ae482990d532546dd9d2da3e6182b3098113ee97b4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "4a4f09805cbc98a77e82e2cec4a97fc0309af18a3849648f7235df8e199a4145",
+          "inventory_sha256": "028571a9d2b4e6e6c9f955cb0627174df61dce03f9fe4db5081e1ce83288f81b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1821,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "60b5279191271246d3a9b0953b97a1a7e766249e99b3aa37e17ff0b6bd05af7e",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a47d42027af54ed93302549cc5e43b84857d14c0a945caad236affcb013bb32e",
+          "inventory_sha256": "9f472d576f3e34705a1d0fb59c4213bbe57db59bc262a899fb8d7fb695c47b30",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "wire_verification": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-peer-inputs-01/normal-wire-verification.json",
+        "sha256": "0da6d4637b89f821638907b47876734bc526902ffb062bacfaa3f7352f5d1a5f"
+      },
+      "cases": 23,
+      "cpp_xml_sha256": "5691fa23638f80a56e39de586e85b86da59e01a121038818f6ee6ad2720fd154",
+      "binary_cpp_json_python_exact": true
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-peer-inputs-01/sanitized-wire-verification.json",
+        "sha256": "2dbd779992eda88d06ff5e0b08ffffb55823852d257ef7b162819f4deee5afee"
+      },
+      "cases": 23,
+      "cpp_xml_sha256": "4a4f09805cbc98a77e82e2cec4a97fc0309af18a3849648f7235df8e199a4145",
+      "binary_cpp_json_python_exact": true
+    }
+  ],
+  "tools": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-peer-inputs-01/verify-wire.py",
+      "sha256": "d22956cb6a4897bdd7a6905182a06ef2b43ace46d1ed38f84aa3d94ea3e5aa53"
+    }
+  ],
+  "service_cases": {
+    "asymmetric_view_and_clock_cases": 6,
+    "frames_and_release_camera": [
+      [
+        9,
+        30,
+        1
+      ],
+      [
+        30,
+        9,
+        0
+      ]
+    ],
+    "release_after_activation": [
+      0.375,
+      0.5,
+      0.75
+    ],
+    "release_duration": 0.3,
+    "binary_restore": "Before fade anchor, after every update, and after expiry",
+    "unchanged": [
+      "physical-action ledger",
+      "physical-action owners",
+      "combat RNG"
+    ],
+    "native_literals": "Unfinished peer input/weighted/output stay0 at+.125; completed active view advances to.125. Both caches become inactive after the new fade."
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "diagnostics_observed": false,
+    "leak_coverage": false
+  },
+  "limits": [
+    "World/controller still uses legacy blocking paths. The recorded runtime double-begin regression remains open.",
+    "Renderer projection must retain both captured source and destination during shared NI3, apply their new retirement ease, and bind exact held event-track times. No runtime or visual acceptance in this chunk.",
+    "Original native proof supplies rendering/root/scene/cache/INI/proxy boundaries; explicit NI update orders do not establish actual manager traversal.",
+    "No compiler/world authoring validation is claimed. Binary roundtrip and service capture/restore are headless.",
+    "Full camera/source policy, custom INI import, interruption behavior, arbitrary-frequency/control-word arithmetic and the complete S4 input/view/FPS/restart matrix remain open."
+  ]
+}

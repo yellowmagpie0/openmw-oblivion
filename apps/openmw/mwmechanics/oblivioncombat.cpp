@@ -2014,7 +2014,8 @@ namespace MWMechanics
             updateStrike(*next.mStrike, clock->second, false);
         const auto updateRetirement = [&](ESM4::MeleeSequenceTiming& timing, float& animationTime,
                                           ESM4::RuntimeReactionRetirement& retirement,
-                                          const OblivionMeleeSequenceMetadata& source, float viewClock) {
+                                          const OblivionMeleeSequenceMetadata& source, float viewClock,
+                                          std::optional<float> destination = std::nullopt) {
             if (!retirement.mStartClock) retirement.mStartClock = viewClock;
             const float end = static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration);
             if (!std::isfinite(end)) throw std::invalid_argument("overflowing native melee retirement clock");
@@ -2026,7 +2027,7 @@ namespace MWMechanics
             manager.mEaseStart = retirement.mStartClock;
             manager.mEaseEnd = end;
             timing = ESM4::updateMeleeSequenceTiming(manager, viewClock,
-                source.mFrequency, source.mBegin, source.mEnd, {}, source.mCycle);
+                source.mFrequency, source.mBegin, source.mEnd, destination, source.mCycle);
             timing.mEasing = false;
             const float target = source.rendererTime(timing.mOutputTime);
             if (target < animationTime && source.mCycle != ESM4::MeleeSequenceCycle::Loop)
@@ -2191,13 +2192,15 @@ namespace MWMechanics
                     if (!held.mSequenceTiming.mOffset)
                         held.mSequenceTiming.mOffset = ESM4::initialMeleeSequenceOffset(viewClock);
                     if (!updateRetirement(held.mSequenceTiming, held.mAnimationTime,
-                            *held.mRetirement, source, viewClock))
+                            *held.mRetirement, source, viewClock,
+                            held.mPoseSnapshot ? std::optional(held.mPoseSnapshot->mDestinationFrame) : std::nullopt))
                     {
                         held.mSequenceTiming.mEaseStart = held.mRetirement->mStartClock;
                         held.mSequenceTiming.mEaseEnd = static_cast<float>(
                             double(*held.mRetirement->mStartClock) + held.mRetirement->mDuration);
                         deactivateHeldBlockTiming(held.mSequenceTiming, source.mFrequency);
                         held.mInactive = true;
+                        held.mPoseSnapshot.reset();
                     }
                 }
                 else
@@ -5076,15 +5079,14 @@ namespace MWMechanics
         const auto release = [&](auto& view, bool first) {
             auto current = residentHeldBlock(view);
             if (current == view.mHeldBlocks.end()) return;
-            // A peer still in NI5 owns an additional source pose. Preserve it
-            // until that transition ends; partial peer cancellation is separate.
-            if (current->mSequenceTiming.mEasing)
-                throw std::invalid_argument("held-block release has an easing peer source");
+            // Original470FC0 resets the peer's NI4 source and NI5 destination
+            // to the same NI3 span. Retain the frozen pose through that fade.
             const auto& source = sourceFor(current->mAnimationGroup, first);
             if (duration == 0 || (player && firstPersonActive && !first))
             {
                 deactivateHeldBlockTiming(current->mSequenceTiming, source.mFrequency);
                 current->mInactive = true;
+                current->mPoseSnapshot.reset();
             }
             else
             {
@@ -5092,6 +5094,7 @@ namespace MWMechanics
                 current->mSequenceTiming.mEaseStart.reset();
                 current->mSequenceTiming.mEaseEnd = duration;
             }
+            current->mSequenceTiming.mEasing = false;
         };
         release(next, false);
         if (next.mFirstPerson) release(*next.mFirstPerson, true);

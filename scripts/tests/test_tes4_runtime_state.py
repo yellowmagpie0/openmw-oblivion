@@ -3470,7 +3470,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 held["animation_time"] = -0.
                 held["sequence_timing"] = {"easing": False, "offset": None, "ease_start": None,
                     "last_input": None, "ease_end": 0., "weighted_time": 0., "output_time": 0.}
-            if phase in (2, 3, 9):
+            if phase in (2, 3, 9, 19, 20, 21):
                 held.update(animation_time=-0.,
                     sequence_timing={"easing": True, "offset": -0., "ease_start": None, "last_input": None,
                         "ease_end": 1., "weighted_time": 0., "output_time": 0.},
@@ -3505,11 +3505,23 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 held["sequence_timing"] = {"easing": False, "offset": None, "ease_start": clock,
                     "last_input": None, "ease_end": clock, "weighted_time": 0., "output_time": 0.}
                 held["inactive"] = phase == 18
+            if phase in (19, 20, 21):
+                held["sequence_timing"].update(easing=False, ease_end=.5)
+                if phase != 21: held["sequence_timing"]["last_input"] = -0.
+                held["retirement"] = {"duration": .5, "start_clock": None}
+                if phase == 20:
+                    held["retirement"]["start_clock"] = clock - .25
+                    held["sequence_timing"].update(ease_start=clock - .25, ease_end=clock + .25)
+            if phase == 22:
+                held["sequence_timing"] = {"easing": False, "offset": -0., "ease_start": clock,
+                    "last_input": None, "ease_end": clock, "weighted_time": 0., "output_time": 0.}
+                held["retirement"] = {"duration": struct.unpack("<f", struct.pack("<I", 1))[0], "start_clock": clock}
+                held["inactive"] = True
             view["held_blocks"] = [held]
         return state
 
     def test_held_block61_preserves_independent_lifetimes_and_signed_zero(self):
-        for phase in range(19):
+        for phase in range(23):
             with self.subTest(phase=phase):
                 state = self.held_block_state(phase)
                 payload = state_io.encode_payload(state)

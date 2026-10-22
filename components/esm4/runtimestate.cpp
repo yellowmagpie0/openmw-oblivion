@@ -1403,8 +1403,8 @@ namespace ESM4
         if (mPoseSnapshot)
         {
             mPoseSnapshot->validate();
-            if (!mSequenceTiming.mEasing || mRetirement || mInactive
-                || mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f))
+            if (mInactive || (!mSequenceTiming.mEasing && !mRetirement)
+                || (!mRetirement && mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f)))
                 throw std::runtime_error("Invalid TES4 held-block pose transition");
         }
         if (mInactive && (mSequenceTiming.mEasing || (mRetirement && !mRetirement->mStartClock)))

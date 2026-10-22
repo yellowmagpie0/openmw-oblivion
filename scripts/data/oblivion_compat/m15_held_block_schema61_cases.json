@@ -87,6 +87,22 @@
     {
       "phase": 18,
       "lifecycle": "immediate inactive cache after reactivation without prior input"
+    },
+    {
+      "phase": 19,
+      "lifecycle": "unanchored peer pose and destination sharing NI3 fade"
+    },
+    {
+      "phase": 20,
+      "lifecycle": "anchored peer pose and destination sharing NI3 fade"
+    },
+    {
+      "phase": 21,
+      "lifecycle": "unupdated peer pose and destination sharing NI3 fade"
+    },
+    {
+      "phase": 22,
+      "lifecycle": "peer fade expires before first input and clears pose"
     }
   ],
   "per_view": "Same resource alias in independent body/FP clocks; additional inactive resource retained.",
@@ -102,7 +118,9 @@
   "native_basis": [
     "M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
     "M15-BLOCK-RELEASE-CALLER-VERIFICATION.json",
-    "M15-HELD-BLOCK-SERVICE-VERIFICATION.json"
+    "M15-HELD-BLOCK-SERVICE-VERIFICATION.json",
+    "M15-HELD-BLOCK-PEER-LIFECYCLE-VERIFICATION.json"
   ],
-  "full_M15S4_acceptance": false
+  "full_M15S4_acceptance": false,
+  "pose_lifecycle": "Captured source is retained during resident NI5 or a shared NI3 retirement span. Positive peer reset preserves requested destination frame and both frozen layers use the new fade. Immediate deactivation and expiry clear the pose; inactive caches never retain a live pose."
 }

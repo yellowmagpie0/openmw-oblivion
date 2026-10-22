@@ -10841,3 +10841,36 @@ All extracted instructions and bulky corpora remain ignored. Renderer/root,
 scene, cache, INI and proxy allocation are supplied. Explicit source/destination
 updates do not prove actual original manager traversal, and no game process or
 production runtime acceptance is claimed. M15S4 remains incomplete.
+
+
+## Shared peer-pose retirement implementation
+
+The service now implements the asymmetric release handoff established by the
+288-case original-instruction matrix. A peer's unfinished NI5 destination and
+captured NI4 source share the new NI3 fade. The existing schema61 pose field
+remains present through retirement, retaining requested destination frame0 and
+its frozen sample. Immediate body deactivation in FP-active release and normal
+fade expiry clear the live pose while keeping cached timing history. No wire
+fields or version numbers changed.
+
+Six headless cases cover both body/FP frame patterns and three release times,
+with independent clocks and whole binary service restore before the fade anchor,
+after every update and after expiry. They assert frozen peer input/output,
+advancing completed-view time and unchanged contact ledger, owners and RNG.
+The earlier rejection test is replaced by the now-supported lifecycle.
+Twenty-three C++ binary/JSON witnesses reproduce byte-exactly through Python in
+both configurations, including shared pose retirement before first input and
+its sub-ULP expiry.
+
+Normal checks passed 382 Python, 2995 components and 1821 engine tests. Sanitizer
+checks passed 848 ESM4* components and 1821 engine tests, with no ASan/UBSan
+diagnostic observed; leaks remain disabled.
+
+Tested source fingerprint: `58057df07e33239e7618b502111f76804469ee173592f37d71de1f1e580121f0`.
+
+[M15-HELD-BLOCK-PEER-LIFECYCLE-VERIFICATION.json](M15-HELD-BLOCK-PEER-LIFECYCLE-VERIFICATION.json)
+links exact inventories, configurations, hashes, native proof and wire checks.
+This is service/persistence coverage, without new compiler/world authoring or
+actual runtime acceptance. World/controller wiring must project both source and
+destination through the shared NI3 span; interruption/camera policy and the
+recorded double-begin runtime regression remain open. M15S4 remains incomplete.
