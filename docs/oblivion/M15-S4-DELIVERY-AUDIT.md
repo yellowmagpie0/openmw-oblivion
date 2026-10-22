@@ -10970,3 +10970,67 @@ Character hard interruption and World held begin/release wiring remain to be
 connected. No new authoring/compiler/world plugin validation, windowed gameplay
 or typed in-flight restart acceptance. The double-begin regression and full
 M15S4 remain open.
+
+
+## Typed held World/controller integration and actual cache restart
+
+World now prepares held activation/release/cancellation from actual animation
+resources, selected view clocks and root identities. Controller input uses the
+typed cache, restores its resident tracks and leaves fading/inactive resources
+to the independent native frame lifecycle. A reblock reuses the resource and
+removes its former generic held fade, so expiry cannot disable a newly accepted
+same-group held track and manufacture a second begin. Legacy action6 without
+recoverable history keeps its prior playback until release.
+
+Actual restart testing exposed a separate startup edge: the first mechanics
+frame precedes Lua's queued OnActive event. Reading default controls there
+released the saved block before its continuous policy supplied input. The
+controller now binds saved ownership while local scripts await activation;
+zero-duration renderer refreshes also defer input interpretation. It uses the
+existing activation boundary, without adding saved readiness state or inventing
+held loop history. Adding onLoad/onActive policy alone and a zero-duration-only
+guard each failed the positive-duration startup case; those runs remain intact.
+
+Both final engine inventories pass all 1,829 tests in 125 suites. The new headless
+NPC/Player test rejects missing scene resources with the whole runtime snapshot
+unchanged. All 382 Python tests pass after adding the editable runtime manifests.
+Normal and ASan/UBSan resident courses each accept exactly one first begin and
+zero restart releases/begins. Every epoch saves twice with exact binary payload,
+decode/re-encode and live JSON equality. Initial NPC melee/cache and clock are
+exact under declared schema60-to61 empty-cache migration or direct schema61
+restore; the continuation loads the actual prior final save in a distinct PID/
+start-tick epoch. Nine AV arrays, life, RNG, consumed action ledger/owners and
+2,151 original nonempty reference inventories plus Player inventory stay exact.
+
+A separate normal course starts from an actual resident typed save and supplies
+block=false intent. One release produces a live NI3 duration 1 checkpoint and a
+late inactive cache. A fresh process preserves every inactive cache field through
+two more saves without another release or begin. Late animation API queries
+report playing for residence and stopped for release; all six final screenshots
+were inspected directly for guard-up versus lowered stance. These are scoped
+stance observations, not image equivalence or original-game skin interpolation.
+
+The first preregistration overreached by requiring the consumed Counter cache
+to remain throughout both saved checkpoints. It naturally reaches End under
+the already independently verified passive slot3 rule and retires; that failed
+assertion is preserved, and production was not changed to suppress End. One
+exploratory sanitizer first epoch also remains unaccepted because a subsequent
+rebuild changed its binary path and the launcher's final pin check rejected it.
+The final accepted sanitizer binary remains pinned across both processes.
+
+Final engine tested fingerprint:
+`7ac35dad74577bc00e9566965b1054c6b71df18de9af5a826c2ebe9286ba268e`.
+The receipt separately hashes the exact four tested C++ files, later-added
+manifests, Python report, engine inventories, runtime executables, inputs,
+preregistrations, semantic verifiers, saved/live pairs and retained failures.
+No ASan/UBSan diagnostic observed; leak detection disabled.
+
+[M15-HELD-BLOCK-WORLD-VERIFICATION.json](M15-HELD-BLOCK-WORLD-VERIFICATION.json)
+pins these layers and editable cases. This checkpoint accepts NPC body steady
+residence and normal release/inactive restart at configured 10 FPS with normal
+Lua intent and keyboard saves. Saved resident phases are NI1; no actual NI5
+held windup/release-deferral, Player asymmetric view/camera, equipment break/
+disarm, contact-driven typed reaction, full input/FPS/mastery/effects or original
+visual parity acceptance follows. Custom INI and initial FP clock/root policy
+remain open. Existing TES4 fixtures were reused: no new plugin/compiler/world
+validation or TES4 MCP capability claim. Full M15S4 remains incomplete.

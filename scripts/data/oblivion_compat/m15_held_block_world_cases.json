@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "native_basis": [
+    "docs/oblivion/M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
+    "docs/oblivion/M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json",
+    "docs/oblivion/M15-HELD-BLOCK-INTERRUPTION-VERIFICATION.json"
+  ],
+  "cases": [
+    {
+      "test": "OblivionWorldTest.HeldWorldBridgeRejectsMissingSceneResourcesWithoutChangingAuthority",
+      "matrix": {
+        "actor": [
+          "NPC",
+          "Player"
+        ]
+      },
+      "expected": [
+        "World begin rejects absent renderer with complete authority unchanged",
+        "World release and cancel preserve resident cache if resources unavailable",
+        "Cancel with no resident is an accepted no-op"
+      ]
+    },
+    {
+      "scenario": "oblivion_m15_held_block_reactivation.json",
+      "continuation": "oblivion_m15_held_block_reactivation_continuation.json",
+      "expected": [
+        "Actual released schema60 Counter/held save receives normal continuous block intent",
+        "Exactly one accepted begin and no old legacy held retirement",
+        "No release or begin across actual distinct-process resident restart",
+        "Initial NPC melee/clock exact under explicit empty-cache migration or schema61 restore",
+        "Four actual save/live binary pairs exact",
+        "All9 AV arrays, life, RNG, consumed ledger/owners and inventories unchanged"
+      ],
+      "limits": [
+        "Natural passive Counter End retirement is expected; no whole-course cache lifetime guarantee",
+        "Saved held phases are steady NI1; no NI5 windup acceptance",
+        "NPC body only; Player view/input/equipment/FPS matrix open"
+      ]
+    },
+    {
+      "scenario": "oblivion_m15_held_block_release.json",
+      "continuation": "oblivion_m15_held_block_release_continuation.json",
+      "expected": [
+        "Actual saved resident typed held receives normal block=false intent",
+        "One release and zero new begins",
+        "Actual first save captures typed NI3 duration1; late save retains inactive cache",
+        "Distinct-process inactive cache remains bit-exact",
+        "Four actual save/live binary pairs exact and unrelated authority/inventories unchanged"
+      ],
+      "limits": [
+        "NPC steady release only; pending NI5, Player asymmetric views, camera and equipment breaks open"
+      ]
+    }
+  ],
+  "full_M15S4_acceptance": false
+}

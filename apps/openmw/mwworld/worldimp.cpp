@@ -2790,6 +2790,151 @@ namespace MWWorld
         }
     }
 
+    bool World::beginOblivionHeldBlock(const Ptr& actor, std::string_view group)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || group.empty()) return false;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+        if (!animation) return false;
+        auto* first = player ? animation->getPlaybackPeer() : nullptr;
+        if (player && !first) return false;
+        const auto* root = animation->getObjectRoot();
+        const auto* firstRoot = first ? first->getObjectRoot() : nullptr;
+        if (!root || (first && !firstRoot)) return false;
+        const auto* state = mOblivionCombat->findMeleeState(key);
+        const float clock = mOblivionCombat->animationClock(key);
+        const float firstClock = state && state->mFirstPerson ? state->mFirstPerson->mClock : clock;
+        try
+        {
+            const auto prepare = [&](MWRender::Animation& view, float time, bool pose) {
+                const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(view, group, false);
+                const auto* source = view.getControllerSequenceMetadata(group);
+                if (!source || source->mWeight != 1 || metadata.mCycle != ESM4::MeleeSequenceCycle::Loop)
+                    throw std::invalid_argument("held activation requires a unit-weight cyclic BlockIdle");
+                MWMechanics::OblivionHeldBlockActivation result;
+                result.mSource = {std::string(group), source->mSequenceName, time, metadata.mTimelineBegin,
+                    metadata.mFrequency, metadata.mBegin, metadata.mEnd, metadata.mTimelineBegin,
+                    metadata.mTimelineEnd, metadata.mCycle, metadata.mBlendFrames};
+                if (pose)
+                {
+                    result.mDuration = ESM4::meleeBlendDuration({}, metadata.mBlendFrames, .1f);
+                    result.mPose = view.captureNativeSequencePose(group, 0);
+                }
+                result.validate();
+                return result;
+            };
+            const bool firstActive = player && isFirstPerson();
+            std::optional<MWMechanics::OblivionHeldBlockActivation> body, mirror;
+            if (!firstActive) body = prepare(*animation, clock,
+                player || mRendering->nativeReactionIntersectsFrustum(*animation));
+            if (player) mirror = prepare(*first, firstClock, true);
+            if (static_cast<const World&>(*this).getAnimation(actor) != animation
+                || animation->getObjectRoot() != root || animation->getPlaybackPeer() != first
+                || (first && first->getObjectRoot() != firstRoot)) return false;
+            return mOblivionCombat->activateHeldBlock(key, firstActive, body, mirror);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 held activation rejected: actor=" << key.serialize() << " reason=" << error.what();
+            return false;
+        }
+    }
+
+    bool World::releaseOblivionHeldBlock(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty()) return false;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* state = mOblivionCombat->findMeleeState(key);
+        if (!state || mOblivionCombat->getProcessAction(key) != 6) return false;
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+        auto* first = animation && player ? animation->getPlaybackPeer() : nullptr;
+        if (!animation || (player && (!first || !state->mFirstPerson))) return false;
+        const auto* root = animation->getObjectRoot();
+        const auto* firstRoot = first ? first->getObjectRoot() : nullptr;
+        const bool firstActive = player && isFirstPerson();
+        const auto& active = firstActive ? state->mFirstPerson->mHeldBlocks : state->mHeldBlocks;
+        const auto held = std::find_if(active.begin(), active.end(), [](const auto& entry) { return entry.resident(); });
+        if (held == active.end() || held->mSequenceTiming.mEasing) return false;
+        try
+        {
+            std::vector<MWMechanics::OblivionMeleeSequenceMetadata> sources;
+            const auto append = [&](MWRender::Animation& view, const auto& cache, bool mirror) {
+                for (const auto& entry : cache)
+                    if (entry.resident())
+                    {
+                        auto source = MWMechanics::captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                        source.mFirstPerson = mirror;
+                        sources.push_back(source);
+                    }
+            };
+            append(*animation, state->mHeldBlocks, false);
+            if (state->mFirstPerson) append(*first, state->mFirstPerson->mHeldBlocks, true);
+            const auto source = std::find_if(sources.begin(), sources.end(), [&](const auto& entry) {
+                return entry.mFirstPerson == firstActive && Misc::StringUtils::ciEqual(entry.mGroup, held->mAnimationGroup);
+            });
+            if (source == sources.end()) return false;
+            const float duration = ESM4::meleeBlendDuration({}, source->mBlendFrames, .1f);
+            if (static_cast<const World&>(*this).getAnimation(actor) != animation
+                || animation->getObjectRoot() != root || animation->getPlaybackPeer() != first
+                || (first && first->getObjectRoot() != firstRoot)) return false;
+            return mOblivionCombat->releaseHeldBlock(key, firstActive, duration, sources);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 held release rejected: actor=" << key.serialize() << " reason=" << error.what();
+            return false;
+        }
+    }
+
+    bool World::cancelOblivionHeldBlock(const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty()) return false;
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* state = mOblivionCombat->findMeleeState(key);
+        if (!state) return true;
+        const auto resident = [](const auto& cache) {
+            return std::any_of(cache.begin(), cache.end(), [](const auto& entry) { return entry.resident(); });
+        };
+        if (!resident(state->mHeldBlocks) && (!state->mFirstPerson || !resident(state->mFirstPerson->mHeldBlocks))) return true;
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+        if (!animation) return false;
+        auto* first = animation->getPlaybackPeer();
+        const auto* root = animation->getObjectRoot();
+        const auto* firstRoot = first ? first->getObjectRoot() : nullptr;
+        try
+        {
+            std::vector<MWMechanics::OblivionMeleeSequenceMetadata> sources;
+            const auto append = [&](MWRender::Animation& view, const auto& cache, bool mirror) {
+                for (const auto& entry : cache)
+                    if (entry.resident())
+                    {
+                        auto source = MWMechanics::captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                        source.mFirstPerson = mirror;
+                        sources.push_back(source);
+                    }
+            };
+            append(*animation, state->mHeldBlocks, false);
+            if (state->mFirstPerson && resident(state->mFirstPerson->mHeldBlocks))
+            {
+                if (!first) return false;
+                append(*first, state->mFirstPerson->mHeldBlocks, true);
+            }
+            if (static_cast<const World&>(*this).getAnimation(actor) != animation
+                || animation->getObjectRoot() != root || animation->getPlaybackPeer() != first
+                || (first && first->getObjectRoot() != firstRoot)) return false;
+            return mOblivionCombat->cancelResidentHeldBlocks(key, sources);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 held cancellation rejected: actor=" << key.serialize() << " reason=" << error.what();
+            return false;
+        }
+    }
+
     bool World::releaseOblivionCounterBlock(const Ptr& actor, std::string_view heldGroup)
     {
         if (!mOblivionCombat || actor.isEmpty() || heldGroup.empty()) return false;

@@ -31237,3 +31237,30 @@ TEST(OblivionWorldTest, ContactReactionCancelsResidentHeldSlotsInItsAtomicPublic
         EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
     }
 }
+
+TEST(OblivionWorldTest, HeldWorldBridgeRejectsMissingSceneResourcesWithoutChangingAuthority)
+{
+    for (const bool player : {false, true})
+    {
+        SCOPED_TRACE(player);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actorPtr = player ? fixture.mPlayer : fixture.mAttacker;
+        const auto actor = player ? fixture.mPlayerKey : actorPtr.getCellRef().getFormKey();
+        seedHeldBlockOwner(fixture, actor);
+        const auto before = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(world.beginOblivionHeldBlock(actorPtr, "handtohandblockidle"));
+        EXPECT_FALSE(world.beginOblivionHeldBlock({}, "handtohandblockidle"));
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        std::optional<MWMechanics::OblivionHeldBlockActivation> first;
+        if (player) first = heldBlockActivation(10.75f, true);
+        ASSERT_TRUE(service.activateHeldBlock(actor, false, heldBlockActivation(.75f, true), first));
+        const auto held = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(world.releaseOblivionHeldBlock(actorPtr));
+        EXPECT_FALSE(world.cancelOblivionHeldBlock(actorPtr));
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), held);
+        ASSERT_TRUE(service.cancelResidentHeldBlocks(actor, heldBlockMetadata(player)));
+        EXPECT_TRUE(world.cancelOblivionHeldBlock(actorPtr));
+    }
+}

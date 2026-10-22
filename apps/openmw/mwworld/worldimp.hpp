@@ -804,6 +804,9 @@ namespace MWWorld
         // restoration precedes optional scene attachment in saveLoaded.
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
+        bool beginOblivionHeldBlock(const Ptr& actor, std::string_view group);
+        bool releaseOblivionHeldBlock(const Ptr& actor);
+        bool cancelOblivionHeldBlock(const Ptr& actor);
         bool releaseOblivionCounterBlock(const Ptr& actor, std::string_view heldGroup);
         class PreparedOblivionDynamicReferenceKey
         {

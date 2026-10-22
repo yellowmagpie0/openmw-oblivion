@@ -66,6 +66,7 @@
 #include "../mwworld/worldimp.hpp"
 #include "../mwworld/oblivionprofileservices.hpp"
 #include "../mwworld/oblivionactorstats.hpp"
+#include "../mwlua/localscripts.hpp"
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadcrea.hpp>
@@ -1700,6 +1701,10 @@ namespace MWMechanics
                 throw std::invalid_argument("held first-person cache has no renderer view");
             if (peer) bind(*peer, state->mFirstPerson->mHeldBlocks);
         }
+        const auto& active = player && world->isFirstPerson() && state->mFirstPerson
+            ? state->mFirstPerson->mHeldBlocks : state->mHeldBlocks;
+        const auto resident = std::find_if(active.begin(), active.end(), [](const auto& entry) { return entry.resident(); });
+        if (resident != active.end()) mOblivionBlockGroup = resident->mAnimationGroup;
     }
 
     bool CharacterController::advanceOblivionMeleeReactionFrame(float duration)
@@ -2182,6 +2187,7 @@ namespace MWMechanics
             return;
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
+        if (!world->cancelOblivionHeldBlock(mPtr)) return;
         std::string strikeGroup;
         if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
         {
@@ -2253,7 +2259,40 @@ namespace MWMechanics
         const auto& cls = mPtr.getClass();
         const auto& stats = cls.getCreatureStats(mPtr);
         const bool drawn = stats.getDrawState() == DrawState::Weapon || mPtr.getType() == ESM::REC_CREA4;
+        const auto hasResidentHeld = [](const auto* state) {
+            const auto resident = [](const auto& cache) {
+                return std::any_of(cache.begin(), cache.end(), [](const auto& entry) { return entry.resident(); });
+            };
+            return state && (resident(state->mHeldBlocks)
+                || (state->mFirstPerson && resident(state->mFirstPerson->mHeldBlocks)));
+        };
         const auto releaseBlock = [&] {
+            const auto* heldState = service->findMeleeState(actor);
+            if (hasResidentHeld(heldState))
+            {
+                const bool counter = heldState->mStrike && heldState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
+                const auto cause = counter ? heldState->mStrike->mActionId : 0;
+                if (service->getProcessAction(actor) == 2 && counter)
+                {
+                    Log(Debug::Verbose) << "M15 Counter block release deferred: actor=" << actor.serialize()
+                                        << " id=" << cause << " action=2";
+                    return false;
+                }
+                if (!world->releaseOblivionHeldBlock(mPtr)) return false;
+                // Slot3 now belongs to the passive cache; clear only its owner
+                // bindings so the next pass does not disable its event tracks.
+                mOblivionRenderedStrike = mOblivionFirstPersonRenderedStrike = 0;
+                mCurrentWeapon.clear(); mOblivionFirstPersonStrikeGroup.clear();
+                mOblivionRenderedReaction = mOblivionFirstPersonRenderedReaction = 0;
+                mOblivionReactionGroup.clear(); mOblivionFirstPersonReactionGroup.clear();
+                mOblivionPoseSnapshot.reset(); mOblivionFirstPersonPoseSnapshot.reset();
+                mUpperBodyState = UpperBodyState::WeaponEquipped;
+                const auto group = std::exchange(mOblivionBlockGroup, {});
+                Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << group;
+                if (counter) Log(Debug::Verbose) << "M15 Counter block released: actor=" << actor.serialize()
+                    << " id=" << cause << " action=" << service->getProcessAction(actor);
+                return true;
+            }
             if (const auto* state = service->findMeleeState(actor); state && state->mStrike
                 && state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)
             {
@@ -2292,6 +2331,28 @@ namespace MWMechanics
             interrupt();
             return false;
         }
+        try { bindOblivionHeldBlock(); }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 held restore binding rejected: actor=" << actor.serialize() << " reason=" << error.what();
+            interrupt();
+            return false;
+        }
+        // Scene construction and the first mechanics frame precede Lua's
+        // queued OnActive event. Bind saved ownership until local scripts have
+        // activated; interpreting their default controls would manufacture a
+        // release on load. Zero-duration renderer refreshes also supply no input.
+        const auto* localScripts = mPtr.getRefData().getLuaScripts();
+        if ((duration == 0 || (localScripts && !localScripts->isActive()))
+            && hasResidentHeld(service->findMeleeState(actor)))
+        {
+            Log(Debug::Verbose) << "M15 held initialization: actor=" << actor.serialize() << " input deferred";
+            return false;
+        }
+        const auto* earlyControls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
+        if ((!earlyControls || !earlyControls->mBlock) && service->getProcessAction(actor) == 6
+            && hasResidentHeld(service->findMeleeState(actor)))
+            if (!releaseBlock()) return false;
         // BlockHit keeps the held BlockIdle channel resident. A fresh renderer
         // has neither layer yet, so reconstruct the held NPC layer before
         // recovery decides whether channel1 is present. This projects existing
@@ -2362,7 +2423,15 @@ namespace MWMechanics
                     return false;
                 }
         }
-        const bool blockIdlePresent = !mOblivionBlockGroup.empty() && mAnimation->getInfo(mOblivionBlockGroup);
+        const auto* heldState = service->findMeleeState(actor);
+        const bool typedHeld = heldState && (!heldState->mHeldBlocks.empty()
+            || (heldState->mFirstPerson && !heldState->mFirstPerson->mHeldBlocks.empty()));
+        const bool blockIdlePresent = typedHeld ? [&] {
+            const bool firstActive = player && world->isFirstPerson();
+            const auto& cache = firstActive && heldState->mFirstPerson
+                ? heldState->mFirstPerson->mHeldBlocks : heldState->mHeldBlocks;
+            return std::any_of(cache.begin(), cache.end(), [](const auto& entry) { return entry.resident(); });
+        }() : !mOblivionBlockGroup.empty() && mAnimation->getInfo(mOblivionBlockGroup);
         if (const auto* state = service->findMeleeState(actor); state && state->mStrike
             && state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter && state->mStrike->mInactive)
         {
@@ -2470,8 +2539,8 @@ namespace MWMechanics
             state && state->mFirstPerson && state->mFirstPerson->mStrike
                 && state->mFirstPerson->mStrike->mWeaponBase != weaponBase)
             interrupt();
-        const bool equipmentChanged = weapon != mWeapon || weaponType != mWeaponType
-            || mUpperBodyState == UpperBodyState::None;
+        const bool hadEquippedState = mUpperBodyState != UpperBodyState::None;
+        const bool equipmentChanged = weapon != mWeapon || weaponType != mWeaponType || !hadEquippedState;
         mWeapon = weapon;
         mWeaponType = weaponType;
         mUpperBodyState = UpperBodyState::WeaponEquipped;
@@ -2482,8 +2551,12 @@ namespace MWMechanics
         const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
         // Original5E5690 forces prefix0 for worn-shield groups27/28.
         const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
-        if (equipmentChanged || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
-            releaseBlock();
+        if ((equipmentChanged && hadEquippedState)
+            || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
+        {
+            if (hasResidentHeld(service->findMeleeState(actor))) interrupt();
+            else releaseBlock();
+        }
         const auto* blockState = service->findMeleeState(actor);
         const bool counterActive = blockState && blockState->mStrike
             && blockState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
@@ -2491,29 +2564,32 @@ namespace MWMechanics
         if (!counterActive && controls && controls->mBlock && mPtr.getType() != ESM::REC_CREA4
             && mAnimation->hasAnimation(blockGroup))
         {
-            const auto* metadata = mAnimation->getControllerSequenceMetadata(blockGroup);
-            const float start = mAnimation->getTextKeyTimeInGroup(blockGroup, blockGroup + ": start");
-            const float stop = mAnimation->getTextKeyTimeInGroup(blockGroup, blockGroup + ": stop");
-            // Stock native BlockIdle sequences cycle over their complete range;
-            // they have start/end keys and no authored loop keys.
-            if (metadata && metadata->mCycleType == 0 && start >= 0 && stop > start)
-                blockAccepted = service->beginBlocking(actor);
+            const bool resident = hasResidentHeld(service->findMeleeState(actor));
+            if (resident && service->getProcessAction(actor) == 6)
+            {
+                bindOblivionHeldBlock();
+                return false;
+            }
+            // Legacy action6 has no recoverable held timing. Keep its existing
+            // playback until release; fresh activations use the native cache.
+            const bool legacy = !resident && service->getProcessAction(actor) == 6;
+            blockAccepted = legacy ? service->beginBlocking(actor) : world->beginOblivionHeldBlock(mPtr, blockGroup);
             if (blockAccepted)
             {
-                if (mOblivionBlockGroup.empty() || !mAnimation->isPlaying(blockGroup))
+                mOblivionBlockGroup = blockGroup;
+                if (legacy)
                 {
-                    mOblivionBlockGroup = blockGroup;
-                    Log(Debug::Verbose) << "M15 block begin: actor=" << actor.serialize() << " group=" << blockGroup;
-                    try
-                    {
+                    if (!mAnimation->isPlaying(blockGroup))
                         playBlendedAnimation(blockGroup, Priority_Weapon, MWRender::BlendMask_UpperBody,
                             false, 1.f, "start", "stop", 0.f, std::numeric_limits<std::uint32_t>::max(), true);
-                    }
-                    catch (...)
-                    {
-                        releaseBlock();
-                        throw;
-                    }
+                }
+                else
+                {
+                    bindOblivionHeldBlock();
+                    // Anchor manager state before projection, matching its
+                    // ordinary frame path without consuming another delta.
+                    advanceOblivionMeleeReactionFrame(0);
+                    Log(Debug::Verbose) << "M15 block begin: actor=" << actor.serialize() << " group=" << blockGroup;
                 }
                 return false;
             }
