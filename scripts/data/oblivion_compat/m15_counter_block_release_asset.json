@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "scope": "Authored held BlockIdle blend30 (30/30=1 second) gives a robust NI retirement save window. A normal-input warmup waits for sampled held phase>=1.1 before Player attacks. No Counter/contact/AV outcome is injected.",
+  "archive": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Meshes.bsa",
+  "archive_sha256": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+  "entry": "meshes\\characters\\_male\\handtohandblockidle.kf",
+  "extractor": "build/bsatool",
+  "extractor_sha256": "85e37a09d7454dbd4d2c56be47a345f09ad56c38304bf4b72737892872dede44",
+  "original_path": "build/oblivion-compat/m15/S4/native-counter-block-release-runtime-inputs-01/original/handtohandblockidle.kf",
+  "original_sha256": "9be999a427a170a1288136a3d7c3515031d697cf6672601b671be8238aa99226",
+  "version_hex": "0x14000004",
+  "original_text_keys": [
+    [
+      0.0,
+      "start"
+    ],
+    [
+      1.3000001907348633,
+      "end"
+    ]
+  ],
+  "count_offset": 25213,
+  "insertion_offset": 25230,
+  "mutation": {
+    "text_key_count": [
+      2,
+      3
+    ],
+    "insert_after_start": {
+      "time": 0,
+      "text": "Blend: 30"
+    }
+  },
+  "output": "build/oblivion-compat/m15/S4/native-counter-block-release-runtime-inputs-02/fixture/meshes/characters/_male/handtohandblockidle.kf",
+  "output_sha256": "ddf251e2a7fa0d3eb19cb181b41ed04d724416c04a1e0696aacae8e1c3df5a88",
+  "bytes_added": 17,
+  "inverse_patch_exact": true,
+  "only_text_key_count_and_one_key_record_changed": true,
+  "expected_release_duration_float_bits": "3f800000",
+  "structural_write_success": true,
+  "parser_world_acceptance_pending": true,
+  "input_save": "build/oblivion-compat/m15/S4/native-expert-counter-isolated-inputs-01/expert-counter-restrained.omwsave",
+  "input_sha256": "bb2d338c05b6e5327026c7c22f368e697b12bc8008dde7efdaa0aa5fe43967ff",
+  "prerequisite_original": "build/oblivion-compat/m15/S4/native-counter-block-release-runtime-inputs-01/original/handtohandblockidle.kf"
+}

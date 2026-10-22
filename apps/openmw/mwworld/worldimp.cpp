@@ -2790,6 +2790,63 @@ namespace MWWorld
         }
     }
 
+    bool World::releaseOblivionCounterBlock(const Ptr& actor, std::string_view heldGroup)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || heldGroup.empty()) return false;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* state = mOblivionCombat->findMeleeState(key);
+        if (!state || !state->mStrike || state->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
+            || !state->mStrike->mContactCommitted || mOblivionCombat->getProcessAction(key) != 6)
+            return false;
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+        if (!animation) return false;
+        auto* first = player ? animation->getPlaybackPeer() : nullptr;
+        if (player && (!first || !state->mFirstPerson || !state->mFirstPerson->mStrike)) return false;
+        const auto* root = animation->getObjectRoot();
+        const auto* firstRoot = first ? first->getObjectRoot() : nullptr;
+        const auto cause = state->mStrike->mActionId;
+        try
+        {
+            const auto sample = [&](MWRender::Animation& view, float clock) {
+                if (!view.getInfo(heldGroup) || !view.isPlaying(heldGroup))
+                    throw std::invalid_argument("Counter release requires a resident steady BlockIdle");
+                const auto* authored = view.getControllerSequenceMetadata(heldGroup);
+                if (!authored || authored->mWeight != 1)
+                    throw std::invalid_argument("unsupported Counter held-source weight");
+                const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(view, heldGroup, false);
+                MWMechanics::OblivionMeleeSlot1Source result{std::string(heldGroup), authored->mSequenceName,
+                    clock, view.getCurrentTime(heldGroup), metadata.mFrequency, metadata.mBegin, metadata.mEnd,
+                    metadata.mTimelineBegin, metadata.mTimelineEnd, metadata.mCycle, metadata.mBlendFrames};
+                result.validate();
+                return result;
+            };
+            const auto body = sample(*animation, mOblivionCombat->animationClock(key));
+            std::optional<MWMechanics::OblivionMeleeSlot1Source> mirror;
+            if (player) mirror = sample(*first, state->mFirstPerson->mClock);
+            const bool firstActive = player && isFirstPerson();
+            // Original5F4AE0 uses the active view's unsigned blend-frame byte,
+            // or the reviewed fAnimationDefaultBlend:General INI default .1.
+            const auto frames = firstActive ? mirror->mBlendFrames : body.mBlendFrames;
+            const float duration = ESM4::meleeBlendDuration({}, frames, .1f);
+            std::optional<ESM4::RuntimeRetiringMeleeSequence> bodyHeld, firstHeld;
+            if (!firstActive) bodyHeld = body.retire(cause, duration);
+            if (player) firstHeld = mirror->retire(cause, duration);
+            if (static_cast<const World&>(*this).getAnimation(actor) != animation
+                || animation->getObjectRoot() != root || animation->getPlaybackPeer() != first
+                || (first && first->getObjectRoot() != firstRoot))
+                return false;
+            return mOblivionCombat->releaseCounterBlock(key, firstActive, bodyHeld, firstHeld);
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 Counter block release rejected: actor=" << key.serialize()
+                                << " reason=" << error.what();
+            return false;
+        }
+    }
+
     bool World::prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
         ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {

@@ -74,6 +74,22 @@ namespace MWMechanics
         ESM4::RuntimeRetiringMeleeSequence retire(std::uint64_t cause, float duration) const;
     };
 
+    // A steady resident BlockIdle sample at input release. As with slot0
+    // adoption, this establishes a canonical phase for subsequent NI updates;
+    // it does not reconstruct the legacy adapter's past loop count.
+    struct OblivionMeleeSlot1Source
+    {
+        std::string mGroup;
+        std::string mSequenceName;
+        float mClock = 0, mAnimationTime = 0;
+        float mFrequency = 1, mBegin = 0, mEnd = 0;
+        float mTimelineBegin = 0, mTimelineEnd = 0;
+        ESM4::MeleeSequenceCycle mCycle = ESM4::MeleeSequenceCycle::Loop;
+        std::uint8_t mBlendFrames = 0;
+        void validate() const;
+        ESM4::RuntimeRetiringMeleeSequence retire(std::uint64_t cause, float duration) const;
+    };
+
     // NPC/creature activations own only the body. Player activations must
     // supply the first-person mirror; missing or foreign mirrors reject.
     struct OblivionMeleeStrikeViews
@@ -916,6 +932,12 @@ namespace MWMechanics
         // intent is transient; only the accepted native posture is persisted.
         bool beginBlocking(const ESM::FormKey& actor);
         bool endBlocking(const ESM::FormKey& actor);
+        // Original5F4AE0(false) after Counter contact. Resource preparation
+        // supplies each held view's native retirement; process ownership ends
+        // while resident/detached Counter playback keeps its own lifetime.
+        bool releaseCounterBlock(const ESM::FormKey& actor, bool firstPersonActive,
+            const std::optional<ESM4::RuntimeRetiringMeleeSequence>& bodyHeld,
+            const std::optional<ESM4::RuntimeRetiringMeleeSequence>& firstHeld);
         // A real animated actor has constructed an Active process. Apply its
         // native defaults only where an older save has no restored field.
         // Headless restore and same-process activation must not call this.

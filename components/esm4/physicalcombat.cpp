@@ -348,6 +348,13 @@ namespace ESM4
         return nativeSequenceGroup(sequenceName, resourceBasename, names);
     }
 
+    std::optional<std::uint16_t> nativeHeldBlockSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename)
+    {
+        constexpr std::array<std::pair<std::string_view, std::uint16_t>, 1> names{{{"blockidle", 27}}};
+        return nativeSequenceGroup(sequenceName, resourceBasename, names);
+    }
+
     std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename)
     {

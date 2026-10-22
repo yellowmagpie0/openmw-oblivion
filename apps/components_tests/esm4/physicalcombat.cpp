@@ -6207,6 +6207,20 @@ TEST(ESM4PhysicalCombat, NativeSlot0NamesExcludeParallelSpecialIdlesAndAttacks)
     EXPECT_EQ(ESM4::nativeReactionSequenceGroup("Stagger", "onehandstagger.kf"), 0x21fu);
 }
 
+TEST(ESM4PhysicalCombat, HeldBlockNamesKeepSlot1IdentitySeparateFromCounterAndHit)
+{
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "blockidle.kf"), 0x1bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("bLoCkIdLe_variant", "handtohandblockidle.kf"), 0x11bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "onehandblockidle.kf"), 0x21bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "twohandblockidle.kf"), 0x31bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "swimstaffblockidle.kf"), 0x241bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "sneakbowblockidle.kf"), 0x151bu);
+    EXPECT_EQ(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "flyonehandblockidle.kf"), 0x321bu);
+    for (const auto name : {"", "Idle", "BlockHit", "BlockAttack", "BlockIdleX", "Recoil", "Stagger"})
+        EXPECT_FALSE(ESM4::nativeHeldBlockSequenceGroup(name, "handtohandblockidle.kf"));
+    EXPECT_THROW(ESM4::nativeHeldBlockSequenceGroup("BlockIdle", "folder/blockidle.kf"), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, CounterUsesAttackKeyInsteadOfPowerHitKey)
 {
     // Original51B688..51BA50 group29, all three x87 precision words.

@@ -10575,3 +10575,58 @@ name is `fAnimationDefaultBlend:General`, an INI global with compiled default
 float bits3DCCCCCD (.1). The probes supply .25. Reviewed helper/caller reports
 and the editable cases correct that provenance; raw execution artifacts and
 corpora remain unchanged. No numerical result or production code changed.
+
+## Counter block release and released-cache restart checkpoint
+
+Counter now retains held BlockIdle while action2 owns startup. After committed
+contact, release clears process action to -1 while Counter slot3 continues as a
+passive cache and held slot1 retires independently. Resource capture checks the
+resident source, authored metadata and view identities before atomic service
+publication. Native expiry also removes the corresponding legacy animation
+track. NPC uses body retirement; Player first-person-active releases body
+immediately and retires FP, while body-active retires both. Both Player paths
+use the active view's unsigned blend-frame byte/30, or the reviewed General INI
+compiled default .1. Importing custom original INI values remains open.
+
+Independent original-instruction evidence adds **288+96 authored-blend cases**
+to the prior helper96/caller72 matrix, including actual x87 integer load/divide
+and float store. Supplied scene/cache/notification, device-query and postcontact
+boundaries remain explicit. This is not an original-game process observation.
+
+Final normal and ASan/UBSan engine runs each pass **1814 tests/125 suites**, exact
+inventories, zero failures/skips. Tested parent is
+`540a19d8853239ac8a7df7dbec0ba4f24aa0780b`, dirty fingerprint
+`706e4dbae0b14356b2a76eb48dfa86d8aef823a4e53477128554ff8527d74c09`.
+Earlier normal components **2993/280** and sanitizer ESM4 **846/64** pass; their
+component code is unchanged by subsequent fixes. Those overall01 attempts
+failed engine compilation on private method access; overall02 failed on two
+SCOPED_TRACE declarations sharing a source line. All attempts are retained;
+final03 engine checks pass. Python is unchanged and was not repeated. No
+sanitizer diagnostics were observed; leak checks were disabled. A test macro
+style warning and existing aggregate warnings remain in build logs.
+
+The accepted normal and sanitizer runtime courses each run two actual process
+epochs: a keyboard attack with Lua block intent released during Counter startup,
+and a fresh process loading the actual postcontact released save. An authored
+Blend:30 key in the hash-pinned held KF supplies a one-second retirement window;
+the editable structural recipe preserves every other source byte, and no
+proprietary asset is committed. Actual parser/world and runtime acceptance are
+recorded separately from that recipe's structural preflight status.
+
+Each course has **four strict binary/live payload pairs**, unchanged Counter
+AV/life/RNG checks, nine matching combat actors and **2151 matching inventories**.
+The saved process-1/passive Counter3/held retirement state restores with exact
+initial cache and clock bytes, then naturally retires without contact replay or
+block rebind. All six Stagger/recovery captures were directly inspected.
+Configured10 FPS, software/offscreen rendering, sound disabled and Player first
+person bound this course. Actual Player Counter view release has unit coverage,
+not an original-dispatch or complete runtime camera matrix.
+
+Held-source adoption uses the actual legacy sampled phase as a canonical
+baseline; it does not recover past unwrapped NI loop count. Full resident held
+activation/windup persistence, reactivation during a prior held retirement,
+BlockHit release, partial mirrors and full first-person Counter source dispatch
+remain open. The isolated fixture's distant-AI restraint also does not close
+the broader background materialization snapshot issue. Exact artifacts, failed
+attempts, source and binary hashes, tool pins and editable manifests are in
+`M15-COUNTER-BLOCK-RELEASE-VERIFICATION.json`. Full M15S4 remains incomplete.

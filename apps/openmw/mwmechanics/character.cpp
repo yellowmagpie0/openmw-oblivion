@@ -1843,12 +1843,41 @@ namespace MWMechanics
                 throw std::invalid_argument("native first-person strike event track is missing");
         }
         const bool bodyInactive = next.mReaction && next.mReaction->mInactive;
+        const bool firstInactive = firstReaction && firstReaction->mInactive;
+        struct RetiredGroup { std::string mGroup; std::uint64_t mCause; bool mFirstPerson; };
+        std::vector<RetiredGroup> retiredGroups;
+        const auto collectRetired = [&](const auto& before, const auto& after, bool first) {
+            const auto remains = [&](std::string_view group) {
+                return (after.mStrike && after.mStrike->mAnimationGroup == group)
+                    || (after.mReaction && after.mReaction->mAnimationGroup == group)
+                    || (after.mPassiveSequence && after.mPassiveSequence->group() == group)
+                    || std::any_of(after.mRetiringSequences.begin(), after.mRetiringSequences.end(),
+                        [&](const auto& sequence) { return sequence.mAnimationGroup == group; });
+            };
+            for (const auto& sequence : before.mRetiringSequences)
+                if (!remains(sequence.mAnimationGroup))
+                    retiredGroups.push_back({sequence.mAnimationGroup, sequence.mContactId, first});
+            if (before.mPassiveSequence && !remains(before.mPassiveSequence->group()))
+                retiredGroups.push_back({std::string(before.mPassiveSequence->group()),
+                    before.mPassiveSequence->cause(), first});
+        };
+        collectRetired(*state, next, false);
+        if (state->mFirstPerson && next.mFirstPerson)
+            collectRetired(*state->mFirstPerson, *next.mFirstPerson, true);
         if (!service->commitMeleeReactionFrame(*prepared))
             throw std::invalid_argument("native reaction frame lost actor ownership");
         if (bodyInactive && !mOblivionReactionGroup.empty())
             mAnimation->disable(mOblivionReactionGroup, MWRender::Animation::PlaybackScope::ThisView);
-        if (firstReaction && firstReaction->mInactive && !mOblivionFirstPersonReactionGroup.empty())
+        if (firstInactive && !mOblivionFirstPersonReactionGroup.empty())
             peer->disable(mOblivionFirstPersonReactionGroup, MWRender::Animation::PlaybackScope::ThisView);
+        for (const auto& retired : retiredGroups)
+        {
+            auto& view = retired.mFirstPerson ? *peer : *mAnimation;
+            view.disable(retired.mGroup, MWRender::Animation::PlaybackScope::ThisView);
+            Log(Debug::Verbose) << "M15 native sequence retired: actor=" << actor.serialize()
+                << " cause=" << retired.mCause << " group=" << retired.mGroup
+                << " view=" << (retired.mFirstPerson ? "first" : "body");
+        }
         return true;
     }
 
@@ -2150,14 +2179,37 @@ namespace MWMechanics
         const auto& stats = cls.getCreatureStats(mPtr);
         const bool drawn = stats.getDrawState() == DrawState::Weapon || mPtr.getType() == ESM::REC_CREA4;
         const auto releaseBlock = [&] {
+            if (const auto* state = service->findMeleeState(actor); state && state->mStrike
+                && state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)
+            {
+                const auto cause = state->mStrike->mActionId;
+                if (service->getProcessAction(actor) == 2)
+                {
+                    Log(Debug::Verbose) << "M15 Counter block release deferred: actor=" << actor.serialize()
+                                        << " id=" << cause << " action=2";
+                    return false;
+                }
+                if (!world->releaseOblivionCounterBlock(mPtr, mOblivionBlockGroup)) return false;
+                // The cache now owns Counter's remaining visual lifetime.
+                // Keep its renderer state until the native frame retires it.
+                mOblivionRenderedStrike = 0;
+                mCurrentWeapon.clear();
+                mOblivionFirstPersonRenderedStrike = 0;
+                mOblivionFirstPersonStrikeGroup.clear();
+                mUpperBodyState = UpperBodyState::WeaponEquipped;
+                Log(Debug::Verbose) << "M15 Counter block released: actor=" << actor.serialize()
+                                    << " id=" << cause << " action=" << service->getProcessAction(actor);
+            }
+            else
+                service->endBlocking(actor);
             // Clear posture before animation-end observers can query/save it.
-            service->endBlocking(actor);
             const std::string group = std::exchange(mOblivionBlockGroup, {});
             if (!group.empty())
             {
                 Log(Debug::Verbose) << "M15 block release: actor=" << actor.serialize() << " group=" << group;
                 mAnimation->disable(group);
             }
+            return true;
         };
         const auto interrupt = [&] { cancelOblivionCombatInput(); };
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
@@ -2391,8 +2443,8 @@ namespace MWMechanics
                 return false;
             }
         }
-        // Counter owns action2/6 in slot3 while an existing held BlockIdle
-        // stays resident in slot1. Releasing input still removes that idle.
+        // Counter action2 defers release. After contact, action6 can release
+        // posture while cached slot3 and held-slot retirement keep advancing.
         if (!counterActive || !controls || !controls->mBlock) releaseBlock();
         persistOblivionMeleeProgress();
         const auto* saved = service->findMeleeState(actor);

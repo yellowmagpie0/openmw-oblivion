@@ -1,0 +1,26 @@
+{
+  "input_save_sha256": "bb2d338c05b6e5327026c7c22f368e697b12bc8008dde7efdaa0aa5fe43967ff",
+  "asset_recipe": "scripts/data/oblivion_compat/m15_counter_block_release_asset.json",
+  "scope": "Normal-input NPC Counter release during action2, postcontact process release, held NI retirement and cached Counter; actual released save4 fresh-process continuation without attacks/repeated control release. Full held-slot windup persistence remains outside this course.",
+  "preconditions": [
+    "Held sampled phase>=1.1 before Player attack; authored blend30 means1 second.",
+    "Only NPC stance/movement/block controls plus persisted author-policy booleans are changed by Lua. No contact, AV, action or animation outcome injected."
+  ],
+  "required": [
+    "One Player2 and Counter3 contact in first epoch, zero in released-cache continuation.",
+    "Block release requested/deferred while action2 before Counter contact; physical contact3 precedes process release-1 and held-slot-detached observation.",
+    "Actual save4 must contain NPC process-1, Counter3 passive cached and held BlockIdle retiring duration1 with remaining time; preserve binary/live payload exactly.",
+    "Fresh process loads exact save4 SHA; no block rebind or contact/resource-selection replay; retained held/Counter states naturally retire.",
+    "Final combat core, Player and every nonempty reference inventory match; no live native sequences in NPC or either Player view.",
+    "Inspect six captures and actual sanitizer environment/diagnostics."
+  ],
+  "full_M15S4_acceptance": false,
+  "isolated_input_recipe": "scripts/data/oblivion_compat/m15_expert_counter_isolated_input.json",
+  "manifests": [
+    "scripts/data/oblivion_compat/oblivion_m15_counter_block_release.json",
+    "scripts/data/oblivion_compat/oblivion_m15_counter_block_release_continuation.json",
+    "scripts/data/oblivion_compat/oblivion_m15_counter_block_release_sanitized.json",
+    "scripts/data/oblivion_compat/oblivion_m15_counter_block_release_sanitized_continuation.json"
+  ],
+  "asset_recipe_status": "The copied asset recipe records structural preflight status. Parser/world and actual runtime acceptance are recorded separately in M15-COUNTER-BLOCK-RELEASE-VERIFICATION.json."
+}

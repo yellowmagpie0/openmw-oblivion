@@ -1754,25 +1754,53 @@ namespace MWMechanics
             throw std::invalid_argument("invalid native slot0 adoption sample");
     }
 
-    ESM4::RuntimeRetiringMeleeSequence OblivionMeleeSlot0Source::retire(std::uint64_t cause, float duration) const
+    void OblivionMeleeSlot1Source::validate() const
     {
-        validate();
+        OblivionMeleeSequenceMetadata source{mGroup, mFrequency, mBegin, mEnd, mTimelineBegin, mTimelineEnd};
+        source.mCycle = mCycle;
+        source.validate();
+        if (mCycle != ESM4::MeleeSequenceCycle::Loop
+            || !ESM4::nativeHeldBlockSequenceGroup(mSequenceName, mGroup)
+            || !std::isfinite(mClock) || mClock < 0 || !std::isfinite(mAnimationTime)
+            || mAnimationTime < mTimelineBegin || mAnimationTime > mTimelineEnd)
+            throw std::invalid_argument("invalid native slot1 adoption sample");
+    }
+
+    template <class Source>
+    static ESM4::RuntimeRetiringMeleeSequence adoptRetiringMeleeSample(
+        const Source& sample, std::uint64_t cause, float duration)
+    {
+        sample.validate();
         // The legacy adapter exposes the current sampled phase, not NI's past
         // lap count. Adopt that actual phase as a canonical unwrapped baseline.
         // All following offset/input/weighted history is retained across saves.
-        const float fraction = (mAnimationTime - mTimelineBegin) / (mTimelineEnd - mTimelineBegin);
-        const float nativeTime = mAnimationTime <= mTimelineBegin ? mBegin
-            : mAnimationTime >= mTimelineEnd ? mEnd : mBegin + fraction * (mEnd - mBegin);
-        ESM4::MeleeSequenceTiming timing{.mOffset = ESM4::initialMeleeSequenceOffset(mClock),
+        const float fraction = (sample.mAnimationTime - sample.mTimelineBegin)
+            / (sample.mTimelineEnd - sample.mTimelineBegin);
+        const float nativeTime = sample.mAnimationTime <= sample.mTimelineBegin ? sample.mBegin
+            : sample.mAnimationTime >= sample.mTimelineEnd ? sample.mEnd
+            : sample.mBegin + fraction * (sample.mEnd - sample.mBegin);
+        ESM4::MeleeSequenceTiming timing{.mOffset = ESM4::initialMeleeSequenceOffset(sample.mClock),
             .mEaseStart = nativeTime, .mLastInput = 0.f, .mWeightedTime = nativeTime, .mOutputTime = nativeTime};
-        timing = ESM4::updateMeleeSequenceTiming(timing, mClock, mFrequency, mBegin, mEnd, {}, mCycle);
-        const OblivionMeleeSequenceMetadata source{mGroup, mFrequency, mBegin, mEnd, mTimelineBegin, mTimelineEnd};
+        timing = ESM4::updateMeleeSequenceTiming(timing, sample.mClock, sample.mFrequency,
+            sample.mBegin, sample.mEnd, {}, sample.mCycle);
+        const OblivionMeleeSequenceMetadata source{sample.mGroup, sample.mFrequency, sample.mBegin,
+            sample.mEnd, sample.mTimelineBegin, sample.mTimelineEnd};
         // Canonicalize the coordinate roundtrip before enforcing monotonic
         // clamp playback; inverse remapping can otherwise lose one float step.
-        ESM4::RuntimeRetiringMeleeSequence result{cause, mGroup, source.rendererTime(timing.mOutputTime),
+        ESM4::RuntimeRetiringMeleeSequence result{cause, sample.mGroup, source.rendererTime(timing.mOutputTime),
             timing, {duration, {}}};
         result.validate();
         return result;
+    }
+
+    ESM4::RuntimeRetiringMeleeSequence OblivionMeleeSlot0Source::retire(std::uint64_t cause, float duration) const
+    {
+        return adoptRetiringMeleeSample(*this, cause, duration);
+    }
+
+    ESM4::RuntimeRetiringMeleeSequence OblivionMeleeSlot1Source::retire(std::uint64_t cause, float duration) const
+    {
+        return adoptRetiringMeleeSample(*this, cause, duration);
     }
 
     struct OblivionCombatService::PreparedMeleeReactionFrame::Data
@@ -4806,6 +4834,92 @@ namespace MWMechanics
             || values->mProcessAction != 6 || (melee && (melee->mReaction || melee->mStrike)))
             return false;
         setProcessAction(actor, -1);
+        return true;
+    }
+
+    bool OblivionCombatService::releaseCounterBlock(const ESM::FormKey& actor, bool firstPersonActive,
+        const std::optional<ESM4::RuntimeRetiringMeleeSequence>& bodyHeld,
+        const std::optional<ESM4::RuntimeRetiringMeleeSequence>& firstHeld)
+    {
+        const auto found = mMeleeStates.find(actor);
+        const auto values = mActorValues.find(actor);
+        const auto* life = findActorLife(actor);
+        const auto clock = mAnimationClocks.find(actor);
+        if (found == mMeleeStates.end() || values == mActorValues.end() || !life
+            || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessAction != 6 || clock == mAnimationClocks.end())
+            return false;
+        const auto& state = found->second;
+        if (!state.mStrike || state.mStrike->mKind != ESM4::MeleeStrikeKind::Counter
+            || !state.mStrike->mContactCommitted || !isActionConsumed(state.mStrike->mActionId)
+            || state.mReaction || state.mPassiveSequence)
+            return false;
+        const auto cause = state.mStrike->mActionId;
+        const bool player = values->second.mOwner == ESM4::ActorValueOwner::Player;
+        if (player)
+        {
+            if (!state.mFirstPerson || !state.mFirstPerson->mStrike
+                || state.mFirstPerson->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
+                || state.mFirstPerson->mStrike->mActionId != cause
+                || !state.mFirstPerson->mStrike->mContactCommitted
+                || state.mFirstPerson->mReaction || state.mFirstPerson->mPassiveSequence
+                || !firstHeld || (firstPersonActive ? bodyHeld.has_value() : !bodyHeld))
+                return false;
+        }
+        else if (firstPersonActive || firstHeld || state.mFirstPerson || !bodyHeld)
+            return false;
+        const auto validateHeld = [&](const auto& held, float viewClock) {
+            if (!held) return;
+            held->validate();
+            const auto& timing = held->mSequenceTiming;
+            if (held->mContactId != cause || held->mRetirement.mStartClock
+                || !timing.mOffset || !timing.mLastInput || timing.mEasing
+                || std::bit_cast<std::uint32_t>(*timing.mOffset)
+                    != std::bit_cast<std::uint32_t>(ESM4::initialMeleeSequenceOffset(viewClock))
+                || *timing.mLastInput != 0.f)
+                throw std::invalid_argument("Counter block release requires a fresh clock-stamped held source");
+        };
+        validateHeld(bodyHeld, clock->second);
+        if (player) validateHeld(firstHeld, state.mFirstPerson->mClock);
+        if (bodyHeld && firstHeld
+            && bodyHeld->mRetirement.mDuration != firstHeld->mRetirement.mDuration)
+            throw std::invalid_argument("Counter block release requires the active view's shared duration");
+
+        // Prepare every allocation and invariant before changing posture.
+        // Counter contact/ledger/RNG have already committed and are untouched.
+        auto next = state;
+        const auto appendHeld = [](auto& retiring, const auto& held) {
+            if (!held) return;
+            if (std::any_of(retiring.begin(), retiring.end(), [&](const auto& old) {
+                    return old.mAnimationGroup == held->mAnimationGroup;
+                }))
+                throw std::invalid_argument("Counter block release has an ambiguous held cache source");
+            retiring.push_back(*held);
+        };
+        appendHeld(next.mRetiringSequences, bodyHeld);
+        if (player) appendHeld(next.mFirstPerson->mRetiringSequences, firstHeld);
+        const auto detach = [&](auto& strike, auto& passive, auto& retiring) {
+            if (!strike->mInactive)
+            {
+                if (strike->mRetirement)
+                    retiring.push_back(ESM4::RuntimeRetiringMeleeSequence{cause, strike->mAnimationGroup,
+                        strike->mAnimationTime, *strike->mSequenceTiming, *strike->mRetirement});
+                else
+                    passive = ESM4::RuntimePassiveMeleeSequence{*strike};
+            }
+            strike.reset();
+        };
+        detach(next.mStrike, next.mPassiveSequence, next.mRetiringSequences);
+        if (player)
+            detach(next.mFirstPerson->mStrike, next.mFirstPerson->mPassiveSequence,
+                next.mFirstPerson->mRetiringSequences);
+        next.mInput = {};
+        next.mAiIntent.reset();
+        next.validate();
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        std::swap(found->second, next);
+        values->second.mProcessAction = -1;
         return true;
     }
 

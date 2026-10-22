@@ -804,6 +804,7 @@ namespace MWWorld
         // restoration precedes optional scene attachment in saveLoaded.
         void applyOblivionRuntimeState();
         ESM4::RuntimeState captureOblivionRuntimeState() const;
+        bool releaseOblivionCounterBlock(const Ptr& actor, std::string_view heldGroup);
         class PreparedOblivionDynamicReferenceKey
         {
             friend class World;

@@ -30359,3 +30359,192 @@ TEST(OblivionWorldTest, FreshNpcCapturedContactRetainsRequestedOffsetUntilManage
         EXPECT_EQ(snapshot().mNativeActorValues, before.mNativeActorValues);
     }
 }
+
+TEST(OblivionWorldTest, HeldBlockAdoptionValidatesSlot1AndRetainsCanonicalLoopPhase)
+{
+    MWMechanics::OblivionMeleeSlot1Source source{"handtohandblockidle", "BlockIdle", 1, 11.5f,
+        1, 2, 4, 10, 12, ESM4::MeleeSequenceCycle::Loop, 0};
+    const auto retiring = source.retire(7, .25f);
+    EXPECT_EQ(retiring.mContactId, 7u);
+    EXPECT_EQ(retiring.mAnimationTime, 11.5f);
+    EXPECT_EQ(retiring.mSequenceTiming.mOffset, -1.f);
+    EXPECT_EQ(retiring.mSequenceTiming.mLastInput, 0.f);
+    EXPECT_EQ(retiring.mSequenceTiming.mWeightedTime, 3.5f);
+    EXPECT_EQ(retiring.mSequenceTiming.mOutputTime, 3.5f);
+    EXPECT_EQ(retiring.mRetirement.mDuration, .25f);
+    EXPECT_FALSE(retiring.mRetirement.mStartClock);
+    const auto reject = [&](auto mutate) {
+        auto invalid = source; mutate(invalid);
+        EXPECT_THROW(invalid.retire(7, .25f), std::invalid_argument);
+    };
+    reject([](auto& s) { s.mSequenceName = "BlockAttack"; });
+    reject([](auto& s) { s.mCycle = ESM4::MeleeSequenceCycle::Clamp; });
+    reject([](auto& s) { s.mClock = -1; });
+    reject([](auto& s) { s.mAnimationTime = 9.5f; });
+    reject([](auto& s) { s.mTimelineEnd = s.mTimelineBegin; });
+    reject([](auto& s) { s.mFrequency = std::numeric_limits<float>::quiet_NaN(); });
+}
+
+TEST(OblivionWorldTest, CounterBlockReleaseSeparatesProcessFromCachedPlaybackAndSurvivesBinaryRestore)
+{
+    for (unsigned view = 0; view != 3; ++view)
+    for (const bool detached : {false, true})
+    {
+        SCOPED_TRACE(view);
+        SCOPED_TRACE(detached);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const bool player = view != 0;
+        const bool firstActive = view == 2;
+        const auto source = player ? fixture.mPlayer : fixture.mAttacker;
+        const auto actor = player ? fixture.mPlayerKey : source.getCellRef().getFormKey();
+        std::optional<MWMechanics::OblivionMeleeStrikeViews> views;
+        if (player)
+        {
+            ESM4::RuntimeMeleeStrike body{1, ESM4::MeleeStrikeKind::Counter, {}, "handtohandblockattack"};
+            body.mSequenceTiming.emplace(); body.mPowerPhase = ESM4::PowerMeleePhase::Start;
+            auto seed = fixture.snapshot();
+            seed.mNativeMeleeStates.at(actor).mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{10.5f, {}};
+            service.restore(seed, world.getStore());
+            views = MWMechanics::OblivionMeleeStrikeViews{body,
+                ESM4::RuntimeFirstPersonMeleeState{10.5f, {}, body}};
+        }
+        const auto id = service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Counter,
+            "handtohandblockattack", 1, {}, views);
+        std::vector<MWMechanics::OblivionMeleeSequenceMetadata> metadata;
+        for (const bool first : {false, true})
+        {
+            if (first && !player) continue;
+            const float end = first ? .95f : .8f;
+            MWMechanics::OblivionMeleeSequenceMetadata counter{"handtohandblockattack", 1, 0, end, 0, end};
+            counter.mPowerKeys = std::array<float, 3>{0, .3f, end};
+            counter.mRetirementDuration = .1f; counter.mFirstPerson = first;
+            metadata.push_back(counter);
+            MWMechanics::OblivionMeleeSequenceMetadata held{"handtohandblockidle", 1, 0, 2, 0, 2};
+            held.mCycle = ESM4::MeleeSequenceCycle::Loop; held.mFirstPerson = first;
+            metadata.push_back(held);
+        }
+        const auto advance = [&](float dt) {
+            auto frame = service.prepareMeleeReactionFrame(actor, dt, metadata);
+            EXPECT_TRUE(frame);
+            if (frame) EXPECT_TRUE(service.commitMeleeReactionFrame(*frame));
+        };
+        for (const float dt : {0.f, .2f, .2f}) advance(dt);
+        ASSERT_TRUE(service.isMeleeContactPending(id, actor));
+        const auto packets = [&] {
+            std::pair<std::optional<ESM4::RuntimeRetiringMeleeSequence>,
+                std::optional<ESM4::RuntimeRetiringMeleeSequence>> result;
+            MWMechanics::OblivionMeleeSlot1Source body{"handtohandblockidle", "BlockIdle",
+                service.animationClock(actor), 1.95f, 1, 0, 2, 0, 2};
+            if (!firstActive) result.first = body.retire(id, .25f);
+            if (player)
+            {
+                body.mClock = service.findMeleeState(actor)->mFirstPerson->mClock;
+                body.mAnimationTime = .6f;
+                result.second = body.retire(id, .25f);
+            }
+            return result;
+        };
+        auto held = packets();
+        const auto pending = fixture.snapshot().serializeBinary();
+        EXPECT_FALSE(service.releaseCounterBlock(actor, firstActive, held.first, held.second));
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), pending);
+        auto contact = world.prepareOblivionPhysicalContact(id, source, {}, {});
+        ASSERT_TRUE(contact); ASSERT_TRUE(contact->commit());
+        if (detached) advance(.45f);
+        const auto before = fixture.snapshot();
+        const auto strike = *service.findMeleeState(actor)->mStrike;
+        EXPECT_EQ(strike.mRetirement.has_value(), detached);
+        held = packets();
+        EXPECT_FALSE(world.releaseOblivionCounterBlock(source, "handtohandblockidle")); // No renderer.
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        EXPECT_FALSE(service.releaseCounterBlock(ESM::FormKey::dynamic("missing", 1),
+            firstActive, held.first, held.second));
+        if (player)
+        {
+            EXPECT_FALSE(service.releaseCounterBlock(actor, firstActive, held.first, {}));
+            if (firstActive)
+                EXPECT_FALSE(service.releaseCounterBlock(actor, true, held.second, held.second));
+            else
+            {
+                EXPECT_FALSE(service.releaseCounterBlock(actor, false, {}, held.second));
+                auto wrongDuration = held.second;
+                wrongDuration->mRetirement.mDuration += .1f;
+                EXPECT_THROW(service.releaseCounterBlock(actor, false, held.first, wrongDuration),
+                    std::invalid_argument);
+            }
+        }
+        else
+        {
+            EXPECT_FALSE(service.releaseCounterBlock(actor, true, held.first, held.second));
+            EXPECT_FALSE(service.releaseCounterBlock(actor, false, held.first, held.first));
+        }
+        for (unsigned fault = 0; fault != 3; ++fault)
+        {
+            auto invalid = held;
+            auto& packet = invalid.first ? *invalid.first : *invalid.second;
+            if (fault == 0) packet.mContactId = id + 1;
+            if (fault == 1) *packet.mSequenceTiming.mOffset += 1;
+            if (fault == 2) packet.mRetirement.mStartClock = 0;
+            EXPECT_THROW(service.releaseCounterBlock(actor, firstActive, invalid.first, invalid.second),
+                std::invalid_argument);
+        }
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        auto staleFrame = service.prepareMeleeReactionFrame(actor, 0, metadata);
+        ASSERT_TRUE(staleFrame);
+        ASSERT_TRUE(service.releaseCounterBlock(actor, firstActive, held.first, held.second));
+        EXPECT_FALSE(service.commitMeleeReactionFrame(*staleFrame));
+        EXPECT_EQ(service.getProcessAction(actor), -1);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto* released = service.findMeleeState(actor);
+        ASSERT_TRUE(released); EXPECT_FALSE(released->mStrike);
+        if (detached)
+        {
+            EXPECT_FALSE(released->mPassiveSequence);
+            const auto tail = std::find_if(released->mRetiringSequences.begin(), released->mRetiringSequences.end(),
+                [&](const auto& s) { return s.mAnimationGroup == strike.mAnimationGroup; });
+            ASSERT_NE(tail, released->mRetiringSequences.end());
+            EXPECT_EQ(tail->mSequenceTiming, *strike.mSequenceTiming);
+            EXPECT_EQ(tail->mAnimationTime, strike.mAnimationTime);
+            EXPECT_EQ(tail->mRetirement, *strike.mRetirement);
+        }
+        else
+        {
+            ASSERT_TRUE(released->mPassiveSequence);
+            EXPECT_EQ(std::get<ESM4::RuntimeMeleeStrike>(released->mPassiveSequence->mSequence), strike);
+        }
+        const auto checkpoint = fixture.snapshot();
+        EXPECT_FALSE(service.releaseCounterBlock(actor, firstActive, held.first, held.second));
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), checkpoint.serializeBinary());
+        auto expectedValues = before.mNativeActorValues;
+        for (auto& v : expectedValues) if (v.mActor == actor) v.mProcessAction = -1;
+        EXPECT_EQ(checkpoint.mNativeActorValues, expectedValues);
+        EXPECT_EQ(checkpoint.mPhysicalActions, before.mPhysicalActions);
+        EXPECT_EQ(checkpoint.mPhysicalActionOwners, before.mPhysicalActionOwners);
+        EXPECT_EQ(checkpoint.mCombatRngState, before.mCombatRngState);
+        service.restore(ESM4::RuntimeState::deserializeBinary(checkpoint.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), checkpoint.serializeBinary());
+        advance(0);
+        for (unsigned frame = 0; frame != 20; ++frame)
+        {
+            const auto* state = service.findMeleeState(actor);
+            const bool active = state->mPassiveSequence || !state->mRetiringSequences.empty()
+                || (state->mFirstPerson && (state->mFirstPerson->mPassiveSequence
+                    || !state->mFirstPerson->mRetiringSequences.empty()));
+            if (!active) break;
+            advance(.1f);
+            EXPECT_EQ(service.getProcessAction(actor), -1);
+            EXPECT_FALSE(service.isMeleeContactPending(id, actor));
+        }
+        const auto* done = service.findMeleeState(actor);
+        EXPECT_FALSE(done->mPassiveSequence); EXPECT_TRUE(done->mRetiringSequences.empty());
+        if (player)
+        {
+            EXPECT_FALSE(done->mFirstPerson->mPassiveSequence);
+            EXPECT_TRUE(done->mFirstPerson->mRetiringSequences.empty());
+        }
+        EXPECT_EQ(fixture.snapshot().mNativeActorValues, expectedValues);
+        EXPECT_EQ(fixture.snapshot().mCombatRngState, before.mCombatRngState);
+    }
+}

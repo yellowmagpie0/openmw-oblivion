@@ -109,6 +109,9 @@ namespace ESM4
         std::string_view sequenceName, std::string_view resourceBasename);
     std::optional<std::uint16_t> nativeCounterSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
+    // Cyclic held BlockIdle27 belongs to its independent native slot1.
+    std::optional<std::uint16_t> nativeHeldBlockSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename);
     // Slot0 locomotion names from the native table, excluding SpecialIdle2/slot4.
     std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
