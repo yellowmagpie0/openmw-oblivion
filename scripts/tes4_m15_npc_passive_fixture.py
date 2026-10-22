@@ -22,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60) or not isinstance(recipe['actor'], str)
+            or runtime.CURRENT_VERSION not in (59, 60, 61) or not isinstance(recipe['actor'], str)
             or not recipe['actor'].startswith('content:')
             or type(recipe['actor_draw_state']) is not int or recipe['actor_draw_state'] != 1
             or type(recipe['process_action']) is not int or recipe['process_action'] != -1
@@ -62,6 +62,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
             or not melee.get('passive_sequence')):
         raise ValueError('NPC fixture requires recovered body-only passive history')
     state = copy.deepcopy(original)
+    runtime._upgrade_held_blocks(state)
     state['schema_version'] = recipe['target_schema']
     next(v for v in state['references'] if v['key'] == actor)['actor_draw_state'] = 1
     next(v for v in state['content'] if v['plugin'].lower() == override['plugin'])['fingerprint'] = override['replacement_fingerprint']
@@ -81,6 +82,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
                   source_sha256=source_hash, output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
                   mutations=['NPC draw state0 -> 1', 'declared NPC passive history installed',
                              'declared inspected private plugin fingerprint replaced'],
+                  schema_defaults={'melee.held_blocks': [], 'first_person.held_blocks': []},
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False, normal_input_contact=False)
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')

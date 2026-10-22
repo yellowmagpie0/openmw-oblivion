@@ -22,6 +22,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
         state['native_melee_states'] = []
         if idle:
             entry = copy.deepcopy(recipe['melee_state']); entry['passive_sequence'] = None
+            entry.pop('held_blocks', None)
             state['native_melee_states'] = [entry]
         state['physical_actions'] = {'next': 2, 'pending': []}; state['physical_action_owners'] = []
         for value in state['native_actor_values']: value['process_action'] = -1

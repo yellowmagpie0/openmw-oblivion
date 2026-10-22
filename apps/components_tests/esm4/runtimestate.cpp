@@ -4865,3 +4865,165 @@ TEST(ESM4RuntimeState, Counter60InactiveIntervalsAndBothViewWireFlagsAreStrict)
     }
     EXPECT_EQ(views, 2u);
 }
+
+namespace
+{
+    ESM4::RuntimeState heldBlockState(unsigned phase)
+    {
+        auto state = firstPersonStrikeState();
+        state.mVersion = 61;
+        const auto actor = state.mPlayer.mReference;
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        state.mNativeAnimationClocks.at(actor) = 10.125f;
+        melee.mFirstPerson->mClock = 20.125f;
+        for (const bool first : {false, true})
+        {
+            const float clock = first ? 20.125f : 10.125f;
+            ESM4::RuntimeHeldBlockSequence held{"handtohandblockidle", .125f,
+                {.mOffset = -(clock - 2.125f), .mEaseStart = 2.f, .mEaseEnd = 1.f,
+                 .mLastInput = 2.125f, .mWeightedTime = 2.125f, .mOutputTime = .125f}};
+            if (phase == 0) { held.mAnimationTime = -0.f; held.mSequenceTiming = {}; }
+            if (phase == 2 || phase == 3 || phase == 9)
+            {
+                held.mAnimationTime = -0.f;
+                held.mSequenceTiming = {.mEasing = true, .mOffset = -0.f, .mEaseStart = {},
+                    .mEaseEnd = 1.f, .mLastInput = {}};
+                held.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{-0.f, {}};
+                ESM4::RuntimeMeleePoseTrack track;
+                track.mBone = "Bip01 Pelvis"; track.mTranslation = {-0.f, 2, 3};
+                track.mRotation = {1, -0.f, 0, 0}; track.mScale = -0.f; track.mPriority = 8;
+                held.mPoseSnapshot->mTracks.push_back(track);
+                if (phase == 3)
+                {
+                    held.mSequenceTiming.mEaseStart = clock;
+                    held.mSequenceTiming.mLastInput = -0.f;
+                    held.mSequenceTiming.mEaseEnd = clock + 1;
+                }
+            }
+            if (phase >= 4 && phase <= 6)
+                held.mRetirement = ESM4::RuntimeReactionRetirement{.5f,
+                    phase == 4 ? std::nullopt : std::optional(clock - (phase == 6 ? .5f : .25f))};
+            if (phase == 6 || phase == 7) held.mInactive = true;
+            if (phase == 8 || phase == 10)
+            {
+                held.mSequenceTiming.mOffset.reset();
+                if (phase == 10) held.mSequenceTiming.mEaseStart.reset();
+            }
+            if (phase == 9)
+            {
+                held.mSequenceTiming.mLastInput = 2.125f;
+                held.mSequenceTiming.mWeightedTime = 2.125f;
+                held.mSequenceTiming.mOutputTime = .125f;
+            }
+            auto& cache = first ? melee.mFirstPerson->mHeldBlocks : melee.mHeldBlocks;
+            cache.push_back(held);
+            // Keep inactive resources too; the active slot need not own all caches.
+            auto old = held;
+            old.mAnimationGroup = "onehandblockidle";
+            old.mPoseSnapshot.reset(); old.mSequenceTiming.mEasing = false;
+            old.mInactive = true; old.mRetirement.reset();
+            // An inactive never-updated cache is representable without invented timing.
+            old.mSequenceTiming = {};
+            cache.push_back(old);
+        }
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, HeldBlock61RetainsIndependentCacheLifecycleWithoutContactOwnership)
+{
+    for (unsigned phase = 0; phase != 11; ++phase)
+    {
+        SCOPED_TRACE(phase);
+        const auto state = heldBlockState(phase);
+        const auto bytes = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_EQ(loaded.mPhysicalActions.mPending, state.mPhysicalActions.mPending);
+        EXPECT_EQ(loaded.mPhysicalActionOwners, state.mPhysicalActionOwners);
+        EXPECT_EQ(loaded.mCombatRngState, state.mCombatRngState);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        const auto actor = state.mPlayer.mReference;
+        const auto& held = loaded.mNativeMeleeStates.at(actor).mHeldBlocks.front();
+        if (phase == 0 || phase == 2 || phase == 3 || phase == 9)
+        {
+            EXPECT_TRUE(std::signbit(held.mAnimationTime));
+        }
+        if (held.mPoseSnapshot)
+        {
+            EXPECT_TRUE(std::signbit(held.mPoseSnapshot->mDestinationFrame));
+            EXPECT_TRUE(std::signbit(held.mPoseSnapshot->mTracks.front().mScale));
+        }
+        std::string wire;
+        constexpr char hex[] = "0123456789abcdef";
+        for (auto byte : bytes) { wire += hex[byte >> 4]; wire += hex[byte & 15]; }
+        RecordProperty("held61_" + std::to_string(phase) + "_hex", wire);
+        RecordProperty("held61_" + std::to_string(phase) + "_json", state.canonicalJson());
+        auto legacy = state; legacy.mVersion = 60;
+        EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
+        auto& old = legacy.mNativeMeleeStates.at(actor);
+        old.mHeldBlocks.clear(); old.mFirstPerson->mHeldBlocks.clear();
+        const auto oldBytes = legacy.serializeBinary();
+        auto promoted = ESM4::RuntimeState::deserializeBinary(oldBytes);
+        promoted.mVersion = 61;
+        EXPECT_TRUE(promoted.mNativeMeleeStates.at(actor).mHeldBlocks.empty());
+        EXPECT_TRUE(promoted.mNativeMeleeStates.at(actor).mFirstPerson->mHeldBlocks.empty());
+        EXPECT_EQ(promoted.serializeBinary().size(), oldBytes.size() + 8);
+    }
+}
+
+TEST(ESM4RuntimeState, HeldBlock61RejectsAmbiguousPartialAndPrematureCacheHistory)
+{
+    for (const bool first : {false, true})
+    {
+        SCOPED_TRACE(first);
+        const auto state = heldBlockState(1);
+        const auto actor = state.mPlayer.mReference;
+        const auto reject = [&](auto mutate) {
+            auto bad = state;
+            auto& m = bad.mNativeMeleeStates.at(actor);
+            auto& cache = first ? m.mFirstPerson->mHeldBlocks : m.mHeldBlocks;
+            mutate(bad, m, cache);
+            EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        };
+        reject([](auto&, auto&, auto& c) { c.front().mAnimationGroup.clear(); });
+        reject([](auto&, auto&, auto& c) { c.front().mAnimationTime = -1; });
+        reject([](auto&, auto&, auto& c) { c.front().mSequenceTiming.mLastInput.reset(); });
+        reject([](auto&, auto&, auto& c) { c.front().mSequenceTiming.mEaseStart.reset(); });
+        reject([](auto&, auto&, auto& c) { c.front().mSequenceTiming.mOutputTime = std::numeric_limits<float>::infinity(); });
+        reject([](auto&, auto&, auto& c) { auto x = c.front(); x.mAnimationGroup = "HANDTOHANDBLOCKIDLE"; c.push_back(x); });
+        reject([](auto&, auto&, auto& c) { c.back().mInactive = false; });
+        reject([](auto& s, auto&, auto&) { s.mNativeAnimationClocks.clear(); });
+        reject([](auto& s, auto&, auto&) { s.mNativeActorValues.back().mProcess = ESM4::ActorValueProcess::Low; });
+        reject([](auto&, auto&, auto& c) { c.front().mRetirement = ESM4::RuntimeReactionRetirement{0, {}}; });
+        reject([](auto&, auto&, auto& c) { c.front().mRetirement = ESM4::RuntimeReactionRetirement{.5f, {}}; c.front().mInactive = true; });
+        reject([&](auto&, auto& m, auto& c) {
+            c.front().mRetirement = ESM4::RuntimeReactionRetirement{.5f, first ? m.mFirstPerson->mClock : 10.125f};
+            c.front().mInactive = true;
+        });
+        reject([](auto&, auto&, auto& c) { c.front().mRetirement = ESM4::RuntimeReactionRetirement{.5f, 100}; });
+        reject([&](auto&, auto& m, auto& c) {
+            auto& old = first ? m.mFirstPerson->mRetiringSequences : m.mRetiringSequences;
+            old.push_back({3, c.front().mAnimationGroup, .125f, c.front().mSequenceTiming, {.5f, {}}});
+        });
+    }
+    const auto bytes = heldBlockState(0).serializeBinary();
+    const std::string marker = "handtohandblockidle";
+    auto from = bytes.begin();
+    unsigned views = 0;
+    while (true)
+    {
+        const auto at = std::search(from, bytes.end(), marker.begin(), marker.end());
+        if (at == bytes.end()) break;
+        ++views;
+        const auto tail = std::size_t(at - bytes.begin()) + marker.size();
+        for (const auto flag : {4u, 5u, 6u, 7u, 20u, 21u, 22u})
+        {
+            auto bad = bytes; bad.at(tail + flag) = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+        }
+        from = at + marker.size();
+    }
+    EXPECT_EQ(views, 2u);
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "runtime_state_version": 61,
+  "scope": "Versioned per-view slot1 cache persistence contract; actual controller activation and frame advancement remain separate work.",
+  "fields": [
+    "animation_group",
+    "animation_time",
+    "sequence_timing",
+    "retirement",
+    "inactive",
+    "pose_snapshot"
+  ],
+  "binary_layout": "After body/FP passive slot3 fields, write body held count and entries, then FP held count/entries iff FP exists. Each entry: string group, f32 animation time, bool easing, optional f32 offset/easeStart/lastInput, f32 easeEnd/weighted/output, optional retirement duration/optional start, bool inactive, optional captured pose. No contact ID.",
+  "cases": [
+    {
+      "phase": 0,
+      "lifecycle": "fresh direct activation"
+    },
+    {
+      "phase": 1,
+      "lifecycle": "resident loop with unwrapped2.125/output.125"
+    },
+    {
+      "phase": 2,
+      "lifecycle": "unanchored captured pose"
+    },
+    {
+      "phase": 3,
+      "lifecycle": "anchored captured pose"
+    },
+    {
+      "phase": 4,
+      "lifecycle": "unanchored retirement"
+    },
+    {
+      "phase": 5,
+      "lifecycle": "anchored retirement"
+    },
+    {
+      "phase": 6,
+      "lifecycle": "expired inactive cache"
+    },
+    {
+      "phase": 7,
+      "lifecycle": "immediately inactive cache"
+    },
+    {
+      "phase": 8,
+      "lifecycle": "cached direct activation with offset reset and old timing retained"
+    },
+    {
+      "phase": 9,
+      "lifecycle": "cached NI5 activation with old last/weighted/output retained"
+    },
+    {
+      "phase": 10,
+      "lifecycle": "cached direct activation after unanchored retirement"
+    }
+  ],
+  "per_view": "Same resource alias in independent body/FP clocks; additional inactive resource retained.",
+  "admission": [
+    "Alive Active actor with body clock; FP only on Player with independent FP clock.",
+    "ASCII-case-insensitive unique resource aliases; at most one resident held slot per view.",
+    "Same alias cannot also exist in legacy retiring vector.",
+    "Finite samples/timing, positive activation/retirement interval, valid pose tracks and strict booleans.",
+    "Pending cached activation preserves known native partial initialization masks. Other partial timing is rejected.",
+    "Inactive retirement requires anchored interval already elapsed in that view."
+  ],
+  "migration": "Versions1..60 add empty caches only. Never invent resident history from action6, or relabel a nonempty old-version held cache as valid. Older-version C++ service capture rejects before destination mutation.",
+  "native_basis": [
+    "M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
+    "M15-BLOCK-RELEASE-CALLER-VERIFICATION.json"
+  ],
+  "full_M15S4_acceptance": false
+}

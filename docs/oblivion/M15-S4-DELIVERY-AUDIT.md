@@ -10706,3 +10706,54 @@ controllers and rendering gates are supplied; actual scene pose capture,
 production persistence, differing Player source blends and runtime reactivation
 acceptance remain open. Updated editable cases and pins are in the same
 reactivation receipt. No production code or test selection changed.
+
+## Held-block schema61 persistence checkpoint
+
+Schema61 now stores a per-view resource cache for held slot1 separately from
+contact IDs, Counter slot3 and process action. Each entry retains sampled time,
+unwrapped NI timing, optional retirement/inactivity and optional captured pose.
+Inactive resources survive; one resident slot and case-insensitive unique aliases
+are enforced per view. A resource cannot simultaneously appear in its old generic
+retiring vector and new held cache. Actor life/process/clock ownership, independent
+Player FP ownership, finite fields, pose tracks, retirement clocks and binary
+boolean flags are validated before admission. Resource metadata/slot reinspection
+remains a world-layer responsibility.
+
+Eleven lifecycle cases include normal loops, requested/anchored poses, pending/
+anchored/expired retirement and cached preupdate activation. Native activation
+can reset offset/easeStart while retaining prior lastInput/weighted/output fields;
+those explicit masks are preserved rather than cleared. Other partial timing is
+rejected. Legacy migration adds empty caches only, and does not infer history from
+action6. Headless service capture rejects older output versions before modifying
+the destination and restores both view histories through the binary codec.
+
+Final normal checks pass **382 Python tests**, **2995 component tests/280 suites**
+and **1815 engine tests/125 suites**. Final ASan/UBSan checks pass **848 ESM4 tests/
+64 suites** and **1815 engine tests/125 suites**, with exact inventories and no
+failures/skips. Parent is `6919f23035801330036da5c737c08a0a4fa31e81`, tested dirty
+fingerprint `8dd3c3bc95fb8dff0a1b59224005443eff15dc0fb183ffe548abd31f9172d0ef`.
+All eleven C++ whole binary/canonical JSON cases reproduce byte-for-byte through
+Python in both configurations, including signed zeros and independent clocks.
+No sanitizer diagnostics observed; leak checks were disabled. Existing aggregate
+warnings and the earlier Counter-test macro warning remain.
+
+The first full Python run retained seven fixture helper failures at their old
+version60 guards. Four reviewed helpers and six editable recipes now explicitly
+declare61 and empty held caches; final full Python passes. A pinned real schema59
+strike-tail source stages to61 with complete semantic reinspection and preserved
+undeclared state. This is structural/semantic staging, not compiler/world or
+runtime acceptance. Earlier receipts retain their original recipe hashes at the
+tested revisions; prior gameplay evidence has not been relabeled as61 evidence.
+Baseline C++ runs passed before native preupdate-mask review; final02 reruns cover
+the corrected implementation. Exact pins are in
+`M15-HELD-BLOCK-SCHEMA61-VERIFICATION.json`.
+
+An additional original-instruction call across the same288 eligible matrix
+verifies full5F4AE0(false) during fresh NI5: it returns false, retains process6
+and preserves complete held/proxy/Counter blocks. The release intent must defer
+through that transition. The reactivation receipt includes this check without
+counting repeated timing samples as new independent parameter cases.
+
+This checkpoint supplies the saved-state contract. Controller activation,
+advancement/projection, actual held windup/blocking restart and the recorded
+runtime double-begin regression remain open. Full M15S4 remains incomplete.

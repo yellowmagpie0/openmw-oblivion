@@ -30548,3 +30548,42 @@ TEST(OblivionWorldTest, CounterBlockReleaseSeparatesProcessFromCachedPlaybackAnd
         EXPECT_EQ(fixture.snapshot().mCombatRngState, before.mCombatRngState);
     }
 }
+
+TEST(OblivionWorldTest, HeldBlock61CaptureRetainsIndependentHistoryAndRejectsLossyOlderSaveBeforeMutation)
+{
+    for (const unsigned views : {1u, 2u, 3u})
+    {
+        SCOPED_TRACE(views);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = fixture.mPlayerKey;
+        auto state = fixture.snapshot();
+        state.mVersion = 61;
+        state.mNativeAnimationClocks[actor] = 1;
+        auto& melee = state.mNativeMeleeStates[actor];
+        melee.mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{10.5f, {}};
+        const ESM4::RuntimeHeldBlockSequence held{"handtohandblockidle", .125f,
+            {.mOffset = -0.f, .mEaseStart = 2.f, .mEaseEnd = 1.f,
+             .mLastInput = 2.125f, .mWeightedTime = 2.125f, .mOutputTime = .125f}};
+        if (views & 1) melee.mHeldBlocks.push_back(held);
+        if (views & 2)
+        {
+            auto first = held; first.mSequenceTiming.mOffset = -10.f;
+            melee.mFirstPerson->mHeldBlocks.push_back(first);
+        }
+        service.restore(state, world.getStore());
+        const auto captured = fixture.snapshot();
+        EXPECT_EQ(captured.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(captured.mPhysicalActions, state.mPhysicalActions);
+        EXPECT_EQ(captured.mPhysicalActionOwners, state.mPhysicalActionOwners);
+        auto old = captured; old.mVersion = 60;
+        auto& oldMelee = old.mNativeMeleeStates.at(actor);
+        oldMelee.mHeldBlocks.clear(); oldMelee.mFirstPerson->mHeldBlocks.clear();
+        const auto before = old.serializeBinary();
+        EXPECT_THROW(service.capture(old), std::invalid_argument);
+        EXPECT_EQ(old.serializeBinary(), before);
+        service.restore(ESM4::RuntimeState::deserializeBinary(captured.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), captured.serializeBinary());
+    }
+}

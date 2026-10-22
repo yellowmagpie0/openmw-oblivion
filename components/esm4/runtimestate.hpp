@@ -42,7 +42,8 @@ namespace ESM4
     // v49 carries the distinct three-stage power attack phase.
     // v50 retains explicit physical body/constraint World registrations.
     // v60 adds Counter strike tag7, three-stage phase and detached NI retirement.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 60;
+    // v61 retains slot1 held-block cache history independently of contacts.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 61;
 
     struct RuntimeContentIdentity
     {
@@ -623,6 +624,20 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimePassiveMeleeSequence&, const RuntimePassiveMeleeSequence&) = default;
     };
+    struct RuntimeHeldBlockSequence
+    {
+        // No causal contact: slot1 can be active before any strike exists.
+        // Resident NI1/5, detached NI3 and cached NI0 share one resource entry.
+        std::string mAnimationGroup;
+        float mAnimationTime = 0;
+        MeleeSequenceTiming mSequenceTiming{};
+        std::optional<RuntimeReactionRetirement> mRetirement = std::nullopt;
+        bool mInactive = false;
+        std::optional<RuntimeMeleePoseSnapshot> mPoseSnapshot = std::nullopt;
+        bool resident() const { return !mInactive && !mRetirement; }
+        void validate() const;
+        friend bool operator==(const RuntimeHeldBlockSequence&, const RuntimeHeldBlockSequence&) = default;
+    };
     struct RuntimeFirstPersonMeleeState
     {
         // The Player mirror owns its clock even between reactions. Its direct
@@ -634,6 +649,7 @@ namespace ESM4
         std::optional<RuntimeMeleeStrike> mStrike = std::nullopt;
         std::vector<RuntimeRetiringMeleeSequence> mRetiringSequences = {};
         std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
+        std::vector<RuntimeHeldBlockSequence> mHeldBlocks = {};
         void validate() const;
         friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
     };
@@ -651,6 +667,7 @@ namespace ESM4
         // invented mirror or clock. The body alone owns the process action.
         std::optional<RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
         std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
+        std::vector<RuntimeHeldBlockSequence> mHeldBlocks = {};
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

@@ -2250,6 +2250,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_melee_pose_snapshots(migrated)
         state_io._upgrade_first_person_melee(migrated)
         state_io._upgrade_passive_melee(migrated)
+        state_io._upgrade_held_blocks(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)
@@ -3448,6 +3449,115 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         melee["first_person"]["strike"] = first
         next(x for x in state["native_actor_values"] if x["actor"] == state["player"]["reference"])["process_action"] = 3
         return state
+
+    def held_block_state(self, phase=1):
+        state = self.first_person_strike_state()
+        state_io._upgrade_passive_melee(state)
+        state_io._upgrade_held_blocks(state)
+        state["schema_version"] = 61
+        # Preserve the existing fixture's native binary32 inputs exactly.
+        state = state_io.decode_payload(state_io.encode_payload(state))
+        melee = state["native_melee_states"][0]
+        state["native_animation_clocks"][0]["clock"] = 10.125
+        melee["first_person"]["clock"] = 20.125
+        for first, view in enumerate((melee, melee["first_person"])):
+            clock = 20.125 if first else 10.125
+            held = {"animation_group": "handtohandblockidle", "animation_time": .125,
+                "sequence_timing": {"easing": False, "offset": -(clock - 2.125), "ease_start": 2.,
+                    "last_input": 2.125, "ease_end": 1., "weighted_time": 2.125, "output_time": .125},
+                "retirement": None, "inactive": False, "pose_snapshot": None}
+            if phase == 0:
+                held["animation_time"] = -0.
+                held["sequence_timing"] = {"easing": False, "offset": None, "ease_start": None,
+                    "last_input": None, "ease_end": 0., "weighted_time": 0., "output_time": 0.}
+            if phase in (2, 3, 9):
+                held.update(animation_time=-0.,
+                    sequence_timing={"easing": True, "offset": -0., "ease_start": None, "last_input": None,
+                        "ease_end": 1., "weighted_time": 0., "output_time": 0.},
+                    pose_snapshot={"destination_frame": -0., "tracks": [{"bone": "Bip01 Pelvis",
+                        "translation": [-0., 2., 3.], "rotation": [1., -0., 0., 0.], "scale": -0., "priority": 8}]})
+                if phase == 3:
+                    held["sequence_timing"].update(ease_start=clock, last_input=-0., ease_end=clock + 1.)
+            if 4 <= phase <= 6:
+                held["retirement"] = {"duration": .5,
+                    "start_clock": None if phase == 4 else clock - (.5 if phase == 6 else .25)}
+            held["inactive"] = phase in (6, 7)
+            if phase in (8, 10):
+                held["sequence_timing"]["offset"] = None
+                if phase == 10: held["sequence_timing"]["ease_start"] = None
+            if phase == 9:
+                held["sequence_timing"].update(last_input=2.125, weighted_time=2.125, output_time=.125)
+            view["held_blocks"] = [held]
+        return state
+
+    def test_held_block61_preserves_independent_lifetimes_and_signed_zero(self):
+        for phase in range(11):
+            with self.subTest(phase=phase):
+                state = self.held_block_state(phase)
+                payload = state_io.encode_payload(state)
+                loaded = state_io.decode_payload(payload)
+                self.assertEqual(state_io.encode_payload(loaded), payload)
+                self.assertEqual(loaded, state)
+                held = loaded["native_melee_states"][0]["held_blocks"][0]
+                if phase in (0, 2, 3, 9): self.assertLess(math.copysign(1, held["animation_time"]), 0)
+                if held["pose_snapshot"]:
+                    self.assertLess(math.copysign(1, held["pose_snapshot"]["destination_frame"]), 0)
+                legacy = copy.deepcopy(state); legacy["schema_version"] = 60
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(legacy)
+                for view in (legacy["native_melee_states"][0], legacy["native_melee_states"][0]["first_person"]):
+                    view.pop("held_blocks")
+                raw = state_io.encode_payload(legacy)
+                promoted = state_io.decode_payload(raw)
+                state_io._upgrade_held_blocks(promoted)
+                promoted["schema_version"] = 61
+                self.assertEqual(len(state_io.encode_payload(promoted)), len(raw) + 8)
+                self.assertEqual(promoted["native_melee_states"][0]["held_blocks"], [])
+                self.assertEqual(promoted["native_melee_states"][0]["first_person"]["held_blocks"], [])
+
+    def test_held_block61_rejects_ambiguous_partial_or_premature_cache_history(self):
+        for first in (False, True):
+            def faults(state, cache):
+                return [lambda: cache[0].update(animation_group=""),
+                    lambda: cache[0].update(animation_time=-1),
+                    lambda: cache[0]["sequence_timing"].update(last_input=None),
+                    lambda: cache[0]["sequence_timing"].update(ease_start=None),
+                    lambda: cache[0]["sequence_timing"].update(output_time=float("inf")),
+                    lambda: cache.append(copy.deepcopy(cache[0]) | {"animation_group": "HANDTOHANDBLOCKIDLE"}),
+                    lambda: cache.append(copy.deepcopy(cache[0]) | {"animation_group": "onehandblockidle"}),
+                    lambda: state.update(native_animation_clocks=[]),
+                    lambda: cache[0].update(retirement={"duration": 0, "start_clock": None}),
+                    lambda: cache[0].update(retirement={"duration": .5, "start_clock": None}, inactive=True),
+                    lambda: cache[0].update(retirement={"duration": .5, "start_clock": 100}),
+                    lambda: cache[0].update(retirement={"duration": .5, "start_clock": 20.125 if first else 10.125}, inactive=True),
+                    lambda: cache[0].update(inactive=2),
+                    lambda: cache[0].update(pose_snapshot={"destination_frame": 0., "tracks": []})]
+            for fault in range(14):
+                with self.subTest(first=first, fault=fault):
+                    state = self.held_block_state()
+                    m = state["native_melee_states"][0]
+                    view = m["first_person"] if first else m
+                    faults(state, view["held_blocks"])[fault]()
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+            state = self.held_block_state(); m = state["native_melee_states"][0]
+            view = m["first_person"] if first else m
+            held = view["held_blocks"][0]
+            view["retiring_sequences"].append({"contact_id": 3, "animation_group": held["animation_group"],
+                "animation_time": .125, "sequence_timing": copy.deepcopy(held["sequence_timing"]),
+                "retirement": {"duration": .5, "start_clock": None}})
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+            state["schema_version"] = 60
+            with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_held_blocks(state)
+        payload = state_io.encode_payload(self.held_block_state(0))
+        marker = b"handtohandblockidle"
+        start = 0; views = 0
+        while (at := payload.find(marker, start)) != -1:
+            views += 1; tail = at + len(marker)
+            for flag in (4, 5, 6, 7, 20, 21, 22):
+                bad = bytearray(payload); bad[tail + flag] = 2
+                with self.subTest(view=views, flag=flag), self.assertRaises(state_io.RuntimeStateError):
+                    state_io.decode_payload(bytes(bad))
+            start = tail
+        self.assertEqual(views, 2)
 
     def test_strike58_roundtrip_preserves_independent_pose_and_history_after_body_finishes(self):
         for phase in range(6):

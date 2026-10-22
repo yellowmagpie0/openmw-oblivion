@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 60
+CURRENT_VERSION = 61
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1640,6 +1640,67 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Passive TES4 slot3 cannot contain Stagger slot0")
         reaction_actors.add(actor)
 
+    def held_blocks(sequences, actor, clock, legacy_retiring):
+        groups = set()
+        residents = 0
+        def canonical(group):
+            return "".join(chr(ord(c) + 32) if "A" <= c <= "Z" else c for c in group)
+        for sequence in check_collection(sequences, "held-block cache"):
+            fields = {"animation_group", "animation_time", "sequence_timing", "retirement", "inactive", "pose_snapshot"}
+            if (version < 61 or not isinstance(sequence, dict) or set(sequence) != fields
+                    or actor not in clock_actors or native_value_states[actor]["process"] != 1):
+                raise RuntimeStateError("Unowned or unsupported TES4 held-block cache")
+            group = sequence["animation_group"]
+            if (not isinstance(group, str) or not group or "\0" in group
+                    or len(group.encode("utf-8")) > MAX_STRING or canonical(group) in groups
+                    or native_float(sequence["animation_time"]) < 0):
+                raise RuntimeStateError("Invalid or duplicated TES4 held-block resource")
+            groups.add(canonical(group))
+            timing = sequence["sequence_timing"]
+            if (not isinstance(timing, dict) or set(timing) != {
+                    "easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"}
+                    or type(timing["easing"]) is not bool):
+                raise RuntimeStateError("Invalid TES4 held-block timing")
+            optional = [timing[k] for k in ("offset", "ease_start", "last_input")]
+            pose = sequence["pose_snapshot"]
+            fresh = (pose is not None and timing["easing"] and optional[0] is not None
+                     and optional[1] is None and optional[2] is None)
+            pending = (sequence["inactive"] is False and sequence["retirement"] is None and (
+                (timing["easing"] and optional[1] is None and (pose is None or optional[0] is not None))
+                or (not timing["easing"] and optional[0] is None
+                    and (optional[1] is None or optional[2] is not None))))
+            if not fresh and not pending and any(v is None for v in optional) and not all(v is None for v in optional):
+                raise RuntimeStateError("Partial TES4 held-block timing")
+            for value in optional:
+                if value is not None: native_float(value)
+            for key in ("ease_end", "weighted_time", "output_time"): native_float(timing[key])
+            if timing["easing"] and native_float(timing["ease_end"]) <= (
+                    native_float(timing["ease_start"]) if timing["ease_start"] is not None else 0):
+                raise RuntimeStateError("Invalid TES4 held-block activation interval")
+            span = sequence["retirement"]
+            inactive = sequence["inactive"]
+            if type(inactive) is not bool or (inactive and timing["easing"]):
+                raise RuntimeStateError("Invalid TES4 held-block inactive state")
+            if span is not None:
+                if (not isinstance(span, dict) or set(span) != {"duration", "start_clock"}
+                        or native_float(span["duration"]) <= 0 or timing["easing"] or timing["offset"] is None):
+                    raise RuntimeStateError("Invalid TES4 held-block retirement")
+                start = span["start_clock"]
+                if start is None:
+                    if inactive: raise RuntimeStateError("Unanchored inactive TES4 held block")
+                else:
+                    start = native_float(start)
+                    end = native_float(start + native_float(span["duration"]))
+                    if start < 0 or start > clock or (inactive and clock < end):
+                        raise RuntimeStateError("Invalid TES4 held-block retirement clock")
+            if pose is not None:
+                if inactive or span is not None:
+                    raise RuntimeStateError("Invalid TES4 held-block pose transition")
+                melee_pose(pose, timing)
+            if not inactive and span is None: residents += 1
+        if residents > 1 or any(canonical(x["animation_group"]) in groups for x in legacy_retiring):
+            raise RuntimeStateError("Conflicting TES4 held-block cache history")
+
     for entry in melee_states:
         fields = {"actor", "input", "strike"}
         if version >= 28:
@@ -1652,6 +1713,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             fields.add("first_person")
         if version >= 59:
             fields.add("passive_sequence")
+        if version >= 61:
+            fields.add("held_blocks")
         if not isinstance(entry, dict) or set(entry) != fields:
             raise RuntimeStateError("Invalid TES4 melee state")
         actor = entry["actor"]
@@ -1683,11 +1746,14 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             melee_reaction(reaction, actor, strike, clock_values.get(actor, 0.), True)
         if version >= 59:
             passive_sequence(entry["passive_sequence"], actor, clock_values.get(actor, 0.), strike, reaction)
+        if version >= 61:
+            held_blocks(entry["held_blocks"], actor, clock_values.get(actor, 0.), entry["retiring_sequences"])
         first_person = entry.get("first_person")
         if first_person is not None:
             if (version < 57 or actor != state["player"]["reference"]
                     or not isinstance(first_person, dict) or set(first_person) != (
-                        {"clock", "reaction", "strike", "retiring_sequences", "passive_sequence"} if version >= 59
+                        {"clock", "reaction", "strike", "retiring_sequences", "passive_sequence", "held_blocks"} if version >= 61
+                        else {"clock", "reaction", "strike", "retiring_sequences", "passive_sequence"} if version >= 59
                         else {"clock", "reaction", "strike", "retiring_sequences"} if version >= 58 else {"clock", "reaction"})
                     or actor not in clock_actors or native_value_states[actor]["owner"] != 0
                     or native_value_states[actor]["process"] != 1):
@@ -1695,6 +1761,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             clock = native_float(first_person["clock"])
             if clock < 0:
                 raise RuntimeStateError("Invalid TES4 first-person melee clock")
+            if version >= 61:
+                held_blocks(first_person["held_blocks"], actor, clock, first_person["retiring_sequences"])
             mirror = first_person["reaction"]
             if version >= 59:
                 passive_sequence(first_person["passive_sequence"], actor, clock,
@@ -2318,6 +2386,21 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     "start_clock": reader.unpack("<f") if melee_boolean() else None}
                 sequences.append(sequence)
             return sequences
+        def read_held_blocks():
+            sequences = []
+            for _ in range(reader.count()):
+                sequence = {"animation_group": reader.string(), "animation_time": reader.unpack("<f")}
+                timing = {"easing": melee_boolean()}
+                for key in ("offset", "ease_start", "last_input"):
+                    timing[key] = reader.unpack("<f") if melee_boolean() else None
+                for key in ("ease_end", "weighted_time", "output_time"): timing[key] = reader.unpack("<f")
+                sequence["sequence_timing"] = timing
+                sequence["retirement"] = ({"duration": reader.unpack("<f"),
+                    "start_clock": reader.unpack("<f") if melee_boolean() else None} if melee_boolean() else None)
+                sequence["inactive"] = melee_boolean()
+                sequence["pose_snapshot"] = read_melee_pose() if melee_boolean() else None
+                sequences.append(sequence)
+            return sequences
         for _ in range(reader.count()):
             entry = {"actor": reader.string(), "input": {
                 "held_seconds": reader.unpack("<f"), "input_held": melee_boolean(),
@@ -2347,6 +2430,9 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 entry["passive_sequence"] = read_passive_sequence()
                 if first_person is not None:
                     first_person["passive_sequence"] = read_passive_sequence()
+            if version >= 61:
+                entry["held_blocks"] = read_held_blocks()
+                if first_person is not None: first_person["held_blocks"] = read_held_blocks()
             result["native_melee_states"].append(entry)
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
@@ -2914,6 +3000,29 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 if "strike" in sequence: write_melee_strike(sequence["strike"])
                 else: write_melee_reaction(sequence["reaction"])
 
+        def write_held_blocks(sequences):
+            writer.pack("<I", len(sequences))
+            for sequence in sequences:
+                writer.string(sequence["animation_group"])
+                writer.pack("<f", sequence["animation_time"])
+                timing = sequence["sequence_timing"]
+                writer.pack("<B", int(timing["easing"]))
+                for key in ("offset", "ease_start", "last_input"):
+                    value = timing[key]
+                    writer.pack("<B", int(value is not None))
+                    if value is not None: writer.pack("<f", value)
+                for key in ("ease_end", "weighted_time", "output_time"): writer.pack("<f", timing[key])
+                span = sequence["retirement"]
+                writer.pack("<B", int(span is not None))
+                if span is not None:
+                    writer.pack("<f", span["duration"])
+                    writer.pack("<B", int(span["start_clock"] is not None))
+                    if span["start_clock"] is not None: writer.pack("<f", span["start_clock"])
+                writer.pack("<B", int(sequence["inactive"]))
+                pose = sequence["pose_snapshot"]
+                writer.pack("<B", int(pose is not None))
+                if pose is not None: write_melee_pose(pose)
+
         for entry in melee_states:
             writer.string(entry["actor"])
             control, strike = entry["input"], entry["strike"]
@@ -2948,6 +3057,9 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 59:
                 write_passive_sequence(entry["passive_sequence"])
                 if first_person is not None: write_passive_sequence(first_person["passive_sequence"])
+            if version >= 61:
+                write_held_blocks(entry["held_blocks"])
+                if first_person is not None: write_held_blocks(first_person["held_blocks"])
     if version >= 23:
         clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
         writer.pack("<I", len(clocks))
@@ -3313,6 +3425,17 @@ def _upgrade_passive_melee(state: dict[str, Any]) -> None:
                 view["passive_sequence"] = None
 
 
+def _upgrade_held_blocks(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 61:
+        for entry in state.get("native_melee_states", []):
+            for view in (entry, entry.get("first_person")):
+                if view is None: continue
+                if view.get("held_blocks"):
+                    raise RuntimeStateError("Legacy TES4 save cannot carry held-block cache history")
+                # Never synthesize resident timing from legacy process action6.
+                view["held_blocks"] = []
+
+
 def _upgrade_power_melee_phases(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 49:
         for entry in state.get("native_melee_states", []):
@@ -3349,6 +3472,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_melee_pose_snapshots(state)
     _upgrade_first_person_melee(state)
     _upgrade_passive_melee(state)
+    _upgrade_held_blocks(state)
     _upgrade_melee_timing(state)
     _upgrade_melee_ai(state)
     _upgrade_actor_draw(state)

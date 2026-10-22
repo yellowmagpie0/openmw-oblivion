@@ -229,6 +229,71 @@ namespace ESM4
             return reaction;
         }
 
+        void writeHeldBlocks(BinaryWriter& writer, const std::vector<RuntimeHeldBlockSequence>& sequences)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(sequences.size()));
+            for (const auto& sequence : sequences)
+            {
+                writer.string(sequence.mAnimationGroup);
+                writer.floating(sequence.mAnimationTime);
+                const auto& timing = sequence.mSequenceTiming;
+                writer.integer<std::uint8_t>(timing.mEasing);
+                for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
+                {
+                    writer.integer<std::uint8_t>(value.has_value());
+                    if (value) writer.floating(*value);
+                }
+                writer.floating(timing.mEaseEnd);
+                writer.floating(timing.mWeightedTime);
+                writer.floating(timing.mOutputTime);
+                writer.integer<std::uint8_t>(sequence.mRetirement.has_value());
+                if (sequence.mRetirement)
+                {
+                    writer.floating(sequence.mRetirement->mDuration);
+                    writer.integer<std::uint8_t>(sequence.mRetirement->mStartClock.has_value());
+                    if (sequence.mRetirement->mStartClock) writer.floating(*sequence.mRetirement->mStartClock);
+                }
+                writer.integer<std::uint8_t>(sequence.mInactive);
+                writer.integer<std::uint8_t>(sequence.mPoseSnapshot.has_value());
+                if (sequence.mPoseSnapshot) writeMeleePose(writer, *sequence.mPoseSnapshot);
+            }
+        }
+
+        std::vector<RuntimeHeldBlockSequence> readHeldBlocks(BinaryReader& reader)
+        {
+            const auto boolean = [&reader]() {
+                const auto value = reader.integer<std::uint8_t>();
+                if (value > 1) throw std::runtime_error("Invalid TES4 held-block boolean");
+                return value != 0;
+            };
+            std::vector<RuntimeHeldBlockSequence> sequences;
+            const auto count = reader.count();
+            sequences.reserve(count);
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                RuntimeHeldBlockSequence sequence;
+                sequence.mAnimationGroup = reader.string();
+                sequence.mAnimationTime = reader.float32();
+                auto& timing = sequence.mSequenceTiming;
+                timing.mEasing = boolean();
+                for (auto* value : {&timing.mOffset, &timing.mEaseStart, &timing.mLastInput})
+                    if (boolean()) *value = reader.float32();
+                timing.mEaseEnd = reader.float32();
+                timing.mWeightedTime = reader.float32();
+                timing.mOutputTime = reader.float32();
+                if (boolean())
+                {
+                    RuntimeReactionRetirement span{reader.float32(), {}};
+                    if (boolean()) span.mStartClock = reader.float32();
+                    sequence.mRetirement = span;
+                }
+                sequence.mInactive = boolean();
+                if (boolean()) sequence.mPoseSnapshot = readMeleePose(reader);
+                sequences.push_back(std::move(sequence));
+            }
+            return sequences;
+        }
+
         void writeKey(BinaryWriter& writer, const ESM::FormKey& key)
         {
             writer.string(key.serialize());
@@ -468,6 +533,52 @@ namespace ESM4
                 }
             }
             stream << '}';
+        }
+
+        void writeHeldBlocksJson(std::ostream& stream, const std::vector<RuntimeHeldBlockSequence>& sequences)
+        {
+            const auto floating = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            stream << '[';
+            bool first = true;
+            for (const auto& sequence : sequences)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"animation_group\":\"" << escapeJson(sequence.mAnimationGroup)
+                    << "\",\"animation_time\":";
+                floating(sequence.mAnimationTime);
+                stream << ",\"sequence_timing\":{\"easing\":"
+                    << (sequence.mSequenceTiming.mEasing ? "true" : "false");
+                const auto optional = [&](std::string_view name, std::optional<float> value) {
+                    stream << ",\"" << name << "\":";
+                    if (value) floating(*value);
+                    else stream << "null";
+                };
+                const auto& timing = sequence.mSequenceTiming;
+                optional("offset", timing.mOffset);
+                optional("ease_start", timing.mEaseStart);
+                optional("last_input", timing.mLastInput);
+                stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                stream << "},\"retirement\":";
+                if (!sequence.mRetirement) stream << "null";
+                else
+                {
+                    stream << "{\"duration\":"; floating(sequence.mRetirement->mDuration);
+                    optional("start_clock", sequence.mRetirement->mStartClock);
+                    stream << '}';
+                }
+                stream << ",\"inactive\":" << (sequence.mInactive ? "true" : "false");
+                stream << ",\"pose_snapshot\":";
+                if (!sequence.mPoseSnapshot) stream << "null";
+                else writeMeleePoseJson(stream, *sequence.mPoseSnapshot);
+                stream << '}';
+            }
+            stream << ']';
         }
 
 
@@ -1087,13 +1198,20 @@ namespace ESM4
             throw std::runtime_error("Invalid TES4 melee input state");
     }
 
-    static void validateMeleeTiming(const MeleeSequenceTiming& timing, bool capturedPose = false)
+    static void validateMeleeTiming(const MeleeSequenceTiming& timing, bool capturedPose = false,
+        bool cachedActivation = false)
     {
         const bool freshCapture = capturedPose && timing.mEasing && timing.mOffset
             && !timing.mEaseStart && !timing.mLastInput;
+        // Native cached activation resets offset, and an easing activation also
+        // resets easeStart, while retaining prior input/output history until
+        // the first manager update. These masks are specific to held caches.
+        const bool pendingCache = cachedActivation
+            && (timing.mEasing ? !timing.mEaseStart && (!capturedPose || timing.mOffset)
+                : !timing.mOffset && (!timing.mEaseStart || timing.mLastInput));
         if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
             || !std::isfinite(timing.mOutputTime)
-            || (!freshCapture && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
+            || (!freshCapture && !pendingCache && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
                 || timing.mOffset.has_value() != timing.mLastInput.has_value())))
             throw std::runtime_error("Invalid TES4 melee sequence timing");
         for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput})
@@ -1266,8 +1384,57 @@ namespace ESM4
             throw std::runtime_error("Passive TES4 slot3 cannot contain Stagger slot0");
     }
 
+    void RuntimeHeldBlockSequence::validate() const
+    {
+        if (mAnimationGroup.empty() || mAnimationGroup.size() > sMaximumStringSize
+            || mAnimationGroup.find('\0') != std::string::npos
+            || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
+            throw std::runtime_error("Invalid TES4 held-block resource or sample");
+        validateMeleeTiming(mSequenceTiming, mPoseSnapshot.has_value(), !mInactive && !mRetirement);
+        if (mSequenceTiming.mEasing && mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f))
+            throw std::runtime_error("Invalid TES4 held-block activation interval");
+        if (mPoseSnapshot)
+        {
+            mPoseSnapshot->validate();
+            if (!mSequenceTiming.mEasing || mRetirement || mInactive
+                || mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f))
+                throw std::runtime_error("Invalid TES4 held-block pose transition");
+        }
+        if (mInactive && (mSequenceTiming.mEasing || (mRetirement && !mRetirement->mStartClock)))
+            throw std::runtime_error("Invalid inactive TES4 held-block sequence");
+        if (mRetirement)
+        {
+            validateMeleeRetirement(*mRetirement);
+            if (mSequenceTiming.mEasing || !mSequenceTiming.mOffset)
+                throw std::runtime_error("Invalid TES4 held-block retirement");
+        }
+    }
+
+    static void validateHeldBlocks(const std::vector<RuntimeHeldBlockSequence>& sequences,
+        const std::vector<RuntimeRetiringMeleeSequence>& legacyRetiring)
+    {
+        if (sequences.size() > sMaximumCollectionSize)
+            throw std::runtime_error("Too many TES4 held-block cache entries");
+        const auto canonical = [](std::string text) {
+            for (char& c : text) if (c >= 'A' && c <= 'Z') c += 'a' - 'A';
+            return text;
+        };
+        std::set<std::string> groups;
+        unsigned residents = 0;
+        for (const auto& sequence : sequences)
+        {
+            sequence.validate();
+            if (!groups.insert(canonical(sequence.mAnimationGroup)).second || (sequence.resident() && ++residents > 1))
+                throw std::runtime_error("Conflicting TES4 held-block cache entries");
+        }
+        for (const auto& sequence : legacyRetiring)
+            if (groups.contains(canonical(sequence.mAnimationGroup)))
+                throw std::runtime_error("Duplicated TES4 legacy and held-block cache history");
+    }
+
     void RuntimeFirstPersonMeleeState::validate() const
     {
+        validateHeldBlocks(mHeldBlocks, mRetiringSequences);
         if (!std::isfinite(mClock) || mClock < 0)
             throw std::runtime_error("Invalid TES4 first-person melee clock");
         if (mRetiringSequences.size() > sMaximumCollectionSize)
@@ -1297,6 +1464,7 @@ namespace ESM4
 
     void RuntimeMeleeState::validate() const
     {
+        validateHeldBlocks(mHeldBlocks, mRetiringSequences);
         mInput.validate();
         if (mStrike) mStrike->validate();
         if (mAiIntent) mAiIntent->validate();
@@ -1624,6 +1792,7 @@ namespace ESM4
         if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mReaction || entry.second.mFirstPerson
                     || entry.second.mPassiveSequence || !entry.second.mRetiringSequences.empty()
+                    || !entry.second.mHeldBlocks.empty()
                     || (entry.second.mStrike && entry.second.mStrike->mKind == MeleeStrikeKind::Counter); }))
             for (const auto& values : mNativeActorValues) reactionValues.emplace(values.mActor, &values);
         std::set<std::uint64_t> meleeIds;
@@ -1668,6 +1837,23 @@ namespace ESM4
             validatePassive(melee.mPassiveSequence, clock == mNativeAnimationClocks.end() ? 0.f : clock->second);
             if (melee.mFirstPerson)
                 validatePassive(melee.mFirstPerson->mPassiveSequence, melee.mFirstPerson->mClock);
+            const auto validateHeld = [&](const auto& sequences, float viewClock) {
+                if (sequences.empty()) return;
+                const auto values = reactionValues.find(actor);
+                if (mVersion < 61 || clock == mNativeAnimationClocks.end()
+                    || values == reactionValues.end() || values->second->mProcess != ActorValueProcess::Active)
+                    throw std::runtime_error("Unowned or unsupported TES4 held-block cache");
+                for (const auto& sequence : sequences)
+                    if (sequence.mRetirement && sequence.mRetirement->mStartClock)
+                    {
+                        const float start = *sequence.mRetirement->mStartClock;
+                        if (start > viewClock || (sequence.mInactive && viewClock
+                                < static_cast<float>(double(start) + sequence.mRetirement->mDuration)))
+                            throw std::runtime_error("Invalid TES4 held-block retirement clock");
+                    }
+            };
+            validateHeld(melee.mHeldBlocks, clock == mNativeAnimationClocks.end() ? 0.f : clock->second);
+            if (melee.mFirstPerson) validateHeld(melee.mFirstPerson->mHeldBlocks, melee.mFirstPerson->mClock);
             if (melee.mAiIntent)
             {
                 const auto& target = melee.mAiIntent->mTarget;
@@ -2676,6 +2862,11 @@ namespace ESM4
                     writePassive(melee.mPassiveSequence);
                     if (melee.mFirstPerson) writePassive(melee.mFirstPerson->mPassiveSequence);
                 }
+                if (mVersion >= 61)
+                {
+                    writeHeldBlocks(writer, melee.mHeldBlocks);
+                    if (melee.mFirstPerson) writeHeldBlocks(writer, melee.mFirstPerson->mHeldBlocks);
+                }
             }
         }
         if (mVersion >= 23)
@@ -3626,6 +3817,11 @@ namespace ESM4
                     };
                     melee.mPassiveSequence = readPassive();
                     if (melee.mFirstPerson) melee.mFirstPerson->mPassiveSequence = readPassive();
+                }
+                if (result.mVersion >= 61)
+                {
+                    melee.mHeldBlocks = readHeldBlocks(reader);
+                    if (melee.mFirstPerson) melee.mFirstPerson->mHeldBlocks = readHeldBlocks(reader);
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
@@ -4762,6 +4958,11 @@ namespace ESM4
                             stream << ",\"passive_sequence\":";
                             writePassiveJson(melee.mFirstPerson->mPassiveSequence);
                         }
+                        if (mVersion >= 61)
+                        {
+                            stream << ",\"held_blocks\":";
+                            writeHeldBlocksJson(stream, melee.mFirstPerson->mHeldBlocks);
+                        }
                         stream << '}';
                     }
                 }
@@ -4769,6 +4970,11 @@ namespace ESM4
                 {
                     stream << ",\"passive_sequence\":";
                     writePassiveJson(melee.mPassiveSequence);
+                }
+                if (mVersion >= 61)
+                {
+                    stream << ",\"held_blocks\":";
+                    writeHeldBlocksJson(stream, melee.mHeldBlocks);
                 }
                 stream << '}';
             }

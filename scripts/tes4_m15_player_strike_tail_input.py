@@ -22,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58, 59)
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60) or recipe['restrained_actors'] != actors
+            or runtime.CURRENT_VERSION not in (59, 60, 61) or recipe['restrained_actors'] != actors
             or recipe['weapon_base'] != 'content:oblivion.esm:090615'):
         raise ValueError('unsupported Player strike-tail input recipe')
     if output.exists():
@@ -53,6 +53,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     runtime.write_save(source, output, state)
     expected = copy.deepcopy(state)
     runtime._upgrade_passive_melee(expected)
+    runtime._upgrade_held_blocks(expected)
     expected['schema_version'] = runtime.CURRENT_VERSION
     if runtime.load_save(output) != expected:
         raise ValueError('Player strike-tail output differs outside declared fixture fields')
@@ -63,6 +64,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   output_sha256=hashlib.sha256(output.read_bytes()).hexdigest(),
                   source_schema=recipe['source_schema'], target_schema=runtime.CURRENT_VERSION,
                   mutations=dict(player_weapon_equipped_slots=[65536, 0], npc_restrained=changes),
+                  schema_defaults={'melee.held_blocks': []},
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False)
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')

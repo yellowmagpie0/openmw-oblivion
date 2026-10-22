@@ -1,0 +1,401 @@
+{
+  "schema_version": 1,
+  "status": "Held-block slot1 saved-state contract and migration verified; activation/advancement/runtime reblock not yet wired.",
+  "full_M15S4_acceptance": false,
+  "editable_cases": {
+    "path": "scripts/data/oblivion_compat/m15_held_block_schema61_cases.json",
+    "sha256": "33c468e6fa7771588d7d18de9b3f05ff2e65f9cde7513cba0c86ccaea7500587"
+  },
+  "implementation": "RuntimeHeldBlockSequence caches resource/sample/timing, optional fade, inactivity and optional pose without a causal contact. Per-view vectors retain inactive resources and enforce one resident slot. Binary and canonical JSON use schema61; Python codec validates the same layouts and upgrades legacy saves with empty caches. C++ service capture rejects lossy older-format output before mutation.",
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-normal-02/verification.json",
+        "sha256": "64c56cd305c0fa037bd50059c4f9781774d9b9f76d25497ecf391154b982e965"
+      },
+      "tested_source": {
+        "head": "6919f23035801330036da5c737c08a0a4fa31e81",
+        "source_fingerprint": "8dd3c3bc95fb8dff0a1b59224005443eff15dc0fb183ffe548abd31f9172d0ef"
+      },
+      "results": {
+        "python": {
+          "executed": 382,
+          "passed": true,
+          "log_sha256": "a9a1c43a8a65e8b3749ce9f1adb64ff48b2d59d2d603d0047b6fd42248a92936"
+        },
+        "components": {
+          "executed": 2995,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "69a6bf86eab25791620d1869390a93ff8a08eadf49ca935155f3365e60648fa6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ba35c88fb0d08f187fa54f45643d07d34e2d845eba27af30be3ff3d11a81a188",
+          "inventory_sha256": "0123897daabceb4c703a9a53cdddbd37897a22f264a53b51a17fb2b1e305ea1c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1815,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "08acd9f0fc51b62ef9d87a5924825bbfc9f2f0eba31e378050cb91b97a52439e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "87876f19f762d11f68a941ec7e8c0112f560214fe32d9c6af5fb349ce1757630",
+          "inventory_sha256": "c5ed35e60c79f107873ebec8f266777e6512cf239b917189a292ba45b9dda5d1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-sanitized-02/verification.json",
+        "sha256": "9d0cf7966c9b746256daf6d301a85cccd92caa6de619088d76d620020cb9d28c"
+      },
+      "tested_source": {
+        "head": "6919f23035801330036da5c737c08a0a4fa31e81",
+        "source_fingerprint": "8dd3c3bc95fb8dff0a1b59224005443eff15dc0fb183ffe548abd31f9172d0ef"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 848,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "6ed54b080caa165e8302fe55c9512dd940ebf47b6d6322a203ff38f85ed731d4",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "852826a962da7c47de62379de39b5f33ab47859facde68db2ac3d6e35460dab7",
+          "inventory_sha256": "bee6bebe1001022025eebe34b228f9ccc1ebbc252327ec978e58f8610308fc25",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1815,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "47f68905d0cc9b34bbb64446f06a1607f5c5e6a3b2522f187a27ea2360e0c746",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "bf73b659db21015f76a0058068aa46091fc232987ed2c774cd93d2593a3b8374",
+          "inventory_sha256": "c5ed35e60c79f107873ebec8f266777e6512cf239b917189a292ba45b9dda5d1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "wire_verification": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/normal-wire-verification-02.json",
+        "sha256": "92e6239f5631c487d52c119b8088f32d0bc0bafe9ce1bced96c9beabe3e1cf5d"
+      },
+      "result": {
+        "passed": true,
+        "cpp_xml": "build/oblivion-compat/m15/S4/native-held-block-schema-normal-02/components.xml",
+        "cpp_xml_sha256": "ba35c88fb0d08f187fa54f45643d07d34e2d845eba27af30be3ff3d11a81a188",
+        "cases": [
+          {
+            "phase": 0,
+            "payload_bytes": 2774,
+            "payload_sha256": "673c22575919401ef45ce9ca758d62bffba319175d373b63b80cf0f38718bbc5",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 1,
+            "payload_bytes": 2798,
+            "payload_sha256": "83ce23fed5bb2a1a3c4c305bd7ef6efc790502236dc06a5ee2265a1cdeb994c8",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 2,
+            "payload_bytes": 2896,
+            "payload_sha256": "157d1a55f4e052e0c4c14383e7837c72144c3311ebc4239768952b9d8da6e7b9",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 3,
+            "payload_bytes": 2912,
+            "payload_sha256": "c1a5369c544de4361923a62e1a56d1910307d451b3af3dba0cac81187e899d7e",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 4,
+            "payload_bytes": 2808,
+            "payload_sha256": "e5619c063f5acbd041059254c2f2ed62ee3131ff88aededac1545d66690f5456",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 5,
+            "payload_bytes": 2816,
+            "payload_sha256": "5a151320d2b0b0ddcbfb517bbcc7835ae8f69a4f6a4ea4968e3afc70aba09ae2",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 6,
+            "payload_bytes": 2816,
+            "payload_sha256": "38f0056d7e954049adb337660cba25ccb8b94a74091d99d896d6da999291a3ba",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 7,
+            "payload_bytes": 2798,
+            "payload_sha256": "2d403cf491da18b06a5dc8ea5b5ad2d069f2021f5d9792b730d2e9085fafa7bb",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 8,
+            "payload_bytes": 2790,
+            "payload_sha256": "1ae9ee96d1a6fca81ff8612f566867a4d8e1cab614c9f6edff6f7448d17e1d9a",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 9,
+            "payload_bytes": 2904,
+            "payload_sha256": "e3d5b0f31451fdc95b87e50e6c12bf45e422674b5073a3e22d3b70a14b1c8ebb",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 10,
+            "payload_bytes": 2782,
+            "payload_sha256": "e483e17affb0f30b2c87d787d5389f855e12865eb98c926bd419bd33387d098c",
+            "binary_cpp_json_python_exact": true
+          }
+        ],
+        "scope": "Whole C++ binary and canonical JSON payloads decode and reproduce byte-exactly through Python for eleven cache lifecycle states and both independent views. No gameplay/runtime acceptance.",
+        "full_M15S4_acceptance": false
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/sanitized-wire-verification-02.json",
+        "sha256": "52070d19e20ecbaa9f06ee9d172cfc647624d4c44034d70b02160f59205aea44"
+      },
+      "result": {
+        "passed": true,
+        "cpp_xml": "build/oblivion-compat/m15/S4/native-held-block-schema-sanitized-02/sanitize.xml",
+        "cpp_xml_sha256": "852826a962da7c47de62379de39b5f33ab47859facde68db2ac3d6e35460dab7",
+        "cases": [
+          {
+            "phase": 0,
+            "payload_bytes": 2774,
+            "payload_sha256": "673c22575919401ef45ce9ca758d62bffba319175d373b63b80cf0f38718bbc5",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 1,
+            "payload_bytes": 2798,
+            "payload_sha256": "83ce23fed5bb2a1a3c4c305bd7ef6efc790502236dc06a5ee2265a1cdeb994c8",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 2,
+            "payload_bytes": 2896,
+            "payload_sha256": "157d1a55f4e052e0c4c14383e7837c72144c3311ebc4239768952b9d8da6e7b9",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 3,
+            "payload_bytes": 2912,
+            "payload_sha256": "c1a5369c544de4361923a62e1a56d1910307d451b3af3dba0cac81187e899d7e",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 4,
+            "payload_bytes": 2808,
+            "payload_sha256": "e5619c063f5acbd041059254c2f2ed62ee3131ff88aededac1545d66690f5456",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 5,
+            "payload_bytes": 2816,
+            "payload_sha256": "5a151320d2b0b0ddcbfb517bbcc7835ae8f69a4f6a4ea4968e3afc70aba09ae2",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 6,
+            "payload_bytes": 2816,
+            "payload_sha256": "38f0056d7e954049adb337660cba25ccb8b94a74091d99d896d6da999291a3ba",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 7,
+            "payload_bytes": 2798,
+            "payload_sha256": "2d403cf491da18b06a5dc8ea5b5ad2d069f2021f5d9792b730d2e9085fafa7bb",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 8,
+            "payload_bytes": 2790,
+            "payload_sha256": "1ae9ee96d1a6fca81ff8612f566867a4d8e1cab614c9f6edff6f7448d17e1d9a",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 9,
+            "payload_bytes": 2904,
+            "payload_sha256": "e3d5b0f31451fdc95b87e50e6c12bf45e422674b5073a3e22d3b70a14b1c8ebb",
+            "binary_cpp_json_python_exact": true
+          },
+          {
+            "phase": 10,
+            "payload_bytes": 2782,
+            "payload_sha256": "e483e17affb0f30b2c87d787d5389f855e12865eb98c926bd419bd33387d098c",
+            "binary_cpp_json_python_exact": true
+          }
+        ],
+        "scope": "Whole C++ binary and canonical JSON payloads decode and reproduce byte-exactly through Python for eleven cache lifecycle states and both independent views. No gameplay/runtime acceptance.",
+        "full_M15S4_acceptance": false
+      }
+    }
+  ],
+  "fixture_recipes": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+      "sha256": "ade63cb1d3143bde479155b7fc06ee9d4644a323fade53c27602ad824e177dcd"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json",
+      "sha256": "8793d080f81259459b8974cf771b4b7af82b7964f3c9a586bf09e59078c30080"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json",
+      "sha256": "5b4677ebbd6aa02763d634d817f9c56f29fd1d0f18538e95563b25d36dc2db1b"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_player_strike_tail_input.json",
+      "sha256": "22968327d6faab68272cbcd5813788471b4ed9723f0ccc8e69261522e762c95e"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_counter_tail_fixture.json",
+      "sha256": "e87633e44dabdd9e39e2d7b76d42436bdf8b334cf301fdf9b4a0e61e91a6b172"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_slot0_loop_retirement_fixture.json",
+      "sha256": "580002a6ad55fce8892a7f88d48b1d4348f890b516dada38a1f8dda522ca7eb3"
+    }
+  ],
+  "fixture_scope": "Four reviewed staging helpers now accept current61 and declare added empty held-cache defaults. Six editable recipes target61 and retain otherwise declared histories. Generated saves/plugins remain ignored. Older receipts pin their original recipe hashes/revisions; historical runtime evidence has not been relabeled as schema61 gameplay.",
+  "retained_attempts": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-normal-01/verification.json",
+        "sha256": "34fd9a98c71c8b32f129847f3e50afc35108f566701cbf6eb5566ab160d37e8a"
+      },
+      "scope": "Full Python382 failed7 fixture-staging cases whose current-version guards stopped at60; final02 fixes declarations/defaults and passes382."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-normal-cpp-01/verification.json",
+        "sha256": "ff9cd3f65abc0dcae97ddb0d8c7dba28bb631f0caad41ab57163a5945dc12135"
+      },
+      "scope": "Baseline component2995/engine1815 pass before review added native cached preupdate masks."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-sanitized-01/verification.json",
+        "sha256": "533006570ead2ebadda2c412fbe42db460f428c298bfce40ec55098ddf947d51"
+      },
+      "scope": "Baseline ESM4*848/engine1815 pass before pending masks. Final02 repeats complete relevant suites after actual source changes."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/python-preflight-01.log",
+        "sha256": "424a26c1c3e0b468bcc70e7cd39a267175f7b487c799ed9adcc679eff016a073"
+      },
+      "scope": "Initial focused Python122 had one explicit migration test missing the new empty-cache upgrade. Final full suite passes."
+    }
+  ],
+  "limits": [
+    "Controller activation, native frame advancement/projection, held-source binding and reactivation still need wiring. The recorded double-begin runtime regression remains open.",
+    "This is structural persistence and headless service capture/restore coverage, not actual held windup/blocking/recovery restart acceptance.",
+    "Legacy resident held lap counts are not reconstructed; legacy held retirement stays in its existing record vector until a reviewed transition replaces it.",
+    "Resource names are structural identities here. Actual slot1 metadata, cycle, resource lease and view policy require world reinspection.",
+    "Native pose/proxy/controller capture and full Player camera/source dispatch remain distinct gates.",
+    "Sanitizer leaks disabled; no leak coverage. Full S4 scope and matrix remain incomplete."
+  ],
+  "tools": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/verify-wire-02.py",
+      "sha256": "03731e27abf017184a83ee2e344fa42d0b99edc405db3efc183eb4d8da2da541"
+    }
+  ],
+  "fixture_staging": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/strike-tail-staged-61.staging.json",
+      "sha256": "90d966aa6b881e91571f381c0126136c7e58756ee7b14932f8a4255721c17de2"
+    },
+    "save": {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-schema-inputs-01/strike-tail-staged-61.omwsave",
+      "sha256": "3374242b238c9e5641b3feb9c0f3959dbb58a0c7073511c61ab2856a50c556c6"
+    },
+    "result": {
+      "structural_write_success": true,
+      "semantic_reinspection_passed": true,
+      "source": "build/oblivion-compat/m15/S4/native-passive-slot3-schema59-inputs-01/cached-idle59.omwsave",
+      "source_sha256": "e0139d9bb46773eaad83d5645c902a968eb920ba8f5a14386d8a8b39e274de03",
+      "output_sha256": "3374242b238c9e5641b3feb9c0f3959dbb58a0c7073511c61ab2856a50c556c6",
+      "source_schema": 59,
+      "target_schema": 61,
+      "mutations": {
+        "player_weapon_equipped_slots": [
+          65536,
+          0
+        ],
+        "npc_restrained": [
+          {
+            "actor": "content:oblivion.esm:01fc43",
+            "restrained_before": false
+          },
+          {
+            "actor": "content:oblivion.esm:026be1",
+            "restrained_before": false
+          },
+          {
+            "actor": "content:oblivion.esm:15985a",
+            "restrained_before": false
+          }
+        ]
+      },
+      "schema_defaults": {
+        "melee.held_blocks": []
+      },
+      "all_other_decoded_state_preserved": true,
+      "compiler_world_validation": false,
+      "runtime_acceptance": false
+    },
+    "scope": "Actual pinned schema59 source staged to61, full semantic reinspection passes. No original source changes, compiler/world validation or game execution."
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "diagnostics_observed": false,
+    "leak_coverage": false
+  },
+  "warnings": "Final builds retain existing aggregate initialization warnings and the prior Counter release test guard macro warning. The new held-cache test guard is braced and optional timing fields explicitly initialized."
+}

@@ -5689,6 +5689,11 @@ namespace MWMechanics
         if (state.mVersion < 57 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
                 [](const auto& entry) { return entry.second.mFirstPerson.has_value(); }))
             throw std::invalid_argument("native first-person melee ownership requires an Oblivion v57+ save");
+        if (state.mVersion < 61 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
+                return !entry.second.mHeldBlocks.empty()
+                    || (entry.second.mFirstPerson && !entry.second.mFirstPerson->mHeldBlocks.empty());
+            }))
+            throw std::invalid_argument("native held-block cache history requires an Oblivion v61+ save");
         if (state.mVersion < 59 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(), [](const auto& entry) {
                 return entry.second.mPassiveSequence
                     || (entry.second.mFirstPerson && entry.second.mFirstPerson->mPassiveSequence);

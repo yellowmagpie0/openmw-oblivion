@@ -133,6 +133,7 @@
       3.125
     ],
     "selected_view_samples": 3240,
-    "acceptance_scope": "Original instruction protocol only; production slot1 history and actual reactivation regression remain open."
+    "acceptance_scope": "Original instruction protocol only; production slot1 history and actual reactivation regression remain open.",
+    "early_release": "Before first NI5 update, full5F4AE0(false) returnsfalse and leaves process6 and complete body/FP held, proxies and Counter blocks unchanged. Release intent must defer through the pose transition."
   }
 }

@@ -5,7 +5,7 @@
   "source_parent": "537af90b6f",
   "editable_cases": {
     "path": "scripts/data/oblivion_compat/m15_held_block_reactivation_native_cases.json",
-    "sha256": "93ae93b394ad494e8f47d1f38c8b53849145a82be3e6b6261d56143a2bcbeeb2"
+    "sha256": "3d867e8f3d60410bf7a3503956f6aa3ad757da098273cc4dfd2d7687c930bae3"
   },
   "accepted_result": {
     "passed": true,
@@ -362,6 +362,35 @@
     ],
     "retained_failures": "08 expectedNI2,09 expectedNI1; original path produces NI5 via pose proxy.10 records exploratory results;11 asserts all exact timing results. No implementation expected values used.",
     "scope": "Proxy allocation/pool lookup and scene/controller data remain supplied; actual manager and NI instructions execute. No C++/Python production edits or repeated build tests.",
-    "sample_limit": "Deltas include exact duration1 completion and exact post-completion loopEnd in selected cases; not an exhaustive adjacent-float completion matrix or full Player differing blend-frame matrix."
+    "sample_limit": "Deltas include exact duration1 completion and exact post-completion loopEnd in selected cases; not an exhaustive adjacent-float completion matrix or full Player differing blend-frame matrix.",
+    "early_release_guard": {
+      "accepted_result": {
+        "passed": true,
+        "cases": 288,
+        "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "e0378146688824bb768bd2378c55c04a4f2d6de809aceaded68a9f1e00a88d9d",
+        "scope": "Eligible/root-matching full helper reactivation with supplied pose proxy from6C5860. Actual manager6C5C70/pose transfer6C9D30/NI activate/update execute. Hold frames0/9/30; startup rendering eligibility remainsfalse to isolate reblock. Assertions also verify full helper false during fresh NI5: returnsfalse without changing held, proxies, Counter or process6. Assertions pin reuse/process/counter/repeat, NI5 held plus NI4 proxy, exact active-view ease span, frozen output then fresh loop origin at first update reaching blend end. Nine NI updates per selected view. Supplied proxy/scene and rendering gates remain explicit; no production runtime acceptance."
+      },
+      "checks": 288,
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered12.json",
+          "sha256": "738adfbd61ff6130ec285006986f430d125c673ed13e1d2d14c88e58e96f6f54"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-12.py",
+          "sha256": "a36fecb6eef0d3aa1e678826de7b7e4247fa0f4005ed6fcf4fc467d829ccd42c"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification12.json",
+          "sha256": "d31b61942e805b3bd7ba57704b6023388d6498d429beceea5f40f4e44b3a3782"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/corpus12.json",
+          "sha256": "e0378146688824bb768bd2378c55c04a4f2d6de809aceaded68a9f1e00a88d9d"
+        }
+      ],
+      "scope": "Same288 parameter matrix with an additional full helper false call before first NI5 update; process6 and complete body/FP held/proxy/Counter sequence blocks remain unchanged. Existing3240 timing samples repeated, not counted as a new independent parameter matrix."
+    }
   }
 }

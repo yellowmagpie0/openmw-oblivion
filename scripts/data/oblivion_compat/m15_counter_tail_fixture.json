@@ -1,7 +1,7 @@
 {
   "source": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/first/snapshots/save-3.omwsave",
   "source_sha256": "ab2615819388931e614aa5aa76302434b1ad562325426a3660c0cd6c134d5564",
-  "target_schema": 60,
+  "target_schema": 61,
   "actor": "dynamic:player:0000000000000001",
   "melee_state": {
     "actor": "dynamic:player:0000000000000001",
@@ -70,9 +70,11 @@
         "inactive": false
       },
       "retiring_sequences": [],
-      "passive_sequence": null
+      "passive_sequence": null,
+      "held_blocks": []
     },
-    "passive_sequence": null
+    "passive_sequence": null,
+    "held_blocks": []
   },
   "process_action": 6,
   "scope": "Injected committed Counter End history with synthetic body8s/FP10s retirement. No activation, proc, contact or gameplay input proof.",
