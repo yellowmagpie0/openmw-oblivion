@@ -5,7 +5,7 @@
   "source_parent": "537af90b6f",
   "editable_cases": {
     "path": "scripts/data/oblivion_compat/m15_held_block_reactivation_native_cases.json",
-    "sha256": "63a8d2e3c64afe546f69ed3a83038810c653587b1794cfd8571771b567b19b52"
+    "sha256": "93ae93b394ad494e8f47d1f38c8b53849145a82be3e6b6261d56143a2bcbeeb2"
   },
   "accepted_result": {
     "passed": true,
@@ -161,13 +161,13 @@
     "Probe05 reused the global observed hook-name map for a sample variable, dropping call names after case1. Probe06 fixes variable shadowing;96 cases pass.",
     "Probe07 matches actual held cache key and metadata0x11b and adds repeat-helper assertions;96 cases/720 selected-view NI samples pass. All attempts retained."
   ],
-  "production_next": "Persist resident slot1 ownership and native timing/cache history independently of process/Counter; reactivation must remove old retirement, publish native fresh timing and preserve peer asymmetry atomically. Merely erasing a retirement and restarting legacy animation would lose the native history contract.",
+  "production_next": "Persist resident slot1 source/timing and optional pose transition independently of process/Counter. Represent direct restart and eligible NI5 frozen-destination transition. Reblock must atomically replace old held retirement, preserve Counter and peer asymmetry, and retain all resulting history across actual restart.",
   "tests": "No C++/Python production code changed; existing final03 implementation checks remain pinned by M15-COUNTER-BLOCK-RELEASE-VERIFICATION.json and were not repeated.",
   "limits": [
     "No original-game runtime proof or production acceptance of reblock yet.",
     "Supplied scene updates do not prove full pose mixer or camera transitions.",
     "Complete resident slot1 activation/windup/blocking restart and BlockHit release remain open.",
-    "The immediate-activation proof is selected by supplied rendering eligibility/model-root gates. Eligible/root-matching manager activation/blend timing must be established separately before a universal slot1 activation policy is implemented."
+    "Both direct and eligible manager instruction branches now have bounded proofs. Actual pool/proxy/controller capture, differing Player held asset blends and production persistence/reactivation still require implementation and runtime verification."
   ],
   "retained_runtime_red": {
     "editable_manifest": {
@@ -272,5 +272,96 @@
     "direct_image_review": "Late capture shows recovered Player fists and NPC blocking again. Does not disprove intervening disable/rebind; event ordering records two block begins around the single old fade expiry.",
     "harness_vs_acceptance": "Scenario driver passed. Semantic regression remains false, expected_red_reproduced true. Fresh load cache/clock exact, both save/live payload pairs exact, all9 AV arrays/life/RNG and2151 inventories unchanged."
   },
-  "review_addendum": "A follow-up read of474852..474A2F identifies selection direct INI reads and visibility/model-root branches. Accepted raw07 execution/corpus remains unchanged. Its immediate NI1 observation is bounded to the supplied zero-duration branch, not generalized to visible actors."
+  "review_addendum": "A follow-up read of474852..474A2F identifies selection direct INI reads and visibility/model-root branches. Accepted raw07 execution/corpus remains unchanged. Its immediate NI1 observation is bounded to the supplied zero-duration branch, not generalized to visible actors.",
+  "eligible_branch": {
+    "accepted_result": {
+      "passed": true,
+      "cases": 288,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "bf92a8c7275136cdf3445267df738a2af07bb68b8e20d34996269740ac68c13f",
+      "scope": "Eligible/root-matching full helper reactivation with supplied pose proxy from6C5860. Actual manager6C5C70/pose transfer6C9D30/NI activate/update execute. Hold frames0/9/30; startup rendering eligibility remainsfalse to isolate reblock. Assertions pin reuse/process/counter/repeat, NI5 held plus NI4 proxy, exact active-view ease span, frozen output then fresh loop origin at first update reaching blend end. Nine NI updates per selected view. Supplied proxy/scene and rendering gates remain explicit; no production runtime acceptance."
+    },
+    "selected_view_samples": 3240,
+    "protocol": {
+      "matrix": "Prior96 x held frames0/9/30=288 cases",
+      "rendering_gates": "During reblock only:47F7B0 true; Player660110 returns matching per-query root;578F60 false. Startup remains in prior direct branch.",
+      "new_boundary": "6C5860 supplies a preallocated pose proxy, range0..2/frequency1/destination0. No full allocation/pool or scene controller capture proof.",
+      "executed": "Full5F4AE0(true),6C5C70,6C9D30,6C9BA0/6C9CB0 and subsequent6CA950 updates.",
+      "expected": {
+        "held_state": 5,
+        "proxy_state": 4,
+        "duration": "frames/30 when nonzero; compiled direct INI .1 at0, global speed1",
+        "first_update": "Anchors easeStart to own view clock; easeEnd=f32(clock+duration); last/weighted/output0, offset0.",
+        "during_blend": "Held remainsNI5, destination output0 frozen",
+        "completion": "First update with ownclock>=easeEnd givesNI1, offset=-currentclock; loop starts at0 in that update. Following updates advance relative to that clock and preserve strict End equality.",
+        "process_and_counter": "action6 targets same active-view held object; Counter cache unchanged by reblock; repeat helper false/complete sequence bytes unchanged"
+      },
+      "sample_deltas": [
+        0,
+        0.125,
+        0.25,
+        1,
+        1.125,
+        2,
+        2.125,
+        3,
+        3.125
+      ],
+      "selected_view_samples": 3240,
+      "acceptance_scope": "Original instruction protocol only; production slot1 history and actual reactivation regression remain open."
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered08.json",
+        "sha256": "e5f6af1be01959925551d367569ca3f5bcbc3ac490c2685936b04a9f47968ef0"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-08.py",
+        "sha256": "75bf37edcce17a6a9d29e2bd8772ea090eaa23012b50f73a55c9635822a2cba9"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/attempt08.json",
+        "sha256": "81bd0f6a8ec9086a3a2166b23f8fd94fc4b7acb0f99c4a0bd06bdd422b6581d2"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-09.py",
+        "sha256": "8673599fe6924af77fde11d1fafc3c5cd4b2ea9e79bc521777e845f39df3f727"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/attempt09.json",
+        "sha256": "81bd0f6a8ec9086a3a2166b23f8fd94fc4b7acb0f99c4a0bd06bdd422b6581d2"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-10.py",
+        "sha256": "7a4ccbf88a6967514d28eac285f53dd86314a269f68ffaaa3a9fbbb2e665c3fb"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification10.json",
+        "sha256": "2ba5e6210614e34d239eef0974c7b171a90004ee55c7a2ddc9b352fb8d450b3e"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/corpus10.json",
+        "sha256": "bf92a8c7275136cdf3445267df738a2af07bb68b8e20d34996269740ac68c13f"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered11.json",
+        "sha256": "0d0eaa637074e4d23c6762eb42c2f1be388c8013127065d0633cc8283efcf4ae"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-11.py",
+        "sha256": "b6150d2b1e8cfe1f01bc3d70b5cbe0a4860192df811c2d35633225a23ed4bff1"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification11.json",
+        "sha256": "6a6ce7bbea54e0d11de41c732718ecd471382a9388e62aa08a8b1d3b972d9905"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/corpus11.json",
+        "sha256": "bf92a8c7275136cdf3445267df738a2af07bb68b8e20d34996269740ac68c13f"
+      }
+    ],
+    "retained_failures": "08 expectedNI2,09 expectedNI1; original path produces NI5 via pose proxy.10 records exploratory results;11 asserts all exact timing results. No implementation expected values used.",
+    "scope": "Proxy allocation/pool lookup and scene/controller data remain supplied; actual manager and NI instructions execute. No C++/Python production edits or repeated build tests.",
+    "sample_limit": "Deltas include exact duration1 completion and exact post-completion loopEnd in selected cases; not an exhaustive adjacent-float completion matrix or full Player differing blend-frame matrix."
+  }
 }

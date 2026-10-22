@@ -10687,3 +10687,22 @@ whereas the release getter supplies .25. Raw07 results are retained unchanged;
 the reviewed receipt and editable cases now state these gates explicitly.
 Eligible manager activation is a required next proof before a universal slot1
 activation implementation.
+
+The eligible/root-matching branch is now separately exercised in **288 cases**
+with **3240 selected-view NI samples**, held blend frames0/9/30 and the prior
+actor/camera/clock/x87/elapsed matrix. Full helper, manager6C5C70 and pose transfer
+6C9D30 execute with a supplied preallocated6C5860 pose proxy. The selected held
+sequence enters **NI5**, while the proxy enters **NI4**. Activation duration uses
+authored frames/30 or direct compiled General INI .1 at0. First NI update anchors
+the independent view's ease span and freezes destination0 through blending.
+The first update reaching easeEnd changes held toNI1 and sets its loop origin
+to that update's clock; later samples preserve strict loop End equality.
+
+Attempts08/09 expected ordinary NI2/NI1 respectively and were falsified by
+NI5. Exploratory10 records the actual protocol; accepted11 asserts all288 cases
+without deriving expected values from production code. Counter cache and
+repeated-held invariants remain intact. Proxy allocation/pool lookup, scene
+controllers and rendering gates are supplied; actual scene pose capture,
+production persistence, differing Player source blends and runtime reactivation
+acceptance remain open. Updated editable cases and pins are in the same
+reactivation receipt. No production code or test selection changed.

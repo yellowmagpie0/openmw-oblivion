@@ -106,5 +106,33 @@
     "prepare": "Copy unchanged source save to OUTPUT/userdata/saves/M15Review/Quicksave.omwsave before running manifest, with authored held blend fixture from m15_counter_block_release_asset.json.",
     "expected_regression": "Only one accepted block begin per continuous block request; old fade cannot remove/exclude newly activated held lifecycle.",
     "observed_before_fix": "Two begins around old held expiry; final blocking stance masks rebind."
+  },
+  "eligible_branch": {
+    "matrix": "Prior96 x held frames0/9/30=288 cases",
+    "rendering_gates": "During reblock only:47F7B0 true; Player660110 returns matching per-query root;578F60 false. Startup remains in prior direct branch.",
+    "new_boundary": "6C5860 supplies a preallocated pose proxy, range0..2/frequency1/destination0. No full allocation/pool or scene controller capture proof.",
+    "executed": "Full5F4AE0(true),6C5C70,6C9D30,6C9BA0/6C9CB0 and subsequent6CA950 updates.",
+    "expected": {
+      "held_state": 5,
+      "proxy_state": 4,
+      "duration": "frames/30 when nonzero; compiled direct INI .1 at0, global speed1",
+      "first_update": "Anchors easeStart to own view clock; easeEnd=f32(clock+duration); last/weighted/output0, offset0.",
+      "during_blend": "Held remainsNI5, destination output0 frozen",
+      "completion": "First update with ownclock>=easeEnd givesNI1, offset=-currentclock; loop starts at0 in that update. Following updates advance relative to that clock and preserve strict End equality.",
+      "process_and_counter": "action6 targets same active-view held object; Counter cache unchanged by reblock; repeat helper false/complete sequence bytes unchanged"
+    },
+    "sample_deltas": [
+      0,
+      0.125,
+      0.25,
+      1,
+      1.125,
+      2,
+      2.125,
+      3,
+      3.125
+    ],
+    "selected_view_samples": 3240,
+    "acceptance_scope": "Original instruction protocol only; production slot1 history and actual reactivation regression remain open."
   }
 }
