@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "shared_matrix": {
+    "actor": [
+      "NPC",
+      "Player"
+    ],
+    "camera": [
+      0,
+      1
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87_control_word": [
+      127,
+      639,
+      895
+    ],
+    "body_FP_Blend_frames": [
+      [
+        0,
+        0
+      ],
+      [
+        9,
+        30
+      ],
+      [
+        30,
+        9
+      ]
+    ],
+    "held_phase": [
+      "NI5 before first update",
+      "anchored NI5",
+      "mixed peer phase",
+      "steady NI1"
+    ],
+    "old_process_action": [
+      2,
+      6
+    ]
+  },
+  "cases": [
+    {
+      "name": "Blocking wear caller with supplied condition return",
+      "cases": 2304,
+      "extra_matrix": {
+        "item_present": [
+          false,
+          true
+        ],
+        "condition_return_AL": [
+          0,
+          1
+        ]
+      },
+      "entry": "005F5C69",
+      "stop": "005F5CD6",
+      "expected": [
+        "No item skips condition call; false AL skips release",
+        "True AL invokes actual full5F4AE0(false)",
+        "NI5 active view and old2 defer without any sequence bytes/pointers/action change",
+        "Steady active NI1 and old6 clear action and detach held to native positive retirement using active-view Blend frames, or supplied .25 INI fallback",
+        "Player active FP immediately zero-deactivates body; body-active fades both views; NPC leaves fake FP unchanged",
+        "Counter bytes unchanged"
+      ]
+    },
+    {
+      "name": "Disarm post-drop caller with actual held helper and action setter",
+      "cases": 1152,
+      "extra_matrix": {
+        "shield_present": [
+          false,
+          true
+        ]
+      },
+      "entry": "005FC3C3",
+      "stop": "005FC406",
+      "expected": [
+        "Old2 action clears to-1 while all held/proxy/Counter bytes and slot1 pointers survive",
+        "Old6 with shield remains unchanged",
+        "Old6 without shield and steady NI1 releases through positive retirement",
+        "Old6 without shield and NI5: helper false, then actual5EFFD0(-1) zero-deactivates resident body/Player FP; exact0x70 held bytes follow native offset/state/link/destination changes",
+        "Counter bytes unchanged"
+      ]
+    },
+    {
+      "name": "Shield unequip cleanup prefix",
+      "cases": 576,
+      "entry": "004DC93C",
+      "stop": "004DC998",
+      "expected": [
+        "Old6 zero-deactivates resident body/Player FP and clears process action/pointer regardless NI5 or NI1",
+        "Selected-view zero470FC0 precedes full5EFFD0(-1)",
+        "Old2 retains action/held/proxy/Counter state",
+        "No positive fade or pending NI5 gate in this prefix"
+      ]
+    },
+    {
+      "name": "Blocking wear caller after actual weapon unequip callback",
+      "cases": 4608,
+      "extra_matrix": {
+        "item_present": [
+          false,
+          true
+        ],
+        "condition_return_AL": [
+          0,
+          1
+        ],
+        "drawn": [
+          false,
+          true
+        ]
+      },
+      "entry": "005F5C69",
+      "stop": "005F5CD6",
+      "actual_callback": "004DC5B0 and00478CE0",
+      "expected": [
+        "Distinct Actor Biped pointers +104/+5C8 and Biped owner+150 dispatch actual weapon callback",
+        "Declared empty weapon attachment branch; supplied empty scene-root child getter; menu repair branch suppressed",
+        "Drawn true writes Actor pointer to NPC body or Player both AnimData+C8 pending fields; drawn false leaves both0",
+        "Whole held/proxy/Counter sequence bytes and process/slot ownership unchanged by weapon callback",
+        "Following wear caller obeys same active-view NI5 gate or NI1 positive release as baseline caller"
+      ]
+    }
+  ],
+  "boundaries": [
+    "Condition arithmetic, inventory removal, DropItem, relation publication and full actor update/input not executed",
+    "Caller slices have specified entry/stop boundaries; shield probe stops before remaining skin/model work",
+    "Weapon callback uses actual owned Biped/AnimData dispatch with empty Biped weapon descriptor and empty scene-root child getter; UI repair branch suppressed",
+    "Native .25 release INI supplied; this does not establish custom INI import or change compiled .1 fallback",
+    "Original scene/cache/proxy selection boundaries inherited from pinned native-held-block-reactivation19",
+    "No original-game process, production integration or normal-input acceptance"
+  ],
+  "full_M15S4_acceptance": false
+}

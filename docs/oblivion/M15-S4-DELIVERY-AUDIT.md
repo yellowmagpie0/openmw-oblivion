@@ -11079,3 +11079,53 @@ trajectory comparison, Player asymmetric view/input matrix or original-game
 skin interpolation proof. Equipment/contact/mastery/effects and the remaining
 S4 gates stay open. Existing fixtures were reused; no new plugin/compiler/world
 authoring validation or TES4 MCP capability claim. Full M15S4 remains incomplete.
+
+
+## Native held equipment callers and callback distinctions
+
+The pinned original image now has bounded composed proofs for the equipment
+paths that the typed held controller exposed. The blocking-wear caller executes
+full5F4AE0(false), not a recorded release stub. Across 2,304 cases, absent-item
+and false-condition-return controls do nothing; a reported break with active
+NI5 or action2 leaves complete sequence bytes, action and pointers unchanged.
+Steady NI1/action6 uses the active view's positive span. Player FP selection
+immediately deactivates body; body selection fades both views. Counter cache
+bytes remain exact. Release INI .25 is supplied; frame0 activation still uses
+the separately identified compiled .1 selection default.
+
+Disarm differs. Its post-drop caller first tries the full held release helper,
+then falls back to actual5EFFD0(-1,0) on failure. The 1,152-case composition
+shows that old6 without a shield uses positive release when steady, but zero-
+deactivates resident body/Player FP when NI5 rejects release. Complete 0x70 held
+bytes match the independent native offset/state/link/destination model. Old2
+Counter action withdrawal preserves held/proxy/Counter bytes; old6 with a shield
+keeps its posture. The action setter is not a plain process-field assignment.
+
+The actual shield-unequip cleanup prefix has 576 cases: old6 zero-resets selected
+slot1, then the full action setter clears the remaining body/Player FP resident
+slot regardless of NI5. Old2 stays unchanged. There is no positive fade or NI5
+gate in this prefix. Separate weapon callback/caller composition covers 4,608
+cases with distinct Actor Biped and AnimData objects and both drawn states.
+Actual4DC5B0/478CE0 preserve every held/proxy/Counter byte and ownership field;
+original drawn predicates gate asserted pending actor notifications in body
+AnimData or both Player views. The following wear helper retains its NI5 gate
+or NI1 positive release. Empty Biped weapon attachments, an empty scene-root
+child getter and a suppressed UI repair branch are explicit boundaries.
+
+[M15-HELD-BLOCK-EQUIPMENT-ORACLE-VERIFICATION.json](M15-HELD-BLOCK-EQUIPMENT-ORACLE-VERIFICATION.json)
+pins the image, preregistrations, accepted01/04/06/08 probes, corpora and editable
+cases. Drawn-true07 is a subset of08. Attempt02 failed unsigned packing before
+the tested caller; attempt03 revealed native setup cleanup that invalidated the
+assumed plain setter. Weaker05 had no Biped pointers and skipped the claimed
+Biped model/notification branch; its original report and limiting review remain
+intact. Corrected07/08 require the actual body/FP notification fields.
+
+These are original instruction observations with supplied condition returns,
+post-drop admission, cache/proxy/scene/INI and other stated boundaries. Inventory
+mutation, real weapon model removal, the complete shield callback, subsequent
+actor update and normal-input gameplay are not accepted by them. No C++/codec
+change, engine build or runtime course in this checkpoint. Production still
+needs atomic held equipment effects and slot3 cache retention, followed by real
+break/disarm/restart coverage; the existing unconditional break withdrawal and
+generic hard equipment cancellation do not establish those native paths.
+Full M15S4 remains incomplete.
