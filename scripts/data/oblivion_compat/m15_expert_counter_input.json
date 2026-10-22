@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": "Authored idle Expert H2H Counter gameplay setup; no Counter or contact is injected. Runtime acceptance pending.",
+  "base_input": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/unarmed-idle60.omwsave",
+  "base_input_sha256": "fe496e520109e24c889854d7f8eb3d65fedf2b754cb782d34f1d2480f2bc5aec",
+  "output": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/expert-counter.omwsave",
+  "output_sha256": "d8081195239d69e5f590bfb9685c84f1826b8858cd7f0d3f81f18316ed92e210",
+  "mutations": {
+    "actor": "content:oblivion.esm:01fc43",
+    "unequip_weapon": "content:oblivion.esm:090615",
+    "base_form": "content:oblivion.esm:025200",
+    "base_hand_to_hand": [
+      5.0,
+      75
+    ],
+    "combat_rng_state": [
+      505908858,
+      2832368235
+    ]
+  },
+  "expected_first_expert_draw": {
+    "next_state": 2006221698,
+    "raw": 30612,
+    "percentile": 12,
+    "installed_chance": 25
+  },
+  "all_other_decoded_state_preserved": true,
+  "structural_write_success": true,
+  "semantic_reinspection": true,
+  "compiler_world_validation": false,
+  "normal_input_runtime_acceptance": false,
+  "prerequisite_recipe": "scripts/data/oblivion_compat/m15_player_strike_tail_input.json",
+  "prerequisite_tool": "scripts/tes4_m15_player_strike_tail_input.py",
+  "base_override_to_append": {
+    "base": "content:oblivion.esm:025200",
+    "kind": 0,
+    "values": [
+      [
+        17,
+        0,
+        75
+      ]
+    ]
+  },
+  "actor_value_update": {
+    "actor": "content:oblivion.esm:01fc43",
+    "index": 17,
+    "field": 0,
+    "before": 5,
+    "after": 75
+  },
+  "procedure": "Generate base_input with prerequisite_tool from its pinned schema59 source. Load with scripts.tes4_runtime_state.load_save; unequip the one target weapon with mask65536, append/sort base_override_to_append by base, apply actor_value_update and combat_rng_state, then write_save(base_input, a fresh output, state). Require exact output SHA256 and all other decoded state preserved. Use an isolated copied quicksave slot and the unchanged three plugins pinned by the base input. Normal action/Counter/Stagger outcomes are not injected."
+}

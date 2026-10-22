@@ -3332,19 +3332,22 @@ namespace MWWorld
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
         if (!contact) return nullptr;
         auto preparedDeltas = deltas;
-        if (blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive()
+        const bool defensiveQuery = blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive();
+        if (defensiveQuery && !MWMechanics::prepareOblivionDefensiveBlockConsequences(*this, attacker, victim, preparedDeltas))
+            return nullptr;
+        if (blockHit && !preparedDeltas.mVictimCounterRequested && contact->victimRemainsAlive()
             && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
                 return change.mOwner == victim && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
             }))
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
         }
-        if (attackerRecoil && !deltas.mVictimCounterRequested && contact->victimRemainsAlive()
+        if (attackerRecoil && !preparedDeltas.mVictimCounterRequested && contact->victimRemainsAlive()
             && !prepareOblivionContactReaction(id, attacker, ESM4::MeleeReactionKind::Recoil, true, preparedDeltas))
             return nullptr;
         if (preparedDeltas.mVictimCounterRequested && !preparedDeltas.mVictimCounter && contact->victimRemainsAlive()
             && !prepareOblivionCounterStrike(victim, preparedDeltas)) return nullptr;
-        if (preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
+        if (defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
             contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
                 essential, recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());

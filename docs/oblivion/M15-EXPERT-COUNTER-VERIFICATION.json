@@ -1,0 +1,292 @@
+{
+  "schema_version": 1,
+  "status": "Expert defensive Counter selection integrated. Full M15S4 remains incomplete.",
+  "validation_layers": {
+    "structural_write_success": true,
+    "compiler_and_world_validation": true,
+    "semantic_reinspection": "Full engine tests, actual normal-input Counter pending/consumed/recovered observations, and authoritative binary fresh-process continuation core equality. See diagnostic limit below.",
+    "normal_input_runtime_acceptance": "Bounded Expert H2H NPC Counter against unarmed Player, keyboard, first-person camera, configured10FPS offscreen software renderer, sound disabled.",
+    "fresh_process_restart_acceptance": "Actual pending Counter windup save loaded in a new process without attack input; one Counter contact and natural paired Stagger recovery.",
+    "full_M15S4_acceptance": false
+  },
+  "tested_source": {
+    "head": "9b04a38167e25ba1a637ee6a926a79c6bb67a3b8",
+    "source_fingerprint": "d613396922ca4b48bcf3114a59fceada1cca131c8886ed9c0b951297668171ab"
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-expert-counter-normal-02/verification.json",
+        "sha256": "3e6480dadbcf4404b9aca6ba5319f16994c868ee43fb2c8b03e535be8ad6b4ed"
+      },
+      "tested_source": {
+        "head": "9b04a38167e25ba1a637ee6a926a79c6bb67a3b8",
+        "source_fingerprint": "d613396922ca4b48bcf3114a59fceada1cca131c8886ed9c0b951297668171ab"
+      },
+      "results": {
+        "engine": {
+          "executed": 1810,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d42f6ba5d5d63be5c9d5ff41a3062f5fb75fa19aa1887bcc9bd85356a73b75c9",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3b815e85600bd197cff94db1759bf9ee11e6495eddae0fb3bbcaf1f7fb3ac338",
+          "inventory_sha256": "b6b2f38b9433cbeecf3e1ac12cc23e232afb61b6c5218bcf15d024d6e5cb6a21",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-expert-counter-sanitized-02/verification.json",
+        "sha256": "fcd441041c68d13ded2afd913484b328cf44f66bc696fe3f1ce8e5acdc8076fe"
+      },
+      "tested_source": {
+        "head": "9b04a38167e25ba1a637ee6a926a79c6bb67a3b8",
+        "source_fingerprint": "d613396922ca4b48bcf3114a59fceada1cca131c8886ed9c0b951297668171ab"
+      },
+      "results": {
+        "engine": {
+          "executed": 1810,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6605e678129f77efe217b8df12b56f3ffb20ade5ae52fc1c8c89d05921906ff1",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "387bd3c5b8434cde44b33ee263ebc325371e5769061e89af809b7346a1f6f709",
+          "inventory_sha256": "b6b2f38b9433cbeecf3e1ac12cc23e232afb61b6c5218bcf15d024d6e5cb6a21",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "native_references": [
+    {
+      "path": "docs/oblivion/M15-COUNTER-STARTUP-VERIFICATION.json",
+      "sha256": "f8a6a79258bc5f01965ca52e9721c9fdaf16296c92f4fbe425b2b98c30a30387"
+    },
+    {
+      "path": "docs/oblivion/M15-COUNTER-CONTACT-VERIFICATION.json",
+      "sha256": "41b8a09708d5675f01f59bb96f41fc6d84869bc36b74026eb4930fbba2e880bc"
+    }
+  ],
+  "editable_inputs": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_expert_counter_input.json",
+      "sha256": "245460507b99c2785bd5650299a401dd47258b896bcb4b535557f324fab54c82"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_expert_counter.json",
+      "sha256": "84a37dc74ac1d6563631bf846e90ba07060efb1833bd7f65df96b18b68e1c9c0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_expert_counter_continuation.json",
+      "sha256": "228d8e9928ac60988f23a43e54606e6d53b11ba36bfa1f406359e1805cdba8a6"
+    }
+  ],
+  "runtime": {
+    "root": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02",
+    "engine_sha256": "e39d5f47c1aa219a6503e0d6e56544c1345d24d2237d59ea5495665c75f8adbd",
+    "core_verification": {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/core-verification.json",
+      "sha256": "e928d11acb36a0a4e179ec5c611933ee6503e7716e21397595260b5126408bca"
+    },
+    "monitor": {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/monitor.py",
+      "sha256": "d10c85083cfb761f2203bd515f54f8f89c8c4017efaa7fe941b7ead4e8cd1df1"
+    },
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/verify-normal.py",
+      "sha256": "87f2a5ec6521c6e137528822a3eef1fa711f752f3198f33a14a42f47a0e8cb61"
+    },
+    "staged_input": {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/expert-counter.omwsave",
+      "sha256": "d8081195239d69e5f590bfb9685c84f1826b8858cd7f0d3f81f18316ed92e210"
+    },
+    "preregistration": {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-runtime-inputs-01/preregistered-input.json",
+      "sha256": "b9f16b395faeadb7fe970351c38f8dafc5bd89d63a424911c75856fd74bfd08a"
+    },
+    "epochs": [
+      {
+        "name": "first",
+        "process": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/process-epoch.json",
+          "sha256": "f1540f1ca7bbf9092f72a4073280670998220d447d04df354e2e805b20281dac"
+        },
+        "environment": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/actual-engine-environment.json",
+          "sha256": "55e93335224571dc7843e40a8153d24119b6ce08bec60f0d7db376b570a34eab"
+        },
+        "events": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/events.jsonl",
+          "sha256": "0d5b080d25090c4dc95aaf15b135613c31a8aa2fdd14865d8040c69f39315e95"
+        },
+        "scenario": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/scenario.json",
+          "sha256": "089cfaaa1a08be902a495d4aad20a8d7b20a68d831a36e87e592f323420c2ea5"
+        },
+        "input_sha256": "d8081195239d69e5f590bfb9685c84f1826b8858cd7f0d3f81f18316ed92e210",
+        "snapshot_index": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/snapshot-index.json",
+          "sha256": "036f17dcd6672f194fdec28599c59b429a21f3f6c15fd0e80a4572545e47cfa5"
+        },
+        "snapshots": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/snapshots/save-3.omwsave",
+            "sha256": "3a22f49144452f9de64ef1c4a70396f8010a5f2c88ad6561bbd52f0ab3df2ba5"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/snapshots/save-4.omwsave",
+            "sha256": "785c37c26eb24bfdb9bf3cc4224f5f9ddca345264549ebfe053ecb421621fa9e"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/snapshots/save-5.omwsave",
+            "sha256": "ad778dec3adabb41b69c89f1c623c4385ec6192f2ca37c743f5321fed8ba249c"
+          }
+        ],
+        "live": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/live-1-3.json",
+            "sha256": "d32b47457a1bddac654a763e29225ac09d928e013134debb4f61b00fdbea50ea"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/live-1-4.json",
+            "sha256": "9bb9f89fdb8455b47d7645dc6119b733322d35a13fa2a5c18d4d86ef4fb41274"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/live-1-5.json",
+            "sha256": "75ab8a553e6e8a0c97ef8a894bab7cb77774e6ddd48402abfafe90ecdc09fec4"
+          }
+        ],
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/counter-stagger.png",
+            "sha256": "a13ceef212438026a03456059f8ac4ad8d45d5b372e5e146e6754cb432901092"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/first/counter-recovered.png",
+            "sha256": "fa0d4c92747d266b09311600d14532c6f2ba6434c8c2d103332b138f0ee06ba1"
+          }
+        ]
+      },
+      {
+        "name": "second",
+        "process": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/process-epoch.json",
+          "sha256": "53eb60d37f1692030d56a16baf0578eb0b6bafece4537c3394b77d3aeba54e3f"
+        },
+        "environment": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/actual-engine-environment.json",
+          "sha256": "aeaeed6e7e57e1e63207f5507d49bbd43bebca1f80c53a7a73e7199b616fae22"
+        },
+        "events": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/events.jsonl",
+          "sha256": "b038e52fa55a08c53a03ada2247ff51159e5aeb52ee5f502cd5da9198978b6c3"
+        },
+        "scenario": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/scenario.json",
+          "sha256": "0078cdefcb53b9549340cdac025edff1feed410357e92d39cf31c30fd3f7d7a1"
+        },
+        "input_sha256": "3a22f49144452f9de64ef1c4a70396f8010a5f2c88ad6561bbd52f0ab3df2ba5",
+        "snapshot_index": {
+          "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/snapshot-index.json",
+          "sha256": "05dd5d61feaf6354a0705c50f42e850a65e0cbaf44c4c1cf700db46a114db83e"
+        },
+        "snapshots": [
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/snapshots/save-3.omwsave",
+            "sha256": "1382adec92a963af43cd65f82ccd43e58488467c9fad6781b916601510634f13"
+          },
+          {
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/snapshots/save-4.omwsave",
+            "sha256": "de58fb8a994c1d73dabda4b5982dd9f78929064e84143bc4a46a1956102387f1"
+          }
+        ],
+        "live": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/live-2-3.json",
+            "sha256": "386c21a1e5f621f1cb61b6e27351a3426134e8aa057eaec8ae6b9105745cd27a"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/live-2-4.json",
+            "sha256": "b8c0126ee11457d6bcfad285e280fcda65be6a062a7d5b1d8258c279a1b11c50"
+          }
+        ],
+        "images": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/counter-stagger.png",
+            "sha256": "d569deb8346d8ecfdc10a3f15f3f2d8e56ca347b479e6735f4cd3e94e372ac05"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-02/second/counter-recovered.png",
+            "sha256": "7145f365036808e535fefbbcac804fe4f04c67e8d359f89f2c1f954bb6b9e716"
+          }
+        ]
+      }
+    ],
+    "observations": {
+      "player_contact": 2,
+      "counter": 3,
+      "rng_after_expert_roll": 2006221698,
+      "expert_percentile": 12,
+      "installed_chance": 25,
+      "final_ledger": {
+        "next": 4,
+        "pending": []
+      },
+      "exact_restart_actor_count": 9,
+      "exact_restart_inventory_count": 2348,
+      "counter_health_damage": 0,
+      "counter_fatigue_damage": 0,
+      "counter_attack_fatigue_cost": 0
+    },
+    "direct_image_review": true,
+    "image_scope": "Counter/Stagger first-person view and recovered visible Player fists/NPC block; no audio or full camera matrix claim."
+  },
+  "diagnostic_limit": {
+    "whole_binary_live_payload_equal": false,
+    "reason": "Canonical diagnostic JSON writes some reference/AI Euler negative zeros as integer -0; JSON parsing loses their sign. Whole-payload comparison was retained as failed. Numeric whole-state equality passes; authoritative binary save/restart core values, all inventories and action/RNG states match. No signed-zero normalization is claimed as a passing wire comparison.",
+    "next_work": "Fix diagnostic position JSON signed-zero representation and repeat the strict payload comparison."
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-normal-01",
+      "outcome": "All1810 tests ran; two fixtures failed: old Expert-rejection expectation and rendererless full-World capture without Player. Corrected only tests for02."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-sanitized-01",
+      "outcome": "All1810 tests ran; two fixtures failed: old Expert-rejection expectation and rendererless full-World capture without Player. Corrected only tests for02."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-expert-counter-pilot-normal-first-01",
+      "outcome": "Successful normal-input/recovery pilot. Intermediate binary saves were not retained, so no in-flight restart claim from this attempt."
+    }
+  ],
+  "limits": [
+    "Master immediate disarm, Creature Counter-target Stagger/Recoil and equipment-change Counter startup remain guarded.",
+    "The existing World surviving-defender preview gates this query; no complete original terminal-contact caller proof is added.",
+    "Observed NPC held BlockIdle is rebound at Counter recovery; native slot1 cache/clock continuity is not accepted here.",
+    "No rendered sanitizer course, post-consumed restart, audio, actual measured FPS matrix, gamepad, full camera matrix, or complete first-person native Counter source dispatch acceptance is added by this checkpoint.",
+    "Component/Python sources are unchanged; those inventories were not rerun."
+  ]
+}

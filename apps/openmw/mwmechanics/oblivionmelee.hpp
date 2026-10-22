@@ -77,6 +77,13 @@ namespace MWMechanics
         MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& victim);
 
+    // After a surviving blocked-contact preview, append the Expert defensive
+    // query to this packet's wear RNG. Resource preparation chooses Counter
+    // instead of BlockHit/Recoil. Master immediate disarm remains guarded.
+    bool prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
+        OblivionPhysicalContactDeltas& deltas);
+
     // Adapter for this fork's existing -100..100 GUI slider. Config values
     // outside that UI range saturate; this is not native INI deserialization.
     float oblivionNormalizedDifficulty(int difficultySetting);

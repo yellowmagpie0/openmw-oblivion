@@ -8953,7 +8953,7 @@ namespace
                             MWWorld::InventoryStore::Slot_CarriedRight) : MWWorld::Ptr{};
                         const auto action = world.beginOblivionPhysicalAction(attacker);
                         const auto before = snapshot();
-                        if (blockSkill >= 75)
+                        if (blockSkill >= 100)
                         {
                             if (weaponAttack)
                                 EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false));
@@ -8961,7 +8961,7 @@ namespace
                                 EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false));
                             EXPECT_EQ(snapshot(), before);
                             EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 100.125f);
-                            continue; // Proc publication remains explicitly unsupported, never silently omitted.
+                            continue; // Immediate Master disarm publication remains unsupported.
                         }
                         float health, fatigue = 0, debit, fraction;
                         std::vector<MWMechanics::OblivionPhysicalConditionChange> conditions;
@@ -28380,6 +28380,196 @@ TEST(OblivionWorldTest, PlayerContactReactionsReplaceIndependentStrikeSourcesAto
         EXPECT_EQ(current->mFirstPerson->mRetiringSequences.size(), mode == 6 ? 1u : 0u);
         EXPECT_TRUE(fixture.snapshot().mPhysicalActions.mPending.empty());
         EXPECT_EQ(service.combatRandomState(), request.mRandomTransition->mNextState);
+    }
+}
+
+TEST(OblivionWorldTest, ExpertDefensiveQueryAppendsWearRandomAndUsesBaseSkillAndProjectedEquipment)
+{
+    struct Row { int rank, modifier, gear; unsigned prior; int chance; bool accepted, consumes, triggered; };
+    // Native CRT seed1 gives41,67,34. Each chance pair checks inclusive <=
+    // after zero/one/two already-staged wear draws, without spending live RNG.
+    for (const auto row : {Row{75, 0, 0, 0, 40, true, true, false},
+             Row{75, 0, 0, 0, 41, true, true, true}, Row{75, -75, 0, 0, 41, true, true, true},
+             Row{74, 26, 0, 0, 100, true, false, false}, Row{99, 1, 0, 0, 41, true, true, true},
+             Row{100, -100, 0, 0, 100, false, false, false},
+             Row{75, 0, 0, 1, 66, true, true, false}, Row{75, 0, 0, 1, 67, true, true, true},
+             Row{75, 0, 0, 2, 33, true, true, false}, Row{75, 0, 0, 2, 34, true, true, true},
+             Row{75, 0, 1, 0, 100, true, false, false}, Row{75, 0, 2, 0, 41, true, true, true},
+             Row{75, 0, 3, 0, 41, true, true, true}})
+    {
+        SCOPED_TRACE(row.rank);
+        SCOPED_TRACE(row.modifier);
+        SCOPED_TRACE(row.gear);
+        SCOPED_TRACE(row.prior);
+        SCOPED_TRACE(row.chance);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto source = addNativeNpc(fixture, 0x801), defender = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(defender));
+        auto& service = *world.getOblivionCombatService();
+        std::vector<ESM4::RuntimeInventoryItem> equipment;
+        if (row.gear & 1)
+        {
+            ESM4::RuntimeInventoryItem weapon; weapon.mBase = addEquipmentWeapon(fixture); weapon.mCount = 1;
+            weapon.mCondition = 50; weapon.mEquippedSlots = ESM4::InventorySlotWeapon; equipment.push_back(weapon);
+        }
+        if (row.gear & 2)
+        {
+            ESM4::Armor shield{}; shield.mId = {0x941, 0}; shield.mArmorFlags = ESM4::Armor::TES4_Shield;
+            shield.mData.health = 100;
+            const auto key = ESM::FormKey::content("headless.esm", 0x941);
+            world.getStore().getWritable<ESM4::Armor>().insertStatic(shield, key);
+            ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(shield.mId);
+            projected.mData.mType = ESM::Armor::Shield; projected.mData.mHealth = 100;
+            world.getStore().insertStatic(projected); MWClass::Armor::registerSelf();
+            ESM4::RuntimeInventoryItem item; item.mBase = key; item.mCount = 1; item.mCondition = 50;
+            item.mEquippedSlots = ESM4::Armor::TES4_Shield; equipment.push_back(item);
+        }
+        if (!equipment.empty()) installEquipmentInventory(fixture, defender, equipment);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, row.gear ? 15 : 17,
+            ESM4::ActorValueCommand::Set, ESM4::ActorValueCommandSource::Script, row.rank));
+        if (row.modifier) ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, row.modifier));
+        ASSERT_TRUE(service.beginBlocking(defender.getCellRef().getFormKey()));
+        ESM4::GameSetting chance{}; chance.mId = {0x990, 0}; chance.mEditorId = "iPerkBlockStaggerChance";
+        chance.mData = std::int32_t(row.chance);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance,
+            ESM::FormKey::content("headless.esm", 0x990));
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        if (row.prior) packet.mRandomTransition = service.prepareCombatRandom(row.prior);
+        const auto before = contactSnapshot(fixture, {source, defender});
+        EXPECT_EQ(MWMechanics::prepareOblivionDefensiveBlockConsequences(world, source, defender, packet), row.accepted);
+        EXPECT_EQ(packet.mVictimCounterRequested, row.triggered);
+        const unsigned draws = row.prior + unsigned(row.consumes);
+        EXPECT_EQ(packet.mRandomTransition.has_value(), draws != 0);
+        if (draws)
+        {
+            const std::array<std::uint32_t, 4> states{1, 2745024, 3357800067u, 415139642};
+            EXPECT_EQ(packet.mRandomTransition->mDraws, draws);
+            EXPECT_EQ(packet.mRandomTransition->mExpectedState, 1u);
+            EXPECT_EQ(packet.mRandomTransition->mNextState, states[draws]);
+        }
+        EXPECT_EQ(packet.mAttackerFatigue, -7); EXPECT_EQ(packet.mVictimHealth, -3);
+        EXPECT_TRUE(packet.mConditionChanges.empty()); EXPECT_FALSE(packet.mVictimCounter);
+        EXPECT_EQ(contactSnapshot(fixture, {source, defender}), before);
+        if (row.gear == 3)
+        {
+            // Removing the shield leaves a weapon-only blocker, so the Expert
+            // query consumes no draw even while the live shield remains worn.
+            auto& inventory = defender.getClass().getInventoryStore(defender);
+            const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+            ASSERT_NE(left, inventory.end());
+            auto change = MWMechanics::captureOblivionPhysicalConditionChange(defender, *left, 0);
+            change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+            MWMechanics::OblivionPhysicalContactDeltas projected;
+            projected.mConditionChanges.push_back(change);
+            ASSERT_TRUE(MWMechanics::prepareOblivionDefensiveBlockConsequences(world, source, defender, projected));
+            EXPECT_FALSE(projected.mRandomTransition); EXPECT_FALSE(projected.mVictimCounterRequested);
+            EXPECT_EQ(projected.mConditionChanges.size(), 1u);
+            EXPECT_EQ(contactSnapshot(fixture, {source, defender}), before);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, ExpertBlockWorldPublishesProcRandomEvenWhenCounterPlaybackIsAbsent)
+{
+    for (const unsigned prior : {0u, 2u})
+    for (const bool proc : {false, true})
+    for (const bool stale : {false, true})
+    {
+        SCOPED_TRACE(prior);
+        SCOPED_TRACE(proc);
+        SCOPED_TRACE(stale);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto source = addNativeNpc(fixture, 0x801), defender = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(defender));
+        auto& service = *world.getOblivionCombatService();
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 75));
+        ASSERT_TRUE(service.beginBlocking(defender.getCellRef().getFormKey()));
+        source.getClass().getCreatureStats(source).setDrawState(MWMechanics::DrawState::Weapon);
+        defender.getClass().getCreatureStats(defender).setDrawState(MWMechanics::DrawState::Weapon);
+        ESM4::GameSetting chance{}; chance.mId = {0x990, 0}; chance.mEditorId = "iPerkBlockStaggerChance";
+        chance.mData = std::int32_t(proc ? 100 : 0);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance,
+            ESM::FormKey::content("headless.esm", 0x990));
+        const auto id = world.beginOblivionPhysicalAction(source);
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        if (prior) packet.mRandomTransition = service.prepareCombatRandom(prior);
+        const auto before = contactSnapshot(fixture, {source, defender});
+        auto prepared = world.prepareOblivionPhysicalContact(id, source, defender, packet, true, true);
+        ASSERT_TRUE(prepared); EXPECT_EQ(prepared->randomDraws(), prior + 1);
+        EXPECT_EQ(contactSnapshot(fixture, {source, defender}), before);
+        if (stale)
+        {
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 76));
+            const auto changed = contactSnapshot(fixture, {source, defender});
+            EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+            EXPECT_EQ(contactSnapshot(fixture, {source, defender}), changed);
+            EXPECT_TRUE(service.isActionPending(id, source.getCellRef().getFormKey()));
+            prepared = world.prepareOblivionPhysicalContact(id, source, defender, packet, true, true);
+            ASSERT_TRUE(prepared);
+        }
+        const auto expectedValues = *service.findActorValues(defender.getCellRef().getFormKey());
+        const auto fatigue = service.getNonPlayerValue(source, 10), health = service.getNonPlayerValue(defender, 8);
+        ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+        EXPECT_EQ(service.getNonPlayerValue(source, 10), fatigue - 7);
+        EXPECT_EQ(service.getNonPlayerValue(defender, 8), health - 3);
+        EXPECT_EQ(service.getProcessAction(defender.getCellRef().getFormKey()), 6);
+        if (const auto* state = service.findMeleeState(defender.getCellRef().getFormKey()))
+            EXPECT_FALSE(state->mStrike);
+        EXPECT_EQ(service.findActorValues(defender.getCellRef().getFormKey())->mValues[10], expectedValues.mValues[10]);
+        auto after = captureNativeActorState(fixture, source);
+        after.mReferences.push_back(captureNativeActorState(fixture, defender).mReferences[0]);
+        EXPECT_EQ(after.mCombatRngState, prior ? 415139642u : 2745024u);
+        EXPECT_EQ(after.mPhysicalActions.mNext, id + 1); EXPECT_TRUE(after.mPhysicalActions.mPending.empty());
+        EXPECT_TRUE(service.isActionConsumed(id));
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        auto restored = captureNativeActorState(fixture, source);
+        restored.mReferences.push_back(captureNativeActorState(fixture, defender).mReferences[0]);
+        EXPECT_EQ(restored.serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, ExpertDefensiveQueryDoesNotRunAfterTheVictimLeavesAlivePhase)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto source = addNativeNpc(fixture, 0x801), defender = addNativeNpc(fixture, 0x802);
+    ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(defender));
+    auto& service = *world.getOblivionCombatService();
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17, ESM4::ActorValueCommand::Set,
+        ESM4::ActorValueCommandSource::Script, 75));
+    ASSERT_TRUE(service.beginBlocking(defender.getCellRef().getFormKey()));
+    const auto id = world.beginOblivionPhysicalAction(source);
+    const auto before = service.combatRandomState();
+    auto prepared = world.prepareOblivionPhysicalContact(id, source, defender, {-7, -10000, 0}, true, true);
+    ASSERT_TRUE(prepared); EXPECT_EQ(prepared->randomDraws(), 0u); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(service.combatRandomState(), before);
+    EXPECT_EQ(service.findActorLife(defender.getCellRef().getFormKey())->mPhase, ESM4::ActorLifePhase::Dead);
+    EXPECT_TRUE(service.isActionConsumed(id));
+}
+
+TEST(OblivionWorldTest, OrdinaryUnarmedBlockingAdmitsExpertNumericsButKeepsMasterGuard)
+{
+    for (const int rank : {74, 75, 99, 100})
+    {
+        SCOPED_TRACE(rank);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto source = addNativeNpc(fixture, 0x801), defender = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(defender));
+        auto& service = *world.getOblivionCombatService();
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, rank));
+        ASSERT_TRUE(service.beginBlocking(defender.getCellRef().getFormKey()));
+        const auto before = contactSnapshot(fixture, {source, defender});
+        const auto damage = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, defender, 0, false);
+        EXPECT_EQ(damage.has_value(), rank < 100);
+        if (damage) { EXPECT_TRUE(damage->mBlockAccepted); EXPECT_FALSE(damage->mRandomTransition); }
+        EXPECT_EQ(contactSnapshot(fixture, {source, defender}), before);
     }
 }
 

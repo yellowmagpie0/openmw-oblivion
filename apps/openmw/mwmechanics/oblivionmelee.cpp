@@ -398,6 +398,64 @@ namespace MWMechanics
         return deltas;
     }
 
+    bool prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
+        OblivionPhysicalContactDeltas& deltas)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        const auto player = world.getPlayerPtr();
+        if (!service || attacker.isEmpty() || defender.isEmpty() || attacker == defender
+            || (defender != player && defender.getType() != ESM::REC_NPC_4)
+            || !oblivionBlockingPosture(world, defender) || deltas.mVictimCounterRequested || deltas.mVictimCounter)
+            return false;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        auto& inventory = defender.getClass().getInventoryStore(defender);
+        const auto retained = [&](const auto& slot) {
+            return slot != inventory.end()
+                && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                    return change.mOwner == defender && change.mItem == *slot
+                        && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+                });
+        };
+        const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+        const bool hasWeapon = retained(right) && right->getType() == ESM::REC_WEAP;
+        const bool hasShield = retained(left) && left->getType() == ESM::REC_ARMO
+            && left->get<ESM::Armor>()->mBase->mData.mType == ESM::Armor::Shield;
+        const auto key = defender == player ? ESM::FormKey::dynamic("player", 1) : defender.getCellRef().getFormKey();
+        const auto base = [&](std::uint8_t av) { return defender == player ? service->getPlayerBaseValue(av)
+            : service->getNonPlayerBaseValue(key, av, world.getStore()); };
+        const ESM4::BlockMasteryInput input{base(15), base(17), hasWeapon, hasShield};
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const bool master = hasWeapon || hasShield
+            ? hasShield && ESM4::combatMastery(input.mBlock, mastery) >= ESM4::CombatMastery::Master
+            : ESM4::combatMastery(input.mHandToHand, mastery) >= ESM4::CombatMastery::Master;
+        if (master) return false; // The no-Counter branch must include immediate Master disarm.
+        const auto draw = ESM4::combatRandomDraw(deltas.mRandomTransition
+            ? deltas.mRandomTransition->mNextState : service->combatRandomState());
+        const auto proc = ESM4::blockMasteryStagger(input, draw.mValue % 100,
+            ESM4::buildMasteryProcSettings(settings), mastery);
+        if (!proc.mConsumesDraw) return true;
+        if (attacker != player && attacker.getType() != ESM::REC_NPC_4)
+            return false; // Creature Counter-target Stagger/Recoil is not admitted.
+        if (deltas.mVictimReaction || deltas.mAttackerReaction || !deltas.mDisarms.empty()) return false;
+        if (proc.mTriggered && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
+                [&](const auto& change) { return change.mOwner == defender
+                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None; }))
+            return false; // Projected equipment-change Counter activation needs its own resource packet.
+        const auto random = service->prepareCombatRandom((deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
+        if (random.mNextState != draw.mNextState) return false;
+        deltas.mRandomTransition = random;
+        deltas.mVictimCounterRequested = proc.mTriggered;
+        return true;
+    }
+
     std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
         MWBase::World& world, std::uint64_t actionId,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& selectedTarget,
@@ -942,10 +1000,10 @@ namespace MWMechanics
                 : service.getNonPlayerIntegerValue(victim, av); };
             const auto base = [&](std::uint8_t av) { return player ? service.getPlayerBaseValue(av)
                 : service.getNonPlayerBaseValue(key, av, world.getStore()); };
-            // Expert/Master defensive procs need their complete recoil/drop
-            // transaction. Never publish an ordinary hit while omitting them.
+            // Expert selection joins the World contact after armor-wear RNG.
+            // Master immediate-disarm publication remains a separate caller.
             if (ESM4::combatMastery(base(item.isEmpty() ? 17 : 15),
-                    ESM4::buildCombatMasterySettings(settings)) >= ESM4::CombatMastery::Expert)
+                    ESM4::buildCombatMasterySettings(settings)) >= ESM4::CombatMastery::Master)
                 return std::nullopt;
             double itemCondition = 0;
             if (!item.isEmpty())

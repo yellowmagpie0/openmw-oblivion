@@ -10401,3 +10401,39 @@ still guarded. Player/Creature drops, Creature Stagger, NPC replacement and
 combat-controller policy, complete native first-person action dispatch, partial
 mirrors/cached sources, normal-input/save-restart and the camera/input/audio/FPS
 matrix remain open. The other canonical S4 gates are unchanged.
+
+
+## Expert defensive Counter activation checkpoint
+
+The surviving blocked-contact World preview now appends the Expert query after
+staged armor-wear RNG. A true proc selects Counter instead of immediate
+BlockHit/Recoil, including failed-playback cases. The final numerical token is
+rebuilt even when no animation was prepared, so query RNG cannot be discarded.
+Ordinary numeric blocking admits Expert; immediate Master disarm remains guarded.
+Projected worn equipment controls rank selection. Creature Counter targets and
+selected equipment-change startup remain guarded.
+
+Both final full engine runs pass **1,810 /125 suites**, exact inventory, no
+failures/skips: native-expert-counter-normal-02 and -sanitized-02. Tested parent
+`9b04a38167e25ba1a637ee6a926a79c6bb67a3b8`, dirty fingerprint
+`d613396922ca4b48bcf3114a59fceada1cca131c8886ed9c0b951297668171ab`. Components/Python are unchanged.
+The retained01 failures were two test fixture expectations/capture setup issues.
+
+A normal keyboard Player attack now causes NPC Expert H2H Counter3, whose Attack
+key acquires Player and requests paired Stagger3 with zero damage/attack Fatigue.
+The declared idle input contains no active melee sequence/action; it unequips
+the NPC weapon, sets base H2H75 and selects a declared native CRT seed (draw12,
+installed chance25). Actual saved checkpoints show pending3, consumed3 and full
+recovery. A fresh process loads the real pending windup save with no attack
+input, fires Counter once and reaches the same values/life/bases, ledger/RNG and
+all2,348 nonempty reference inventories as the uninterrupted process. Both
+views recover. Direct captures were inspected. This is first-person/configured
+10FPS software-rendered coverage with sound disabled, not the full S4 matrix.
+
+The strict whole-payload diagnostic comparison failed: position JSON emits
+some negative Euler zeros as integer -0. Numeric state equality passes, but
+whole wire equality is not claimed. Authoritative binary gameplay core and
+restart inventories match. This diagnostic issue remains to fix. NPC held
+BlockIdle also rebinds at Counter recovery; original slot1 cache/clock
+continuity remains open. Exact checks, source/data/epoch/save hashes, retained
+failures and bounds are in M15-EXPERT-COUNTER-VERIFICATION.json. S4 stays open.
