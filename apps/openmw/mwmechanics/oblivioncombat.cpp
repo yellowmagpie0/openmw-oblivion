@@ -12,6 +12,7 @@
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/actorclock.hpp>
 #include <components/esm4/fatigueexpenditure.hpp>
+#include <components/misc/strings/algorithm.hpp>
 
 #include <algorithm>
 #include <bit>
@@ -1497,14 +1498,19 @@ namespace MWMechanics
             if (views->mFirstPerson)
             {
                 auto& first = *views->mFirstPerson;
-                if (first.mReaction || !first.mStrike || first.mPassiveSequence || !first.mRetiringSequences.empty())
+                if (first.mReaction || !first.mStrike || first.mPassiveSequence || !first.mRetiringSequences.empty()
+                    || !first.mHeldBlocks.empty())
                     throw std::invalid_argument("native paired strike requires fresh Player view ownership");
                 fresh(*first.mStrike);
                 const float clock = candidate.mFirstPerson ? candidate.mFirstPerson->mClock : animationClock(actor);
                 if (std::bit_cast<std::uint32_t>(first.mClock) != std::bit_cast<std::uint32_t>(clock))
                     throw std::invalid_argument("native paired strike changed first-person clock");
                 first.validate();
-                if (candidate.mFirstPerson) first.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
+                if (candidate.mFirstPerson)
+                {
+                    first.mRetiringSequences = candidate.mFirstPerson->mRetiringSequences;
+                    first.mHeldBlocks = candidate.mFirstPerson->mHeldBlocks;
+                }
                 preserveDetachedCounter(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr,
                     first.mStrike->mAnimationGroup, first.mRetiringSequences);
                 outgoing(oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
@@ -1766,6 +1772,51 @@ namespace MWMechanics
             throw std::invalid_argument("invalid native slot1 adoption sample");
     }
 
+    void OblivionHeldBlockActivation::validate() const
+    {
+        mSource.validate();
+        if (!std::isfinite(mDuration) || mDuration < 0 || (mDuration > 0) != mPose.has_value())
+            throw std::invalid_argument("invalid native held-block activation branch");
+        if (mPose)
+        {
+            mPose->validate();
+            if (mPose->mDestinationFrame != 0)
+                throw std::invalid_argument("native held-block activation requires requested frame0");
+        }
+    }
+
+    namespace
+    {
+        template <class View>
+        bool hasAdvancingHeldBlock(const View& view)
+        {
+            return std::any_of(view.mHeldBlocks.begin(), view.mHeldBlocks.end(),
+                [](const auto& held) { return !held.mInactive; });
+        }
+
+        template <class View>
+        auto residentHeldBlock(View& view)
+        {
+            return std::find_if(view.mHeldBlocks.begin(), view.mHeldBlocks.end(),
+                [](const auto& held) { return held.resident(); });
+        }
+
+        void deactivateHeldBlockTiming(ESM4::MeleeSequenceTiming& timing, float frequency)
+        {
+            // Original6C9CEF: one offset store after division/subtraction/add.
+            // All source frequency and history fields were validated earlier.
+            if (timing.mLastInput)
+            {
+                const float sentinel = -std::numeric_limits<float>::max();
+                const float offset = static_cast<float>(double(timing.mWeightedTime) / frequency
+                    - *timing.mLastInput + timing.mOffset.value_or(sentinel));
+                if (!std::isfinite(offset)) throw std::invalid_argument("overflowing held-block deactivation offset");
+                if (offset == sentinel) timing.mOffset.reset();
+                else timing.mOffset = offset;
+            }
+        }
+    }
+
     template <class Source>
     static ESM4::RuntimeRetiringMeleeSequence adoptRetiringMeleeSample(
         const Source& sample, std::uint64_t cause, float duration)
@@ -1880,10 +1931,10 @@ namespace MWMechanics
         const auto* life = findActorLife(actor);
         if (!state || (!state->mReaction && !state->mPassiveSequence
                 && !(state->mStrike && (state->mStrike->mPoseSnapshot
-                    || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) && state->mRetiringSequences.empty()
+                    || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) && state->mRetiringSequences.empty() && !hasAdvancingHeldBlock(*state)
                 && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
                     && !state->mFirstPerson->mStrike && !state->mStrike && !state->mFirstPerson->mPassiveSequence
-                    && state->mFirstPerson->mRetiringSequences.empty()))) || !values || !life
+                    && state->mFirstPerson->mRetiringSequences.empty() && !hasAdvancingHeldBlock(*state->mFirstPerson)))) || !values || !life
             || values->mProcess != ESM4::ActorValueProcess::Active || life->mPhase != ESM4::ActorLifePhase::Alive)
             return {};
         using SourceKey = std::pair<bool, std::string_view>;
@@ -2120,6 +2171,48 @@ namespace MWMechanics
                 }
             sequences.erase(retained, sequences.end());
         }
+        const auto updateHeld = [&](auto& view, float viewClock, bool first) {
+            for (auto& held : view.mHeldBlocks)
+            {
+                if (held.mInactive) continue;
+                const OblivionMeleeSequenceMetadata* matched = nullptr;
+                for (const auto& source : metadata)
+                    if (source.mFirstPerson == first && Misc::StringUtils::ciEqual(source.mGroup, held.mAnimationGroup))
+                    {
+                        if (matched) throw std::invalid_argument("ambiguous native held-block frame source");
+                        matched = &source;
+                    }
+                if (!matched || matched->mCycle != ESM4::MeleeSequenceCycle::Loop)
+                    throw std::invalid_argument("native held-block frame requires its cyclic source");
+                const auto& source = *matched;
+                if (held.mRetirement)
+                {
+                    // NI initializes offset before testing state3 expiry.
+                    if (!held.mSequenceTiming.mOffset)
+                        held.mSequenceTiming.mOffset = ESM4::initialMeleeSequenceOffset(viewClock);
+                    if (!updateRetirement(held.mSequenceTiming, held.mAnimationTime,
+                            *held.mRetirement, source, viewClock))
+                    {
+                        held.mSequenceTiming.mEaseStart = held.mRetirement->mStartClock;
+                        held.mSequenceTiming.mEaseEnd = static_cast<float>(
+                            double(*held.mRetirement->mStartClock) + held.mRetirement->mDuration);
+                        deactivateHeldBlockTiming(held.mSequenceTiming, source.mFrequency);
+                        held.mInactive = true;
+                    }
+                }
+                else
+                {
+                    held.mSequenceTiming = ESM4::updateMeleeSequenceTiming(held.mSequenceTiming,
+                        viewClock, source.mFrequency, source.mBegin, source.mEnd,
+                        held.mPoseSnapshot ? std::optional(held.mPoseSnapshot->mDestinationFrame) : std::nullopt,
+                        ESM4::MeleeSequenceCycle::Loop);
+                    if (!held.mSequenceTiming.mEasing) held.mPoseSnapshot.reset();
+                    held.mAnimationTime = source.rendererTime(held.mSequenceTiming.mOutputTime);
+                }
+            }
+        };
+        updateHeld(next, nextClock, false);
+        if (next.mFirstPerson) updateHeld(*next.mFirstPerson, next.mFirstPerson->mClock, true);
         next.validate();
         auto data = std::make_unique<PreparedMeleeReactionFrame::Data>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
@@ -4834,6 +4927,208 @@ namespace MWMechanics
             || values->mProcessAction != 6 || (melee && (melee->mReaction || melee->mStrike)))
             return false;
         setProcessAction(actor, -1);
+        return true;
+    }
+
+    bool OblivionCombatService::activateHeldBlock(const ESM::FormKey& actor, bool firstPersonActive,
+        const std::optional<OblivionHeldBlockActivation>& body,
+        const std::optional<OblivionHeldBlockActivation>& first)
+    {
+        const auto values = mActorValues.find(actor);
+        const auto* life = findActorLife(actor);
+        const auto found = mMeleeStates.find(actor);
+        const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
+        if (values == mActorValues.end() || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessKnockedState != 0 || values->second.mProcessAction != -1
+            || (previous && (previous->mStrike || previous->mReaction
+                || (previous->mFirstPerson && (previous->mFirstPerson->mStrike || previous->mFirstPerson->mReaction))))
+            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0)
+            return false;
+        const bool player = values->second.mOwner == ESM4::ActorValueOwner::Player;
+        if (player ? (!first || (firstPersonActive ? body.has_value() : !body))
+                   : (firstPersonActive || first || !body || (previous && previous->mFirstPerson)))
+            return false;
+        if (body) body->validate();
+        if (first) first->validate();
+        const auto sameClock = [](float a, float b) { return std::bit_cast<std::uint32_t>(a) == std::bit_cast<std::uint32_t>(b); };
+        const float clock = animationClock(actor);
+        if ((body && !sameClock(body->mSource.mClock, clock))
+            || (first && previous && previous->mFirstPerson
+                && !sameClock(first->mSource.mClock, previous->mFirstPerson->mClock)))
+            throw std::invalid_argument("held-block activation lost its view clock");
+        if (body && first && ESM4::nativeHeldBlockSequenceGroup(body->mSource.mSequenceName, body->mSource.mGroup)
+                != ESM4::nativeHeldBlockSequenceGroup(first->mSource.mSequenceName, first->mSource.mGroup))
+            throw std::invalid_argument("held-block activation has mismatched Player group identities");
+        auto next = previous ? *previous : ESM4::RuntimeMeleeState{};
+        if (player && !next.mFirstPerson)
+            next.mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{first->mSource.mClock, {}};
+        if (residentHeldBlock(next) != next.mHeldBlocks.end()
+            || (next.mFirstPerson && residentHeldBlock(*next.mFirstPerson) != next.mFirstPerson->mHeldBlocks.end()))
+            return false;
+        const auto activate = [&](auto& view, const auto& request) {
+            if (!request) return;
+            const auto& source = request->mSource;
+            auto current = std::find_if(view.mHeldBlocks.begin(), view.mHeldBlocks.end(),
+                [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mAnimationGroup, source.mGroup); });
+            ESM4::RuntimeHeldBlockSequence held;
+            if (current != view.mHeldBlocks.end()) held = *current;
+            else
+            {
+                held.mAnimationGroup = source.mGroup;
+                held.mAnimationTime = source.mAnimationTime;
+                auto legacy = std::find_if(view.mRetiringSequences.begin(), view.mRetiringSequences.end(),
+                    [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.mAnimationGroup, source.mGroup); });
+                if (legacy != view.mRetiringSequences.end())
+                {
+                    if (!isActionConsumed(legacy->mContactId))
+                        throw std::invalid_argument("held-block cache has a replaying legacy cause");
+                    held.mAnimationTime = legacy->mAnimationTime;
+                    held.mSequenceTiming = legacy->mSequenceTiming;
+                    held.mRetirement = legacy->mRetirement;
+                    view.mRetiringSequences.erase(legacy);
+                }
+            }
+            if (held.mRetirement)
+            {
+                held.mSequenceTiming.mEaseStart = held.mRetirement->mStartClock;
+                held.mSequenceTiming.mEaseEnd = held.mRetirement->mStartClock
+                    ? static_cast<float>(double(*held.mRetirement->mStartClock) + held.mRetirement->mDuration)
+                    : held.mRetirement->mDuration;
+            }
+            // Cache reuse keeps lastInput/weighted/output. A clock reset is
+            // not a reset of those values, including a legacy adopted bias.
+            held.mInactive = false;
+            held.mRetirement.reset();
+            held.mPoseSnapshot = request->mPose;
+            held.mSequenceTiming.mEasing = request->mPose.has_value();
+            if (request->mPose)
+            {
+                held.mSequenceTiming.mOffset = source.mBegin;
+                held.mSequenceTiming.mEaseStart.reset();
+                held.mSequenceTiming.mEaseEnd = request->mDuration;
+            }
+            else held.mSequenceTiming.mOffset.reset();
+            held.validate();
+            if (current == view.mHeldBlocks.end()) view.mHeldBlocks.push_back(std::move(held));
+            else *current = std::move(held);
+        };
+        activate(next, body);
+        if (player) activate(*next.mFirstPerson, first);
+        next.mInput = {};
+        next.mAiIntent.reset();
+        next.validate();
+        decltype(mMeleeStates) states;
+        states.emplace(actor, std::move(next));
+        auto stateNode = states.extract(states.begin());
+        decltype(mAnimationClocks) clocks;
+        if (!mAnimationClocks.contains(actor)) clocks.emplace(actor, clock);
+        // Node publication and swaps cannot allocate; all resource/state
+        // preparation precedes the process action transition.
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        if (previous) std::swap(found->second, stateNode.mapped());
+        else mMeleeStates.insert(std::move(stateNode));
+        if (!clocks.empty()) mAnimationClocks.insert(clocks.extract(clocks.begin()));
+        values->second.mProcessAction = 6;
+        return true;
+    }
+
+    bool OblivionCombatService::releaseHeldBlock(const ESM::FormKey& actor, bool firstPersonActive,
+        float duration, std::span<const OblivionMeleeSequenceMetadata> sources)
+    {
+        const auto found = mMeleeStates.find(actor);
+        const auto values = mActorValues.find(actor);
+        const auto* life = findActorLife(actor);
+        if (found == mMeleeStates.end() || values == mActorValues.end() || !life
+            || life->mPhase != ESM4::ActorLifePhase::Alive || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessAction != 6 || !mAnimationClocks.contains(actor))
+            return false;
+        const bool player = values->second.mOwner == ESM4::ActorValueOwner::Player;
+        const auto& state = found->second;
+        if ((!player && (firstPersonActive || state.mFirstPerson)) || (firstPersonActive && !state.mFirstPerson))
+            return false;
+        const auto& active = firstPersonActive ? state.mFirstPerson->mHeldBlocks : state.mHeldBlocks;
+        const auto held = std::find_if(active.begin(), active.end(), [](const auto& entry) { return entry.resident(); });
+        if (held == active.end() || held->mSequenceTiming.mEasing) return false;
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native held-block release duration");
+        const auto sourceFor = [&](std::string_view group, bool first) -> const auto& {
+            const OblivionMeleeSequenceMetadata* match = nullptr;
+            for (const auto& source : sources)
+            {
+                source.validate();
+                if (!Misc::StringUtils::ciEqual(source.mGroup, group) || source.mFirstPerson != first) continue;
+                if (match || source.mCycle != ESM4::MeleeSequenceCycle::Loop)
+                    throw std::invalid_argument("ambiguous native held-block release source");
+                match = &source;
+            }
+            if (!match) throw std::invalid_argument("missing native held-block release source");
+            return *match;
+        };
+        const auto canDetach = [&](const auto& view) {
+            return (!view.mStrike || (view.mStrike->mKind == ESM4::MeleeStrikeKind::Counter
+                    && view.mStrike->mContactCommitted && isActionConsumed(view.mStrike->mActionId)))
+                && (!view.mReaction || (view.mReaction->mKind == ESM4::MeleeReactionKind::BlockHit
+                    && isActionConsumed(view.mReaction->mContactId)));
+        };
+        if (!canDetach(state) || (state.mFirstPerson && !canDetach(*state.mFirstPerson))) return false;
+        auto next = state;
+        const auto release = [&](auto& view, bool first) {
+            auto current = residentHeldBlock(view);
+            if (current == view.mHeldBlocks.end()) return;
+            // A peer still in NI5 owns an additional source pose. Preserve it
+            // until that transition ends; partial peer cancellation is separate.
+            if (current->mSequenceTiming.mEasing)
+                throw std::invalid_argument("held-block release has an easing peer source");
+            const auto& source = sourceFor(current->mAnimationGroup, first);
+            if (duration == 0 || (player && firstPersonActive && !first))
+            {
+                deactivateHeldBlockTiming(current->mSequenceTiming, source.mFrequency);
+                current->mInactive = true;
+            }
+            else
+            {
+                current->mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+                current->mSequenceTiming.mEaseStart.reset();
+                current->mSequenceTiming.mEaseEnd = duration;
+            }
+        };
+        release(next, false);
+        if (next.mFirstPerson) release(*next.mFirstPerson, true);
+        const auto detach = [&](auto& view) {
+            if (view.mStrike)
+            {
+                const auto& strike = *view.mStrike;
+                if (!strike.mInactive)
+                {
+                    if (strike.mRetirement)
+                        view.mRetiringSequences.push_back({strike.mActionId, strike.mAnimationGroup,
+                            strike.mAnimationTime, *strike.mSequenceTiming, *strike.mRetirement});
+                    else view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{strike};
+                }
+                view.mStrike.reset();
+            }
+            if (view.mReaction)
+            {
+                const auto& reaction = *view.mReaction;
+                if (!reaction.mInactive)
+                {
+                    if (reaction.mRetirement)
+                        view.mRetiringSequences.push_back({reaction.mContactId, reaction.mAnimationGroup,
+                            reaction.mAnimationTime, reaction.mSequenceTiming, *reaction.mRetirement});
+                    else view.mPassiveSequence = ESM4::RuntimePassiveMeleeSequence{reaction};
+                }
+                view.mReaction.reset();
+            }
+        };
+        detach(next);
+        if (next.mFirstPerson) detach(*next.mFirstPerson);
+        next.mInput = {};
+        next.mAiIntent.reset();
+        next.validate();
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        std::swap(found->second, next);
+        values->second.mProcessAction = -1;
         return true;
     }
 

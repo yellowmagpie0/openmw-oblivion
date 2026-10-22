@@ -3487,11 +3487,29 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 if phase == 10: held["sequence_timing"]["ease_start"] = None
             if phase == 9:
                 held["sequence_timing"].update(last_input=2.125, weighted_time=2.125, output_time=.125)
+            if phase == 11:
+                held["sequence_timing"] = {"easing": False, "offset": None, "ease_start": None,
+                    "last_input": None, "ease_end": 0., "weighted_time": 0., "output_time": 0.}
+                held["retirement"] = {"duration": .5, "start_clock": None}
+            if phase in (12, 13, 15, 16):
+                held["sequence_timing"]["offset"] = None
+                if phase in (12, 13): held["sequence_timing"]["ease_start"] = None
+                if phase in (12, 15): held["retirement"] = {"duration": .5, "start_clock": None}
+                if phase in (13, 16): held["inactive"] = True
+            if phase == 14:
+                held["sequence_timing"] = {"easing": False, "offset": -clock, "ease_start": clock,
+                    "last_input": None, "ease_end": clock, "weighted_time": 0., "output_time": 0.}
+                held["retirement"] = {"duration": struct.unpack("<f", struct.pack("<I", 1))[0], "start_clock": clock}
+                held["inactive"] = True
+            if phase in (17, 18):
+                held["sequence_timing"] = {"easing": False, "offset": None, "ease_start": clock,
+                    "last_input": None, "ease_end": clock, "weighted_time": 0., "output_time": 0.}
+                held["inactive"] = phase == 18
             view["held_blocks"] = [held]
         return state
 
     def test_held_block61_preserves_independent_lifetimes_and_signed_zero(self):
-        for phase in range(11):
+        for phase in range(19):
             with self.subTest(phase=phase):
                 state = self.held_block_state(phase)
                 payload = state_io.encode_payload(state)

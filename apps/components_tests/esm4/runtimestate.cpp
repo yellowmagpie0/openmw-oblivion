@@ -4915,6 +4915,29 @@ namespace
                 held.mSequenceTiming.mWeightedTime = 2.125f;
                 held.mSequenceTiming.mOutputTime = .125f;
             }
+            if (phase == 11)
+            {
+                held.mSequenceTiming = {};
+                held.mRetirement = ESM4::RuntimeReactionRetirement{.5f, {}};
+            }
+            if (phase == 12 || phase == 13 || phase == 15 || phase == 16)
+            {
+                held.mSequenceTiming.mOffset.reset();
+                if (phase == 12 || phase == 13) held.mSequenceTiming.mEaseStart.reset();
+                if (phase == 12 || phase == 15) held.mRetirement = ESM4::RuntimeReactionRetirement{.5f, {}};
+                if (phase == 13 || phase == 16) held.mInactive = true;
+            }
+            if (phase == 14)
+            {
+                held.mSequenceTiming = {.mOffset = -clock, .mEaseStart = clock, .mEaseEnd = clock, .mLastInput = {}};
+                held.mRetirement = ESM4::RuntimeReactionRetirement{std::numeric_limits<float>::denorm_min(), clock};
+                held.mInactive = true;
+            }
+            if (phase == 17 || phase == 18)
+            {
+                held.mSequenceTiming = {.mOffset = {}, .mEaseStart = clock, .mEaseEnd = clock, .mLastInput = {}};
+                held.mInactive = phase == 18;
+            }
             auto& cache = first ? melee.mFirstPerson->mHeldBlocks : melee.mHeldBlocks;
             cache.push_back(held);
             // Keep inactive resources too; the active slot need not own all caches.
@@ -4932,7 +4955,7 @@ namespace
 
 TEST(ESM4RuntimeState, HeldBlock61RetainsIndependentCacheLifecycleWithoutContactOwnership)
 {
-    for (unsigned phase = 0; phase != 11; ++phase)
+    for (unsigned phase = 0; phase != 19; ++phase)
     {
         SCOPED_TRACE(phase);
         const auto state = heldBlockState(phase);

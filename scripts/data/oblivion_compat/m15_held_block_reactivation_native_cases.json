@@ -135,5 +135,54 @@
     "selected_view_samples": 3240,
     "acceptance_scope": "Original instruction protocol only; production slot1 history and actual reactivation regression remain open.",
     "early_release": "Before first NI5 update, full5F4AE0(false) returnsfalse and leaves process6 and complete body/FP held, proxies and Counter blocks unchanged. Release intent must defer through the pose transition."
+  },
+  "weighted_history_extension": {
+    "cases": 1152,
+    "selected_view_samples": 12960,
+    "ranges_and_frequencies": [
+      [
+        2,
+        4,
+        2
+      ],
+      [
+        -2,
+        0,
+        0.5
+      ]
+    ],
+    "metadata": [
+      "stable from initialization",
+      "changed immediately before release"
+    ],
+    "expected": "NI5 activation sets offset to source Begin, requested destination frame0, retains previous last/weighted/output. Nine updates per selected view follow independent binary32 delta/frequency/accumulation and Loop model; nonzero bias survives the first update, pose completion and later wrap.",
+    "literal_case": {
+      "body_clock": 0.75,
+      "source_begin": 2,
+      "source_end": 4,
+      "frequency": 2,
+      "old_last_input": 0.75,
+      "old_weighted": 1,
+      "first_new_input": 0,
+      "first_new_weighted": -0.5,
+      "first_new_output": 3.5,
+      "first_finish_clock": 1.75,
+      "next_clock": 1.875,
+      "next_weighted": -0.25,
+      "next_output": 3.75
+    },
+    "receipt": "docs/oblivion/M15-HELD-BLOCK-SERVICE-VERIFICATION.json"
+  },
+  "preupdate_release_extension": {
+    "cases": 144,
+    "second_activation_cases": 144,
+    "fresh_and_reused_cache": true,
+    "release_durations": [
+      0,
+      0.25,
+      "smallest positive binary32"
+    ],
+    "expected": "Full helper release succeeds before the first direct activation update. Positive release resets easeStart while offset remains missing. Update initializes offset before expiry; a tiny fade may expire without assigning lastInput. Zero release retains missing timing. Second direct activation resets only offset and retains the other cache timing fields.",
+    "boundaries": "Same supplied scene/render/cache/INI boundaries; no original-game process or runtime acceptance."
   }
 }

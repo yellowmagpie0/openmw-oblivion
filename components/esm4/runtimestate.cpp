@@ -1199,16 +1199,18 @@ namespace ESM4
     }
 
     static void validateMeleeTiming(const MeleeSequenceTiming& timing, bool capturedPose = false,
-        bool cachedActivation = false)
+        bool cachedHistory = false, bool inactiveUnupdated = false, bool unanchoredRetirement = false)
     {
         const bool freshCapture = capturedPose && timing.mEasing && timing.mOffset
             && !timing.mEaseStart && !timing.mLastInput;
         // Native cached activation resets offset, and an easing activation also
         // resets easeStart, while retaining prior input/output history until
         // the first manager update. These masks are specific to held caches.
-        const bool pendingCache = cachedActivation
+        const bool pendingCache = (cachedHistory
             && (timing.mEasing ? !timing.mEaseStart && (!capturedPose || timing.mOffset)
-                : !timing.mOffset && (!timing.mEaseStart || timing.mLastInput));
+                : !timing.mOffset))
+            || (inactiveUnupdated && timing.mOffset && timing.mEaseStart && !timing.mLastInput)
+            || (unanchoredRetirement && !timing.mEasing && !timing.mEaseStart);
         if (!std::isfinite(timing.mEaseEnd) || !std::isfinite(timing.mWeightedTime)
             || !std::isfinite(timing.mOutputTime)
             || (!freshCapture && !pendingCache && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
@@ -1390,7 +1392,12 @@ namespace ESM4
             || mAnimationGroup.find('\0') != std::string::npos
             || !std::isfinite(mAnimationTime) || mAnimationTime < 0)
             throw std::runtime_error("Invalid TES4 held-block resource or sample");
-        validateMeleeTiming(mSequenceTiming, mPoseSnapshot.has_value(), !mInactive && !mRetirement);
+        const bool pendingHistory = !mRetirement || (!mInactive && !mRetirement->mStartClock);
+        // A state3 span can expire before the sequence ever assigns lastInput.
+        const bool expiredUnupdated = mInactive && mRetirement && mRetirement->mStartClock
+            && mSequenceTiming.mOffset && mSequenceTiming.mEaseStart && !mSequenceTiming.mLastInput;
+        validateMeleeTiming(mSequenceTiming, mPoseSnapshot.has_value(), pendingHistory, expiredUnupdated,
+            !mInactive && mRetirement && !mRetirement->mStartClock);
         if (mSequenceTiming.mEasing && mSequenceTiming.mEaseEnd <= mSequenceTiming.mEaseStart.value_or(0.f))
             throw std::runtime_error("Invalid TES4 held-block activation interval");
         if (mPoseSnapshot)
@@ -1405,7 +1412,7 @@ namespace ESM4
         if (mRetirement)
         {
             validateMeleeRetirement(*mRetirement);
-            if (mSequenceTiming.mEasing || !mSequenceTiming.mOffset)
+            if (mSequenceTiming.mEasing || (mRetirement->mStartClock && !mSequenceTiming.mOffset))
                 throw std::runtime_error("Invalid TES4 held-block retirement");
         }
     }

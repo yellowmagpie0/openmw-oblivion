@@ -10757,3 +10757,56 @@ counting repeated timing samples as new independent parameter cases.
 This checkpoint supplies the saved-state contract. Controller activation,
 advancement/projection, actual held windup/blocking restart and the recorded
 runtime double-begin regression remain open. Full M15S4 remains incomplete.
+
+
+## Held-block service lifecycle checkpoint
+
+The held slot now has contact-free service activation, per-view manager updates,
+release and cached reactivation. Reactivation replaces the same resource's old
+fade and preserves last-input, weighted-time and output history; case-insensitive
+resource aliases cannot create a second cache. NPC body, Player body/FP and
+Player FP-only selection retain their independent clocks. Consumed Counter and
+BlockHit slot3 sequences become passive caches on release and survive reblock.
+Bad source metadata and stale frame preparations cannot publish authority.
+
+Schema61 admits the additional native preupdate layouts: release before the
+first input, immediate inactive caches, and sub-ULP retirement expiry before
+lastInput assignment. Nineteen whole C++ binary/JSON witnesses reproduce exactly
+through Python in both configurations. Versions1..60 still migrate with empty
+held caches; no prior resident lap history is invented. Legacy retiring history
+moves only on an explicit activation and retains its existing bias.
+
+Original executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+passed the 1152-case nonzero-bound/frequency reactivation matrix with 12960 selected
+view samples. NI5 starts with offset=source Begin and requested destination0;
+weighted bias survives fresh-loop origin selection. A 144-case immediate-release
+matrix and its second-reactivation extension verify missing timing history,
+including expiry before first input. Probe 13 remains exploratory; probe 15 is a
+subset of 16. Supplied rendering, cache, INI, scene and proxy boundaries remain
+explicit. These are instruction probes, not an original-game process.
+
+Normal checks passed 382 Python, 2995 components and 1820 engine tests. Sanitizer
+checks passed 848 ESM4* components and 1820 engine tests, with no ASan/UBSan
+diagnostic observed and leaks disabled. After both full runs, only world-test
+braces and stronger ambiguous-source/peer-pose rejection assertions changed;
+the final focused normal run passed all five affected lifecycle tests. Production
+and codec/component-test files remain byte-identical to the full-suite sources.
+
+Full-suite source fingerprint: `bc82319bb1ac1776a20a153df21a0c36d169c0b5f2235903bec5218f722513c0`.
+Final focused-test fingerprint: `253bbd0d3a94f99444c978dfeb00d237bc377bc435deedb24c784f28e9955db6`.
+
+The hash-linked receipt is
+[M15-HELD-BLOCK-SERVICE-VERIFICATION.json](M15-HELD-BLOCK-SERVICE-VERIFICATION.json).
+Editable native and wire cases remain in `scripts/data/oblivion_compat/`.
+Generated oracle corpora, logs and saves remain ignored.
+
+**M15S4 remains incomplete.** World/controller still uses legacy begin/end
+paths; the actual double-begin runtime regression is open. Release while the
+peer retains NI5 is rejected atomically: full support needs an independently
+owned NI4 source-pose lifetime. Renderer binding/projection, interruption and
+camera/source policies, custom INI import, actual in-flight restart acceptance
+and the broad S4 matrix remain open. The power-of-two numerical probes do not
+settle arbitrary-frequency deactivation under every original x87 control word.
+This checkpoint is service and persistence validation, with no new compiler/world
+authoring validation or actual runtime acceptance.

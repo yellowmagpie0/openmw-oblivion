@@ -90,6 +90,15 @@ namespace MWMechanics
         ESM4::RuntimeRetiringMeleeSequence retire(std::uint64_t cause, float duration) const;
     };
 
+    struct OblivionHeldBlockActivation
+    {
+        OblivionMeleeSlot1Source mSource;
+        // Zero for the direct branch; positive with a captured NI4/5 pair.
+        float mDuration = 0;
+        std::optional<ESM4::RuntimeMeleePoseSnapshot> mPose = std::nullopt;
+        void validate() const;
+    };
+
     // NPC/creature activations own only the body. Player activations must
     // supply the first-person mirror; missing or foreign mirrors reject.
     struct OblivionMeleeStrikeViews
@@ -932,6 +941,12 @@ namespace MWMechanics
         // intent is transient; only the accepted native posture is persisted.
         bool beginBlocking(const ESM::FormKey& actor);
         bool endBlocking(const ESM::FormKey& actor);
+        // Resource-prepared native slot1 activation. No contact is allocated.
+        bool activateHeldBlock(const ESM::FormKey& actor, bool firstPersonActive,
+            const std::optional<OblivionHeldBlockActivation>& body,
+            const std::optional<OblivionHeldBlockActivation>& first);
+        bool releaseHeldBlock(const ESM::FormKey& actor, bool firstPersonActive, float duration,
+            std::span<const OblivionMeleeSequenceMetadata> sources);
         // Original5F4AE0(false) after Counter contact. Resource preparation
         // supplies each held view's native retirement; process ownership ends
         // while resident/detached Counter playback keeps its own lifetime.

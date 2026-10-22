@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "status": "Held-block service activation, per-view advancement, release and cache reuse verified. Controller/runtime reblock remains open.",
+  "full_M15S4_acceptance": false,
+  "implementation": "Separate contact-free slot1 cache lifecycle; reuse retains native weighted/input/output history, independent body/FP clocks, NI5 pose and NI3 fade state. Consumed Counter/BlockHit slot3 caches survive release and reblock. State preparation rejects bad sources before authority publication.",
+  "editable_cases": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_block_schema61_cases.json",
+      "sha256": "afc77f6865cb86836ce7fb6dec9e2a26186eb6ca9aae04de125081ca1c5f6275"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_held_block_reactivation_native_cases.json",
+      "sha256": "4d2a55fe3ec6c9f356487b2d2d7c0923d6af8fd7ebf7d91f15e7ed81de3bae77"
+    }
+  ],
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-service-normal-01/verification.json",
+        "sha256": "054968487d1255169e7d55fe3cbf3d860978e4599c42eed7b1262f8d6aa710e1"
+      },
+      "tested_source": {
+        "head": "535b6821677e9e477c79167b6779822f18039e22",
+        "source_fingerprint": "bc82319bb1ac1776a20a153df21a0c36d169c0b5f2235903bec5218f722513c0"
+      },
+      "results": {
+        "python": {
+          "executed": 382,
+          "passed": true,
+          "log_sha256": "03a9320c228f10b2392a8ae6fdc069d11b70fba2a298c62a515c0d147a6165a4"
+        },
+        "components": {
+          "executed": 2995,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "81f93bb401d217e8db5c5739418a611b992ddf69dac955e8aed0149c95e6ebb7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ee5ef2eceb3601b2035a519a33119d735b21c417b720dc84670884db10fa7bdd",
+          "inventory_sha256": "2b572a7842b23c749b4f419e999c1cb7d5134fdc976ed0046c58a298461d3c31",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1820,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ff152c5841f01fc3c395dcd00264ec1439ca8e6ff88fbc31933a823232c33c69",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "73e5358e07feb5617d574135fd7c09c402d4e547281e8371b1c4fd323595c4bf",
+          "inventory_sha256": "fe1638d0042e60f11f1a7e10fec63eea751c3c1efa45767e27b39af972dc99f2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-service-sanitized-01/verification.json",
+        "sha256": "33cdb015495a27c9eff0b688290acbe1e8a493519033a1414f935cf3165543c5"
+      },
+      "tested_source": {
+        "head": "535b6821677e9e477c79167b6779822f18039e22",
+        "source_fingerprint": "bc82319bb1ac1776a20a153df21a0c36d169c0b5f2235903bec5218f722513c0"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 848,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "dd393a086608e8fe54a0785a1dad6b47df3d31e3aa0ae849a200fc97efdbf681",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5ef19841de222b9bd691c5a077e70b898b34d33ec46a27eeb348c127ead36b10",
+          "inventory_sha256": "fb1a2f12edb23849f4e68b0f983d2b54161bb9bd2d12dc65511f5863a7091864",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1820,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "23d88586b7804cf14a55ee3e71e4cc7595106fe3cd833c9a625378f6b1e501b7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ef5fd4aadc2673567088a1cd9462887a9c683cd24e68eba436ad863953a24d72",
+          "inventory_sha256": "fe1638d0042e60f11f1a7e10fec63eea751c3c1efa45767e27b39af972dc99f2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-service-normal-02/verification.json",
+        "sha256": "9a66fb96daa01c922bfdb02d177ff58280f1625ab7b6358c7d13bdb8524a70c3"
+      },
+      "tested_source": {
+        "head": "535b6821677e9e477c79167b6779822f18039e22",
+        "source_fingerprint": "253bbd0d3a94f99444c978dfeb00d237bc377bc435deedb24c784f28e9955db6"
+      },
+      "results": {
+        "engine": {
+          "executed": 5,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionWorldTest.HeldBlockLifecycle*:OblivionWorldTest.HeldBlockActivation*:OblivionWorldTest.HeldBlockCache*:OblivionWorldTest.HeldBlockReactivation*:OblivionWorldTest.HeldReleaseDetaches*",
+          "binary_sha256": "365ae9f67cff5c3b5d8a2fdc7358e25d620f47159e72e38b018713493bcfb104",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "8693e9e8c5b0f1b38e80eef439a2113c10570d382b1113eb077efd2c15058d8b",
+          "inventory_sha256": "fe1638d0042e60f11f1a7e10fec63eea751c3c1efa45767e27b39af972dc99f2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "wire_verification": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-service-inputs-01/normal-wire-verification-02.json",
+        "sha256": "9e2a0f69a30cae00a8aaa332374ad6dfbdb8ca9c7a2bd080b35430b5cce2f2dc"
+      },
+      "cases": 19,
+      "cpp_xml_sha256": "ee5ef2eceb3601b2035a519a33119d735b21c417b720dc84670884db10fa7bdd",
+      "binary_cpp_json_python_exact": true
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-service-inputs-01/sanitized-wire-verification-02.json",
+        "sha256": "658be4751e27a0e8d2ea29900869b97d0458fe9a8598fc4033dcadf7f96d1896"
+      },
+      "cases": 19,
+      "cpp_xml_sha256": "5ef19841de222b9bd691c5a077e70b898b34d33ec46a27eeb348c127ead36b10",
+      "binary_cpp_json_python_exact": true
+    }
+  ],
+  "original_instruction_checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification14.json",
+        "sha256": "253ff98ab4a800a5f6b578f4632242a09718862cc77030405d75eea9c6917e1a"
+      },
+      "result": {
+        "passed": true,
+        "cases": 1152,
+        "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "e8efacf0b991900d275962cfd14809b4def22a20b16ee2db8b8f2298a4671c53",
+        "scope": "1152 full eligible held-reactivation cases: ranges2..4/freq2 and -2..0/freq.5, metadata either stable from initial activation or changed before release. Same cache reuse, process/Counter/proxy and early-release checks. Initial NI5 offset is source Begin, requested destinationFrame0; explicit binary32 input delta/frequency/accumulation and loop-boundary model asserts nine samples per selected view, including preserved nonzero history bias. Rendering, source-metadata and proxy/scene boundaries supplied; no game runtime acceptance."
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered14.json",
+        "sha256": "5faf7f62a41aa67074d10b8fe1df4a509e48de240821d8d272095b3ddeb702e3"
+      },
+      "tool": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-14.py",
+        "sha256": "31fca5889e7c81c62d4345e162bcfe9918f4e8e0782d4de1e8c4bc619ed15c13"
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification16.json",
+        "sha256": "aec2f7f0c17e8b3388d56a2e977e6e522d5a8d6e88a7c31ac0151a97aae2e932"
+      },
+      "result": {
+        "passed": true,
+        "cases": 144,
+        "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "aeec23bfdc49ec596e64fece0ebcbe7ba852ec6dc1b6eba53222229d8ce30c9d",
+        "scope": "Full direct-held activation followed immediately by full release before first manager update. Fresh and reused cached NI1; release durations0/.25/minimum positive binary32. Zero releases preserve a cached inactive preupdate layout without synthesizing timing; Native unanchoredNI3 retains missing offset/easeStart plus old or missing lastInput; first update initializes clock fields, and sub-ULP expiry with never-updated history yields inactive state0 retaining missing lastInput. Rendering/cache/INI boundaries supplied. No gameplay acceptance."
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered16.json",
+        "sha256": "b4b43a6c38130f96b17a825e74335b9cea0d393ac84fbac967cc360470915482"
+      },
+      "tool": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-16.py",
+        "sha256": "12f91338d22371026d6888b4e5d2400340f8d69461e23519eaec621d201b3c56"
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification17.json",
+        "sha256": "994c268916b5f2ba666ce0413d8cdc8b325e46ce8ad275f73db842cb4459063d"
+      },
+      "result": {
+        "passed": true,
+        "cases": 144,
+        "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "f98b38cfcdcb119a0f7af470763d5d7535c34f85251ad9719bbf4db6d7aebdf8",
+        "scope": "Second direct held reactivation after immediate release and one manager update retains every timing field except reset offset, including fresh sub-ULP expiry with easeStart present and lastInput absent. Full direct-held activation followed immediately by full release before first manager update. Fresh and reused cached NI1; release durations0/.25/minimum positive binary32. Zero releases preserve a cached inactive preupdate layout without synthesizing timing; Native unanchoredNI3 retains missing offset/easeStart plus old or missing lastInput; first update initializes clock fields, and sub-ULP expiry with never-updated history yields inactive state0 retaining missing lastInput. Rendering/cache/INI boundaries supplied. No gameplay acceptance."
+      },
+      "preregistration": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/preregistered17.json",
+        "sha256": "9a9eb764dd65ceecd4dfa3dc9aa8153166dc7078687e5005e5eeeb5195d82bb0"
+      },
+      "tool": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/probe-17.py",
+        "sha256": "10b3f3bc529ffd6656cf2979772a681080b7910e51430b7f113b18869906fd5c"
+      }
+    }
+  ],
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "source_relationship": {
+    "full_suite_source_files": {
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "3f29a489e9188d8f2e1852e1b504aff9a33556e9e15170e9d7b5300122612d88",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "3ed3e7b3a5e210ab2eaf6b33713864a749ac1baf115b96d59375c8648e0ae918",
+      "components/esm4/runtimestate.cpp": "da40c23a7aa167878c3682e2dadb593a5cf4b47e5614de2f3b9f9af0ed74d7c1",
+      "scripts/tes4_runtime_state.py": "badb6d32138d66ca487812c40c63ad4006f3fc9e5db9165f18da639135648f5d",
+      "apps/components_tests/esm4/runtimestate.cpp": "e150f78b75456215dac5be9c73b9b5093d79f89ac4768562ae8745455660abf4",
+      "scripts/tests/test_tes4_runtime_state.py": "4759945c05b48f41f8094dfbea0d6f59de444c669b85b5178ff38cf416fb502c",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "71c529f8723a7c4f517318446ac0d1fbda8922099e8a1be5e9cfa3a27709918a"
+    },
+    "final_source_files": {
+      "apps/openmw/mwmechanics/oblivioncombat.cpp": "3f29a489e9188d8f2e1852e1b504aff9a33556e9e15170e9d7b5300122612d88",
+      "apps/openmw/mwmechanics/oblivioncombat.hpp": "3ed3e7b3a5e210ab2eaf6b33713864a749ac1baf115b96d59375c8648e0ae918",
+      "components/esm4/runtimestate.cpp": "da40c23a7aa167878c3682e2dadb593a5cf4b47e5614de2f3b9f9af0ed74d7c1",
+      "scripts/tes4_runtime_state.py": "badb6d32138d66ca487812c40c63ad4006f3fc9e5db9165f18da639135648f5d",
+      "apps/components_tests/esm4/runtimestate.cpp": "e150f78b75456215dac5be9c73b9b5093d79f89ac4768562ae8745455660abf4",
+      "scripts/tests/test_tes4_runtime_state.py": "4759945c05b48f41f8094dfbea0d6f59de444c669b85b5178ff38cf416fb502c",
+      "apps/openmw_tests/mwworld/testoblivionworld.cpp": "c387861d694fbfe021186eb56fe2f9ad342a939776166a138fbaf9e7bf01dd50"
+    },
+    "changes_after_full_suites": "Only world-test braces and stronger ambiguous-source/peer-pose rejection assertions. Production sources and codec/component tests remain byte-identical; final focused engine run executes five new lifecycle tests."
+  },
+  "service_cases": {
+    "lifecycle": 18,
+    "consumed_slot3_protocols": 9,
+    "legacy_fades": 2,
+    "weighted_native_literal": true,
+    "whole_binary_restore_between_steps": true,
+    "no_contact_or_rng_allocation": true
+  },
+  "retained_oracle_attempts": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification13.json",
+        "sha256": "92eece405625cefbfe915a888b1df01dac1a857d29a24e893149d354fc7c5c67"
+      },
+      "scope": "Exploratory576 nonzero-bound samples; full host arithmetic assertions added in14."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-reactivation-oracle-01/verification15.json",
+        "sha256": "6c0214a8b4496bd203d55c7efbfb7addef4072061543aff0096e69d2c3f94669"
+      },
+      "scope": "96 preupdate-release cases are a subset of16; not additional independent cases."
+    }
+  ],
+  "tools": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-held-block-service-inputs-01/verify-wire.py",
+      "sha256": "2de260b2e35722d6e85484bae16c93562b63ea52fa9e9e53ebc2e27c1bfc2015"
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "diagnostics_observed": false,
+    "leak_coverage": false
+  },
+  "limits": [
+    "World/controller still uses legacy begin/end paths. Runtime double-begin regression is not fixed by this service-only checkpoint.",
+    "Peer NI5 cancellation with independent NI4 pose lifetime is rejected atomically. Full native partial-peer release remains open.",
+    "No compiler/world authoring validation or actual game/restart acceptance in this chunk. Service restore is headless whole-state binary roundtrip.",
+    "Native oracle supplies rendering/scene/cache/INI/proxy boundaries; arithmetic and branch evidence is not original-game process acceptance.",
+    "Stock frequency1 and reviewed power-of-two frequency/bound examples do not settle arbitrary-frequency deactivation under every original x87 control word.",
+    "Full Player camera/source dispatch, custom INI import, interruptions, renderer binding/projection and broad S4 view/input/FPS/restart matrix remain open."
+  ],
+  "warnings": "Existing aggregate initialization, earlier Counter-test macro, shadowed local and prior pose-optional optimizer warnings remain. New service-test macro guards are braced."
+}

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "runtime_state_version": 61,
-  "scope": "Versioned per-view slot1 cache persistence contract; actual controller activation and frame advancement remain separate work.",
+  "scope": "Schema61 per-view slot1 persistence and service lifecycle contract. Controller wiring and actual runtime reblock remain open.",
   "fields": [
     "animation_group",
     "animation_time",
@@ -55,6 +55,38 @@
     {
       "phase": 10,
       "lifecycle": "cached direct activation after unanchored retirement"
+    },
+    {
+      "phase": 11,
+      "lifecycle": "unanchored retirement before any input"
+    },
+    {
+      "phase": 12,
+      "lifecycle": "unanchored retirement with retained last input"
+    },
+    {
+      "phase": 13,
+      "lifecycle": "immediate inactive cache before first new update"
+    },
+    {
+      "phase": 14,
+      "lifecycle": "sub-ULP fade expires before first input assignment"
+    },
+    {
+      "phase": 15,
+      "lifecycle": "unanchored retirement retaining old ease and input"
+    },
+    {
+      "phase": 16,
+      "lifecycle": "immediate inactive cache retaining old ease and input"
+    },
+    {
+      "phase": 17,
+      "lifecycle": "direct reactivation after expiry without prior input"
+    },
+    {
+      "phase": 18,
+      "lifecycle": "immediate inactive cache after reactivation without prior input"
     }
   ],
   "per_view": "Same resource alias in independent body/FP clocks; additional inactive resource retained.",
@@ -63,13 +95,14 @@
     "ASCII-case-insensitive unique resource aliases; at most one resident held slot per view.",
     "Same alias cannot also exist in legacy retiring vector.",
     "Finite samples/timing, positive activation/retirement interval, valid pose tracks and strict booleans.",
-    "Pending cached activation preserves known native partial initialization masks. Other partial timing is rejected.",
+    "Pending cached activation, immediate inactive caches, unanchored fades and expiry before first input retain the native partial timing masks. Other partial timing is rejected.",
     "Inactive retirement requires anchored interval already elapsed in that view."
   ],
   "migration": "Versions1..60 add empty caches only. Never invent resident history from action6, or relabel a nonempty old-version held cache as valid. Older-version C++ service capture rejects before destination mutation.",
   "native_basis": [
     "M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
-    "M15-BLOCK-RELEASE-CALLER-VERIFICATION.json"
+    "M15-BLOCK-RELEASE-CALLER-VERIFICATION.json",
+    "M15-HELD-BLOCK-SERVICE-VERIFICATION.json"
   ],
   "full_M15S4_acceptance": false
 }
