@@ -302,6 +302,11 @@ namespace MWMechanics
         std::optional<OblivionMeleeSlot0Source> mVictimSlot0Source{};
         std::optional<OblivionMeleeSlot0Source> mAttackerFirstPersonSlot0Source{};
         std::optional<OblivionMeleeSlot0Source> mVictimFirstPersonSlot0Source{};
+        // The defensive proc chooses Counter instead of BlockHit/Recoil.
+        // A missing resource may leave a requested Counter without views;
+        // only a prepared playback packet allocates a new logical action.
+        bool mVictimCounterRequested = false;
+        std::optional<OblivionMeleeStrikeViews> mVictimCounter{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -342,6 +347,9 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
+        ESM4::RuntimeMeleeState prepareMeleeStrikeState(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
+            std::string_view animationGroup, float playbackSpeed, const ESM::FormKey& weaponBase,
+            std::optional<OblivionMeleeStrikeViews> views) const;
         void clearBowPlaybackAction(const ESM::FormKey& actor) noexcept;
         bool advanceBowPlaybackImpl(std::uint64_t id, const ESM::FormKey& actor,
             float duration, bool paused, bool sequenceRunning, bool updatePlayerTimer);

@@ -267,6 +267,8 @@ namespace MWRender
         std::map<std::string, LazyAnimSource, std::less<>> mLazyAnimSources;
         std::map<std::string, VFS::Path::Normalized, std::less<>> mNativeReactionFiles;
         std::optional<std::vector<NativeReactionResources>> mNativeReactionCatalog;
+        std::optional<std::vector<NativeReactionResources>> mNativeCounterCatalog;
+        const std::vector<NativeReactionResources>& getNativeSequenceCatalog(bool counter);
         std::unordered_set<std::string> mLoadedLazyAnimations;
         std::unordered_set<std::string> mReportedLazyAnimations;
         mutable std::vector<std::pair<std::string, MWWorld::MovementDirectionFlags>> mSupportedDirections;
@@ -576,6 +578,7 @@ namespace MWRender
         // Multiple variants require a known listing order from one archive
         // and directory; ambiguous loose/overlay order is rejected.
         const std::vector<NativeReactionResources>& getNativeReactionCatalog();
+        const std::vector<NativeReactionResources>& getNativeCounterCatalog();
         // Actual currently selected group for a renderer body mask; no loading.
         std::string_view getActiveAnimationGroup(BoneGroup group) const;
 

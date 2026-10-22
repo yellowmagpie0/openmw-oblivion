@@ -10211,3 +10211,60 @@ The wider Stagger/Creature/mastery/effect/input/gamepad/FPS/audio/E2E gates
 remain open. These courses disable sound, configure 1 FPS without claiming an
 FPS matrix, and inject history rather than trigger a Counter through gameplay.
 M15S4 remains incomplete.
+
+
+## Atomic Counter startup preparation checkpoint
+
+Counter startup can now be prepared inside a physical-contact transaction.
+A defensive request selects Counter instead of immediate BlockHit/Recoil;
+missing playback consumes no new action. A complete packet privately allocates
+one Counter identity and publishes it with the original contact, resource/RNG
+changes and independent body/FP histories. Preparation is read-only. A full
+ledger/owner lease rejects unrelated action issuance or consumption before
+commit, preventing a prepared allocation from replacing newer live ownership.
+The World wrapper also guards the selected animation instances and roots.
+
+The group29 catalog shares native family/movement fallback and established
+archive ordering with reaction catalogs while retaining its own namespace.
+The factory handles drawn NPCs and paired Players with empty slot3 or a reviewed
+steady different source. Counter timing uses raw Start/Attack/End and unit
+weapon-speed correction. Steady BlockHit sources retain exact outgoing timing.
+Stationary AI leaves Counter ownership alone, contacts bypass prior AI target
+restriction, and a held resident BlockIdle remains while Counter owns slot3.
+These controller changes have regression coverage, not new rendered acceptance.
+
+Independent original activation evidence covers24 source contexts and192
+availability contexts. Active-camera availability controls startup, but each
+available view can play independently and the process pointer remains body
+slot3, including old/null body sources. Current paired storage rejects partial
+playback; this reference does not settle complete first-person action dispatch.
+A separate48-case original600528..60056A probe confirms one playback-helper
+call with the query result, and no immediate disarm/Recoil when the Counter
+proc is true even if playback fails. Query, resource, disarm and Recoil effects
+are declared boundaries. The first caller probe omitted a required emulator
+return value; the failed script is retained and corrected probe02 passes.
+
+New typed World/service tests cover NPC/Player, empty/steady BlockHit sources,
+read-only preparation, one-time issuance, binary restart, malformed packets,
+missing AnimData without phantom actions, stale unrelated allocations or
+consumption, and contact independent of a prior AI target. All2,986 normal
+component tests,1,798 normal engine tests,380 Python tests,839 ESM4* sanitizer
+component tests and1,798 sanitizer engine tests pass with matching C++
+inventories and no failed/skipped accepted cases. Both final engine runs use
+source fingerprint `caf81457930762bcc101a82c0ae26e9c96fbcd918e5dbfa26b1227fb594bfa75`
+on parent `c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9`.
+Component/Python checks precede only unrelated World edits or exception
+expectation corrections, as detailed in the verification record. ASan leak
+checks are disabled and UBSan halts. Existing compiler warnings remain.
+Interrupted builds, the strict-key test correction, and the failed exception
+expectations remain retained rather than being counted as passing attempts.
+
+This is a startup preparation foundation. New integration tests supply typed
+packets in headless fixtures; no normal input/resource-factory or rendered
+Counter activation is claimed. Normal defensive proc triggering, Master disarm
+and Counter phase1 target/consequence dispatch remain open. Partial mirror
+playback, complete first-person action dispatch, cached/captured reactivation,
+undrawn paths and the wider mastery/effect/input/gamepad/FPS/audio/E2E gates
+also remain open. M15S4 remains incomplete. See
+[verification](M15-COUNTER-STARTUP-VERIFICATION.json) and editable protocol
+`scripts/data/oblivion_compat/m15_counter_startup_native_probe.json`.

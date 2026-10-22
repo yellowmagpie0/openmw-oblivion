@@ -31,6 +31,9 @@ namespace ESM4
         // Cancellation also consumes an action. False means unissued or replay.
         bool consume(std::uint64_t id);
         ActionLedgerState capture() const;
+        // A prepared allocation must reject any intervening issuance or
+        // consumption. This comparison performs no snapshot allocation.
+        bool sameState(const ActionLedger& other) const noexcept;
         // Validates a temporary replacement before changing live state.
         void restore(const ActionLedgerState& state);
     };

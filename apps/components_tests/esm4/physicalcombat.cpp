@@ -6237,6 +6237,22 @@ TEST(ESM4PhysicalCombat, CounterUsesAttackKeyInsteadOfPowerHitKey)
     }
 }
 
+TEST(ESM4PhysicalCombat, CounterCatalogHasItsOwnGroup29NamespaceAndNativeFallback)
+{
+    EXPECT_EQ(ESM4::nativeCounterSequenceGroup("BlockAttack", "handtohandblockattack.kf"), 0x11du);
+    EXPECT_EQ(ESM4::nativeCounterSequenceGroup("BLOCKATTACK_variant", "swimstaffblockattack2.kf"), 0x241du);
+    EXPECT_FALSE(ESM4::nativeCounterSequenceGroup("BlockHit", "blockhit.kf"));
+    EXPECT_FALSE(ESM4::nativeReactionSequenceGroup("BlockAttack", "blockattack.kf"));
+    EXPECT_THROW(ESM4::nativeCounterSequenceGroup("BlockAttack", "folder/blockattack.kf"), std::invalid_argument);
+    const std::array<std::uint16_t, 4> groups{0x31d, 0x21d, 0x221d, 0x1d};
+    EXPECT_EQ(ESM4::resolveNativeCounterSequenceGroup(0x41d, groups), 0x31du);
+    EXPECT_EQ(ESM4::resolveNativeCounterSequenceGroup(0x241d, groups), 0x221du);
+    EXPECT_EQ(ESM4::resolveNativeCounterSequenceGroup(0x151d, groups), 0x21du);
+    EXPECT_FALSE(ESM4::resolveNativeCounterSequenceGroup(0x11d, {}));
+    EXPECT_THROW(ESM4::resolveNativeCounterSequenceGroup(28, groups), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolveNativeReactionSequenceGroup(29, groups), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, CounterSubtype6SharesThreeKeyPhaseAtUnitWeaponSpeed)
 {
     // Original477248/6CA950 group29, CW007F. Other weapon-speed storage

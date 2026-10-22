@@ -35,6 +35,11 @@ namespace ESM4
         return {mNext, {mPending.begin(), mPending.end()}};
     }
 
+    bool ActionLedger::sameState(const ActionLedger& other) const noexcept
+    {
+        return mNext == other.mNext && mPending == other.mPending;
+    }
+
     void ActionLedger::restore(const ActionLedgerState& state)
     {
         if (state.mNext == 0)

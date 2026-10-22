@@ -107,6 +107,8 @@ namespace ESM4
     // This bounded parser recognizes BlockHit28, Recoil30 and Stagger31.
     std::optional<std::uint16_t> nativeReactionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
+    std::optional<std::uint16_t> nativeCounterSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename);
     // Slot0 locomotion names from the native table, excluding SpecialIdle2/slot4.
     std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
@@ -128,6 +130,8 @@ namespace ESM4
     // the original's eventual Idle fallback is rejected by reaction callers.
     // Variant choice and its RNG draw belong to the selected collection.
     std::optional<std::uint16_t> resolveNativeReactionSequenceGroup(
+        std::uint16_t requested, std::span<const std::uint16_t> available);
+    std::optional<std::uint16_t> resolveNativeCounterSequenceGroup(
         std::uint16_t requested, std::span<const std::uint16_t> available);
     // Original47DA70/47F7B0: sphere(x,y,z,r), planes(nx,ny,nz,d)
     // using normal.dot(point)-d. A sphere tangent on the negative side is

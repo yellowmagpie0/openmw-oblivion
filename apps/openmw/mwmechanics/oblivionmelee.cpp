@@ -238,6 +238,9 @@ namespace MWMechanics
             combat->clearMeleeAiIntent(key);
             return false; // Retain the existing package's reserved action authority.
         }
+        if (const auto* melee = combat->findMeleeState(key); melee && melee->mStrike
+            && melee->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)
+            return true; // The defensive controller owns its untargeted Attack-key acquisition.
         const auto policy = MWWorld::resolveOblivionCombatPolicy(world.getStore(), values->mBase,
             MWWorld::buildOblivionCombatDefaults(world.getStore()));
         const auto& style = policy.mStandard;

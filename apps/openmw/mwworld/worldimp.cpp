@@ -2643,6 +2643,147 @@ namespace MWWorld
         return prepareOblivionContactReaction(id, victim, ESM4::MeleeReactionKind::BlockHit, false, deltas);
     }
 
+    bool World::prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || !deltas.mVictimCounterRequested || deltas.mVictimCounter)
+            return false;
+        const bool player = actor == getPlayerPtr();
+        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
+        if (!animation) return true; // No live AnimData: the numerical block still commits.
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto* previous = mOblivionCombat->findMeleeState(key);
+        try
+        {
+            const bool drawn = actor.getClass().getCreatureStats(actor).getDrawState() == MWMechanics::DrawState::Weapon;
+            if (!drawn) return false;
+            ESM4::NativeNpcBlockHitGroupInput groupInput;
+            groupInput.mWeaponDrawn115 = drawn;
+            ESM::FormKey weaponBase;
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            if (const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
+                right != inventory.end() && right->getType() == ESM::REC_WEAP)
+            {
+                const auto item = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
+                const auto* form = item.getIf<ESM::FormId>();
+                const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
+                if (!weapon || weapon->mData.type > 5) return false;
+                groupInput.mWeaponType = static_cast<std::uint8_t>(weapon->mData.type);
+                weaponBase = ESM::FormKeyResolver(getContentFiles()).toFormKey(*form);
+            }
+            // A shield overrides only groups27/28, never Counter29.
+            groupInput.mMovementFlags = static_cast<std::uint16_t>((isSwimming(actor) ? 0x800 : 0)
+                | (isFlying(actor) ? 0x2000 : 0)
+                | (actor.getClass().getCreatureStats(actor).getStance(MWMechanics::CreatureStats::Stance_Sneak) ? 0x400 : 0));
+            const auto requested = static_cast<std::uint16_t>((ESM4::nativeNpcBlockHitGroup(groupInput) & 0xff00) | 29);
+            const auto& bodyCatalog = animation->getNativeCounterCatalog();
+            auto* first = player ? animation->getPlaybackPeer() : nullptr;
+            if (player && !first) return false;
+            const auto& activeCatalog = player && isFirstPerson() ? first->getNativeCounterCatalog() : bodyCatalog;
+            std::vector<std::uint16_t> available;
+            for (const auto& entry : activeCatalog) available.push_back(entry.mNativeGroup);
+            const auto selected = ESM4::resolveNativeCounterSequenceGroup(requested, available);
+            if (!selected) return true; // The proc still consumed its roll; no new action is issued.
+            const auto find = [&](const auto& catalog) {
+                return std::find_if(catalog.begin(), catalog.end(), [&](const auto& entry) {
+                    return entry.mNativeGroup == *selected;
+                });
+            };
+            const auto bodyEntry = find(bodyCatalog);
+            // Original may play one view while retaining the other's old slot.
+            // That partial ownership needs a separate representation.
+            if (bodyEntry == bodyCatalog.end()) return false;
+            const auto resources = [](const auto& entry) {
+                std::vector<std::string_view> result;
+                for (const auto& group : entry.mGroups) result.push_back(group);
+                return result;
+            };
+            const auto bodyNames = resources(*bodyEntry);
+            auto random = deltas.mRandomTransition;
+            const auto randomState = random ? random->mNextState : mOblivionCombat->combatRandomState();
+            std::size_t bodyIndex = 0, firstIndex = 0;
+            std::uint32_t draws = 0, nextRandomState = randomState;
+            std::string firstGroup;
+            if (player)
+            {
+                const auto& firstCatalog = first->getNativeCounterCatalog();
+                const auto firstEntry = find(firstCatalog);
+                if (firstEntry == firstCatalog.end()) return false;
+                const auto firstNames = resources(*firstEntry);
+                const auto collection = [](std::size_t count) {
+                    return count == 1 ? ESM4::NativeSequenceCollection::Single : ESM4::NativeSequenceCollection::Multiple;
+                };
+                const auto selection = ESM4::selectNativePlayerReactionResources(isFirstPerson(),
+                    {collection(bodyNames.size()), bodyNames}, {collection(firstNames.size()), firstNames}, randomState);
+                bodyIndex = selection.mBodyIndex; firstIndex = selection.mFirstPersonIndex; draws = selection.mDraws;
+                firstGroup = firstEntry->mGroups[firstIndex];
+                nextRandomState = selection.mNextState;
+            }
+            else
+            {
+                const auto collection = bodyNames.size() == 1 ? ESM4::NativeSequenceCollection::Single
+                    : ESM4::NativeSequenceCollection::Multiple;
+                const auto count = static_cast<std::uint32_t>(bodyNames.size());
+                const auto preflight = ESM4::selectNativeSequenceVariant(collection, count, 255, randomState);
+                const auto playback = ESM4::selectNativeSequenceVariant(collection, count, 255, preflight.mNextState);
+                bodyIndex = playback.mIndex; draws = preflight.mDraws + playback.mDraws;
+                nextRandomState = playback.mNextState;
+            }
+            if (draws) random = mOblivionCombat->prepareCombatRandom((random ? random->mDraws : 0) + draws);
+            if ((random ? random->mNextState : randomState) != nextRandomState) return false;
+            const auto prepareView = [&](MWRender::Animation& view, const std::string& group,
+                                         const MWMechanics::OblivionMeleeSlot3Source& old,
+                                         std::optional<ESM4::RuntimeRetiringMeleeSequence>& outgoing) {
+                const auto metadata = MWMechanics::captureOblivionMeleeSequenceMetadata(view, group, false);
+                const auto* source = view.getControllerSequenceMetadata(group);
+                if (!source || source->mCycleType != 2 || source->mWeight != 1)
+                    throw std::invalid_argument("unsupported Counter controller metadata");
+                std::vector<ESM4::MeleeTextKey> raw;
+                for (const auto& [time, text] : source->mTextKeys) raw.push_back({time, text});
+                const auto keys = ESM4::counterMeleeKeyTimes(raw);
+                if (keys.mMatchedCount != 3) throw std::invalid_argument("Counter requires Start/Attack/End keys");
+                (void)ESM4::advancePowerMeleePhase(ESM4::PowerMeleePhase::Start, 0, 0, keys.mTimes);
+                ESM4::RuntimeMeleeStrike incoming{1, ESM4::MeleeStrikeKind::Counter, weaponBase, group};
+                incoming.mSequenceTiming.emplace();
+                incoming.mPowerPhase = ESM4::PowerMeleePhase::Start;
+                if (old && !old.mInactive)
+                {
+                    if (!old.mTiming || !old.mTiming->mOffset || old.mTiming->mEasing || old.mPose || old.mGroup == group)
+                        throw std::invalid_argument("Counter source requires reviewed steady crossfade ownership");
+                    const auto prior = MWMechanics::captureOblivionMeleeSequenceMetadata(view, old.mGroup, false);
+                    const float duration = std::max(0.f, ESM4::meleeBlendDuration(prior.mBlendFrames, metadata.mBlendFrames, .1f));
+                    incoming.mSequenceTiming->mEasing = duration > 0;
+                    incoming.mSequenceTiming->mEaseEnd = duration;
+                    if (duration > 0) outgoing = ESM4::RuntimeRetiringMeleeSequence{old.mCause,
+                        std::string(old.mGroup), old.mAnimationTime, *old.mTiming, {duration, {}}};
+                }
+                // Original5F4E10/474530 enters state1 immediately if slot3 is empty.
+                incoming.validate();
+                return incoming;
+            };
+            MWMechanics::OblivionMeleeStrikeViews views;
+            views.mBody = prepareView(*animation, bodyEntry->mGroups[bodyIndex],
+                MWMechanics::oblivionMeleeSlot3Source(previous), views.mBodyOutgoing);
+            if (player)
+            {
+                const float clock = previous && previous->mFirstPerson ? previous->mFirstPerson->mClock
+                    : mOblivionCombat->animationClock(key);
+                auto mirror = prepareView(*first, firstGroup,
+                    MWMechanics::oblivionMeleeSlot3Source(previous && previous->mFirstPerson ? &*previous->mFirstPerson : nullptr),
+                    views.mFirstPersonOutgoing);
+                views.mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{clock, {}, std::move(mirror)};
+            }
+            deltas.mVictimCounter = std::move(views);
+            deltas.mRandomTransition = random;
+            return true;
+        }
+        catch (const std::invalid_argument& error)
+        {
+            Log(Debug::Verbose) << "M15 Counter resources rejected: actor=" << key.serialize() << " reason=" << error.what();
+            return false;
+        }
+    }
+
     bool World::prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
         ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {
@@ -3124,17 +3265,19 @@ namespace MWWorld
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
         if (!contact) return nullptr;
         auto preparedDeltas = deltas;
-        if (blockHit && contact->victimRemainsAlive()
+        if (blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive()
             && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
                 return change.mOwner == victim && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
             }))
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
         }
-        if (attackerRecoil && contact->victimRemainsAlive()
+        if (attackerRecoil && !deltas.mVictimCounterRequested && contact->victimRemainsAlive()
             && !prepareOblivionContactReaction(id, attacker, ESM4::MeleeReactionKind::Recoil, true, preparedDeltas))
             return nullptr;
-        if (preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction)
+        if (preparedDeltas.mVictimCounterRequested && !preparedDeltas.mVictimCounter && contact->victimRemainsAlive()
+            && !prepareOblivionCounterStrike(victim, preparedDeltas)) return nullptr;
+        if (preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
             contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
                 essential, recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
@@ -3153,13 +3296,14 @@ namespace MWWorld
         data->mContact = std::move(contact);
         for (const auto& [owner, requested] : std::array<std::pair<Ptr, bool>, 2>{{
                  {attacker, preparedDeltas.mAttackerReaction.has_value()},
-                 {victim, preparedDeltas.mVictimReaction.has_value()}}})
+                 {victim, preparedDeltas.mVictimReaction.has_value() || preparedDeltas.mVictimCounter.has_value()}}})
             if (requested)
                 if (const auto* animation = static_cast<const World&>(*this).getAnimation(owner))
                 {
                     data->mReactionBindings.push_back({owner, animation, animation->getObjectRoot()});
                     const bool firstRequested = owner == attacker ? preparedDeltas.mAttackerFirstPerson.has_value()
-                        : preparedDeltas.mVictimFirstPerson.has_value();
+                        : preparedDeltas.mVictimFirstPerson.has_value()
+                            || (preparedDeltas.mVictimCounter && preparedDeltas.mVictimCounter->mFirstPerson);
                     if (firstRequested)
                     {
                         const auto* first = animation->getPlaybackPeer();

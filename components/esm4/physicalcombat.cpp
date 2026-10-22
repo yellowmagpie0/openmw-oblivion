@@ -341,6 +341,13 @@ namespace ESM4
         return nativeSequenceGroup(sequenceName, resourceBasename, names);
     }
 
+    std::optional<std::uint16_t> nativeCounterSequenceGroup(
+        std::string_view sequenceName, std::string_view resourceBasename)
+    {
+        constexpr std::array<std::pair<std::string_view, std::uint16_t>, 1> names{{{"blockattack", 29}}};
+        return nativeSequenceGroup(sequenceName, resourceBasename, names);
+    }
+
     std::optional<std::uint16_t> nativeLocomotionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename)
     {
@@ -369,13 +376,13 @@ namespace ESM4
         return static_cast<std::uint16_t>((movement << 12) | (family << 8) | 28);
     }
 
-    std::optional<std::uint16_t> resolveNativeReactionSequenceGroup(
+    static std::optional<std::uint16_t> resolveNativeSequenceGroup(
         std::uint16_t requested, std::span<const std::uint16_t> available)
     {
         const auto base = requested & 255;
         const auto movement = requested >> 12;
         const auto family = (requested >> 8) & 15;
-        if ((base != 28 && base != 30 && base != 31) || movement > 3 || family > 5)
+        if (movement > 3 || family > 5)
             throw std::invalid_argument("unsupported native reaction group");
         const auto has = [&](std::uint16_t code) {
             return std::find(available.begin(), available.end(), code) != available.end();
@@ -390,6 +397,22 @@ namespace ESM4
         };
         if (const auto result = resolve(movement)) return result;
         return movement ? resolve(0) : std::nullopt;
+    }
+
+    std::optional<std::uint16_t> resolveNativeReactionSequenceGroup(
+        std::uint16_t requested, std::span<const std::uint16_t> available)
+    {
+        const auto base = requested & 255;
+        if (base != 28 && base != 30 && base != 31)
+            throw std::invalid_argument("unsupported native reaction group");
+        return resolveNativeSequenceGroup(requested, available);
+    }
+
+    std::optional<std::uint16_t> resolveNativeCounterSequenceGroup(
+        std::uint16_t requested, std::span<const std::uint16_t> available)
+    {
+        if ((requested & 255) != 29) throw std::invalid_argument("unsupported native Counter group");
+        return resolveNativeSequenceGroup(requested, available);
     }
 
     bool nativeReactionSphereInFrustum(const std::array<float, 4>& sphere,

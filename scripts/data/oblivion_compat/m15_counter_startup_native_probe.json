@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent Counter startup source, missing-view availability and blocked-contact caller-order references. This protocol does not close normal-input Counter or M15S4.",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "source_activation": {
+    "entry": "0x5f4e10",
+    "counter_argument": true,
+    "old_action": 6,
+    "old_group": 28,
+    "new_group": 29,
+    "body_source": [
+      false,
+      true
+    ],
+    "first_source": [
+      false,
+      true
+    ],
+    "first_clock": [
+      0.5,
+      10.5
+    ],
+    "x87": [
+      127,
+      639,
+      895
+    ],
+    "cases": 24,
+    "expected_action": 2,
+    "expected_slot": 3,
+    "expected_NI_empty": 1,
+    "expected_NI_steady_source": 2,
+    "scope": "Actual activation and NI updates; synthetic cache/metadata/scene/notification boundaries."
+  },
+  "availability": {
+    "extends": "source_activation",
+    "body_available": [
+      false,
+      true
+    ],
+    "first_available": [
+      false,
+      true
+    ],
+    "camera_byte": [
+      0,
+      1
+    ],
+    "cases": 192,
+    "rules": [
+      "Only active camera resource availability decides whether Counter begins: camera byte0 selects FP; byte1 selects body.",
+      "On success, each available view plays independently. An absent mirror preserves its old slot3 pointer.",
+      "Process action2 retains the current BODY slot3 pointer, even when only FP played. It may therefore retain old BlockHit28 or null when body resource is missing.",
+      "Full original action-frame/camera dispatch and failed mirror playback are not represented by the current paired Counter storage. Do not infer phase authority from active-cache selection."
+    ],
+    "scope": "Missing resource behavior reference. Current paired Counter storage rejects partial playback."
+  },
+  "blocked_contact_caller": {
+    "entry": "0x600528",
+    "stop": "0x60056a",
+    "ranged": [
+      false,
+      true
+    ],
+    "counter_proc": [
+      false,
+      true
+    ],
+    "disarm_result": [
+      false,
+      true
+    ],
+    "resource_success": [
+      false,
+      true
+    ],
+    "x87": [
+      127,
+      639,
+      895
+    ],
+    "cases": 48,
+    "boundaries": {
+      "0x5f3c30": "Record actor and return chosen proc boolean.",
+      "0x5f4e10": "Record actor and bool argument, return chosen success pointer with ret4.",
+      "0x5fc2b0": "Record actor/target and return chosen disarm boolean with ret4.",
+      "0x5f4f00": "Record actor; return0 with no stack argument cleanup."
+    },
+    "expected": "600528..60056A: nonranged queries the Counter proc; ranged skips it. One5F4E10 invocation receives that bool. A true proc skips immediate disarm/Recoil regardless of playback success. Without Counter, disarm precedes Recoil; nonranged always requests Recoil, ranged only after successful disarm.",
+    "scope": "Original caller instructions/argument and branch order; actual mastery RNG, playback, disarm and Recoil effects are supplied boundaries."
+  },
+  "production_supported_subset": [
+    "Drawn NPC and paired Player resources.",
+    "Empty or reviewed steady different slot3 source.",
+    "Complete Player body/FP playback packet."
+  ],
+  "open": [
+    "Normal proc producer and consequence dispatcher.",
+    "Partial Player playback and complete camera action dispatch.",
+    "Cached/captured Counter reactivation.",
+    "Real normal-input, audio, FPS and restart acceptance."
+  ],
+  "verification": "docs/oblivion/M15-COUNTER-STARTUP-VERIFICATION.json"
+}

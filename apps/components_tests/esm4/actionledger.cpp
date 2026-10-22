@@ -49,6 +49,26 @@ TEST(ESM4ActionLedger, RejectsUnissuedAndMalformedIdentitiesWithoutChangingState
     }
 }
 
+TEST(ESM4ActionLedger, PreparedAllocationLeaseDistinguishesIssuanceAndConsumption)
+{
+    ESM4::ActionLedger live;
+    live.restore({8, {2, 5}});
+    const auto expected = live;
+    auto prepared = live;
+    EXPECT_TRUE(live.sameState(expected));
+    static_assert(noexcept(live.sameState(expected)));
+    EXPECT_EQ(prepared.allocate(), 8);
+    EXPECT_TRUE(live.sameState(expected)); // Preparing does not issue a live action.
+    EXPECT_FALSE(live.sameState(prepared));
+    ASSERT_TRUE(prepared.consume(8));
+    EXPECT_EQ(live.capture().mPending, prepared.capture().mPending);
+    EXPECT_FALSE(live.sameState(prepared)); // Consumed issuance still advances identity.
+    ASSERT_TRUE(live.consume(2));
+    EXPECT_FALSE(live.sameState(expected));
+    live.restore({8, {5, 2}});
+    EXPECT_TRUE(live.sameState(expected));
+}
+
 TEST(ESM4ActionLedger, ExhaustionNeverWrapsOrReusesAnIdentity)
 {
     ESM4::ActionLedger ledger;

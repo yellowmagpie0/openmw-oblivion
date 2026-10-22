@@ -722,6 +722,7 @@ namespace MWRender
     void Animation::addAnimDirectory(VFS::Path::NormalizedView directory)
     {
         mNativeReactionCatalog.reset();
+        mNativeCounterCatalog.reset();
         constexpr VFS::Path::ExtensionView kf("kf");
         std::map<std::string, VFS::Path::Normalized, std::less<>> files;
         for (const VFS::Path::Normalized& name : mResourceSystem->getVFS()->getRecursiveDirectoryIterator(directory))
@@ -1002,6 +1003,7 @@ namespace MWRender
         mLazyAnimSources.clear();
         mNativeReactionFiles.clear();
         mNativeReactionCatalog.reset();
+        mNativeCounterCatalog.reset();
         mLoadedLazyAnimations.clear();
         mReportedLazyAnimations.clear();
         mSupportedDirections.clear();
@@ -1138,7 +1140,18 @@ namespace MWRender
 
     const std::vector<Animation::NativeReactionResources>& Animation::getNativeReactionCatalog()
     {
-        if (mNativeReactionCatalog) return *mNativeReactionCatalog;
+        return getNativeSequenceCatalog(false);
+    }
+
+    const std::vector<Animation::NativeReactionResources>& Animation::getNativeCounterCatalog()
+    {
+        return getNativeSequenceCatalog(true);
+    }
+
+    const std::vector<Animation::NativeReactionResources>& Animation::getNativeSequenceCatalog(bool counter)
+    {
+        auto& catalog = counter ? mNativeCounterCatalog : mNativeReactionCatalog;
+        if (catalog) return *catalog;
         if (!mResourceSystem)
             throw std::invalid_argument("native reaction catalog requires a resource system");
         struct Candidate
@@ -1157,7 +1170,8 @@ namespace MWRender
             const auto keyframes = mResourceSystem->getKeyframeManager()->get(path);
             if (!keyframes) continue;
             for (const auto& metadata : keyframes->mControllerSequences)
-                if (const auto code = ESM4::nativeReactionSequenceGroup(metadata.mSequenceName, path.filename().value()))
+                if (const auto code = (counter ? ESM4::nativeCounterSequenceGroup(metadata.mSequenceName, path.filename().value())
+                                         : ESM4::nativeReactionSequenceGroup(metadata.mSequenceName, path.filename().value())))
                 {
                     if (keyframes->mControllerSequences.size() != 1)
                         throw std::invalid_argument("native reaction KF contains ambiguous controller sequences");
@@ -1187,8 +1201,8 @@ namespace MWRender
             for (const auto& candidate : candidates) resources.mGroups.push_back(candidate.mGroup);
             result.push_back(std::move(resources));
         }
-        mNativeReactionCatalog = std::move(result);
-        return *mNativeReactionCatalog;
+        catalog = std::move(result);
+        return *catalog;
     }
 
     std::string_view Animation::getActiveAnimationGroup(BoneGroup group) const

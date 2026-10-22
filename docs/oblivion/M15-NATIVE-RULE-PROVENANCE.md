@@ -16602,3 +16602,42 @@ is still guarded. No schema change is made. The public receipt
 pins test/source/native/live evidence and retained failed attempts. This closes
 fresh packet/service pose acceptance, not normal Player generation, persistent
 dual renderer roots, actual Player input/save-restart or the full M15S4 gate.
+
+
+### Counter startup availability and blocked-contact caller ordering
+
+The pinned original1.2.0416 executable
+SHA256 `a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes Counter5F4E10(true), its activation and NI updates in24 source
+contexts and192 independent availability contexts. Synthetic cache/metadata,
+scene and notification boundaries are explicit. Empty slot3 enters NI1;
+a steady old BlockHit enters incoming NI2 and retires the old sequence.
+Player body/FP clocks and source presence are independent.
+
+Active-camera resource availability decides startup. When it succeeds, each
+available view may play; a missing mirror retains its old slot3. The process
+action2 sequence pointer remains current body slot3 even if FP alone played,
+so it can retain BlockHit28 or null. This does not establish complete original
+first-person action-frame dispatch. The production paired Counter packet
+represents only complete body/FP activation and rejects partial playback.
+
+The original600528..60056A caller runs48 contexts over ranged/proc/disarm/
+resource booleans and x87 control words007F/027F/037F. Nonranged contacts query
+5F3C30; ranged skip it. Exactly one5F4E10 call receives that bool. A true proc
+skips the immediate disarm/Recoil branch regardless of playback success.
+Without Counter,5FC2B0 precedes5F4F00; nonranged requests Recoil regardless of
+disarm result, ranged only after successful disarm. All query/resource/disarm/
+Recoil results are supplied recording boundaries; no actual mastery RNG, drop,
+playback, full numeric contact or gameplay acceptance follows from this probe.
+Probe01 failed because its Recoil hook omitted the loader's required return
+value; probe02 supplies ret(0), preserves stack cleanup and passes all48.
+
+Corpora SHA256: source24
+`1bdb84e62b98f18d76e5464f572f5ee16f0dd5e5554366b3e589c931ccf04b66`,
+availability192
+`6d6570538dccdcc40501c5d9ca62ddca25b16a8dffdd8115435bb7e70dd181b2`,
+caller48
+`91d50d1ffa3cd204ea0fb4064e76e6ed5787d0e7d11576eb08ddfc798d96c700`.
+Editable protocol: `m15_counter_startup_native_probe.json` under
+scripts/data/oblivion_compat. Exact artifact pins, typed preparation tests and
+remaining boundaries are in `M15-COUNTER-STARTUP-VERIFICATION.json`.

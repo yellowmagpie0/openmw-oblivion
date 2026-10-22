@@ -2353,8 +2353,11 @@ namespace MWMechanics
         const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
         if (equipmentChanged || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
             releaseBlock();
+        const auto* blockState = service->findMeleeState(actor);
+        const bool counterActive = blockState && blockState->mStrike
+            && blockState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
         bool blockAccepted = false;
-        if (controls && controls->mBlock && mPtr.getType() != ESM::REC_CREA4
+        if (!counterActive && controls && controls->mBlock && mPtr.getType() != ESM::REC_CREA4
             && mAnimation->hasAnimation(blockGroup))
         {
             const auto* metadata = mAnimation->getControllerSequenceMetadata(blockGroup);
@@ -2384,7 +2387,9 @@ namespace MWMechanics
                 return false;
             }
         }
-        releaseBlock(); // Also clears saved posture6 when no held input was restored.
+        // Counter owns action2/6 in slot3 while an existing held BlockIdle
+        // stays resident in slot1. Releasing input still removes that idle.
+        if (!counterActive || !controls || !controls->mBlock) releaseBlock();
         persistOblivionMeleeProgress();
         const auto* saved = service->findMeleeState(actor);
         auto input = saved ? saved->mInput : ESM4::RuntimeMeleeInput{};

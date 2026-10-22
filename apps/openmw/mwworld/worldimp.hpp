@@ -1050,6 +1050,7 @@ namespace MWWorld
 
         void setActorActive(const MWWorld::Ptr& ptr, bool value) override;
     private:
+        bool prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         bool prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
             ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(

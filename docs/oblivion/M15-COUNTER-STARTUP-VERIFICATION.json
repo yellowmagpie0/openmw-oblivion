@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "status": "Counter startup preparation and atomic issuance verified in typed World/service checks. Normal defensive proc and Counter consequence dispatch are not wired. M15S4 incomplete.",
+  "validation_layers": {
+    "generated_plugin_or_runtime_fixture": "No new plugin or save fixture.",
+    "compiler_and_typed_world_checks": true,
+    "semantic_reinspection": "Binary RuntimeState roundtrip after the blocked contact for NPC and paired Player, with empty or steady BlockHit source.",
+    "actual_normal_input_runtime_acceptance": false
+  },
+  "tested_source": {
+    "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+    "source_fingerprint": "caf81457930762bcc101a82c0ae26e9c96fbcd918e5dbfa26b1227fb594bfa75"
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-02/verification.json",
+        "sha256": "a564b1f9cc6aaa12878162dbce220ceb9ac7c6d111ad644b0b4bf45c3eb6be42"
+      },
+      "tested_source": {
+        "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+        "source_fingerprint": "2d7ee6475e42f6b809ef8a1549d4e460971a7c0e7b0bb7a4037661afc12d3d75"
+      },
+      "results": {
+        "components": {
+          "executed": 2986,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "17f138e98779f32f1cc1c41c5962199c878992f9644f7f27b548a69f33f34d9f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fdf6d420a8ffe851520fe6da5e7c5a08c7bd5de367dc434ba34f0e7117d239df",
+          "inventory_sha256": "fd400121258791bd204d365b36f009699bd3f89713a9feddb3e6b3845b7f2af1",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": false
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-03/verification.json",
+        "sha256": "bf8cbf9b4636a557428a559c0311ac27bd2cb4e290383cb495a143378566f8e8"
+      },
+      "tested_source": {
+        "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+        "source_fingerprint": "4023bbb1001d4de0cd0ce491a9fcd1d4d0414948ec06183267f8c6b660d750a3"
+      },
+      "results": {
+        "python": {
+          "executed": 380,
+          "passed": true,
+          "log_sha256": "fb882cfd507dc4608995f9953d6d8f783bf13f1fae19c32041d7cf27c073a20d"
+        }
+      },
+      "overall_attempt_passed": true
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-04/verification.json",
+        "sha256": "170aa6bd6108edd8b575759208b4049c3f4bd61be5884e6d071f47d71891fabb"
+      },
+      "tested_source": {
+        "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+        "source_fingerprint": "caf81457930762bcc101a82c0ae26e9c96fbcd918e5dbfa26b1227fb594bfa75"
+      },
+      "results": {
+        "engine": {
+          "executed": 1798,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "81b721a3a23c17499ec58e48adc62e950782bbcd977d712d9df85be107b23be6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e12e9d400fbecb676930bed6d637c4e8e8c153eaccc5e0a28838dd87ff8e3338",
+          "inventory_sha256": "eaebccd3a544f421cfa04375d744690e226c84136ebeac34ac3559600009ea82",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": true
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-initiation-sanitized-02/verification.json",
+        "sha256": "ae8b96d6cc2b1cbec5679d45b8a5bd67e3e49b114f0911c62245b4d3e0eab6b2"
+      },
+      "tested_source": {
+        "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+        "source_fingerprint": "2d7ee6475e42f6b809ef8a1549d4e460971a7c0e7b0bb7a4037661afc12d3d75"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 839,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "b2d65b4beb304412ad36383fe54c5c6ffa0c7e5a46455f0225b908b755d7f2e9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "212e85ceb7a9beeafc8da65985f0bcfbf892ccb97660c16f91007fabbc98526f",
+          "inventory_sha256": "5acd5b908f90484deaa1d813baacd7bfd3815fc7124fed52576acd89a44f31c4",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": false
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-counter-initiation-sanitized-04/verification.json",
+        "sha256": "c81e221540e8d40dde2bbbb27cefafd6ce9d6ac00f08cad811a8ce333b181c60"
+      },
+      "tested_source": {
+        "head": "c6988a6a71a8c4c3e4e5d45f36b22306668e9fe9",
+        "source_fingerprint": "caf81457930762bcc101a82c0ae26e9c96fbcd918e5dbfa26b1227fb594bfa75"
+      },
+      "results": {
+        "engine": {
+          "executed": 1798,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9cc67aef3227ed93da0559e95412a6af5538ad176600624ba269ed8424509942",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "203202a17b4723bf468dd525c686056edf7ae6d60a2530d39078bd4e0c37ca8b",
+          "inventory_sha256": "eaebccd3a544f421cfa04375d744690e226c84136ebeac34ac3559600009ea82",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "overall_attempt_passed": true
+    }
+  ],
+  "check_scope": "Component results precede the final World-only rendering lease fix and two World-test exception expectation corrections; component implementation/tests were unchanged. Python precedes the World-only lease fix; Python sources were unchanged. Both final engine runs use the same complete source fingerprint. Full normal component/engine inventories, selected ESM4* sanitizer components, full sanitizer engine inventory; no failures/skips in the selected accepted results.",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "implementation": [
+    "Counter group29 has a separate resource catalog and namespace while sharing the established native family/movement fallback and archive variant ordering.",
+    "World prepares drawn NPC or paired Player Counter views with Start/Attack/End metadata at unit weapon-speed correction. Empty slot3 enters directly; a reviewed steady different source crossfades with its exact owned history.",
+    "A defensive request excludes immediate BlockHit/Recoil even if no Counter playback packet is available. Only a complete prepared packet issues a new logical Counter action.",
+    "Private copies prepare the next action ledger and owner map. Commit rejects any intervening issuance or consumption, then publishes the new Counter action, original contact consumption, numeric deltas, RNG and body/FP histories together without allocating during publication.",
+    "Prepared Counter packets capture rendering instance/root leases for body and requested FP just like reactions. Existing held BlockIdle is retained while Counter owns slot3; release still removes it.",
+    "Stationary AI does not take over an owned Counter; Counter contact is independent of a prior AI target."
+  ],
+  "test_cases": [
+    "ESM4ActionLedger.PreparedAllocationLeaseDistinguishesIssuanceAndConsumption",
+    "ESM4PhysicalCombat.CounterCatalogHasItsOwnGroup29NamespaceAndNativeFallback",
+    "OblivionWorldTest.BlockContactAllocatesCounterAndConsumesItsSourceAtomicallyAcrossRestart",
+    "OblivionWorldTest.CounterRequestRequiresOneDefensiveOutcomeAndMissingPlaybackIssuesNoAction",
+    "OblivionWorldTest.PreparedCounterRejectsUnrelatedLedgerMutationWithoutPublishingAnyContact",
+    "OblivionWorldTest.CounterContactAcquiresIndependentlyOfPriorAiTarget"
+  ],
+  "native_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-source-oracle-01/probe-01.py",
+      "sha256": "715b249f4602d007d85bc78c0159e7f38078c745defe3ec168deafeff1e72f1f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-source-oracle-01/preregistered.json",
+      "sha256": "51cee2d4096d0233df0de92519cf3c995d42bd14a4408b5a3d49c20904c5dc54"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-source-oracle-01/reviewed-expectations.json",
+      "sha256": "4e918a6b3c89adad4a2c67f39588d2aeed9ed30b93e50491c12c4db56759613c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-source-oracle-01/verification01.json",
+      "sha256": "b69bfc7a99a1e4015523148de110a0db63e0d21c10b0808a96be55864a8a51ad"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-source-oracle-01/corpus01.json",
+      "sha256": "1bdb84e62b98f18d76e5464f572f5ee16f0dd5e5554366b3e589c931ccf04b66"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-availability-oracle-01/probe-01.py",
+      "sha256": "a09d953e8fb648cb94d3827dfd7783c0af16c55bebc0400f8750125980b70c47"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-availability-oracle-01/preregistered.json",
+      "sha256": "63c38de48ce3e87c3c944d4a9141b64d643dd3fbfc83ec6b5c445a61ee9453e2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-availability-oracle-01/reviewed-expectations.json",
+      "sha256": "eb1a7137898a6060fa0e2db1aebf34fcd482a7d8814fa6cde479d1c0c36a5e9b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-availability-oracle-01/verification01.json",
+      "sha256": "90ddc8d6fb4bf0fca73ad1f67d9ecf36b6e3e2c2e254d0d55e4add610470e0d4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-activation-availability-oracle-01/corpus01.json",
+      "sha256": "6d6570538dccdcc40501c5d9ca62ddca25b16a8dffdd8115435bb7e70dd181b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-caller-order-oracle-01/probe-01.py",
+      "sha256": "4abb4c5c25f38667244c86adda7e071a873326c766501a53a2fc31f7b3f67a9a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-caller-order-oracle-01/probe-02.py",
+      "sha256": "b73934e7473402383c320fcad7cace18eb97db635570105dec75c0db5a28bdce"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-caller-order-oracle-01/verification02.json",
+      "sha256": "cfd52ba1912c33aaf571fc4ce181b823a2f24106d03409b83603064d0c7c071c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-caller-order-oracle-01/corpus02.json",
+      "sha256": "91d50d1ffa3cd204ea0fb4064e76e6ed5787d0e7d11576eb08ddfc798d96c700"
+    }
+  ],
+  "native_findings": {
+    "activation_source_cases": 24,
+    "availability_cases": 192,
+    "caller_order_cases": 48,
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Actual original activation/NI or caller branch instructions with explicit synthetic cache/metadata/scene/notification or query/resource/disarm/recoil boundaries. No complete actor frame, proc RNG integration, physical collision, audio or normal input acceptance.",
+    "caller_order": "600528..60056A: nonranged queries the Counter proc; ranged skips it. One5F4E10 invocation receives that bool. A true proc skips immediate disarm/Recoil regardless of playback success. Without Counter, disarm precedes Recoil; nonranged always requests Recoil, ranged only after successful disarm.",
+    "availability": "Active-camera resource availability controls startup. Each available view may play independently; an absent mirror retains its old slot3. The process action pointer remains current body slot3, even if FP alone played. Current paired storage cannot represent all these cases and rejects partial playback."
+  },
+  "retained_attempts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-caller-order-oracle-01/probe-01.py",
+      "reason": "Recoil hook omitted required ret value; probe02 supplies ret(0) and passes48 cases. Probe01 retained, excluded."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-01",
+      "reason": "Stopped build after review found exact Attack-key equality in the new AI-target test; native contact needs strict crossing."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-sanitized-01",
+      "reason": "Stopped with the same test correction; no sanitizer acceptance from this attempt."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-02",
+      "reason": "Components passed2986. Engine ran1798, with one failed new test: two malformed protocol expectations requested invalid_argument, but existing validation throws runtime_error. Corrected expectations preserve whole-state unchanged assertions."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-sanitized-02",
+      "reason": "ESM4* components passed839. Engine build stopped for the same expectation fix."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-normal-03",
+      "reason": "Engine1798 and Python380 passed before the final rendering lease extension. Python result retained; final normal04 reruns engine."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-counter-initiation-sanitized-03",
+      "reason": "Engine build stopped to add the Counter rendering lease; no acceptance from this attempt."
+    }
+  ],
+  "limitations": [
+    "New World/service tests use typed packets in headless fixtures. They do not execute resource factory preparation through normal input or prove geometry/acquisition.",
+    "The ordinary defensive caller still guards unsupported Expert/Master consequences. No normal-input Counter trigger or phase1 acquisition/disarm/Stagger publication is claimed.",
+    "Partial Player mirror playback, complete first-person action dispatch, captured/cached Counter reactivation and undrawn resource paths remain open.",
+    "Held BlockIdle and AI controller changes are built/regression checked, without new rendered or normal-input acceptance.",
+    "No new audio, measured FPS matrix, gamepad, effects or E2E acceptance. Existing compiler warnings remain. No push or publication."
+  ]
+}

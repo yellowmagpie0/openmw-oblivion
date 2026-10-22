@@ -1405,9 +1405,9 @@ namespace MWMechanics
         return slot3Source(view, true);
     }
 
-    std::uint64_t OblivionCombatService::beginMeleeStrike(const ESM::FormKey& actor,
+    ESM4::RuntimeMeleeState OblivionCombatService::prepareMeleeStrikeState(const ESM::FormKey& actor,
         ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
-        const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views)
+        const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views) const
     {
         if (mBowStates.contains(actor))
             throw std::invalid_argument("native melee strike cannot replace owned bow playback");
@@ -1421,11 +1421,12 @@ namespace MWMechanics
         if (counter && (counterValues == mActorValues.end() || counterValues->second.mProcess != ESM4::ActorValueProcess::Active
                 || !life || life->mPhase != ESM4::ActorLifePhase::Alive))
             throw std::invalid_argument("native counter requires a live active owner");
-        decltype(mAnimationClocks) counterClock;
-        if (counter && !mAnimationClocks.contains(actor)) counterClock.emplace(actor, 0.f);
         const auto found = mMeleeStates.find(actor);
         const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
-        if (previous && (previous->mReaction || (previous->mFirstPerson && previous->mFirstPerson->mReaction)))
+        if (previous && ((previous->mReaction && (!counter || !views
+                    || previous->mReaction->mKind != ESM4::MeleeReactionKind::BlockHit))
+                || (previous->mFirstPerson && previous->mFirstPerson->mReaction && (!counter || !views
+                    || previous->mFirstPerson->mReaction->mKind != ESM4::MeleeReactionKind::BlockHit))))
             throw std::invalid_argument("native melee strike cannot replace an owned reaction");
         if (!views && previous && (previous->mStrike
                 || (previous->mFirstPerson && previous->mFirstPerson->mStrike)))
@@ -1511,12 +1512,27 @@ namespace MWMechanics
             }
             preserveDetachedCounter(previous, views->mBody.mAnimationGroup, candidate.mRetiringSequences);
             outgoing(oblivionMeleeSlot3Source(previous), views->mBody, views->mBodyOutgoing, candidate.mRetiringSequences);
+            candidate.mReaction.reset();
             candidate.mStrike = std::move(views->mBody);
             candidate.mFirstPerson = std::move(views->mFirstPerson);
             candidate.mPassiveSequence.reset();
         }
         else candidate.mStrike = std::move(strike);
         candidate.validate();
+        return candidate;
+    }
+
+    std::uint64_t OblivionCombatService::beginMeleeStrike(const ESM::FormKey& actor,
+        ESM4::MeleeStrikeKind kind, std::string_view animationGroup, float playbackSpeed,
+        const ESM::FormKey& weaponBase, std::optional<OblivionMeleeStrikeViews> views)
+    {
+        auto candidate = prepareMeleeStrikeState(actor, kind, animationGroup, playbackSpeed, weaponBase, std::move(views));
+        const bool counter = kind == ESM4::MeleeStrikeKind::Counter;
+        const auto counterValues = mActorValues.find(actor);
+        const auto found = mMeleeStates.find(actor);
+        const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
+        decltype(mAnimationClocks) counterClock;
+        if (counter && !mAnimationClocks.contains(actor)) counterClock.emplace(actor, 0.f);
         // All copies, list growth and validation precede allocation/consumption.
         decltype(mMeleeStates) prepared;
         prepared.emplace(actor, std::move(candidate));
@@ -2518,6 +2534,12 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mReactionStates;
         std::map<ESM::FormKey, float> mReactionClocks;
         std::vector<std::uint64_t> mReactionCanceledActions;
+        struct CounterAllocation
+        {
+            ESM4::ActionLedger mExpected, mNext;
+            decltype(OblivionCombatService::mActionOwners) mExpectedOwners, mNextOwners;
+        };
+        std::optional<CounterAllocation> mCounterAllocation;
         struct Unequip
         {
             MWWorld::Ptr mItem;
@@ -2593,6 +2615,7 @@ namespace MWMechanics
             return values;
         };
         if (const auto* melee = findMeleeState(attackerKey); melee && melee->mAiIntent && melee->mStrike
+            && melee->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
             && melee->mStrike->mActionId == id && !victim.isEmpty()
             && actorKey(victim) != melee->mAiIntent->mTarget)
             throw std::invalid_argument("native melee AI contact does not match its owned target");
@@ -2603,10 +2626,16 @@ namespace MWMechanics
                 || deltas.mAttackerFatigue != 0
                 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0
                 || !deltas.mConditionChanges.empty() || deltas.mKnockback || deltas.mAttackerReaction
+                || deltas.mVictimCounterRequested || deltas.mVictimCounter
                 || (deltas.mVictimReaction && deltas.mVictimReaction->mKind != ESM4::MeleeReactionKind::Stagger))
                 throw std::invalid_argument("native counter requires its nondamaging phase1 consequence");
         }
         auto attacking = *validateActor(attacker, attackerKey);
+        if ((deltas.mVictimCounter && !deltas.mVictimCounterRequested)
+            || (deltas.mVictimCounterRequested && (victim.isEmpty() || deltas.mVictimReaction
+                || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence || deltas.mVictimSlot0Source
+                || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction)))
+            throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
             return nullptr;
         for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth,
@@ -3131,6 +3160,39 @@ namespace MWMechanics
         if (receiving) prepareReaction(deltas.mVictimReaction, deltas.mVictimRetiringSequence,
             deltas.mVictimFirstPerson, deltas.mVictimSlot0Source, deltas.mVictimFirstPersonSlot0Source,
             *receiving, *receivingLife);
+        std::optional<PreparedPhysicalContact::Impl::CounterAllocation> counterAllocation;
+        if (deltas.mVictimCounterRequested)
+        {
+            const auto* before = findActorValues(victimKey);
+            if (!receiving || before->mProcess != ESM4::ActorValueProcess::Active
+                || before->mProcessAction != 6 || findActorLife(victimKey)->mPhase != ESM4::ActorLifePhase::Alive)
+                throw std::invalid_argument("native defensive Counter requires an active blocking owner");
+            if (deltas.mVictimCounter)
+            {
+                if (receivingLife->mPhase != ESM4::ActorLifePhase::Alive || receiving->mProcessAction != 6)
+                    throw std::invalid_argument("native Counter cannot survive this contact's incapacitation/equipment change");
+                const auto& request = *deltas.mVictimCounter;
+                auto candidate = prepareMeleeStrikeState(victimKey, ESM4::MeleeStrikeKind::Counter,
+                    request.mBody.mAnimationGroup, 1, request.mBody.mWeaponBase, request);
+                counterAllocation.emplace(PreparedPhysicalContact::Impl::CounterAllocation{
+                    mActions, mActions, mActionOwners, mActionOwners});
+                const auto counterId = counterAllocation->mNext.allocate();
+                counterAllocation->mNextOwners.emplace(counterId, victimKey);
+                if (const auto* old = findMeleeState(victimKey); old && old->mStrike
+                    && isActionPending(old->mStrike->mActionId, victimKey))
+                    reactionCanceledActions.push_back(old->mStrike->mActionId);
+                candidate.mStrike->mActionId = counterId;
+                if (candidate.mFirstPerson && candidate.mFirstPerson->mStrike)
+                    candidate.mFirstPerson->mStrike->mActionId = counterId;
+                candidate.mInput = {};
+                candidate.mAiIntent.reset(); // Counter acquires its own target at phase1.
+                candidate.validate();
+                reactionStates.insert_or_assign(victimKey, std::move(candidate));
+                if (!mAnimationClocks.contains(victimKey)) reactionClocks.emplace(victimKey, 0.f);
+                receiving->mProcessAction = 2;
+                receiving->validate();
+            }
+        }
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);
@@ -3167,6 +3229,7 @@ namespace MWMechanics
         data->mReactionStates = std::move(reactionStates);
         data->mReactionClocks = std::move(reactionClocks);
         data->mReactionCanceledActions = std::move(reactionCanceledActions);
+        data->mCounterAllocation = std::move(counterAllocation);
         data->mUnequips = std::move(unequips);
         return std::unique_ptr<PreparedPhysicalContact>(new PreparedPhysicalContact(std::move(data)));
     }
@@ -3181,6 +3244,9 @@ namespace MWMechanics
             return false;
         const auto& attackerKey = data->mAttacker.mValues.mActor;
         const auto* victimKey = data->mVictim ? &data->mVictim->mValues.mActor : nullptr;
+        if (data->mCounterAllocation && (!mActions.sameState(data->mCounterAllocation->mExpected)
+                || mActionOwners != data->mCounterAllocation->mExpectedOwners))
+            return false;
         std::size_t owned = 0;
         for (const auto& action : mActionOwners)
             if (action.second == attackerKey || (victimKey && action.second == *victimKey))
@@ -3221,6 +3287,12 @@ namespace MWMechanics
         auto& data = *contact.mImpl;
         const auto& attackerKey = data.mAttacker.mValues.mActor;
         const auto* victimKey = data.mVictim ? &data.mVictim->mValues.mActor : nullptr;
+        if (data.mCounterAllocation)
+        {
+            static_assert(std::is_nothrow_swappable_v<ESM4::ActionLedger>);
+            std::swap(mActions, data.mCounterAllocation->mNext);
+            mActionOwners.swap(data.mCounterAllocation->mNextOwners);
+        }
         for (auto& condition : data.mConditions)
             if (condition.mApply) condition.mItem.getCellRef().swapNativeItemCondition(condition.mReference);
         for (auto& unequip : data.mUnequips)
