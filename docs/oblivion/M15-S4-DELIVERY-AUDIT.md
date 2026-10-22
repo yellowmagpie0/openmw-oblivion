@@ -10874,3 +10874,32 @@ This is service/persistence coverage, without new compiler/world authoring or
 actual runtime acceptance. World/controller wiring must project both source and
 destination through the shared NI3 span; interruption/camera policy and the
 recorded double-begin runtime regression remain open. M15S4 remains incomplete.
+
+
+## Held native projection and public sample clocks
+
+Held caches now participate in CharacterController's native frame routing,
+metadata collection and per-view projection. Resident held event tracks bind at
+zero legacy speed; native destination layers expose their stored time to public
+animation queries, including Loop End and wrap. They do not seek or replay the
+shared text-key track. Resource exclusion follows case-insensitive cache identity.
+Inactive held entries disable their old event tracks without erasing the cached
+history; advancing ordinary NPC strikes reuse the already-advanced actor clock.
+
+Four renderer tests cover captured interpolation with literal native blend
+goldens, stable bindings/callbacks, fresh-root reconstruction, both sides of the
+shared peer fade, independent body/FP times, wrapped public queries, no extra
+text-key calls, alias exclusion and rejection without replacing published time.
+Full normal and sanitizer engine inventories pass 1825 tests each. Sanitizer
+leaks remain disabled, with no ASan/UBSan diagnostic observed.
+
+Tested source fingerprint: `49bf2593a43b4b6b792a5ba7066b901bedf7269145f21c3adb60977adf61cd78`.
+
+[M15-HELD-BLOCK-PROJECTION-VERIFICATION.json](M15-HELD-BLOCK-PROJECTION-VERIFICATION.json)
+pins configurations, exact inventories, retained baseline runs and editable cases.
+World activation/release and atomic interruption adapters remain to be connected.
+New native interruption evidence also requires inactive preupdate NI5 timing
+masks100/101 in save validation. This is headless renderer/controller-source
+verification, with no new actual runtime, visual, authoring/compiler/world or
+fresh-process acceptance. The double-begin runtime regression remains open,
+and M15S4 remains incomplete.

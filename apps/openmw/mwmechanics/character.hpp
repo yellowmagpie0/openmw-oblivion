@@ -223,6 +223,7 @@ namespace MWMechanics
         void advanceOblivionMeleePlayback(float duration);
         bool bindOblivionMeleeReaction();
         bool advanceOblivionMeleeReactionFrame(float duration);
+        void bindOblivionHeldBlock();
         void finishOblivionMeleePlayback();
         std::string mOblivionBlockGroup; // Render binding; held input is not saved.
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
@@ -230,6 +231,8 @@ namespace MWMechanics
         std::string mOblivionReactionGroup;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionPoseSnapshot;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionPassivePoseSnapshot;
+        std::vector<std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot>> mOblivionHeldPoseBindings;
+        std::vector<std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot>> mOblivionFirstPersonHeldPoseBindings;
         bool mOblivionMeleeProjection = false;
         std::uint64_t mOblivionFirstPersonRenderedReaction = 0;
         std::string mOblivionFirstPersonReactionGroup;

@@ -10,6 +10,50 @@
 
 namespace MWRender
 {
+    std::vector<Animation::NativeSequenceLayer> oblivionHeldBlockLayers(Animation& animation,
+        std::span<const ESM4::RuntimeHeldBlockSequence> held, float clock, OblivionHeldPoseBindings& bindings)
+    {
+        if (!std::isfinite(clock) || clock < 0)
+            throw std::invalid_argument("invalid held-block projection clock");
+        auto preparedBindings = bindings;
+        preparedBindings.resize(held.size());
+        std::vector<Animation::NativeSequenceLayer> layers;
+        for (std::size_t i = 0; i < held.size(); ++i)
+        {
+            const auto& sequence = held[i];
+            sequence.validate();
+            auto& pose = preparedBindings[i];
+            if (sequence.mInactive) { pose.reset(); continue; }
+            const auto* source = animation.getControllerSequenceMetadata(sequence.mAnimationGroup);
+            if (!source || source->mCycleType != 0 || source->mWeight != 1)
+                throw std::invalid_argument("held-block projection requires its cyclic native source");
+            const auto& timing = sequence.mSequenceTiming;
+            if ((timing.mEasing && !timing.mEaseStart)
+                || (sequence.mRetirement && !sequence.mRetirement->mStartClock))
+                throw std::invalid_argument("held-block projection requires an anchored manager frame");
+            const float start = sequence.mRetirement ? *sequence.mRetirement->mStartClock
+                : timing.mEaseStart.value_or(clock);
+            const float end = sequence.mRetirement
+                ? static_cast<float>(double(start) + sequence.mRetirement->mDuration) : timing.mEaseEnd;
+            const float ease = sequence.mRetirement ? ESM4::sequenceBlendEase(clock, start, end, true)
+                : timing.mEasing ? ESM4::sequenceBlendEase(clock, start, end, false) : 1.f;
+            if (sequence.mPoseSnapshot)
+            {
+                if (!pose || *pose != *sequence.mPoseSnapshot)
+                    pose = std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*sequence.mPoseSnapshot);
+                // Full peer reset changes both NI4 source and NI5 destination
+                // to NI3: both use the same new retirement ease.
+                const float sourceEase = ESM4::sequenceBlendEase(clock, start, end, true);
+                layers.push_back({sequence.mAnimationGroup, BlendMask_All, 0, 1, sourceEase, false, pose});
+            }
+            else pose.reset();
+            layers.push_back({sequence.mAnimationGroup, BlendMask_All, sequence.mAnimationTime,
+                source->mWeight, ease, false, nullptr, true});
+        }
+        bindings.swap(preparedBindings);
+        return layers;
+    }
+
     std::vector<Animation::NativeSequenceLayer> oblivionPassiveMeleeLayers(Animation& animation,
         const ESM4::RuntimePassiveMeleeSequence* passive, float clock,
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot>& poseBinding)

@@ -2022,4 +2022,144 @@ namespace
         ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(body, first));
         checkPublished(.5f, .75f);
     }
+
+    TEST_F(PhysicalPoseAnimationTest, HeldCapturedLayersReuseBindingsAndRebuildSavedViews)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto source = mAnimation->addNativeSource("held", nativeTrack({100, 200, 300}, 3), 9);
+        source->mControllerSequences[0].mCycleType = 0;
+        ESM4::RuntimeHeldBlockSequence held{"held", 0,
+            {.mEasing = true, .mOffset = 0.f, .mEaseStart = 1.f, .mEaseEnd = 2.f, .mLastInput = 0.f}};
+        held.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+            {{"Pelvis", {11, 22, 33}, {1, 0, 0, 0}, 2, 9}}};
+        MWRender::OblivionHeldPoseBindings bindings;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> original;
+        osg::ref_ptr<osg::Callback> controller;
+        for (unsigned i = 0; i <= 4; ++i)
+        {
+            const float clock = 1 + i * .25f;
+            auto layers = MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, clock, bindings);
+            ASSERT_EQ(layers.size(), 2u); ASSERT_EQ(bindings.size(), 1u); ASSERT_TRUE(bindings[0]);
+            if (i == 0) original = bindings[0];
+            EXPECT_EQ(bindings[0], original);
+            EXPECT_FALSE(layers[0].mExposeSampleTime); EXPECT_TRUE(layers[1].mExposeSampleTime);
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+            if (i == 0) controller = mBone->getUpdateCallback();
+            EXPECT_EQ(controller, mBone->getUpdateCallback());
+            mFrameStamp->setFrameNumber(i); traverse();
+            const auto transform = mBone->getControllerTransform();
+            EXPECT_EQ(transform.mTranslation.x(), 11 + i * 22.25f);
+            EXPECT_EQ(transform.mTranslation.y(), 22 + i * 44.5f);
+            EXPECT_EQ(transform.mScale, 2 + i * .25f);
+            PlaybackPeerView fresh;
+            auto rebuiltSource = fresh.mAnimation->addNativeSource("held", nativeTrack({100, 200, 300}, 3), 9);
+            rebuiltSource->mControllerSequences[0].mCycleType = 0;
+            MWRender::OblivionHeldPoseBindings rebound;
+            const auto rebuilt = MWRender::oblivionHeldBlockLayers(*fresh.mAnimation, {&held, 1}, clock, rebound);
+            ASSERT_TRUE(fresh.mAnimation->setNativeSequenceLayers(rebuilt));
+            fresh.mRoot->accept(mVisitor);
+            EXPECT_EQ(fresh.mBone->getMatrix(), mBone->getMatrix());
+            EXPECT_FALSE(fresh.mAnimation->getInfo("held"));
+        }
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, HeldPeerRetirementUsesOneNewEaseForCapturedSourceAndDestination)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto source = mAnimation->addNativeSource("held", nativeTrack({100, 0, 0}), 9);
+        source->mControllerSequences[0].mCycleType = 0;
+        ESM4::RuntimeHeldBlockSequence held{"held", 0,
+            {.mOffset = 0.f, .mEaseStart = 1.f, .mEaseEnd = 2.f, .mLastInput = 0.f},
+            ESM4::RuntimeReactionRetirement{1, 1}};
+        held.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0,
+            {{"Pelvis", {11, 0, 0}, {1, 0, 0, 0}, 1, 9}}};
+        MWRender::OblivionHeldPoseBindings bindings;
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            auto layers = MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1 + i * .25f, bindings);
+            ASSERT_EQ(layers.size(), 2u);
+            EXPECT_EQ(layers[0].mEase, 1 - i * .25f);
+            EXPECT_EQ(layers[1].mEase, 1 - i * .25f);
+            EXPECT_EQ(layers[1].mTime, 0);
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+            mFrameStamp->setFrameNumber(i); traverse();
+            // Equal native priorities normalize the two shared NI3 layers.
+            EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 55.5f);
+        }
+        held.mPoseSnapshot.reset(); held.mInactive = true;
+        EXPECT_TRUE(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 2, bindings).empty());
+        ASSERT_EQ(bindings.size(), 1u); EXPECT_FALSE(bindings[0]);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, HeldLoopSamplesExposeIndependentWrappedTimesWithoutReplayingEventTracks)
+    {
+        PlaybackPeerView peer;
+        mAnimation->setPlaybackPeer(peer.mAnimation);
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto bodyTrack = nativeTrack({3, 0, 0}), firstTrack = nativeTrack({11, 0, 0});
+        bodyTrack->mVelocity = firstTrack->mVelocity = {4, 0, 0};
+        auto bodySource = mAnimation->addNativeSource("held", bodyTrack, 9, 2);
+        auto firstSource = peer.mAnimation->addNativeSource("held", firstTrack, 9, 2);
+        bodySource->mControllerSequences[0].mCycleType = firstSource->mControllerSequences[0].mCycleType = 0;
+        mAnimation->play("held", 1, MWRender::BlendMask_All, false, 0, "start", "stop", 0, 0, false,
+            MWRender::Animation::PlaybackScope::ThisView);
+        peer.mAnimation->play("held", 1, MWRender::BlendMask_All, false, 0, "start", "stop", 0, 0, false,
+            MWRender::Animation::PlaybackScope::ThisView);
+        const std::array<std::string_view, 1> excluded{"HELD"};
+        EXPECT_TRUE(mAnimation->nativePlayingSequenceLayers(excluded).empty());
+        EXPECT_TRUE(peer.mAnimation->nativePlayingSequenceLayers(excluded).empty());
+        PlaybackKeys bodyKeys, firstKeys;
+        mAnimation->setTextKeyListener(&bodyKeys); peer.mAnimation->setTextKeyListener(&firstKeys);
+        ESM4::RuntimeHeldBlockSequence body{"held"}, first{"held"};
+        MWRender::OblivionHeldPoseBindings bodyBindings, firstBindings;
+        for (const float time : {.25f, 1.5f, 2.f, 0.f, .125f})
+        {
+            body.mAnimationTime = time; first.mAnimationTime = 2 - time;
+            auto bodyLayers = MWRender::oblivionHeldBlockLayers(*mAnimation, {&body, 1}, 1, bodyBindings);
+            auto firstLayers = MWRender::oblivionHeldBlockLayers(*peer.mAnimation, {&first, 1}, 11, firstBindings);
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers));
+            mAnimation->runAnimation(.25f); peer.mAnimation->runAnimation(.25f);
+            mRoot->accept(mVisitor); peer.mRoot->accept(mVisitor);
+            EXPECT_EQ(mAnimation->getCurrentTime("HELD"), time);
+            EXPECT_EQ(peer.mAnimation->getCurrentTime("held"), 2 - time);
+            EXPECT_EQ(mBone->getControllerTransform().mTranslation.x(), 3 + 4 * time);
+            EXPECT_EQ(peer.mBone->getControllerTransform().mTranslation.x(), 11 + 4 * (2 - time));
+            EXPECT_EQ(bodyKeys.mCalls, 0u); EXPECT_EQ(firstKeys.mCalls, 0u);
+            bodyLayers[0].mExposeSampleTime = false;
+            ASSERT_TRUE(mAnimation->setNativeSequenceLayers(bodyLayers));
+            EXPECT_EQ(mAnimation->getCurrentTime("held"), 0);
+        }
+        mAnimation->setTextKeyListener(nullptr); peer.mAnimation->setTextKeyListener(nullptr);
+    }
+
+    TEST_F(PhysicalPoseAnimationTest, HeldProjectionRejectsBadFramesWithoutReplacingBindingsOrPublishedTime)
+    {
+        auto source = mAnimation->addNativeSource("held", nativeTrack({3, 0, 0}), 9);
+        source->mControllerSequences[0].mCycleType = 0;
+        ESM4::RuntimeHeldBlockSequence held{"held", .25f};
+        MWRender::OblivionHeldPoseBindings bindings{std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>()};
+        const auto old = bindings;
+        held.mRetirement = ESM4::RuntimeReactionRetirement{1, {}};
+        EXPECT_THROW(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1, bindings), std::invalid_argument);
+        EXPECT_EQ(bindings, old);
+        held.mRetirement.reset(); held.mAnimationGroup = "missing";
+        EXPECT_THROW(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1, bindings), std::invalid_argument);
+        EXPECT_EQ(bindings, old);
+        held.mAnimationGroup = "held";
+        auto layers = MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1, bindings);
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(layers));
+        auto bad = layers; bad.push_back(bad.front());
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(bad), std::invalid_argument);
+        EXPECT_EQ(mAnimation->getCurrentTime("held"), .25f);
+        bad = layers; bad[0].mFollowAnimationTime = true;
+        EXPECT_THROW(mAnimation->setNativeSequenceLayers(bad), std::invalid_argument);
+        EXPECT_EQ(mAnimation->getCurrentTime("held"), .25f);
+        source->mControllerSequences[0].mCycleType = 2;
+        EXPECT_THROW(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1, bindings), std::invalid_argument);
+        EXPECT_THROW(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, -1, bindings), std::invalid_argument);
+        held.mInactive = true;
+        EXPECT_TRUE(MWRender::oblivionHeldBlockLayers(*mAnimation, {&held, 1}, 1, bindings).empty());
+        EXPECT_FALSE(bindings[0]);
+    }
+
 }

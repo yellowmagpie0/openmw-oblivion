@@ -147,6 +147,9 @@ namespace MWRender
             // Reactions and outgoing tracks keep explicit service-owned times.
             bool mFollowAnimationTime = false;
             std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mPoseSnapshot = nullptr;
+            // Cyclic native samples expose their own time without seeking or
+            // replaying the shared event track on every wrap.
+            bool mExposeSampleTime = false;
         };
 
         struct NativeReactionResources

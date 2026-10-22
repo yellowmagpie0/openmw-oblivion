@@ -1776,6 +1776,9 @@ namespace MWRender
 
     float Animation::getCurrentTime(std::string_view groupname) const
     {
+        for (const auto& layer : mNativeSequenceLayers)
+            if (layer.mExposeSampleTime && Misc::StringUtils::ciEqual(layer.mGroup, groupname))
+                return layer.mTime;
         AnimStateMap::const_iterator iter = mStates.find(groupname);
         if (iter == mStates.end())
             return -1.f;
@@ -1897,7 +1900,8 @@ namespace MWRender
         std::vector<NativeSequenceLayer> result;
         for (const auto& [group, state] : mStates)
         {
-            if (std::find(excluded.begin(), excluded.end(), group) != excluded.end()) continue;
+            if (std::any_of(excluded.begin(), excluded.end(),
+                    [&](std::string_view name) { return Misc::StringUtils::ciEqual(name, group); })) continue;
             const auto* metadata = getControllerSequenceMetadata(group);
             if (!metadata) throw std::invalid_argument("shared animation has no native sequence metadata");
             if (excludeLocomotion && ESM4::nativeLocomotionSequenceGroup(metadata->mSequenceName, group)) continue;
@@ -2042,6 +2046,13 @@ namespace MWRender
                 || !std::isfinite(layer.mTime) || !std::isfinite(layer.mWeight) || layer.mWeight < 0
                 || !std::isfinite(layer.mEase) || layer.mEase < 0 || layer.mEase > 1)
                 throw std::invalid_argument("invalid native sequence layer frame");
+            if (layer.mExposeSampleTime && (layer.mFollowAnimationTime || layer.mPoseSnapshot))
+                throw std::invalid_argument("exposed native time requires an explicit destination sample");
+            const auto earlierLayers = layers.first(static_cast<std::size_t>(&layer - layers.data()));
+            if (layer.mExposeSampleTime && std::any_of(earlierLayers.begin(), earlierLayers.end(),
+                    [&](const auto& earlier) { return earlier.mExposeSampleTime
+                        && Misc::StringUtils::ciEqual(earlier.mGroup, layer.mGroup); }))
+                throw std::invalid_argument("ambiguous exposed native sequence time");
             auto source = nativeSequenceSource(layer.mGroup);
             const auto* metadata = getControllerSequenceMetadata(layer.mGroup);
             if (!source || !metadata) return false;
@@ -2087,6 +2098,7 @@ namespace MWRender
                 mNativeSequenceLayers[i].mWeight = layers[i].mWeight;
                 mNativeSequenceLayers[i].mEase = layers[i].mEase;
                 mNativeSequenceLayers[i].mFollowAnimationTime = layers[i].mFollowAnimationTime;
+                mNativeSequenceLayers[i].mExposeSampleTime = layers[i].mExposeSampleTime;
             }
             return true;
         }

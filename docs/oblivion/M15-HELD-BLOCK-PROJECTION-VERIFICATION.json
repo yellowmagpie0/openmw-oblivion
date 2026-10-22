@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "status": "Held native projection and independent public sample times verified headlessly; controller frame routing implemented and compiled. World activation and interruption integration remains open.",
+  "full_M15S4_acceptance": false,
+  "editable_cases": {
+    "path": "scripts/data/oblivion_compat/m15_held_block_projection_cases.json",
+    "sha256": "020f7a6e62ac26f06377e726e6b68d3f8d2b8b6a8b606bf32bfeac282773e93e"
+  },
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-projection-normal-02/verification.json",
+        "sha256": "a60ae28a909ea0f3d355f9a42ca6be61a518d8244cb730956471ec06ff7a0ed0"
+      },
+      "tested_source": {
+        "head": "a2bb404f508bcf65129198aa58fb10ff20eb57e3",
+        "source_fingerprint": "49bf2593a43b4b6b792a5ba7066b901bedf7269145f21c3adb60977adf61cd78"
+      },
+      "results": {
+        "engine": {
+          "executed": 1825,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b343618445a0da6ff4cb57581772c5b09b981ebd541d5ebed6356a915a07700d",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "f9e150221b688d07c9527107b1dd997eef96d128baf7822811ee8183563944b8",
+          "inventory_sha256": "212db900f3ffae563fba719ba187a09bb3f918310f7a16bef942b2ad74a9338b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-projection-sanitized-02/verification.json",
+        "sha256": "cd50145975f746325c9fcaa3afd7f17fc37b2efa376cb670ffae6f32d57b54ba"
+      },
+      "tested_source": {
+        "head": "a2bb404f508bcf65129198aa58fb10ff20eb57e3",
+        "source_fingerprint": "49bf2593a43b4b6b792a5ba7066b901bedf7269145f21c3adb60977adf61cd78"
+      },
+      "results": {
+        "engine": {
+          "executed": 1825,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "677cf445921aafcda8d924652ea91502ea1d7e322ea2c7c0087d9ba3df77fcc9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ddfd41006055239ea69320f99518325f923b25407d1af23bd6be15a1f538e0fb",
+          "inventory_sha256": "212db900f3ffae563fba719ba187a09bb3f918310f7a16bef942b2ad74a9338b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "implementation": [
+    "Held source/destination layers retain stable per-resource captured-pose bindings through NI5 or shared NI3 and release them on inactivity.",
+    "Controller collects live held metadata, binds resident event tracks without advancing their legacy clocks, projects body/FP independently, and disables an event track only after its held cache becomes inactive.",
+    "Explicit destination layers can expose native sample time to public queries across Loop End/wrap without seeking or replaying shared text-key tracks.",
+    "Case-insensitive exclusion prevents legacy/native duplication of the same cached resource."
+  ],
+  "native_basis": [
+    {
+      "path": "docs/oblivion/M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json",
+      "sha256": "fce32f1f61daf7450fecf978e012600f6e23490ca3dd5fca54d7abef645a2139"
+    }
+  ],
+  "retained_checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-projection-normal-01/verification.json",
+        "sha256": "45c9054d4c4dcbd3b09d0f4430ef91bdb73c43a62378bf7274f61be35f358b9e"
+      },
+      "scope": "Full1825-engine baseline before adding case-insensitive background exclusion and its direct renderer assertion."
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-held-block-projection-sanitized-01/verification.json",
+        "sha256": "ddde73ec96def113b2f19000415bdc6c4f7e522492bd1e40dc04fc972afddc2e"
+      },
+      "scope": "Full1825-engine baseline before adding case-insensitive background exclusion and its direct renderer assertion."
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "diagnostics_observed": false,
+    "leak_coverage": false
+  },
+  "limits": [
+    "World still uses legacy begin/end blocking and Counter release factories; actual typed cache activation via normal input is not enabled by this checkpoint.",
+    "Recoil/Stagger and other interruption paths must deactivate the appropriate resident held caches atomically before enabling the World bridge. Native interruption proofs are recorded separately.",
+    "The saved-state validator still needs the newly observed inactive preupdate NI5 cancellation masks100/101.",
+    "The controller route is compiled and regression-tested; execution with actual typed held records remains a normal-input runtime gate. No actual double-begin fix, windowed visual or in-flight fresh-process acceptance is claimed.",
+    "No new compiler/world authoring validation. Components/Python sources are unchanged and their suites were not repeated.",
+    "Full M15S4 camera/input/FPS/effects/mastery/interruption/restart matrix remains incomplete."
+  ]
+}

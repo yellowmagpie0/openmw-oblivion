@@ -1662,6 +1662,46 @@ namespace MWMechanics
         return body || first || (firstStrike && !firstFinished);
     }
 
+    void CharacterController::bindOblivionHeldBlock()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation) return;
+        const bool player = mPtr == world->getPlayerPtr();
+        const auto actor = player ? ESM::FormKey::dynamic("player", 1) : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        if (!state) return;
+        const auto bind = [&](MWRender::Animation& view, const auto& held) {
+            for (const auto& entry : held)
+            {
+                if (!entry.resident() || view.getInfo(entry.mAnimationGroup)) continue;
+                const auto source = captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                if (source.mCycle != ESM4::MeleeSequenceCycle::Loop)
+                    throw std::invalid_argument("held-block binding lost its cyclic source");
+                const float fraction = (entry.mAnimationTime - source.mTimelineBegin)
+                    / (source.mTimelineEnd - source.mTimelineBegin);
+                if (!std::isfinite(fraction) || fraction < 0 || fraction > 1)
+                    throw std::invalid_argument("held-block binding cannot map its saved sample");
+                // The event track follows native clock projection. Its legacy
+                // priority must not evict the independent slot3 event track.
+                view.play(entry.mAnimationGroup, Priority_Block, MWRender::BlendMask_All, false,
+                    0.f, "start", "stop", fraction, std::numeric_limits<std::uint32_t>::max(), true,
+                    MWRender::Animation::PlaybackScope::ThisView);
+                Log(Debug::Verbose) << "M15 held binding: actor=" << actor.serialize()
+                    << " group=" << entry.mAnimationGroup << " time=" << entry.mAnimationTime;
+            }
+        };
+        bind(*mAnimation, state->mHeldBlocks);
+        if (state->mFirstPerson)
+        {
+            auto* peer = mAnimation->getPlaybackPeer();
+            if (!peer && std::any_of(state->mFirstPerson->mHeldBlocks.begin(), state->mFirstPerson->mHeldBlocks.end(),
+                    [](const auto& held) { return !held.mInactive; }))
+                throw std::invalid_argument("held first-person cache has no renderer view");
+            if (peer) bind(*peer, state->mFirstPerson->mHeldBlocks);
+        }
+    }
+
     bool CharacterController::advanceOblivionMeleeReactionFrame(float duration)
     {
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
@@ -1674,8 +1714,11 @@ namespace MWMechanics
             return state && (state->mReaction || state->mPassiveSequence
                 || (state->mStrike && (state->mStrike->mPoseSnapshot
                     || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) || !state->mRetiringSequences.empty()
+                || std::any_of(state->mHeldBlocks.begin(), state->mHeldBlocks.end(), [](const auto& h) { return !h.mInactive; })
                 || (state->mFirstPerson && (state->mFirstPerson->mReaction || state->mFirstPerson->mStrike
-                    || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty())));
+                    || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty()
+                    || std::any_of(state->mFirstPerson->mHeldBlocks.begin(), state->mFirstPerson->mHeldBlocks.end(),
+                        [](const auto& h) { return !h.mInactive; }))));
         };
         const auto* state = service->findMeleeState(actor);
         auto* peer = mAnimation->getPlaybackPeer();
@@ -1686,9 +1729,12 @@ namespace MWMechanics
             mOblivionMeleeProjection = mOblivionFirstPersonMeleeProjection = false;
             mOblivionPassivePoseSnapshot.reset();
             mOblivionFirstPersonPassivePoseSnapshot.reset();
+            mOblivionHeldPoseBindings.clear();
+            mOblivionFirstPersonHeldPoseBindings.clear();
             return false;
         }
         bindOblivionMeleeReaction();
+        bindOblivionHeldBlock();
         state = service->findMeleeState(actor);
         if (!active(state)) return false;
         std::array<std::set<std::string_view>, 2> groups;
@@ -1708,6 +1754,10 @@ namespace MWMechanics
         if (state->mPassiveSequence) groups[0].insert(state->mPassiveSequence->group());
         if (state->mFirstPerson && state->mFirstPerson->mPassiveSequence)
             groups[1].insert(state->mFirstPerson->mPassiveSequence->group());
+        for (const auto& held : state->mHeldBlocks) if (!held.mInactive) groups[0].insert(held.mAnimationGroup);
+        if (state->mFirstPerson)
+            for (const auto& held : state->mFirstPerson->mHeldBlocks)
+                if (!held.mInactive) groups[1].insert(held.mAnimationGroup);
         std::vector<OblivionMeleeSequenceMetadata> metadata;
         for (unsigned view = 0; view < groups.size(); ++view)
             for (const auto group : groups[view])
@@ -1745,15 +1795,19 @@ namespace MWMechanics
                                  std::span<const ESM4::RuntimeRetiringMeleeSequence> retiring,
                                  const ESM4::RuntimeMeleeStrike* strike, float clock,
                                  const auto& pose, const auto& excludedGroups,
-                                 const ESM4::RuntimePassiveMeleeSequence* passive, auto& passivePose) {
+                                 const ESM4::RuntimePassiveMeleeSequence* passive, auto& passivePose,
+                                 const auto& held, auto& heldPoses) {
             std::vector<MWRender::Animation::NativeSequenceLayer> layers;
-            if ((!reaction || reaction->mInactive) && retiring.empty() && !strike && !passive)
+            if ((!reaction || reaction->mInactive) && retiring.empty() && !strike && !passive
+                && std::none_of(held.begin(), held.end(), [](const auto& h) { return !h.mInactive; }))
             {
                 passivePose.reset();
+                heldPoses.clear();
                 return layers;
             }
             std::vector<std::string_view> excluded(excludedGroups.begin(), excludedGroups.end());
             if (strike) excluded.push_back(strike->mAnimationGroup);
+            for (const auto& sequence : held) excluded.push_back(sequence.mAnimationGroup);
             const bool ownsSlot0 = reaction && reaction->mKind == ESM4::MeleeReactionKind::Stagger
                 && !reaction->mRetirement && !reaction->mInactive;
             layers = view.nativePlayingSequenceLayers(excluded, ownsSlot0);
@@ -1774,6 +1828,9 @@ namespace MWMechanics
             auto passiveLayers = MWRender::oblivionPassiveMeleeLayers(view, passive, clock, passivePose);
             layers.insert(layers.end(), std::make_move_iterator(passiveLayers.begin()),
                 std::make_move_iterator(passiveLayers.end()));
+            auto heldLayers = MWRender::oblivionHeldBlockLayers(view, held, clock, heldPoses);
+            layers.insert(layers.end(), std::make_move_iterator(heldLayers.begin()),
+                std::make_move_iterator(heldLayers.end()));
             if (reaction && !reaction->mInactive)
             {
                 if (reaction->mPoseSnapshot)
@@ -1803,7 +1860,8 @@ namespace MWMechanics
         };
         auto bodyLayers = project(*mAnimation, next.mReaction, next.mRetiringSequences,
             next.mStrike ? &*next.mStrike : nullptr, prepared->clock(), mOblivionPoseSnapshot, groups[0],
-            next.mPassiveSequence ? &*next.mPassiveSequence : nullptr, mOblivionPassivePoseSnapshot);
+            next.mPassiveSequence ? &*next.mPassiveSequence : nullptr, mOblivionPassivePoseSnapshot,
+            next.mHeldBlocks, mOblivionHeldPoseBindings);
         const auto firstReaction = next.mFirstPerson ? next.mFirstPerson->mReaction : std::nullopt;
         std::vector<MWRender::Animation::NativeSequenceLayer> firstLayers;
         const auto* firstStrike = next.mFirstPerson && next.mFirstPerson->mStrike ? &*next.mFirstPerson->mStrike : nullptr;
@@ -1814,12 +1872,19 @@ namespace MWMechanics
         const bool firstRetiring = next.mFirstPerson && !next.mFirstPerson->mRetiringSequences.empty();
         const auto* firstPassive = next.mFirstPerson && next.mFirstPerson->mPassiveSequence
             ? &*next.mFirstPerson->mPassiveSequence : nullptr;
-        if (firstReaction || firstStrike || firstRetiring || firstPassive)
+        const bool firstHeld = next.mFirstPerson && std::any_of(next.mFirstPerson->mHeldBlocks.begin(),
+            next.mFirstPerson->mHeldBlocks.end(), [](const auto& held) { return !held.mInactive; });
+        if (firstReaction || firstStrike || firstRetiring || firstPassive || firstHeld)
             firstLayers = project(*peer, firstReaction, next.mFirstPerson->mRetiringSequences, firstStrike, next.mFirstPerson->mClock,
-                mOblivionFirstPersonPoseSnapshot, groups[1], firstPassive, mOblivionFirstPersonPassivePoseSnapshot);
-        else mOblivionFirstPersonPassivePoseSnapshot.reset();
+                mOblivionFirstPersonPoseSnapshot, groups[1], firstPassive, mOblivionFirstPersonPassivePoseSnapshot,
+                next.mFirstPerson->mHeldBlocks, mOblivionFirstPersonHeldPoseBindings);
+        else
+        {
+            mOblivionFirstPersonPassivePoseSnapshot.reset();
+            mOblivionFirstPersonHeldPoseBindings.clear();
+        }
         const bool paired = peer && (firstReaction || firstStrike || firstRetiring || firstPassive
-            || mOblivionFirstPersonMeleeProjection);
+            || firstHeld || mOblivionFirstPersonMeleeProjection);
         if (!(paired ? mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers)
                      : mAnimation->setNativeSequenceLayers(bodyLayers)))
             throw std::invalid_argument("native melee sequence projection could not bind");
@@ -1851,9 +1916,14 @@ namespace MWMechanics
                 return (after.mStrike && after.mStrike->mAnimationGroup == group)
                     || (after.mReaction && after.mReaction->mAnimationGroup == group)
                     || (after.mPassiveSequence && after.mPassiveSequence->group() == group)
+                    || std::any_of(after.mHeldBlocks.begin(), after.mHeldBlocks.end(),
+                        [&](const auto& held) { return !held.mInactive && Misc::StringUtils::ciEqual(held.mAnimationGroup, group); })
                     || std::any_of(after.mRetiringSequences.begin(), after.mRetiringSequences.end(),
                         [&](const auto& sequence) { return sequence.mAnimationGroup == group; });
             };
+            for (const auto& held : before.mHeldBlocks)
+                if (!held.mInactive && !remains(held.mAnimationGroup))
+                    retiredGroups.push_back({held.mAnimationGroup, 0, first});
             for (const auto& sequence : before.mRetiringSequences)
                 if (!remains(sequence.mAnimationGroup))
                     retiredGroups.push_back({sequence.mAnimationGroup, sequence.mContactId, first});
@@ -1932,8 +2002,11 @@ namespace MWMechanics
                 return;
             }
             if (state && !state->mStrike && (state->mReaction || state->mPassiveSequence || !state->mRetiringSequences.empty()
+                    || std::any_of(state->mHeldBlocks.begin(), state->mHeldBlocks.end(), [](const auto& h) { return !h.mInactive; })
                     || (state->mFirstPerson && (state->mFirstPerson->mReaction
-                        || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty()))))
+                        || state->mFirstPerson->mPassiveSequence || !state->mFirstPerson->mRetiringSequences.empty()
+                        || std::any_of(state->mFirstPerson->mHeldBlocks.begin(), state->mFirstPerson->mHeldBlocks.end(),
+                            [](const auto& h) { return !h.mInactive; })))))
             {
                 if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
                 return;
@@ -2139,6 +2212,8 @@ namespace MWMechanics
         mOblivionFirstPersonPoseSnapshot.reset();
         mOblivionPassivePoseSnapshot.reset();
         mOblivionFirstPersonPassivePoseSnapshot.reset();
+        mOblivionHeldPoseBindings.clear();
+        mOblivionFirstPersonHeldPoseBindings.clear();
         if (mOblivionMeleeProjection) mAnimation->setNativeSequenceLayers({});
         auto* peer = mAnimation->getPlaybackPeer();
         if (peer && mOblivionFirstPersonMeleeProjection) peer->setNativeSequenceLayers({});

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "scope": "Headless native held pose/sequence projection and controller frame routing. World activation/interruption adapters and actual runtime acceptance remain open.",
+  "cases": [
+    {
+      "name": "captured activation and fresh-root reconstruction",
+      "clock": [
+        1,
+        1.25,
+        1.5,
+        1.75,
+        2
+      ],
+      "source_translation": [
+        11,
+        22,
+        33
+      ],
+      "target_translation": [
+        100,
+        200,
+        300
+      ],
+      "expected_x": [
+        11,
+        33.25,
+        55.5,
+        77.75,
+        100
+      ],
+      "expected_y": [
+        22,
+        66.5,
+        111,
+        155.5,
+        200
+      ],
+      "source_scale": 2,
+      "target_scale": 3,
+      "expected_scale": [
+        2,
+        2.25,
+        2.5,
+        2.75,
+        3
+      ],
+      "invariants": [
+        "Pose binding and bone controller callback stable while layers unchanged",
+        "Fresh root reconstructed from stored pose yields the same bone matrix",
+        "Projection allocates no event/contact playback"
+      ]
+    },
+    {
+      "name": "shared peer retirement",
+      "clock": [
+        1,
+        1.25,
+        1.5,
+        1.75
+      ],
+      "new_retirement": [
+        1,
+        1
+      ],
+      "expected_source_and_destination_ease": [
+        1,
+        0.75,
+        0.5,
+        0.25
+      ],
+      "expected_x": 55.5,
+      "invariants": [
+        "Destination sample frozen at0",
+        "Captured source and destination share the new NI3 ease",
+        "Inactive entry releases its pose binding"
+      ]
+    },
+    {
+      "name": "independent cyclic view samples",
+      "body_time": [
+        0.25,
+        1.5,
+        2,
+        0,
+        0.125
+      ],
+      "first_time": [
+        1.75,
+        0.5,
+        0,
+        2,
+        1.875
+      ],
+      "body_translation": "3+4*time",
+      "first_translation": "11+4*time",
+      "invariants": [
+        "Public time query returns each native sample including strict End and wrap",
+        "Shared event tracks remain at0 and emit no additional keys",
+        "Case-insensitive background exclusion prevents duplicate legacy held layer",
+        "Changing sample-time exposure updates query behavior without rebuilding the callback"
+      ]
+    },
+    {
+      "name": "rejection and binding cleanup",
+      "rejected": [
+        "unanchored NI3",
+        "missing cyclic source",
+        "duplicate exposed destination clocks",
+        "exposed clock with follow-animation mode",
+        "noncyclic held metadata",
+        "negative clock"
+      ],
+      "invariants": [
+        "Failed layer admission preserves published native time",
+        "Failed helper preparation preserves pose bindings",
+        "Inactive caches need no live resource and release bindings"
+      ]
+    }
+  ],
+  "native_basis": [
+    "docs/oblivion/M15-HELD-BLOCK-REACTIVATION-VERIFICATION.json",
+    "docs/oblivion/M15-HELD-BLOCK-PEER-RELEASE-VERIFICATION.json"
+  ],
+  "full_M15S4_acceptance": false
+}
