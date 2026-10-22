@@ -31989,3 +31989,127 @@ TEST(OblivionWorldTest, MasterComputedDisarmPublishesFinalWearDropReactionsAndRa
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
     }
 }
+
+TEST(OblivionWorldTest, BrokenIncomingWeaponSkipsMasterRollAndPublishesRecoilWithOneZeroConditionDrop)
+{
+    for (const unsigned priorDraws : {0u, 2u})
+    {
+        SCOPED_TRACE(priorDraws);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+        auto& world = fixture.mWorld;
+        const auto defender = prepareNativeDropContactActors(fixture), attacker = fixture.mActor;
+        auto& service = *world.getOblivionCombatService();
+        const auto attackerKey = attacker.getCellRef().getFormKey(), defenderKey = defender.getCellRef().getFormKey();
+        auto& inventory = attacker.getClass().getInventoryStore(attacker);
+        fixture.mItem = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        installMasterDefenderGear(fixture, defender, 2);
+        defender.getClass().getCreatureStats(defender).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 15, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 100));
+        ASSERT_TRUE(service.beginBlocking(defenderKey));
+        setMasterDispatchChances(world, 0, 100);
+        const auto id = service.beginMeleeStrike(attackerKey, ESM4::MeleeStrikeKind::Left,
+            "onehandattackleft", 1, ESM::FormKey::content("headless.esm", 0x940));
+        ASSERT_TRUE(service.bindMeleePlayback(id, attackerKey));
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        auto wear = MWMechanics::captureOblivionPhysicalConditionChange(attacker, fixture.mItem, 0);
+        wear.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Drop;
+        packet.mConditionChanges.push_back(wear);
+        if (priorDraws) packet.mRandomTransition = service.prepareCombatRandom(priorDraws);
+        const auto before = world.captureOblivionRuntimeState();
+        ASSERT_TRUE(MWMechanics::prepareOblivionDefensiveBlockConsequences(world, attacker, defender, packet));
+        ASSERT_TRUE(packet.mRandomTransition);
+        EXPECT_EQ(packet.mRandomTransition->mDraws, priorDraws + 1);
+        const std::uint32_t expectedState = priorDraws ? 415139642u : 2745024u;
+        EXPECT_EQ(packet.mRandomTransition->mNextState, expectedState);
+        EXPECT_FALSE(packet.mVictimCounterRequested);
+        EXPECT_TRUE(packet.mDisarms.empty()); // The earlier break owns the sole drop.
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        // Owned scene/physics publication verifies the combined consequences.
+        // Automatic family discovery and ordinary dispatcher admission use the
+        // separate normal-input runtime regression.
+        packet.mAttackerReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::Recoil, "handtohandrecoil"};
+        packet.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::BlockHit, "blockhit"};
+        const std::array<MWWorld::EquippedWeaponDrop, 1> drops{{{
+            attacker, fixture.mItem, *fixture.mAnimation, 0.f}}};
+        auto plan = world.prepareOblivionPhysicalContactWithWeaponDrops(id, attacker, defender, packet,
+            *fixture.mObjects, *fixture.mPhysics, drops);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        ASSERT_TRUE(plan->commit());
+        EXPECT_FALSE(plan->commit());
+        EXPECT_EQ(service.getProcessAction(attackerKey), 7);
+        EXPECT_EQ(service.getProcessAction(defenderKey), 6);
+        const auto* melee = service.findMeleeState(attackerKey);
+        ASSERT_TRUE(melee);
+        EXPECT_FALSE(melee->mStrike);
+        ASSERT_TRUE(melee->mReaction);
+        EXPECT_EQ(melee->mReaction->mContactId, id);
+        EXPECT_EQ(melee->mReaction->mAnimationGroup, "handtohandrecoil");
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mCombatRngState, expectedState);
+        EXPECT_EQ(after.mNextDynamicSerial, before.mNextDynamicSerial + 1);
+        const auto reference = world.getWorldModel().getDynamicNativePtr(
+            ESM::FormKey::dynamic("native-reference", before.mNextDynamicSerial));
+        ASSERT_FALSE(reference.isEmpty());
+        EXPECT_EQ(reference.getCellRef().getNativeItemCondition(), 0);
+        EXPECT_EQ(fixture.mPhysics->looseObjectOwners(), std::vector<MWWorld::Ptr>{reference});
+        EXPECT_TRUE(service.isActionConsumed(id));
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, AutomaticRecoilPreparationAdmitsRetainedIncomingBreakForPlayerAndNpc)
+{
+    for (const bool playerAttacker : {false, true})
+    {
+        SCOPED_TRACE(playerAttacker);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = playerAttacker ? fixture.mPlayer : fixture.mAttacker;
+        const auto defender = playerAttacker ? fixture.mAttacker : fixture.mPlayer;
+        const auto attackerKey = playerAttacker ? fixture.mPlayerKey : attacker.getCellRef().getFormKey();
+        const auto defenderKey = playerAttacker ? defender.getCellRef().getFormKey() : fixture.mPlayerKey;
+        // Player and quest NPC weapon breaks retain the stack, so this direct
+        // automatic World path requires no external scene/drop factory.
+        const auto item = installMasterTargetWeapon(fixture.mFixture, attacker, !playerAttacker);
+        installMasterDefenderGear(fixture.mFixture, defender, 2);
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        defender.getClass().getCreatureStats(defender).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 15, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 100));
+        ASSERT_TRUE(service.beginBlocking(defenderKey));
+        setMasterDispatchChances(world, 0, 100);
+        const auto id = service.beginMeleeStrike(attackerKey, ESM4::MeleeStrikeKind::Left,
+            "onehandattackleft", 1, ESM::FormKey::content("headless.esm", 0x940));
+        ASSERT_TRUE(service.bindMeleePlayback(id, attackerKey));
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        auto wear = MWMechanics::captureOblivionPhysicalConditionChange(attacker, item, 0);
+        wear.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        packet.mConditionChanges.push_back(wear);
+        const auto before = fixture.snapshot().serializeBinary();
+        auto plan = world.prepareOblivionPhysicalContact(id, attacker, defender, packet, true, true);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        EXPECT_EQ(plan->randomDraws(), 1u); // Counter miss, broken target skips Master roll.
+        ASSERT_TRUE(plan->commit());
+        EXPECT_FALSE(plan->commit());
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        auto& inventory = attacker.getClass().getInventoryStore(attacker);
+        EXPECT_FALSE(inventory.isEquipped(item));
+        EXPECT_EQ(item.getCellRef().getCount(), 1);
+        EXPECT_EQ(service.combatRandomState(), 2745024u);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        // A rendererless World admits the numerical/equipment consequence,
+        // while real H2H Recoil resource selection remains the runtime gate.
+        const auto* melee = service.findMeleeState(attackerKey);
+        ASSERT_TRUE(melee);
+        EXPECT_FALSE(melee->mReaction);
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+    }
+}

@@ -1,0 +1,548 @@
+{
+  "schema_version": 1,
+  "scope": "Broken incoming weapon admits automatic Recoil, skips Master disarm roll, and publishes one zero-condition NPC drop with interrupted restart",
+  "full_M15S4_acceptance": false,
+  "tested_parent": "28b049e2f517773748ffae8e1c3c064a0b1a531d",
+  "tested_CPP_sha256": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "93e44af16b312b9d4a771ca99fad782eeb0e6d99fbb4701c5d11b17e4adfed29",
+    "apps/openmw/mwworld/worldimp.cpp": "5faff6cd2552299a86226ade6cd2bf3077fec59624f4652afa303e7c62f7be37",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "c01892370a78350c893da3596f7e879fd1c826a0377e966edcf5f437e7848df5"
+  },
+  "checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-normal-02/verification.json",
+      "sha256": "256afdb5f2c9181ead9b905ea5c3da060b275e777edff863609d41bde7a77c90",
+      "bytes": 2145,
+      "source": {
+        "head": "28b049e2f517773748ffae8e1c3c064a0b1a531d",
+        "source_fingerprint": "52465dc19b6876872c33a3029701ee486e7f5c425082556aa3d5f8b9bbd531d2"
+      },
+      "results": {
+        "engine": {
+          "executed": 1842,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "62b659e2e5b4803b14f80c0011042aa1e119902e170bf81c3aa2ef6e34f4b78e",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "5f5f668ca45fd72e1a63608f325a13b765b5769013364a7b95a29324e3ddc9e0",
+          "inventory_sha256": "0f5c69d821ff1349d6ebb81e18b7034bb193ecf46f77fd28854a1c66abc9f661",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-sanitized-02/verification.json",
+      "sha256": "ba8558c1f414cf9bae953e3097c5127f1494024e9f5f021a985fd7facb97f5c1",
+      "bytes": 2237,
+      "source": {
+        "head": "28b049e2f517773748ffae8e1c3c064a0b1a531d",
+        "source_fingerprint": "52465dc19b6876872c33a3029701ee486e7f5c425082556aa3d5f8b9bbd531d2"
+      },
+      "results": {
+        "engine": {
+          "executed": 1842,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "029b79ceef00e30fd109a014be5b2fa9efc33ff874fb4acb09855139930e5615",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "1fe91e2c1c2974a3e4007b09a328fdc6b1bae4c111b9ea2e23810d51d8af583c",
+          "inventory_sha256": "0f5c69d821ff1349d6ebb81e18b7034bb193ecf46f77fd28854a1c66abc9f661",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": [
+    {
+      "name": "native-master-incoming-break-runtime-normal-03",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/runtime-verification.json",
+        "sha256": "c034d46518424c66d9c89fbd68d9e07548e1bcccab8864b8dcb7fea786b0d9f6",
+        "bytes": 1284
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Master shield Counter miss, projected incoming weapon break skips disarm roll and publishes one zero-condition drop with H2H Recoil",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1382378,
+            "binary_sha256": "b3be9ccc7c586d72ca92bd6ce2bac0a4fe94864599fe1527ff5ef428df2c85a1",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": true,
+                "rng": 4,
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1136761003,
+                "loose_count": 1
+              }
+            ]
+          },
+          {
+            "phase": "second",
+            "pid": 1382467,
+            "binary_sha256": "b3be9ccc7c586d72ca92bd6ce2bac0a4fe94864599fe1527ff5ef428df2c85a1",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1136761003,
+                "loose_count": 1
+              }
+            ]
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Single target without spare. Health bounded, no new exact damage oracle. No Player/Creature drop, autonomous replacement/pickup AI, settled body, original skin or uninterrupted trajectory parity. No PCM correlation."
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "b3be9ccc7c586d72ca92bd6ce2bac0a4fe94864599fe1527ff5ef428df2c85a1"
+      }
+    },
+    {
+      "name": "native-master-incoming-break-runtime-sanitized-03",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/runtime-verification.json",
+        "sha256": "b0670e18d3d00e2eee5399b30508ae606fa8686509ea9641c033ea02dbfbf23b",
+        "bytes": 1284
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Master shield Counter miss, projected incoming weapon break skips disarm roll and publishes one zero-condition drop with H2H Recoil",
+        "phases": [
+          {
+            "phase": "first",
+            "pid": 1382552,
+            "binary_sha256": "36afad5ddca6d798a96fa882328ef67192aefbc93110bb44b48b4eaa2a862b18",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": true,
+                "rng": 4,
+                "loose_count": 0
+              },
+              {
+                "sequence": "4",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1136761003,
+                "loose_count": 1
+              }
+            ]
+          },
+          {
+            "phase": "second",
+            "pid": 1382725,
+            "binary_sha256": "36afad5ddca6d798a96fa882328ef67192aefbc93110bb44b48b4eaa2a862b18",
+            "saves": [
+              {
+                "sequence": "3",
+                "wire_exact": true,
+                "precontact": false,
+                "rng": 1136761003,
+                "loose_count": 1
+              }
+            ]
+          }
+        ],
+        "full_M15S4_acceptance": false,
+        "limits": "Single target without spare. Health bounded, no new exact damage oracle. No Player/Creature drop, autonomous replacement/pickup AI, settled body, original skin or uninterrupted trajectory parity. No PCM correlation."
+      },
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "36afad5ddca6d798a96fa882328ef67192aefbc93110bb44b48b4eaa2a862b18"
+      }
+    }
+  ],
+  "artifacts": {
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-normal-02/verification.json": {
+      "sha256": "256afdb5f2c9181ead9b905ea5c3da060b275e777edff863609d41bde7a77c90",
+      "bytes": 2145
+    },
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-sanitized-02/verification.json": {
+      "sha256": "ba8558c1f414cf9bae953e3097c5127f1494024e9f5f021a985fd7facb97f5c1",
+      "bytes": 2237
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/runtime-verification.json": {
+      "sha256": "c034d46518424c66d9c89fbd68d9e07548e1bcccab8864b8dcb7fea786b0d9f6",
+      "bytes": 1284
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/launcher.py": {
+      "sha256": "95aa0afcbb67d0748668793f04fec16a8bbce2a721a26c3ccc80b3dea0e71cb7",
+      "bytes": 2014
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/monitor.py": {
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/audit-extra-content.py": {
+      "sha256": "b05ee673a5292437adbc02bf9217c7c29b153bd16e42e1fc3bb16a24673a1ce7",
+      "bytes": 4495
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/verify.py": {
+      "sha256": "ac22c6b2061c833561577485ab971f316c63d682b52004ae401e72204d9f07eb",
+      "bytes": 7633
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/verifier-01.log": {
+      "sha256": "c034d46518424c66d9c89fbd68d9e07548e1bcccab8864b8dcb7fea786b0d9f6",
+      "bytes": 1284
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/reference-audit.log": {
+      "sha256": "ee757c6785c5673b7eeb6c42281cb3ba4596f5891917ae67cf250cead5c41809",
+      "bytes": 3721
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/preregistration.json": {
+      "sha256": "82f7a11142b4ea0154e394d461a7e060aa415dd0a8d8464048145eab72562123",
+      "bytes": 2583
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/binary-pin.json": {
+      "sha256": "b4c080f0d91ca19663e217b5b127f8973c972a2a181f73a21da3243f83831c12",
+      "bytes": 154
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/manifest.json": {
+      "sha256": "f178fe32eaf823fcac05c100e7fec011f32b7dc01c3e5f2cd093868faa680b55",
+      "bytes": 21905
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/continuation.json": {
+      "sha256": "9668ff2ca5178a0d9f475fb669798c0c4b27a071365f9c7795e569dc0acb2241",
+      "bytes": 20361
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/staged-input.omwsave": {
+      "sha256": "787a432401cfd93823ac74304fc6d684b91b716bccc085b46ed68c595ffd8150",
+      "bytes": 10340832
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/extra-content-reference-audit.json": {
+      "sha256": "7beaff779eb75d8eeb8176b4c5aca64ff6d4710879baae99e88b84c822f8fc0b",
+      "bytes": 4697
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/launcher.json": {
+      "sha256": "584825d96e974244d1c61458ee88bc39838e7f2f4c377ad9433d01fa7de799e1",
+      "bytes": 984
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/scenario.json": {
+      "sha256": "73b1169fee4014e51a3a79fe7d0f226390f694488a1ded39c5b6ff30579dcf58",
+      "bytes": 7628
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/process-epoch.json": {
+      "sha256": "dd3d1504fcbc2c71e9ae7bc6b9a201de02f87469d4a70639fb73dd6a39d43c57",
+      "bytes": 700
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/actual-engine-environment.json": {
+      "sha256": "24291058b4f05466c8a95e93178d241d27f8b54acb4d1ba3d3a9100677e2ecc2",
+      "bytes": 328
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/events.jsonl": {
+      "sha256": "2b0d6f1d1792927bcdad4a8fc6b851390a5fcc84f0f99270f87b6aff0006c844",
+      "bytes": 2348
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/snapshot-index.json": {
+      "sha256": "a8c2edaec2858a341a820e9c01083a50fa46f07ea7328975bfa18755e62aadbb",
+      "bytes": 2226
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/process.log": {
+      "sha256": "af1b0646dc9878704123f6117d69144ae3749d3f44a7fb587bcb08e909ef1f29",
+      "bytes": 856031
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/master-disarm-first.png": {
+      "sha256": "a8d1d98d8277b9431178cc479bb564e632f0beb1bd8662c9ba0621c077154d75",
+      "bytes": 1179449
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/snapshots/save-3.omwsave": {
+      "sha256": "46b807914ee6829e0845c9b7b193ec73a70836f949b2dd76e234ca0fbe8711f3",
+      "bytes": 10866855
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/live-1-3.json": {
+      "sha256": "977ab75f340661bc17a96dae916684212eb478131ac9feb0a6f0c99a499cd4fb",
+      "bytes": 25893333
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/snapshots/save-4.omwsave": {
+      "sha256": "38c657780df0e610cfd65bc531acda1c9cd1c96c649f5b4fa1ecc6a93c772f75",
+      "bytes": 11022697
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/first/live-1-4.json": {
+      "sha256": "7509106276c714e0176920f7a6a7e5adc2bf0d22e3ae9d5133294bf5e4afbee7",
+      "bytes": 26254605
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/launcher.json": {
+      "sha256": "191437e2f640d2b1142833cb38d51aea10f6d28093791327c7156bafb3f1f77c",
+      "bytes": 989
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/scenario.json": {
+      "sha256": "bc7f393180c395aeeb4cf75b145e35bf9496e4f7e9ed4b31698baeb736a331bc",
+      "bytes": 4523
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/process-epoch.json": {
+      "sha256": "3df74ad5adcf75b55e390d2007955a03fb87df26adc7a4ab28a4339ac16e54cc",
+      "bytes": 702
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/actual-engine-environment.json": {
+      "sha256": "d12f27816373873e394154c919a93de20ae2e572b831c37aa166b0c7387dbab1",
+      "bytes": 329
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/events.jsonl": {
+      "sha256": "c03befca4cfb8ef86863af99b1bb5bc9e07743e70c38d79afcfd50ee3975fc35",
+      "bytes": 1659
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/snapshot-index.json": {
+      "sha256": "8a8571d9ad4582b9b3af90485be72ffab5cdd15365e47bf6cd6943e382b53e6f",
+      "bytes": 1107
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/process.log": {
+      "sha256": "0a6eec9884f23e926c97d328f292fdeb5adc2555f78dbd663c7bc29d31b2b985",
+      "bytes": 476336
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/master-disarm-restart.png": {
+      "sha256": "c3c6406aec1fc4b1fa0652c9151fd9c0684772c2b606863f014301a819c14f0a",
+      "bytes": 1190849
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/snapshots/save-3.omwsave": {
+      "sha256": "6b5a4bc403cfe63dd614514df7317029ce5656734333a88366bc647eeae3a6e2",
+      "bytes": 11076869
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-03/second/live-2-3.json": {
+      "sha256": "a6317bd3cc216472f0fef2ffc12cf3be02d02f243856378fde0522b004081bd1",
+      "bytes": 26361252
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/runtime-verification.json": {
+      "sha256": "b0670e18d3d00e2eee5399b30508ae606fa8686509ea9641c033ea02dbfbf23b",
+      "bytes": 1284
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/launcher.py": {
+      "sha256": "d1efb0e257c9ddff05d53ed77100ebf8bb4d5d4a9158e1a5948cac6531189e32",
+      "bytes": 2017
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/monitor.py": {
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/audit-extra-content.py": {
+      "sha256": "b05ee673a5292437adbc02bf9217c7c29b153bd16e42e1fc3bb16a24673a1ce7",
+      "bytes": 4495
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/verify.py": {
+      "sha256": "ac22c6b2061c833561577485ab971f316c63d682b52004ae401e72204d9f07eb",
+      "bytes": 7633
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/verifier-01.log": {
+      "sha256": "b0670e18d3d00e2eee5399b30508ae606fa8686509ea9641c033ea02dbfbf23b",
+      "bytes": 1284
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/reference-audit.log": {
+      "sha256": "eeb1c126dc040d0c3e4ac8f1011b75149eee1de9d0fca3ed4dec43b8bb968e1a",
+      "bytes": 867
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/preregistration.json": {
+      "sha256": "82f7a11142b4ea0154e394d461a7e060aa415dd0a8d8464048145eab72562123",
+      "bytes": 2583
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/binary-pin.json": {
+      "sha256": "af80bf1ff032c34fcf0150b10ca8a0c83eb1c24c8e4fc39b122b60eff0b95d81",
+      "bytes": 167
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/manifest.json": {
+      "sha256": "ae72b27e346aeeed8a51fab0a594236947072374504d2045fb2555cf76476a9e",
+      "bytes": 22073
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/continuation.json": {
+      "sha256": "75f58e8692adeb1f9d1e52bd9d85e13dc6e4ae99422c63c7031067082dc489f7",
+      "bytes": 20529
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/staged-input.omwsave": {
+      "sha256": "787a432401cfd93823ac74304fc6d684b91b716bccc085b46ed68c595ffd8150",
+      "bytes": 10340832
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/extra-content-reference-audit.json": {
+      "sha256": "67e6cc0d8f375976e6b4ca35aed6ff8c441a8e4c69861b5ae7b4be43e8329f3e",
+      "bytes": 927
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/launcher.json": {
+      "sha256": "fdb938f52c1a06a578f16cacd8c875586705349f285fef81751c3a15c648e807",
+      "bytes": 1003
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/scenario.json": {
+      "sha256": "a1ee26f149a9a284d2b5dd65c5879f30a9783a533da63e111afb12ecaa7ef9f4",
+      "bytes": 7723
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/process-epoch.json": {
+      "sha256": "1becefd205e0086592969b8f898b69d4dd663fe68ed5201b18ef142faebebb64",
+      "bytes": 719
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/actual-engine-environment.json": {
+      "sha256": "34c98010c594a05ced1d75991d612fd593b4bf311070c0b330cf46d8f8d1414d",
+      "bytes": 471
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/events.jsonl": {
+      "sha256": "ee4240c7ad34391cc80f5d5e1c53aa2071196880e3df7d9c822234cdd7ccfd0a",
+      "bytes": 2372
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/snapshot-index.json": {
+      "sha256": "5b3312eda7a0b9b9a5afff3d48bbef6ad06c516adf50c8aa968b6f58a83560bf",
+      "bytes": 2244
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/process.log": {
+      "sha256": "1a2a9ed99fba884427ab49f821ee6d3c87e05a48074947744221821ef319ba12",
+      "bytes": 652344
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/master-disarm-first.png": {
+      "sha256": "194c27210f44a90751ac753e9f21f71b260a85cf14fc87d468ffd276272d0827",
+      "bytes": 1109590
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/snapshots/save-3.omwsave": {
+      "sha256": "7f3bac0c9e085150ddd848bfd679c8d1eb02909430b8b10d72c03a49a2ee4220",
+      "bytes": 10456626
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/live-1-3.json": {
+      "sha256": "5e171870f45cb581fc3e6dbe0c3eba64a58f919e7a7570da34b9ad52af8f2969",
+      "bytes": 24888741
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/snapshots/save-4.omwsave": {
+      "sha256": "c15b94d9445d4aa83016b399bde137ed9960840b45dd5330f15971b01d4fd72a",
+      "bytes": 10601489
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/first/live-1-4.json": {
+      "sha256": "557d03eefaf89eb9c9895a4951389f1c7c2fa6a56240e8394bad51d43fca5f59",
+      "bytes": 25242831
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/launcher.json": {
+      "sha256": "c25d4d7a1088157a93f4677cb6802832144fafe8d5ca1fbdfd9121e8e5d9098d",
+      "bytes": 1008
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/scenario.json": {
+      "sha256": "3b7775fd723e1f7303896560c66918d1f683dd1fceb9c5a5c0d7acd8ac80af9b",
+      "bytes": 4601
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/process-epoch.json": {
+      "sha256": "93a2abe94dd5eea4cc8d0af4b83d3d6aa022dd58c3d23451e261bf442e682178",
+      "bytes": 721
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/actual-engine-environment.json": {
+      "sha256": "31c249864d07a14fe243cb88b87eabfa741866e8b6d673b639feaceeb8e5d46f",
+      "bytes": 472
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/events.jsonl": {
+      "sha256": "40c6240f5752b334baa5cb2497d74e4b4f6d3d5bdcb2284ac54e4388bfd0d459",
+      "bytes": 1677
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/snapshot-index.json": {
+      "sha256": "44c2dccfc3ffa22796616b5d3aef9be5e5eda9be6832fd4428a9611c8ecb8ea5",
+      "bytes": 1116
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/process.log": {
+      "sha256": "0b20230f8b06af83d680b9d527735468138a9747121f5eea77293882a3da1f3b",
+      "bytes": 474127
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/master-disarm-restart.png": {
+      "sha256": "168fde49bb7ace7c380a0752c1eb3a3a81b04b5a249b7c82f25f03e8e4a04b12",
+      "bytes": 1177128
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/snapshots/save-3.omwsave": {
+      "sha256": "c4e89cce5a2ff995385edddb5b1534512553151b388ac64b180c1c032685abe3",
+      "bytes": 10612396
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-sanitized-03/second/live-2-3.json": {
+      "sha256": "10f3f19936f1b6da8b731dfa9f191b92417a7385540ddf673ff69e6c28d42bd0",
+      "bytes": 25239318
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/input-recipe.json": {
+      "sha256": "eb5ce61a18360f97444650c2f502a63e2040f84a7b1f701e65465310a019a621",
+      "bytes": 2114
+    },
+    "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/weapon-record-audit.json": {
+      "sha256": "3f44591db2de10bbb7581d67acbc382becb8f6e4202dfeba1b290be2eb703155",
+      "bytes": 324
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-01/preregistration.json": {
+      "sha256": "1dcfc820861e4e75ab8bf3162b8c7a8551504f97133fd5a88e98938f26432c22",
+      "bytes": 1702
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-01/first/scenario.json": {
+      "sha256": "af48b9762146a518a907a6fa95f143348db890da9973a495a4109830cd95680c",
+      "bytes": 7681
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-01/first/launcher.json": {
+      "sha256": "e98ddf46df5d35930325fdf31ef0a3fa09621ae8b773a938fcef9f8b498b5a57",
+      "bytes": 984
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-02/preregistration.json": {
+      "sha256": "e0a5909d99c4ddc86a9b423cff6a81cc2775e70eaac12060f1d758c5c6568b9e",
+      "bytes": 2277
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-02/early-stop-diagnosis.json": {
+      "sha256": "74a40185e1be64e943e3da39211213da1f4db01d8c205f7b57185841990f06e7",
+      "bytes": 208
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-02/first/scenario.json": {
+      "sha256": "2b8eb22b929a1d9cbe4066b12261d711dd9caad7a0e1a173fb75c195daa03b60",
+      "bytes": 6054
+    },
+    "build/oblivion-compat/m15/S4/native-master-incoming-break-runtime-normal-02/first/launcher.json": {
+      "sha256": "519b5d13724a6847359c7ae0f14b23bf2d3bdec38c2b44721f75b40495c26de4",
+      "bytes": 984
+    },
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-normal-01/verification.json": {
+      "sha256": "aa16fbe21db3bb791cb8314fbdcee98e3f514e77c4ed2969c2cc6a72e34aada5",
+      "bytes": 2147
+    },
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-sanitized-01/verification.json": {
+      "sha256": "af03471e25aff571b335d8dd514fb60afc48d0ab75a8deec974da4e46ebcc202",
+      "bytes": 1320
+    },
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-sanitized-01/interrupted-known-incomplete-version.json": {
+      "sha256": "6b283c8fd407dd9fb231350dc48b1bd3a5b1b9266d0aa868dcdda7f35fec45da",
+      "bytes": 336
+    },
+    "build/oblivion-compat/m15/S4/native-broken-incoming-recoil-sanitized-01/termination.json": {
+      "sha256": "77b2d74ad8f5b0888b4f71e0edb7421b866e50789ffcf3d744349f8b17ad9b26",
+      "bytes": 289
+    }
+  },
+  "tested_CPP_fingerprint": "52465dc19b6876872c33a3029701ee486e7f5c425082556aa3d5f8b9bbd531d2",
+  "independent_references": [
+    "M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json",
+    "M15-NPC-BLOCKED-RECOIL-VERIFICATION.json",
+    "M15-NATIVE-LOOSE-RESTART-PROBE.json"
+  ],
+  "failures_retained": [
+    "Runtime normal01 on prior Master integration produces five draws and a zero-condition NPC break drop, but suppresses Recoil at ordinary dispatch. Its provisional private recipe incorrectly expected retention/no drop; original break dispatch controls correction.",
+    "Check normal01 passes1841 tests after first dispatcher guard removal. Runtime normal02 then exposes remaining World preparation guard: no contact deltas commit. Direct automatic World regression added.",
+    "Instrumented check01 intentionally stopped for the known incomplete version. SIGTERM did not stop owned openmw-tests, so SIGKILL stopped it; helper passedfalse, child-9. This is neither a sanitizer pass nor an actual test-failure diagnosis.",
+    "Fresh normal/sanitized checks02 include both guard removals and both new tests; full1842 inventories pass. Fresh runtime03 uses the corrected native NPC drop policy and expected H2H Recoil."
+  ],
+  "implementation": "Remove redundant incoming-break suppression at ordinary dispatch and World reaction preparation. Existing projected Right-slot family discovery admits unarmed Recoil, existing owned break factory publishes the sole zero-condition drop. Counter-first target projection skips the extra Master roll. No schema/default change.",
+  "health_scope": "One positive debit<=1.1 and exact persisted Player Health Damage across restart; no new exact real-content damage-oracle acceptance.",
+  "limits": [
+    "StopCombat-interrupted NPC Recoil, not uninterrupted natural recovery",
+    "Player/quest NPC retention has automatic World admission coverage, not a new paired Player broken-weapon runtime course",
+    "No Creature defensive admission, Player selected disarm or spare replacement extension",
+    "No original skin/update parity, settled-body or matched trajectory, PCM mixture or full input/view/FPS coverage",
+    "Default blend setting remains compiled0.1; full INI adaptation and complete M15S4 remain open"
+  ],
+  "runtime_visual_review": "Four screenshots reviewed. Normal post-contact and both restart views show NPC fists and a separate shortsword near the actor/floor; sanitizer post-contact Player shield occludes the NPC body. Inventory, sole native drop/body, live/save and load checks establish semantics. No original attachment/skin-update or settled/matched-trajectory claim.",
+  "passed": true
+}

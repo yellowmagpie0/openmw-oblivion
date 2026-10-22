@@ -11352,3 +11352,34 @@ drop policy. The next chunk must fix and verify that dispatcher path.
 pins the two accepted courses, full suites, source and 92 evidence artifacts.
 Editable scenarios and `m15_master_block_disarm_cases.json` retain inputs,
 expected values and boundaries. **M15S4 remains incomplete.**
+
+## Incoming break and Recoil admission
+
+The ordinary dispatcher and World preparation now both admit Recoil after the
+incoming weapon breaks. Resource discovery uses the projected empty Right slot.
+Counter-first selection sees no remaining weapon and consumes no additional
+Master disarm roll. The NPC break policy creates one zero-condition drop.
+
+Two new tests cover owned break/drop/Recoil publication with prior RNG and
+binary restore, plus automatic World admission for retained Player and quest
+NPC breaks. The normal and ASan/UBSan full engine suites each pass 1,842 tests
+in 125 suites with no failures or skips. Automatic Player admission is not a
+new paired Player broken-weapon rendering course. The current scope also leaves
+uninterrupted natural Recoil and the complete S4 matrix open.
+
+Normal and instrumented runtime03 each complete two processes and three exact
+live/save wire pairs. The contact logs action 7, H2H Recoil, condition 0,
+block fraction .75, block Fatigue 0 and five random draws. The save contains
+one zero-condition NPC shortsword drop and final RNG 1136761003. Fresh load
+preserves equipment, native body state, consumed contact and RNG; the second
+process emits no repeated contact. Four screenshots were reviewed, with the
+instrumented post-contact Player shield occluding the NPC body. The inventory,
+sole native drop/body and exact persistence checks establish these semantics;
+original attachment/skin update and matched/settled trajectory parity are not
+claimed. Player Health remains a bounded single debit with exact persisted
+Damage, not a new numeric damage oracle. StopCombat interrupts Recoil.
+
+[M15-BROKEN-INCOMING-RECOIL-VERIFICATION.json](M15-BROKEN-INCOMING-RECOIL-VERIFICATION.json)
+pins the tested source, full inventories and 85 evidence artifacts. Editable
+`m15_broken_incoming_recoil_cases.json` and the incoming-break scenarios retain
+normal-input expectations. **Full M15S4 remains incomplete.**

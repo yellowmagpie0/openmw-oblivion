@@ -805,10 +805,10 @@
       ],
       "open_questions": [
         "Player target drop policy and spare weapon replacement remain explicitly guarded",
-        "Uninterrupted post-disarm reaction, full input/view/FPS and recovery/restart matrices remain open",
-        "Ordinary attacker weapon-break Recoil dispatch remains guarded despite projected World resource support"
+        "Uninterrupted post-disarm reaction, full input/view/FPS and recovery/restart matrices remain open"
       ],
-      "evidence": "M15-MASTER-BLOCK-DISARM-VERIFICATION.json"
+      "evidence": "M15-MASTER-BLOCK-DISARM-VERIFICATION.json",
+      "break_followup": "M15-BROKEN-INCOMING-RECOIL-VERIFICATION.json: both dispatch guards removed; NPC zero-condition drop/H2H Recoil/skip-roll normal and sanitized restart accepted within stated bounds."
     },
     {
       "id": "M15-MASTERY-MARKSMAN-01",

@@ -709,16 +709,12 @@ namespace MWMechanics
         }
         const bool blockHit = blockAccepted && !contact->isEmpty()
             && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4);
-        // The verified nonprojectile, positive-absorption branch requests
-        // Recoil on an intact Player or NPC attacker too. Projected broken
-        // equipment and zero-absorption unarmed reactions
-        // need their separate resource/ownership paths.
+        // Original600528..60056A requests nonprojectile Recoil after a
+        // Counter miss even when earlier wear removed the incoming weapon.
+        // Resource discovery uses the projected empty Right slot in that case.
+        // Zero-absorption unarmed reactions retain their separate admission.
         const bool attackerRecoil = blockHit && result.mBlockAbsorbedFraction > 0
-            && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4)
-            && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
-                return change.mOwner == attacker
-                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
-            });
+            && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4);
         auto prepared = nativeWorld->prepareOblivionPhysicalContact(
             actionId, attacker, *contact, deltas, blockHit, attackerRecoil);
         if (!prepared || !prepared->commit())

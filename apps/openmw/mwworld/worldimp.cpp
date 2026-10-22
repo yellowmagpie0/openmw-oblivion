@@ -3534,11 +3534,8 @@ namespace MWWorld
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
             return nullptr;
-        if (attackerRecoil && (!blockHit || (!player && attacker.getType() != ESM::REC_NPC_4)
-                || std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
-                    return change.mOwner == attacker
-                        && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
-                }))) return nullptr;
+        if (attackerRecoil && (!blockHit || (!player && attacker.getType() != ESM::REC_NPC_4)))
+            return nullptr;
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};

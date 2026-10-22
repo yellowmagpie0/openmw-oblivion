@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "scope": "Positive-absorption block requests Recoil after incoming weapon break; native projected empty Right resource family, Master skip-roll, one zero-condition NPC break drop and StopCombat-interrupted restart",
+  "full_M15S4_acceptance": false,
+  "implementation_parent": "28b049e2f5",
+  "first": "oblivion_m15_master_incoming_break.json",
+  "continuation": "oblivion_m15_master_incoming_break_continuation.json",
+  "input": {
+    "path": "build/oblivion-compat/m15/S4/native-master-block-runtime-inputs-02/master-incoming-break.omwsave",
+    "sha256": "787a432401cfd93823ac74304fc6d684b91b716bccc085b46ed68c595ffd8150",
+    "mutation": "Only combat RNG62->4 from preserved input01",
+    "expected_contact_draws": 5,
+    "expected_final_rng": 1136761003
+  },
+  "independent_references": [
+    "M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json",
+    "M15-NATIVE-RULE-PROVENANCE.md: retained melee break consequence",
+    "M15-NPC-BLOCKED-RECOIL-VERIFICATION.json"
+  ],
+  "expected": {
+    "contact_id": 2,
+    "attacker_action_at_contact": 7,
+    "victim_action_at_contact": 6,
+    "block_fraction": 0.75,
+    "block_fatigue": 0,
+    "weapon_condition": 0,
+    "armor_condition_writes": 0,
+    "source_weapon_retained_count": 0,
+    "source_weapon_drop_count": 1,
+    "disarm_drop_count": 0,
+    "drop_reference": "dynamic:native-reference:0000000000000001",
+    "next_dynamic_serial": 2,
+    "physical_action_next": 3,
+    "pending": [],
+    "combat_rng_seed": 4,
+    "armor_selection_draws": 4,
+    "Counter_percentile": 45,
+    "Counter_threshold": 25,
+    "Master_disarm_draws": 0,
+    "recoil_variant_draws": 0,
+    "total_contact_draws": 5,
+    "final_rng": 1136761003,
+    "recoil_group": "handtohandrecoil",
+    "weapon": "content:oblivion.esm:090615",
+    "model": "meshes/weapons/iron/shortsword.nif",
+    "asset_hash": "841da9f6ac9673af0a277f0559baa9e8",
+    "body_record": 7,
+    "node_record": 20,
+    "wire_pairs_per_course": 3,
+    "contacts_per_epoch": [
+      1,
+      0
+    ]
+  },
+  "unit_coverage": [
+    "Owned NPC zero-condition drop plus Recoil, shield Master Counter miss and no duplicate disarm roll/drop, with zero/two prior draws and binary restore",
+    "Direct automatic World preparation with both retained Player and quest NPC break policies, atomic preparation/publication and one Counter draw; rendererless resource absence is explicit"
+  ],
+  "health_scope": "This new course constrains one positive Player health debit<=1.1 and exact retained Damage across restart, not a new numerical damage oracle. Other raw channels exact except declared NPC attack Fatigue/regeneration.",
+  "interruption": "Fixture GameMode calls StopCombat on spent attack Fatigue, cancelActorActions clears Recoil; no natural recovery event required or claimed.",
+  "limits": [
+    "Real runtime is NPC break against Player Master shield, keyboard first-person and existing deterministic stationary style. Full Player/Creature, input/view/FPS and interruption matrix remains open.",
+    "Retained Player and quest NPC cases prove automatic World admission; actual paired Player broken-weapon Recoil rendering is not a new runtime claim.",
+    "No uninterrupted natural Recoil recovery, original skin/update parity, settled-body or matched trajectory acceptance.",
+    "No new exact numeric damage oracle or PCM mixture claim.",
+    "No new content-authoring support or TES4 MCP use."
+  ],
+  "input_policy": "Unchanged authored schema61 input: Player Block base/raw/facade100, equipped Iron Shield100 and sword55.875; NPC incoming sword0.01f; combat seed4. No contacts, actions, poses, drops or outcomes injected."
+}

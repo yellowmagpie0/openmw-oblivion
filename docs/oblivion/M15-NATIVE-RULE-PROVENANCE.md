@@ -16856,3 +16856,46 @@ reveals ordinary dispatch still suppressing attacker Recoil after breakage;
 its provisional retention expectation conflicts with the established native
 NPC zero-condition drop policy. Those remain a subsequent dispatcher/runtime
 chunk. The public verification receipt pins accepted evidence and failures.
+
+### Incoming weapon break followed by blocked-attacker Recoil
+
+Two admission guards suppressed Recoil when contact wear removed the attacking
+weapon: the ordinary dispatcher omitted the request, and World preparation
+rejected that combination. Both now admit the existing projected empty Right
+slot path. The original blocked caller requests nonprojectile Recoil after a
+Counter miss regardless of the earlier break. A missing projected weapon skips
+the Master disarm roll; the original ready nonquest NPC break policy owns the
+single zero-condition drop.
+
+The new owned scene/physics test combines that break drop, Master Counter miss
+and H2H Recoil with zero or two prior draws, then checks atomic publication and
+binary restore. A second test exercises the automatic World entrypoint for
+retained Player and quest NPC weapons, including unchanged preparation and one
+Counter draw. Its rendererless resource absence is explicit; actual discovery
+is verified separately through the normal-input course.
+
+Full normal and ASan/UBSan inventories pass 1,842 tests in 125 suites, without
+failures or skips. Both identify tested parent
+28b049e2f517773748ffae8e1c3c064a0b1a531d and source fingerprint
+52465dc19b6876872c33a3029701ee486e7f5c425082556aa3d5f8b9bbd531d2.
+Leak checking is disabled. The first dispatcher-only normal build passed 1,841
+cases, but its runtime exposed the remaining World guard before any contact
+committed. Its instrumented run was intentionally stopped, not passed; all
+failures and the explicit interruption reason remain in their original paths.
+
+Normal and instrumented runtime03 each complete two processes and three exact
+live/save wire pairs. The contact logs action 7, H2H Recoil, condition 0,
+block fraction .75, block Fatigue 0 and five random draws. The save contains
+one zero-condition NPC shortsword drop and final RNG 1136761003. Fresh load
+preserves equipment, native body state, consumed contact and RNG; the second
+process emits no repeated contact. Four screenshots were reviewed, with the
+instrumented post-contact Player shield occluding the NPC body. The inventory,
+sole native drop/body and exact persistence checks establish these semantics;
+original attachment/skin update and matched/settled trajectory parity are not
+claimed. Player Health remains a bounded single debit with exact persisted
+Damage, not a new numeric damage oracle. StopCombat interrupts Recoil.
+
+[M15-BROKEN-INCOMING-RECOIL-VERIFICATION.json](M15-BROKEN-INCOMING-RECOIL-VERIFICATION.json)
+pins the tested source, full inventories and 85 evidence artifacts. Editable
+`m15_broken_incoming_recoil_cases.json` and the incoming-break scenarios retain
+normal-input expectations. **Full M15S4 remains incomplete.**
