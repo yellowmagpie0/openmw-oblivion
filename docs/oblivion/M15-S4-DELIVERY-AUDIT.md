@@ -10437,3 +10437,38 @@ restart inventories match. This diagnostic issue remains to fix. NPC held
 BlockIdle also rebinds at Counter recovery; original slot1 cache/clock
 continuity remains open. Exact checks, source/data/epoch/save hashes, retained
 failures and bounds are in M15-EXPERT-COUNTER-VERIFICATION.json. S4 stays open.
+
+
+## Lossless runtime diagnostic JSON checkpoint
+
+Canonical JSON now retains integer/double variant tags and signed zero for
+runtime/script values, plus negative position/rotation zeros. This changes no
+binary schema or gameplay. Three component cases exercise these distinctions.
+Both final checks pass: **2,992 components /280 suites**, **845 ESM4 sanitizer
+cases /64 suites**, and **1,810 engine cases /125 suites** in each build, with
+exact inventories and no failures/skips. Source parent is
+`dfad5b3b5df94f2ccaa5add9300b6f76e8e688cb`, dirty fingerprint
+`4f2906f6e31f85282e4de2f0aed5c541caf37811c519909a2329ece8b619ed75`.
+No sanitizer diagnostics were observed; leak checks were disabled.
+
+The normal three-process course passes six exact binary/live T4ST payload
+comparisons, including real pending and consumed Counter saves loaded into
+fresh processes without attack input. Final combat core and all 2,348 nonempty
+reference inventories agree. The corresponding sanitized scenarios also finish
+and all six binary/live payloads agree exactly. Its windup continuation matches
+all 2,251 inventories, but the consumed-contact continuation has six additional
+inventories from cell `content:oblivion.esm:02c1b3` and fails full inventory-set
+acceptance. Existing inventories, Player inventory and combat core match.
+This failure is retained rather than excluded or normalized. Materialized-cell
+capture and lazy reference discovery require investigation. The sanitized root's
+older wire-verification.json covers only its first epoch; the failed full-course
+wire-diagnostic-verification.json is authoritative for the broader comparison.
+All ten final captures were directly inspected. The course remains first-person,
+keyboard, configured 10 FPS, software-rendered, sound disabled.
+
+Editable manifests include the consumed-contact and sanitizer continuations.
+Exact source/build/epoch/save/dump/tool hashes, retained intermediate failures,
+and bounds are in `M15-STATE-JSON-FIDELITY-VERIFICATION.json`. The earlier
+Expert checkpoint's diagnostic failure is fixed by this new checkpoint; its
+historical report is unchanged. Native held-slot continuity and all other
+listed S4 gaps remain open. Full M15S4 is not accepted.

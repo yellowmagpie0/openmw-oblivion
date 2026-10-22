@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "scope": "Normal-input Expert H2H NPC Counter followed by paired Player Stagger, with actual windup and consumed-contact fresh-process continuations. Full M15S4 remains incomplete.",
+  "input_recipe": "m15_expert_counter_input.json",
+  "normal_manifests": [
+    "oblivion_m15_expert_counter.json",
+    "oblivion_m15_expert_counter_continuation.json",
+    "oblivion_m15_expert_counter_no_replay.json"
+  ],
+  "sanitized_manifests": [
+    "oblivion_m15_expert_counter_sanitized.json",
+    "oblivion_m15_expert_counter_sanitized_continuation.json",
+    "oblivion_m15_expert_counter_sanitized_no_replay.json"
+  ],
+  "configuration": "First-person keyboard SDL input; configured 10 FPS offscreen software renderer, sound disabled. Actual measured FPS matrix/audio/gamepad are not covered.",
+  "restart_selection": [
+    "First actual save with NPC Counter3 kind7 pending, ledger next4/pending3, Player contact2 already consumed.",
+    "Second actual save after Counter3 is committed and paired Stagger3 active, ledger next4/pending empty."
+  ],
+  "required_checks": [
+    "Retain each real binary save before the next save overwrites it, plus exact matching live dump and actual process epoch/binary hash.",
+    "First process: exactly Player contact2 and Counter contact3. Windup continuation: only Counter3. Consumed continuation: zero contacts/resource selections.",
+    "Every live JSON reconstructs the original T4ST binary payload byte-for-byte, without numeric/type/zero-sign normalization.",
+    "All9 actor states, bases/life, ledger/owners/RNG and every nonempty reference inventory equal after recovery. Inventory identity sets must also match; added inventories fail.",
+    "No active strike/reaction/passive/retiring sequence remains in either Player view or NPC.",
+    "Inspect captures and sanitizer environment/diagnostics. Leak checks disabled."
+  ],
+  "regression_values": {
+    "player_attack_fatigue": 7,
+    "npc_health_damage": 1.3312499523162842,
+    "npc_fatigue_damage": 1.6031250953674316,
+    "counter_damage": 0,
+    "counter_attack_fatigue": 0,
+    "rng": 2006221698,
+    "final_ledger": {
+      "next": 4,
+      "pending": []
+    }
+  },
+  "value_provenance": "Incoming ordinary-hit values are fork regression values from the first accepted pilot, not a new independent original-game damage oracle. Counter zero-damage/cost and phase/order have separate original-instruction references.",
+  "full_M15S4_acceptance": false
+}

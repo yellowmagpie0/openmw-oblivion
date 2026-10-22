@@ -664,6 +664,18 @@ namespace ESM4
             return stream.str();
         }
 
+        void writeJsonDouble(std::ostream& stream, double value)
+        {
+            // Both value variants distinguish integers from doubles. Keep a
+            // decimal/exponent marker, including for either sign of zero.
+            std::ostringstream number;
+            number.imbue(std::locale::classic());
+            number << std::setprecision(17) << value;
+            auto text = number.str();
+            if (text.find_first_of(".eE") == std::string::npos) text += ".0";
+            stream << text;
+        }
+
         void writeJsonValue(std::ostream& stream, const RuntimeValue& value)
         {
             std::visit(
@@ -673,6 +685,8 @@ namespace ESM4
                         stream << (item ? "true" : "false");
                     else if constexpr (std::is_same_v<T, std::string>)
                         stream << '"' << escapeJson(item) << '"';
+                    else if constexpr (std::is_floating_point_v<T>)
+                        writeJsonDouble(stream, item);
                     else
                         stream << std::setprecision(17) << item;
                 },
@@ -691,6 +705,12 @@ namespace ESM4
                     else if constexpr (std::is_same_v<T, ESM::FormKey>)
                         stream << "{\"type\":\"reference\",\"value\":\"" << escapeJson(item.serialize())
                                << "\"}";
+                    else if constexpr (std::is_floating_point_v<T>)
+                    {
+                        stream << "{\"type\":\"number\",\"value\":";
+                        writeJsonDouble(stream, item);
+                        stream << '}';
+                    }
                     else
                         stream << "{\"type\":\"number\",\"value\":" << std::setprecision(17) << item << '}';
                 },
@@ -699,11 +719,24 @@ namespace ESM4
 
         void writeJsonPosition(std::ostream& stream, const ESM::Position& position)
         {
+            const auto write = [&stream](float value) {
+                // JSON readers commonly parse bare -0 as an integer and lose
+                // its sign. Position/rotation diagnostics must retain the same
+                // binary32 zero as the authoritative save, like native clocks.
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
             stream << '[';
             for (int i = 0; i < 3; ++i)
-                stream << (i == 0 ? "" : ",") << std::setprecision(17) << position.pos[i];
-            for (int i = 0; i < 3; ++i)
-                stream << ',' << std::setprecision(17) << position.rot[i];
+            {
+                if (i) stream << ',';
+                write(position.pos[i]);
+            }
+            for (float value : position.rot)
+            {
+                stream << ',';
+                write(value);
+            }
             stream << ']';
         }
     }

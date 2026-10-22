@@ -404,6 +404,88 @@ namespace
         EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     }
 
+    TEST(ESM4RuntimeState, CanonicalRuntimeValuesRetainDoubleTypeAndZeroSign)
+    {
+        auto state = makeState();
+        const auto key = [](unsigned id) { return ESM::FormKey::content("Oblivion.esm", id); };
+        state.mGlobals[key(0xf0001)] = 1.0;
+        state.mGlobals[key(0xf0002)] = std::int64_t{1};
+        state.mGlobals[key(0xf0003)] = -0.0;
+        state.mGlobals[key(0xf0004)] = 0.0;
+        state.mGlobals[key(0xf0005)] = 42.5;
+        auto& custom = state.mReferences.front().mCustomState;
+        custom["diag_float"] = 1.0;
+        custom["diag_integer"] = std::int64_t{1};
+        custom["diag_zero"] = -0.0;
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        EXPECT_TRUE(std::holds_alternative<double>(restored.mGlobals.at(key(0xf0001))));
+        EXPECT_TRUE(std::holds_alternative<std::int64_t>(restored.mGlobals.at(key(0xf0002))));
+        EXPECT_TRUE(std::signbit(std::get<double>(restored.mGlobals.at(key(0xf0003)))));
+        const auto json = restored.canonicalJson();
+        EXPECT_NE(json.find("\"content:oblivion.esm:0f0001\":1.0,"), std::string::npos);
+        EXPECT_NE(json.find("\"content:oblivion.esm:0f0002\":1,"), std::string::npos);
+        EXPECT_NE(json.find("\"content:oblivion.esm:0f0003\":-0.0,"), std::string::npos);
+        EXPECT_NE(json.find("\"content:oblivion.esm:0f0004\":0.0,"), std::string::npos);
+        EXPECT_NE(json.find("\"content:oblivion.esm:0f0005\":42.5"), std::string::npos);
+        EXPECT_NE(json.find("\"diag_float\":1.0,\"diag_integer\":1,\"diag_zero\":-0.0"), std::string::npos);
+        EXPECT_EQ(json, state.canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, CanonicalScriptNumbersRetainIntegerDoubleAndZeroSign)
+    {
+        auto state = makeState();
+        state.mScriptInstances.front().mLocals = {std::int64_t{1}, 1.0, -0.0};
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.serializeBinary(), bytes);
+        const auto& locals = restored.mScriptInstances.front().mLocals;
+        EXPECT_TRUE(std::holds_alternative<std::int64_t>(locals[0]));
+        EXPECT_TRUE(std::holds_alternative<double>(locals[1]));
+        EXPECT_TRUE(std::signbit(std::get<double>(locals[2])));
+        EXPECT_NE(restored.canonicalJson().find("\"locals\":[{\"type\":\"number\",\"value\":1},"
+            "{\"type\":\"number\",\"value\":1.0},{\"type\":\"number\",\"value\":-0.0}]"), std::string::npos);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+    }
+
+    TEST(ESM4RuntimeState, CanonicalPositionsPreserveBinaryNegativeZeroForPlayerReferencesAndAi)
+    {
+        for (unsigned component = 0; component != 6; ++component)
+        {
+            SCOPED_TRACE(component);
+            auto state = makeM14State();
+            ESM::Position position{};
+            (component < 3 ? position.pos[component] : position.rot[component - 3]) = -0.f;
+            state.mPlayer.mPosition = position;
+            state.mReferences.front().mPosition = position;
+            state.mActorAi.front().mDestinationPosition = position;
+            state.mActorAi.front().mLastValidPosition = position;
+            const auto bytes = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+            EXPECT_EQ(restored.serializeBinary(), bytes);
+            const auto negative = [&](const ESM::Position& p) {
+                return std::signbit(component < 3 ? p.pos[component] : p.rot[component - 3]);
+            };
+            EXPECT_TRUE(negative(restored.mPlayer.mPosition));
+            EXPECT_TRUE(negative(restored.mReferences.front().mPosition));
+            EXPECT_TRUE(negative(restored.mActorAi.front().mDestinationPosition));
+            EXPECT_TRUE(negative(restored.mActorAi.front().mLastValidPosition));
+            std::string expected = "[";
+            for (unsigned i = 0; i != 6; ++i)
+            {
+                if (i) expected += ',';
+                expected += i == component ? "-0.0" : "0";
+            }
+            expected += ']';
+            const auto json = restored.canonicalJson();
+            EXPECT_NE(json.find("\"position\":" + expected), std::string::npos);
+            EXPECT_NE(json.find("\"destination_position\":" + expected), std::string::npos);
+            EXPECT_NE(json.find("\"last_valid_position\":" + expected), std::string::npos);
+            EXPECT_EQ(json, state.canonicalJson());
+        }
+    }
+
     TEST(ESM4RuntimeState, canonicalJsonIsStableAndContainsStableKeys)
     {
         const std::string json = makeState().canonicalJson();
