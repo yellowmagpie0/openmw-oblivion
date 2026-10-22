@@ -16780,3 +16780,30 @@ checks. No new normal-input, rendered post-disarm resource discovery, audio,
 camera/input/FPS or fresh-process gameplay acceptance is claimed. The exact
 source, checks, boundaries and retained failures are pinned in
 `M15-COUNTER-CONTACT-VERIFICATION.json`.
+
+### Composed Expert/Master blocked-contact selection
+
+Pinned original image a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6
+executes600528..60056A with actual Counter query5F3C30, native rank56A300,
+and complete disarm5FC2B0/target lookup5E4A80/quest4D7030/drawn64AD30/
+Player-byte65D820. The31,356 supplied contexts include30,720 main equipment,
+base-rank, target, draw-stream, playback and x87 cases plus ranged, cleanup,
+null-drop and Player-byte controls. Counter is selected8,664 times, immediate
+disarm681 times and two draws945 times. Corpus SHA256
+ce14c7a521a7cc3aa4523310eb33cc687b7f24d736aa1776770e785718146f65.
+
+Master defense retains the Expert Counter-first roll. A true selection invokes
+playback(true), then suppresses immediate disarm/Recoil even when playback
+fails. On a miss, playback(false) precedes actual Master disarm admission.
+Only eligible target/gear/rank contexts consume the next draw; source drawn
+follows it. Nonranged Recoil follows regardless of disarm return; ranged Recoil
+requires successful disarm. The native stack and actor/target callee-saved
+registers remain intact. Null drop return still precedes the relation and
+subsequent action/controller requests, without proving actual item removal.
+
+Base AV and equipment entries, supplied RNG values, playback, drop/relation/
+action/release/controller requests and Recoil remain explicit boundaries.
+Thresholds25/5 reuse the audited installed values; no new live GMST or runtime
+acceptance. Protocol `m15_master_block_dispatch_native_cases.json` and
+`M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json` pin the inputs and tools.
+Production Master ordinary contacts remain guarded pending integration.

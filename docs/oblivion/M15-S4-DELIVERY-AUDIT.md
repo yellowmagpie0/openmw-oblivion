@@ -11284,3 +11284,31 @@ recorded. Existing stationary plugins are reused, with no compiler/plugin
 change or TES4 MCP capability claim. Player/asymmetric shield views, other
 equipment/disarm, mastery/effects, input/FPS/interrupt matrices and full S4
 remain open. **M15S4 remains incomplete.**
+
+## Original composed Master blocking caller
+
+A separate original-instruction composition now covers31,356 contexts of the
+blocked-contact caller with actual Counter query, native rank and full defensive
+disarm target admission. It confirms that Master retains the Expert Counter
+roll first. Successful Counter selection skips immediate disarm/Recoil even
+when playback fails. After a miss, playback(false) precedes the Master disarm
+query; a second draw requires target eligibility and source gear/rank, while
+source drawn is checked afterwards. Nonranged Recoil follows independently of
+disarm success. Ranged, target action/shield, null drop and raw Player-byte
+controls are included, with intact stack/register conventions.
+
+The30,720 main cases plus636 controls produce8,664 Counter selections,
+681 immediate disarms and945 two-draw cases. Original SHA256 is
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`;
+the corpus is `ce14c7a521a7cc3aa4523310eb33cc687b7f24d736aa1776770e785718146f65`.
+Actual base AV/equipment returns, RNG stream, playback, drop/relation/action/
+release/controller callbacks and Recoil are declared boundaries. This is not
+inventory, animation/resource, damage or normal-input acceptance. Supplied
+thresholds25/5 reuse installed-record evidence, not a fresh live-setting probe.
+
+[M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json](M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json)
+and editable `m15_master_block_dispatch_native_cases.json` preserve the protocol,
+source and results. No failures or production changes in this checkpoint, and
+no engine/component/Python suite rerun. Production still rejects Master ordinary
+blocking; integrating Counter-first and immediate disarm remains required.
+**M15S4 remains incomplete.**

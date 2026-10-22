@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x600528",
+  "stop": "0x60056a",
+  "actual_callees": [
+    "5F3C30 Counter query",
+    "56A300 rank",
+    "5FC2B0 disarm",
+    "5E4A80 target weapon",
+    "4D7030 quest predicate",
+    "64AD30 drawn predicate",
+    "65D820 raw Player lookup byte"
+  ],
+  "boundaries": [
+    "source base AV reads",
+    "equipped-entry returns",
+    "two supplied RNG stream values",
+    "5F4E10 playback result",
+    "DropItem",
+    "relation publication",
+    "action/release requests",
+    "combat-controller notification",
+    "5F4F00 Recoil"
+  ],
+  "matrix": {
+    "source_kind": [
+      "npc",
+      "player"
+    ],
+    "target_kind": [
+      "npc",
+      "player",
+      "creature"
+    ],
+    "exclude": "both Player",
+    "source_weapon": [
+      false,
+      true
+    ],
+    "source_shield": [
+      false,
+      true
+    ],
+    "target_weapon": [
+      false,
+      true
+    ],
+    "target_drawn": [
+      false,
+      true
+    ],
+    "target_quest": [
+      false,
+      true
+    ],
+    "source_drawn": [
+      false,
+      true
+    ],
+    "base_skill": [
+      74,
+      75,
+      99,
+      100
+    ],
+    "rng_stream_0": [
+      25,
+      26
+    ],
+    "rng_stream_1": [
+      5,
+      6
+    ],
+    "playback_result": [
+      false,
+      true
+    ],
+    "x87": [
+      127,
+      639,
+      895
+    ],
+    "main_cases": 30720
+  },
+  "installed_thresholds_supplied": {
+    "Counter": 25,
+    "disarm": 5
+  },
+  "additional_controls": "Ranged first-roll5/6; source equipment/skill, target action/shield, null drop return and block-release result; raw Player lookup byte.",
+  "expected": [
+    "Eligible Expert-or-Master defense first rolls Counter for nonranged contact.",
+    "Counter success invokes playback(true) and suppresses immediate disarm/Recoil even if playback fails.",
+    "Otherwise playback(false) precedes actual defensive disarm; Master disarm consumes a second draw only after an eligible target query and source rank/gear gates.",
+    "Source drawn is checked after the disarm draw. Missing/undrawn/quest or suppressed Player targets consume no disarm draw.",
+    "Nonranged no-Counter always requests Recoil after the disarm helper, independent of its return. Ranged requests it only after successful disarm.",
+    "Preserve original stack and callee-saved actor/target registers. No native inventory or rendered acceptance is inferred."
+  ],
+  "production_subset": "NPC/Player blockers and ordinary NPC target drops; partial Player/Creature dispatch, replacement equipment, full original scene/drop and runtime remain separate.",
+  "accepted_counts": {
+    "main_cases": 30720,
+    "cases": 31356,
+    "counter_cases": 8664,
+    "disarm_cases": 681,
+    "two_draw_cases": 945
+  },
+  "corpus_sha256": "ce14c7a521a7cc3aa4523310eb33cc687b7f24d736aa1776770e785718146f65",
+  "verification": "docs/oblivion/M15-MASTER-BLOCK-DISPATCH-ORACLE-VERIFICATION.json",
+  "full_M15S4_acceptance": false
+}
