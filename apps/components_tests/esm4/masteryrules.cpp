@@ -44,7 +44,7 @@ TEST(ESM4MasteryRules, ContactReactionsShareOneStrictDrawAndParalysisPrecedence)
     EXPECT_FALSE(k.mParalysis);EXPECT_TRUE(k.mKnockdown);
 }
 
-TEST(ESM4MasteryRules, SideDisarmUsesJourneymanInclusiveDrawAndPostDrawItemGuards)
+TEST(ESM4MasteryRules, SideDisarmUsesEligibleTargetBeforeDrawAndSourceDrawnAfterDraw)
 {
     for (int skill : {24, 25, 49, 50, 51, 74, 75, 99, 100, 101})
         for (auto attack : attacks)
@@ -54,11 +54,11 @@ TEST(ESM4MasteryRules, SideDisarmUsesJourneymanInclusiveDrawAndPostDrawItemGuard
                         for (bool drawn : {false, true})
                             for (unsigned draw : {0, 4, 5, 6, 99})
                             {
-                                const auto r = ESM4::sidePowerDisarm(skill, attack, npc, armed, quest, drawn, draw, settings, mastery);
-                                const bool consumes = npc && armed && skill >= 50
+                                const auto r = ESM4::sidePowerDisarm(skill, attack, npc, {armed, true, quest}, drawn, draw, settings, mastery);
+                                const bool consumes = npc && armed && !quest && skill >= 50
                                     && (attack == ESM4::MasteryAttack::Left || attack == ESM4::MasteryAttack::Right);
                                 EXPECT_EQ(r.mConsumesDraw, consumes);
-                                EXPECT_EQ(r.mTriggered, consumes && !quest && drawn && draw <= 5);
+                                EXPECT_EQ(r.mTriggered, consumes && drawn && draw <= 5);
                             }
 }
 
@@ -90,12 +90,41 @@ TEST(ESM4MasteryRules, DefensiveDisarmRequiresMasterShieldOrUnarmedHandAndRealWe
                                     for (unsigned draw : {0, 5, 6, 99})
                                     {
                                         const auto r = ESM4::blockMasteryDisarm({block, hand, weapon, shield}, npc,
-                                            targetWeapon, quest, drawn, draw, settings, mastery);
+                                            {targetWeapon, true, quest}, drawn, draw, settings, mastery);
                                         const bool rank = weapon || shield ? shield && block >= 100 : hand >= 100;
-                                        const bool consumes = npc && targetWeapon && rank;
+                                        const bool consumes = npc && targetWeapon && !quest && rank;
                                         EXPECT_EQ(r.mConsumesDraw, consumes);
-                                        EXPECT_EQ(r.mTriggered, consumes && !quest && drawn && draw <= 5);
+                                        EXPECT_EQ(r.mTriggered, consumes && drawn && draw <= 5);
                                     }
+}
+
+TEST(ESM4MasteryRules, NativeTargetLookupRejectionsSpendNoDisarmRoll)
+{
+    // Original5FC2B0 ->5E4A80 and side-power5FC0EB ->5E4A80.
+    // Target entry guards precede RNG; source drawn is checked after RNG.
+    struct Golden
+    {
+        ESM4::DisarmTargetWeaponInput mTarget;
+        bool mSourceDrawn, mConsumesDraw, mTriggered;
+    };
+    const Golden rows[]{
+        {{true, true, false}, true, true, true},
+        {{true, true, false}, false, true, false},
+        {{true, true, true}, true, false, false},
+        {{true, false, false}, true, false, false},
+        {{true, false, true}, true, false, false},
+        {{false, true, false}, true, false, false},
+        {{true, true, false, true}, true, false, false},
+    };
+    for (const auto& row : rows)
+    {
+        const auto side = ESM4::sidePowerDisarm(50, ESM4::MasteryAttack::Left, true,
+            row.mTarget, row.mSourceDrawn, 5, settings, mastery);
+        const auto block = ESM4::blockMasteryDisarm({100, 0, false, true}, true,
+            row.mTarget, row.mSourceDrawn, 5, settings, mastery);
+        EXPECT_EQ(side.mConsumesDraw, row.mConsumesDraw); EXPECT_EQ(side.mTriggered, row.mTriggered);
+        EXPECT_EQ(block.mConsumesDraw, row.mConsumesDraw); EXPECT_EQ(block.mTriggered, row.mTriggered);
+    }
 }
 
 TEST(ESM4MasteryRules, ProcChanceEndpointsCustomThresholdsAndInvalidInputs)
@@ -108,13 +137,13 @@ TEST(ESM4MasteryRules, ProcChanceEndpointsCustomThresholdsAndInvalidInputs)
         {
             EXPECT_EQ(ESM4::attackMasteryReaction({75, ESM4::MasteryAttack::Arrow, 1, false}, draw, s, mastery).mKnockdown,
                 draw < static_cast<unsigned>(chance));
-            EXPECT_EQ(ESM4::sidePowerDisarm(50, ESM4::MasteryAttack::Left, true, true, false, true, draw, s, mastery).mTriggered,
+            EXPECT_EQ(ESM4::sidePowerDisarm(50, ESM4::MasteryAttack::Left, true, {true, true, false}, true, draw, s, mastery).mTriggered,
                 draw <= static_cast<unsigned>(chance));
             EXPECT_EQ(ESM4::attackMasteryReaction({100, ESM4::MasteryAttack::Forward, 1, false}, draw, s, mastery).mParalysis,
                 draw < static_cast<unsigned>(chance));
             EXPECT_EQ(ESM4::blockMasteryStagger({75, 0, false, true}, draw, s, mastery).mTriggered,
                 draw <= static_cast<unsigned>(chance));
-            EXPECT_EQ(ESM4::blockMasteryDisarm({100, 0, false, true}, true, true, false, true, draw, s, mastery).mTriggered,
+            EXPECT_EQ(ESM4::blockMasteryDisarm({100, 0, false, true}, true, {true, true, false}, true, draw, s, mastery).mTriggered,
                 draw <= static_cast<unsigned>(chance));
         }
     }
@@ -122,7 +151,7 @@ TEST(ESM4MasteryRules, ProcChanceEndpointsCustomThresholdsAndInvalidInputs)
     EXPECT_FALSE(ESM4::attackMasteryReaction({29, ESM4::MasteryAttack::Backward, 1, false}, 0, settings, custom).mConsumesDraw);
     EXPECT_TRUE(ESM4::attackMasteryReaction({30, ESM4::MasteryAttack::Backward, 1, false}, 0, settings, custom).mKnockdown);
     EXPECT_TRUE(ESM4::attackMasteryReaction({40, ESM4::MasteryAttack::Forward, 1, false}, 0, settings, custom).mParalysis);
-    EXPECT_TRUE(ESM4::blockMasteryDisarm({40, 0, false, true}, true, true, false, true, 0, settings, custom).mTriggered);
+    EXPECT_TRUE(ESM4::blockMasteryDisarm({40, 0, false, true}, true, {true, true, false}, true, 0, settings, custom).mTriggered);
     for (int bad : {-1, 101})
         for (std::int32_t ESM4::MasteryProcSettings::* member : {&ESM4::MasteryProcSettings::mAttackDisarm,
                  &ESM4::MasteryProcSettings::mBlockDisarm, &ESM4::MasteryProcSettings::mBlockStagger,
@@ -134,8 +163,8 @@ TEST(ESM4MasteryRules, ProcChanceEndpointsCustomThresholdsAndInvalidInputs)
         }
     EXPECT_THROW(ESM4::attackMasteryReaction({100, static_cast<ESM4::MasteryAttack>(99), 1, false}, 0, settings, mastery), std::invalid_argument);
     EXPECT_THROW(ESM4::blockMasteryStagger({100, 100, true, true}, 100, settings, mastery), std::invalid_argument);
-    EXPECT_THROW(ESM4::sidePowerDisarm(100, ESM4::MasteryAttack::Left, true, true, false, true, 100, settings, mastery), std::invalid_argument);
-    EXPECT_THROW(ESM4::blockMasteryDisarm({100, 100, true, true}, true, true, false, true, 100, settings, mastery), std::invalid_argument);
+    EXPECT_THROW(ESM4::sidePowerDisarm(100, ESM4::MasteryAttack::Left, true, {true, true, false}, true, 100, settings, mastery), std::invalid_argument);
+    EXPECT_THROW(ESM4::blockMasteryDisarm({100, 100, true, true}, true, {true, true, false}, true, 100, settings, mastery), std::invalid_argument);
     EXPECT_THROW(ESM4::blockMasteryStagger({100, 100, true, true}, 0, settings, {{25, 20, 75, 100}}), std::invalid_argument);
 }
 
@@ -174,10 +203,10 @@ TEST(ESM4MasteryRules, FixedSeedInclusiveAndStrictProcDistributions)
     for (unsigned i = 0; i < 100000; ++i)
     {
         const unsigned draw = random() % 100;
-        disarm += ESM4::sidePowerDisarm(50, ESM4::MasteryAttack::Left, true, true, false, true, draw, settings, mastery).mTriggered;
+        disarm += ESM4::sidePowerDisarm(50, ESM4::MasteryAttack::Left, true, {true, true, false}, true, draw, settings, mastery).mTriggered;
         const auto r = ESM4::attackMasteryReaction({100, ESM4::MasteryAttack::Arrow, 1, false}, draw, settings, mastery);
         paralysis += r.mParalysis;knockdown += r.mKnockdown;
-        blockDisarm += ESM4::blockMasteryDisarm({100, 0, false, true}, true, true, false, true, draw, native, mastery).mTriggered;
+        blockDisarm += ESM4::blockMasteryDisarm({100, 0, false, true}, true, {true, true, false}, true, draw, native, mastery).mTriggered;
         stagger += ESM4::blockMasteryStagger({75, 0, false, true}, draw, native, mastery).mTriggered;
     }
     EXPECT_NEAR(disarm, 6000, 500); // inclusive 0..5

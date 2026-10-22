@@ -40,6 +40,15 @@ namespace ESM4
         bool mHasWeapon;
         bool mHasShield;
     };
+    struct DisarmTargetWeaponInput
+    {
+        bool mHasWeapon;
+        bool mWeaponDrawn;
+        bool mQuestItem;
+        // Original5E4A80 can suppress the Player lookup before process access.
+        // The adapter owns that query; this is not an inferred actor state.
+        bool mLookupSuppressed = false;
+    };
     struct UnarmedBlockRecoilInput
     {
         std::int32_t mBaseBlock;
@@ -102,13 +111,16 @@ namespace ESM4
     // real inventory drops, effect application, controller state and saves.
     AttackMasteryResult attackMasteryReaction(const AttackMasteryInput& input, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery);
+    // Both disarm callers use5E4A80 before taking a roll. Missing/undrawn/
+    // quest weapons (or a suppressed lookup) therefore consume no draw.
+    bool disarmTargetWeaponEligible(const DisarmTargetWeaponInput& target) noexcept;
     MasteryProcResult sidePowerDisarm(std::int32_t baseSkill, MasteryAttack attack, bool isNpc,
-        bool targetHasWeapon, bool targetWeaponQuestItem, bool attackerWeaponDrawn, unsigned draw,
+        const DisarmTargetWeaponInput& target, bool attackerWeaponDrawn, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery);
     MasteryProcResult blockMasteryStagger(const BlockMasteryInput& input, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery);
     MasteryProcResult blockMasteryDisarm(const BlockMasteryInput& input, bool isNpc,
-        bool targetHasWeapon, bool targetWeaponQuestItem, bool defenderWeaponDrawn, unsigned draw,
+        const DisarmTargetWeaponInput& target, bool defenderWeaponDrawn, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery);
     void validateMasteryProcSettings(const MasteryProcSettings& settings);
 }

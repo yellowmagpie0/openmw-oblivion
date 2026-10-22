@@ -786,14 +786,19 @@ controllers. The ability matrix remains pending for those real consequences.
   `NiNodes.h` enumeration and reviewed original dispatch.
 - Side power disarm `005FC090–005FC299` excludes creature attackers, needs
   left/right power animation, a target weapon entry, and Journeyman attack
-  skill. The draw is **inclusive <= iPerkAttackDisarmChance**. Quest-weapon
-  and attacker-weapon-drawn guards follow the roll; they must not erase RNG
-  consumption. The item quest guard is TESForm virtual +78; drawn guard is
+  skill. The draw is **inclusive <= iPerkAttackDisarmChance**. The target-entry
+  helper5E4A80 rejects quest and undrawn weapons
+  before the roll. The source weapon-drawn guard follows the roll; it must not
+  erase RNG consumption for an otherwise eligible target. The item quest guard
+  is TESForm virtual +78; drawn guard is
   `005E0DA0 -> process +304` (GetWeaponOut in pinned GameProcess.h).
 - Defensive disarm `005FC2B0` excludes creature defenders and requires an
-  opponent weapon entry. With weapon/shield present it needs Master Block
+  opponent drawn nonquest weapon entry. With weapon/shield present it needs
+  Master Block
   **and a shield**; with neither it uses Master Hand to Hand. The inclusive
-  roll precedes quest-item and defender-drawn guards. Real drop implementation
+  roll follows target-entry eligibility and precedes the defender-drawn guard.
+  A later quest recheck does not bypass the earlier target query. Real drop
+  implementation
   is visible after `005FC3A1` and remains a native integration requirement.
 - Defensive stagger query `005F3C30–005F3CBA` uses Expert Block with shield
   when a weapon/shield is present, otherwise Expert Hand to Hand. Its roll
@@ -16641,3 +16646,50 @@ caller48
 Editable protocol: `m15_counter_startup_native_probe.json` under
 scripts/data/oblivion_compat. Exact artifact pins, typed preparation tests and
 remaining boundaries are in `M15-COUNTER-STARTUP-VERIFICATION.json`.
+
+
+### Full disarm target query corrects the earlier RNG interpretation
+
+Original image SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes complete5FC2B0 in7,878 synthetic contexts and the side-power suffix
+5FC0EB..5FC172/5FC17D in576 contexts. Both execute target lookup5E4A80,
+WEAP quest getter4D7030, High-process drawn getter64AD30 and rank56A300.
+AV/equipment-entry/RNG queries and drop/relation/action/block-release/combat
+consequences are recording boundaries. Source and target cannot both be the
+Player singleton in the final matrix. No real inventory or runtime result
+is inferred from these instruction probes.
+
+The earlier S2 description focused on the late quest/drawn guards with a
+supplied target entry. In the actual whole caller,5E4A80 first rejects missing,
+undrawn and quest weapons. Those targets consume **no** disarm draw. It also
+returns absent for the Player when actual65D820 reads nonzero rawB3BB06; no
+gameplay meaning is assigned to that raw byte here. For an eligible target,
+the source's drawn guard remains after the inclusive chance roll. Both pure
+disarm decisions now accept an explicit target weapon snapshot and implement
+this earlier gate; their previous quest-target RNG claim is superseded.
+
+On a successful defensive proc, target virtual+2C8 receives the weapon,
+first extra-data pointer, count1 and two nulls. NPC/Creature dispatch5FC440;
+Player dispatch660CC0. The caller then requests4DC000(target,dropResult),
+including null results. Process action0..5 requests5EFFD0(-1,null). Action6
+without shield first requests5F4AE0(false), then the explicit action clear only
+if that helper returns false. A shield, negative action or action>6 skips that
+clear branch. Finally target+330 is queried; a present combat controller is
+queried again and receives61DD10(source). The helper still returns true after
+a supplied null drop result; that return does not prove inventory removal.
+Release helper, action writer and controller effects themselves are boundaries.
+
+The production C++ draw/trigger comparison matches all8,454 final observations
+with zero mismatches. The original harness separately asserts request order,
+arguments, stack cleanup and preserved registers. Defensive corpus SHA256
+`19533dbd4e2031016f75a85c970e93f14f9280191894e00f5433007799b1975d`;
+side suffix SHA256
+`3462ed53dc6296783a55d55aa135f8f16c34bebd6a9094dfc309d51fbd36b6f9`.
+Probe01 failed before cases because it incorrectly expected a shared Player/NPC
+drop virtual. Probe02 passed8,646 exploratory contexts but included dual-Player
+identities; those are excluded from final probe03 and the final comparison.
+All attempts remain retained. Actual drops, action/controller publication,
+Counter initiation/contact and normal-input/E2E acceptance remain open.
+Exact pins and limits are in `M15-DISARM-TARGET-VERIFICATION.json`; editable
+protocol: `scripts/data/oblivion_compat/m15_disarm_target_native_probe.json`.

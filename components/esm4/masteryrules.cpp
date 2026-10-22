@@ -69,17 +69,21 @@ namespace ESM4
         return result;
     }
 
+    bool disarmTargetWeaponEligible(const DisarmTargetWeaponInput& target) noexcept
+    {
+        return target.mHasWeapon && target.mWeaponDrawn && !target.mQuestItem && !target.mLookupSuppressed;
+    }
+
     MasteryProcResult sidePowerDisarm(std::int32_t baseSkill, MasteryAttack attack, bool isNpc,
-        bool targetHasWeapon, bool targetWeaponQuestItem, bool attackerWeaponDrawn, unsigned draw,
+        const DisarmTargetWeaponInput& target, bool attackerWeaponDrawn, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery)
     {
         validate(draw, settings, mastery);
         validateAttack(attack);
-        if (!isNpc || !targetHasWeapon || (attack != MasteryAttack::Left && attack != MasteryAttack::Right)
+        if (!isNpc || !disarmTargetWeaponEligible(target) || (attack != MasteryAttack::Left && attack != MasteryAttack::Right)
             || combatMastery(baseSkill, mastery) < CombatMastery::Journeyman)
             return {};
-        return {true, draw <= static_cast<unsigned>(settings.mAttackDisarm)
-            && !targetWeaponQuestItem && attackerWeaponDrawn};
+        return {true, draw <= static_cast<unsigned>(settings.mAttackDisarm) && attackerWeaponDrawn};
     }
 
     MasteryProcResult blockMasteryStagger(const BlockMasteryInput& input, unsigned draw,
@@ -92,14 +96,13 @@ namespace ESM4
     }
 
     MasteryProcResult blockMasteryDisarm(const BlockMasteryInput& input, bool isNpc,
-        bool targetHasWeapon, bool targetWeaponQuestItem, bool defenderWeaponDrawn, unsigned draw,
+        const DisarmTargetWeaponInput& target, bool defenderWeaponDrawn, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery)
     {
         validate(draw, settings, mastery);
-        if (!isNpc || !targetHasWeapon || !defensiveRank(input, CombatMastery::Master, mastery))
+        if (!isNpc || !disarmTargetWeaponEligible(target) || !defensiveRank(input, CombatMastery::Master, mastery))
             return {};
-        return {true, draw <= static_cast<unsigned>(settings.mBlockDisarm)
-            && !targetWeaponQuestItem && defenderWeaponDrawn};
+        return {true, draw <= static_cast<unsigned>(settings.mBlockDisarm) && defenderWeaponDrawn};
     }
 
     MasteryProcResult unarmedBlockRecoil(const UnarmedBlockRecoilInput& input, unsigned draw,

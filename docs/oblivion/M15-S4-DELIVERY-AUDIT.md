@@ -10268,3 +10268,39 @@ undrawn paths and the wider mastery/effect/input/gamepad/FPS/audio/E2E gates
 also remain open. M15S4 remains incomplete. See
 [verification](M15-COUNTER-STARTUP-VERIFICATION.json) and editable protocol
 `scripts/data/oblivion_compat/m15_counter_startup_native_probe.json`.
+
+
+## Disarm target eligibility and RNG correction
+
+Complete native caller verification exposed an earlier partial-path error:
+quest and undrawn targets are rejected by5E4A80 before either disarm caller
+rolls. Source drawn remains a post-roll guard. The side-power and defensive
+rule APIs now take a target snapshot that distinguishes weapon presence,
+drawn state, quest status and caller-resolved lookup suppression. Tests retain
+the inclusive thresholds and distinguish early target rejection from late
+source rejection. No live engine caller uses these two decision APIs yet.
+
+The original full defensive helper passes7,878 final contexts; the side-power
+suffix passes576. The production C++ comparison matches all8,454 draw/trigger
+observations. Target kinds include NPC/Player/Creature; source Creature exits
+and impossible dual-Player contexts are excluded. The actual target lookup,
+quest/drawn predicates and rank selector execute, with base AV reads, equipment
+entries, RNG and real consequences explicitly supplied. A separate request
+trace proves drop arguments, relation handling even for a null drop result,
+process-action clear/block-release ordering and combat-controller notification.
+These requests are prerequisites for integration, not proof of real drops.
+
+All2,987 normal component tests and840 ESM4* ASan/UBSan tests pass with matching
+inventories and no failed/skipped cases. Tested parent is
+`50a1c0182cda519b1558b07ce84d74733c56115d`, dirty fingerprint
+`2412196e510a73fd0a5caf5bc7af0282c7604fb689427dd789545bf26c717e10`.
+Leak checks are disabled; UBSan halts. World/engine/Python sources did not change
+and those suites were not rerun for this rule-only correction. Existing compiler
+warnings remain. The initial wrong Player drop-vtable assertion and broader
+exploratory identity matrix are retained and excluded from final counts.
+
+This corrects the earlier S2 whole-caller RNG implication. Real disarm inventory,
+action/controller publication, Counter triggering/dispatch and normal-input
+restart/E2E acceptance remain open. M15S4 remains incomplete. See
+[verification](M15-DISARM-TARGET-VERIFICATION.json) and the editable
+`m15_disarm_target_native_probe.json` protocol under scripts/data/oblivion_compat.

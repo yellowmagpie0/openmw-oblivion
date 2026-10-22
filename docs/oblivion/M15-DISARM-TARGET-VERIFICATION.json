@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "status": "Disarm target lookup and RNG decisions corrected against full native caller paths. Actual drop/action/controller and normal Counter integration remain open. M15S4 incomplete.",
+  "validation_layers": {
+    "compiler_and_component_checks": true,
+    "independent_original_instructions": true,
+    "cpp_comparison": true,
+    "world_inventory_or_renderer_integration": false,
+    "normal_input_runtime_acceptance": false
+  },
+  "problem": "Prior decisions took a disarm roll for quest targets. Both actual disarm callers first use5E4A80, which rejects quest and undrawn targets before RNG. The later quest recheck does not remove this earlier eligibility gate.",
+  "implementation": "DisarmTargetWeaponInput now distinguishes equipped weapon, target drawn, quest and caller-resolved lookup suppression. Both disarm decisions reject ineligible targets before claiming a consumed draw. Source drawn remains a post-roll guard. No live engine caller currently invokes these two decision APIs.",
+  "checks": [
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-target-normal-01/verification.json",
+        "sha256": "5099dd98f56730af6c4d2240a51a6bbe85a3724e5279d57b5efcef5deebbde54"
+      },
+      "tested_source": {
+        "head": "50a1c0182cda519b1558b07ce84d74733c56115d",
+        "source_fingerprint": "2412196e510a73fd0a5caf5bc7af0282c7604fb689427dd789545bf26c717e10"
+      },
+      "results": {
+        "components": {
+          "executed": 2987,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4c5ffbc1e3d7fb1c6b75c718897d7eaa4579979abec38b412855a5c5cd3798e6",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "02822dc572496b5aeeb20e3449accaa5379cfd1deeff67f183a3f851072f3268",
+          "inventory_sha256": "1d2d7fa12872f585ea76a8851385bcc7506af781077bf17ae593305943f316b4",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "evidence": {
+        "path": "build/oblivion-compat/m15/S4/native-disarm-target-sanitized-01/verification.json",
+        "sha256": "e768d225d8a52a145e0571b213014dd2144b3c0b3c7170d5d0375fc1ade18f0b"
+      },
+      "tested_source": {
+        "head": "50a1c0182cda519b1558b07ce84d74733c56115d",
+        "source_fingerprint": "2412196e510a73fd0a5caf5bc7af0282c7604fb689427dd789545bf26c717e10"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 840,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "cfafdadf137e8a489126dd954377347f9218359fe6864496a29e5337b97e3e34",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5e0f22ad86f1d2d4a230a0b06d03e826a5f17eae4dc8fb2c785738b5aed67f38",
+          "inventory_sha256": "81e38796bb13f14f1c72e3519858440bc55d3b2e403aab1c5ce95f05897ca16f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  ],
+  "tested_source": {
+    "head": "50a1c0182cda519b1558b07ce84d74733c56115d",
+    "source_fingerprint": "2412196e510a73fd0a5caf5bc7af0282c7604fb689427dd789545bf26c717e10"
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "native_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/preregistered.json",
+      "sha256": "ef4ebc7b36ad945f7c0d609b8c3728efae7d2e90abfbdb7c5191e4afea66ee15"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/probe-01.py",
+      "sha256": "e4e8f227791f08104737f49beb5c8a0308241f23f5a782b4c81e9bb0dc7bf1c9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/probe-02.py",
+      "sha256": "01ad9db32a6797a411a4789d49f06bd25b0ac52e202670be70fb832a9adc45c1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/probe-03.py",
+      "sha256": "4d87c5ed078ceb1f2f854910794a12d485f0571196590cb4746912d53f784592"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/verification02.json",
+      "sha256": "77fcaf25daf34e159622c2647190a727979f44d2a411e8324e165e4f6d40455c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/verification03.json",
+      "sha256": "c4e9ce377cff99c7a0d78a162ac8f1ccddd1a863586d926f6e0262637f559189"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/corpus03.json",
+      "sha256": "19533dbd4e2031016f75a85c970e93f14f9280191894e00f5433007799b1975d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/side-power-query-01.py",
+      "sha256": "39d66772b1432af8250133dbcd5f393a6b8618a8794365b7596d3ac0207773bc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/side-power-query-verification01.json",
+      "sha256": "206729748f2889b8a361340a3b0036fa271f4ebe72a3f54a2b9a1788a536ce20"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/side-power-query-corpus01.json",
+      "sha256": "3462ed53dc6296783a55d55aa135f8f16c34bebd6a9094dfc309d51fbd36b6f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/compare.cpp",
+      "sha256": "9ed7863a314c068a2583df050df8751649071333793b5e07cebbf80efbe0ad4d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/compare",
+      "sha256": "ef8098f814ef1bbbbb75e399cc99b77a73d569f3a8b7c040bdbe92b97780cbce"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/comparison03.json",
+      "sha256": "d623ebde88ed63d59344e85a5638f327d0369054a6c1dcef6b50b90ec447a943"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/comparison-input03.tsv",
+      "sha256": "1e636ac574b9a54ad1526e865b4a66e398444bdc387889279712d9902a7ddb32"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/comparison-output03.tsv",
+      "sha256": "8528e10e67202a1dbd4b3bb738b21750e8f8c0b79ffdf1c07ff16b716851f501"
+    }
+  ],
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_results": {
+    "defensive": {
+      "passed": true,
+      "cases": 7878,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "19533dbd4e2031016f75a85c970e93f14f9280191894e00f5433007799b1975d",
+      "scope": "Full original5FC2B0 including5E4A80 target weapon admission, actual WEAP quest predicate4D7030, high-process drawn predicate64AD30, rank56A300 and request ordering. Base AV reads, equipped entries, RNG, DropItem, relation publication, action request, block release and combat-controller notification are explicit boundaries. No actual drop or gameplay acceptance."
+    },
+    "side_power": {
+      "passed": true,
+      "cases": 576,
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "3462ed53dc6296783a55d55aa135f8f16c34bebd6a9094dfc309d51fbd36b6f9",
+      "scope": "Actual5FC0EB..5FC172/5FC17D suffix after side-power source/animation admission. Actual5E4A80 target lookup, quest/drawn predicates and rank56A300. AV/equipped-entry/RNG boundaries; no drop, numeric contact or gameplay. Left/right and nonCreature guards are before this suffix."
+    },
+    "comparison": {
+      "passed": true,
+      "cases": 8454,
+      "mismatches": [],
+      "input_sha256": "1e636ac574b9a54ad1526e865b4a66e398444bdc387889279712d9902a7ddb32",
+      "output_sha256": "8528e10e67202a1dbd4b3bb738b21750e8f8c0b79ffdf1c07ff16b716851f501",
+      "scope": "Production C++ disarm decisions compared with original rows after excluding impossible dual-Player identity contexts. Source Creature exclusions and target Creature vtables remain covered. Request ordering is asserted by the original harness, not this boolean comparison. No actual drop, live RNG or gameplay."
+    }
+  },
+  "findings": [
+    "Actual5FC2B0 calls actual5E4A80, WEAP quest predicate4D7030, high-process drawn predicate64AD30 and rank56A300. Creature source exits before target query. Player/NPC/Creature target vtables are covered; only one actor may be the Player singleton.",
+    "Target5E4A80 requires an equipped WEAP, drawn process and nonquest predicate. Player65D820 reads rawB3BB06; nonzero suppresses target lookup before process access. This experiment does not assign a gameplay meaning to that byte.",
+    "For an eligible target, Master shield Block or unarmed HandToHand takes the inclusive<=5 roll. Source drawn is checked after RNG. Side-power suffix uses Journeyman and the same target query, with the same guard order.",
+    "Successful defensive proc requests virtual+2C8(weapon,firstExtraData,1,null,null). NPC/Creature dispatch to5FC440; Player dispatches to660CC0. Actual drop bodies are recording boundaries.",
+    "The caller unconditionally requests4DC000(target,returnedReference), including a null drop result. It still continues controller/action requests and returns true. That boolean does not prove actual inventory removal.",
+    "Target process action0..5 requests5EFFD0(-1,null). At action6 without a shield it first requests5F4AE0(false), and requests the explicit action clear only if that helper returns false. With a shield it skips those requests. Negative and>6 actions skip this clear branch.",
+    "After drop/relation/action handling it queries target virtual+330. A nonnull controller is queried a second time and receives61DD10(source). These controller effects are boundaries."
+  ],
+  "retained_attempts": [
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/probe-01.py",
+        "sha256": "e4e8f227791f08104737f49beb5c8a0308241f23f5a782b4c81e9bb0dc7bf1c9"
+      },
+      "reason": "Pre-execution assertion incorrectly expected Player and NPC virtual+2C8 to share a body. Actual Player660CC0 differs from NPC/Creature5FC440. No accepted cases from probe01."
+    },
+    {
+      "artifact": {
+        "path": "build/oblivion-compat/m15/S4/native-defensive-disarm-consequence-oracle-01/verification02.json",
+        "sha256": "77fcaf25daf34e159622c2647190a727979f44d2a411e8324e165e4f6d40455c"
+      },
+      "reason": "Exploratory8646 contexts passed, but included impossible dual-Player source/target identities. Final probe03 excludes those, passing7878 contexts. Broader exploratory comparison9222 remains private and is excluded from final counts."
+    }
+  ],
+  "limitations": [
+    "Base AV reads, equipment-entry queries, RNG, actual DropItem, relation publication, block release, action writer and combat-controller effects are explicit boundaries. The defensive function and target admission/rank instructions execute; no actual drop, animation, numerical hit or full-game acceptance.",
+    "Side-power experiment starts after source kind/animation admission at5FC0EB and stops at failure5FC172 or consequence5FC17D. It does not execute the drop body or re-prove animation-direction admission.",
+    "Standalone production C++ comparison checks draw/trigger booleans for8454 rows. Native request ordering is asserted separately by the original harness.",
+    "World/engine/Python sources did not change and their suites were not rerun. The two changed decision functions have no live engine callers yet; this checkpoint does not close mastery, Counter triggering, disarm drops or normal-input/E2E gates. Existing compiler warnings remain."
+  ]
+}

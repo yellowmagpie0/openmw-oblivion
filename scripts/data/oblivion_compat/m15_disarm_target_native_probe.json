@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "purpose": "Full native defensive disarm target admission and consequence request ordering, plus side-power shared target lookup. No actual inventory/runtime acceptance.",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "defensive": {
+    "entry": "0x5fc2b0",
+    "stop": "caller return",
+    "source_kinds": [
+      "npc",
+      "player",
+      "creature"
+    ],
+    "target_kinds": [
+      "npc",
+      "player",
+      "creature"
+    ],
+    "exclude": "Source and target cannot both be the Player singleton.",
+    "source_weapon": [
+      false,
+      true
+    ],
+    "source_shield": [
+      false,
+      true
+    ],
+    "target_weapon": [
+      false,
+      true
+    ],
+    "target_drawn": [
+      false,
+      true
+    ],
+    "target_quest": [
+      false,
+      true
+    ],
+    "source_drawn": [
+      false,
+      true
+    ],
+    "base_skill": [
+      99,
+      100
+    ],
+    "draw": [
+      5,
+      6
+    ],
+    "x87": [
+      127,
+      639,
+      895
+    ],
+    "target_actions": [
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      15
+    ],
+    "target_shield": [
+      false,
+      true
+    ],
+    "drop_result": [
+      "null",
+      "reference"
+    ],
+    "block_release_result": [
+      false,
+      true
+    ],
+    "combat_controller": [
+      false,
+      true
+    ],
+    "player_lookup_byte": [
+      0,
+      1
+    ],
+    "cases": 7878
+  },
+  "side_power": {
+    "entry": "0x5fc0eb",
+    "stops": [
+      "0x5fc172",
+      "0x5fc17d"
+    ],
+    "source_kind": "npc",
+    "target_kinds": [
+      "npc",
+      "player",
+      "creature"
+    ],
+    "target_weapon": [
+      false,
+      true
+    ],
+    "target_drawn": [
+      false,
+      true
+    ],
+    "target_quest": [
+      false,
+      true
+    ],
+    "source_drawn": [
+      false,
+      true
+    ],
+    "base_skill": [
+      49,
+      50
+    ],
+    "draw": [
+      5,
+      6
+    ],
+    "x87": [
+      127,
+      639,
+      895
+    ],
+    "cases": 576,
+    "scope": "Suffix after original source/direction admission; before actual drop consequences."
+  },
+  "actual_instructions": [
+    "5E4A80 equipped target query",
+    "4D7030 WEAP quest predicate",
+    "64AD30 high-process drawn predicate",
+    "56A300 rank selector",
+    "65D820 raw Player lookup suppression getter",
+    "5FC2B0 defensive caller branches and request order"
+  ],
+  "boundaries": [
+    "Base AV reads",
+    "Equipped entry queries",
+    "RNG",
+    "Drop virtual+2C8:5FC440 or660CC0",
+    "Relation4DC000",
+    "Release block5F4AE0",
+    "Action writer5EFFD0",
+    "Combat getter+330 and61DD10"
+  ],
+  "expected": [
+    "Actual5FC2B0 calls actual5E4A80, WEAP quest predicate4D7030, high-process drawn predicate64AD30 and rank56A300. Creature source exits before target query. Player/NPC/Creature target vtables are covered; only one actor may be the Player singleton.",
+    "Target5E4A80 requires an equipped WEAP, drawn process and nonquest predicate. Player65D820 reads rawB3BB06; nonzero suppresses target lookup before process access. This experiment does not assign a gameplay meaning to that byte.",
+    "For an eligible target, Master shield Block or unarmed HandToHand takes the inclusive<=5 roll. Source drawn is checked after RNG. Side-power suffix uses Journeyman and the same target query, with the same guard order.",
+    "Successful defensive proc requests virtual+2C8(weapon,firstExtraData,1,null,null). NPC/Creature dispatch to5FC440; Player dispatches to660CC0. Actual drop bodies are recording boundaries.",
+    "The caller unconditionally requests4DC000(target,returnedReference), including a null drop result. It still continues controller/action requests and returns true. That boolean does not prove actual inventory removal.",
+    "Target process action0..5 requests5EFFD0(-1,null). At action6 without a shield it first requests5F4AE0(false), and requests the explicit action clear only if that helper returns false. With a shield it skips those requests. Negative and>6 actions skip this clear branch.",
+    "After drop/relation/action handling it queries target virtual+330. A nonnull controller is queried a second time and receives61DD10(source). These controller effects are boundaries."
+  ],
+  "verification": "docs/oblivion/M15-DISARM-TARGET-VERIFICATION.json"
+}
