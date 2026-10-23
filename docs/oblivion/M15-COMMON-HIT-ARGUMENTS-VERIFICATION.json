@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "common_hit_phase_runtime_wiring": false,
+  "scope": "Ordinary melee common-hit argument producers; ephemeral packet only",
+  "tested_source": {
+    "head": "ef2a18fd5c17a3e130ec5c2860e1a0150a093dbf",
+    "source_fingerprint": "96cafb3306eaa59a56d81743649727de65e1f30693a69ace73ec09b67a67d112"
+  },
+  "tested_source_files": {
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "92713a24eaca1e71f747956e4cc0f9f2c9c9074a5f78e18056215a3f7060a6f4",
+      "bytes": 64754
+    },
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.hpp",
+      "sha256": "350ca78994181274368da5ed77655de5b4e5a30b2864f8731eadd236e5c423c8",
+      "bytes": 9564
+    },
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "f7f05ed146ba70174aefe6d8d07d89468d55b22c8b9bf6d0b4f16da7d9daa313",
+      "bytes": 101166
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "cb85b8d2691af8b382916eab168346881cc529c89c4331d93ba41c007a63271f",
+      "bytes": 1967699
+    }
+  },
+  "tested_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-tested.patch",
+    "sha256": "8152f3bbf633276eee4ccc76669ce4ab2dc92709dfd85b30f2ad2e09124d6b65",
+    "bytes": 19328
+  },
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_common_hit_arguments_oracle_cases.json",
+    "sha256": "0a411e48d1d54da3367a67ed775526a7224ab159e1d25ab381a51c86e710b3ae",
+    "bytes": 2438
+  },
+  "checks": {
+    "normal_engine": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-02/verification.json",
+        "sha256": "daa77ab92aa51fdcd8343cc77b4357aa5c8c4c766b1258ed1aba70879c9083f8",
+        "bytes": 2143
+      },
+      "results": {
+        "engine": {
+          "executed": 1862,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "71f4cf5506173350a9c920015a08cb237e272ca527724c2fe76b2612f06b6de7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "9d74760a6da0c3f81b589e7c8e57a600701c6bc65c87f060b1b88a1174bb24d4",
+          "inventory_sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-02/engine-build.log",
+          "sha256": "37202b3870cd3bc1764543db8ebeab21a6ef3d456a988e1ac5738c3cf16122e7",
+          "bytes": 29996
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-02/engine-inventory.txt",
+          "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "bytes": 131709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-02/engine.log",
+          "sha256": "26694a87106159ab8727170c983a71136c26c047d7a7b6481e394d2240d74155",
+          "bytes": 2180858
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-02/engine.xml",
+          "sha256": "9d74760a6da0c3f81b589e7c8e57a600701c6bc65c87f060b1b88a1174bb24d4",
+          "bytes": 613519
+        }
+      ]
+    },
+    "sanitized_engine": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-02/verification.json",
+        "sha256": "e03087525ba23fced96e6398f35f0878117e724effe01f1dabd89a1b1eb8188f",
+        "bytes": 2242
+      },
+      "results": {
+        "engine": {
+          "executed": 1862,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1cc30d0bb46814e50f371c939a41358fc905ef261e31cf2f6c7fcef6d01a9b8a",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "63ebc990f18d5a9c9dbf0dbfdb9c500c50c8bb4df69ead1306127b03ac35ae9d",
+          "inventory_sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-02/engine-build.log",
+          "sha256": "72f7dc62463ec752c87e14dfd73353e5a12ed8fe094658c9d2f5e1272feda319",
+          "bytes": 28562
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-02/engine-inventory.txt",
+          "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "bytes": 131709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-02/engine.log",
+          "sha256": "892efb75c805ddb21675f3412cae232a74aec68cf805af98e1a1b4f05f26f4e0",
+          "bytes": 2181378
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-02/engine.xml",
+          "sha256": "63ebc990f18d5a9c9dbf0dbfdb9c500c50c8bb4df69ead1306127b03ac35ae9d",
+          "bytes": 615216
+        }
+      ]
+    }
+  },
+  "original_cache": {
+    "passed": true,
+    "cases": 2016,
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "6e7b285758bc5c8749a4e9d8beda0225fac7e667d820bf220032ec1b6898d30d",
+    "scope": "Original 5FF7C9 through 5FF84E/5FFBE3; actual actor paralysis helper, blocking helper, High action getter. Boundaries: integer AV48, process shield/weapon cache pointer getters, facing predicate. No full equipment producers, RNG, mitigation, resource publication or gameplay acceptance.",
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/corpus.json",
+        "sha256": "6e7b285758bc5c8749a4e9d8beda0225fac7e667d820bf220032ec1b6898d30d",
+        "bytes": 332497
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/creature-skill-verification.json",
+        "sha256": "1096e94bff21e7de46486782ff553a94e91d2172ba964453414978984a2e5fb5",
+        "bytes": 1477
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/creature-skill.py",
+        "sha256": "1ad2e0fcb0c373c6713dbe80f16a2efa33666313be8fe69d43cc6b1cc66c61be",
+        "bytes": 2090
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+        "bytes": 661
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/probe.py",
+        "sha256": "aad3816b870d4868e1dc97663e737ae5b6a8f9e794dc4194664fc19b841876bc",
+        "bytes": 4017
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/used-skill-verification.json",
+        "sha256": "96729d1ae68a49003b35740de2dc93746b7866beb2cfd1a4d32ec01fc94ca25e",
+        "bytes": 1078
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/used-skill.py",
+        "sha256": "088ba4fb84da502699b1a940adcf144b84295bdf19e8fb925dff14651af4c7b5",
+        "bytes": 1694
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-block-cache-oracle-01/verification.json",
+        "sha256": "861ba4aad2dcb6e5ee7d26a0a5fcf9997c51a6ec6578c96592e82e204b474b82",
+        "bytes": 519
+      }
+    ]
+  },
+  "retained_failed_fixture": {
+    "patch": {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-failed-fixture-01.patch",
+      "sha256": "0592d1fc04bab6d770a33d332d0fe1972be841a072086e94e0558da64c8cc1c0",
+      "bytes": 16512
+    },
+    "normal_report": {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/verification.json",
+      "sha256": "0a71a20b4ec1d479c3373db12377728ef86ca9f612c6d80aaf2346247daa1d2c",
+      "bytes": 1273
+    },
+    "sanitized_report": {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/verification.json",
+      "sha256": "c2ca01942ac19c6e934e705c2e21931faffe2bc9bd619fd79e6f3d8bac782557",
+      "bytes": 1323
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/engine-build.log",
+        "sha256": "f016e2914e31b9dde64e8b4332e32668f9fbd686e96f420260a6deb11e36bed9",
+        "bytes": 35058
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/engine-inventory.txt",
+        "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+        "bytes": 131709
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/engine.log",
+        "sha256": "fc23baa8bc80803205090878861c4b4455baa1373642486504f6e8a0e62d6a45",
+        "bytes": 2181154
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/engine.xml",
+        "sha256": "68967613e795b7331238e45689db43ef87dbedce1257db8aa428ec9a46255385",
+        "bytes": 614048
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-engine-01/verification.json",
+        "sha256": "0a71a20b4ec1d479c3373db12377728ef86ca9f612c6d80aaf2346247daa1d2c",
+        "bytes": 1273
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/engine-build.log",
+        "sha256": "7480d2901b14aaf31ad0463c3e8d44746e7938c6d6f7351c8fb15ef42d95b95b",
+        "bytes": 32450
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/engine-inventory.txt",
+        "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+        "bytes": 131709
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/engine.log",
+        "sha256": "7381f1d0e992ac4d1084a681be87b2e7cfae20a7487db00b6512eced744ae1ef",
+        "bytes": 2181632
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/engine.xml",
+        "sha256": "ba7d82c457172b2be677c48e4a591422524d000e910bddb78d008ae17dc8dd03",
+        "bytes": 615552
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-arguments-sanitized-engine-01/verification.json",
+        "sha256": "c2ca01942ac19c6e934e705c2e21931faffe2bc9bd619fd79e6f3d8bac782557",
+        "bytes": 1323
+      }
+    ],
+    "reason": "Duplicate GMST editor IDs in the added zero-Health fixture; corrected by replacing existing IDs951/952"
+  },
+  "instruction_inspection": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/005e17e0.txt",
+      "sha256": "b6260e8da6b86a25024d01c0c7d3a85e203cd7ce21d56903b916210956198a7c",
+      "bytes": 4684
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/005e5670.txt",
+      "sha256": "471da93f175715cb3859c4526753ca5c57466bd1fbe23673127b1dafdb663cf3",
+      "bytes": 3098
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/00628200.txt",
+      "sha256": "affbe66c9d37a360f17a1f869c675798219f6403a5989326711179e42a5e9799",
+      "bytes": 1178
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/block-gate-vtables.json",
+      "sha256": "5e4b7516253bfbeb0cb1f4711e09dcad3455ed876433d58360ea4e8cef1cca66",
+      "bytes": 248
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/caller-entry.txt",
+      "sha256": "e8612187194b14cb84f00a440542852f60eaac8795df0c653d8369b46a370d16",
+      "bytes": 5704
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/caller-prologue.txt",
+      "sha256": "bd4ab0d0dde5e7b404f6b10ca3bae76c2673c78c14550ed7ae3797ced9388512",
+      "bytes": 11510
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/caller.txt",
+      "sha256": "7936b13ae0f3880106f8167aebda554b270bafcfff1bd47c39fc613502b28313",
+      "bytes": 94029
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-argument-inspection-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    }
+  ],
+  "limits": [
+    "Creature natural attacks leave the used-skill field unavailable255; later native cached-slot semantics remain unestablished",
+    "Common hit phases still have no live consumer",
+    "Admitted ordinary non-sneaking domain only; no new lower-HTH/Creature-block/directional admission",
+    "Equipment pointer getter and facing producers are boundary fixtures in original oracle",
+    "No new gameplay or restart acceptance course for packet metadata"
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "scope": "Ordinary melee common-hit argument producers; ephemeral packet only",
+  "full_M15S4_acceptance": false,
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "block_cache": {
+    "entry": "005FF7C9",
+    "success": "005FF84E",
+    "reject": "005FFBE3",
+    "actor_vtables": [
+      "00A6FC9C",
+      "00A73A0C",
+      "00A710F4"
+    ],
+    "process_vtable": "00A71814",
+    "actual_helpers": [
+      "005E17E0",
+      "005E5670",
+      "00628200"
+    ],
+    "blocking_action": 6,
+    "paralysis": [
+      -1,
+      0,
+      1
+    ],
+    "sneak_bypass": [
+      0,
+      1
+    ],
+    "actions": [
+      -1,
+      0,
+      5,
+      6,
+      7,
+      8,
+      32767
+    ],
+    "shield": [
+      0,
+      1
+    ],
+    "weapon": [
+      0,
+      1
+    ],
+    "facing": [
+      0,
+      1
+    ],
+    "control_words": [
+      639,
+      895
+    ],
+    "cases": 2016,
+    "boundaries": [
+      "Integer AV48 getter",
+      "Process shield and weapon cached-pointer getters",
+      "Facing predicate6131D0"
+    ]
+  },
+  "used_skill": {
+    "weapon_helper": "004BB060",
+    "unarmed_store": "005FF423",
+    "weapon_types": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "expected_weapon_skills": [
+      14,
+      14,
+      16,
+      16
+    ],
+    "npc_player_hand_skill": 17,
+    "creature_skill_field": "unavailable255; native natural branch bypasses the HTH store",
+    "cases": 10,
+    "creature_bypass_cases": 10
+  },
+  "engine_assertions": [
+    "Bare active-block cache survives rejected facing",
+    "Paralysis clears both cache flags",
+    "Health argument remains pre-difficulty while published Health scales",
+    "Normalized zero/zero Fatigue retains pre-scaling damage-path intent",
+    "Blade/Blunt indices follow native equipped type",
+    "Weapon-break preparation retains original attacker weapon presence",
+    "Queries preserve native actor/resource/condition/RNG state"
+  ],
+  "limits": [
+    "Creature natural attacks leave the used-skill field unavailable255; later native cached-slot semantics remain unestablished",
+    "Common hit phases still have no live consumer",
+    "Admitted ordinary non-sneaking domain only; no new lower-HTH/Creature-block/directional admission",
+    "Equipment pointer getter and facing producers are boundary fixtures in original oracle",
+    "No new gameplay or restart acceptance course for packet metadata"
+  ]
+}

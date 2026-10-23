@@ -17675,3 +17675,23 @@ for the new phases yet; no new engine or gameplay acceptance is claimed.
 pins source, retained comparison objects, native corpora, controls and checks.
 Live contact argument/cache producers, speech/history/results preparation and
 resource/RNG publication remain open. Full M15S4 remains incomplete.
+
+### Ordinary-hit argument and block-cache producers
+
+Pinned original caller5FF7C9..5FF84E/5FFBE3 executes actual actor paralysis
+helper5E17E0, blocking helper5E5670 and High action getter628200. Action6
+blocks; nonzero integer AV48 or earlier sneak bypass clears intent. Shield
+cache is queried first and weapon only when absent. Both raw flags survive a
+failed facing predicate. The 2,016 cases cover three actor vtables, both x87
+control words and all listed boolean/action boundaries; AV48, equipment
+cache returns and facing are explicit boundaries. Full4BB060/data-table queries
+map weapon types0/1 to Blade14 and2/3 to Blunt16; NPC/Player caller5FF423
+stores HTH17.
+The packet preserves those indices rather than prematurely reading base skills.
+Health stays pre-difficulty; Fatigue is the normalized scaled writer argument;
+pre-scaling damage-path selection remains separate even when both writers zero.
+[M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json](M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json)
+pins source, original observations and full engine checks in both profiles.
+Creature natural attacks bypass that HTH store in ten original cases; the packet leaves their used-skill field
+unavailable255 pending the later query semantics.
+This is producer wiring, not common speech/reaction or gameplay acceptance.

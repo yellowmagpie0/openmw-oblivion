@@ -12029,3 +12029,17 @@ All 3,013 normal components and 866 instrumented ESM4 components pass. See
 [M15-COMMON-HIT-PHASES-VERIFICATION.json](M15-COMMON-HIT-PHASES-VERIFICATION.json).
 These APIs have no production caller yet. The live hit pipeline and full M15S4
 acceptance remain open; this numeric contract adds no gameplay acceptance claim.
+
+### Ordinary-hit caller argument preservation
+
+The ordinary melee producer now carries pre-difficulty Health, normalized
+Fatigue, pre-armor damage, the used skill index and pre-scaling damage-path
+selection in an ephemeral contact packet. Raw active-block and bare-hand flags
+are captured before facing and preserved across condition/equipment changes.
+Original instructions pass 2,016 cache cases, ten NPC/weapon skill-index
+observations and ten Creature bypass cases. Creature skill metadata stays
+explicitly unavailable until its later native query is established.
+Both normal and ASan/UBSan full engine inventories pass (1,862 tests each).
+See [M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json](M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json).
+The common phase APIs still have no live consumer; no new gameplay/restart gate
+is claimed. Unsupported contact domains and remaining M15S4 gates stay open.

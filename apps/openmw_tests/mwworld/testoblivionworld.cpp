@@ -6679,6 +6679,9 @@ namespace
                 else
                 {
                     ASSERT_TRUE(contact); EXPECT_EQ(contact->mHealth, health); EXPECT_EQ(contact->mFatigue, 0);
+                    EXPECT_EQ(contact->mHitArguments.mUsedSkill, 255); // Native natural branch bypasses the HTH store.
+                    EXPECT_FALSE(contact->mHitArguments.mAttackerHasWeapon);
+                    EXPECT_TRUE(contact->mHitArguments.mDamagePath);
                 }
             }
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
@@ -7311,6 +7314,15 @@ namespace
         EXPECT_EQ(damage->mHealth, 7.5f); // 20 * .75 armor remainder * .5 block remainder.
         EXPECT_EQ(damage->mFatigue, 3.75f); // 10 * 7.5/20, before difficulty.
         EXPECT_EQ(damage->mBlockFatigueDebit, 20.5f); // Separate earlier Novice writer.
+        EXPECT_EQ(damage->mHitArguments.mHealth, 7.5f);
+        EXPECT_EQ(damage->mHitArguments.mFatigue, 3.75f);
+        EXPECT_EQ(damage->mHitArguments.mPreArmorDamage, 20.f);
+        EXPECT_EQ(damage->mHitArguments.mBlockAbsorbedFraction, .5f);
+        EXPECT_EQ(damage->mHitArguments.mUsedSkill, 17);
+        EXPECT_TRUE(damage->mHitArguments.mDamagePath);
+        EXPECT_TRUE(damage->mHitArguments.mActiveBlock);
+        EXPECT_TRUE(damage->mHitArguments.mBareHandBlock);
+        EXPECT_FALSE(damage->mHitArguments.mAttackerHasWeapon);
         EXPECT_EQ(*service.findActorValues(attacker.getCellRef().getFormKey()), sourceValues);
         EXPECT_EQ(*service.findActorValues(victim.getCellRef().getFormKey()), targetValues);
         for (const int base : {0, 24, 25, 49, 50, 100})
@@ -7329,6 +7341,10 @@ namespace
         const auto outside = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
         ASSERT_TRUE(outside); EXPECT_EQ(outside->mHealth, 15); EXPECT_EQ(outside->mFatigue, 7.5f);
         EXPECT_EQ(outside->mBlockAbsorbedFraction, 0); EXPECT_EQ(outside->mBlockFatigueDebit, 0);
+        EXPECT_FALSE(outside->mBlockAccepted);
+        EXPECT_TRUE(outside->mHitArguments.mActiveBlock);
+        EXPECT_TRUE(outside->mHitArguments.mBareHandBlock);
+        EXPECT_EQ(outside->mHitArguments.mHealth, 15.f);
         position.rot[2] = 0; victim.getRefData().setPosition(position);
         auto state = captureNativeActorState(fixture, attacker);
         state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
@@ -7339,6 +7355,24 @@ namespace
         const auto paralyzed = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
         ASSERT_TRUE(paralyzed); EXPECT_EQ(paralyzed->mHealth, 15); EXPECT_EQ(paralyzed->mFatigue, 7.5f);
         EXPECT_EQ(paralyzed->mBlockAbsorbedFraction, 0); EXPECT_EQ(paralyzed->mBlockFatigueDebit, 0);
+        EXPECT_FALSE(paralyzed->mHitArguments.mActiveBlock);
+        EXPECT_FALSE(paralyzed->mHitArguments.mBareHandBlock);
+        // A zero Health calculation normalizes the native 0/0 Fatigue writer,
+        // while the common damage-path flag still sees incoming hand Fatigue.
+        ESM4::GameSetting zero{}; zero.mId = {0x951, 0};
+        zero.mEditorId = "fHandHealthMin"; zero.mData = 0.f;
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(zero,
+            ESM::FormKey::content("headless.esm", 0x951));
+        zero.mId = {0x952, 0}; zero.mEditorId = "fHandHealthMax";
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(zero,
+            ESM::FormKey::content("headless.esm", 0x952));
+        const auto noHealth = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
+        ASSERT_TRUE(noHealth);
+        EXPECT_EQ(noHealth->mHealth, 0);
+        EXPECT_EQ(noHealth->mFatigue, 0);
+        EXPECT_EQ(noHealth->mHitArguments.mHealth, 0);
+        EXPECT_EQ(noHealth->mHitArguments.mFatigue, 0);
+        EXPECT_TRUE(noHealth->mHitArguments.mDamagePath);
     }
 
     TEST(OblivionWorldTest, OrdinaryWeaponPolicyPreparesNativeWearBeforeOwnedResourcePublication)
@@ -7416,6 +7450,25 @@ namespace
         const auto playerSource = install(player);
         const auto out = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, playerSource, 1, false);
         ASSERT_TRUE(out); EXPECT_EQ(std::bit_cast<std::uint32_t>(out->mHealth), 1076974933u); EXPECT_EQ(out->mConditionAfterWear, 994.f);
+        const auto outNeutral = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, player, victim, playerSource, 0, false);
+        ASSERT_TRUE(outNeutral);
+        EXPECT_EQ(out->mHitArguments.mHealth, outNeutral->mHealth);
+        EXPECT_NE(out->mHitArguments.mHealth, out->mHealth);
+        EXPECT_EQ(out->mHitArguments.mPreArmorDamage, outNeutral->mPreArmorDamage);
+        EXPECT_EQ(out->mHitArguments.mFatigue, 0);
+        EXPECT_TRUE(out->mHitArguments.mDamagePath);
+        // The cached skill is an index, independent of later actor-value queries.
+        for (const auto type : {0, 1, 2, 3})
+        {
+            native.mData.type = type;
+            store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+            const auto typed = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+            ASSERT_TRUE(typed);
+            EXPECT_EQ(typed->mHitArguments.mUsedSkill, type < 2 ? 14 : 16);
+            EXPECT_TRUE(typed->mHitArguments.mAttackerHasWeapon);
+        }
+        native.mData.type = 0;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
         const auto in = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 1, false);
         ASSERT_TRUE(in); EXPECT_EQ(std::bit_cast<std::uint32_t>(in->mHealth), 1120370688u); EXPECT_EQ(in->mConditionAfterWear, 994.f);
         EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, true));
@@ -7428,6 +7481,12 @@ namespace
         ASSERT_TRUE(ordinaryBreak);
         EXPECT_EQ(ordinaryBreak->mBreakDisposition, MWMechanics::OblivionWeaponBreakDisposition::Drop);
         EXPECT_EQ(ordinaryBreak->mConditionAfterWear, 0.f);
+        EXPECT_TRUE(ordinaryBreak->mHitArguments.mAttackerHasWeapon);
+        EXPECT_EQ(ordinaryBreak->mHitArguments.mUsedSkill, 14);
+        EXPECT_EQ(ordinaryBreak->mHitArguments.mHealth, ordinaryBreak->mHealth);
+        EXPECT_FALSE(ordinaryBreak->mHitArguments.mActiveBlock);
+        EXPECT_FALSE(ordinaryBreak->mHitArguments.mBareHandBlock);
+
         native.mFlags |= ESM4::Rec_Persistent;
         store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
         const auto questBreak = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
@@ -8963,6 +9022,8 @@ namespace
                             const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
                             ASSERT_TRUE(prepared);
                             EXPECT_TRUE(prepared->mBlockAccepted);
+                            EXPECT_TRUE(prepared->mHitArguments.mActiveBlock);
+                            EXPECT_FALSE(prepared->mHitArguments.mBareHandBlock);
                             EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
                             ASSERT_TRUE(prepared->mBlockSounds);
                             EXPECT_EQ(*prepared->mBlockSounds, hasShield
@@ -8978,6 +9039,8 @@ namespace
                             const auto prepared = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, attacker, victim, 0, false);
                             ASSERT_TRUE(prepared);
                             EXPECT_TRUE(prepared->mBlockAccepted);
+                            EXPECT_TRUE(prepared->mHitArguments.mActiveBlock);
+                            EXPECT_FALSE(prepared->mHitArguments.mBareHandBlock);
                             EXPECT_EQ(prepared->mWeaponBlockSound, !hasShield);
                             ASSERT_TRUE(prepared->mBlockSounds);
                             EXPECT_EQ(*prepared->mBlockSounds, hasShield
@@ -32246,6 +32309,9 @@ TEST(OblivionWorldTest, AdvancedUnarmedWeaponBlockKeepsFullDamageAndSeparatesRea
             EXPECT_EQ(damage->mPreArmorDamage, 16);
             EXPECT_EQ(damage->mBlockAbsorbedFraction, 0);
             EXPECT_EQ(damage->mBlockFatigueDebit, block < 25 ? 20 : 0);
+            EXPECT_TRUE(damage->mHitArguments.mActiveBlock);
+            EXPECT_TRUE(damage->mHitArguments.mBareHandBlock);
+            EXPECT_TRUE(damage->mHitArguments.mAttackerHasWeapon);
             EXPECT_TRUE(damage->mBlockAccepted);
             EXPECT_TRUE(damage->mRequestsAttackerRecoil);
             EXPECT_EQ(damage->mWeaponBlockSound, block >= 50);

@@ -321,6 +321,22 @@ namespace MWMechanics
         MWWorld::Ptr mItem;
     };
 
+    // Ephemeral caller arguments for the common ordinary-hit phases. Keep
+    // pre-difficulty damage and raw block-cache flags across wear/removal;
+    // post-sink actor values, facing and animation state must be queried later.
+    struct OblivionOrdinaryHitArguments
+    {
+        float mHealth = 0;
+        float mFatigue = 0;
+        float mPreArmorDamage = 0;
+        float mBlockAbsorbedFraction = 0;
+        std::uint8_t mUsedSkill = 255;
+        bool mDamagePath = false;
+        bool mActiveBlock = false;
+        bool mBareHandBlock = false;
+        bool mAttackerHasWeapon = false;
+    };
+
     struct OblivionPhysicalContactDeltas
     {
         float mAttackerFatigue = 0;
@@ -356,6 +372,7 @@ namespace MWMechanics
         std::vector<OblivionMeleeSequenceMetadata> mVictimHeldSources{};
         std::optional<OblivionHeldBlockEquipmentSources> mAttackerHeldEquipment{};
         std::optional<OblivionHeldBlockEquipmentSources> mVictimHeldEquipment{};
+        std::optional<OblivionOrdinaryHitArguments> mOrdinaryHitArguments{};
     };
 
     struct OblivionPassiveEffectIdentity

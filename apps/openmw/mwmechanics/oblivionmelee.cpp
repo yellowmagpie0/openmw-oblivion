@@ -601,6 +601,7 @@ namespace MWMechanics
                 result.mDamage = {damage->mHealth, damage->mFatigue};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+                deltas.mOrdinaryHitArguments = damage->mHitArguments;
                 blockAccepted = damage->mBlockAccepted;
                 requestsAttackerRecoil = damage->mRequestsAttackerRecoil;
                 weaponBlockSound = damage->mWeaponBlockSound;
@@ -639,6 +640,7 @@ namespace MWMechanics
                 result.mDamage = {damage->mHealth, 0};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
+                deltas.mOrdinaryHitArguments = damage->mHitArguments;
                 blockAccepted = damage->mBlockAccepted;
                 requestsAttackerRecoil = damage->mRequestsAttackerRecoil;
                 weaponBlockSound = damage->mWeaponBlockSound;
@@ -965,6 +967,8 @@ namespace MWMechanics
             float mDebit = 0;
             bool mAccepted = false;
             bool mUnarmed = true;
+            bool mActiveBlock = false;
+            bool mBareHandBlock = false;
             bool mWeaponBlockSound = false;
             bool mRequestsAttackerRecoil = false;
             std::optional<std::array<std::string_view, 3>> mSounds{};
@@ -1010,6 +1014,23 @@ namespace MWMechanics
                 return result;
             if (victim.getType() == ESM::REC_CREA4)
                 return std::nullopt; // Creature defensive posture/equipment policy needs its native caller.
+            // Original5FF7E6/5FF81D cache these before the facing gate.
+            // Read presence first: definitions and supported mitigation policy
+            // are needed only after facing accepts the contact.
+            auto& inventory = victim.getClass().getInventoryStore(victim);
+            MWWorld::Ptr item;
+            bool hasShield = false;
+            if (auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
+                left != inventory.end() && left->getType() == ESM::REC_ARMO)
+            {
+                item = *left;
+                hasShield = true;
+            }
+            else if (auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                right != inventory.end() && right->getType() == ESM::REC_WEAP)
+                item = *right;
+            result.mActiveBlock = true;
+            result.mBareHandBlock = item.isEmpty();
             const auto& from = attacker.getRefData().getPosition();
             const auto& to = victim.getRefData().getPosition();
             const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
@@ -1017,29 +1038,24 @@ namespace MWMechanics
             if (!ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy),
                     ESM4::buildCombatHitConeAngle(settings)).mInside)
                 return result;
-            auto& inventory = victim.getClass().getInventoryStore(victim);
-            MWWorld::Ptr item;
             const ESM4::Armor* shield = nullptr;
             const ESM4::Weapon* weapon = nullptr;
-            if (auto left = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedLeft);
-                left != inventory.end() && left->getType() == ESM::REC_ARMO)
+            if (!item.isEmpty())
             {
-                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), left->getCellRef().getRefId());
+                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
                 const auto* form = id.getIf<ESM::FormId>();
-                shield = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
-                if (!shield || !(shield->mArmorFlags & ESM4::Armor::TES4_Shield))
-                    throw std::invalid_argument("native blocking shield has no winning shield definition");
-                item = *left;
-            }
-            else if (auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
-                right != inventory.end() && right->getType() == ESM::REC_WEAP)
-            {
-                const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), right->getCellRef().getRefId());
-                const auto* form = id.getIf<ESM::FormId>();
-                weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
-                if (!weapon || weapon->mData.type > 3)
-                    return std::nullopt;
-                item = *right;
+                if (hasShield)
+                {
+                    shield = form ? world.getStore().get<ESM4::Armor>().search(*form) : nullptr;
+                    if (!shield || !(shield->mArmorFlags & ESM4::Armor::TES4_Shield))
+                        throw std::invalid_argument("native blocking shield has no winning shield definition");
+                }
+                else
+                {
+                    weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+                    if (!weapon || weapon->mData.type > 3)
+                        return std::nullopt;
+                }
             }
             const auto equipment = shield ? ESM4::BlockEquipment::Shield
                 : weapon ? ESM4::BlockEquipment::Weapon : ESM4::BlockEquipment::Unarmed;
@@ -1215,7 +1231,12 @@ namespace MWMechanics
         return OblivionUnarmedContactDamage{damage.mHealth, damage.mFatigue, block->mDebit, block->mFraction,
             incoming.mHealth, std::move(wear.mConditions), wear.mRandom,
             block->mAccepted, block->mWeaponBlockSound, block->mSounds, wear.mHitArmorClass,
-            block->mRequestsAttackerRecoil};
+            block->mRequestsAttackerRecoil,
+            // Creature natural damage bypasses native5FF423; its later cached
+            // skill query is not established. 255 marks this field unavailable.
+            {block->mRemaining, damage.mFatigue, incoming.mHealth, block->mFraction,
+                static_cast<std::uint8_t>(creature ? 255 : 17),
+                block->mRemaining > 0 || incoming.mFatigue > 0, block->mActiveBlock, block->mBareHandBlock, false}};
     }
 
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
@@ -1418,7 +1439,10 @@ namespace MWMechanics
             return std::nullopt;
         return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
-            wear->mHitArmorClass, breakDisposition, block->mRequestsAttackerRecoil};
+            wear->mHitArmorClass, breakDisposition, block->mRequestsAttackerRecoil,
+            {block->mRemaining, 0, incoming, block->mFraction,
+                static_cast<std::uint8_t>(weapon->mData.type < 2 ? 14 : 16),
+                block->mRemaining > 0, block->mActiveBlock, block->mBareHandBlock, true}};
     }
 
     static float weaponContactDamage(MWBase::World& world,
