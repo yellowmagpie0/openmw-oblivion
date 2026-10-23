@@ -1,0 +1,12 @@
+{
+  "scope": "Full original5F4FD0 Stagger activation followed by actual5F4E10 blocked/Counter playback request; determine action8 guard before changing production slot representation",
+  "source_fixture": "native-stagger-parallel-slot3-oracle-01/probe-01.py",
+  "matrix": "Old action2/6/7/8; body/first-person camera; first clocks0/.25/.5/2; prior first slot3false/true; x87PC53/64. Each accepted Stagger followed by both counter argument0 and1.",
+  "expectation": "5F4E10 process virtual2D0 reads actual action8 and returns before animation lookup/playback. No action, slot, sequence, owner or timing mutation and no RNG/resource/callback. Existing Stagger slot0 and passive slot3 remain.",
+  "boundaries": "Inherited hash-identified Player animation/cache fixture, scene/frustum/notification/atomic boundaries. Actual group/cache/playback/activation/sequence update/action setter and High process action getter execute. No real rendering or gameplay acceptance.",
+  "schema_version": 1,
+  "cases": 128,
+  "guard_checks": 256,
+  "full_M15S4_acceptance": false,
+  "receipt": "docs/oblivion/M15-STAGGER-BLOCKED-PLAYBACK-GUARD-VERIFICATION.json"
+}

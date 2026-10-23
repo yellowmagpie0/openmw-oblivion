@@ -11671,3 +11671,28 @@ pins source, final checks, original observations, all retained fixture failures,
 content/settings audit and both comparison profiles. Editable
 `m15_ordinary_hit_reaction_oracle_cases.json` records the case groups and
 remaining integration requirements. Full M15S4 remains incomplete.
+
+
+## Blocked playback after common Stagger
+
+Full original5F4FD0 activation followed by actual5F4E10 verifies128 paired
+Player contexts and256 BlockHit/Counter requests. High-process virtual2D0
+returns action8; the blocked-playback helper exits before resource lookup,
+playback, RNG or notification. Actor/process/view/sequence bytes remain exact
+for both request arguments and the Stagger sequences continue their own clocks.
+Prior actions2/6/7/8, both cameras, four first-person clocks, prior first-person
+slot3 presence and both x87 words are crossed. Scene and notification boundaries
+remain supplied; no gameplay/render/PCM acceptance is added.
+
+This refines the common-hit integration: retain Stagger slot0 and existing
+passive slot3 when later blocked playback is suppressed by action8. Keep the
+Counter query outcome separate from actual Counter activation, since the
+blocked caller skips subsequent disarm/Recoil after a successful query even
+when playback returns early. The guard campaign does not itself execute that
+Counter query or defensive disarm. No new slot representation is needed solely
+to manufacture a BlockHit over this guarded action.
+
+[M15-STAGGER-BLOCKED-PLAYBACK-GUARD-VERIFICATION.json](M15-STAGGER-BLOCKED-PLAYBACK-GUARD-VERIFICATION.json)
+pins the original executable identity, complete probe and corpus. The editable
+case protocol accompanies it. Production common-hit integration and full M15S4
+acceptance remain open.

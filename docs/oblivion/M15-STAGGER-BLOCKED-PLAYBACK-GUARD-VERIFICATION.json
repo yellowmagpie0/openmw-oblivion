@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "source_parent": "430d9ad505545d9c48275a4e3a694f5cacd29172",
+  "scope": "Original blocked-playback action8 guard after actual paired Player Stagger activation",
+  "full_M15S4_acceptance": false,
+  "verification": {
+    "passed": true,
+    "cases": 128,
+    "guard_checks": 256,
+    "corpus_sha256": "ad031b5fd7cbabb987f540a7e878feeb52f566664bb6892d2b93b36ce6c81a3c",
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Full original5F4FD0 Stagger activation followed by actual5F4E10 blocked/Counter playback request; determine action8 guard before changing production slot representation",
+    "full_M15S4_acceptance": false
+  },
+  "retained_artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/corpus01.json",
+      "sha256": "ad031b5fd7cbabb987f540a7e878feeb52f566664bb6892d2b93b36ce6c81a3c",
+      "bytes": 974849
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/preregistration.json",
+      "sha256": "9cf8613cb914535445748ed85cf9aac12e1d499db3c227b286cb081b6dda6fad",
+      "bytes": 967
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/probe-01.py",
+      "sha256": "27e6127f71b5198440a752b11874fb41b79f5b8f579cb82e6a418200ebc2b0c5",
+      "bytes": 9799
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/probe.log",
+      "sha256": "359a8259ee62ec104871dac0445be221a5487fe4ae9dfc9d89d69866f47e5612",
+      "bytes": 441
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-dispatch-guard-oracle-01/verification01.json",
+      "sha256": "b33835969cda5714dfbd72b3db2c038def8ac60a9531710a92502479afacd969",
+      "bytes": 457
+    }
+  ],
+  "fixture_source": {
+    "path": "build/oblivion-compat/m15/S4/native-stagger-parallel-slot3-oracle-01/probe-01.py",
+    "sha256": "a628dca826afc3890e333c3036a364a39ba60b8a4245d88a5c2cba6bd33675d4",
+    "bytes": 8609
+  },
+  "findings": [
+    "Actual5F4FD0 Stagger activates native slot0 and sets process action8; existing slot3 history remains.",
+    "Subsequent actual5F4E10 with Counter argumentfalse ortrue invokes the actual High-process virtual2D0 getter and returns before group/cache selection, playback, RNG or notifications.",
+    "Complete actor/process/view and selected sequence bytes remain unchanged after each request. The original Stagger clocks continue advancing in the retained sequence-update samples.",
+    "A common Stagger therefore suppresses later BlockHit/Counter playback. Counter query success and Counter activation must be separate decisions: the blocked caller can skip disarm/Recoil on a successful Counter query even though playback was suppressed. The last consequence follows the separately pinned caller order; this guard probe does not execute the Counter query or disarm caller."
+  ],
+  "limits": [
+    "128 Player contexts: prior action2/6/7/8, both cameras, distinct first-person clocks0/.25/.5/2, prior first-person slot3 missing/present and x87PC53/64. NPC/Creature are not dynamically covered here.",
+    "Inherited scene/frustum/notification/atomic fixture boundaries remain; real asset rendering/PCM/gameplay and normal-input recovery are excluded.",
+    "Current production does not yet integrate the common stage. No source behavior, save schema or runtime admission changes in this evidence supplement."
+  ],
+  "integration": "Use the existing Stagger slot0 plus passive slot3 representation for this native action8 guard. Preserve Counter selection, playback admission and subsequent defensive disarm/Recoil as distinct staged operations; do not invent a later BlockHit activation over action8."
+}
