@@ -29,7 +29,7 @@
       "339:IsPlayersLastRiddenHorse": 14,
       "358:IsPlayerMovingIntoNewSpace": 8,
       "35:GetDisabled": 5,
-      "365:IsChild": 8,
+      "365:GetPlayerInSEWorld": 8,
       "45:GetDetected": 13,
       "46:GetDead": 14,
       "47:GetItemCount": 101,
@@ -68,7 +68,7 @@
       "12:Furniture": 1,
       "15:NPCs": 2
     },
-    "package_fingerprint": "sha256:46f3d110b1b6d60e2443c7f83d6d276ead8f87ecd5fbb18b4b2a3a287b5da904",
+    "package_fingerprint": "sha256:0bbb3969e5ee18ab9a32c5d7d8c0c2ac728f2190ae9a4fcea02a00bbc5f89556",
     "package_flag_distribution": {
       "0x00000000": 2720,
       "0x00000001": 242,

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "Native GetPlayerInSEWorld script/condition and GetIsPlayableRace condition admission; not all quest predicates or M15S4 acceptance",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_predicates": {
+    "playable": {
+      "function": 254,
+      "evaluate": "004F7030",
+      "cases": 192,
+      "rule": "NPC base type0x23 and nonnull race with RaceFlags mask0x1; other base types and null actor/race yield false"
+    },
+    "realm": {
+      "function": 365,
+      "name": "GetPlayerInSEWorld",
+      "evaluate": "004F87F0",
+      "cases": 1024,
+      "rule": "Player singleton byte at offset0x116 nonzero; no parameters or run-on actor/geography dependence",
+      "raw_player_bytes": "all256",
+      "control_words": [
+        639,
+        895
+      ]
+    }
+  },
+  "production_cases": [
+    "Missing Player authority is explicit MissingContext/RuntimeError",
+    "Realm false/true/false through shared Player value publication; both NPC and Player subjects; absent geographic context; unresolved reference run-on; parameters ignored; no query mutation/RNG; binary authority roundtrip and same bounty routing",
+    "Playable RaceFlags0..15, Creature false, current Player proxy race rather than absent original Player NPC record, missing race false",
+    "Correct function365 name/count lock; label-only package fingerprint verification",
+    "Rendered shipped command course preserves audio/weather/save checks and adds two no-argument Player realm queries"
+  ],
+  "remaining": [
+    "Quest root live admission and native faction queries",
+    "INFO list ordering/history and common-hit speech preparation",
+    "Full M15S4 normal-input and restart acceptance"
+  ]
+}

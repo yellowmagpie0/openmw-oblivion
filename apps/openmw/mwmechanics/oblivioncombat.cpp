@@ -5103,6 +5103,12 @@ namespace MWMechanics
         return values ? values->mReputation : std::nullopt;
     }
 
+    std::optional<bool> OblivionCombatService::playerInShiveringIsles() const
+    {
+        const auto* values = findActorValues(ESM::FormKey::dynamic("player", 1));
+        return values ? std::optional(values->mPlayerInShiveringIsles) : std::nullopt;
+    }
+
     void OblivionCombatService::publishPlayerReputation(MWWorld::Player& player,
         ESM4::PlayerReputationState reputation, const ESM4::PlayerDynamicBaseSettings& settings)
     {

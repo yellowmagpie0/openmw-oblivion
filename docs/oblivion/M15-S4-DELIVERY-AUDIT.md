@@ -11987,3 +11987,17 @@ code is unchanged from the preceding decoder checks. Leak checks are disabled.
 Root quest predicate authority, automatic common-hit speech/resource/condition
 preparation/publication, INFO history/results and complete M15S4 normal-input
 and fresh-process combat acceptance remain open.
+
+### Native dialogue realm and playable race prerequisite
+
+The script and dialogue condition for `GetPlayerInSEWorld` now share saved
+Player realm authority with bounty routing. `GetIsPlayableRace` conditions read
+the native race flag and the Player's current race proxy. Both engine profiles
+pass 1,860 tests; normal components pass 3,009, instrumented ESM4 components 862,
+and Python 384. The rendered command course passes both no-argument realm
+queries and its existing audio, weather, and save checks; the resulting save
+retains the observed false realm flag. See
+[M15-NATIVE-DIALOGUE-REALM-VERIFICATION.json](M15-NATIVE-DIALOGUE-REALM-VERIFICATION.json)
+for source, independent native observations, content lock correction, retained
+fixture failures, and runtime limits. Quest root admission and full common hit
+speech and reaction integration remain incomplete; this does not close M15S4.

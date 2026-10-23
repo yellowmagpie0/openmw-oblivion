@@ -44,6 +44,7 @@
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrefr.hpp>
+#include <components/esm4/loadrace.hpp>
 #include <components/esm4/playermechanics.hpp>
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/loadwthr.hpp>
@@ -936,6 +937,8 @@ namespace MWMechanics
                     subjectKey = ESM::FormKey::dynamic("player", 1);
                     break;
             }
+            if (condition.mFunction == 365)
+                return playerRealmCondition();
             const std::optional<StableLocation> subjectLocation = locationFor(subjectKey);
             if (!subjectLocation)
                 return ESM4::ConditionValue::missing();
@@ -1482,8 +1485,8 @@ namespace MWMechanics
                 return value((mWorld.isPlayerTraveling() || mWorld.getPlayer().wasTeleported()) ? 1.0 : 0.0);
             if (function == "GetRandomPercent")
                 return value(static_cast<double>(stableChoice(snapshot.mActor, snapshot.mSelectionGeneration) % 100));
-            if (function == "IsChild")
-                return value(0.0);
+            if (function == "GetIsPlayableRace")
+                return value(playableRace(loadedPtrFor(subjectKey), subjectLocation->mBase) ? 1.0 : 0.0);
             return ESM4::ConditionValue::unsupported();
         };
         return context;
@@ -1625,6 +1628,30 @@ namespace MWMechanics
         return ESM4::evaluateConditions(conditions, context);
     }
 
+    ESM4::ConditionValue OblivionAiService::playerRealmCondition() const
+    {
+        const auto* combat = mWorld.getOblivionCombatService();
+        const auto realm = combat ? combat->playerInShiveringIsles() : std::nullopt;
+        return realm ? value(*realm ? 1.0 : 0.0) : ESM4::ConditionValue::missing();
+    }
+
+    bool OblivionAiService::playableRace(const MWWorld::Ptr& actor, const ESM::FormKey& base) const
+    {
+        ESM::RefId race;
+        if (!actor.isEmpty() && actor == mWorld.getPlayerPtr())
+            race = actor.get<ESM::NPC>()->mBase->mRace;
+        else
+        {
+            const ESM4::Npc* npc = !actor.isEmpty() && actor.getClass().getType() == ESM::REC_NPC_4
+                ? actor.get<ESM4::Npc>()->mBase : mWorld.mStore.search<ESM4::Npc>(base);
+            if (npc == nullptr)
+                return false;
+            race = ESM::RefId(npc->mRace);
+        }
+        const auto* definition = mWorld.mStore.get<ESM4::Race>().search(race);
+        return definition && (definition->mRaceFlags & 1) != 0;
+    }
+
     ESM4::ConditionEvaluationContext OblivionAiService::conditionContext(
         const MWWorld::Ptr& actor, const LiveActor& live, const DialogueConditionInputs* dialogue,
         const MWWorld::Ptr* boundTarget) const
@@ -1676,6 +1703,8 @@ namespace MWMechanics
                     subjectPtr = ptrFor(condition.mRunOnReferenceKey);
                     break;
             }
+            if (condition.mFunction == 365)
+                return playerRealmCondition();
             if (subjectPtr.isEmpty())
                 return ESM4::ConditionValue::missing();
 
@@ -2045,8 +2074,8 @@ namespace MWMechanics
             }
             if (function == "IsPlayerMovingIntoNewSpace")
                 return value((mWorld.isPlayerTraveling() || mWorld.getPlayer().wasTeleported()) ? 1.0 : 0.0);
-            if (function == "IsChild")
-                return value(0.0);
+            if (function == "GetIsPlayableRace")
+                return value(playableRace(subjectPtr, baseKey(subjectPtr)) ? 1.0 : 0.0);
             if (function == "GetSitting")
                 return value(sleeping() ? 1.0 : 0.0);
             if (function == "GetGlobalValue")

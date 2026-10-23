@@ -68,6 +68,8 @@ TEST(ESM4AIConditions, NamesNativeOblivionFunctions)
     EXPECT_EQ(ESM4::conditionFunctionName(180), "GetDetectionLevel");
     EXPECT_EQ(ESM4::conditionFunctionName(339), "IsPlayersLastRiddenHorse");
     EXPECT_EQ(ESM4::conditionFunctionName(358), "IsPlayerMovingIntoNewSpace");
+    EXPECT_EQ(ESM4::conditionFunctionName(254), "GetIsPlayableRace");
+    EXPECT_EQ(ESM4::conditionFunctionName(365), "GetPlayerInSEWorld");
     EXPECT_TRUE(ESM4::conditionFunctionName(999).empty());
 }
 

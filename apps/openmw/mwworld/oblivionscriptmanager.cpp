@@ -2281,13 +2281,11 @@ namespace MWWorld
         }
         if (name == "getplayerinseworld")
         {
-            const auto world = keyFromValue(argument(0));
-            const Ptr player = mWorld.getPlayerPtr();
-            if (!world || !player.isInCell())
-                return std::int64_t(0);
-            const ESM::RefId worldId = player.getCell()->getCell()->getWorldSpace();
-            const ESM::FormId* formId = worldId.getIf<ESM::FormId>();
-            return std::int64_t(formId != nullptr && mResolver.toFormKey(*formId) == *world);
+            const auto* combat = mWorld.getOblivionCombatService();
+            const auto realm = combat ? combat->playerInShiveringIsles() : std::nullopt;
+            if (!realm)
+                throw ObScript::RuntimeError("OBSV115", "native Player realm query requires actor authority", name);
+            return std::int64_t(*realm);
         }
 
         if (name == "getav" || name == "getactorvalue" || name == "getbaseav" || name == "getbaseactorvalue")

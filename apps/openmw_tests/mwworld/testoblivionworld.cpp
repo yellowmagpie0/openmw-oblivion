@@ -32763,3 +32763,102 @@ TEST(OblivionWorldTest, NativeSayForUnmaterializedActorsSkipsConditionsAndSelect
     }
     EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), 3357800067u);
 }
+
+TEST(OblivionWorldTest, NativePlayerRealmPredicateAndCommandReadTheSavedPlayerFlagWithoutArguments)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto speaker = addNativeNpc(fixture, 0xa00);
+    ASSERT_TRUE(world.activateOblivionActor(speaker));
+    auto& ai = *world.getOblivionAiService();
+    auto& combat = *world.getOblivionCombatService();
+    auto& scripts = *world.getOblivionScriptManager();
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 365;
+    condition.mComparisonValue = 1;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    ObScript::RuntimeContext context;
+    context.mSelf = speaker.getCellRef().getFormKey();
+    EXPECT_FALSE(combat.playerInShiveringIsles().has_value());
+    EXPECT_EQ(ai.evaluateDialogueConditions(speaker, {}, std::span(&condition, 1)),
+        ESM4::ConditionResult::MissingContext);
+    EXPECT_THROW(scripts.call("GetPlayerInSEWorld", std::nullopt, {}, context, {}), ObScript::RuntimeError);
+
+    MWClass::Npc::registerSelf(); world.setupPlayer();
+    ESM4::Npc native{};
+    native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    native.mIsTES4 = true; native.mData.health = 100;
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    const auto player = world.getPlayerPtr();
+    ASSERT_FALSE(player.isInCell()); // A realm flag query requires no geographic context.
+    const auto key = ESM::FormKey::dynamic("player", 1);
+    for (const bool realm : {false, true, false})
+    {
+        auto values = *combat.findActorValues(key);
+        values.mPlayerInShiveringIsles = realm;
+        values.mBounty = ESM4::CrimeBountyState{9.f, 17.f};
+        combat.publishPlayerValues(world.getPlayer(), values,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        const auto before = contactSnapshot(fixture, {speaker});
+        EXPECT_EQ(combat.playerInShiveringIsles(), realm);
+        EXPECT_EQ(ObScript::asNumber(scripts.call("GetPlayerInSEWorld", std::nullopt, {}, context, {})), realm);
+        EXPECT_EQ(combat.crimeBounty(key), realm ? 17.f : 9.f);
+        for (const auto& actor : {speaker, player})
+            EXPECT_EQ(ai.evaluateDialogueConditions(actor, {}, std::span(&condition, 1)),
+                realm ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        // The native evaluator ignores its run-on reference and its parameter slots.
+        condition.mRunOn = ESM4::ConditionRunOn::Reference;
+        condition.mRunOnReferenceKey = ESM::FormKey::content("headless.esm", 0xfffffe);
+        condition.mParameter1.mNumber = 123;
+        EXPECT_EQ(ai.evaluateDialogueConditions(speaker, {}, std::span(&condition, 1)),
+            realm ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        const auto saved = ESM4::RuntimeState::deserializeBinary(captureNativeActorState(fixture, speaker).serializeBinary());
+        const auto stored = std::find_if(saved.mNativeActorValues.begin(), saved.mNativeActorValues.end(),
+            [&](const auto& actor) { return actor.mActor == key; });
+        ASSERT_NE(stored, saved.mNativeActorValues.end());
+        EXPECT_EQ(stored->mPlayerInShiveringIsles, realm);
+        EXPECT_EQ(contactSnapshot(fixture, {speaker}), before);
+    }
+}
+
+TEST(OblivionWorldTest, NativePlayableRaceUsesTheNpcRaceFlagAndCurrentPlayerProxy)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    const auto npc = addNativeNpc(fixture, 0xa00);
+    const auto creature = addEquipmentCreature(fixture);
+    auto& ai = *world.getOblivionAiService();
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 254;
+    condition.mComparisonValue = 1;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    const auto raceKey = ESM::FormKey::content("headless.esm", 0x810);
+    auto race = *store.search<ESM4::Race>(raceKey);
+    for (std::uint32_t flags = 0; flags < 16; ++flags)
+    {
+        race.mRaceFlags = flags;
+        store.getWritable<ESM4::Race>().insertStatic(race, raceKey);
+        EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)),
+            flags & 1 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        EXPECT_EQ(ai.evaluateDialogueConditions(creature, {}, std::span(&condition, 1)),
+            ESM4::ConditionResult::False);
+    }
+    MWClass::Npc::registerSelf(); world.setupPlayer();
+    const auto player = world.getPlayerPtr();
+    auto current = *player.get<ESM::NPC>()->mBase;
+    current.mRace = ESM::RefId(race.mId);
+    {
+        auto prepared = store.preparePlayerRecord(current);
+        world.getPlayer().set(prepared.commit());
+    }
+    // No ESM4 Player base definition is available: the current proxy still owns race.
+    EXPECT_EQ(ai.evaluateDialogueConditions(player, {}, std::span(&condition, 1)), ESM4::ConditionResult::True);
+    current.mRace = ESM::RefId(ESM::FormId{0xfffffe, 0});
+    {
+        auto prepared = store.preparePlayerRecord(current);
+        world.getPlayer().set(prepared.commit());
+    }
+    EXPECT_EQ(ai.evaluateDialogueConditions(player, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);
+}

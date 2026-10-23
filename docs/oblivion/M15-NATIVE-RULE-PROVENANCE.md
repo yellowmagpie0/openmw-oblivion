@@ -17562,3 +17562,41 @@ code is unchanged from the preceding decoder checks. Leak checks are disabled.
 Root quest predicate authority, automatic common-hit speech/resource/condition
 preparation/publication, INFO history/results and complete M15S4 normal-input
 and fresh-process combat acceptance remain open.
+
+
+## Native dialogue Player realm and playable race
+
+Condition 365 is `GetPlayerInSEWorld` in original 1.2.0416. The native
+`004F87F0` evaluator reads the Player singleton's byte at offset `0x116` and
+has no parameters. Script and condition adapters now read the existing saved
+Player realm flag also used by bounty routing; missing authority is explicit.
+The query requires no geographic context. Condition 254 (`GetIsPlayableRace`,
+`004F7030`) checks the NPC race's playable bit. The Player uses its current
+shared NPC proxy race, including current edits. Creatures and missing races
+yield false. The independent original predicate campaign covers 192 playable
+race cases and 1,024 realm cases at both x87 control words. Its additional
+51,488 IsActorEvil cases are not implemented by this change.
+
+Both full engine profiles pass 1,860 tests. Normal components pass 3,009;
+instrumented ESM4 components pass 862; Python passes 384. Two new world
+regressions exercise query authority, unchanged native state and RNG, a native
+binary roundtrip, and Player race selection. Tested dirty source fingerprint:
+`84049d7ae516bab4866dbf4a94e15ca186531de993cce639b2e5ff8d1ac69308`.
+Leak detection is disabled. Pre-test build stops and a normal test compilation
+failure retain the corrected fixture attempts.
+
+The M14 count lock changes its function 365 label and package fingerprint only.
+An independent rerun reproduces the old fingerprint by restoring only the old
+decoded name. Content identities and every other inventory field are identical.
+The refreshed complete official inventory passes its lock. A rendered shipped
+command course passes with two added no-argument realm queries, both zero,
+and its existing audio, weather, and save checks. The generated schema 63 save
+independently decodes to the same false Player realm flag. Unrelated shipped
+VM diagnostics remain recorded. Realm transitions, fresh-process query restart,
+and common hit acceptance are outside this course.
+
+[M15-NATIVE-DIALOGUE-REALM-VERIFICATION.json](M15-NATIVE-DIALOGUE-REALM-VERIFICATION.json)
+pins source, original evidence, checks, content comparison, runtime observations,
+and retained binaries. Quest root admission, native faction queries, INFO
+ordering and history, and automatic hit speech and reactions remain open.
+Full M15S4 is incomplete.

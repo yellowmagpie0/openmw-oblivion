@@ -240,6 +240,7 @@ namespace ESM4
         FUN_IsPlayerMovingIntoNewSpace = 358,
         FUN_GetTimeDead = 361,
         FUN_GetPlayerHasLastRiddenHorse = 362,
+        FUN_GetPlayerInSEWorld = 365, // TES4; later games reuse this index for IsChild.
         FUN_IsChild = 365,
         FUN_GetLastPlayerAction = 367,
         FUN_IsPlayerActionActive = 368,

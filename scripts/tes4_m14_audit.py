@@ -205,7 +205,7 @@ SUPPORTED_CONDITION_FUNCTIONS = {
     310,  # GetInWorldspace
     339,  # IsPlayersLastRiddenHorse
     358,  # IsPlayerMovingIntoNewSpace
-    365,  # IsChild
+    365,  # GetPlayerInSEWorld
 }
 
 # Names are included for the functions that M14 currently evaluates and for
@@ -272,7 +272,7 @@ CONDITION_NAMES = {
     310: "GetInWorldspace",
     339: "IsPlayersLastRiddenHorse",
     358: "IsPlayerMovingIntoNewSpace",
-    365: "IsChild",
+    365: "GetPlayerInSEWorld",
 }
 
 

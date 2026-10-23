@@ -286,7 +286,7 @@ namespace ESM4
             case 353: return "IsActor";
             case 354: return "IsEssential";
             case 358: return "IsPlayerMovingIntoNewSpace";
-            case 365: return "IsChild";
+            case 365: return "GetPlayerInSEWorld";
             default: return {};
         }
         return {};

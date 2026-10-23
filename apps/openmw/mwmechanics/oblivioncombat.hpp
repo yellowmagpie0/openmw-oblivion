@@ -512,6 +512,8 @@ namespace MWMechanics
         // without generic AV modifiers. Absence denotes legacy unowned storage.
         std::optional<float> crimeBounty(const ESM::FormKey& actor) const;
         std::optional<ESM4::PlayerReputationState> playerReputation() const;
+        // Native Player byte shared by GetPlayerInSEWorld and bounty routing.
+        std::optional<bool> playerInShiveringIsles() const;
         void publishPlayerReputation(MWWorld::Player& player, ESM4::PlayerReputationState reputation,
             const ESM4::PlayerDynamicBaseSettings& settings);
         // Integer Lua adapter explicitly replaces the selected raw bucket;
