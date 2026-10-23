@@ -152,6 +152,35 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    def test_friendly_hit_flags65_exact_wire_and_migration(self):
+        state = self.movement_state(); state['schema_version'] = 64
+        legacy = state_io.encode_payload(state)
+        self.assertNotIn('ignore_friendly_hits', state_io.decode_payload(legacy))
+        prefix = bytearray(legacy); struct.pack_into('<I',prefix,len(state_io.MAGIC),65)
+        state['schema_version'] = 65
+        a = 'content:oblivion.esm:000321'; b = state['player']['reference']
+        state['ignore_friendly_hits'] = {b:True,a:False}
+        def wire(rows):
+            result = bytes(prefix) + struct.pack('<I',len(rows))
+            for key,ignored in rows:
+                raw = key.encode(); result += struct.pack('<I',len(raw)) + raw + bytes([ignored])
+            return result
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload,wire([(a,0),(b,1)]))
+        self.assertEqual(state_io.decode_payload(payload)['ignore_friendly_hits'],{a:False,b:True})
+        for rows in ([(a,0),(a,1)],[(b,0),(a,1)],[(a,2)],[('null',0)],
+                     [('content:Oblivion.esm:000321',0)],[('content:oblivion.esm:000014',0)],
+                     [('dynamic:missing-reference:0000000000000001',0)]):
+            with self.subTest(rows=rows),self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(wire(rows))
+        with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(payload[:-1])
+        for bad in (None,[],{a:0},{a:1},{a:'false'},{'null':False}):
+            state['ignore_friendly_hits']=bad
+            with self.subTest(bad=bad),self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(state)
+        state['schema_version']=64; state['ignore_friendly_hits']={a:False}
+        with self.assertRaises(state_io.RuntimeStateError):state_io._upgrade_friendly_hit_flags(state)
+        state['ignore_friendly_hits']={}; state_io._upgrade_friendly_hit_flags(state)
+        self.assertEqual(state['ignore_friendly_hits'],{})
+
     def test_spoken_history_migration_preserves_current_and_rejects_legacy_invention(self):
         a = "content:oblivion.esm:0150c7"
         state = self.movement_state()

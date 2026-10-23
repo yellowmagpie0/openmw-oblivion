@@ -33570,3 +33570,123 @@ TEST(OblivionWorldTest, UnloadedReferenceConditionsBindExplicitAndOppositeActors
                 }
         }
 }
+
+TEST(OblivionWorldTest, FriendlyHitFlagsUseReferenceIdentityAuthoredDefaultsAndNativeSignedArguments)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    const auto npc = fixture.mActor.getCellRef().getFormKey();
+    ESM4::ActorCharacter cold{}; cold.mId = {0xa50, 0};
+    cold.mFormKey = ESM::FormKey::content("headless.esm", 0xa50);
+    cold.mBaseObj = fixture.mActor.get<ESM4::Npc>()->mBase->mId;
+    cold.mBaseKey = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+    cold.mParent = world.getPlayerPtr().getCell()->getCell()->getId();
+    cold.mParentKey = ESM::FormKey::content("headless.esm", 1);
+    cold.mFlags = 0x100400;
+    world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+    const ObScript::RuntimeContext context;
+    const auto call = [&](std::string_view command, const ESM::FormKey& key, std::vector<ObScript::Value> arguments) {
+        return scripts->call(command, ObScript::Value{ObScript::ReferenceValue{key, {}}}, arguments, context, {});
+    };
+    EXPECT_EQ(ObScript::asInteger(call("GetIgnoreFriendlyHits", cold.mFormKey, {})), 1);
+    EXPECT_EQ(ObScript::asInteger(call("GetIgnoreFriendlyHits", npc, {})), 0);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    call("SetIgnoreFriendlyHits", npc, {std::int64_t(-1)});
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    call("SetIgnoreFriendlyHits", player, {std::int64_t(-2)});
+    call("SetIgnoreFriendlyHits", cold.mFormKey, {std::int64_t(0)});
+    call("SetIgnoreFriendlyHits", npc, {std::int64_t(0)});
+    EXPECT_EQ(ObScript::asInteger(call("GetIgnoreFriendlyHits", ESM::FormKey::content("oblivion.esm", 0x14), {})), 1);
+    EXPECT_EQ(ObScript::asInteger(call("GetIgnoreFriendlyHits", cold.mFormKey, {})), 0);
+    EXPECT_EQ(ObScript::asInteger(call("GetIgnoreFriendlyHits", npc, {})), 0);
+    EXPECT_EQ(world.getStore().search<ESM4::ActorCharacter>(cold.mFormKey)->mFlags, 0x100400u);
+    auto state = world.captureOblivionRuntimeState();
+    ASSERT_EQ(state.mIgnoreFriendlyHits.size(), 3u);
+    EXPECT_TRUE(state.mIgnoreFriendlyHits.at(player));
+    EXPECT_FALSE(state.mIgnoreFriendlyHits.at(cold.mFormKey));
+    EXPECT_FALSE(state.mIgnoreFriendlyHits.at(npc));
+    call("SetIgnoreFriendlyHits", player, {std::int64_t(-1)});
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), state.serializeBinary());
+    EXPECT_FALSE(world.setOblivionIgnoreFriendlyHits(ESM::FormKey::content("headless.esm", 0xdead), 1));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), state.serializeBinary());
+    ESM4::PackageCondition condition{}; condition.mFunction = 338;
+    condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = 1;
+    auto& ai = *world.getOblivionAiService();
+    EXPECT_EQ(ai.evaluateDialogueConditions(world.getPlayerPtr(), fixture.mActor, std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    condition.mRunOnTarget = true;
+    EXPECT_EQ(ai.evaluateDialogueConditions(world.getPlayerPtr(), fixture.mActor, std::span(&condition, 1)),
+        ESM4::ConditionResult::False);
+}
+
+TEST(OblivionWorldTest, FriendlyHitFlagsRestoreAtomicallyFollowRuntimeRetentionAndRejectWrongOwners)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto player = ESM::FormKey::dynamic("player", 1), npc = fixture.mActor.getCellRef().getFormKey();
+    ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(player, 1));
+    ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(npc, 0));
+    const auto saved = world.captureOblivionRuntimeState();
+    ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    auto bad = saved;
+    bad.mIgnoreFriendlyHits[ESM::FormKey::content("headless.esm", 0xdead)] = true;
+    EXPECT_THROW(world.validateOblivionSaveState(bad), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), saved.serializeBinary());
+    auto archive = world.retainSimulation();
+    EXPECT_THROW(world.setOblivionIgnoreFriendlyHits(player, 0), std::logic_error);
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(player), true);
+    ASSERT_TRUE(archive.detach()); ASSERT_TRUE(archive.restore());
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(player), true);
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(npc), false);
+    ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(player, 0));
+    ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(npc, 1));
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(player), true);
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(npc), false);
+    auto legacy = saved; legacy.mVersion = 64; legacy.mIgnoreFriendlyHits.clear();
+    readNativeSnapshot(fixture, legacy);
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(player), false);
+    EXPECT_EQ(world.getOblivionIgnoreFriendlyHits(npc), false);
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mIgnoreFriendlyHits.empty());
+}
+
+TEST(OblivionWorldTest, FriendlyHitFlagsAreVisibleToUnloadedPackageConditionsWithoutMaterializingTheActor)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::AIPackage package{}; package.mId = {0xa51, 0};
+    package.mFormKey = ESM::FormKey::content("headless.esm", 0xa51);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    ESM4::PackageCondition condition{}; condition.mFunction = 338;
+    condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = 1;
+    package.mCanonicalConditions = {condition};
+    auto& store = world.getStore();
+    store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+    auto native = *fixture.mActor.get<ESM4::Npc>()->mBase; native.mAIPackageKeys = {package.mFormKey};
+    store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ESM4::ActorCharacter cold{}; cold.mId = {0xa52, 0};
+    cold.mFormKey = ESM::FormKey::content("headless.esm", 0xa52);
+    cold.mBaseObj = native.mId; cold.mBaseKey = native.mFormKey;
+    cold.mParent = world.getPlayerPtr().getCell()->getCell()->getId();
+    cold.mParentKey = ESM::FormKey::content("headless.esm", 1);
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState actor;
+    actor.mActor = cold.mFormKey; actor.mBase = native.mFormKey;
+    actor.mCell = actor.mLastValidCell = cold.mParentKey; actor.mTier = ESM4::ProcessTier::Low;
+    saved.mActorAi = {actor};
+    for (const bool ignored : {false, true})
+    {
+        ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(cold.mFormKey, ignored));
+        auto& ai = *world.getOblivionAiService(); ASSERT_NO_THROW(ai.restore(saved));
+        ai.updateUnloaded(.5f);
+        const auto* result = ai.state(cold.mFormKey); ASSERT_TRUE(result);
+        EXPECT_EQ(result->mConditionResult, ignored ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        EXPECT_EQ(result->mPackage, ignored ? package.mFormKey : ESM::FormKey{});
+        EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
+    }
+}

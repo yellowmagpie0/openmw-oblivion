@@ -12229,3 +12229,36 @@ probes do not establish native hit classification, scheduling or persistence.
 See [M15-REFERENCE-BINDING-VERIFICATION.json](M15-REFERENCE-BINDING-VERIFICATION.json).
 GetFriendHit production state/producer/expiry integration, Player audio identity,
 automatic common-hit callbacks and the remaining M15S4 gameplay gates remain open.
+
+
+### Per-reference IgnoreFriendlyHits flags and save authority
+
+SetIgnoreFriendlyHits and GetIgnoreFriendlyHits now use the addressed reference
+instead of a ScriptManager global. Loaded and unloaded condition 338 queries
+share the World authority. Authored flags supply the default; explicit true and
+false overrides use canonical reference keys and survive World retention and
+schema 65 saves. Legacy saves add an empty override map. Invalid/dangling owners,
+noncanonical keys and non-boolean wire values fail before publication. Native
+argument -1 leaves the reference and save state unchanged.
+
+The hash-identified original setter, bit writer and getter pass 504 cases across
+Player, Character and Creature contexts. The actual C++ helper matches 1,512
+fields; treating -1 as ordinary nonzero produces 36 mismatches. Argument extraction
+and MarkModified are declared observation boundaries; native save serialization
+is not emulated. Full normal engine 1,876/components 3,024 and sanitizer engine 1,876/
+ESM4 components 876 pass, as do all 399 Python tests. Leak detection is disabled.
+All four affected pinned fixture generators reproduce schema 65 outputs with
+complete decoded-state semantic reinspection.
+
+A rendered original-content course sets Player and creature true and NPC false,
+checks independent values and -1 no-ops, and saves. A fresh process loads a
+protected copy, repeats the queries/no-ops and resaves all three flags, including
+explicit false. Each course compiles 10,470 units with zero failures/diagnostics.
+First-course 31 unrelated startup deferred commands and continuation 0 remain
+separate. Reviewed prison/HUD images do not establish flag values; command and
+save records do. Sound is disabled and this is scheduled script acceptance.
+
+See [M15-IGNORE-FRIENDLY-HITS-VERIFICATION.json](M15-IGNORE-FRIENDLY-HITS-VERIFICATION.json).
+GetFriendHit production counters/expiry/lifecycle/persistence, automatic common-hit
+callbacks, Player audio identity and the remaining full M15S4 gameplay gates
+remain open.

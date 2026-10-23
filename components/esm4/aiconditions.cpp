@@ -282,6 +282,7 @@ namespace ESM4
             case 306: return "IsActorUsingATorch";
             case 310: return "GetInWorldspace";
             case 327: return "IsRidingHorse";
+            case 338: return "GetIgnoreFriendlyHits";
             case 339: return "IsPlayersLastRiddenHorse";
             case 353: return "IsActor";
             case 354: return "IsEssential";

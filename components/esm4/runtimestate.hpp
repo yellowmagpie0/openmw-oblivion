@@ -47,7 +47,7 @@ namespace ESM4
     // v62 retains backend living-actor movement across a fresh scene load.
     // v63 preserves the mechanics actor's initial position-adjustment flag.
     // v64 retains global INFO spoken history (native change flag 0x10000000).
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 64;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 65;
 
     struct RuntimeContentIdentity
     {
@@ -703,6 +703,9 @@ namespace ESM4
         std::vector<RuntimeScriptInstance> mScriptInstances;
         std::vector<RuntimeQuestState> mQuests;
         std::set<ESM::FormKey> mSpokenDialogueInfos;
+        // v65: explicit per-reference flag overrides, including false. Absence
+        // uses the authored flag; legacy script-manager globals are not state.
+        std::map<ESM::FormKey, bool> mIgnoreFriendlyHits;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.
         // Zero is a valid CRT seed. Older saves initialize this stream at one.

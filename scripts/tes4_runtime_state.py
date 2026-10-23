@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 64
+CURRENT_VERSION = 65
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -851,6 +851,17 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         native_key(info)
     if len(set(spoken)) != len(spoken):
         raise RuntimeStateError("Duplicate spoken dialogue INFO identity")
+
+    friendly = state.get("ignore_friendly_hits", {})
+    if not isinstance(friendly, dict) or len(friendly) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid friendly-hit reference flag map")
+    if version < 65 and friendly:
+        raise RuntimeStateError("Reference friendly-hit flags require runtime schema65")
+    for key, ignored in friendly.items():
+        native_key(key)
+        if (type(ignored) is not bool or key == "content:oblivion.esm:000014"
+                or (key.startswith("dynamic:") and key != state["player"]["reference"] and key not in reference_keys)):
+            raise RuntimeStateError("Invalid or dangling friendly-hit reference flag")
 
     native_bases = check_collection(state.get("native_actor_bases", []), "native actor-base list")
     if version < 11 and native_bases:
@@ -2694,6 +2705,20 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             previous = order
             spoken.append(info)
         result["spoken_dialogue_infos"] = spoken
+    if version >= 65:
+        friendly = {}
+        previous = None
+        for _ in range(reader.count()):
+            key = reader.string()
+            order = tuple(key.split(":"))
+            if previous is not None and previous >= order:
+                raise RuntimeStateError("Noncanonical friendly-hit reference flags")
+            ignored = reader.unpack("<B")
+            if ignored > 1:
+                raise RuntimeStateError("Invalid friendly-hit reference boolean")
+            friendly[key] = bool(ignored)
+            previous = order
+        result["ignore_friendly_hits"] = friendly
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3327,6 +3352,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         writer.pack("<I", len(spoken))
         for info in spoken:
             writer.string(info)
+    if version >= 65:
+        friendly = sorted(state.get("ignore_friendly_hits", {}).items(), key=lambda item: tuple(item[0].split(":")))
+        writer.pack("<I", len(friendly))
+        for key, ignored in friendly:
+            writer.string(key)
+            writer.pack("<B", int(ignored))
     return writer.finish()
 
 
@@ -3601,6 +3632,12 @@ def _upgrade_spoken_dialogue_history(state: dict[str, Any]) -> None:
     state.setdefault("spoken_dialogue_infos", [])
 
 
+def _upgrade_friendly_hit_flags(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 65 and state.get("ignore_friendly_hits"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry friendly-hit reference flags")
+    state.setdefault("ignore_friendly_hits", {})
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
@@ -3624,6 +3661,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_movement(state)
     _upgrade_bow_states(state)
     _upgrade_spoken_dialogue_history(state)
+    _upgrade_friendly_hit_flags(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3707,6 +3745,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_movement(result)
     _upgrade_bow_states(result)
     _upgrade_spoken_dialogue_history(result)
+    _upgrade_friendly_hit_flags(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

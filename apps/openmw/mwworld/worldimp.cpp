@@ -1,3 +1,4 @@
+#include <components/esm4/referenceflags.hpp>
 #include "worldimp.hpp"
 #include "oblivionweapondrop.hpp"
 #include "savedreference.hpp"
@@ -1848,6 +1849,8 @@ namespace MWWorld
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
     {
         ESM4::RuntimeState state;
+        if (mOblivionRuntimeState)
+            state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
         state.mNextDynamicSerial = mNextOblivionDynamicSerial;
         for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
             state.mContent.push_back({ plugin, fingerprint });
@@ -2343,6 +2346,72 @@ namespace MWWorld
                 disabled = (creatureRef->mFlags & ESM4::Rec_Disabled) != 0;
         }
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
+    }
+
+    std::optional<bool> World::getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(reference);
+        if (key.isNull())
+            return std::nullopt;
+        if (mOblivionRuntimeState)
+            if (const auto found = mOblivionRuntimeState->mIgnoreFriendlyHits.find(key);
+                found != mOblivionRuntimeState->mIgnoreFriendlyHits.end())
+                return found->second;
+        if (key == ESM::FormKey::dynamic("player", 1))
+        {
+            if (!mPlayer || const_cast<World*>(this)->getPlayerPtr().isEmpty())
+                return std::nullopt;
+            const auto* authored = mStore.search<ESM4::ActorCharacter>(
+                ESM::FormKey::content("oblivion.esm", 0x14));
+            return authored && ESM4::ignoresFriendlyHits(authored->mFlags);
+        }
+        Ptr resident;
+        if (key.isDynamic())
+            resident = mWorldModel.getDynamicNativePtr(key);
+        else if (const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key))
+            resident = mWorldModel.getPtr(*id);
+        if (!resident.isEmpty())
+        {
+            if (const auto* actor = resident.getCellRef().getNativeActor())
+                return ESM4::ignoresFriendlyHits(actor->mFlags);
+            if (const auto* object = resident.getCellRef().getNativeReference())
+                return ESM4::ignoresFriendlyHits(object->mFlags);
+        }
+        if (const auto* actor = mStore.search<ESM4::ActorCharacter>(key))
+            return ESM4::ignoresFriendlyHits(actor->mFlags);
+        if (const auto* creature = mStore.search<ESM4::ActorCreature>(key))
+            return ESM4::ignoresFriendlyHits(creature->mFlags);
+        if (const auto* object = mStore.search<ESM4::Reference>(key))
+            return ESM4::ignoresFriendlyHits(object->mFlags);
+        if (key.isDynamic() && mOblivionRuntimeState)
+            for (const auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == key)
+                    return false; // New dynamic instances have no authored flag.
+        return std::nullopt;
+    }
+
+    bool World::setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value)
+    {
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto current = getOblivionIgnoreFriendlyHits(reference);
+        if (!current)
+            return false;
+        const auto flags = ESM4::ignoreFriendlyHitsFlags(*current ? ESM4::IgnoreFriendlyHitsMask : 0, value);
+        if (!flags)
+            return true; // Native -1 neither writes nor creates an override.
+        const auto key = ESM4::runtimeReferenceKey(reference);
+        if (!mOblivionRuntimeState)
+        {
+            auto state = std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+            state->mIgnoreFriendlyHits.emplace(key, ESM4::ignoresFriendlyHits(*flags));
+            mOblivionRuntimeState = std::move(state);
+        }
+        else
+            mOblivionRuntimeState->mIgnoreFriendlyHits.insert_or_assign(key, ESM4::ignoresFriendlyHits(*flags));
+        return true;
     }
 
     std::optional<double> World::getOblivionScriptKnockedState(const ESM::FormKey& actor) const
@@ -5098,6 +5167,10 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
+            if (key.isContent() && !mStore.search<ESM4::ActorCharacter>(key)
+                && !mStore.search<ESM4::ActorCreature>(key) && !mStore.search<ESM4::Reference>(key))
+                throw std::runtime_error("Friendly-hit flag owner is not a winning placed reference: " + key.serialize());
         const ESM::FormKeyResolver resolver(mContentFiles);
         validateNativeDropRelations(state, mStore, resolver, incoming);
         validateOblivionLooseWeaponState(state);

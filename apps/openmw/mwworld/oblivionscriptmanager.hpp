@@ -183,7 +183,6 @@ namespace MWWorld
         std::size_t mCompilationFailures = 0;
         std::map<std::string, std::uint64_t, std::less<>> mCommandCounts;
         std::set<ESM::FormKey> mSuppressedActivations;
-        bool mIgnoreFriendlyHits = false;
         RetainedRuntime::Data* mRetainedRuntime = nullptr;
         void requireMutableRuntime() const;
 

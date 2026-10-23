@@ -523,7 +523,6 @@ namespace MWWorld
         decltype(OblivionScriptManager::mDepth) mDepth{};
         decltype(OblivionScriptManager::mElapsed) mElapsed{};
         decltype(OblivionScriptManager::mSuppressedActivations) mSuppressedActivations{};
-        decltype(OblivionScriptManager::mIgnoreFriendlyHits) mIgnoreFriendlyHits{};
         bool mDetached = false;
         bool mRetainedSelected = false;
         std::uint64_t mExpectedSequence;
@@ -558,7 +557,6 @@ namespace MWWorld
             swap(mDepth, owner.mDepth);
             swap(mElapsed, owner.mElapsed);
             swap(mSuppressedActivations, owner.mSuppressedActivations);
-            swap(mIgnoreFriendlyHits, owner.mIgnoreFriendlyHits);
         }
     };
     OblivionScriptManager::~OblivionScriptManager()
@@ -671,7 +669,6 @@ namespace MWWorld
         mSequence = 0;
         mDepth = 0;
         mElapsed = 0;
-        mIgnoreFriendlyHits = false;
         // OPENMW_OBSCRIPT_EVENTS is a process-local acceptance driver, not game content. Its commands must execute
         // once per launched scenario: replaying them after an in-process quickload can mutate actor values twice and
         // hide persistence regressions. A fresh process constructs a fresh manager with every event unexecuted.
@@ -1470,12 +1467,15 @@ namespace MWWorld
         }
         if (name == "setignorefriendlyhits")
         {
-            mIgnoreFriendlyHits = ObScript::asInteger(argument(0)) != 0;
-            trace("setignorefriendlyhits enabled=" + std::string(mIgnoreFriendlyHits ? "true" : "false"));
+            const auto key = objectKey();
+            const bool applied = !arguments.empty()
+                && mWorld.setOblivionIgnoreFriendlyHits(key, boundedCount(argument(0)));
+            trace("setignorefriendlyhits ref=" + key.serialize()
+                + " applied=" + (applied ? "true" : "false"));
             return std::int64_t(0);
         }
         if (name == "getignorefriendlyhits")
-            return std::int64_t(mIgnoreFriendlyHits);
+            return std::int64_t(mWorld.getOblivionIgnoreFriendlyHits(objectKey()).value_or(false));
         if (name == "autosave")
         {
             MWBase::Environment::get().getStateManager()->quickSave("Autosave");

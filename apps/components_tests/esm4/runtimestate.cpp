@@ -1741,7 +1741,7 @@ namespace
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
-                + (version >= 64 ? 4 : 0);
+                + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5238,4 +5238,64 @@ TEST(ESM4RuntimeState, SpokenDialogueHistory64RejectsDuplicateOrderNoncanonicalA
     bytes = prefix;
     bytes.insert(bytes.end(), {0xff, 0xff, 0xff, 0xff});
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::exception);
+}
+
+
+TEST(ESM4RuntimeState, FriendlyHitFlags65PreserveExplicitFalseAndHaveExactCanonicalWire)
+{
+    auto state = makeState(); state.mVersion = 64;
+    auto prefix = state.serializeBinary();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(prefix).mIgnoreFriendlyHits.empty());
+    state.mVersion = 65;
+    const auto reference = ESM::FormKey::content("oblivion.esm", 0x321);
+    state.mIgnoreFriendlyHits = {{state.mPlayer.mReference, true}, {reference, false}};
+    prefix.at(9) = 65;
+    const auto integer = [&](std::uint32_t value) {
+        for (unsigned shift = 0; shift < 32; shift += 8)
+            prefix.push_back(static_cast<std::uint8_t>(value >> shift));
+    };
+    integer(2);
+    for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
+    {
+        const auto text = key.serialize(); integer(text.size());
+        prefix.insert(prefix.end(), text.begin(), text.end()); prefix.push_back(ignored);
+    }
+    EXPECT_EQ(state.serializeBinary(), prefix);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(prefix).mIgnoreFriendlyHits, state.mIgnoreFriendlyHits);
+    EXPECT_NE(state.canonicalJson().find("\"ignore_friendly_hits\":{\"content:oblivion.esm:000321\":false,\"dynamic:save-1:0000000000000001\":true}"), std::string::npos);
+    state.mVersion = 64;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mVersion = 65;
+    for (const auto& bad : {ESM::FormKey{}, ESM::FormKey::content("oblivion.esm", 0x14),
+             ESM::FormKey::dynamic("missing-reference", 1),
+             ESM::FormKey{ESM::FormKeyKind::Content, "Oblivion.esm", 0x321}})
+    {
+        state.mIgnoreFriendlyHits = {{bad, false}};
+        EXPECT_THROW(state.serializeBinary(), std::exception);
+    }
+}
+
+TEST(ESM4RuntimeState, FriendlyHitFlags65RejectNoncanonicalOrMalformedWireBeforeUse)
+{
+    auto state = makeState(); state.mVersion = 64;
+    auto prefix = state.serializeBinary(); prefix.at(9) = 65;
+    const auto wire = [&](const std::vector<std::pair<std::string, unsigned>>& rows) {
+        auto bytes = prefix;
+        const auto integer = [&](std::uint32_t value) {
+            for (unsigned shift = 0; shift < 32; shift += 8)
+                bytes.push_back(static_cast<std::uint8_t>(value >> shift));
+        };
+        integer(rows.size());
+        for (const auto& [key, ignored] : rows)
+        { integer(key.size()); bytes.insert(bytes.end(), key.begin(), key.end()); bytes.push_back(ignored); }
+        return bytes;
+    };
+    const std::string a = "content:oblivion.esm:000321", b = "content:oblivion.esm:000322";
+    for (const auto& rows : std::vector<std::vector<std::pair<std::string, unsigned>>>{
+             {{a,0},{a,1}}, {{b,0},{a,1}}, {{a,2}}, {{"null",0}},
+             {{"content:Oblivion.esm:000321",0}}, {{"content:oblivion.esm:000014",0}},
+             {{"dynamic:missing-reference:0000000000000001",0}}})
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire(rows)), std::exception);
+    auto bytes = wire({{a,0}}); bytes.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::runtime_error);
 }

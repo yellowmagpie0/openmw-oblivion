@@ -2,6 +2,7 @@
 
 #include "ability.hpp"
 #include "crimecontractsio.hpp"
+#include "runtimereferences.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -1620,6 +1621,17 @@ namespace ESM4
         std::map<ESM::FormKey, ESM::FormKey> actorBases;
         for (const auto& reference : mReferences)
             actorBases.emplace(reference.mKey, reference.mBase);
+        checkSize(mIgnoreFriendlyHits.size(), "ignore-friendly-hits map");
+        if (mVersion < 65 && !mIgnoreFriendlyHits.empty())
+            throw std::runtime_error("Reference friendly-hit flags require runtime schema65");
+        for (const auto& [key, ignored] : mIgnoreFriendlyHits)
+        {
+            if (key.isNull() || ESM::FormKey::deserialize(key.serialize()) != key || runtimeReferenceKey(key) != key
+                || (key.isDynamic() && key != mPlayer.mReference
+                    && !actorBases.contains(key)))
+                throw std::runtime_error("Invalid or dangling friendly-hit reference identity");
+        }
+
         std::map<ESM::FormKey, ESM::FormKey> nativeActors;
         for (const auto& actor : mNativeActorValues)
         {
@@ -3164,6 +3176,15 @@ namespace ESM4
             for (const auto& info : mSpokenDialogueInfos)
                 writeKey(writer, info);
         }
+        if (mVersion >= 65)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mIgnoreFriendlyHits.size()));
+            for (const auto& [key, ignored] : mIgnoreFriendlyHits)
+            {
+                writeKey(writer, key);
+                writer.integer<std::uint8_t>(ignored);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4262,6 +4283,23 @@ namespace ESM4
                     throw std::runtime_error("Noncanonical spoken dialogue INFO history");
                 result.mSpokenDialogueInfos.insert(info);
                 previous = info;
+            }
+        }
+        if (result.mVersion >= 65)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                const auto key = ESM::FormKey::deserialize(text);
+                if (key.isNull() || key.serialize() != text || (previous && !(*previous < key)))
+                    throw std::runtime_error("Noncanonical friendly-hit reference flags");
+                const auto ignored = reader.integer<std::uint8_t>();
+                if (ignored > 1)
+                    throw std::runtime_error("Invalid friendly-hit reference boolean");
+                result.mIgnoreFriendlyHits.emplace(key, ignored != 0);
+                previous = key;
             }
         }
         if (!reader.eof())
@@ -5480,6 +5518,18 @@ namespace ESM4
                 stream << '\"' << escapeJson(info.serialize()) << '\"';
             }
             stream << ']';
+        }
+        if (mVersion >= 65)
+        {
+            stream << ",\"ignore_friendly_hits\":{";
+            bool first = true;
+            for (const auto& [key, ignored] : mIgnoreFriendlyHits)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << '\"' << escapeJson(key.serialize()) << "\":" << (ignored ? "true" : "false");
+            }
+            stream << '}';
         }
         stream << "}";
         return stream.str();

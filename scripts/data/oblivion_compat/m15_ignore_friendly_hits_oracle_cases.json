@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "scope": "Per-reference native SetIgnoreFriendlyHits/GetIgnoreFriendlyHits and fork save/restart authority",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native": {
+    "setter": "00506750",
+    "bit_writer": "0046AB20",
+    "getter": "004F8720",
+    "reference_flag_mask": "00100000",
+    "kinds": [
+      "Character",
+      "Player",
+      "Creature"
+    ],
+    "flags": [
+      0,
+      1,
+      1048576,
+      2147483648,
+      4293918719,
+      4294967295
+    ],
+    "signed_values": [
+      -2147483648,
+      -2,
+      -1,
+      0,
+      1,
+      2,
+      2147483647
+    ],
+    "parsed": [
+      false,
+      true
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "cases": 504,
+    "rules": [
+      "Failed argument extraction preserves flags",
+      "Parsed -1 preserves flags and does not mark modified",
+      "Other signed nonzero values set the bit; zero clears it",
+      "All parsed values except -1 call MarkModified(1), including unchanged bits",
+      "Other bits and the other reference remain unchanged"
+    ],
+    "boundaries": [
+      "Argument extraction004FAE80 supplies declared parsed int32",
+      "Actor vtable+40 MarkModified callback records actual argument1; native serialization is not executed"
+    ]
+  },
+  "fork": {
+    "schema": 65,
+    "owner": "Existing World RuntimeState map keyed by canonical placed-reference identity",
+    "absent": "Authored flag; builtin Player defaults false",
+    "explicit_false_preserved": true,
+    "legacy": "No invented per-reference overrides from the former global boolean",
+    "wire": "Sorted canonical key string plus strict bool byte, appended after schema64 spoken INFO history"
+  },
+  "runtime": {
+    "first": "scripts/data/oblivion_compat/oblivion_m15_ignore_friendly_hits_first.json",
+    "continuation": "scripts/data/oblivion_compat/oblivion_m15_ignore_friendly_hits_continuation.json",
+    "expected_flags": {
+      "dynamic:player:0000000000000001": true,
+      "content:oblivion.esm:032a15": false,
+      "content:oblivion.esm:070f51": true
+    },
+    "sound_enabled": false,
+    "scope": "Scheduled real script commands, F5 save and protected-input fresh-process load/resave; not normal-input melee or audio acceptance"
+  },
+  "open": [
+    "GetFriendHit native producer and counter expiry/lifecycle/persistence integration",
+    "Automatic ordered common-hit callbacks",
+    "Player audio identity",
+    "Remaining full M15S4 normal-input opponent/mastery/views/devices/FPS and restart gates"
+  ]
+}

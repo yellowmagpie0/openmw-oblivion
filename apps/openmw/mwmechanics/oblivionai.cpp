@@ -1179,6 +1179,11 @@ namespace MWMechanics
                 const auto found = mDetectionVectors.find({ subjectKey, comparison->mReference });
                 return value(found != mDetectionVectors.end() && found->second.mLineOfSight ? 1.0 : 0.0);
             }
+            if (function == "GetIgnoreFriendlyHits")
+            {
+                const auto ignored = mWorld.getOblivionIgnoreFriendlyHits(subjectKey);
+                return ignored ? value(*ignored ? 1.0 : 0.0) : ESM4::ConditionValue::missing();
+            }
             if (function == "GetIsInSameCell")
             {
                 const auto comparison = comparisonLocation();
@@ -1862,6 +1867,11 @@ namespace MWMechanics
                 const MWWorld::Ptr comparison = comparisonPtr();
                 return comparison.isEmpty() ? ESM4::ConditionValue::missing()
                                              : value(mWorld.getLOS(subjectPtr, comparison) ? 1.0 : 0.0);
+            }
+            if (function == "GetIgnoreFriendlyHits")
+            {
+                const auto ignored = mWorld.getOblivionIgnoreFriendlyHits(actorKey(subjectPtr));
+                return ignored ? value(*ignored ? 1.0 : 0.0) : ESM4::ConditionValue::missing();
             }
             if (function == "GetIsInSameCell")
                 return value(sameCell() ? 1.0 : 0.0);
