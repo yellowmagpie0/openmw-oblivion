@@ -7518,3 +7518,27 @@ namespace
         }
     }
 }
+
+TEST(OblivionActorStatsRandomTest, ImmediateDialogueDrawsShareTheSavedCombatCursor)
+{
+    MWMechanics::OblivionCombatService service;
+    MWWorld::ESMStore store;
+    const auto two = service.prepareCombatRandom(2);
+    EXPECT_EQ(service.drawNativeRandom(), 41);
+    EXPECT_EQ(service.combatRandomState(), 2745024u);
+    const auto one = service.prepareCombatRandom(1);
+    EXPECT_EQ(one.mExpectedState, 2745024u);
+    EXPECT_EQ(one.mNextState, two.mNextState);
+    ESM4::RuntimeState saved;
+    saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+    saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+    saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+    saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+    service.capture(saved);
+    const auto bytes = saved.serializeBinary();
+    EXPECT_EQ(service.drawNativeRandom(), 18467);
+    EXPECT_EQ(service.combatRandomState(), two.mNextState);
+    service.restore(ESM4::RuntimeState::deserializeBinary(bytes), store);
+    EXPECT_EQ(service.drawNativeRandom(), 18467);
+    EXPECT_EQ(service.drawNativeRandom(), 6334);
+}

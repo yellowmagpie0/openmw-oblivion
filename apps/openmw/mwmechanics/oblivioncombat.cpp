@@ -2590,6 +2590,13 @@ namespace MWMechanics
         return {mCombatRngState, next, draws};
     }
 
+    std::uint16_t OblivionCombatService::drawNativeRandom() noexcept
+    {
+        const auto draw = ESM4::combatRandomDraw(mCombatRngState);
+        mCombatRngState = draw.mNextState;
+        return draw.mValue;
+    }
+
     struct OblivionCombatService::PreparedPhysicalContact::Impl
     {
         struct Gear

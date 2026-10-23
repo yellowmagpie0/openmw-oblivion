@@ -495,3 +495,72 @@ TEST(ESM4LoadPackage, RejectsMalformedLayoutsAndDiscriminants)
     appendRecord(invalid, ESM4::REC_PACK, 0, 0x1236, payload);
     EXPECT_THROW(loadPackage(invalid), std::runtime_error);
 }
+
+TEST(ESM4LoadInfo, RandomInfoSelectionUsesReverseAcceptanceOrderAndDrawsForSingleton)
+{
+    std::array<ESM4::DialogInfo, 3> definitions{};
+    std::array<const ESM4::DialogInfo*, 3> infos{};
+    for (std::size_t i = 0; i < infos.size(); ++i)
+    {
+        definitions[i].mInfoFlags = ESM4::INFO_Random;
+        infos[i] = &definitions[i];
+    }
+    for (const unsigned raw : {0u, 1u, 2u, 32766u, 32767u})
+    {
+        unsigned draws = 0;
+        const auto draw = [&] { ++draws; return raw; };
+        EXPECT_EQ(ESM4::selectDialogueInfo(infos, [](const auto&) { return true; }, draw),
+            infos[2 - raw % 3]);
+        EXPECT_EQ(draws, 1u);
+        draws = 0;
+        EXPECT_EQ(ESM4::selectDialogueInfo(std::span(infos).first(1), [](const auto&) { return true; }, draw),
+            infos[0]);
+        EXPECT_EQ(draws, 1u);
+    }
+}
+
+TEST(ESM4LoadInfo, InfoSelectionStopsConditionsAtAcceptedRandomEndOrNonrandomEntry)
+{
+    std::array<ESM4::DialogInfo, 4> definitions{};
+    const std::array<const ESM4::DialogInfo*, 4> infos{
+        &definitions[0], &definitions[1], &definitions[2], &definitions[3]};
+    definitions[0].mInfoFlags = ESM4::INFO_Random;
+    definitions[1].mInfoFlags = ESM4::INFO_Random | ESM4::INFO_RandomEnd;
+    definitions[2].mInfoFlags = ESM4::INFO_Random;
+    unsigned draws = 0;
+    const auto draw = [&] { ++draws; return 0u; };
+    std::vector<const ESM4::DialogInfo*> visited;
+    const auto accept = [&](const auto& info) { visited.push_back(&info); return true; };
+    EXPECT_EQ(ESM4::selectDialogueInfo(infos, accept, draw), infos[1]);
+    EXPECT_EQ(visited, (std::vector{infos[0], infos[1]}));
+    EXPECT_EQ(draws, 1u);
+    // A failing RandomEnd does not terminate the group. A subsequent accepted
+    // nonrandom INFO stops traversal but does not join accumulated candidates.
+    visited.clear(); draws = 0;
+    EXPECT_EQ(ESM4::selectDialogueInfo(infos, [&](const auto& info) {
+        visited.push_back(&info); return &info != infos[1];
+    }, draw), infos[2]);
+    EXPECT_EQ(visited, (std::vector{infos[0], infos[1], infos[2], infos[3]}));
+    EXPECT_EQ(draws, 1u);
+    definitions[1].mInfoFlags = 0;
+    visited.clear(); draws = 0;
+    EXPECT_EQ(ESM4::selectDialogueInfo(infos, accept, draw), infos[0]);
+    EXPECT_EQ(visited, (std::vector{infos[0], infos[1]}));
+    EXPECT_EQ(draws, 1u);
+    definitions[0].mInfoFlags = 0;
+    visited.clear(); draws = 0;
+    EXPECT_EQ(ESM4::selectDialogueInfo(infos, accept, draw), infos[0]);
+    EXPECT_EQ(visited, (std::vector{infos[0]}));
+    EXPECT_EQ(draws, 0u);
+}
+
+TEST(ESM4LoadInfo, EmptyOrRejectedInfoSelectionDoesNotDrawAndUsedDrawMustBeRawNative)
+{
+    ESM4::DialogInfo info{};
+    info.mInfoFlags = ESM4::INFO_Random;
+    const std::array<const ESM4::DialogInfo*, 2> infos{nullptr, &info};
+    const auto invalid = [] { return 32768u; };
+    EXPECT_EQ(ESM4::selectDialogueInfo({}, [](const auto&) { return true; }, invalid), nullptr);
+    EXPECT_EQ(ESM4::selectDialogueInfo(infos, [](const auto&) { return false; }, invalid), nullptr);
+    EXPECT_THROW(ESM4::selectDialogueInfo(infos, [](const auto&) { return true; }, invalid), std::invalid_argument);
+}

@@ -419,37 +419,44 @@ namespace MWWorld
                 << " infos=" << (topicInfos == mTopicInfos.end() ? 0 : topicInfos->second.size());
         if (topicInfos == mTopicInfos.end())
             return std::nullopt;
-        for (const ESM::FormKey& info : topicInfos->second)
-        {
-            const ESM4::DialogInfo* definition = mStore.search<ESM4::DialogInfo>(info);
-            const MWMechanics::OblivionAiService* ai = mWorld.getOblivionAiService();
-            if (definition == nullptr || ai == nullptr)
-                continue;
-            const ESM::FormKey quest = mResolver.toFormKey(definition->mQuest);
+        std::vector<const ESM4::DialogInfo*> infos;
+        infos.reserve(topicInfos->second.size());
+        for (const auto& info : topicInfos->second)
+            infos.push_back(mStore.search<ESM4::DialogInfo>(info));
+        const auto* definition = ESM4::selectDialogueInfo(infos, [&](const ESM4::DialogInfo& info) {
+            const auto* ai = mWorld.getOblivionAiService();
+            if (ai == nullptr)
+                return false;
+            const ESM::FormKey quest = mResolver.toFormKey(info.mQuest);
             const auto questState = mQuests.find(quest);
             if (!quest.isNull() && (questState == mQuests.end() || !questState->second.mRunning))
-                continue;
-            const auto conditions = ai->evaluateDialogueConditions(actor, target, definition->mCanonicalConditions, diagnose);
+                return false;
+            const auto conditions = ai->evaluateDialogueConditions(actor, target, info.mCanonicalConditions, diagnose);
             if (diagnose)
-                Log(Debug::Info) << "Native dialogue candidate: info=" << info.serialize()
+                Log(Debug::Info) << "Native dialogue candidate: info=" << info.mFormKey.serialize()
                     << " result=" << static_cast<int>(conditions);
             if (conditions == ESM4::ConditionResult::Unsupported || conditions == ESM4::ConditionResult::MissingContext)
-                throw std::runtime_error("Native dialogue condition cannot be evaluated: " + info.serialize());
-            if (conditions != ESM4::ConditionResult::True)
-                continue;
-            const auto files = mNativeVoiceFiles.find(info);
-            if (files == mNativeVoiceFiles.end())
-                return std::nullopt;
-            const auto selected = ESM4::dialogueVoiceFiles(*definition, files->second, race, sex);
-            if (diagnose)
-                Log(Debug::Info) << "Native dialogue voices: info=" << info.serialize()
-                    << " files=" << files->second.size() << " responses=" << definition->mResponses.size()
-                    << " matched=" << selected.has_value();
-            if (!selected)
-                return std::nullopt;
-            return NativeVoice{ info, *selected };
-        }
-        return std::nullopt;
+                throw std::runtime_error("Native dialogue condition cannot be evaluated: " + info.mFormKey.serialize());
+            return conditions == ESM4::ConditionResult::True;
+        }, [&]() {
+            auto* combat = mWorld.getOblivionCombatService();
+            if (!combat)
+                throw std::runtime_error("Native dialogue selection requires the native random authority");
+            return combat->drawNativeRandom();
+        });
+        if (!definition)
+            return std::nullopt;
+        const auto files = mNativeVoiceFiles.find(definition->mFormKey);
+        if (files == mNativeVoiceFiles.end())
+            return std::nullopt;
+        const auto selected = ESM4::dialogueVoiceFiles(*definition, files->second, race, sex);
+        if (diagnose)
+            Log(Debug::Info) << "Native dialogue voices: info=" << definition->mFormKey.serialize()
+                << " files=" << files->second.size() << " responses=" << definition->mResponses.size()
+                << " matched=" << selected.has_value();
+        if (!selected)
+            return std::nullopt;
+        return NativeVoice{ definition->mFormKey, *selected };
     }
 
     void OblivionScriptManager::loadScheduledEvents()

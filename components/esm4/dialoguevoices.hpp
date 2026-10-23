@@ -6,12 +6,45 @@
 #include <optional>
 #include <set>
 #include <span>
+#include <stdexcept>
 
 #include "loadinfo.hpp"
 #include "loadrace.hpp"
 
 namespace ESM4
 {
+    // Original52F010, after topic/quest/link/history admission. Conditions are
+    // lazy: a matching RandomEnd or nonrandom entry ends traversal. Candidate
+    // insertion446CB0 prepends; modulo selection therefore reverses acceptance
+    // order. The owner supplies either a staged or an immediately consumed raw
+    // CRT draw. Missing voice files do not change the selected INFO or draw.
+    template <class Accept, class Draw>
+    const DialogInfo* selectDialogueInfo(std::span<const DialogInfo* const> infos,
+        Accept&& accept, Draw&& draw)
+    {
+        std::vector<const DialogInfo*> candidates;
+        for (const DialogInfo* info : infos)
+        {
+            if (info == nullptr || !accept(*info))
+                continue;
+            if ((info->mInfoFlags & INFO_Random) == 0)
+            {
+                if (candidates.empty())
+                    return info;
+                break;
+            }
+            candidates.push_back(info);
+            if (info->mInfoFlags & INFO_RandomEnd)
+                break;
+        }
+        if (candidates.empty())
+            return nullptr;
+        const unsigned raw = draw();
+        if (raw > 32767)
+            throw std::invalid_argument("invalid native dialogue random draw");
+        return candidates[candidates.size() - 1 - raw % candidates.size()];
+    }
+
     inline const Race* dialogueVoiceRace(const Race* race, bool female,
         const std::function<const Race*(ESM::FormId)>& resolve)
     {

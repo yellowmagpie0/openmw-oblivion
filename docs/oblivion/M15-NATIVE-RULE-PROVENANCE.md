@@ -17347,3 +17347,50 @@ expectation was falsified and retained before registering the correction.
 pins that probe and its editable case protocol. Conditions, raw RNG and node
 allocation are supplied boundaries. Serialized flag mapping, actual voice/audio,
 result scripts and production integration are not established by this probe.
+
+
+## Live dialogue candidate selection and shared native RNG
+
+Say/SayTo voice lookup now accumulates random INFO candidates, honors accepted
+RandomEnd/nonrandom stop boundaries, and selects in reverse acceptance order
+using one native modulo draw. A singleton random candidate still draws; an
+immediate nonrandom match and an empty set do not. Exact voice-file resolution
+follows selection. The scalar draw shares the saved physical-contact authority.
+An engine test verifies seed-1 values 41/18467/6334, agreement between staged and
+immediate cursors, and binary save/restore replay.
+
+The production selector matches all 10,240 recorded original cases in normal
+and ASan/UBSan comparisons: selected INFO, draw count and condition visitation
+order. Three component tests cover lazy traversal and invalid-draw boundaries.
+Normal components pass 3,004 tests; the sanitized ESM4 selection passes 857.
+Both full engine inventories pass 1,854 tests in 126 suites. Passing component
+results are reused after correcting only the new engine fixture's required
+Player reference, cell, race and class fields. The failed fixture attempt and
+matching deliberately stopped sanitizer build are retained. Earlier wrappers
+were interrupted while separate CMake groups remained live; the normal build
+finished before its fresh wrapper started. No sanitizer defect was found.
+
+A separate 1,536-case original DATA dispatch slice confirms that three bytes
+load into INFO offsets 0x23/0x24/0x25: serialized flag byte 3 is native byte 0x25.
+The file-read boundary is supplied; full record registration is not exercised.
+An installed-plugin inventory finds 105 Hit INFOs, all in Oblivion.esm, without
+nonempty result bytecode. This is not an active winning-load-order audit.
+Quest ordering, SayOnce/history/link policies, real conditions and audio remain
+separate from the supplied-admission selector comparison. One installed Hit
+condition uses GetRandomPercent, whose existing AI resolver still uses
+stableChoice. A 131,072-case original instruction run verifies both condition
+and script entry paths across every raw draw and both x87 words: each consumes
+one draw and stores exact double raw modulo 100. Raw RNG is supplied and console
+printing disabled; condition-expression evaluation is not exercised. That
+condition must join the native cursor for implicit combat speech parity.
+
+[M15-DIALOGUE-INFO-SELECTOR-VERIFICATION.json](M15-DIALOGUE-INFO-SELECTOR-VERIFICATION.json)
+pins code and evidence. The attempted real-content scripted audio regression
+is not accepted: its original total deadline was 15 seconds before a 31-second
+first sleep; a retained retry with a startup wait and 150-second deadline logged
+uninitialized native Player values and returned to the title loop. Neither
+process reached voice lookup. Fatal shutdown errors and failed reports remain
+in the evidence; owned leftover crash reporters were closed. Native Player
+setup/the older recipe must be reconciled before this regression can pass.
+Automatic common-hit speech/resource publication and full normal-input and
+fresh-process M15S4 acceptance remain open.

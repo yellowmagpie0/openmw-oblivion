@@ -521,6 +521,9 @@ namespace MWMechanics
         // Preparation does not advance live state. The owned contact publishes
         // the checked transition with all resources/conditions and consumption.
         OblivionCombatRandomTransition prepareCombatRandom(unsigned draws) const;
+        // The original scalar stream is also used by immediate dialogue INFO
+        // selection. Contact preparation must instead retain a staged draw.
+        std::uint16_t drawNativeRandom() noexcept;
         float actorManagerTime() const noexcept { return mActorManagerTime; }
         void advanceFrameClock(float duration);
         float elapsedSinceActorUpdate(const ESM::FormKey& actor, float time) const;

@@ -45,5 +45,7 @@
     "Successful8-byte allocation/free",
     "No history or speaker constraints"
   ],
-  "receipt": "docs/oblivion/M15-HIT-INFO-SELECTION-VERIFICATION.json"
+  "receipt": "docs/oblivion/M15-HIT-INFO-SELECTION-VERIFICATION.json",
+  "DATA_mapping": "Original531035..531060 reads3 DATA bytes into native23/24/25; third byte is the supplied selector flag byte.",
+  "production_comparison_receipt": "docs/oblivion/M15-DIALOGUE-INFO-SELECTOR-VERIFICATION.json"
 }
