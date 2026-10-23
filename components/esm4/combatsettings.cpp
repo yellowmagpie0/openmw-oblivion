@@ -543,6 +543,25 @@ namespace ESM4
         return result;
     }
 
+    DispositionSettings buildDispositionSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const DispositionSettings result{
+            inputs.number("fDispActorPerBase", 0.f), inputs.number("fDispActorPerMult", 1.f),
+            inputs.number("fDispTargetPerBase", 0.f), inputs.number("fDispTargetPerMult", 1.f),
+            inputs.number("fDispTargetFameMult", .3f),
+            inputs.number("fDispTargetInfamyMult", -.3f), inputs.number("fDispActorInfamyMult", .02f),
+            inputs.number("fDispTargetBountyMult", -.003f), inputs.number("fDispActorBountyBase", -1.f),
+            inputs.number("fDispActorBountyMult", .02f), inputs.number("fDispTargetRaceMult", 1.f),
+            inputs.number("fDispTargetFactionMult", 1.f), inputs.number("fDispTargetFactionRankBase", 1.f),
+            inputs.number("fDispTargetWeaponBase", -10.f), inputs.number("fDispTargetDiseaseBase", -10.f),
+            inputs.number("iDispFameMax", std::int32_t{20}), inputs.number("iDispBountyMax", std::int32_t{20}),
+            inputs.number("fDispInfamyMax", 20.f),
+        };
+        validateDispositionSettings(result);
+        return result;
+    }
+
     FightScoreSettings buildFightScoreSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

@@ -8,6 +8,73 @@
 
 namespace ESM4
 {
+    void validateDispositionSettings(const DispositionSettings& settings)
+    {
+        for (float value : {settings.mActorPersonalityBase, settings.mActorPersonalityMultiplier,
+                 settings.mTargetPersonalityBase, settings.mTargetPersonalityMultiplier,
+                 settings.mTargetFameMultiplier, settings.mTargetInfamyMultiplier, settings.mActorInfamyMultiplier,
+                 settings.mTargetBountyMultiplier, settings.mActorBountyBase, settings.mActorBountyMultiplier,
+                 settings.mRaceMultiplier, settings.mFactionMultiplier, settings.mFactionRankBase,
+                 settings.mWeaponPenalty, settings.mDiseasePenalty, settings.mInfamyMaximum})
+            if (!std::isfinite(value))
+                throw std::invalid_argument("nonfinite native disposition setting");
+    }
+
+    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings)
+    {
+        validateDispositionSettings(settings);
+        const auto integer = [](double value) {
+            const double result = std::trunc(value);
+            if (!std::isfinite(result) || result < std::numeric_limits<std::int32_t>::min()
+                || result > std::numeric_limits<std::int32_t>::max())
+                throw std::overflow_error("native disposition conversion overflow");
+            return static_cast<std::int32_t>(result);
+        };
+        const auto capped = [](std::int32_t value, std::int32_t maximum) {
+            if (value > maximum)
+                return maximum;
+            const auto minimum = std::bit_cast<std::int32_t>(0u - static_cast<std::uint32_t>(maximum));
+            return value < minimum ? minimum : value;
+        };
+        const auto personality = integer(((double(input.mTargetPersonality) * settings.mTargetPersonalityMultiplier
+                                             + settings.mTargetPersonalityBase)
+            + (double(input.mActorPersonality) * settings.mActorPersonalityMultiplier
+                + settings.mActorPersonalityBase)) * .5);
+        std::int32_t fame = 0;
+        std::int32_t bounty = 0;
+        float infamy = 0;
+        if (!input.mActorCreature)
+        {
+            fame = integer(double(input.mTargetFame) * settings.mTargetFameMultiplier);
+            // Native uses TargetInfamyMult twice, leaving ActorInfamyBase
+            // unread. The product is stored as float before capping/summing.
+            const double value = (double(input.mActorResponsibility) * settings.mActorInfamyMultiplier
+                + settings.mTargetInfamyMultiplier)
+                * (double(settings.mTargetInfamyMultiplier) * input.mTargetInfamy);
+            if (!std::isfinite(value) || std::abs(value) > std::numeric_limits<float>::max())
+                throw std::overflow_error("native disposition infamy overflow");
+            infamy = static_cast<float>(value);
+            bounty = integer((double(input.mActorResponsibility) * settings.mActorBountyMultiplier
+                + settings.mActorBountyBase) * (double(input.mTargetBounty) * settings.mTargetBountyMultiplier));
+        }
+        const auto race = integer(double(input.mRaceReaction) * settings.mRaceMultiplier);
+        // Likewise TargetFactionMult is used for both factors; the separate
+        // TargetFactionRankMult setting is not read by the original scorer.
+        const auto faction = integer((double(input.mFactionRank) * settings.mFactionMultiplier
+            + settings.mFactionRankBase) * (double(settings.mFactionMultiplier) * input.mFactionReaction));
+        const auto weapon = integer(double(input.mWeaponPenalty) * settings.mWeaponPenalty);
+        const auto disease = integer(double(input.mDiseasePenalty) * settings.mDiseasePenalty);
+        if (infamy > settings.mInfamyMaximum)
+            infamy = settings.mInfamyMaximum;
+        else if (infamy < -settings.mInfamyMaximum)
+            infamy = -settings.mInfamyMaximum;
+        fame = capped(fame, settings.mFameMaximum);
+        bounty = capped(bounty, settings.mBountyMaximum);
+        const auto base = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(personality)
+            + static_cast<std::uint32_t>(fame));
+        return integer((((((double(base) + infamy) + bounty) + race) + faction) + weapon) + disease + input.mModifier);
+    }
+
     void validateYieldSettings(const YieldSettings& settings)
     {
         for (float value : {settings.mBase, settings.mMultiplier, settings.mDurationBase, settings.mDurationMultiplier})

@@ -17992,3 +17992,42 @@ This component has no production caller yet. GetFriendHit, notification
 classification/disposition inputs, actor update scheduling, fork save schema,
 automatic common-hit phases, Player audio and full M15S4 runtime gates remain
 open. This chunk adds no runtime or end-to-end acceptance claim.
+
+
+### Numeric disposition dependency for common-hit classification
+
+`dispositionScore` now reproduces original 546260 using typed winning GMST
+inputs and independently observed compiled fallbacks. It returns the signed
+score before the actor wrapper's clamp. Personality averaging, separate
+reputation caps, the stored-float Infamy term, integer conversion order and
+wrapping Personality-plus-Fame addition follow the native instructions.
+
+The original scorer reuses TargetInfamyMult in two factors and leaves
+ActorInfamyBase unread. It likewise reuses TargetFactionMult in both factors,
+leaving TargetFactionRankMult unread. Single-setting overrides independently
+verify these quirks. Creature reputation gating and signed negative-cap branch
+order are retained. Unsupported out-of-int32 conversions and nonfinite
+settings fail explicitly rather than inventing an overflow result.
+
+The full numeric instruction path, including original non-SSE conversion,
+matches 27,288 direct C++ comparisons across two x87 precision modes and 22
+setting variants. Three deliberately incorrect implementations are rejected.
+Seven new tests cover deterministic boundaries and typed overrides; full
+normal components pass 3,039 tests and the ESM4 sanitizer selection passes 890.
+ASan leak detection is disabled. The first oracle attempt's wrong cdecl return
+stack assertion is retained; it produced no numeric cases.
+
+See [M15-DISPOSITION-SCORE-VERIFICATION.json](M15-DISPOSITION-SCORE-VERIFICATION.json)
+and the editable [probe recipe](../../scripts/data/oblivion_compat/m15_disposition_score_oracle_cases.json).
+This is an intermediate rule with no production caller. Live ownership,
+process/faction/modifier projection, GetDisposition/ModDisposition, common-hit
+notifications/counters, Player audio and the remaining M15S4 gameplay/restart
+gates remain open. No runtime, world validation or end-to-end claim is added.
+
+The actor-wrapper probe independently verifies all thirteen scoring arguments
+and native race/faction/modifier/bounty getter composition in 13,032 cases;
+the C++ score plus clamp matches every result. A distinct NPC sharing the
+Player NPC base still receives the faction-bit8 membership exclusion: this
+check uses base identity. The probe supplies current AV6/36 values and has no
+process/owner/leveled context or multiple memberships. It proves native input
+contracts, not a fork runtime adapter.

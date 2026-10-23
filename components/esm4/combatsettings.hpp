@@ -66,6 +66,7 @@ namespace ESM4
     CrimeReportingSettings buildCrimeReportingSettings(std::span<const GameSetting* const> settings);
     TrespassWarningSettings buildTrespassWarningSettings(std::span<const GameSetting* const> settings);
     FightScoreSettings buildFightScoreSettings(std::span<const GameSetting* const> settings);
+    DispositionSettings buildDispositionSettings(std::span<const GameSetting* const> settings);
     YieldSettings buildYieldSettings(std::span<const GameSetting* const> settings);
     CrimeAlarmSettings buildCrimeAlarmSettings(std::span<const GameSetting* const> settings);
     JailSettings buildJailSettings(std::span<const GameSetting* const> settings);

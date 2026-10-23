@@ -1,0 +1,449 @@
+{
+  "schema_version": 1,
+  "purpose": "Native numeric disposition dependency for automatic common-hit classification; full M15S4 incomplete.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "numeric_entry": "0x546260",
+  "numeric_end": "0x5463ec",
+  "conversion": "0x9828c0",
+  "conversion_cpu_gate": {
+    "address": "0xbaabe0",
+    "value": 0,
+    "meaning": "actual non-SSE conversion; conversions outside signed int32 remain unsupported in C++"
+  },
+  "x87_control_words": [
+    639,
+    895
+  ],
+  "argument_order": [
+    "actor current integer Personality AV6",
+    "target current integer Personality AV6",
+    "actor current integer Responsibility AV36",
+    "target Fame",
+    "target Infamy",
+    "target integer bounty",
+    "actor-to-target race reaction",
+    "actor-to-target faction reaction",
+    "target faction rank selected by relationship lookup",
+    "target weapon penalty flag",
+    "disease penalty flag (zero in inspected actor wrapper)",
+    "actor per-target modifier",
+    "actor base is Creature"
+  ],
+  "settings": [
+    {
+      "storage": "0xb367b8",
+      "name": "fDispActorPerBase",
+      "value": 0.0,
+      "bits": 0
+    },
+    {
+      "storage": "0xb367c0",
+      "name": "fDispActorPerMult",
+      "value": 1.0,
+      "bits": 1065353216
+    },
+    {
+      "storage": "0xb367c8",
+      "name": "fDispTargetPerBase",
+      "value": 0.0,
+      "bits": 0
+    },
+    {
+      "storage": "0xb367d0",
+      "name": "fDispTargetPerMult",
+      "value": 1.0,
+      "bits": 1065353216
+    },
+    {
+      "storage": "0xb367d8",
+      "name": "fDispTargetFameMult",
+      "value": 0.30000001192092896,
+      "bits": 1050253722
+    },
+    {
+      "storage": "0xb367e0",
+      "name": "fDispTargetInfamyMult",
+      "value": -0.30000001192092896,
+      "bits": 3197737370
+    },
+    {
+      "storage": "0xb367e8",
+      "name": "fDispActorInfamyBase",
+      "value": -1.0,
+      "bits": 3212836864
+    },
+    {
+      "storage": "0xb367f0",
+      "name": "fDispActorInfamyMult",
+      "value": 0.019999999552965164,
+      "bits": 1017370378
+    },
+    {
+      "storage": "0xb367f8",
+      "name": "fDispTargetBountyMult",
+      "value": -0.003000000026077032,
+      "bits": 3141835686
+    },
+    {
+      "storage": "0xb36800",
+      "name": "fDispActorBountyBase",
+      "value": -1.0,
+      "bits": 3212836864
+    },
+    {
+      "storage": "0xb36808",
+      "name": "fDispActorBountyMult",
+      "value": 0.019999999552965164,
+      "bits": 1017370378
+    },
+    {
+      "storage": "0xb36810",
+      "name": "fDispTargetRaceMult",
+      "value": 1.0,
+      "bits": 1065353216
+    },
+    {
+      "storage": "0xb36818",
+      "name": "fDispTargetFactionMult",
+      "value": 1.0,
+      "bits": 1065353216
+    },
+    {
+      "storage": "0xb36820",
+      "name": "fDispTargetFactionRankBase",
+      "value": 1.0,
+      "bits": 1065353216
+    },
+    {
+      "storage": "0xb36828",
+      "name": "fDispTargetFactionRankMult",
+      "value": 0.5,
+      "bits": 1056964608
+    },
+    {
+      "storage": "0xb36830",
+      "name": "fDispTargetWeaponBase",
+      "value": -10.0,
+      "bits": 3240099840
+    },
+    {
+      "storage": "0xb36838",
+      "name": "fDispTargetDiseaseBase",
+      "value": -10.0,
+      "bits": 3240099840
+    },
+    {
+      "storage": "0xb36ce8",
+      "name": "iDispFameMax",
+      "value": 20,
+      "bits": 20
+    },
+    {
+      "storage": "0xb36cf0",
+      "name": "iDispBountyMax",
+      "value": 20,
+      "bits": 20
+    },
+    {
+      "storage": "0xb36cf8",
+      "name": "fDispInfamyMax",
+      "value": 20.0,
+      "bits": 1101004800
+    }
+  ],
+  "unused_settings": [
+    "fDispActorInfamyBase",
+    "fDispTargetFactionRankMult"
+  ],
+  "arithmetic_contract": [
+    "Personality terms remain unrounded until average is truncated to int32.",
+    "TargetInfamyMult appears in the actor base position and target multiplier position. Infamy product is stored as float before capping/final sum.",
+    "TargetFactionMult appears in both rank and reaction factors.",
+    "Fame/bounty use int32 truncation before separate signed branch-order caps. Infamy cap occurs after its float store. Negative cap overrides preserve original branch order.",
+    "Personality-plus-capped-Fame performs wrapping signed int32 addition. Remaining terms add without an extra float store before final truncation.",
+    "Creature gate suppresses reputation calculations before the shared caps; other terms remain.",
+    "Scorer returns an unclamped signed score. Actor wrapper clamps0..100; ownership/missing-base early paths are separate."
+  ],
+  "numeric_courses": {
+    "neutral": [
+      50,
+      50,
+      50,
+      0,
+      0,
+      0,
+      0,
+      0,
+      -1,
+      0,
+      0,
+      0,
+      0
+    ],
+    "one_coordinate_values": [
+      [
+        -100,
+        0,
+        1,
+        49,
+        50,
+        51,
+        100,
+        200
+      ],
+      [
+        -100,
+        0,
+        1,
+        49,
+        50,
+        51,
+        100,
+        200
+      ],
+      [
+        -100,
+        0,
+        1,
+        49,
+        50,
+        51,
+        100,
+        200
+      ],
+      [
+        0,
+        1,
+        66,
+        67,
+        100,
+        1000,
+        -100
+      ],
+      [
+        0,
+        1,
+        66,
+        67,
+        100,
+        1000,
+        -100
+      ],
+      [
+        0,
+        1,
+        66,
+        67,
+        100,
+        1000,
+        -100
+      ],
+      [
+        0,
+        1,
+        -1,
+        20,
+        -20,
+        100,
+        -100
+      ],
+      [
+        0,
+        1,
+        -1,
+        20,
+        -20,
+        100,
+        -100
+      ],
+      [
+        0,
+        1,
+        -1,
+        20,
+        -20,
+        100,
+        -100
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -100,
+        0,
+        100
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "random_seed": 5051732,
+    "random_rows": 8192,
+    "random_coordinate_ranges": [
+      [
+        -100,
+        200
+      ],
+      [
+        -100,
+        200
+      ],
+      [
+        -100,
+        200
+      ],
+      [
+        -100,
+        10000
+      ],
+      [
+        -100,
+        10000
+      ],
+      [
+        -100,
+        10000
+      ],
+      [
+        -100,
+        100
+      ],
+      [
+        -100,
+        100
+      ],
+      [
+        -10,
+        10
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        -100,
+        100
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "variants": "Defaults; one setting at a time overridden to 1.375 (float) or -3 (int); all settings overridden together to -.375 (float) or13 (int). Default variant runs all rows, others first/last128.",
+    "expected_native_cases": 27288
+  },
+  "initializer_boundaries": [
+    "Observe float name/value constructor0x41bae0 and suppress atexit registration0x981fb4. Numeric scorer has no hooked game functions.",
+    "Two integer cap initializer name/address/value patterns checked directly against the pinned image."
+  ],
+  "wrapper_entry": "0x5ea800",
+  "wrapper_virtuals": {
+    "base": "0x170 -> 0x4d9b40",
+    "eligible": "0x190 -> 0x977c50",
+    "leveled": "0x128 -> 0x447550",
+    "fame": "0x204 -> Player0x66b090, NPC/Creature0x6f7070",
+    "infamy": "0x208 -> Player0x66b0a0, NPC/Creature0x6f7070",
+    "bounty": "0x250 -> NPC/Player0x60fbc0, Creature0x6bf3d0",
+    "per_target_modifier": "0x378 -> 0x5e21a0"
+  },
+  "remaining_runtime_work": [
+    "Native actor ownership/leveled-base/context resolution",
+    "Current process weapon/combat-package flags",
+    "Multi-faction ordering and Player-base exclusion state projection",
+    "Persistent per-target disposition modifiers",
+    "Live GetDisposition/ModDisposition integration",
+    "Friendly-hit production/expiry/save lifecycle and automatic ordered common-hit callbacks",
+    "All remaining M15S4 normal-input and fresh-process acceptance gates"
+  ],
+  "wrapper_courses": {
+    "source_kinds": [
+      "NPC",
+      "Creature"
+    ],
+    "target_kinds": [
+      "NPC",
+      "Player"
+    ],
+    "actor_personality": [
+      0,
+      50
+    ],
+    "target_personality": 51,
+    "actor_responsibility": [
+      0,
+      50,
+      100
+    ],
+    "target_fame": [
+      0,
+      70
+    ],
+    "target_infamy": [
+      0,
+      70
+    ],
+    "target_bounty": [
+      0,
+      0.5,
+      10000
+    ],
+    "per_target_modifier": [
+      -200,
+      7,
+      200
+    ],
+    "race_reaction": [
+      -25,
+      0,
+      25
+    ],
+    "faction_modes": [
+      "no memberships",
+      "distinct factions +15",
+      "distinct factions -15",
+      "same faction +15",
+      "target faction bit8 set"
+    ],
+    "source_faction_rank": 1,
+    "target_faction_rank": 2,
+    "expected_main_cases": 12960,
+    "player_base_alias_cases": 72,
+    "query_boundaries": [
+      "current-int AV6/36 supplied",
+      "bootstrap allocator/free and single-thread lock boundaries; no allocations occur on the inspected getters"
+    ],
+    "native_paths": [
+      "base identity and eligible virtuals",
+      "empty leveled-base getter",
+      "owner lookup (absent owner/context)",
+      "actual race reaction list",
+      "actual single-membership faction selection",
+      "actual Fame/Infamy and CrimeGold getters",
+      "actual per-target modifier lookup and int conversion",
+      "full numeric score and outer0..100 clamp"
+    ],
+    "findings": [
+      "Rank is the selected target membership rank.",
+      "Target faction bit8 excludes membership when the target BASE equals the Player base, including a distinct NPC sharing that base.",
+      "NPC target Fame/Infamy getters return zero even with nonzero raw Player-offset fixture fields.",
+      "Positive bounty below1 is promoted to1 by the actual getter.",
+      "Actor wrapper currently pushes zero for the disease penalty slot."
+    ],
+    "unexecuted": [
+      "process/controller/weapon gate branches",
+      "owned/leveled/base-context branches",
+      "multi-membership ordering cases",
+      "fork live input adapter and persistence"
+    ]
+  }
+}

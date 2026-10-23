@@ -11,6 +11,126 @@
 namespace
 {
     const ESM4::FightScoreSettings installed{50, -1, -55, 1, 1, -.005f, -25, 1, 2};
+    const ESM4::DispositionInput neutralDisposition{50, 50, 50, 0, 0, 0, 0, 0, -1, false, false, 0, false};
+}
+
+TEST(ESM4CombatAIRules, DispositionAveragesPersonalityBeforeTruncationAndLeavesWrapperClampToCaller)
+{
+    const auto settings = ESM4::buildDispositionSettings({});
+    auto input = neutralDisposition;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 50);
+    input.mActorPersonality = 51;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 50);
+    input.mActorPersonality = -151;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), -50);
+    input.mModifier = 200;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 150);
+}
+
+TEST(ESM4CombatAIRules, DispositionReputationTermsCapSeparatelyAndUseNativeRepeatedInfamyFactor)
+{
+    const auto settings = ESM4::buildDispositionSettings({});
+    auto input = neutralDisposition;
+    input.mTargetFame = 100;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 70);
+    input.mTargetFame = -100;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 30);
+    input.mTargetFame = 0;
+    input.mTargetInfamy = 100;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 30);
+    input.mTargetInfamy = 10;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 47); // Float term is -2.1 before final truncation.
+    input.mActorResponsibility = 0;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 50); // (-.3) * (-.3 * 10), not (-1) * (-.3 * 10).
+    input.mTargetInfamy = 0;
+    input.mTargetBounty = 10000;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 70);
+    input.mActorResponsibility = 100;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 30);
+}
+
+TEST(ESM4CombatAIRules, DispositionFactionMultiplierAppearsInBothFactors)
+{
+    auto settings = ESM4::buildDispositionSettings({});
+    auto input = neutralDisposition;
+    input.mFactionReaction = 10;
+    input.mFactionRank = 2;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 80);
+    settings.mFactionMultiplier = 2;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 150);
+    input.mFactionRank = -1;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 30);
+}
+
+TEST(ESM4CombatAIRules, CreatureDispositionSkipsReputationButRetainsOtherTerms)
+{
+    const auto settings = ESM4::buildDispositionSettings({});
+    auto input = neutralDisposition;
+    input.mActorCreature = true;
+    input.mTargetFame = 1000;
+    input.mTargetInfamy = 1000;
+    input.mTargetBounty = 10000;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 50);
+    input.mRaceReaction = 10;
+    input.mWeaponPenalty = true;
+    input.mDiseasePenalty = true;
+    input.mModifier = 7;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 47);
+}
+
+TEST(ESM4CombatAIRules, DispositionCapsRetainSignedNativeBranchOrder)
+{
+    auto settings = ESM4::buildDispositionSettings({});
+    settings.mFameMaximum = -3;
+    settings.mBountyMaximum = -3;
+    EXPECT_EQ(ESM4::dispositionScore(neutralDisposition, settings), 44);
+    auto input = neutralDisposition;
+    input.mTargetFame = -100;
+    input.mActorResponsibility = 100;
+    input.mTargetBounty = 10000;
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), 56);
+    settings = ESM4::buildDispositionSettings({});
+    settings.mInfamyMaximum = -3;
+    EXPECT_EQ(ESM4::dispositionScore(neutralDisposition, settings), 47);
+}
+
+TEST(ESM4CombatAIRules, DispositionSettingsUseTypedWinningOverridesAndIgnoreUnreadSettings)
+{
+    ESM4::GameSetting actor{};
+    actor.mEditorId = "fDispActorPerBase";
+    actor.mData = 20.f;
+    ESM4::GameSetting infamy{};
+    infamy.mEditorId = "fDispActorInfamyBase";
+    infamy.mData = 10000.f;
+    ESM4::GameSetting rank{};
+    rank.mEditorId = "fDispTargetFactionRankMult";
+    rank.mData = 10000.f;
+    const ESM4::GameSetting* values[]{&actor, &infamy, &rank};
+    const auto settings = ESM4::buildDispositionSettings(values);
+    EXPECT_EQ(ESM4::dispositionScore(neutralDisposition, settings), 60);
+    actor.mData = std::int32_t{20};
+    EXPECT_THROW(ESM4::buildDispositionSettings(values), std::invalid_argument);
+    actor.mEditorId = "iDispFameMax";
+    actor.mData = 20.f;
+    EXPECT_THROW(ESM4::buildDispositionSettings(values), std::invalid_argument);
+}
+
+TEST(ESM4CombatAIRules, DispositionInvalidSettingsAndUnsupportedConversionsFailExplicitly)
+{
+    auto settings = ESM4::buildDispositionSettings({});
+    settings.mActorPersonalityBase = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::dispositionScore(neutralDisposition, settings), std::invalid_argument);
+    settings = ESM4::buildDispositionSettings({});
+    settings.mActorPersonalityMultiplier = std::numeric_limits<float>::max();
+    EXPECT_THROW(ESM4::dispositionScore(neutralDisposition, settings), std::overflow_error);
+    settings = ESM4::buildDispositionSettings({});
+    auto input = neutralDisposition;
+    input.mTargetPersonality = 0;
+    input.mActorPersonality = 0;
+    input.mModifier = std::numeric_limits<std::int32_t>::max();
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), input.mModifier);
+    input.mActorPersonality = 50;
+    EXPECT_THROW(ESM4::dispositionScore(input, settings), std::overflow_error);
 }
 
 TEST(ESM4CombatAIRules, AggressionGateUpperCapAndNegativeScores)

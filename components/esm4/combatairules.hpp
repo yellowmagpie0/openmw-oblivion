@@ -5,6 +5,33 @@
 
 namespace ESM4
 {
+    struct DispositionSettings
+    {
+        float mActorPersonalityBase, mActorPersonalityMultiplier;
+        float mTargetPersonalityBase, mTargetPersonalityMultiplier;
+        float mTargetFameMultiplier;
+        float mTargetInfamyMultiplier, mActorInfamyMultiplier;
+        float mTargetBountyMultiplier, mActorBountyBase, mActorBountyMultiplier;
+        float mRaceMultiplier, mFactionMultiplier, mFactionRankBase;
+        float mWeaponPenalty, mDiseasePenalty;
+        std::int32_t mFameMaximum, mBountyMaximum;
+        float mInfamyMaximum;
+    };
+    struct DispositionInput
+    {
+        std::int32_t mActorPersonality, mTargetPersonality, mActorResponsibility;
+        std::int32_t mTargetFame, mTargetInfamy, mTargetBounty;
+        std::int32_t mRaceReaction, mFactionReaction, mFactionRank;
+        bool mWeaponPenalty, mDiseasePenalty;
+        std::int32_t mModifier;
+        bool mActorCreature;
+    };
+    // Original 546260 numeric score, before the actor wrapper's [0,100] clamp.
+    // Caller resolves ownership/leveled bases, factions, process flags and
+    // per-target modifiers. Integer conversions outside int32 are unsupported.
+    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings);
+    void validateDispositionSettings(const DispositionSettings& settings);
+
     struct FightScoreSettings
     {
         float mDispositionBase;
