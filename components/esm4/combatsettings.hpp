@@ -37,6 +37,7 @@ namespace ESM4
     KnockdownSettings buildKnockdownSettings(std::span<const GameSetting* const> settings);
     KnockbackSettings buildKnockbackSettings(std::span<const GameSetting* const> settings);
     MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings);
+    OrdinaryHitSpeechSettings buildOrdinaryHitSpeechSettings(std::span<const GameSetting* const> settings);
     BowZoomSettings buildBowZoomSettings(std::span<const GameSetting* const> settings);
     EssentialRecoverySettings buildEssentialRecoverySettings(std::span<const GameSetting* const> settings);
     BlockCostSettings buildBlockCostSettings(std::span<const GameSetting* const> settings);

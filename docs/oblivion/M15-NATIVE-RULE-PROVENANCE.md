@@ -17207,3 +17207,42 @@ changes no production behavior and closes no runtime gate.
 pins the hash-identified executable,512-case corpus, successful script,
 preregistrations and retained fixture failures; the editable case matrix is
 `m15_general_hit_continuation_oracle_cases.json`. Full M15S4 remains incomplete.
+
+
+## Ordinary-hit common reaction composition
+
+A new immutable numeric decision layer composes the original ordinary-hit
+caller5FFEB5..5FFF52: damage flag, otherwise-unused Expert mastery draw, hit
+speech, Stagger/visual-force suppression, then lower-HTH Block Recoil. It
+consumes an explicit prefix of raw CRT draws and returns separate decisions;
+no live RNG, resource, renderer or contact admission is changed here.
+
+All4,808 independently executed original cases match normal and ASan/UBSan
+production-object comparisons, including negative controls for a wrong expected
+Stagger, missing row and invalid raw draw. Four new component regressions cover
+ordering, threshold/raw speech and winning settings, invalid data, and post-hit
+Health/entry identity. Full normal components pass3,001 cases; instrumented
+ESM4 components pass854, with no failures/skips. Source fingerprint:
+`5a67b20804a195d5c0f42e0afbf0c4bd29aaccc875d221efc37da420c6eaddcd`
+(parent5f3d997f5f). Leak checks are off. Engine/runtime checks are not repeated
+for this numeric-only chunk; no new E2E gate is claimed.
+
+Speech uses post-contact current integer Health, not base Health. Threshold
+equality consumes a draw; speech uses raw/32767, while percentile rolls use
+raw%100. Compiled chance.35 differs from winning Oblivion.esm00088FFE chance.2;
+threshold00088FFF is.1. A pre-scaling damage path can reach the resource sink
+with both arguments zero and still perform its reaction roll. Zero and negative
+post-integer Health preserve original ordered comparison behavior.
+
+The common stage precedes both blocked and lower-skill routing. Current runtime
+omits it: earlier bounded advanced-block/Counter/disarm courses do not prove
+whole-caller RNG parity. Integration must prepare this stage ahead of both
+paths, preserve independent Stagger slot0 and later slot3 ownership, stage
+post-damage queries and speech/notification consequences, then revalidate the
+full ordinary/block courses. Removing only the lower-HTH rejection is insufficient.
+
+[M15-ORDINARY-HIT-REACTION-VERIFICATION.json](M15-ORDINARY-HIT-REACTION-VERIFICATION.json)
+pins source, final checks, original observations, all retained fixture failures,
+content/settings audit and both comparison profiles. Editable
+`m15_ordinary_hit_reaction_oracle_cases.json` records the case groups and
+remaining integration requirements. Full M15S4 remains incomplete.

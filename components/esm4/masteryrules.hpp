@@ -65,6 +65,48 @@ namespace ESM4
     MasteryProcResult unarmedBlockRecoil(const UnarmedBlockRecoilInput& input, unsigned draw,
         const MasteryProcSettings& settings, const CombatMasterySettings& mastery);
 
+    struct OrdinaryHitSpeechSettings
+    {
+        float mChance;
+        float mDamageThreshold;
+    };
+    struct OrdinaryHitReactionInput
+    {
+        // Health and scaled Fatigue arguments at the resource sink, before
+        // difficulty. Remaining queries describe its prepared post-hit actor.
+        float mHealthDamage, mFatigueDamage;
+        std::int32_t mPreArmorDamage, mPostFatigue, mAgility, mLuck, mPostHealth;
+        float mPostFatigueRatio;
+        std::int32_t mAttackerBaseSkill, mVictimBaseSpeed;
+        std::int8_t mKnocked;
+        bool mVictimRemainsAlive, mFacingAttacker;
+        UnarmedBlockRecoilInput mBlock;
+        // Original5FFEB5 selects this before scaling Fatigue. A selected
+        // path can reach the resource sink with both scaled arguments zero.
+        bool mDamagePath = true;
+    };
+    struct OrdinaryHitReactionResult
+    {
+        unsigned mDraws = 0;
+        bool mDamageFlag = false;
+        bool mHitSpeech = false;
+        bool mStagger = false;
+        bool mSuppressGeneralHit = false;
+        bool mBlockedDispatch = false;
+        bool mAttackerRecoil = false;
+        friend bool operator==(const OrdinaryHitReactionResult&, const OrdinaryHitReactionResult&) = default;
+    };
+    // Original ordinary-group caller5FFEB5..5FFF52: damage, otherwise-unused
+    // Expert mastery, hit speech, then lower-HTH Recoil draws, in that order.
+    // Draws are original raw CRT values [0,32767], not percentiles. Only the
+    // consumed prefix belongs to the transaction. Callback/resource selection
+    // RNG and the blocked Counter/disarm tail remain caller-owned.
+    OrdinaryHitReactionResult ordinaryHitReactions(const OrdinaryHitReactionInput& input,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const MasteryProcSettings& procs, const CombatMasterySettings& mastery);
+    void validateOrdinaryHitSpeechSettings(const OrdinaryHitSpeechSettings& settings);
+
     struct BowZoomSettings
     {
         float mZoomFov;

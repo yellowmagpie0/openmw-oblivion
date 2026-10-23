@@ -1,0 +1,703 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Numeric ordinary-hit caller composition: common damage flag, ordinary Expert draw, hit speech, Stagger/force suppression and lower-HTH Recoil ordering",
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "5f3d997f5fd0f4b31d7f4f51c50c2c6c77ebfdb3",
+    "source_fingerprint": "5a67b20804a195d5c0f42e0afbf0c4bd29aaccc875d221efc37da420c6eaddcd"
+  },
+  "tested_source_files": {
+    "apps/components_tests/esm4/masteryrules.cpp": {
+      "path": "apps/components_tests/esm4/masteryrules.cpp",
+      "sha256": "da1b8892253bae14e74dedbc6a703ed4004ed2e8b948664bed1da8f0800d3f63",
+      "bytes": 27271
+    },
+    "components/esm4/combatsettings.cpp": {
+      "path": "components/esm4/combatsettings.cpp",
+      "sha256": "1a5c23b6de83220f3c42f06292a204a70ef61e52774d5fd4209abe927ed73746",
+      "bytes": 34417
+    },
+    "components/esm4/combatsettings.hpp": {
+      "path": "components/esm4/combatsettings.hpp",
+      "sha256": "3320f1af51ae97dc82ab39fbbf22abbbf76358c08b8dd093627cfa5256523057",
+      "bytes": 5626
+    },
+    "components/esm4/masteryrules.cpp": {
+      "path": "components/esm4/masteryrules.cpp",
+      "sha256": "3d04581afec4a4df9e03be4d7a37fd1eae4cb72c9412f430147127908dbdb38c",
+      "bytes": 12636
+    },
+    "components/esm4/masteryrules.hpp": {
+      "path": "components/esm4/masteryrules.hpp",
+      "sha256": "01b48ac3c2c2f30dce5dc941bc5d8ada097a6d90711653a42b00019db5073297",
+      "bytes": 6966
+    }
+  },
+  "checks": {
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-components-03/verification.json",
+      "sha256": "aae27eda178c717f21046251c5413011db59c119218476ee0732e397279aee8f",
+      "bytes": 3940
+    },
+    "results": {
+      "components": {
+        "executed": 3001,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0d35ddcd700e9e5d0897a4b46b59539556fd578964f55e7cebed638c974cb166",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "32bb77418f7e28d1d0cc0a4602f5530e6436d3309172a79782f4d2eda50b8052",
+        "inventory_sha256": "ea9e91d9de0c38254957b887f86491061e8445b34d3ef78d7d23dac50d2c032c",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 854,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "082d59490da92effff6ffaadf59035062caf3d5b8511b3599f4e02dd7bb872a3",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "697e7ac4b2d6d225c1ab3473276fcd137c5858626c62d2f4048fe4a7d334b6ca",
+        "inventory_sha256": "5c43dacaf32a20b86504c19f2a5bb9af0e760c7a94002020ef4794989d20ab6f",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "original": {
+    "passed": true,
+    "cases": 4808,
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "c7ab5cfcdfe13c56736cd9fc0ee5db6e9eca347e8fa019661d69764ac4b5f061",
+    "scope": "Original5FFEB5 through general-hit reaction and lower-HTH Recoil routing to5FFF52; ordinary source groups only, primitive/resource/action/speech boundaries explicit",
+    "full_M15S4_acceptance": false
+  },
+  "comparison": {
+    "passed": true,
+    "scope": "Compare complete original-instruction corpus numeric outputs and consumed draw prefix; wrong expected Stagger, missing row and invalid raw draw controls must reject",
+    "profiles": {
+      "normal": {
+        "passed": true,
+        "cases": 4808,
+        "binary_sha256": "c9990be6ae3f8472747d7ee141e1bc821a29cfd9f2cfce3bdb3b4e372c18529f",
+        "results": {
+          "all": {
+            "exit": 0,
+            "expected": 0
+          },
+          "wrong-stagger": {
+            "exit": 8,
+            "expected": 8
+          },
+          "missing-case": {
+            "exit": 10,
+            "expected": 10
+          },
+          "invalid-raw": {
+            "exit": 4,
+            "expected": 4
+          }
+        }
+      },
+      "sanitized": {
+        "passed": true,
+        "cases": 4808,
+        "binary_sha256": "ecaad6bc5b61d1469b9e8f77de3102d5cece20e5cd628b9f9ffd6c30499b3e85",
+        "results": {
+          "all": {
+            "exit": 0,
+            "expected": 0
+          },
+          "wrong-stagger": {
+            "exit": 8,
+            "expected": 8
+          },
+          "missing-case": {
+            "exit": 10,
+            "expected": 10
+          },
+          "invalid-raw": {
+            "exit": 4,
+            "expected": 4
+          }
+        }
+      }
+    },
+    "cases_sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82",
+    "full_M15S4_acceptance": false
+  },
+  "retained_artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/audit-settings.py",
+      "sha256": "f28a246b8f3b2ad304b4f13abc31451d6b8790c56704ec427b339e11885b5358",
+      "bytes": 2111
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus04.json",
+      "sha256": "947ebb307d520d315708d790bdbc28713ad085f84286527f9e211f831e78cf31",
+      "bytes": 1503873
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus05.json",
+      "sha256": "8b7bbfa0511259ef384b2be04012cdf21087faaca4b9303a938062dcb0c3d49f",
+      "bytes": 1734369
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus06.json",
+      "sha256": "269f7b6f4cf2ef1014d1b1057b588d69abca41c041583a3a15ed6882f7689d2f",
+      "bytes": 1864481
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus07.json",
+      "sha256": "f7d38e7472b1a01765e98bab966108f63000c54de347b7d572c96cca19548b04",
+      "bytes": 2149377
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus08.json",
+      "sha256": "5fc698af512d9319a7c2e1946fee3fed52e6e6a341916ea011454135dc252944",
+      "bytes": 2178377
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus09.json",
+      "sha256": "6a4dd571dcab25f7ec7ddcc27d40ecba971dd15ac7fb10542ea0a3818d2ff89f",
+      "bytes": 2229565
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/corpus10.json",
+      "sha256": "c7ab5cfcdfe13c56736cd9fc0ee5db6e9eca347e8fa019661d69764ac4b5f061",
+      "bytes": 2250707
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/expert-ordinary-preregistration.json",
+      "sha256": "a0f11277c76b7fca7a28f0a732d5400bb408ea1c886fe3e7a3e2e47c9fe8bf8a",
+      "bytes": 732
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/failure01.json",
+      "sha256": "9d296a1a030378218448a0ce9ebb3c9a01f2a9749bf5ec9e4acb6a11511149eb",
+      "bytes": 689
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/failure02.json",
+      "sha256": "ffeaa3439b80e364027bb6642a565f10e80213be011e80348afdecf3e4eba2be",
+      "bytes": 463
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/failure03.json",
+      "sha256": "00554fa31dc8ce7bd4f8c1d7a8455bade6dde4f0a782b6d5ee90e71f43c50176",
+      "bytes": 491
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/inspect-semantics.py",
+      "sha256": "ab20198c90fc2abe1a9c8189b8d9add6d9b1f07a2b9ac0b3d9af84439c09e1d1",
+      "bytes": 1733
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/installed-speech-preregistration.json",
+      "sha256": "000f73562bf92407876423dc573cc9bc51d817ddb9e01a34fd4eb668cbb8223e",
+      "bytes": 536
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/post-health-preregistration.json",
+      "sha256": "26baf572b740042f335f9c3e133288551ebed9f0bb77c1af34885f7af08f459a",
+      "bytes": 912
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/preregistration.json",
+      "sha256": "543e7582b794f86d2a1a406b5bee227c21d529eb324c21bf1a720f31094724e4",
+      "bytes": 1673
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-01.py",
+      "sha256": "79945079a93c4578660fe364e6b404640c38fa98ef638bf5c9fef4e2c1f44b1f",
+      "bytes": 6025
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-02.py",
+      "sha256": "f533b4c61b0b8c430b44e457d41172db21c7752436ce2a1454886cce458f50c6",
+      "bytes": 6164
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-03.py",
+      "sha256": "2d07df2fd3fae76e1b9c51c8312aaeb47c79ae2901adfe5ab4df08a9dd85adc4",
+      "bytes": 6192
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-04.py",
+      "sha256": "0194a840352091afc2546eaca5c683ac360de381a66daf942c7753cfa9dcd468",
+      "bytes": 6336
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-05.py",
+      "sha256": "1a5425831b60b7d52b58f4d31c120815af9cbb3dce2b9cc0b33bebcfd2f75353",
+      "bytes": 7166
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-06.py",
+      "sha256": "c114a91b254c0dbce9637c10f39aeb74efa90e4b484851039daef307eab97dee",
+      "bytes": 7759
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-07.py",
+      "sha256": "84aeb83300bfde78ef64d9972fe9627c6e523af1ce833de7d61ca56f39da109d",
+      "bytes": 7904
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-08.py",
+      "sha256": "e869359df79eec87a0b926c750e1f7533b1ef06e00acba2a80f2985d109d4852",
+      "bytes": 8296
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-09.py",
+      "sha256": "19f3559a1e3c837538a67cb36dfb027cc887445aa4561280ea844c13c593f477",
+      "bytes": 8735
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/probe-10.py",
+      "sha256": "823a13bb4a11f2cb9aa2fa3ed302a1f190509c89622901263278eec5234f8b32",
+      "bytes": 9148
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/secondary-preregistration.json",
+      "sha256": "2c84ba101c51b8784cb21ec78c3d5b3f1f3d0ac56802f381bb531cbd442cf933",
+      "bytes": 980
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/semantics-inspection.json",
+      "sha256": "8ba23a0de2e475b6c6ac04da19908a2816aa914279e972f2a081624665a4e4f0",
+      "bytes": 1445
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/settings-audit.json",
+      "sha256": "22c2f52e316784de261109d181f0eca32b4e1a0f3b1f483e9ff0356f8412fb93",
+      "bytes": 1779
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification04.json",
+      "sha256": "25e64423ff9bb6f92e1f7bc3bf8e5e9b19582fff5544f37c2b42fdc15959234d",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification05.json",
+      "sha256": "864a1c4afd8ccf21b00346bd42623ae215d994f91c0034c25bf2f2cc39f0183a",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification06.json",
+      "sha256": "9b526ec01bed4c5cda201de7f95eb5340f72501a3f22c66c7f3ec1c73f6ecf5e",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification07.json",
+      "sha256": "fab554bba0cac85a3081c6db6172cabb9d4a0aeecc2c3e6327c893ce90b1a442",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification08.json",
+      "sha256": "c86989e3a1c62715cc59c4b2d2be16ceb51a25757d27d01925477d9db02c727c",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification09.json",
+      "sha256": "e5df1ac7612ddc980fc1b1d9994b963132f53373fa973fedc688d49364b84370",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-general-hit-composition-oracle-01/verification10.json",
+      "sha256": "d65c496f08a5dc4d1944fbf824bb105f2380385c4f8616cd9ebb1cf28758a903",
+      "bytes": 431
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build-02.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build-03.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build-sanitized-02.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build-sanitized-03.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build-sanitized.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/cases-02.tsv",
+      "sha256": "5f6fc6c3f9c07aa2c1a675804898f6c932dfd47cfae63cb2b7f010d0090a7fb1",
+      "bytes": 306726
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/cases.tsv",
+      "sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82",
+      "bytes": 344370
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare",
+      "sha256": "bc67c62e817da367abf5560a462855cc289d3a2cad61207944de03377238d4aa",
+      "bytes": 34032
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-02",
+      "sha256": "950f64aa38bbd5e0e06136e87a119283803a551ba95b5986b2fa51576be6cd44",
+      "bytes": 1071040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-02.cpp",
+      "sha256": "e31169754a04f0c322ad1033554964c01b0a2dfaa445b1dd34e0962cd4cf7a8d",
+      "bytes": 2010
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-03",
+      "sha256": "c9990be6ae3f8472747d7ee141e1bc821a29cfd9f2cfce3bdb3b4e372c18529f",
+      "bytes": 1070840
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-03.cpp",
+      "sha256": "4294e26f3e2452d893b12681b2ee6ad87a95a6f4cabf4a087cd2ecffa60d7733",
+      "bytes": 2059
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-sanitized",
+      "sha256": "2b04eed250cd7803dfe9b785c4d345897cb6e6959d356a0621471fb1e0413dc6",
+      "bytes": 2469352
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-sanitized-02",
+      "sha256": "2d798905a025db31c1dbc14351a1cde47710bd13640b64f5bb08f3490811cb5e",
+      "bytes": 2965272
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare-sanitized-03",
+      "sha256": "ecaad6bc5b61d1469b9e8f77de3102d5cece20e5cd628b9f9ffd6c30499b3e85",
+      "bytes": 2966680
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compare.cpp",
+      "sha256": "33d7f7335f454fae05c65382ce4dc6ebe267ad2de1a0293a6dee1183d1667646",
+      "bytes": 1971
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/compiled-default-verification.json",
+      "sha256": "82a6a3da170a8cfcdc05b0cb63f475f7f1675c99ec16eb61a619508bfa89a8e1",
+      "bytes": 844
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/invalid-raw.tsv",
+      "sha256": "228bc4f68a26fd608fbf975eaf1b2ccb6e9e542717aac21ea2721245c0f25607",
+      "bytes": 344374
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/link-inputs.json",
+      "sha256": "3abaf5a641e5cdfd0b83d91fe47214974ed75914ac321cdd2bf53679f9d675c3",
+      "bytes": 1532
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/missing-case.tsv",
+      "sha256": "afb0526f73df2d1cc1696609cb920507779094fcbdb14ead72de79fc1479d12c",
+      "bytes": 344306
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/normal-all.log",
+      "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7",
+      "bytes": 39
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/normal-invalid-raw.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/normal-missing-case.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/normal-wrong-stagger.log",
+      "sha256": "eb13ec2423ae9b4214d1ddbb3d189097f3c31aefcb609107c2ad747b0f69e323",
+      "bytes": 15
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/prepare-02.py",
+      "sha256": "66f91548d84b2d458e1649e7a7dfad5276d6433969a64a6c152d27e52f4dbb5e",
+      "bytes": 1185
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/prepare-03.py",
+      "sha256": "feaf7307603409eb66bb2ed78933e56118e753a7251902589105053cd0c3b5ae",
+      "bytes": 1261
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/prepare.py",
+      "sha256": "7655ae6b02c698a11f90cb9b20b0df0871c72bc599e1339dc5673c15fe840bf7",
+      "bytes": 1152
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/provenance-02.json",
+      "sha256": "e85352e741e303564eeb5c2fb6ea7fb98b81e29ce316b42382b16a5d40ebf06b",
+      "bytes": 345
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/provenance.json",
+      "sha256": "c34bbdad7f1f678529da7eb3428262d74981e6d453120e8cd3338cb0a6446699",
+      "bytes": 345
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/sanitized-all.log",
+      "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7",
+      "bytes": 39
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/sanitized-invalid-raw.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/sanitized-missing-case.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/sanitized-wrong-stagger.log",
+      "sha256": "eb13ec2423ae9b4214d1ddbb3d189097f3c31aefcb609107c2ad747b0f69e323",
+      "bytes": 15
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/verification-02.json",
+      "sha256": "b8b879682f64622dc5f3567787e59ccf653b7107d51588b79151accf9dc686e3",
+      "bytes": 1351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/verification.json",
+      "sha256": "84141b1d4c417e4a441cdcfcd88cdcb93e6b2b8f39c3f9f62ce231a472df42ad",
+      "bytes": 1351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/verify-02.py",
+      "sha256": "1faa50a595d6658b95999411ea78760c9bf1ae059871553bf75750698a7a30c3",
+      "bytes": 1752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/verify-03.py",
+      "sha256": "ad991c72b5c85c31dc12ce229ecb257f5deb0385a6bddd1ad772c98d080350a9",
+      "bytes": 1752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/verify.py",
+      "sha256": "832bfd8504ef239cfd90c93f195a33e195da21756d1f2d20613f1fe97e2ea92e",
+      "bytes": 1746
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-comparison-01/wrong-stagger.tsv",
+      "sha256": "7e0bd5711772d3c48afa713d4b6b6ec84f70253b00a1966de283c4d8e2bd39c1",
+      "bytes": 344370
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-components-01/verification.json",
+      "sha256": "d165b61d13ea2ed69fb423babad4219011d9a03c317cbed9bc5e78ea3cda5a24",
+      "bytes": 3942
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-reactions-components-02/verification.json",
+      "sha256": "4b2124d29f3bbbbac7b1563e01af83db9ee39ffd55f4ba80b9370f6a1c2408be",
+      "bytes": 3941
+    }
+  ],
+  "settings": {
+    "passed": true,
+    "scope": "Independent TES4 GMST scan of the actual two-plugin ordinary recovery fixture load order; absent installed values use hash-identified constructor defaults, no runtime query claim",
+    "load_order": [
+      {
+        "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-master-recovery-fixture-02/fixture/M15StationaryOpponent.esp",
+        "sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44"
+      }
+    ],
+    "records": [
+      {
+        "file": "Oblivion.esm",
+        "formid": "00088fff",
+        "name": "fCombatSpeakHitThreshold",
+        "flags": 0,
+        "value": 0.10000000149011612
+      },
+      {
+        "file": "Oblivion.esm",
+        "formid": "00088ffe",
+        "name": "fCombatSpeakHitChance",
+        "flags": 0,
+        "value": 0.20000000298023224
+      }
+    ],
+    "winning": {
+      "fcombatspeakhitthreshold": {
+        "file": "Oblivion.esm",
+        "formid": "00088fff",
+        "name": "fCombatSpeakHitThreshold",
+        "flags": 0,
+        "value": 0.10000000149011612
+      },
+      "fcombatspeakhitchance": {
+        "file": "Oblivion.esm",
+        "formid": "00088ffe",
+        "name": "fCombatSpeakHitChance",
+        "flags": 0,
+        "value": 0.20000000298023224
+      }
+    },
+    "compiled_defaults": {
+      "fCombatSpeakHitChance": {
+        "value": 0.3499999940395355,
+        "constructor": "0x009E9390",
+        "storage_object": "0x00B36F50",
+        "name_pointer": "0x00A58C70"
+      },
+      "fCombatSpeakHitThreshold": {
+        "value": 0.10000000149011612,
+        "constructor": "0x009E93C0",
+        "storage_object": "0x00B36F58",
+        "name_pointer": "0x00A58C88"
+      }
+    }
+  },
+  "semantics_inspection": {
+    "passed": true,
+    "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "virtuals": {
+      "NPC": {
+        "virtual164": "004D8370",
+        "virtual198": "005E33B0",
+        "virtual19C": "005E04F0",
+        "virtual220": "005E58F0",
+        "virtual284": "005F1970",
+        "virtual308": "005E7010",
+        "virtual398": "005EE760"
+      },
+      "Player": {
+        "virtual164": "0065D720",
+        "virtual198": "005E33B0",
+        "virtual19C": "005E04F0",
+        "virtual220": "005E58F0",
+        "virtual284": "0065E030",
+        "virtual308": "006608A0",
+        "virtual398": "005EE760"
+      },
+      "Creature": {
+        "virtual164": "004D8370",
+        "virtual198": "005E33B0",
+        "virtual19C": "005E04F0",
+        "virtual220": "005E58F0",
+        "virtual284": "006253C0",
+        "virtual308": "005E7010",
+        "virtual398": "005EE760"
+      }
+    },
+    "settings": [
+      {
+        "name": "fCombatSpeakHitChance",
+        "constructor": "009E9390",
+        "setting_object": "00B36F50",
+        "compiled_value": 0.3499999940395355
+      },
+      {
+        "name": "fCombatSpeakHitThreshold",
+        "constructor": "009E93C0",
+        "setting_object": "00B36F58",
+        "compiled_value": 0.10000000149011612
+      }
+    ],
+    "scope": "Read-only instruction/operand inspection: original actor virtual targets, common resource sink forwards virtual198 boolean on both exits, compiled speech names/defaults and constructors. Full game execution excluded."
+  },
+  "case_groups": [
+    {
+      "group": "main actor and reaction gates",
+      "cases": 3840
+    },
+    {
+      "group": "speech threshold/equality/adjacent Health floats",
+      "cases": 512
+    },
+    {
+      "group": "ordinary Expert/Master draw despite no directional effect",
+      "cases": 256
+    },
+    {
+      "group": "installed .2 speech chance vs compiled .35 raw boundaries",
+      "cases": 56
+    },
+    {
+      "group": "signed and zero post-contact integer Health denominator",
+      "cases": 96
+    },
+    {
+      "group": "zero scaled damage arguments with distinct pre-scaling entry",
+      "cases": 48
+    }
+  ],
+  "implementation": "ordinaryHitReactions consumes only the required raw CRT draw prefix. It reuses damageKnockdown, mastery thresholds and unarmedBlockRecoil, and returns independent damage-flag/speech/Stagger/suppression/blocked-dispatch/Recoil decisions. The settings adapter resolves typed winning GMST records; compiled defaults remain explicit. No runtime authority/schema/contact admission change.",
+  "findings": [
+    "Original integer Fatigue<=0 bypasses the damage roll only when scaled incoming Fatigue is positive. A selected pre-scaling damage path can have both final resource arguments zero and still run the stochastic roll.",
+    "Positive-Speed Expert/Master ordinary attacks consume a mastery draw even without directional procs.",
+    "The speech ratio uses post-contact current integer Health through virtual284, not base Health. At threshold equality it takes a speech draw. That draw uses raw/32767 <= chance; percentile draws use raw%100.",
+    "The damage flag requests Stagger only for standing defender/facing attacker. That sets byte4F suppression, skipping later visual398 and force. Lower Block Recoil comes afterward and can coexist on the attacker.",
+    "Compiled speech chance .35 differs from installed Oblivion.esm00088FFE .2; installed threshold00088FFF is .1. Raw6553 succeeds and6554 fails at installed chance; raw8000 distinguishes installed from compiled.",
+    "The common stage precedes both blocked and lower-skill routing. Current runtime omits this common stage; previous bounded advanced-block/Counter/disarm courses do not establish full-caller RNG parity. Integrate the common stage ahead of both paths and revalidate those courses."
+  ],
+  "preregistration_errata": [
+    "Earlier initial prose baseHealth100 names a supplied virtual284 current integer Health100. Post-health preregistration corrects that identity before edge-case reruns.",
+    "The harness field killed supplies the common resource sink boolean. Separate instruction inspection verifies that both sink exits return virtual198; the numeric mVictimRemainsAlive input means its inverse. Runtime must resolve the exact native predicate, not substitute a broader lifecycle convenience gate."
+  ],
+  "retained_failures": "Attempts01-03 are retained fixture failures: missing actor base/wrong FatigueRatio return cleanup, then omitted positive base-Speed followup on true resource-sink return. Attempt04 and later compositions pass. Component checks01/02 passed their earlier sources; final03 includes denominator/entry corrections and current tests. No failed attempt is promoted to acceptance.",
+  "validation_layers": {
+    "structural": "New explicit numeric DTO/result and typed GMST adapter compile; no runtime wire/schema changes.",
+    "compiler_world": "3001 full normal component tests and854 instrumented ESM4 tests pass with exact inventory and no skips/failures. Engine application/World integration not changed or rebuilt in this chunk.",
+    "semantic": "4808 independently executed original caller cases agree with final normal and ASan/UBSan production-object comparisons. Wrong expected Stagger, missing row and invalid raw controls fail as required. Four unit regressions cover order, speech/raw thresholds and winning override, invalid inputs/draws, post-Health/zero-argument entry identity.",
+    "runtime": "No new original-game or OpenMW normal-input/render/PCM/restart acceptance. Existing runtime admission remains restricted pending complete consequence publication."
+  },
+  "integration_requirements": [
+    "Use staged post-resource integer Health/Fatigue/Agility/Luck and post-FatigueRatio. Preserve pre-difficulty Health argument separately from the actual difficulty-scaled resource delta.",
+    "Preserve the pre-scaling damage-path decision. Do not infer it from final Health/Fatigue deltas.",
+    "Keep attack skill and original block/gear/facing context at their verified acquisition points, including incoming weapon breakage; do not re-query changed equipment/posture after Stagger.",
+    "Join common reaction/RNG preparation before blocked Counter/BlockHit routing and lower Recoil. Preserve independently resident native slot0 Stagger and slot3 sequences when later dispatch changes process authority.",
+    "Prepare speech/voice/combat notification, resource selection RNG and lifetime bindings within the complete contact transaction before removing rejection. No separate live RNG mutation or callback during speculative preparation.",
+    "Complete normal-input and real-output fresh-process courses with the full-caller expected RNG and all remaining M15S4 gates."
+  ]
+}

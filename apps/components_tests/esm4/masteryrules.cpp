@@ -361,3 +361,135 @@ TEST(ESM4MasteryRules, BowZoomClampsLargeFiniteTimeAndDiagnosesOutputOverflow)
     input.mNormalFov = 1;
     EXPECT_THROW(ESM4::bowZoomFov(input, {100, std::numeric_limits<float>::min(), 0}, mastery), std::overflow_error);
 }
+
+namespace
+{
+    const ESM4::KnockdownSettings installedKnockdown{0, 1, 0, .3f, .3f};
+    const ESM4::PhysicalCombatSettings installedPhysical{-20, .4f, 1, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f};
+    ESM4::OrdinaryHitReactionInput ordinaryHitInput()
+    {
+        return {20, 0, 20, 1, 50, 40, 100, 1, 49, 13, 0, true, true,
+            {50, 49, 0, true, true, false, true}};
+    }
+    ESM4::OrdinaryHitReactionResult ordinaryHit(const ESM4::OrdinaryHitReactionInput& input,
+        std::initializer_list<std::uint16_t> draws)
+    {
+        return ESM4::ordinaryHitReactions(input, {draws.begin(), draws.size()}, installedKnockdown,
+            installedPhysical, {.35f, .1f}, settings, mastery);
+    }
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitCallerPreservesDamageMasterySpeechAndRecoilDrawOrder)
+{
+    // Native full-caller corpus07, 4,608 cases. Expected values were recorded
+    // from the hash-identified executable before this implementation.
+    auto input = ordinaryHitInput();
+    EXPECT_EQ(ordinaryHit(input, {0, 25}), (ESM4::OrdinaryHitReactionResult{2, true, true, true, true, false, true}));
+    EXPECT_EQ(ordinaryHit(input, {99, 26}), (ESM4::OrdinaryHitReactionResult{2, false, true, false, false, false, false}));
+    input.mFacingAttacker = false;
+    EXPECT_EQ(ordinaryHit(input, {0, 25}), (ESM4::OrdinaryHitReactionResult{2, true, true, false, false, false, true}));
+    input.mFacingAttacker = true;
+    input.mKnocked = 3;
+    EXPECT_EQ(ordinaryHit(input, {0, 25}), (ESM4::OrdinaryHitReactionResult{2, true, true, false, false, false, true}));
+    input = ordinaryHitInput();
+    input.mFatigueDamage = 10;
+    for (int fatigue : {-1, 0})
+    {
+        input.mPostFatigue = fatigue;
+        EXPECT_EQ(ordinaryHit(input, {25}), (ESM4::OrdinaryHitReactionResult{1, true, true, true, true, false, true}));
+    }
+    input = ordinaryHitInput();
+    for (int skill : {75, 100})
+    {
+        input.mAttackerBaseSkill = skill;
+        EXPECT_EQ(ordinaryHit(input, {0, 99, 25}), (ESM4::OrdinaryHitReactionResult{3, true, true, true, true, false, true}));
+    }
+    input.mVictimBaseSpeed = 0;
+    EXPECT_EQ(ordinaryHit(input, {0, 25}), (ESM4::OrdinaryHitReactionResult{2, true, true, true, true, false, true}));
+    input = ordinaryHitInput();
+    input.mVictimRemainsAlive = false;
+    EXPECT_EQ(ordinaryHit(input, {25}), (ESM4::OrdinaryHitReactionResult{1, false, false, false, false, false, true}));
+    input = ordinaryHitInput();
+    input.mBlock.mBaseHandToHand = 50;
+    EXPECT_EQ(ordinaryHit(input, {0}), (ESM4::OrdinaryHitReactionResult{1, true, true, true, true, true, false}));
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitSpeechIncludesThresholdEqualityAndUsesRawCrtDraw)
+{
+    auto input = ordinaryHitInput();
+    input.mHealthDamage = 10;
+    EXPECT_EQ(ordinaryHit(input, {99, 32767, 25}),
+        (ESM4::OrdinaryHitReactionResult{3, false, false, false, false, false, true}));
+    EXPECT_EQ(ordinaryHit(input, {99, 0, 26}),
+        (ESM4::OrdinaryHitReactionResult{3, false, true, false, false, false, false}));
+    input.mHealthDamage = std::nextafter(10.f, 0.f);
+    EXPECT_EQ(ordinaryHit(input, {99, 32767, 25}).mDraws, 3u);
+    input.mHealthDamage = std::nextafter(10.f, 20.f);
+    EXPECT_EQ(ordinaryHit(input, {99, 25}),
+        (ESM4::OrdinaryHitReactionResult{2, false, true, false, false, false, true}));
+    input.mHealthDamage = 1;
+    const std::array<std::uint16_t, 3> below{99, 11468, 25}, above{99, 11469, 25};
+    const auto resolve = [&](auto draws) { return ESM4::ordinaryHitReactions(input, draws, installedKnockdown,
+        installedPhysical, {.35f, .1f}, settings, mastery); };
+    EXPECT_TRUE(resolve(below).mHitSpeech);
+    EXPECT_FALSE(resolve(above).mHitSpeech);
+    EXPECT_EQ(ESM4::buildOrdinaryHitSpeechSettings({}).mChance, .35f);
+    EXPECT_EQ(ESM4::buildOrdinaryHitSpeechSettings({}).mDamageThreshold, .1f);
+    // Oblivion.esm winning00088FFE differs from the executable constructor.
+    ESM4::GameSetting chance{}, threshold{};
+    chance.mEditorId = "fCombatSpeakHitChance"; chance.mData = .2f;
+    threshold.mEditorId = "fCombatSpeakHitThreshold"; threshold.mData = .1f;
+    const std::array<const ESM4::GameSetting*, 2> records{&chance, &threshold};
+    const auto winning = ESM4::buildOrdinaryHitSpeechSettings(records);
+    EXPECT_EQ(winning.mChance, .2f);
+    EXPECT_EQ(winning.mDamageThreshold, .1f);
+    const std::array<std::uint16_t, 3> distinguishesCompiled{99, 8000, 25};
+    EXPECT_TRUE(resolve(distinguishesCompiled).mHitSpeech);
+    EXPECT_FALSE(ESM4::ordinaryHitReactions(input, distinguishesCompiled, installedKnockdown,
+        installedPhysical, winning, settings, mastery).mHitSpeech);
+    chance.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildOrdinaryHitSpeechSettings(records), std::invalid_argument);
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitRejectsMalformedInputsAndMissingConsumedDraws)
+{
+    auto input = ordinaryHitInput();
+    EXPECT_THROW(ordinaryHit(input, {}), std::invalid_argument);
+    EXPECT_THROW(ordinaryHit(input, {0}), std::invalid_argument);
+    EXPECT_THROW(ordinaryHit(input, {65535, 25}), std::invalid_argument);
+    EXPECT_THROW(ordinaryHit(input, {0, 65535}), std::invalid_argument);
+    EXPECT_EQ(ordinaryHit(input, {0, 25, 65535}).mDraws, 2u); // Unconsumed suffix is not an RNG transition.
+    input.mBlock.mProjectile = true;
+    EXPECT_THROW(ordinaryHit(input, {0, 25}), std::invalid_argument);
+    input = ordinaryHitInput();
+    input.mPostHealth = 0;
+    EXPECT_TRUE(ordinaryHit(input, {99, 25}).mHitSpeech);
+    input = ordinaryHitInput();
+    input.mHealthDamage = -1;
+    EXPECT_THROW(ordinaryHit(input, {0, 25}), std::invalid_argument);
+    input = ordinaryHitInput();
+    input.mPostFatigueRatio = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ordinaryHit(input, {0, 25}), std::invalid_argument);
+    EXPECT_THROW(ESM4::validateOrdinaryHitSpeechSettings({1.01f, .1f}), std::invalid_argument);
+    EXPECT_THROW(ESM4::validateOrdinaryHitSpeechSettings({.35f, -1}), std::invalid_argument);
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitKeepsPreScalingEntryAndPostContactHealthIdentity)
+{
+    auto input = ordinaryHitInput();
+    input.mHealthDamage = 0;
+    input.mFatigueDamage = 0;
+    // Original unscaled Fatigue10 enters the sink, then scales to zero.
+    EXPECT_EQ(ordinaryHit(input, {0, 25}),
+        (ESM4::OrdinaryHitReactionResult{2, true, true, true, true, false, true}));
+    input.mDamagePath = false;
+    EXPECT_EQ(ordinaryHit(input, {25}),
+        (ESM4::OrdinaryHitReactionResult{1, false, false, false, false, false, true}));
+    input = ordinaryHitInput();
+    input.mPostHealth = -1;
+    EXPECT_FALSE(ordinaryHit(input, {99, 32767, 25}).mHitSpeech);
+    input.mPostHealth = 0;
+    EXPECT_TRUE(ordinaryHit(input, {99, 25}).mHitSpeech);
+    input.mPostHealth = 1;
+    EXPECT_TRUE(ordinaryHit(input, {99, 25}).mHitSpeech);
+}

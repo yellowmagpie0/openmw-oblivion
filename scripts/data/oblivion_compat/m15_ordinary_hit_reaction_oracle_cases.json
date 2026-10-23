@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "scope": "Numeric ordinary-hit caller composition: common damage flag, ordinary Expert draw, hit speech, Stagger/force suppression and lower-HTH Recoil ordering",
+  "full_M15S4_acceptance": false,
+  "receipt": "docs/oblivion/M15-ORDINARY-HIT-REACTION-VERIFICATION.json",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x005FFEB5",
+  "stop": "0x005FFF52",
+  "cases": 4808,
+  "case_groups": [
+    {
+      "group": "main actor and reaction gates",
+      "cases": 3840
+    },
+    {
+      "group": "speech threshold/equality/adjacent Health floats",
+      "cases": 512
+    },
+    {
+      "group": "ordinary Expert/Master draw despite no directional effect",
+      "cases": 256
+    },
+    {
+      "group": "installed .2 speech chance vs compiled .35 raw boundaries",
+      "cases": 56
+    },
+    {
+      "group": "signed and zero post-contact integer Health denominator",
+      "cases": 96
+    },
+    {
+      "group": "zero scaled damage arguments with distinct pre-scaling entry",
+      "cases": 48
+    }
+  ],
+  "settings": {
+    "compiled_speech_chance": 0.35,
+    "winning_speech_chance": 0.2,
+    "speech_threshold": 0.1,
+    "damage_agility_base": 0,
+    "damage_agility_mult": 1,
+    "damage_base": 0,
+    "damage_mult": 0.3,
+    "damage_cap": 0.3,
+    "lower_block_recoil_chance": 25
+  },
+  "boundaries": [
+    "Resource sink records arguments and supplies original boolean; actual inventory/resource application is excluded.",
+    "Parent/base AVs, post-FatigueRatio, animation-data pointer and facing predicate supplied. Actual rank/group routines and stochastic damage arithmetic execute.",
+    "Virtual308 speech/combat notification, Stagger5F4FD0 and Recoil5F4F00 are sinks; selection/rendering/PCM excluded.",
+    "Raw RNG supplied per caller origin; complete call order, exact stop and ESP/ESI/EDI checked."
+  ],
+  "requirements": [
+    "Use staged post-resource integer Health/Fatigue/Agility/Luck and post-FatigueRatio. Preserve pre-difficulty Health argument separately from the actual difficulty-scaled resource delta.",
+    "Preserve the pre-scaling damage-path decision. Do not infer it from final Health/Fatigue deltas.",
+    "Keep attack skill and original block/gear/facing context at their verified acquisition points, including incoming weapon breakage; do not re-query changed equipment/posture after Stagger.",
+    "Join common reaction/RNG preparation before blocked Counter/BlockHit routing and lower Recoil. Preserve independently resident native slot0 Stagger and slot3 sequences when later dispatch changes process authority.",
+    "Prepare speech/voice/combat notification, resource selection RNG and lifetime bindings within the complete contact transaction before removing rejection. No separate live RNG mutation or callback during speculative preparation.",
+    "Complete normal-input and real-output fresh-process courses with the full-caller expected RNG and all remaining M15S4 gates."
+  ]
+}

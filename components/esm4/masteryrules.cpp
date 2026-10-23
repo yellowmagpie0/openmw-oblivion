@@ -119,6 +119,67 @@ namespace ESM4
         return {true, draw <= static_cast<unsigned>(settings.mHandBlockRecoil)};
     }
 
+    void validateOrdinaryHitSpeechSettings(const OrdinaryHitSpeechSettings& settings)
+    {
+        if (!std::isfinite(settings.mChance) || settings.mChance < 0 || settings.mChance > 1
+            || !std::isfinite(settings.mDamageThreshold) || settings.mDamageThreshold < 0)
+            throw std::invalid_argument("invalid native ordinary hit speech settings");
+    }
+
+    OrdinaryHitReactionResult ordinaryHitReactions(const OrdinaryHitReactionInput& input,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const MasteryProcSettings& procs, const CombatMasterySettings& mastery)
+    {
+        validateKnockdownSettings(knockdown);
+        validatePhysicalCombatSettings(physical);
+        validateOrdinaryHitSpeechSettings(speech);
+        validateMasteryProcSettings(procs);
+        validateCombatMasterySettings(mastery);
+        if (!std::isfinite(input.mHealthDamage) || input.mHealthDamage < 0
+            || !std::isfinite(input.mFatigueDamage) || input.mFatigueDamage < 0
+            || !std::isfinite(input.mPostFatigueRatio)
+            || !std::isfinite(input.mBlock.mAbsorbedFraction)
+            || input.mBlock.mAbsorbedFraction < 0 || input.mBlock.mAbsorbedFraction > 1
+            || input.mBlock.mProjectile)
+            throw std::invalid_argument("invalid native ordinary hit reaction input");
+        OrdinaryHitReactionResult result;
+        const auto next = [&]() -> unsigned {
+            if (result.mDraws == draws.size() || draws[result.mDraws] > 32767)
+                throw std::invalid_argument("missing or invalid native ordinary hit random draw");
+            return draws[result.mDraws++];
+        };
+        if (input.mVictimRemainsAlive && input.mDamagePath)
+        {
+            // The caller's integer Fatigue gate includes zero. The later
+            // float unconsciousness initialization uses a different predicate.
+            result.mDamageFlag = input.mFatigueDamage > 0 && input.mPostFatigue <= 0;
+            if (!result.mDamageFlag)
+                result.mDamageFlag = damageKnockdown(input.mAgility, input.mLuck, input.mPostFatigueRatio,
+                    input.mPreArmorDamage, next() % 100, knockdown, physical);
+            if (combatMastery(input.mAttackerBaseSkill, mastery) >= CombatMastery::Expert
+                && input.mVictimBaseSpeed > 0)
+                next(); // Original rolls even for ordinary groups14/15.
+            // This is current integer Health, not base Health. Preserve the
+            // original ordered comparison for infinite/unordered quotients.
+            const bool exceedsThreshold = input.mPostHealth == 0 ? input.mHealthDamage > 0
+                : static_cast<float>(double(input.mHealthDamage) / input.mPostHealth) > speech.mDamageThreshold;
+            result.mHitSpeech = result.mDamageFlag || exceedsThreshold;
+            if (!result.mHitSpeech)
+                result.mHitSpeech = double(next()) / 32767.0 <= speech.mChance;
+            result.mStagger = result.mDamageFlag && input.mKnocked == 0 && input.mFacingAttacker;
+            result.mSuppressGeneralHit = result.mStagger;
+        }
+        result.mBlockedDispatch = input.mBlock.mAbsorbedFraction > 0
+            || (input.mBlock.mUnarmed
+                && combatMastery(input.mBlock.mBaseHandToHand, mastery) >= CombatMastery::Journeyman);
+        // Native lower-HTH dispatch follows the common reaction decisions,
+        // including when the resource sink reported the victim dead.
+        if (!result.mBlockedDispatch && unarmedBlockRecoil(input.mBlock, 0, procs, mastery).mConsumesDraw)
+            result.mAttackerRecoil = unarmedBlockRecoil(input.mBlock, next() % 100, procs, mastery).mTriggered;
+        return result;
+    }
+
     void validateBowZoomSettings(const BowZoomSettings& settings)
     {
         if (!std::isfinite(settings.mZoomFov) || settings.mZoomFov <= 0

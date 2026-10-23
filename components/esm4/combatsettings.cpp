@@ -444,6 +444,17 @@ namespace ESM4
         return result;
     }
 
+    OrdinaryHitSpeechSettings buildOrdinaryHitSpeechSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const OrdinaryHitSpeechSettings result{
+            inputs.number("fCombatSpeakHitChance", .35f),
+            inputs.number("fCombatSpeakHitThreshold", .1f),
+        };
+        validateOrdinaryHitSpeechSettings(result);
+        return result;
+    }
+
     MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);
