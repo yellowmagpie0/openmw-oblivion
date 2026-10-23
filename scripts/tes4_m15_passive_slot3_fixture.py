@@ -23,7 +23,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
-            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63)
+            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64)
             or recipe['actor'] != actor or type(recipe['process_action']) is not int or recipe['process_action'] != 8
             or type(recipe['shared_player_draw_state']) is not int or recipe['shared_player_draw_state'] != 1
             or type(recipe['camera_first_person']) is not bool
@@ -59,6 +59,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     state = copy.deepcopy(original)
     runtime._upgrade_held_blocks(state)
     runtime._upgrade_movement(state)
+    runtime._upgrade_spoken_dialogue_history(state)
     state['schema_version'] = recipe['target_schema']
     next(v for v in state['native_actor_values'] if v['actor'] == actor)['process_action'] = 8
     state['native_melee_states'] = [v for v in state['native_melee_states'] if v['actor'] != actor]
@@ -84,7 +85,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   source_schema=59, target_schema=runtime.CURRENT_VERSION,
                   mutations=['Player process action -1 -> 8', 'declared Player melee state installed'],
                   shared_camera=dict(source_first_person=True, output_first_person=recipe['camera_first_person']),
-                  schema_defaults={'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None},
+                  schema_defaults={'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None, 'spoken_dialogue_infos': []},
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False, normal_input_contact=False)
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')

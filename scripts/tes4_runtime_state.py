@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 63
+CURRENT_VERSION = 64
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -843,6 +843,14 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 valid = valid and "/" not in namespace and not any("A" <= c <= "Z" for c in namespace)
         if not valid:
             raise RuntimeStateError("Invalid TES4 native actor-value identity")
+
+    spoken = check_collection(state.get("spoken_dialogue_infos", []), "spoken dialogue INFO list")
+    if version < 64 and spoken:
+        raise RuntimeStateError("Spoken dialogue history requires runtime schema64")
+    for info in spoken:
+        native_key(info)
+    if len(set(spoken)) != len(spoken):
+        raise RuntimeStateError("Duplicate spoken dialogue INFO identity")
 
     native_bases = check_collection(state.get("native_actor_bases", []), "native actor-base list")
     if version < 11 and native_bases:
@@ -2675,6 +2683,17 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     entry["position_adjusted"] = movement_boolean() if movement_boolean() else None
                 movement["actors"].append(entry)
             result["native_movement"] = movement
+    if version >= 64:
+        spoken = []
+        previous = None
+        for _ in range(reader.count()):
+            info = reader.string()
+            order = tuple(info.split(":"))
+            if previous is not None and previous >= order:
+                raise RuntimeStateError("Noncanonical spoken dialogue INFO history")
+            previous = order
+            spoken.append(info)
+        result["spoken_dialogue_infos"] = spoken
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3303,6 +3322,11 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     adjusted = entry["position_adjusted"]
                     writer.pack("<B", int(adjusted is not None))
                     if adjusted is not None: writer.pack("<B", int(adjusted))
+    if version >= 64:
+        spoken = sorted(state.get("spoken_dialogue_infos", []), key=lambda key: tuple(key.split(":")))
+        writer.pack("<I", len(spoken))
+        for info in spoken:
+            writer.string(info)
     return writer.finish()
 
 
@@ -3571,6 +3595,12 @@ def _upgrade_counter_melee(state: dict[str, Any]) -> None:
                     raise RuntimeStateError("Legacy TES4 save cannot carry a counter strike")
 
 
+def _upgrade_spoken_dialogue_history(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 64 and state.get("spoken_dialogue_infos"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry spoken dialogue history")
+    state.setdefault("spoken_dialogue_infos", [])
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
@@ -3593,6 +3623,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_loose_weapons(state)
     _upgrade_movement(state)
     _upgrade_bow_states(state)
+    _upgrade_spoken_dialogue_history(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3675,6 +3706,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_loose_weapons(result)
     _upgrade_movement(result)
     _upgrade_bow_states(result)
+    _upgrade_spoken_dialogue_history(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

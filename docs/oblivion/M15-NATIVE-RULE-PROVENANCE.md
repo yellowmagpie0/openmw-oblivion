@@ -17719,3 +17719,26 @@ are pinned in
 Structural writing, compiler/world loading, semantic record reinspection and
 actual class/voice acceptance are separate recorded layers. This adds neither
 a standalone ObScript command nor automatic common hit/reaction acceptance.
+
+
+### Persisted native dialogue history prerequisite
+
+Runtime schema 64 now retains a global set of spoken INFO identities. C++ and
+Python use the same counted, canonical wire tail; older schemas begin empty and
+cannot silently discard nonempty history on downgrade. ScriptManager capture,
+clear, retained-runtime exchange and prepared restore share this authority.
+Unknown INFO definitions reject restore before publication.
+
+The original executable storage probe passes 6,186 cases: 6,144 empty-condition
+admission observations, 36 save/load/revert calls and six constructor slices.
+History is represented by change-flag presence; its native save method writes no
+additional history bytes. This does not establish the full native ESS container.
+Normal components pass 3,015 tests, sanitizer ESM4 components pass 868, both full
+engine profiles pass 1,865 and Python passes 390. Initial fixture-offset failures
+remain retained. See
+[M15-DIALOGUE-HISTORY-STORAGE-VERIFICATION.json](M15-DIALOGUE-HISTORY-STORAGE-VERIFICATION.json).
+
+Speech eligibility and result callbacks do not consume this authority yet.
+No rendered speech/history restart course or additional M15S4 gameplay gate is
+claimed. All 105 winning installed Hit INFOs have no NAME additional-topic
+entries; this inventory does not implement generic AddTopics effects.

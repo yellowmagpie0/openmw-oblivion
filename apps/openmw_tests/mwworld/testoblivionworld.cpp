@@ -33147,3 +33147,59 @@ TEST(OblivionWorldTest, UnloadedPackageClassConditionUsesNativeBaseWithoutLoadin
         EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
     }
 }
+
+
+TEST(OblivionWorldTest, SpokenDialogueHistoryRestoresAtomicallyAndSurvivesRuntimeRetention)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto* scripts = world.getOblivionScriptManager();
+    ASSERT_NE(scripts, nullptr);
+    const auto a = ESM::FormKey::content("headless.esm", 0xeff001);
+    const auto b = ESM::FormKey::content("headless.esm", 0xeff002);
+    for (const auto& key : {a, b})
+    {
+        ESM4::DialogInfo info{};
+        info.mFormKey = key;
+        info.mId = {key.localId(), 0};
+        world.getStore().getWritable<ESM4::DialogInfo>().insertStatic(info, key);
+    }
+    EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+    scripts->markSpokenDialogueInfo(a);
+    scripts->markSpokenDialogueInfo(a);
+    ESM4::RuntimeState saved;
+    scripts->capture(saved);
+    EXPECT_EQ(saved.mSpokenDialogueInfos, (std::set<ESM::FormKey>{a}));
+    auto incoming = saved;
+    incoming.mSpokenDialogueInfos = {b};
+    auto install = scripts->prepareRestore(incoming);
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(a));
+    auto invalid = incoming;
+    invalid.mSpokenDialogueInfos.insert(ESM::FormKey::content("missing.esm", 1));
+    EXPECT_THROW(scripts->prepareRestore(invalid), std::invalid_argument);
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(a));
+    auto retained = scripts->retainRuntime();
+    EXPECT_THROW(scripts->markSpokenDialogueInfo(b), std::logic_error);
+    EXPECT_FALSE(install.commit());
+    ASSERT_TRUE(retained.detach());
+    EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+    ASSERT_TRUE(install.commit());
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(b));
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(a));
+    EXPECT_FALSE(scripts->hasSpokenDialogueInfo(b));
+    ASSERT_TRUE(retained.exchange());
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(b));
+    ASSERT_TRUE(retained.restore());
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(a));
+    scripts->clear();
+    EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+    auto reload = scripts->prepareRestore(saved);
+    ASSERT_TRUE(reload.commit());
+    EXPECT_TRUE(scripts->hasSpokenDialogueInfo(a));
+    saved.mVersion = 63;
+    saved.mSpokenDialogueInfos.clear();
+    auto legacy = scripts->prepareRestore(saved);
+    ASSERT_TRUE(legacy.commit());
+    EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+}

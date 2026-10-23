@@ -504,6 +504,7 @@ namespace MWWorld
         decltype(OblivionScriptManager::mDiagnosedVoiceTopics) mDiagnosedVoiceTopics{};
         decltype(OblivionScriptManager::mInstances) mInstances{};
         decltype(OblivionScriptManager::mQuests) mQuests{};
+        decltype(OblivionScriptManager::mSpokenDialogueInfos) mSpokenDialogueInfos{};
         decltype(OblivionScriptManager::mDiagnostics) mDiagnostics{};
         decltype(OblivionScriptManager::mTrace) mTrace{};
         decltype(OblivionScriptManager::mSequence) mSequence{};
@@ -538,6 +539,7 @@ namespace MWWorld
             swap(mDiagnosedVoiceTopics, owner.mDiagnosedVoiceTopics);
             swap(mInstances, owner.mInstances);
             swap(mQuests, owner.mQuests);
+            swap(mSpokenDialogueInfos, owner.mSpokenDialogueInfos);
             swap(mDiagnostics, owner.mDiagnostics);
             swap(mTrace, owner.mTrace);
             swap(mSequence, owner.mSequence);
@@ -644,6 +646,7 @@ namespace MWWorld
         mNativeSpeech.clear();
         mDiagnosedVoiceTopics.clear();
         mInstances.clear();
+        mSpokenDialogueInfos.clear();
         for (auto& [_, quest] : mQuests)
         {
             quest.mStage = 0;
@@ -2653,10 +2656,24 @@ namespace MWWorld
         throw ObScript::RuntimeError("OBSV100", "Unsupported ObScript command " + name, name);
     }
 
+    bool OblivionScriptManager::hasSpokenDialogueInfo(const ESM::FormKey& info) const
+    {
+        return mSpokenDialogueInfos.contains(info);
+    }
+
+    void OblivionScriptManager::markSpokenDialogueInfo(const ESM::FormKey& info)
+    {
+        requireMutableRuntime();
+        if (!mStore.search<ESM4::DialogInfo>(info))
+            throw std::invalid_argument("Spoken dialogue history requires a winning INFO: " + info.serialize());
+        mSpokenDialogueInfos.insert(info);
+    }
+
     void OblivionScriptManager::capture(ESM4::RuntimeState& state) const
     {
         state.mVersion = ESM4::CurrentRuntimeStateVersion;
         state.mScriptEventSequence = mSequence;
+        state.mSpokenDialogueInfos = mSpokenDialogueInfos;
         state.mScriptInstances.clear();
         for (const auto& [key, instance] : mInstances)
         {
@@ -2678,6 +2695,7 @@ namespace MWWorld
         OblivionScriptManager* mTarget;
         std::map<InstanceKey, Instance> mInstances;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
+        std::set<ESM::FormKey> mSpokenDialogueInfos;
         std::vector<std::string> mTrace;
         std::string mMessage;
         std::uint64_t mSequence;
@@ -2699,6 +2717,7 @@ namespace MWWorld
             return false;
         target.mInstances.swap(mImpl->mInstances);
         target.mQuests.swap(mImpl->mQuests);
+        target.mSpokenDialogueInfos.swap(mImpl->mSpokenDialogueInfos);
         target.mTrace.swap(mImpl->mTrace);
         target.mSequence = mImpl->mSequence;
         target.mNativeSpeech.clear();
@@ -2715,6 +2734,14 @@ namespace MWWorld
         auto plan = std::make_unique<PreparedRestore::Impl>();
         plan->mTarget = this;
         plan->mSequence = state.mScriptEventSequence;
+        if (state.mVersion < 64 && !state.mSpokenDialogueInfos.empty())
+            throw std::invalid_argument("Spoken dialogue history requires runtime schema64");
+        for (const auto& info : state.mSpokenDialogueInfos)
+        {
+            if (!mStore.search<ESM4::DialogInfo>(info))
+                throw std::invalid_argument("TES4 restored spoken history is not a winning INFO: " + info.serialize());
+            plan->mSpokenDialogueInfos.insert(info);
+        }
         // Omitted legacy quests restart from winning content defaults, never
         // from the previous live world's completed stages.
         for (const ESM4::Quest& record : mStore.get<ESM4::Quest>())

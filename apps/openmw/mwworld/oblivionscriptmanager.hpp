@@ -65,6 +65,8 @@ namespace MWWorld
             const ESM::FormKey& actionReference = {});
         bool dispatchActivation(const Ptr& self, const Ptr& actionReference);
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
+        bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
+        void markSpokenDialogueInfo(const ESM::FormKey& info);
         void dispatchDialogueResult(const ESM::FormKey& info, std::uint32_t ordinal, const Ptr& actor = {});
         void dispatchEffect(
             const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster = {});
@@ -169,6 +171,7 @@ namespace MWWorld
         std::map<ESM::FormKey, ESM::FormKey> mQuestScripts;
         std::map<InstanceKey, Instance> mInstances;
         std::map<ESM::FormKey, ESM4::RuntimeQuestState> mQuests;
+        std::set<ESM::FormKey> mSpokenDialogueInfos;
         std::vector<ObScript::RuntimeDiagnostic> mDiagnostics;
         std::vector<std::string> mTrace;
         std::vector<ScheduledEvent> mScheduledEvents;

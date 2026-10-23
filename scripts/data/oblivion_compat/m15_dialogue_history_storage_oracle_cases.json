@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "Global INFO spoken-history storage and runtime ownership; speech selection/results not yet connected",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_storage": {
+    "vtable": "00A5568C",
+    "rtti": ".?AVTESTopicInfo@@",
+    "history_byte": "INFO+0x22",
+    "change_flag": "0x10000000",
+    "save": "0046B5E0",
+    "load": "005303E0",
+    "revert": "00530410",
+    "constructor_slice": [
+      "00530B0E",
+      "00530B4B"
+    ],
+    "admission": "00530830",
+    "empty_conditions": "0056A510",
+    "observations": {
+      "admission_cases": 6144,
+      "storage_cases": 36,
+      "constructor_cases": 6
+    },
+    "rule": "New INFO history is empty. History-only save mask adds no data bytes; load with change flag sets HasSaid, revert with flag clears it, absent flag preserves it.",
+    "limits": [
+      "Full ESS container and ChangeManager ownership not executed",
+      "Constructor slice only",
+      "Empty-condition admission includes deleted/null quest/SayOnce history gates; production consumer remains future work"
+    ]
+  },
+  "fork_schema": {
+    "version": 64,
+    "field": "spoken_dialogue_infos",
+    "scope": "Global INFO identity set, independent of speaker",
+    "wire": "Append uint32 count followed by canonical nonnull FormKey strings in strictly increasing FormKey order",
+    "legacy": "Versions1..63 read empty history; nonempty downgrade rejected",
+    "admission": "Restore requires winning INFO definitions before atomic publication"
+  },
+  "tests": [
+    "Exact C++/Python v64 wire tail and legacy empty default",
+    "Duplicate, unordered, noncanonical, null, oversized, truncated wire rejection",
+    "ScriptManager capture, invalid-restore isolation, retain/detach/exchange/restore, mutation guard, clear and legacy restore"
+  ],
+  "acceptance": {
+    "rendered_speech_history": false,
+    "automatic_common_hit": false,
+    "full_M15S4": false
+  }
+}

@@ -1740,7 +1740,8 @@ namespace
                 + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
-                + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0);
+                + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
+                + (version >= 64 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5169,4 +5170,72 @@ TEST(ESM4RuntimeState, HeldBlock61RejectsAmbiguousPartialAndPrematureCacheHistor
         from = at + marker.size();
     }
     EXPECT_EQ(views, 2u);
+}
+
+TEST(ESM4RuntimeState, SpokenDialogueHistory64HasCanonicalWireAndLegacyEmptyDefault)
+{
+    auto state = makeState();
+    state.mVersion = 63;
+    auto legacy = state.serializeBinary();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacy).mSpokenDialogueInfos.empty());
+    state.mVersion = 64;
+    const auto a = ESM::FormKey::content("oblivion.esm", 0x150c7);
+    const auto b = ESM::FormKey::dynamic("dialogue", 1);
+    state.mSpokenDialogueInfos = {b, a};
+    const auto bytes = state.serializeBinary();
+    // v64 only changes the header version and appends a counted canonical set.
+    legacy.at(9) = 64;
+    const auto integer = [&](std::uint32_t value) {
+        for (unsigned shift = 0; shift < 32; shift += 8)
+            legacy.push_back(static_cast<std::uint8_t>(value >> shift));
+    };
+    integer(2);
+    for (const auto& text : {std::string("content:oblivion.esm:0150c7"), std::string("dynamic:dialogue:0000000000000001")})
+    {
+        integer(text.size());
+        legacy.insert(legacy.end(), text.begin(), text.end());
+    }
+    EXPECT_EQ(bytes, legacy);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(bytes).mSpokenDialogueInfos, state.mSpokenDialogueInfos);
+    EXPECT_NE(state.canonicalJson().find("\"spoken_dialogue_infos\":[\"content:oblivion.esm:0150c7\",\"dynamic:dialogue:0000000000000001\"]"),
+        std::string::npos);
+    state.mVersion = 63;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mVersion = 64;
+    for (const auto& malformed : {ESM::FormKey{},
+             ESM::FormKey{ESM::FormKeyKind::Content, "Oblivion.esm", 0x150c7},
+             ESM::FormKey{ESM::FormKeyKind::Content, "oblivion.esm", 0},
+             ESM::FormKey{ESM::FormKeyKind::Dynamic, "dialogue", 0}})
+    {
+        state.mSpokenDialogueInfos = {malformed};
+        EXPECT_THROW(state.serializeBinary(), std::exception);
+    }
+}
+
+TEST(ESM4RuntimeState, SpokenDialogueHistory64RejectsDuplicateOrderNoncanonicalAndTruncatedWire)
+{
+    auto state = makeState();
+    state.mVersion = 63;
+    auto prefix = state.serializeBinary();
+    prefix.at(9) = 64;
+    const auto wire = [&](const std::vector<std::string>& keys) {
+        auto bytes = prefix;
+        const auto integer = [&](std::uint32_t value) {
+            for (unsigned shift = 0; shift < 32; shift += 8)
+                bytes.push_back(static_cast<std::uint8_t>(value >> shift));
+        };
+        integer(keys.size());
+        for (const auto& key : keys) { integer(key.size()); bytes.insert(bytes.end(), key.begin(), key.end()); }
+        return bytes;
+    };
+    const std::string a = "content:oblivion.esm:0150c7", b = "content:oblivion.esm:0150c8";
+    for (const auto& keys : std::vector<std::vector<std::string>>{{a,a}, {b,a}, {"null"},
+             {"content:Oblivion.esm:0150c7"}, {"content:oblivion.esm:150c7"}})
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire(keys)), std::exception);
+    auto bytes = wire({a,b});
+    bytes.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::exception);
+    bytes = prefix;
+    bytes.insert(bytes.end(), {0xff, 0xff, 0xff, 0xff});
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::exception);
 }

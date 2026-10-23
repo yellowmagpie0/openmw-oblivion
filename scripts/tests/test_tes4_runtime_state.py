@@ -152,6 +152,50 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    def test_spoken_history_migration_preserves_current_and_rejects_legacy_invention(self):
+        a = "content:oblivion.esm:0150c7"
+        state = self.movement_state()
+        state_io._upgrade_spoken_dialogue_history(state)
+        self.assertEqual(state["spoken_dialogue_infos"], [])
+        state["spoken_dialogue_infos"] = [a]
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io._upgrade_spoken_dialogue_history(state)
+        state["schema_version"] = 64
+        state_io._upgrade_spoken_dialogue_history(state)
+        self.assertEqual(state["spoken_dialogue_infos"], [a])
+
+    def test_spoken_history64_exact_wire_legacy_and_rejections(self):
+        state = self.movement_state()
+        old = state_io.encode_payload(state)
+        self.assertNotIn("spoken_dialogue_infos", state_io.decode_payload(old))
+        state["schema_version"] = 64
+        a, b = "content:oblivion.esm:0150c7", "dynamic:dialogue:0000000000000001"
+        state["spoken_dialogue_infos"] = [b, a]
+        prefix = bytearray(old)
+        struct.pack_into("<I", prefix, len(state_io.MAGIC), 64)
+        def wire(keys):
+            tail = struct.pack("<I", len(keys))
+            for key in keys:
+                raw = key.encode()
+                tail += struct.pack("<I", len(raw)) + raw
+            return bytes(prefix) + tail
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, wire([a, b]))
+        self.assertEqual(state_io.decode_payload(payload)["spoken_dialogue_infos"], [a, b])
+        for keys in ([a,a], [b,a], ["null"], ["content:Oblivion.esm:0150c7"],
+                     ["content:oblivion.esm:150c7"], ["dynamic:dialogue:0000000000000000"]):
+            with self.subTest(keys=keys), self.assertRaises(state_io.RuntimeStateError):
+                state_io.decode_payload(wire(keys))
+        for bad in (payload[:-1], bytes(prefix) + struct.pack("<I", 0xffffffff)):
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bad)
+        for keys in ([a,a], ["null"], None, {}, [True]):
+            state["spoken_dialogue_infos"] = keys
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["spoken_dialogue_infos"] = [a]
+        state["schema_version"] = 63
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
     def loose_weapon_state(self):
         state = self.ownership_state(); state["schema_version"] = 53
         state["native_loose_weapons"] = [{

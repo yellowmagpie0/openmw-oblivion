@@ -1587,6 +1587,12 @@ namespace ESM4
         checkSize(mReferences.size(), "reference list");
         checkSize(mScriptInstances.size(), "script instance list");
         checkSize(mQuests.size(), "quest list");
+        checkSize(mSpokenDialogueInfos.size(), "spoken dialogue INFO list");
+        if (mVersion < 64 && !mSpokenDialogueInfos.empty())
+            throw std::runtime_error("Spoken dialogue history requires runtime schema64");
+        for (const auto& info : mSpokenDialogueInfos)
+            if (info.isNull() || ESM::FormKey::deserialize(info.serialize()) != info)
+                throw std::runtime_error("Invalid spoken dialogue INFO identity");
         checkSize(mActorAi.size(), "actor AI list");
         checkSize(mPathPoints.size(), "path-point overlay list");
         checkSize(mCompanions.size(), "companion relation list");
@@ -3152,6 +3158,12 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 64)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mSpokenDialogueInfos.size()));
+            for (const auto& info : mSpokenDialogueInfos)
+                writeKey(writer, info);
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4236,6 +4248,20 @@ namespace ESM4
                     if (result.mVersion >= 63 && boolean()) state.mPositionAdjusted = boolean();
                     movement.mActors.emplace(actor, std::move(state));
                 }
+            }
+        }
+        if (result.mVersion >= 64)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                const auto info = ESM::FormKey::deserialize(text);
+                if (info.isNull() || info.serialize() != text || (previous && !(*previous < info)))
+                    throw std::runtime_error("Noncanonical spoken dialogue INFO history");
+                result.mSpokenDialogueInfos.insert(info);
+                previous = info;
             }
         }
         if (!reader.eof())
@@ -5442,6 +5468,18 @@ namespace ESM4
                 }
                 stream << "]}";
             }
+        }
+        if (mVersion >= 64)
+        {
+            stream << ",\"spoken_dialogue_infos\":[";
+            bool first = true;
+            for (const auto& info : mSpokenDialogueInfos)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << '\"' << escapeJson(info.serialize()) << '\"';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();
