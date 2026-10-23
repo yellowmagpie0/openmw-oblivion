@@ -349,6 +349,7 @@ add_component_dir (esm4
     readerutils
     reference
     runtimestate
+    actormovementstate.hpp
     dropplacement
     droprelations.hpp
     npcplacement

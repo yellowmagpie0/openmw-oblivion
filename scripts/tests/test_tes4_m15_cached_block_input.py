@@ -49,6 +49,8 @@ class CachedBlockInputTests(unittest.TestCase):
             for key, value in before.items():
                 self.assertEqual(actual[key], value, key)
             self.assertEqual(actual.get('native_loose_weapons'), [])
+            self.assertIn('native_movement', actual)
+            self.assertIsNone(actual['native_movement'])
             self.assertEqual(output.read_bytes()[-len(opaque):], opaque)
             self.assertEqual(source.read_bytes(), before_bytes)
             self.assertTrue(report['structural_write_success'])

@@ -7,6 +7,7 @@
 #include "ptrholder.hpp"
 
 #include <components/detournavigator/collisionshapetype.hpp>
+#include <components/esm4/actormovementstate.hpp>
 
 #include <osg/Quat>
 #include <osg/Vec3f>
@@ -23,6 +24,13 @@ namespace Resource
 namespace MWPhysics
 {
     class PhysicsTaskScheduler;
+
+    struct ActorMovementSnapshot
+    {
+        MWWorld::Ptr mActor;
+        MWWorld::Ptr mStandingOn;
+        ESM4::RuntimeActorMovement mState;
+    };
 
     class Actor final : public PtrHolder
     {
@@ -160,6 +168,9 @@ namespace MWPhysics
 
     private:
         friend class PhysicsTaskScheduler;
+        // Scheduler must finish workers before reading or restoring a snapshot.
+        ActorMovementSnapshot captureMovement() const;
+        void restoreMovement(const ActorMovementSnapshot& snapshot);
         MWWorld::Ptr mStandingOnPtr;
         /// Removes then re-adds the collision object to the dynamics world
         void updateCollisionMask();

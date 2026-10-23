@@ -1362,6 +1362,53 @@ namespace MWPhysics
         syncWithMainThread();
     }
 
+    std::vector<ActorMovementSnapshot> PhysicsTaskScheduler::captureActorMovements(const ActorMap& actors)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mSimulationMutex, mLockingPolicy);
+        std::vector<ActorMovementSnapshot> result;
+        result.reserve(actors.size());
+        for (const auto& [_, actor] : actors)
+            if (!actor->isCollisionSuspended())
+                result.push_back(actor->captureMovement());
+        return result;
+    }
+
+    void PhysicsTaskScheduler::restoreActorMovements(
+        const ActorMap& actors, std::span<const ActorMovementSnapshot> snapshots)
+    {
+        // Validate and resolve the entire batch before changing any actor.
+        std::vector<Actor*> bound;
+        bound.reserve(snapshots.size());
+        std::set<const MWWorld::LiveCellRefBase*> seen;
+        for (const auto& snapshot : snapshots)
+        {
+            snapshot.mState.validate();
+            const auto found = actors.find(snapshot.mActor.mRef);
+            if (snapshot.mActor.isEmpty() || found == actors.end() || !seen.insert(snapshot.mActor.mRef).second
+                || found->second->mTaskScheduler != this || found->second->isCollisionSuspended()
+                || snapshot.mState.mStandingOn.isNull() != snapshot.mStandingOn.isEmpty()
+                || snapshot.mStandingOn == snapshot.mActor)
+                throw std::invalid_argument("invalid actor movement restore binding");
+            bound.push_back(found->second.get());
+        }
+        waitForWorkers();
+        MaybeExclusiveLock simulationLock(mSimulationMutex, mLockingPolicy);
+        if (mSimulations != nullptr)
+            throw std::logic_error("actor movement restore requires no pending simulation");
+        MaybeExclusiveLock collisionLock(mCollisionWorldMutex, mLockingPolicy);
+        for (const auto* actor : bound)
+            if (!actor->getCollisionObject()->getBroadphaseHandle())
+                throw std::invalid_argument("actor movement restore lost its collision registration");
+        for (std::size_t i = 0; i < bound.size(); ++i)
+        {
+            auto& actor = *bound[i];
+            actor.restoreMovement(snapshots[i]);
+            actor.getCollisionObject()->getBroadphaseHandle()->m_collisionFilterMask = actor.getCollisionMask();
+            mCollisionWorld->updateSingleAabb(actor.getCollisionObject());
+        }
+    }
+
     void PhysicsTaskScheduler::resetSimulation(const ActorMap& actors)
     {
         waitForWorkers();

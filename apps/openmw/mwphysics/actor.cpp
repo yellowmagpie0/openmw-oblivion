@@ -344,6 +344,60 @@ namespace MWPhysics
         mStandingOnPtr = ptr;
     }
 
+    ActorMovementSnapshot Actor::captureMovement() const
+    {
+        std::scoped_lock lock(mPositionMutex);
+        ActorMovementSnapshot result{mPtr, mStandingOnPtr, {}};
+        auto& state = result.mState;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            state.mPosition[i] = mPosition[i];
+            state.mPreviousPosition[i] = mPreviousPosition[i];
+            state.mSimulationPosition[i] = mSimulationPosition[i];
+            state.mVelocity[i] = mVelocity[i];
+            state.mPositionOffset[i] = mPositionOffset[i];
+            state.mInertia[i] = mForce[i];
+            state.mLastStuckPosition[i] = mLastStuckPosition[i];
+        }
+        state.mStuckFrames = mStuckFrames;
+        state.mOnGround = mOnGround;
+        state.mOnSlope = mOnSlope;
+        state.mWalkingOnWater = mWalkingOnWater;
+        state.mSkipSimulation = mSkipSimulation;
+        state.mActive = mActive;
+        state.mCollisionMode = mInternalCollisionMode;
+        state.mCollisionBody = mExternalCollisionMode;
+        state.mCanWaterWalk = mCanWaterWalk;
+        return result;
+    }
+
+    void Actor::restoreMovement(const ActorMovementSnapshot& snapshot)
+    {
+        std::scoped_lock lock(mPositionMutex);
+        const auto& state = snapshot.mState;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            mPosition[i] = state.mPosition[i];
+            mPreviousPosition[i] = state.mPreviousPosition[i];
+            mSimulationPosition[i] = state.mSimulationPosition[i];
+            mVelocity[i] = state.mVelocity[i];
+            mPositionOffset[i] = state.mPositionOffset[i];
+            mForce[i] = state.mInertia[i];
+            mLastStuckPosition[i] = state.mLastStuckPosition[i];
+        }
+        mStandingOnPtr = snapshot.mStandingOn;
+        mStuckFrames = state.mStuckFrames;
+        mOnGround = state.mOnGround;
+        mOnSlope = state.mOnSlope;
+        mWalkingOnWater = state.mWalkingOnWater;
+        mSkipSimulation = state.mSkipSimulation;
+        mActive = state.mActive;
+        mInternalCollisionMode = state.mCollisionMode;
+        mExternalCollisionMode = state.mCollisionBody;
+        mCanWaterWalk = state.mCanWaterWalk;
+        updateCollisionObjectPositionUnsafe();
+    }
+
     bool Actor::canMoveToWaterSurface(float waterlevel, const btCollisionWorld* world) const
     {
         const float halfZ = getHalfExtents().z();

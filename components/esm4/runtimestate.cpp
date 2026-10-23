@@ -1051,6 +1051,21 @@ namespace ESM4
         }
     }
 
+    void RuntimeActorMovement::validate() const
+    {
+        if (mBase.isNull())
+            throw std::runtime_error("Missing TES4 movement actor base");
+        const auto finite = [](const auto& vector) {
+            for (const auto value : vector)
+                if (!std::isfinite(value) || std::abs(value) > std::numeric_limits<float>::max())
+                    throw std::runtime_error("Invalid TES4 actor movement vector");
+        };
+        finite(mPosition);
+        finite(mPreviousPosition);
+        for (const auto* vector : {&mSimulationPosition, &mVelocity, &mPositionOffset, &mInertia, &mLastStuckPosition})
+            finite(*vector);
+    }
+
     void RuntimeActorRagdoll::validate() const
     {
         const auto nodes = validatePhysicalBodies(mBase, mModel, mAssetHash, mBodies);
@@ -1745,6 +1760,22 @@ namespace ESM4
             throw std::runtime_error("TES4 melee state requires runtime-state version 21");
         if (mVersion < 23 && !mNativeAnimationClocks.empty())
             throw std::runtime_error("TES4 animation clocks require runtime-state version23");
+        if (mNativeMovement)
+        {
+            if (mVersion < 62)
+                throw std::runtime_error("TES4 actor movement requires runtime-state version62");
+            checkSize(mNativeMovement->mActors.size(), "native actor movement list");
+            for (const auto& [actor, movement] : mNativeMovement->mActors)
+            {
+                movement.validate();
+                if (mVersion < 63 && movement.mPositionAdjusted)
+                    throw std::runtime_error("TES4 mechanics position adjustment requires version63");
+                const auto owner = nativeActors.find(actor);
+                if (owner == nativeActors.end() || owner->second != movement.mBase
+                    || !knownSource(movement.mStandingOn) || movement.mStandingOn == actor)
+                    throw std::runtime_error("Dangling or mismatched TES4 actor movement binding");
+            }
+        }
         checkSize(mNativeActorKnockback.size(), "native actor knockback list");
         checkSize(mNativeLooseWeapons.size(), "native loose weapon list");
         if (mVersion < 53 && !mNativeLooseWeapons.empty())
@@ -3090,6 +3121,37 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 62)
+        {
+            writer.integer<std::uint8_t>(mNativeMovement.has_value());
+            if (mNativeMovement)
+            {
+                writer.integer<std::uint8_t>(mNativeMovement->mDiscardMovements);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeMovement->mActors.size()));
+                for (const auto& [actor, movement] : mNativeMovement->mActors)
+                {
+                    writeKey(writer, actor);
+                    writeKey(writer, movement.mBase);
+                    writeKey(writer, movement.mStandingOn);
+                    for (const auto* vector : {&movement.mPosition, &movement.mPreviousPosition})
+                        for (double value : *vector) writer.floating(value);
+                    for (const auto* vector : {&movement.mSimulationPosition, &movement.mVelocity,
+                             &movement.mPositionOffset, &movement.mInertia, &movement.mLastStuckPosition})
+                        for (float value : *vector) writer.floating(value);
+                    writer.integer(movement.mStuckFrames);
+                    for (bool value : {movement.mOnGround, movement.mOnSlope, movement.mWalkingOnWater,
+                             movement.mSkipSimulation, movement.mActive, movement.mCollisionMode,
+                             movement.mCollisionBody, movement.mCanWaterWalk})
+                        writer.integer<std::uint8_t>(value);
+                    if (mVersion >= 63)
+                    {
+                        writer.integer<std::uint8_t>(movement.mPositionAdjusted.has_value());
+                        if (movement.mPositionAdjusted)
+                            writer.integer<std::uint8_t>(*movement.mPositionAdjusted);
+                    }
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4131,6 +4193,49 @@ namespace ESM4
                 }
                 if (!result.mNativeLooseWeapons.emplace(std::move(reference), std::move(weapon)).second)
                     throw std::runtime_error("Duplicate TES4 loose weapon reference");
+            }
+        }
+        if (result.mVersion >= 62)
+        {
+            const auto boolean = [&]() {
+                const auto value = reader.integer<std::uint8_t>();
+                if (value > 1) throw std::runtime_error("Invalid TES4 actor movement boolean");
+                return value != 0;
+            };
+            const auto key = [&]() {
+                const auto text = reader.string();
+                const auto value = ESM::FormKey::deserialize(text);
+                if (value.serialize() != text) throw std::runtime_error("Noncanonical TES4 actor movement key");
+                return value;
+            };
+            if (boolean())
+            {
+                auto& movement = result.mNativeMovement.emplace();
+                movement.mDiscardMovements = boolean();
+                const auto count = reader.count();
+                std::optional<ESM::FormKey> previous;
+                for (std::uint32_t i = 0; i < count; ++i)
+                {
+                    const auto actor = key();
+                    if (previous && !(*previous < actor))
+                        throw std::runtime_error("Noncanonical TES4 actor movement order");
+                    previous = actor;
+                    RuntimeActorMovement state;
+                    state.mBase = key();
+                    state.mStandingOn = key();
+                    for (auto* vector : {&state.mPosition, &state.mPreviousPosition})
+                        for (double& value : *vector) value = reader.float64();
+                    for (auto* vector : {&state.mSimulationPosition, &state.mVelocity,
+                             &state.mPositionOffset, &state.mInertia, &state.mLastStuckPosition})
+                        for (float& value : *vector) value = reader.float32();
+                    state.mStuckFrames = reader.integer<std::uint32_t>();
+                    for (bool* value : {&state.mOnGround, &state.mOnSlope, &state.mWalkingOnWater,
+                             &state.mSkipSimulation, &state.mActive, &state.mCollisionMode,
+                             &state.mCollisionBody, &state.mCanWaterWalk})
+                        *value = boolean();
+                    if (result.mVersion >= 63 && boolean()) state.mPositionAdjusted = boolean();
+                    movement.mActors.emplace(actor, std::move(state));
+                }
             }
         }
         if (!reader.eof())
@@ -5284,6 +5389,59 @@ namespace ESM4
                 stream << '}';
             }
             stream << ']';
+        }
+        if (mVersion >= 62)
+        {
+            stream << ",\"native_movement\":";
+            if (!mNativeMovement) stream << "null";
+            else
+            {
+                const auto vector = [&](const auto& values) {
+                    stream << '[';
+                    bool first = true;
+                    for (const auto value : values)
+                    {
+                        if (!first) stream << ',';
+                        first = false;
+                        if (value == 0 && std::signbit(value)) stream << "-0.0";
+                        else stream << std::setprecision(17) << value;
+                    }
+                    stream << ']';
+                };
+                stream << "{\"discard_movements\":" << (mNativeMovement->mDiscardMovements ? "true" : "false")
+                    << ",\"actors\":[";
+                bool first = true;
+                for (const auto& [actor, state] : mNativeMovement->mActors)
+                {
+                    if (!first) stream << ',';
+                    first = false;
+                    stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                        << "\",\"base\":\"" << escapeJson(state.mBase.serialize())
+                        << "\",\"standing_on\":\"" << escapeJson(state.mStandingOn.serialize()) << '"';
+                    stream << ",\"position\":"; vector(state.mPosition);
+                    stream << ",\"previous_position\":"; vector(state.mPreviousPosition);
+                    stream << ",\"simulation_position\":"; vector(state.mSimulationPosition);
+                    stream << ",\"velocity\":"; vector(state.mVelocity);
+                    stream << ",\"position_offset\":"; vector(state.mPositionOffset);
+                    stream << ",\"inertia\":"; vector(state.mInertia);
+                    stream << ",\"last_stuck_position\":"; vector(state.mLastStuckPosition);
+                    stream << ",\"stuck_frames\":" << state.mStuckFrames;
+                    for (const auto& [name, value] : {std::pair{"on_ground", state.mOnGround},
+                             {"on_slope", state.mOnSlope}, {"walking_on_water", state.mWalkingOnWater},
+                             {"skip_simulation", state.mSkipSimulation}, {"active", state.mActive},
+                             {"collision_mode", state.mCollisionMode}, {"collision_body", state.mCollisionBody},
+                             {"can_water_walk", state.mCanWaterWalk}})
+                        stream << ",\"" << name << "\":" << (value ? "true" : "false");
+                    if (mVersion >= 63)
+                    {
+                        stream << ",\"position_adjusted\":";
+                        if (state.mPositionAdjusted) stream << (*state.mPositionAdjusted ? "true" : "false");
+                        else stream << "null";
+                    }
+                    stream << '}';
+                }
+                stream << "]}";
+            }
         }
         stream << "}";
         return stream.str();

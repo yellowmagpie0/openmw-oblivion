@@ -22,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] not in (57, 58, 59)
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61) or recipe['restrained_actors'] != actors
+            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63) or recipe['restrained_actors'] != actors
             or recipe['weapon_base'] != 'content:oblivion.esm:090615'):
         raise ValueError('unsupported Player strike-tail input recipe')
     if output.exists():
@@ -54,6 +54,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected = copy.deepcopy(state)
     runtime._upgrade_passive_melee(expected)
     runtime._upgrade_held_blocks(expected)
+    runtime._upgrade_movement(expected)
     expected['schema_version'] = runtime.CURRENT_VERSION
     if runtime.load_save(output) != expected:
         raise ValueError('Player strike-tail output differs outside declared fixture fields')

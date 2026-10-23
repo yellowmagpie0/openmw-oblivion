@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 61
+CURRENT_VERSION = 63
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1273,6 +1273,48 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             validate_physical_bodies({**entry, "bodies": [{"record": 0, "node_record": 0,
                 "rotation": root["rotation"], "position": root["position"],
                 "linear_velocity": [0., 0., 0.], "angular_velocity": [0., 0., 0.]}]})
+
+    movement = state.get("native_movement")
+    if movement is not None:
+        if version < 62:
+            raise RuntimeStateError("TES4 actor movement requires version62")
+        if (not isinstance(movement, dict) or set(movement) != {"discard_movements", "actors"}
+                or type(movement["discard_movements"]) is not bool):
+            raise RuntimeStateError("Invalid TES4 movement snapshot")
+        movement_keys: set[str] = set()
+        vectors = {"position", "previous_position", "simulation_position", "velocity", "position_offset",
+                   "inertia", "last_stuck_position"}
+        flags = {"on_ground", "on_slope", "walking_on_water", "skip_simulation", "active",
+                 "collision_mode", "collision_body", "can_water_walk"}
+        for entry in check_collection(movement["actors"], "native actor movement list"):
+            fields = vectors | flags | {"actor", "base", "standing_on", "stuck_frames"}
+            if version >= 63: fields |= {"position_adjusted"}
+            if not isinstance(entry, dict) or set(entry) != fields:
+                raise RuntimeStateError("Invalid TES4 actor movement snapshot")
+            if version >= 63 and entry["position_adjusted"] is not None and type(entry["position_adjusted"]) is not bool:
+                raise RuntimeStateError("Invalid TES4 mechanics position adjustment")
+            actor, base, standing = entry["actor"], entry["base"], entry["standing_on"]
+            native_key(actor)
+            native_key(base)
+            if standing != "null": native_key(standing)
+            if (actor in movement_keys or actor not in native_keys or value_bases.get(actor) != base
+                    or standing == actor
+                    or standing not in {"null", player["reference"]} and standing not in legacy_refs):
+                raise RuntimeStateError("Duplicate, dangling or mismatched TES4 actor movement binding")
+            movement_keys.add(actor)
+            for field in vectors:
+                values = entry[field]
+                if not isinstance(values, list) or len(values) != 3:
+                    raise RuntimeStateError("Invalid TES4 actor movement vector")
+                # Endpoints retain binary64, but must remain representable by
+                # the backend's binary32 movement inputs and collision poses.
+                for value in values:
+                    native_float(value)
+                    if abs(value) > 3.4028234663852886e38:
+                        raise RuntimeStateError("TES4 actor movement vector exceeds backend range")
+            if (type(entry["stuck_frames"]) is not int or not 0 <= entry["stuck_frames"] <= 0xffffffff
+                    or any(type(entry[field]) is not bool for field in flags)):
+                raise RuntimeStateError("Invalid TES4 actor movement flags or stuck count")
 
     ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
     if version < 31 and ragdolls:
@@ -2606,6 +2648,33 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                        "position": [reader.unpack("<f") for _ in range(3)],
                                        "scale": reader.unpack("<f")}
             result["native_loose_weapons"].append(entry)
+    if version >= 62:
+        def movement_boolean():
+            value = reader.unpack("<B")
+            if value > 1: raise RuntimeStateError("Invalid TES4 actor movement boolean")
+            return bool(value)
+        result["native_movement"] = None
+        if movement_boolean():
+            movement = {"discard_movements": movement_boolean(), "actors": []}
+            previous = None
+            for _ in range(reader.count()):
+                entry = {field: reader.string() for field in ("actor", "base", "standing_on")}
+                order = tuple(entry["actor"].split(":"))
+                if previous is not None and previous >= order:
+                    raise RuntimeStateError("Noncanonical TES4 actor movement order")
+                previous = order
+                for field in ("position", "previous_position"):
+                    entry[field] = [reader.unpack("<d") for _ in range(3)]
+                for field in ("simulation_position", "velocity", "position_offset", "inertia", "last_stuck_position"):
+                    entry[field] = [reader.unpack("<f") for _ in range(3)]
+                entry["stuck_frames"] = reader.unpack("<I")
+                for field in ("on_ground", "on_slope", "walking_on_water", "skip_simulation", "active",
+                              "collision_mode", "collision_body", "can_water_walk"):
+                    entry[field] = movement_boolean()
+                if version >= 63:
+                    entry["position_adjusted"] = movement_boolean() if movement_boolean() else None
+                movement["actors"].append(entry)
+            result["native_movement"] = movement
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3213,6 +3282,27 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for field in ("rotation", "position"):
                     for value in root[field]: writer.pack("<f", value)
                 writer.pack("<f", root["scale"])
+    if version >= 62:
+        movement = state.get("native_movement")
+        writer.pack("<B", int(movement is not None))
+        if movement is not None:
+            writer.pack("<B", int(movement["discard_movements"]))
+            actors = sorted(movement["actors"], key=lambda entry: tuple(entry["actor"].split(":")))
+            writer.pack("<I", len(actors))
+            for entry in actors:
+                for field in ("actor", "base", "standing_on"): writer.string(entry[field])
+                for field in ("position", "previous_position"):
+                    for value in entry[field]: writer.pack("<d", value)
+                for field in ("simulation_position", "velocity", "position_offset", "inertia", "last_stuck_position"):
+                    for value in entry[field]: writer.pack("<f", value)
+                writer.pack("<I", entry["stuck_frames"])
+                for field in ("on_ground", "on_slope", "walking_on_water", "skip_simulation", "active",
+                              "collision_mode", "collision_body", "can_water_walk"):
+                    writer.pack("<B", int(entry[field]))
+                if version >= 63:
+                    adjusted = entry["position_adjusted"]
+                    writer.pack("<B", int(adjusted is not None))
+                    if adjusted is not None: writer.pack("<B", int(adjusted))
     return writer.finish()
 
 
@@ -3334,6 +3424,17 @@ def _upgrade_loose_weapons(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 53 and state.get("native_loose_weapons"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native loose weapon physics")
     state.setdefault("native_loose_weapons", [])
+
+
+def _upgrade_movement(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 62 and state.get("native_movement") is not None:
+        raise RuntimeStateError("Legacy TES4 save cannot carry actor movement history")
+    state.setdefault("native_movement", None)
+    if state.get("schema_version", 1) < 63 and state["native_movement"] is not None:
+        for actor in state["native_movement"]["actors"]:
+            if "position_adjusted" in actor:
+                raise RuntimeStateError("Legacy TES4 save cannot carry mechanics position adjustment")
+            actor["position_adjusted"] = None
 
 
 def _upgrade_bow_states(state: dict[str, Any]) -> None:
@@ -3490,6 +3591,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_drop_relations(state)
     _upgrade_actor_knockback(state)
     _upgrade_loose_weapons(state)
+    _upgrade_movement(state)
     _upgrade_bow_states(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
@@ -3571,6 +3673,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_drop_relations(result)
     _upgrade_actor_knockback(result)
     _upgrade_loose_weapons(result)
+    _upgrade_movement(result)
     _upgrade_bow_states(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())

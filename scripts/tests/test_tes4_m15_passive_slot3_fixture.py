@@ -47,7 +47,7 @@ class PassiveSlot3FixtureTests(unittest.TestCase):
                 source, recipe, opaque = self.source(Path(directory), idle_player=idle_player)
                 before_bytes = source.read_bytes()
                 before = runtime.load_save(source)
-                before['schema_version'] = runtime.CURRENT_VERSION
+                before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None
                 output = Path(directory) / 'new' / 'staged.omwsave'
                 report = stage(source, output, recipe)
                 after = runtime.load_save(output)

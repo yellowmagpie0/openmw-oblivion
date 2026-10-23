@@ -25173,6 +25173,7 @@ TEST(OblivionWorldTest, LegacyNativeDropsBootstrapPhysicalModelsWithoutInventing
     const auto key = reference.getCellRef().getFormKey();
     world.dispatchOblivionEquipmentNotifications(); fixture.mAnimation.reset();
     auto legacy = world.captureOblivionRuntimeState(); legacy.mVersion = 52; legacy.mNativeLooseWeapons.clear();
+    legacy.mNativeMovement.reset();
     detachNativeLooseWeaponForReadmission(fixture, reference);
     readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary()));
     ASSERT_NO_THROW(world.applyOblivionRuntimeState());
@@ -32348,4 +32349,63 @@ TEST(OblivionWorldTest, AdvancedUnarmedOrdinaryDispatcherKeepsFullHitSoundsWitho
     const auto after = world.captureOblivionRuntimeState();
     service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+}
+
+TEST(OblivionWorldTest, SavedMovementBindsResidentContactsAndRestoresDiscardOnlyAfterSuccessfulBatch)
+{
+    NativeWeaponFactoryFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.activateOblivionActor(fixture.mActor));
+    auto& physics = *fixture.mPhysics;
+    physics.addActor(fixture.mActor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    auto* body = physics.getActor(fixture.mActor);
+    ASSERT_NE(body, nullptr);
+    const auto key = fixture.mActor.getCellRef().getFormKey();
+    auto state = world.captureOblivionRuntimeState();
+    ASSERT_TRUE(state.mNativeMovement);
+    ASSERT_EQ(state.mNativeMovement->mActors.size(), 1u);
+    auto& movement = state.mNativeMovement->mActors.at(key);
+    const auto position = fixture.mActor.getRefData().getPosition().asVec3();
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        movement.mPosition[i] = double(position[i]) + 1.;
+        movement.mPreviousPosition[i] = double(position[i]) - 1.;
+        movement.mSimulationPosition[i] = position[i];
+    }
+    movement.mInertia = {1, 2, -3};
+    movement.mVelocity = {4, 5, 6};
+    movement.mStandingOn = fixture.mResident.getCellRef().getFormKey();
+    movement.mOnGround = movement.mActive = true;
+    movement.mSkipSimulation = false;
+    state.mNativeMovement->mDiscardMovements = false;
+    acceptNativeSnapshot(fixture, state);
+    ASSERT_NO_THROW(world.finishSaveLoad());
+    EXPECT_EQ(body->getStandingOnPtr(), fixture.mResident);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeMovement, state.mNativeMovement);
+    body->setPosition(position + osg::Vec3f(2, 2, 2));
+    EXPECT_EQ(body->getPosition(), osg::Vec3d(position + osg::Vec3f(2, 2, 2)));
+    auto unavailableMechanics = state;
+    unavailableMechanics.mNativeMovement->mActors.at(key).mPositionAdjusted = true;
+    unavailableMechanics.mNativeMovement->mActors.at(key).mPosition[0] += 99;
+    acceptNativeSnapshot(fixture, unavailableMechanics);
+    const auto beforeMissingMechanics = world.captureOblivionRuntimeState().mNativeMovement;
+    EXPECT_THROW(world.finishSaveLoad(), std::runtime_error);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mNativeMovement, beforeMissingMechanics);
+    // A valid envelope with an unavailable capsule must not publish the
+    // saved discard flag before its scene-dependent restore succeeds.
+    physics.remove(fixture.mActor);
+    state.mNativeMovement->mDiscardMovements = true;
+    acceptNativeSnapshot(fixture, state);
+    const auto beforeMissingCapsule = world.captureOblivionRuntimeState().mNativeMovement;
+    ASSERT_TRUE(beforeMissingCapsule);
+    ASSERT_NE(beforeMissingCapsule->mDiscardMovements, state.mNativeMovement->mDiscardMovements);
+    EXPECT_THROW(world.finishSaveLoad(), std::invalid_argument);
+    const auto after = world.captureOblivionRuntimeState();
+    ASSERT_TRUE(after.mNativeMovement);
+    EXPECT_EQ(after.mNativeMovement->mDiscardMovements, beforeMissingCapsule->mDiscardMovements);
+    EXPECT_TRUE(after.mNativeMovement->mActors.empty());
+    state.mNativeMovement.reset();
+    state.mVersion = 61;
+    acceptNativeSnapshot(fixture, state);
+    EXPECT_NO_THROW(world.finishSaveLoad());
 }

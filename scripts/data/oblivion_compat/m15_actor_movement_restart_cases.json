@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "Persist backend actor movement history and mechanics initial-grounding state; bounded active-Recoil fresh-process continuation",
+  "full_M15S4_acceptance": false,
+  "receipt": "docs/oblivion/M15-ACTOR-MOVEMENT-RESTART-VERIFICATION.json",
+  "fixture_recipe": "m15_advanced_unarmed_natural_recovery_fixture.json",
+  "fixture_script": "m15_npc_recoil_opponent.obscript",
+  "cases": [
+    {
+      "profile": "normal",
+      "control": "scripts/data/oblivion_compat/oblivion_m15_actor_movement_normal_control.json",
+      "resume": "scripts/data/oblivion_compat/oblivion_m15_actor_movement_normal_resume.json"
+    },
+    {
+      "profile": "sanitized",
+      "control": "scripts/data/oblivion_compat/oblivion_m15_actor_movement_sanitized_control.json",
+      "resume": "scripts/data/oblivion_compat/oblivion_m15_actor_movement_sanitized_resume.json"
+    }
+  ],
+  "checkpoint": "Select actual second control save by numeric sequence; require schema63, positive NPC Recoil phase below0.733334, consumed contact2, both Player reactions, next3/RNG334604033/drop1, global discard false, Player/NPC skip false, NPC position_adjusted true. Pin checksum before fresh load.",
+  "requirements": [
+    "Complete encoded native load payload exact; nine actor movement snapshots plus mechanics flags.",
+    "Four exact live/save wire pairs per profile; no contact, RNG or drop replay.",
+    "Final NPC XYZ maximum absolute component difference0.001; Player arbitrary final position diagnostic."
+  ]
+}

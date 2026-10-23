@@ -1539,6 +1539,16 @@ namespace MWPhysics
         mTaskScheduler->synchronizeCompletedMovements();
     }
 
+    std::vector<ActorMovementSnapshot> PhysicsSystem::captureActorMovements()
+    {
+        return mTaskScheduler->captureActorMovements(mActors);
+    }
+
+    void PhysicsSystem::restoreActorMovements(std::span<const ActorMovementSnapshot> snapshots)
+    {
+        mTaskScheduler->restoreActorMovements(mActors, snapshots);
+    }
+
     void PhysicsSystem::moveActors()
     {
         auto* player = getActor(MWMechanics::getPlayer());

@@ -3,7 +3,7 @@
   "purpose": "Synthetic schema59 resident ordinary slot3 beside already retiring Stagger slot0, with independent Player clocks/samples. The8-second retirement is deliberately synthetic for saving. No normal contact, resource selection or original-duration acceptance; preserve all inventories, resources, RNG and action history. Source is an actual normal F-draw/F5 idle save with shared DRAW=1; one setup NPC unset weapon condition was materialized before this pinned source, as retained in the seed diagnostic.",
   "source": "build/oblivion-compat/m15/S4/native-passive-slot3-drawn-seed-normal-01/first/snapshots/save-3.omwsave",
   "source_sha256": "ab2615819388931e614aa5aa76302434b1ad562325426a3660c0cd6c134d5564",
-  "target_schema": 61,
+  "target_schema": 63,
   "actor": "dynamic:player:0000000000000001",
   "actor_clock": 7.859997272491455,
   "physical_actions": {

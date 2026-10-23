@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>
 #include <osg/Stats>
+#include <limits>
 
 namespace
 {
@@ -158,6 +159,97 @@ namespace
         EXPECT_EQ(world.getNumCollisionObjects(), 0);
         actor.reset();
         EXPECT_EQ(world.getNumCollisionObjects(), 0);
+    }
+
+    TEST(ActorBoundsTest, MovementRestorePreservesHistoryAndContactAndAcceptsFirstSolverUpdate)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restoreThreads;
+        MWClass::Static::registerSelf();
+        MWBase::Environment environment;
+        MWWorld::ESMStore store;
+        environment.setESMStore(store);
+        const BoundsActorClass type(false);
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            btDefaultCollisionConfiguration configuration;
+            btCollisionDispatcher dispatcher(&configuration);
+            btDbvtBroadphase broadphase;
+            btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+            ESM::Static base; base.blank();
+            ESM::CellRef reference; reference.blank();
+            MWWorld::LiveCellRef<ESM::Static> live(reference, &base), other(reference, &base);
+            live.mClass = other.mClass = &type;
+            MWWorld::Ptr ptr(&live), standing(&other);
+            osg::ref_ptr<Resource::BulletShape> shape = new Resource::BulletShape;
+            shape->mCollisionBox.mExtents = osg::Vec3f(1, 1, 2);
+            auto actor = std::make_shared<MWPhysics::Actor>(ptr, shape, &scheduler, false,
+                DetourNavigator::CollisionShapeType::Aabb, osg::Vec3f{});
+            const MWPhysics::ActorMap actors{{ptr.mRef, actor}};
+            // A fresh legacy capsule suppresses its first solver position.
+            const auto original = actor->getPosition();
+            actor->setPosition({100, 200, 300});
+            EXPECT_EQ(actor->getPosition(), original);
+            MWPhysics::ActorMovementSnapshot saved{ptr, standing, {}};
+            auto& state = saved.mState;
+            state.mBase = ESM::FormKey::content("fixture.esm", 1);
+            state.mStandingOn = ESM::FormKey::content("fixture.esm", 2);
+            state.mPosition = {1. + 0x1p-40, 2, 3};
+            state.mPreviousPosition = {-.5, -1, -2};
+            state.mSimulationPosition = {.5f, .25f, .125f};
+            state.mVelocity = {4, 5, 6};
+            state.mInertia = {7, 8, -9};
+            state.mLastStuckPosition = {-4, -5, -6};
+            state.mStuckFrames = 17;
+            state.mOnGround = state.mOnSlope = state.mWalkingOnWater = state.mActive = true;
+            state.mCollisionBody = false;
+            state.mCanWaterWalk = true;
+            state.mSkipSimulation = false;
+            scheduler.restoreActorMovements(actors, std::span(&saved, 1));
+            auto capture = [&] {
+                auto result = scheduler.captureActorMovements(actors);
+                EXPECT_EQ(result.size(), 1u);
+                result.front().mState.mBase = state.mBase;
+                result.front().mState.mStandingOn = state.mStandingOn;
+                return result.front();
+            };
+            EXPECT_EQ(capture().mState, state);
+            EXPECT_EQ(actor->getStandingOnPtr(), standing);
+            EXPECT_EQ(actor->getCollisionObject()->getBroadphaseHandle()->m_collisionFilterMask,
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_HeightMap | MWPhysics::CollisionType_Water);
+            EXPECT_EQ(actor->velocity(), osg::Vec3f(4, 5, 6));
+            EXPECT_EQ(actor->velocity(), osg::Vec3f{});
+            actor->setPosition({100, 200, 300});
+            EXPECT_EQ(actor->getPosition(), osg::Vec3d(100, 200, 300));
+            EXPECT_EQ(actor->getPreviousPosition(), osg::Vec3d(1. + 0x1p-40, 2, 3));
+            actor->setSimulationPosition({90, 180, 270});
+            EXPECT_EQ(actor->getSimulationPosition(), osg::Vec3f(90, 180, 270));
+            // Validate all entries before touching even the first valid actor.
+            const auto before = capture();
+            auto changed = saved;
+            changed.mState.mPosition = {999, 999, 999};
+            auto invalid = saved;
+            invalid.mState.mInertia[0] = std::numeric_limits<float>::infinity();
+            const std::array bad{changed, invalid};
+            EXPECT_THROW(scheduler.restoreActorMovements(actors, bad), std::runtime_error);
+            EXPECT_EQ(capture().mState, before.mState);
+            const std::array duplicate{changed, changed};
+            EXPECT_THROW(scheduler.restoreActorMovements(actors, duplicate), std::invalid_argument);
+            EXPECT_EQ(capture().mState, before.mState);
+            invalid = changed;
+            invalid.mActor = standing;
+            EXPECT_THROW(scheduler.restoreActorMovements(actors, std::span(&invalid, 1)), std::invalid_argument);
+            EXPECT_EQ(capture().mState, before.mState);
+            actor->suspendCollision(true);
+            EXPECT_TRUE(scheduler.captureActorMovements(actors).empty());
+            EXPECT_THROW(scheduler.restoreActorMovements(actors, std::span(&saved, 1)), std::invalid_argument);
+        }
     }
 
     TEST(ActorBoundsTest, FallbackIsOptInAndPreservesLegacyNpcAndCreatureBounds)

@@ -188,6 +188,7 @@ namespace MWPhysics
     class HeightField;
     class Object;
     class Actor;
+    struct ActorMovementSnapshot;
     class PhysicsTaskScheduler;
     class Projectile;
     enum ScriptedCollisionType : char;
@@ -546,6 +547,8 @@ namespace MWPhysics
 
         /// Apply new positions to actors
         void synchronizeCompletedMovements();
+        std::vector<ActorMovementSnapshot> captureActorMovements();
+        void restoreActorMovements(std::span<const ActorMovementSnapshot> snapshots);
         void moveActors();
         void debugDraw();
 

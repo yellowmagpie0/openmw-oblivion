@@ -17142,3 +17142,44 @@ pins source, fresh checks, four accepted processes, eight wire pairs, the
 retained failure and both read-only diagnostics. Editable manifests and case
 protocol accompany it. The remaining S4 mastery/effect/input/view/FPS and
 interruption campaigns are still required.
+
+
+## Actor movement restart continuation
+
+Schema63 retains backend capsule movement endpoints/history, force/inertia,
+standing identity, ground/collision/skip flags and World movement discard, plus
+optional mechanics initial-grounding bookkeeping. The scene-complete load hook
+validates the whole batch before mutation and restores mechanics before
+publishing discard. No process clock is serialized. Older absent snapshots keep
+compatibility initialization; schema62 still decodes with unknown mechanics flags.
+
+The first schema62 real fork restored its entire encoded payload but ended
+NPCY67.78781127929688 versus70.79055786132812. A read-only hardware watch traced
+the subsequent skip reset to Actors::update initial grounding. Preserving that
+separate mechanics flag fixes the bounded case without inferring it from poses.
+Debugger runs remain diagnostic because their pauses alter timing.
+
+Full normal and ASan/UBSan engine inventories each pass1,850 tests in125 suites
+at dirty-source fingerprint
+`215bbc80872c4916c5b21bc925f4b60c682e51248839f86581cb803538445234`
+(parent61f7acf6bf). Unchanged component checks pass2,997 full normal tests and
+850 instrumented ESM4 tests; Python passes384 tests. The receipt distinguishes
+completed component modes from their later failed/stopped engine attempts and
+pins the audit proving the final correction changed only World test setup.
+Leak checking is disabled; UBSan halts on errors.
+
+Four accepted actual processes provide eight exact live/save wire pairs. Both
+profiles load their actual middle Recoil output at time.1660003662109375 with
+the entire encoded payload exact, including nine movement snapshots. Both
+NPC post-recovery XYZ values exactly match their uninterrupted controls:
+[672,70.79055786132812,-107.74292755126953]. Natural paired recovery happens once;
+contact/RNG/drop are not replayed. Four post images were viewed.
+
+This closes the bounded NPC course only. Player arbitrary final Z differs by
+-.00151824951171875 normal and+.0509796142578125 instrumented; the wall/frame
+courses do not establish matched-time Player trajectories. Original Havok,
+skin/update, PCM and remaining input/view/FPS/mastery/interruption campaigns
+remain open. Full M15S4 is incomplete.
+[M15-ACTOR-MOVEMENT-RESTART-VERIFICATION.json](M15-ACTOR-MOVEMENT-RESTART-VERIFICATION.json)
+pins the tested source, selected checks, actual saves, reports, editable course
+manifests, retained failed attempts and diagnostic scripts.

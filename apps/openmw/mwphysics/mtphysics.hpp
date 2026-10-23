@@ -108,6 +108,8 @@ namespace MWPhysics
         // Wait for the submitted frame and publish its movement/contact results
         // once. Does not submit a frame, advance time or reset actor history.
         void synchronizeCompletedMovements();
+        std::vector<ActorMovementSnapshot> captureActorMovements(const ActorMap& actors);
+        void restoreActorMovements(const ActorMap& actors, std::span<const ActorMovementSnapshot> snapshots);
         void suspendActorCollision(Actor& actor, bool suspended);
 
         class PreparedObjectRemoval

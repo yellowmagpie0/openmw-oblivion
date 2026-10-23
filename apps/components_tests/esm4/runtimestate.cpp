@@ -503,6 +503,94 @@ namespace
         EXPECT_EQ(json, makeState().canonicalJson());
     }
 
+    TEST(ESM4RuntimeState, Movement63PreservesSolverHistoryFlagsPrecisionAndLegacyAbsence)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues = {actor};
+        state.mVersion = 61;
+        const auto legacy = state.serializeBinary();
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeMovement);
+        state.mVersion = 63;
+        EXPECT_EQ(state.serializeBinary().size(), legacy.size() + 1);
+        auto& movement = state.mNativeMovement.emplace();
+        movement.mDiscardMovements = true;
+        ESM4::RuntimeActorMovement snapshot;
+        snapshot.mBase = actor.mBase;
+        snapshot.mStandingOn = state.mReferences.front().mKey;
+        snapshot.mPosition = {1. + 0x1p-40, -0., 3.25};
+        snapshot.mPreviousPosition = {-.125, -0., 2.5};
+        snapshot.mSimulationPosition = {1, -0.f, 3};
+        snapshot.mVelocity = {4, 5, -6};
+        snapshot.mInertia = {-.25f, .5f, -0.f};
+        snapshot.mPositionOffset = {.125f, -.5f, 1};
+        snapshot.mLastStuckPosition = {-1, -2, -3};
+        snapshot.mStuckFrames = 0xffffffffu;
+        for (unsigned flags = 0; flags < 256; ++flags)
+        {
+            SCOPED_TRACE(flags);
+            unsigned bit = 0;
+            snapshot.mPositionAdjusted = flags % 3 == 0 ? std::nullopt : std::optional(flags % 3 == 1);
+            for (bool* value : {&snapshot.mOnGround, &snapshot.mOnSlope, &snapshot.mWalkingOnWater,
+                     &snapshot.mSkipSimulation, &snapshot.mActive, &snapshot.mCollisionMode,
+                     &snapshot.mCollisionBody, &snapshot.mCanWaterWalk})
+                *value = (flags & (1u << bit++)) != 0;
+            movement.mActors[actor.mActor] = snapshot;
+            const auto binary = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(binary);
+            ASSERT_TRUE(restored.mNativeMovement);
+            EXPECT_EQ(restored.mNativeMovement, state.mNativeMovement);
+            EXPECT_EQ(restored.serializeBinary(), binary);
+            EXPECT_EQ(restored.mNativeMovement->mActors.at(actor.mActor).mPosition[0], 1. + 0x1p-40);
+            EXPECT_TRUE(std::signbit(restored.mNativeMovement->mActors.at(actor.mActor).mPosition[1]));
+            EXPECT_NE(restored.canonicalJson().find("\"simulation_position\":[1,-0.0,3]"), std::string::npos);
+            auto bad = binary;
+            bad.back() = 2;
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+            bad = binary;
+            bad.pop_back();
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+        }
+        state.mVersion = 62;
+        movement.mActors.at(actor.mActor).mPositionAdjusted = true;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        movement.mActors.at(actor.mActor).mPositionAdjusted.reset();
+        const auto oldMovement = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_FALSE(oldMovement.mNativeMovement->mActors.at(actor.mActor).mPositionAdjusted);
+        state.mVersion = 61;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    }
+
+    TEST(ESM4RuntimeState, Movement63RejectsForeignBindingsAndNonfiniteOrUnrepresentableVectors)
+    {
+        auto state = makeState();
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mPlayer.mReference;
+        actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        actor.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues = {actor};
+        state.mNativeMovement.emplace().mActors[actor.mActor].mBase = actor.mBase;
+        const auto valid = state;
+        for (unsigned fault = 0; fault < 7; ++fault)
+        {
+            SCOPED_TRACE(fault);
+            state = valid;
+            auto& snapshot = state.mNativeMovement->mActors.at(actor.mActor);
+            if (fault == 0) snapshot.mBase = {};
+            if (fault == 1) snapshot.mBase = state.mReferences.front().mBase;
+            if (fault == 2) snapshot.mStandingOn = actor.mActor;
+            if (fault == 3) snapshot.mStandingOn = ESM::FormKey::content("oblivion.esm", 0xabcdef);
+            if (fault == 4) snapshot.mInertia[1] = std::numeric_limits<float>::quiet_NaN();
+            if (fault == 5) snapshot.mPosition[0] = std::numeric_limits<double>::max();
+            if (fault == 6)
+                state.mNativeMovement->mActors.emplace(ESM::FormKey::dynamic("foreign", 1), snapshot);
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+    }
+
     TEST(ESM4RuntimeState, NativeProcessAction26PreservesEverySignedWord)
     {
         auto state = makeState();
@@ -1652,7 +1740,7 @@ namespace
                 + (version >= 23 ? 4 : 0) + (version >= 27 ? 4 : 0)
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
-                + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0);
+                + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;

@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -43,6 +44,8 @@ namespace MWMechanics
         std::list<Actor>::const_iterator begin() const { return mActors.begin(); }
         std::list<Actor>::const_iterator end() const { return mActors.end(); }
         bool hasController(const MWWorld::Ptr& ptr) const { return mIndex.contains(ptr.mRef); }
+        std::optional<bool> positionAdjusted(const MWWorld::Ptr& ptr) const;
+        bool restorePositionAdjusted(const MWWorld::Ptr& ptr, bool adjusted) const noexcept;
 
         std::size_t size() const { return mActors.size(); }
 

@@ -3450,6 +3450,74 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         next(x for x in state["native_actor_values"] if x["actor"] == state["player"]["reference"])["process_action"] = 3
         return state
 
+    def movement_state(self):
+        state = self.held_block_state(0)
+        state["schema_version"] = 63
+        actor = state["native_actor_values"][0]
+        entry = {"actor": actor["actor"], "base": actor["base"], "standing_on": "null",
+            "position": [1. + 2**-40, -0., 3.25], "previous_position": [-.125, -0., 2.5],
+            "simulation_position": [1., -0., 3.], "velocity": [4., 5., -6.],
+            "position_offset": [.125, -.5, 1.], "inertia": [-.25, .5, -0.],
+            "last_stuck_position": [-1., -2., -3.], "stuck_frames": 0xffffffff,
+            "on_ground": True, "on_slope": False, "walking_on_water": False, "skip_simulation": False,
+            "active": True, "collision_mode": True, "collision_body": False, "can_water_walk": True,
+            "position_adjusted": True}
+        state["native_movement"] = {"discard_movements": True, "actors": [entry]}
+        return state
+
+    def test_movement63_exact_wire_history_precision_and_legacy_absence(self):
+        state = self.movement_state()
+        entry = state["native_movement"]["actors"][0]
+        legacy = copy.deepcopy(state); legacy["schema_version"] = 61; legacy.pop("native_movement")
+        old = state_io.encode_payload(legacy)
+        self.assertNotIn("native_movement", state_io.decode_payload(old))
+        prefix = bytearray(old); struct.pack_into("<I", prefix, len(state_io.MAGIC), 63)
+        tail = bytearray(b"\x01\x01\x01\x00\x00\x00")
+        for field in ("actor", "base", "standing_on"):
+            raw = entry[field].encode(); tail += struct.pack("<I", len(raw)) + raw
+        tail += struct.pack("<6d", 1. + 2**-40, -0., 3.25, -.125, -0., 2.5)
+        tail += struct.pack("<15f", 1., -0., 3., 4., 5., -6., .125, -.5, 1., -.25, .5, -0., -1., -2., -3.)
+        tail += b"\xff\xff\xff\xff\x01\x00\x00\x00\x01\x01\x00\x01"
+        tail += b"\x01\x01"
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, prefix + tail)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(loaded, state)
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        older = copy.deepcopy(state); older["schema_version"] = 62
+        older["native_movement"]["actors"][0].pop("position_adjusted")
+        old_motion = state_io.encode_payload(older)
+        self.assertEqual(state_io.decode_payload(old_motion), older)
+        state_io._upgrade_movement(older)
+        self.assertIsNone(older["native_movement"]["actors"][0]["position_adjusted"])
+        self.assertLess(math.copysign(1, loaded["native_movement"]["actors"][0]["position"][1]), 0)
+        for broken in [payload[:-1], payload[:-1] + b"\x02"]:
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(broken)
+        legacy["native_movement"] = state["native_movement"]
+        with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_movement(legacy)
+        legacy.pop("native_movement"); state_io._upgrade_movement(legacy)
+        self.assertIsNone(legacy["native_movement"])
+
+    def test_movement63_rejects_foreign_or_partial_state_and_invalid_vectors(self):
+        for fault in range(14):
+            with self.subTest(fault=fault):
+                state = self.movement_state(); entry = state["native_movement"]["actors"][0]
+                if fault == 0: entry["base"] = "null"
+                if fault == 1: entry["actor"] = "dynamic:foreign:0000000000000001"
+                if fault == 2: entry["standing_on"] = entry["actor"]
+                if fault == 3: entry["standing_on"] = "content:oblivion.esm:abcdef"
+                if fault == 4: entry["inertia"][1] = float("nan")
+                if fault == 5: entry["position"][0] = 1e100
+                if fault == 6: entry.pop("velocity")
+                if fault == 7: entry["stuck_frames"] = -1
+                if fault == 8: entry["active"] = 1
+                if fault == 9: entry["velocity"] = [0., 0.]
+                if fault == 10: state["native_movement"]["actors"].append(copy.deepcopy(entry))
+                if fault == 11: state["native_movement"]["discard_movements"] = 2
+                if fault == 12: entry["position_adjusted"] = 1
+                if fault == 13: entry.pop("position_adjusted")
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def held_block_state(self, phase=1):
         state = self.first_person_strike_state()
         state_io._upgrade_passive_melee(state)

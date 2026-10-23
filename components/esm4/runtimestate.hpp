@@ -17,6 +17,7 @@
 #include <components/esm/position.hpp>
 
 #include "aiphase.hpp"
+#include "actormovementstate.hpp"
 #include "actionledger.hpp"
 #include "crimecontracts.hpp"
 #include "actorvalues.hpp"
@@ -43,7 +44,9 @@ namespace ESM4
     // v50 retains explicit physical body/constraint World registrations.
     // v60 adds Counter strike tag7, three-stage phase and detached NI retirement.
     // v61 retains slot1 held-block cache history independently of contacts.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 61;
+    // v62 retains backend living-actor movement across a fresh scene load.
+    // v63 preserves the mechanics actor's initial position-adjustment flag.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 63;
 
     struct RuntimeContentIdentity
     {
@@ -727,6 +730,8 @@ namespace ESM4
         std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
+        // Absent in older saves: never infer solver history or skip flags.
+        std::optional<RuntimeMovementState> mNativeMovement = std::nullopt;
         // v53: retained loose weapons, including currently unloaded cells.
         std::map<ESM::FormKey, RuntimeLooseWeapon> mNativeLooseWeapons;
         // v36: scheduler-wide physical clock cache, independent of actor ownership.

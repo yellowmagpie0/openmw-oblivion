@@ -161,6 +161,8 @@ namespace MWBase
         // Publish completed native physics before capturing the save profile,
         // reference records or native runtime state.
         virtual void prepareSave() {}
+        // Complete scene-dependent continuation while load rollback is still available.
+        virtual void finishSaveLoad() {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
         // True means a registered native actor handled the request, including
         // native policy suppression. False permits the legacy stat adapter.

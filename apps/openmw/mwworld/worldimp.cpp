@@ -137,6 +137,7 @@
 #include "../mwclass/door.hpp"
 
 #include "../mwphysics/actor.hpp"
+#include "../mwmechanics/mechanicsmanagerimp.hpp"
 #include "../mwphysics/collisiontype.hpp"
 #include "../mwphysics/object.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -1755,11 +1756,39 @@ namespace MWWorld
             // A retained save may be inspected without starting a scene/physics
             // subsystem. Its global clock still belongs to the saved authority.
             if (mOblivionRuntimeState)
+            {
                 state.mNativePhysicalBlendTimeCache = mOblivionRuntimeState->mNativePhysicalBlendTimeCache;
+                state.mNativeMovement = mOblivionRuntimeState->mNativeMovement;
+            }
             return;
         }
         if (!mOblivionCombat)
             throw std::logic_error("native physical save requires combat authority");
+        auto& movement = state.mNativeMovement.emplace();
+        movement.mDiscardMovements = mDiscardMovements;
+        const auto* mechanics = dynamic_cast<const MWMechanics::MechanicsManager*>(
+            MWBase::Environment::get().getMechanicsManagerOrNull());
+        for (auto snapshot : mPhysics->captureActorMovements())
+        {
+            const auto key = snapshot.mActor == player ? ESM::FormKey::dynamic("player", 1)
+                                                       : snapshot.mActor.getCellRef().getFormKey();
+            const auto* values = mOblivionCombat->findActorValues(key);
+            const auto base = snapshot.mActor == player && values ? values->mBase : nativeActorBase(snapshot.mActor);
+            if (!values || base.isNull() || values->mBase != base)
+                throw std::runtime_error("native movement capture has an unbound actor/base owner");
+            snapshot.mState.mBase = base;
+            if (mechanics)
+                snapshot.mState.mPositionAdjusted = mechanics->getActors().positionAdjusted(snapshot.mActor);
+            if (!snapshot.mStandingOn.isEmpty())
+            {
+                snapshot.mState.mStandingOn = snapshot.mStandingOn == player ? ESM::FormKey::dynamic("player", 1)
+                    : snapshot.mStandingOn.getCellRef().getFormKey();
+                if (snapshot.mState.mStandingOn.isNull())
+                    throw std::runtime_error("native movement capture has an unidentified standing reference");
+            }
+            if (!movement.mActors.emplace(key, std::move(snapshot.mState)).second)
+                throw std::runtime_error("native movement capture has duplicate actor ownership");
+        }
         const auto bound = resolveNativePhysicalBindings(
             *mPhysics, *mOblivionCombat, state, player, mResourceSystem->getVFS());
         const auto physical = mPhysics->captureActorRagdollSnapshots(bound.mBindings);
@@ -4920,6 +4949,60 @@ namespace MWWorld
         mPhysics->synchronizeCompletedMovements();
         mPhysics->moveActors();
         synchronizeLooseWeaponPoses(*this, *mPhysics);
+    }
+
+    void World::finishSaveLoad()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionRuntimeState
+            || !mOblivionRuntimeState->mNativeMovement)
+            return;
+        if (!mPhysics || !mOblivionCombat)
+            throw std::runtime_error("saved movement requires a restored physics scene and native authority");
+        const auto player = getPlayerPtr();
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        std::map<ESM::FormKey, Ptr> references{{playerKey, player}};
+        for (const auto& ptr : mWorldModel.getResidentPtrs())
+        {
+            if (ptr == player) continue;
+            const auto key = ptr.getCellRef().getFormKey();
+            if (key.isNull()) continue;
+            const auto [found, inserted] = references.emplace(key, ptr);
+            if (!inserted && found->second != ptr)
+                throw std::runtime_error("movement restore has multiple resident reference owners");
+        }
+        const auto& saved = *mOblivionRuntimeState->mNativeMovement;
+        const auto* mechanics = dynamic_cast<const MWMechanics::MechanicsManager*>(
+            MWBase::Environment::get().getMechanicsManagerOrNull());
+        std::vector<MWPhysics::ActorMovementSnapshot> snapshots;
+        snapshots.reserve(saved.mActors.size());
+        for (const auto& [key, movement] : saved.mActors)
+        {
+            const auto found = references.find(key);
+            const auto* values = mOblivionCombat->findActorValues(key);
+            if (found == references.end() || !values || values->mBase != movement.mBase
+                || (key != playerKey && nativeActorBase(found->second) != movement.mBase))
+                throw std::runtime_error("movement restore has an unbound actor/base owner");
+            if (movement.mPositionAdjusted
+                && (!mechanics || !mechanics->getActors().positionAdjusted(found->second).has_value()))
+                throw std::runtime_error("movement restore has an unresolved mechanics actor");
+            Ptr standingOn;
+            if (!movement.mStandingOn.isNull())
+            {
+                const auto standing = references.find(movement.mStandingOn);
+                if (standing == references.end())
+                    throw std::runtime_error("movement restore has an unresolved standing reference");
+                standingOn = standing->second;
+            }
+            snapshots.push_back({found->second, standingOn, movement});
+        }
+        mPhysics->restoreActorMovements(snapshots);
+        for (const auto& snapshot : snapshots)
+            if (snapshot.mState.mPositionAdjusted
+                && !mechanics->getActors().restorePositionAdjusted(snapshot.mActor, *snapshot.mState.mPositionAdjusted))
+                throw std::logic_error("movement restore lost its validated mechanics actor");
+        // Do not discard the first resumed animation movement to initialize
+        // newly constructed capsules. Their exact history/skip flags now exist.
+        mDiscardMovements = saved.mDiscardMovements;
     }
 
     void World::write(ESM::ESMWriter& writer, Loading::Listener& progress) const

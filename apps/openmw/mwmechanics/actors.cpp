@@ -1374,6 +1374,21 @@ namespace MWMechanics
         return false;
     }
 
+    std::optional<bool> Actors::positionAdjusted(const MWWorld::Ptr& ptr) const
+    {
+        const auto found = mIndex.find(ptr.mRef);
+        if (found == mIndex.end()) return std::nullopt;
+        return found->second->getPositionAdjusted();
+    }
+
+    bool Actors::restorePositionAdjusted(const MWWorld::Ptr& ptr, bool adjusted) const noexcept
+    {
+        const auto found = mIndex.find(ptr.mRef);
+        if (found == mIndex.end()) return false;
+        found->second->setPositionAdjusted(adjusted);
+        return true;
+    }
+
     void Actors::updateActor(const MWWorld::Ptr& old, const MWWorld::Ptr& ptr) const
     {
         const auto iter = mIndex.find(old.mRef);

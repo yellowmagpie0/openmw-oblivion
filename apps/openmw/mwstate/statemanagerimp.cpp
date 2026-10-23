@@ -984,6 +984,7 @@ void MWState::StateManager::loadGame(const Character* character, const std::file
             if (mapped != actorIdConverter.mMappings.end())
                 MWBase::Environment::get().getMechanicsManager()->cleanupSummonedCreature(mapped->second);
         }
+        world.finishSaveLoad();
         if (preparedSpellLists)
         {
             world.getStore().finishSpellListRestore();
