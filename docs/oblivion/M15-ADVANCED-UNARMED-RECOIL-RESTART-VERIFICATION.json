@@ -1,0 +1,1279 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Actual active-Recoil fresh-process forks: normal progressed phase, instrumented recovery-start boundary, and instrumented progressed phase; logical state recovery without contact/RNG/drop replay",
+  "full_M15S4_acceptance": false,
+  "implementation_commit": "c4a3b6031c",
+  "CPP_changed": false,
+  "reused_checks": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-block-normal-04/verification.json",
+      "sha256": "6cb01cb42f633c0d4e15d5bf356806b064e896e74d474d82642e1ef8737c4749",
+      "bytes": 2147,
+      "source": {
+        "head": "d61c3d755e075e71f4a74db8620628184f4e2e1b",
+        "source_fingerprint": "0ed2a5395cae77c1f51fd62a15fe29e37fa3c28168eb516eefa52743718f9710"
+      },
+      "results": {
+        "engine": {
+          "executed": 1845,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c616e0f030bbd2c22e44e44e9c01cd5c022e1d6965c59a97ea482f5c75d63800",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0dded73a7a121b47ff86c8ae289a95b1af3e3c2b2fc128ffe65ef7dce8538bae",
+          "inventory_sha256": "afce45fc6a10f5d7f40810bc913de0bf049cff0a370ec39cb3aeda6dfef7a07f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-block-sanitized-04/verification.json",
+      "sha256": "fdbfcd603cdc35d4654dca3ef5442ae11ef4ec4ceb3b89b4bbfb42e18fe57e50",
+      "bytes": 2237,
+      "source": {
+        "head": "d61c3d755e075e71f4a74db8620628184f4e2e1b",
+        "source_fingerprint": "0ed2a5395cae77c1f51fd62a15fe29e37fa3c28168eb516eefa52743718f9710"
+      },
+      "results": {
+        "engine": {
+          "executed": 1845,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0a56c12b0368cc21dbd4c1f0fff044a9b118e8dcac81904223b83be7da2a2efa",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "14634715a34f65963dbb2a1dafcd06255477c650f8d1e1f28552cb3b74b4471d",
+          "inventory_sha256": "afce45fc6a10f5d7f40810bc913de0bf049cff0a370ec39cb3aeda6dfef7a07f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "tested_CPP_fingerprint": "0ed2a5395cae77c1f51fd62a15fe29e37fa3c28168eb516eefa52743718f9710",
+  "tested_CPP_sha256": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "bc379b2e1fc1ff9ffb459990a6c2d1ee0c910b437e39baa223e627ecc3550c52",
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": "0d5ee6faf99b1b59d61a59d7d395ecc43465c7a2ca087351278f7c854f72b2ce",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "be9e5beff02d6bdcf672836e8caf11e7f90ab8664c1f7bfed4140e21d0640a4f"
+  },
+  "cases": [
+    {
+      "name": "normal-progressed",
+      "control": "native-advanced-unarmed-recoil-fork-normal-02",
+      "resume": "native-advanced-unarmed-recoil-resume-normal-03",
+      "result": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/fork-verification-02.json",
+        "sha256": "9a09ed3d6d7f744eda8f581a1b37b9b9138d48aa3275e1288d96574b50376941",
+        "bytes": 1024
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Full pre/middle/contact/sound and paired Player/NPC logical matched natural recovery after fresh-process load of actual consumed-contact active Recoil save; exact native caches/clocks/AV/life/body/packed velocities and full drop/reference load, no contact/RNG/drop replay",
+        "control": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02",
+        "control_pid": 1403795,
+        "resume_pid": 1404327,
+        "wire_pairs": 4,
+        "middle_sha256": "0720787f42ac2d8fa5c784118e36baf23cada406dd441ae208bb7d6ce3b930af",
+        "middle_recoil_time": 0.1660003662109375,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "final_rng": 334604033,
+        "full_M15S4_acceptance": false,
+        "limits": "Normal B and explicit mouse aim80 before second activation. Camera/player/NPC physical placements differ from uninterrupted course; no matched trajectories or complete restart gate. No new numeric damage oracle, original skin/update or PCM claim."
+      },
+      "checkpoint": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/middle-save-verification.json",
+        "sha256": "aaa78c73e1e591c6736e2edf0226265a089a6eb4733a70309bc2f58733d50603",
+        "bytes": 1073
+      },
+      "checkpoint_summary": {
+        "passed": true,
+        "middle_sequence": "4",
+        "snapshot": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/snapshots/save-4.omwsave",
+        "sha256": "0720787f42ac2d8fa5c784118e36baf23cada406dd441ae208bb7d6ce3b930af",
+        "NPC_action": 7,
+        "reaction": {
+          "contact_id": 2,
+          "kind": 1,
+          "animation_group": "handtohandrecoil",
+          "animation_time": 0.1660003662109375,
+          "started": false,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -15.496013641357422,
+            "ease_start": 15.496013641357422,
+            "last_input": 0.1660003662109375,
+            "ease_end": 15.596014022827148,
+            "weighted_time": 0.1660003662109375,
+            "output_time": 0.1660003662109375
+          },
+          "retirement": null,
+          "inactive": false,
+          "pose_snapshot": null
+        },
+        "physical_actions": {
+          "next": 3,
+          "pending": []
+        },
+        "combat_rng_state": 334604033,
+        "drop_count": 1,
+        "scope": "Actual consumed-contact snapshot during active Recoil, not an authored outcome or post-recovery save"
+      }
+    },
+    {
+      "name": "sanitized-start",
+      "control": "native-advanced-unarmed-recoil-fork-sanitized-02",
+      "resume": "native-advanced-unarmed-recoil-start-resume-sanitized-01",
+      "result": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/start-verification.json",
+        "sha256": "4c344be3f54d9b03625736d6f0b5800117c2ef8663506175d7a609e3af071558",
+        "bytes": 1055
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Instrumented active Recoil time0/easingtrue boundary, full contact/sound and paired Player/NPC logical matched natural recovery after fresh-process load of actual consumed-contact active Recoil save; exact native caches/clocks/AV/life/body/packed velocities and full drop/reference load, no contact/RNG/drop replay",
+        "control": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02",
+        "control_pid": 1404868,
+        "resume_pid": 1405184,
+        "wire_pairs": 4,
+        "middle_sha256": "857cef556973e8af844193d0f4bd5d094ff794c1c4714cf90c487d65c0ec2fa9",
+        "middle_recoil_time": 0.0,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "final_rng": 334604033,
+        "full_M15S4_acceptance": false,
+        "limits": "Normal B and explicit mouse aim80 before second activation. Camera/player/NPC physical placements differ from uninterrupted course; no matched trajectories or complete restart gate. No new numeric damage oracle, original skin/update or PCM claim."
+      },
+      "checkpoint": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/start-save-verification.json",
+        "sha256": "92f4ab32a6788705e86d6494460b113245963d7d4bcb43ae2512112d93b32529",
+        "bytes": 846
+      },
+      "checkpoint_summary": {
+        "passed": true,
+        "middle_sequence": "4",
+        "snapshot": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/snapshots/save-4.omwsave",
+        "sha256": "857cef556973e8af844193d0f4bd5d094ff794c1c4714cf90c487d65c0ec2fa9",
+        "reaction": {
+          "contact_id": 2,
+          "kind": 1,
+          "animation_group": "handtohandrecoil",
+          "animation_time": 0.0,
+          "started": false,
+          "sequence_timing": {
+            "easing": true,
+            "offset": -9.02199935913086,
+            "ease_start": 9.02199935913086,
+            "last_input": 0.0,
+            "ease_end": 9.121999740600586,
+            "weighted_time": 0.0,
+            "output_time": 0.0
+          },
+          "retirement": null,
+          "inactive": false,
+          "pose_snapshot": null
+        },
+        "scope": "Active consumed-contact Recoil start, not progressed-phase checkpoint"
+      }
+    },
+    {
+      "name": "sanitized-progressed",
+      "control": "native-advanced-unarmed-recoil-fork-sanitized-03",
+      "resume": "native-advanced-unarmed-recoil-resume-sanitized-03",
+      "result": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/fork-verification-02.json",
+        "sha256": "e6f3e9e7ca259dc42cee52c5e985dfcb2473bf95f16c4a9d68a3d3b96c16d5f0",
+        "bytes": 1027
+      },
+      "summary": {
+        "passed": true,
+        "scope": "Full pre/middle/contact/sound and paired Player/NPC logical matched natural recovery after fresh-process load of actual consumed-contact active Recoil save; exact native caches/clocks/AV/life/body/packed velocities and full drop/reference load, no contact/RNG/drop replay",
+        "control": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03",
+        "control_pid": 1405348,
+        "resume_pid": 1405596,
+        "wire_pairs": 4,
+        "middle_sha256": "ecf92a404582996e908a489c8788de2ccc3f24d2fe71b442d38f61b90bee93a8",
+        "middle_recoil_time": 0.1660003662109375,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "final_rng": 334604033,
+        "full_M15S4_acceptance": false,
+        "limits": "Normal B and explicit mouse aim80 before second activation. Camera/player/NPC physical placements differ from uninterrupted course; no matched trajectories or complete restart gate. No new numeric damage oracle, original skin/update or PCM claim."
+      },
+      "checkpoint": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/middle-save-verification.json",
+        "sha256": "0a1f5827f9407f937d0ef06de80d9c2d0e21f2d3ef5533d5363605d807d7f75d",
+        "bytes": 926
+      },
+      "checkpoint_summary": {
+        "passed": true,
+        "middle_sequence": "4",
+        "snapshot": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/snapshots/save-4.omwsave",
+        "sha256": "ecf92a404582996e908a489c8788de2ccc3f24d2fe71b442d38f61b90bee93a8",
+        "reaction": {
+          "contact_id": 2,
+          "kind": 1,
+          "animation_group": "handtohandrecoil",
+          "animation_time": 0.1660003662109375,
+          "started": false,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -9.02199935913086,
+            "ease_start": 9.02199935913086,
+            "last_input": 0.1660003662109375,
+            "ease_end": 9.121999740600586,
+            "weighted_time": 0.1660003662109375,
+            "output_time": 0.1660003662109375
+          },
+          "retirement": null,
+          "inactive": false,
+          "pose_snapshot": null
+        },
+        "Player_reaction_views_present": true,
+        "scope": "Actual progressed Recoil checkpoint, not start0"
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/manifest.json",
+      "sha256": "9b4d94fdc9ffd7b04bf14ab4518cdf8a492d82226b1389c5efc05cbfc104c82b",
+      "bytes": 22748
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/preregistration.json",
+      "sha256": "e07cd39cfa8ba3db1805abedff027655485d5628ca5861116240bfcbc74b7102",
+      "bytes": 1084
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/launcher.py",
+      "sha256": "704240f645468d5d55b3abcfe76222fdc0d20ea6755995bb59945c59cb84ae8a",
+      "bytes": 2034
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/binary-pin.json",
+      "sha256": "cd39e615e466c5b90e8ad26bbecda8fe3cf6b657555c748fa07014f236cc4e0f",
+      "bytes": 154
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/staged-input.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/middle-save-verification.json",
+      "sha256": "aaa78c73e1e591c6736e2edf0226265a089a6eb4733a70309bc2f58733d50603",
+      "bytes": 1073
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/middle-save-screenshot.jpg",
+      "sha256": "97dbf80e2e03b71d2b7109648dfaa30eb737f785515e1b9362516371bb699e32",
+      "bytes": 111412
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/middle-save-screenshot-source.json",
+      "sha256": "5ac2ea7b324d44e04a5c37a1d5ed2da2b75e136d870689883f86eaaec79abe94",
+      "bytes": 613
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/continuation.json",
+      "sha256": "a2e808aecd34b55297c1e716e5badd32dc9e0e9f4626c76f34a00a6324f66526",
+      "bytes": 21359
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/preregistration.json",
+      "sha256": "77721f36a8f65618e348f87b20c0763f941529e0ce3f4aa9e2ffaa6baa91bc1c",
+      "bytes": 1024
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/launcher.py",
+      "sha256": "26a2bdf860ac1d3deb2bc788bb00cc053f1081ad1b1ee5034cb86eb5b2cfb404",
+      "bytes": 1989
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/binary-pin.json",
+      "sha256": "cd39e615e466c5b90e8ad26bbecda8fe3cf6b657555c748fa07014f236cc4e0f",
+      "bytes": 154
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/staged-input.omwsave",
+      "sha256": "0720787f42ac2d8fa5c784118e36baf23cada406dd441ae208bb7d6ce3b930af",
+      "bytes": 10911956
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/control-reference.json",
+      "sha256": "883611d2308cd58e4b366c82b0f10bac1239cadd593b785bbca8bc571ada262c",
+      "bytes": 1353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verify-fork.py",
+      "sha256": "cde9fc338d09d8bd6b2da37bf63c413c73b2341df2f70843055027a55b45d698",
+      "bytes": 7277
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verify-fork-02.py",
+      "sha256": "d78e4ac33d4932180c88d7ae22439c47d5cdd0199b7553cec343473e57a452cd",
+      "bytes": 9081
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verifier-01.log",
+      "sha256": "551cfc35aeeba9b571415c59a6ae3d8617aa4753d8337dc61800056dbac4de62",
+      "bytes": 972
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verifier-02.log",
+      "sha256": "9a09ed3d6d7f744eda8f581a1b37b9b9138d48aa3275e1288d96574b50376941",
+      "bytes": 1024
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verify-player-facade.py",
+      "sha256": "d424059da226a276c7c846f8b828802b2d4b403d84d69bfc4f282bcaabae421f",
+      "bytes": 938
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/player-facade-load-verification.json",
+      "sha256": "f452020e828f30ae666b3dacc1a7637dbf2b6e029cdfd40f4217775443748815",
+      "bytes": 668
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/scenario.json",
+      "sha256": "e02faea365cf5af5aabfc35a505ff238897881544b8edacddf67bf93a1c5e177",
+      "bytes": 8768
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/launcher.json",
+      "sha256": "c2f90373dc4b352eab85584c78e298055b8f71a5a40b2b2b01e895bbb791ec22",
+      "bytes": 976
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/process-epoch.json",
+      "sha256": "be44d6963a6dbe62f62e0df6c934620ec762be1cd4183cf360417edcb657526d",
+      "bytes": 698
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/process.log",
+      "sha256": "cb515bcbb4fb7ccb3ce201cfbf93cb99f41242d1fe247e79a7864a51d9c7bfd6",
+      "bytes": 879719
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/events.jsonl",
+      "sha256": "19b6a9d7ddd4e56d6a0d0d4495b358d04fd69a82ba36501ee72e9aaa396b2820",
+      "bytes": 2988
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/snapshot-index.json",
+      "sha256": "2ff8253e3f6b1a51e70f1c96ed7344f5a5109e70c0f7e80800d7ba0739771380",
+      "bytes": 3309
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/actual-engine-environment.json",
+      "sha256": "5dd9b7032a8b38fc7fd0e528608a08c5e57d15e523f9199ce494eeedea174c83",
+      "bytes": 322
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/script-report.json",
+      "sha256": "3474554808e30f25dc24ffa6be70cb03bf5a2862e154273cf85a58ee8074bc78",
+      "bytes": 26498509
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/sdl-input-provenance.json",
+      "sha256": "4e1023d0925f7bd7b507b59b7717178396ef7c73a847d22bb4e69b91ee619578",
+      "bytes": 1253
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/sdl-input.txt",
+      "sha256": "7491e0bc52e95821faef1e013940f5e9b585756a19fe0b9a5516ff9ae2d9296b",
+      "bytes": 164
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/sdl-input.txt.delivered",
+      "sha256": "7491e0bc52e95821faef1e013940f5e9b585756a19fe0b9a5516ff9ae2d9296b",
+      "bytes": 164
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/openal.log",
+      "sha256": "c7aecfcc4bf52a81d6edd9b98376cd3deefb47cae2efc329842c850eb6da6947",
+      "bytes": 3019
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/mixed-output.wav",
+      "sha256": "6c7721fe0a955c501b1078c016b48568fe9e283e81ad152cdf9609eb8556054f",
+      "bytes": 32494148
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/snapshots/save-3.omwsave",
+      "sha256": "0b44808231934eedb726f2ecbd5075f5e9e807961c5a6a0e32163ad7d203e599",
+      "bytes": 10860708
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/live-1-3.json",
+      "sha256": "019c9d0f52d0ddbd2396d820cd0f24993567d108dd4996fd0a85fb07f80b3e9b",
+      "bytes": 25878639
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/snapshots/save-4.omwsave",
+      "sha256": "0720787f42ac2d8fa5c784118e36baf23cada406dd441ae208bb7d6ce3b930af",
+      "bytes": 10911956
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/live-1-4.json",
+      "sha256": "2134a526a0012aa18b68b128d82a25c7dfdb7523c2f2457bdea67ede55eeaf6f",
+      "bytes": 25989064
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/snapshots/save-5.omwsave",
+      "sha256": "2816d8a39d869802e3e14c166f03df24d24e7d072fff181db1dde8a6ff2c1ad6",
+      "bytes": 11067063
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/live-1-5.json",
+      "sha256": "379acbe5b0fbe96309903d8374f4f468b56e1fc35d6cb842aa03f78d1b164e92",
+      "bytes": 26364980
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/first/uninterrupted-after-recoil.png",
+      "sha256": "85074db2b8c97a94a6f6bbd9a7279cbbcf5316a5562a2db08d447ccf9c83fc2e",
+      "bytes": 1122985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/scenario.json",
+      "sha256": "498fced03cafc93b435eb06ebd789a7a6d628beebe3977ce3397278b09908a20",
+      "bytes": 6209
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/launcher.json",
+      "sha256": "572a06bfb04e72d284a8a94f675a23ccf4c8b8e5013570044b9d893c1f26823f",
+      "bytes": 985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/process-epoch.json",
+      "sha256": "5340114873bf643aaff87f9fad424f5a717a76bfdfd3c8d9ecfbc57f3f1e80fa",
+      "bytes": 704
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/process.log",
+      "sha256": "cdd6501e823cc30ff28a8d16d38892e1c203d4a841a5310b6d3bf135f2a56e99",
+      "bytes": 493324
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/events.jsonl",
+      "sha256": "e9fb8a4477adecc1bcfa08a5dae40335945e46a8c10b583bc204ce799b92f8eb",
+      "bytes": 1666
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/snapshot-index.json",
+      "sha256": "bd021a4ca4c4c427da498a5ccf84040710dd35bfce02225ca94516da8c671b23",
+      "bytes": 1111
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/input-pristine.omwsave",
+      "sha256": "0720787f42ac2d8fa5c784118e36baf23cada406dd441ae208bb7d6ce3b930af",
+      "bytes": 10911956
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/actual-engine-environment.json",
+      "sha256": "7c153801cd6cd2ec6f768a85700e3f4c047df9d23f2b5b14e833d624a6d877e5",
+      "bytes": 331
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/script-report.json",
+      "sha256": "728a933abc3e473637332074b8d845b119d4f1f2ec8475f4bd3add96edda18ad",
+      "bytes": 26390088
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/sdl-input-provenance.json",
+      "sha256": "87dae78d62783be955756351bbe8e013c51c67165f73a4862b8d9eb2cfa9bcac",
+      "bytes": 1262
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/sdl-input.txt",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/sdl-input.txt.delivered",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/openal.log",
+      "sha256": "cc9153adbc47a578dbc9a068351c8fc4f3feaa76b12eed7817ed0d72d3e2603d",
+      "bytes": 3028
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/mixed-output.wav",
+      "sha256": "7461923cbf4b06279443e5f5d7b751c71d51ec960d686f86cedad44ed0108609",
+      "bytes": 14515268
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/snapshots/save-3.omwsave",
+      "sha256": "200f52e1563efebf9e40225b1a04fffccfa601a5b3a543e143302858f447b9aa",
+      "bytes": 11080867
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/live-2-3.json",
+      "sha256": "df2ab44bcfc4d7af93b81c3a52f9052bf4af8384c80a07364023bfe51069b3da",
+      "bytes": 26361339
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/second/resumed-after-recoil.png",
+      "sha256": "4f6a0274efb5bb319dae2f5deb14c6c1c3d19465351c3c106ac380cdebe8b343",
+      "bytes": 1167411
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/manifest.json",
+      "sha256": "ba97b285bf38e9bc16b7ac1a86deb4b917bbb6d0b8300249da21943896eebeba",
+      "bytes": 23125
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/preregistration.json",
+      "sha256": "e07cd39cfa8ba3db1805abedff027655485d5628ca5861116240bfcbc74b7102",
+      "bytes": 1084
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/launcher.py",
+      "sha256": "27a5a845bd6415bc35ff4139ef6a9bfef66b5a15b1b5cbcb684944a7d7c7339e",
+      "bytes": 2037
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/binary-pin.json",
+      "sha256": "4d048ad82ced1f03bd6111af9522356f1d6601bc3ae1f55baa3b70560026258c",
+      "bytes": 167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/staged-input.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/start-save-verification.json",
+      "sha256": "92f4ab32a6788705e86d6494460b113245963d7d4bcb43ae2512112d93b32529",
+      "bytes": 846
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/middle-save-screenshot.jpg",
+      "sha256": "9ccb39e68b7df56f4b28eafcbd4eaab6dff061f6350c01bfe5f0d9cceef3752e",
+      "bytes": 105442
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/middle-save-screenshot-source.json",
+      "sha256": "784d68a4a5d36d8619a7f255c914b513ea4ee804539536d913e7e8824fb8b541",
+      "bytes": 652
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/continuation.json",
+      "sha256": "c4c13752d603ca952ad4be713fcc4d3ba60eaae3931ae361fc5bfcdb391b16cd",
+      "bytes": 21539
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/preregistration.json",
+      "sha256": "10b815b579a752a590972f422eab3f2db8a35d3bde735211fae3e78bea471e6c",
+      "bytes": 687
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/launcher.py",
+      "sha256": "79caf06c5cf25caecc7ab10100339a0eb744f517ceacb658b42067e8fca73e20",
+      "bytes": 1992
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/binary-pin.json",
+      "sha256": "4d048ad82ced1f03bd6111af9522356f1d6601bc3ae1f55baa3b70560026258c",
+      "bytes": 167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/staged-input.omwsave",
+      "sha256": "857cef556973e8af844193d0f4bd5d094ff794c1c4714cf90c487d65c0ec2fa9",
+      "bytes": 10604603
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/control-reference.json",
+      "sha256": "85273e642cba1378714945bd7f9c670623e98f6ad0077ad5d071ace8a772a62e",
+      "bytes": 1118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/verify-start.py",
+      "sha256": "0b144330716e4a78e7453355c3c8735ea5dad43338626fd237d73a7dd98217a9",
+      "bytes": 9157
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/verifier-01.log",
+      "sha256": "4c344be3f54d9b03625736d6f0b5800117c2ef8663506175d7a609e3af071558",
+      "bytes": 1055
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/verify-player-facade.py",
+      "sha256": "d424059da226a276c7c846f8b828802b2d4b403d84d69bfc4f282bcaabae421f",
+      "bytes": 938
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/player-facade-load-verification.json",
+      "sha256": "4adfbe79bfa10c7194668cba5bce9add2668f00e12f34938ead262e86055a079",
+      "bytes": 657
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/scenario.json",
+      "sha256": "ba9ee7f7f269ffa0195c393029f354d5f1fb9edd9e7efc1a5c432773ae78218a",
+      "bytes": 9470
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/launcher.json",
+      "sha256": "ac6ce9c92fe18a5700fa1fec74fc873dc48bc64dda23e920743baa7c821e6814",
+      "bytes": 995
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/process-epoch.json",
+      "sha256": "268ccbf96591676f7f1a154e05cf60e34eab7a79a6579b9bcf1a1619a4145684",
+      "bytes": 717
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/process.log",
+      "sha256": "3d33c344713464086bf3963ff07d1b8d4b6b2b611cc1fa4d39a204a7dae04892",
+      "bytes": 681960
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/events.jsonl",
+      "sha256": "19b6a45c6252367f5f2dab998ce6014b7001af7fee81f2a409100adf2d7edbde",
+      "bytes": 3042
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/snapshot-index.json",
+      "sha256": "70a9d2eab5e159d8e08c126b27966e079518aa43ca93e2614f23c22dbb2aea82",
+      "bytes": 3348
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/actual-engine-environment.json",
+      "sha256": "0df1624fdcb07646b253f8efd1d6451a0763e7c5dece2ebb28eeee5df995f209",
+      "bytes": 469
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/script-report.json",
+      "sha256": "b246297af209a83f93cb8abb619d5e2f69466f6f4d65ce461aeab07228aa3ab4",
+      "bytes": 25657362
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/sdl-input-provenance.json",
+      "sha256": "687143adc5055a4415d120b4b4ec4105bb17c6b16b127f67597d9bb527bff697",
+      "bytes": 1290
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/sdl-input.txt",
+      "sha256": "625d25cef104da02b54ec78b5aab0f5da728f5050666bb2cf19c5b34337e2b6e",
+      "bytes": 207
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/sdl-input.txt.delivered",
+      "sha256": "625d25cef104da02b54ec78b5aab0f5da728f5050666bb2cf19c5b34337e2b6e",
+      "bytes": 207
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/openal.log",
+      "sha256": "898d8c05f202a54ca9dcebbc52ad2018da93cb91ed038fecc8941f9d5b5bca34",
+      "bytes": 3070
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/mixed-output.wav",
+      "sha256": "f2eb22cf5aabaa79b5236f7ccff378a7532fb7417805549fb5467190f2be7d2f",
+      "bytes": 123878468
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/snapshots/save-3.omwsave",
+      "sha256": "2c586024e3fbaaaaa8517a78706b688b9532549d927ed52786b3738fa867079a",
+      "bytes": 10455126
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/live-1-3.json",
+      "sha256": "2adde3c176c7919399ce910d1df60cb038d04a48b813b967cccf53f062973084",
+      "bytes": 24888777
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/snapshots/save-4.omwsave",
+      "sha256": "857cef556973e8af844193d0f4bd5d094ff794c1c4714cf90c487d65c0ec2fa9",
+      "bytes": 10604603
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/live-1-4.json",
+      "sha256": "d05f1febc8aeca8be2acaf3f9119663726b8e7b96706f8b94a20071a40c50d9b",
+      "bytes": 25267451
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/snapshots/save-5.omwsave",
+      "sha256": "94b11ac494bfdf4d69e2aebd800788c7cbea5606b5f5f8a9716feb2d349675e2",
+      "bytes": 10668289
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/live-1-5.json",
+      "sha256": "ab654b7501809fadb58cb554470b832b66198975e74b819f455b145a3fa77ae7",
+      "bytes": 25383148
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/first/uninterrupted-after-recoil.png",
+      "sha256": "674c1e83ddc4869601abaeb3d3a318e4dfa3a5bd7768f7d4e4a746f2e9a64805",
+      "bytes": 1151956
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/scenario.json",
+      "sha256": "162cbefdb68feb0e786dd748d955d3755215b4a62a437a3642fa5511a1277126",
+      "bytes": 6364
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/launcher.json",
+      "sha256": "d292f9010cd2dd6bff57eceff69340858d10d6ca368e4f21dbb42b703b771ce3",
+      "bytes": 1016
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/process-epoch.json",
+      "sha256": "b703ba2672ee56c656179a7a3ead49a23b1ea6337bbb845bd4699bca8ed0bb8c",
+      "bytes": 735
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/process.log",
+      "sha256": "1e0bd9993095cf701af1a4f256613112db4798e974baeca01088c86443b58787",
+      "bytes": 488563
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/events.jsonl",
+      "sha256": "b4e51bf6334af8feac5adca1684fba9adbaa28e6821b294a27d742c7f9f66b86",
+      "bytes": 1720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/snapshot-index.json",
+      "sha256": "bf6c808c5ff23009c456ff287db4f53ee2087f55290421c72c8da2c8a3680449",
+      "bytes": 1138
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/input-pristine.omwsave",
+      "sha256": "857cef556973e8af844193d0f4bd5d094ff794c1c4714cf90c487d65c0ec2fa9",
+      "bytes": 10604603
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/actual-engine-environment.json",
+      "sha256": "1390b81f7d49bcc0a3ab5c7942287eb8bcb58c4e980c8f093efc8a5f06f3334e",
+      "bytes": 486
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/script-report.json",
+      "sha256": "61d1416c8b7acac3fab72981e6b8a175413d36650d1b73e8a64b9a3ae77862ae",
+      "bytes": 25625024
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/sdl-input-provenance.json",
+      "sha256": "381d07848c156142c220b4eade22dc3b80a483e1272b147b854358f393a37b5e",
+      "bytes": 1317
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/sdl-input.txt",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/sdl-input.txt.delivered",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/openal.log",
+      "sha256": "73bb2edefda5dc8df0166804a008eb014eb05ebb0c69991d38e56a711f847d4d",
+      "bytes": 3097
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/mixed-output.wav",
+      "sha256": "0bc32962e6b12a09a8d8751589e623dd5e2ac1eb8a13e4c09dcfaa17c3682053",
+      "bytes": 92521028
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/snapshots/save-3.omwsave",
+      "sha256": "f45e5c188596f57b65b77737cee2b51a3a85c5cd907b8d061cb084b0ed314dc7",
+      "bytes": 10674746
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/live-2-3.json",
+      "sha256": "6076372e2940a83b81511ce6d7bfa026e632297c53ceaca4a54a292525da101c",
+      "bytes": 25386784
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/second/resumed-after-recoil.png",
+      "sha256": "c3ba38163fe9e373a79a8e9f59c51201f9e7ee683342fe479021f059e447b57b",
+      "bytes": 1140327
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/manifest.json",
+      "sha256": "e245e80d3fff22614bb8ade555e14acb5fbc451d3331cbee1d264e4952596e18",
+      "bytes": 23318
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/preregistration.json",
+      "sha256": "c71d0700cac0af862fe6e03f9e31a2928500c1eb4f3d089a89c789c926d5409b",
+      "bytes": 1380
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/launcher.py",
+      "sha256": "27a5a845bd6415bc35ff4139ef6a9bfef66b5a15b1b5cbcb684944a7d7c7339e",
+      "bytes": 2037
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/binary-pin.json",
+      "sha256": "4d048ad82ced1f03bd6111af9522356f1d6601bc3ae1f55baa3b70560026258c",
+      "bytes": 167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/staged-input.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/middle-save-verification.json",
+      "sha256": "0a1f5827f9407f937d0ef06de80d9c2d0e21f2d3ef5533d5363605d807d7f75d",
+      "bytes": 926
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/middle-save-screenshot.jpg",
+      "sha256": "eadc1cc53bbfab7767151f5c2191a29cc3cb7021d3d110ce1cb196dabe13cc10",
+      "bytes": 110346
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/middle-save-screenshot-source.json",
+      "sha256": "bfc2f3d96f15f63e811b077812e847d83728634b45a345da1aebbd9393e7c082",
+      "bytes": 592
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/continuation.json",
+      "sha256": "f5bb5b1371750a6b900da7e0cf86f8955a5192c1836ee594003adce8f4cb205f",
+      "bytes": 21527
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/preregistration.json",
+      "sha256": "35a0027895ef7ce35359143b83064c8e20a546d46e7eb03209f8b64856723e09",
+      "bytes": 660
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/launcher.py",
+      "sha256": "79caf06c5cf25caecc7ab10100339a0eb744f517ceacb658b42067e8fca73e20",
+      "bytes": 1992
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/binary-pin.json",
+      "sha256": "4d048ad82ced1f03bd6111af9522356f1d6601bc3ae1f55baa3b70560026258c",
+      "bytes": 167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/staged-input.omwsave",
+      "sha256": "ecf92a404582996e908a489c8788de2ccc3f24d2fe71b442d38f61b90bee93a8",
+      "bytes": 10602796
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/control-reference.json",
+      "sha256": "304d55284601947c9d5ca22310f84a3cb5eb62b6f082b0560f5948feab83916a",
+      "bytes": 1200
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/verify-fork-03.py",
+      "sha256": "93d30bb38f6c50099e7504e139d5fcadf245187b6babc2b227c5738d4d4da232",
+      "bytes": 9055
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/verifier-01.log",
+      "sha256": "e6f3e9e7ca259dc42cee52c5e985dfcb2473bf95f16c4a9d68a3d3b96c16d5f0",
+      "bytes": 1027
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/verify-player-facade.py",
+      "sha256": "d424059da226a276c7c846f8b828802b2d4b403d84d69bfc4f282bcaabae421f",
+      "bytes": 938
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/player-facade-load-verification.json",
+      "sha256": "294a620a515724f8b72dea08da6c9c4707ded2cec7960c455855a552f588934a",
+      "bytes": 668
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/scenario.json",
+      "sha256": "ba046f6a410c63b52e578024ec5bf09fa235c991be1bbc6d1e5c58b0477471b4",
+      "bytes": 9883
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/launcher.json",
+      "sha256": "63c7a9e801f357cbaa8acf2b03f8501b10fe7854f0f4288891048d1da1153563",
+      "bytes": 995
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/process-epoch.json",
+      "sha256": "5f29dc4f1f613bb03e51af0d6559c513bfd365f9a1676e13937a5c9b06122149",
+      "bytes": 717
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/process.log",
+      "sha256": "343652f364520ccd5635b8fb731b1fbcfdbab09d6b75ebd5a50ba9c92bb3f014",
+      "bytes": 682000
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/events.jsonl",
+      "sha256": "72b136e1bdc979626edc08d0260923397feb2ec5843ca7133b1f04d958a6eafb",
+      "bytes": 3042
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/snapshot-index.json",
+      "sha256": "ce15f5bff5a14eea187393208326a16bb67f42e7b5b1538aff39a8270c8ff5a5",
+      "bytes": 3348
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+      "bytes": 10340832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/actual-engine-environment.json",
+      "sha256": "394c4a97725b714dfb33d58eac1dd8719c866401eeffb3e475b8e0611711a561",
+      "bytes": 469
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/script-report.json",
+      "sha256": "b246297af209a83f93cb8abb619d5e2f69466f6f4d65ce461aeab07228aa3ab4",
+      "bytes": 25657362
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/sdl-input-provenance.json",
+      "sha256": "fb22690e50e5c858ad5b8614ac417e65c92b536114aa9daaeea79aa28692eb77",
+      "bytes": 1290
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/sdl-input.txt",
+      "sha256": "625d25cef104da02b54ec78b5aab0f5da728f5050666bb2cf19c5b34337e2b6e",
+      "bytes": 207
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/sdl-input.txt.delivered",
+      "sha256": "625d25cef104da02b54ec78b5aab0f5da728f5050666bb2cf19c5b34337e2b6e",
+      "bytes": 207
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/openal.log",
+      "sha256": "17deb3074073e51f29d13f9b33e9ce7e198defe647d8f604aa3991682b7bd1ac",
+      "bytes": 3070
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/mixed-output.wav",
+      "sha256": "a34e3d526b7b3447f824221eda1a8dcec588b49fc05992929124e38f59cd2a1b",
+      "bytes": 122304068
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/snapshots/save-3.omwsave",
+      "sha256": "59ab0ab5928ea9f5b71f43e1427720a26224c539eb0f5f701642e45d5257290e",
+      "bytes": 10454394
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/live-1-3.json",
+      "sha256": "2adde3c176c7919399ce910d1df60cb038d04a48b813b967cccf53f062973084",
+      "bytes": 24888777
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/snapshots/save-4.omwsave",
+      "sha256": "ecf92a404582996e908a489c8788de2ccc3f24d2fe71b442d38f61b90bee93a8",
+      "bytes": 10602796
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/live-1-4.json",
+      "sha256": "7c019502c8a08f455b243222b350259a6598a860f4c8e7cd7dce25d6484b6122",
+      "bytes": 25243033
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/snapshots/save-5.omwsave",
+      "sha256": "541cfdcf622c1774f0c5521e2887d154659b01876d3035af1ebac9864d7afed1",
+      "bytes": 10667211
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/live-1-5.json",
+      "sha256": "ab654b7501809fadb58cb554470b832b66198975e74b819f455b145a3fa77ae7",
+      "bytes": 25383148
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-03/first/uninterrupted-after-recoil.png",
+      "sha256": "9ba8e337fa57058ab19174c1b24699aa848fb2d42e8690cffd2f524a22f0414e",
+      "bytes": 1125957
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/scenario.json",
+      "sha256": "126c94e2bfd86e8898462c43cd3e019d3a54a6bab39ae33087a7469607dc7eb3",
+      "bytes": 6290
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/launcher.json",
+      "sha256": "49843da7dd9081f429bc5a122a319cbf79da29c6e3c25538c1c27091b3ac9a1e",
+      "bytes": 1004
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/process-epoch.json",
+      "sha256": "abfd192a3b0d007b29f0a0cd62ae5b5ccd01068bb5d465fade507d3fa1d57822",
+      "bytes": 723
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/process.log",
+      "sha256": "0b9076db4ef1a4e1e826d0a81cbf93a4aa226b0b81ae08ad422d8d62059cdb8d",
+      "bytes": 486166
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/events.jsonl",
+      "sha256": "4cde17aa659f9d8cc685cdd181a0462550add4854b18e3ff065cb93b81265cac",
+      "bytes": 1684
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/snapshot-index.json",
+      "sha256": "b578068f0ad6419dfa10d01ef6d7c0641b54c82ec9cf96dd65d6551b72dd26fc",
+      "bytes": 1120
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/input-pristine.omwsave",
+      "sha256": "ecf92a404582996e908a489c8788de2ccc3f24d2fe71b442d38f61b90bee93a8",
+      "bytes": 10602796
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/actual-engine-environment.json",
+      "sha256": "43b7b6bb2c328586ad38bd6140f8ea7830e4d62a9bdaa664d9f66482d21a6649",
+      "bytes": 474
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/script-report.json",
+      "sha256": "991ddcd47a1166551972117edd9b5f1062a62f1c7440791d422a946cc4148763",
+      "bytes": 25626596
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/sdl-input-provenance.json",
+      "sha256": "992f3f491267ad092a8d6d279a2f1ebc0df33bde78779962df40c260965a14bf",
+      "bytes": 1299
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/sdl-input.txt",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/sdl-input.txt.delivered",
+      "sha256": "667b36ac77fd2b5999fbc6678db1c48629b2a181ce50ef62ff849c3a43ae1fbb",
+      "bytes": 129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/openal.log",
+      "sha256": "1dfa7dfad4a872fa36c7f174d3c5bd0884d5a40773efd6df9866be483798c00b",
+      "bytes": 3079
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/mixed-output.wav",
+      "sha256": "e88c0d418d9f53569b3c3279aa97b2f4dcd83e7a0b5b6841436095a7cfcf17da",
+      "bytes": 89940548
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/snapshots/save-3.omwsave",
+      "sha256": "b890e8bf923a70d8994608ec79b1dc297778868f68b19a81e5ef6e741690a9be",
+      "bytes": 10675631
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/live-2-3.json",
+      "sha256": "58df7094cea65f0083d2605be5edc75ce30ce8f66038151f692693a132dc0fd5",
+      "bytes": 25383154
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/second/resumed-after-recoil.png",
+      "sha256": "1b07b9a591128db287bf32375d07ace86b5ac68b017dd6859f5126ed70ccb561",
+      "bytes": 1144794
+    }
+  ],
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-01/prepare-failed.py",
+      "sha256": "4c2042b3d219159f90a79ed4b5c4b912efcbe6d8f1a31df4b6368acba0d47098",
+      "bytes": 3316
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-01/prepare-failure.json",
+      "sha256": "2fc78f62e8fca317d267b0bdf413506dfa28296fb64881f54e582747d4f14483",
+      "bytes": 107
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/second/process.log",
+      "sha256": "18ccf634adf3a74886f23203084b941641478cf4d80915b72dfdfa1513ef0909",
+      "bytes": 879738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/second/launcher.json",
+      "sha256": "14fc2d0893b2ac8c3ae741fadd8bfe4dc3e5f3a4eb9fba326677aa985eec9f90",
+      "bytes": 985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/second/diagnostic-stop-reason.json",
+      "sha256": "68cd00b969cff42e6b9d8539100bd756c431f6f19f4816684abf8bccad0f1a25",
+      "bytes": 251
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/second/diagnostic-termination.json",
+      "sha256": "a2521e08980504d9164174c635d1676c9012bb06a25d2a525c0984b4becbe69a",
+      "bytes": 1928
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/second/snapshot-index.json",
+      "sha256": "ea7fb97fe3e9f5d23aced7a6d19eff76d079c01af322a5c3501602548b293ba4",
+      "bytes": 1120
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-01/first/process.log",
+      "sha256": "acc66cc1de8f81cee3880dc4b599ee0699e50f232f0beb58c601f20db783080d",
+      "bytes": 862365
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-01/first/launcher.json",
+      "sha256": "6cef1455aedfeaa6e3c7fdabd0d3105672a84d0ab21e2b0aad3b921967dd06e5",
+      "bytes": 999
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-01/first/known-activation-focus-failure.json",
+      "sha256": "5abefe410a30bd8d10a7068fec634f7003974f3c17d6d876e00d456099fbcfb8",
+      "bytes": 2355
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-01/first/snapshot-index.json",
+      "sha256": "869c0253155f0937dda587640526ffca862c82dd3bc55cd0b3caa556c10d17e8",
+      "bytes": 2239
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/driver-source.py",
+      "sha256": "2663c60bfb16e356ee8a683fe94aa1140ee14cfed341f357fa6908ce9ce5f52e",
+      "bytes": 4328
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-sanitized-02/checkpoint-selection-failure.json",
+      "sha256": "556687bf330dd805a758eb8b633e6b20e1a03ea4f0c0393df3a1b3763df8940b",
+      "bytes": 295
+    }
+  ],
+  "validation_layers": {
+    "structural": "Unchanged public natural-recovery fixture recipe/script reproduces exact ESP; reuse its hashed receipt and SHA5443fd... staged idle input. No authored actions/poses/outcomes.",
+    "compiler": "Actual game reports9993 compiled units/0 compilation failures in all6 accepted processes.",
+    "semantic": "Independent Python decoder matches every saved T4ST payload to captured live state. Middle inputs require consumed contact2, action7/H2HRecoil, ledger3/RNG334604033 and one final-wear drop. Exact loaded native values/life/clocks/caches/body/packed velocity/full Player/NPC/drop facade.",
+    "runtime": "Normal keyboard/mouse invokes actual block/opponent/contact/3 saves, natural recovery, focused stop and resave. Each fresh continuation loads actual middle snapshot, not quiescent last save; no contact/repeated RNG/drop, finalnext4 and paired recovery. Four wire pairs per fork, distinct process epochs."
+  },
+  "failures_scope": [
+    "Private preparer01 used a nonexistent unexpected_log key before any game;02 used correct forbidden_log.",
+    "Normal un-aimed resume and first un-aimed instrumented control naturally recovered cause2, but Space focus was empty. Newly allocated attacks followed; not replay of contact2. Owned failed courses intentionally stopped, diagnostic normal F5 retained. Explicit normal mouse0/0/80 aim succeeds.",
+    "Instrumented control02 passes, but strict progressed selector rejects authentic time0/easingtrue checkpoint. That is separately preregistered/tested as recovery-start boundary. Control03 waits actual outgoing onehandattackleft retirement before F5 and satisfies strictpositive phase. No forced/native state edits."
+  ],
+  "independent_references": [
+    "M15-ADVANCED-UNARMED-BLOCK-VERIFICATION.json",
+    "M15-ADVANCED-UNARMED-NATURAL-RECOVERY-VERIFICATION.json",
+    "M15-REFERENCE-ROOT-DRIFT-ORACLE-VERIFICATION.json",
+    "M15-ZERO-ABSORPTION-MASTER-DISPATCH-ORACLE-VERIFICATION.json"
+  ],
+  "limits": [
+    "Logical recovery matches, not physical trajectories. Camera/player/NPC placements differ with uncontrolled frame/wall timing; exact loaded state does not close matched physical/FPS/restart gate.",
+    "First-person keyboard/mouse, bare PlayerHTH100/Block25 and one NPC source/no spare only. Other actor/input/view/interruption/power/effect cases remain open.",
+    "No new exact real-content damage oracle, original skin/update, settled-body trajectory or PCM claim. Embedded save JPEG is unmodified last rendered frame; it need not exactly coincide with serialized phase.",
+    "Engine code unchanged; full1845 normal/sanitizer checks reused. Leak detection disabled; no new leak coverage.",
+    "Full M15S4 remains incomplete."
+  ],
+  "visual_review": "Nine captures reviewed: three embedded save JPEGs and six post-recovery images. Player raised BlockHit/release-fade hands partly occlude NPC in checkpoint/instrumented captures; recovered NPC fists are visible in post views. Explicit mouse aim changes resumed framing. Embedded JPEG is the unmodified last rendered frame and can precede serialized state. Loaded caches and live/save comparisons establish exact state; no exact image/phase, original skin or trajectory parity claim.",
+  "full_native_load_payloads": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/full-native-load-payload-diagnostic.json",
+      "sha256": "70ab2891ad614423d0636862e5172585beb007a2b01225856ffafdc024a58ba1",
+      "summary": {
+        "passed": true,
+        "scope": "Entire encoded native load payload against saved input with only original-derived loose linear/angular velocity projection; signed zero/float bits included",
+        "expected_payload_sha256": "9a1a9a60c60e07e745b820263c7e253edf643e8551e8e832e0e1a055ea3a0b19",
+        "loaded_payload_sha256": "9a1a9a60c60e07e745b820263c7e253edf643e8551e8e832e0e1a055ea3a0b19",
+        "differing_keys": []
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-normal-03/verify-full-load.py",
+        "sha256": "dae2846d28ade41c121a88b904d3db79f144f93b9feb72794331c69c568b74ce"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/full-native-load-payload-diagnostic.json",
+      "sha256": "d3a067d780d9a5d078a19e6d1a5f6c342cf8ffe6d0fec57450c22ca8d16f25f3",
+      "summary": {
+        "passed": true,
+        "scope": "Entire encoded native load payload against saved input with only original-derived loose linear/angular velocity projection; signed zero/float bits included",
+        "expected_payload_sha256": "a26e6a7be6a2d05d586863fb3d4aab26da4789c3f17d2b437886f1ba2266495f",
+        "loaded_payload_sha256": "a26e6a7be6a2d05d586863fb3d4aab26da4789c3f17d2b437886f1ba2266495f",
+        "differing_keys": []
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-start-resume-sanitized-01/verify-full-load.py",
+        "sha256": "dae2846d28ade41c121a88b904d3db79f144f93b9feb72794331c69c568b74ce"
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/full-native-load-payload-diagnostic.json",
+      "sha256": "16c5c9b7ca898216d9c3afef5132b6695d2e0e8a330791aec8bc02174765d421",
+      "summary": {
+        "passed": true,
+        "scope": "Entire encoded native load payload against saved input with only original-derived loose linear/angular velocity projection; signed zero/float bits included",
+        "expected_payload_sha256": "d4c87f3517a385e8ba01771ae975965d2a97afbda8664d39b51b1b427743e892",
+        "loaded_payload_sha256": "d4c87f3517a385e8ba01771ae975965d2a97afbda8664d39b51b1b427743e892",
+        "differing_keys": []
+      },
+      "verifier": {
+        "path": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-resume-sanitized-03/verify-full-load.py",
+        "sha256": "dae2846d28ade41c121a88b904d3db79f144f93b9feb72794331c69c568b74ce"
+      }
+    }
+  ]
+}

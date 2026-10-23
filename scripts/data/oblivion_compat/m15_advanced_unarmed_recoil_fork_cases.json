@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "scope": "Actual active-Recoil fresh-process forks: normal progressed phase, instrumented recovery-start boundary, and instrumented progressed phase; logical state recovery without contact/RNG/drop replay",
+  "full_M15S4_acceptance": false,
+  "fixture_recipe": "m15_advanced_unarmed_natural_recovery_fixture.json",
+  "fixture_script": "m15_npc_recoil_opponent.obscript",
+  "idle_input_sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+  "input_policy": "Use unchanged authored idle input; each continuation loads actual middle output from its own control. Never inject contact/reaction/pose or substitute last post-recovery save.",
+  "cases": [
+    {
+      "name": "normal-progressed",
+      "control": "oblivion_m15_advanced_unarmed_recoil_checkpoint.json",
+      "resume": "oblivion_m15_advanced_unarmed_recoil_resume.json",
+      "save_selector": "Require three control snapshots; select second by numeric event sequence, verify active NPC H2H Recoil/action7/contact2consumed/ledgernext3/RNG334604033/one drop; pin actual checksum before continuation.",
+      "checkpoint_profile": "strictpositive time0.1660003662109375 in retained course, below stop0.733334",
+      "Player_views": "Both body and first-person BlockHit present; restore exact phases and naturally recover each once",
+      "normal_stop_input": "B held; explicit mouse0/0/80 aim before focused second activation after natural NPC recovery. Normal retained control had no extra aim; instrumented controls aim after middle save.",
+      "expected": {
+        "control_contacts": 1,
+        "resume_contacts": 0,
+        "wire_pairs": 4,
+        "combat_draws": 2,
+        "final_rng": 334604033,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "next_windup_cancelled": 3,
+        "source_and_Player_actions": -1,
+        "drop_count": 1,
+        "drop_condition": 55.70000076293945
+      }
+    },
+    {
+      "name": "sanitized-start",
+      "control": "oblivion_m15_advanced_unarmed_recoil_start_control_sanitized.json",
+      "resume": "oblivion_m15_advanced_unarmed_recoil_start_resume_sanitized.json",
+      "save_selector": "Require three control snapshots; select second by numeric event sequence, verify active NPC H2H Recoil/action7/contact2consumed/ledgernext3/RNG334604033/one drop; pin actual checksum before continuation.",
+      "checkpoint_profile": "time0/easingtrue",
+      "Player_views": "Both body and first-person BlockHit present; restore exact phases and naturally recover each once",
+      "normal_stop_input": "B held; explicit mouse0/0/80 aim before focused second activation after natural NPC recovery. Normal retained control had no extra aim; instrumented controls aim after middle save.",
+      "expected": {
+        "control_contacts": 1,
+        "resume_contacts": 0,
+        "wire_pairs": 4,
+        "combat_draws": 2,
+        "final_rng": 334604033,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "next_windup_cancelled": 3,
+        "source_and_Player_actions": -1,
+        "drop_count": 1,
+        "drop_condition": 55.70000076293945
+      }
+    },
+    {
+      "name": "sanitized-progressed",
+      "control": "oblivion_m15_advanced_unarmed_recoil_progress_control_sanitized.json",
+      "resume": "oblivion_m15_advanced_unarmed_recoil_progress_resume_sanitized.json",
+      "save_selector": "Require three control snapshots; select second by numeric event sequence, verify active NPC H2H Recoil/action7/contact2consumed/ledgernext3/RNG334604033/one drop; pin actual checksum before continuation.",
+      "checkpoint_profile": "strictpositive time0.1660003662109375 in retained course, below stop0.733334",
+      "Player_views": "Both body and first-person BlockHit present; restore exact phases and naturally recover each once",
+      "normal_stop_input": "B held; explicit mouse0/0/80 aim before focused second activation after natural NPC recovery. Normal retained control had no extra aim; instrumented controls aim after middle save.",
+      "expected": {
+        "control_contacts": 1,
+        "resume_contacts": 0,
+        "wire_pairs": 4,
+        "combat_draws": 2,
+        "final_rng": 334604033,
+        "final_ledger": {
+          "next": 4,
+          "pending": []
+        },
+        "next_windup_cancelled": 3,
+        "source_and_Player_actions": -1,
+        "drop_count": 1,
+        "drop_condition": 55.70000076293945
+      }
+    }
+  ],
+  "validation": {
+    "structural": "Unchanged public natural-recovery fixture recipe/script reproduces exact ESP; reuse its hashed receipt and SHA5443fd... staged idle input. No authored actions/poses/outcomes.",
+    "compiler": "Actual game reports9993 compiled units/0 compilation failures in all6 accepted processes.",
+    "semantic": "Independent Python decoder matches every saved T4ST payload to captured live state. Middle inputs require consumed contact2, action7/H2HRecoil, ledger3/RNG334604033 and one final-wear drop. Exact loaded native values/life/clocks/caches/body/packed velocity/full Player/NPC/drop facade.",
+    "runtime": "Normal keyboard/mouse invokes actual block/opponent/contact/3 saves, natural recovery, focused stop and resave. Each fresh continuation loads actual middle snapshot, not quiescent last save; no contact/repeated RNG/drop, finalnext4 and paired recovery. Four wire pairs per fork, distinct process epochs."
+  },
+  "limits": [
+    "Logical recovery matches, not physical trajectories. Camera/player/NPC placements differ with uncontrolled frame/wall timing; exact loaded state does not close matched physical/FPS/restart gate.",
+    "First-person keyboard/mouse, bare PlayerHTH100/Block25 and one NPC source/no spare only. Other actor/input/view/interruption/power/effect cases remain open.",
+    "No new exact real-content damage oracle, original skin/update, settled-body trajectory or PCM claim. Embedded save JPEG is unmodified last rendered frame; it need not exactly coincide with serialized phase.",
+    "Engine code unchanged; full1845 normal/sanitizer checks reused. Leak detection disabled; no new leak coverage.",
+    "Full M15S4 remains incomplete."
+  ],
+  "receipt": "M15-ADVANCED-UNARMED-RECOIL-RESTART-VERIFICATION.json"
+}

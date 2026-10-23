@@ -17049,3 +17049,55 @@ pins both accepted courses and 106 runtime/fixture artifacts. This closes the
 bounded natural H2H Recoil recovery after NPC disarm and post-recovery restart.
 Save during active Recoil, matched in-reaction continuation and the complete
 M15S4 matrix remain open.
+
+
+### Actual active-Recoil fresh-process forks
+
+Three control/resume pairs now test a consumed contact while reaction is active:
+normal and ASan/UBSan at NPC Recoil time .1660003662109375, plus an instrumented
+recovery-start checkpoint at time 0 with easing true. Both Player BlockHit
+views are also present. Each control makes pre-contact, active-reaction and
+post-recovery saves; its fresh process loads the second save, never the last.
+The progressed instrumented control waits the actual outgoing onehandattackleft
+retirement event before F5. The immediate F5 start-boundary result stays a
+separate profile; its failed strict-positive selector is retained.
+
+All three forks pass four exact live/save wire pairs each, with distinct
+process epochs. Initial native values/life, manager and actor update times,
+animation clocks, owned reaction/held caches, physical body/native packed
+velocity and full Player/NPC/drop facades restore exactly. Player body and
+first-person BlockHit and NPC Recoil naturally recover once. A focused second
+normal activation cancels the new action 3 windup before another contact.
+Final ledger next 4/pending empty, RNG 334604033, exact Player Damage, source
+inventory removal and the sole condition-55.70000076293945 drop match the
+uninterrupted branch. Exact pre/middle actor-value, inventory, contact-token
+and played-sound checks also pass.
+
+The first un-aimed normal resume and instrumented control recover correctly,
+but Space focus is empty and new attacks follow. Those failures are retained;
+they do not replay contact 2. Explicit normal mouse aim 0/0/80 before activation
+fixes the course. Camera/player/NPC placements differ after simulation resumes,
+and wall/frame timing is uncontrolled. This verifies logical recovery and
+exact load state, not matched physical continuation or the complete S4 restart
+gate. Full Player facades do match exactly at load before those later changes.
+
+Nine captures were reviewed, including unmodified embedded JPEGs from the
+actual active saves. Player hands partly obscure the NPC in reaction/fade
+views. Save screenshots are the last rendered frame and need not exactly
+coincide with serialized phase. No original skin/update, matched trajectory,
+new exact real-content numeric damage or PCM claim follows. The unchanged
+normal/instrumented full 1,845-test suites are reused; no engine code changed.
+
+[M15-ADVANCED-UNARMED-RECOIL-RESTART-VERIFICATION.json](M15-ADVANCED-UNARMED-RECOIL-RESTART-VERIFICATION.json)
+pins six accepted processes, twelve wire pairs and 176 artifacts, plus retained
+failures. Editable actual normal and instrumented scenarios and the fork case
+protocol accompany it. Lower Hand to Hand general-hit processing, directional
+power/effects, selected Player/Creature/spare consequences and the remaining
+input/view/FPS/interruption and matched physical campaigns remain open.
+
+Supplemental checks match the entire encoded native load payload bit for bit
+in all three fork profiles, including signed zeros. Only the documented loose
+linear/angular velocity projection from authoritative packed state is applied
+to the expected view. This strengthens load-state fidelity without asserting
+identical subsequent motion. Receipts and replayable checks are pinned in the
+active-Recoil restart verification index.

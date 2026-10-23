@@ -11486,3 +11486,43 @@ accompany
 The receipt pins 106 artifacts. Active-Recoil save/restart and its uninterrupted
 comparison remain open, along with the other recorded S4 gaps. **M15S4 remains
 incomplete.**
+
+
+## Active-Recoil logical restart
+
+Normal and instrumented progressed Recoil snapshots at .1660003662109375 now
+resume in fresh processes, alongside an instrumented time-0/easing boundary.
+Each control saves before contact, during actual owned reactions and after
+natural recovery; continuation uses the real middle save. Both Player reaction
+views and NPC Recoil restore their exact native state and naturally recover.
+A second focused activation cancels newly allocated windup 3; contact 2, its
+RNG and final-wear drop never replay. Final ledger next 4 is empty and RNG
+334604033, Player Damage, equipment and the single condition-55.7 drop match
+logical uninterrupted outcomes.
+
+All three forks pass four exact wire pairs each: six accepted processes and
+twelve comparisons. Whole Player/NPC/drop facades, values/life, clocks, owned
+caches and body/native packed velocity restore exactly at load. Actual game
+compiler reports 9,993 units and no failures in each process. Nine captures
+were reviewed; last-rendered save JPEGs are not exact phase/image evidence.
+
+The empty-focus failures and strict-positive selector's rejection of a genuine
+start-phase checkpoint are retained. Explicit mouse aim solves the activation
+course; the zero-time and progressed profiles are reported separately. No
+engine code changed; existing normal/sanitizer full 1,845-test checks are reused,
+with leak detection disabled.
+
+[M15-ADVANCED-UNARMED-RECOIL-RESTART-VERIFICATION.json](M15-ADVANCED-UNARMED-RECOIL-RESTART-VERIFICATION.json)
+pins 176 artifacts and the retained failures; editable actual scenarios and
+`m15_advanced_unarmed_recoil_fork_cases.json` provide the source. Camera and actor
+placements differ under uncontrolled frame/wall timing. This closes a bounded
+logical in-reaction restart case, **not matched physical continuation or full
+M15S4**. Remaining lower-rank/general-hit, power/effect, selected Player/Creature/
+spare and input/view/FPS/interruption gates stay open.
+
+Supplemental checks match the entire encoded native load payload bit for bit
+in all three fork profiles, including signed zeros. Only the documented loose
+linear/angular velocity projection from authoritative packed state is applied
+to the expected view. This strengthens load-state fidelity without asserting
+identical subsequent motion. Receipts and replayable checks are pinned in the
+active-Recoil restart verification index.
