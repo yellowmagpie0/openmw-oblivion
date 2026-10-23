@@ -210,6 +210,21 @@ namespace EsmTool
                 std::cout << "\n  BaseObj: " << value.mBaseObj;
             if constexpr (ESM4::HasEditorId<T>)
                 std::cout << "\n  EditorId: " << value.mEditorId;
+            if constexpr (std::is_same_v<T, ESM4::Quest>)
+            {
+                std::cout << "\n  QuestDialogueForm: " << reader.getFormKeyFromHeader().serialize()
+                          << "\n  QuestDialogueConditions: " << value.mDialogueConditions.size();
+                for (const auto& condition : value.mDialogueConditions)
+                    std::cout << "\n  QuestDialogueCondition: bytes=" << unsigned(condition.mEncodedSize)
+                              << " flags=" << unsigned(condition.mFlags) << " function=" << condition.mFunction
+                              << " comparisonBits=" << std::bit_cast<std::uint32_t>(condition.mComparisonValue)
+                              << " parameter1=" << condition.mParameter1.mRaw
+                              << " parameter2=" << condition.mParameter2.mRaw
+                              << " tail=" << condition.mUnknownTail
+                              << " global=" << condition.mComparisonGlobalKey.serialize()
+                              << " reference1=" << condition.mParameter1.mReferenceKey.serialize()
+                              << " reference2=" << condition.mParameter2.mReferenceKey.serialize();
+            }
             if constexpr (std::is_same_v<T, ESM4::Skill>)
             {
                 if (value.mData)

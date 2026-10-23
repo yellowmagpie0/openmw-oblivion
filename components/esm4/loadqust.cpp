@@ -44,6 +44,7 @@ void ESM4::Quest::load(ESM4::Reader& reader)
     std::optional<std::uint16_t> currentStage;
     std::optional<std::uint32_t> currentEntry;
     std::uint32_t nextEntry = 0;
+    bool dialogueScope = true;
     const auto finishScript = [&]() {
         if (scriptStarted)
             mResultScripts.push_back(std::move(currentScript));
@@ -62,6 +63,9 @@ void ESM4::Quest::load(ESM4::Reader& reader)
     while (reader.getSubRecordHeader())
     {
         const ESM4::SubRecordHeader& subHdr = reader.subRecordHeader();
+        if (subHdr.typeId == ESM::fourCC("INDX") || subHdr.typeId == ESM::fourCC("QSDT")
+            || subHdr.typeId == ESM::fourCC("QSTA"))
+            dialogueScope = false;
         switch (subHdr.typeId)
         {
             case ESM::fourCC("EDID"):
@@ -91,15 +95,26 @@ void ESM4::Quest::load(ESM4::Reader& reader)
             case ESM::fourCC("SCRI"):
                 reader.getFormId(mQuestScript);
                 break;
-            case ESM::fourCC("CTDA"): // FIXME: how to detect if 1st/2nd param is a formid?
+            case ESM::fourCC("CTDA"):
+            case ESM::fourCC("CTDT"):
             {
-                if (subHdr.dataSize == 24) // TES4
+                const bool legacy = subHdr.typeId == ESM::fourCC("CTDT");
+                if (legacy && subHdr.dataSize != 20)
+                    reader.fail("QUST CTDT must have 20 bytes");
+                if (!reader.hasFormVersion() && !legacy && subHdr.dataSize != 24)
+                    reader.fail("TES4 QUST CTDA must have 24 bytes");
+                if (subHdr.dataSize == 24 || (legacy && subHdr.dataSize == 20))
                 {
-                    TargetCondition cond;
-                    reader.get(&cond, 24);
-                    reader.recordCurrentSubRecordFormIds(cond, 24);
-                    cond.reference = 0; // unused in TES4 but keep it clean
+                    std::vector<std::uint8_t> data(subHdr.dataSize);
+                    if (!reader.get(data.data(), data.size()))
+                        reader.fail("QUST condition is truncated");
+                    TargetCondition cond{};
+                    std::memcpy(&cond, data.data(), data.size());
+                    reader.recordCurrentSubRecordFormIds(data);
                     mTargetConditions.push_back(cond);
+                    if (!reader.hasFormVersion() && dialogueScope)
+                        mDialogueConditions.push_back(decodePackageCondition(data,
+                            [&reader](ESM::FormId raw) { return reader.resolveRawFormId(raw); }));
                 }
                 else if (subHdr.dataSize == 28)
                 {

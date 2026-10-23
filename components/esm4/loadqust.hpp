@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "script.hpp" // TargetCondition, ScriptDefinition
+#include "aipackagedata.hpp"
 #include <components/esm/defs.hpp>
 #include <components/esm/formid.hpp>
 #include <components/esm/formkey.hpp>
@@ -73,6 +74,9 @@ namespace ESM4
         QuestData mData;
 
         std::vector<TargetCondition> mTargetConditions;
+        // TES4 quest-level eligibility, excluding stage/log/target conditions.
+        // Keep the legacy raw sequence above and resolve canonical FormKeys here.
+        std::vector<PackageCondition> mDialogueConditions;
 
         std::vector<ScriptDefinition> mResultScripts;
 

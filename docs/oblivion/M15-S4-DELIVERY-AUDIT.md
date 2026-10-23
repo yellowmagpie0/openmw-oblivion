@@ -11867,3 +11867,47 @@ case protocol. The preceding receipt supplies the original 131,072-case random
 condition/script proof. Generic package random policy remains separate.
 Automatic common-hit speech/publication, quest conditions, INFO history/results
 and full M15S4 normal-input and fresh-process acceptance remain open.
+
+
+## Quest dialogue condition decoder and composition
+
+Native QUST root CTDA/CTDT rows now have a canonical condition vector with
+stable FormKeys. INDX, QSDT and QSTA end the root scope, keeping stage, log and
+target conditions out of dialogue eligibility. The existing raw sequence
+remains available. Native CTDA must contain 24 bytes and legacy CTDT 20 bytes.
+The typed esmtool dump exposes ordered numeric fields and resolved keys.
+An actual ESMStore regression covers compressed records, reordered masters,
+winning overrides, scalar/global/reference preservation and deletion.
+
+Original INFO admission at 530830 and list evaluator at 56A510 establish quest
+conditions before INFO conditions. A quest OR group can cross into INFO, so
+separate evaluations joined with AND are incorrect. The new composition helper
+plus production evaluator matches all 14,450 Boolean cases and exact predicate
+visitation in normal and ASan/UBSan comparisons. The initial INFO-first
+hypothesis was falsified by visitation despite matching Boolean output; the
+failed expectation and corrected preregistration are retained. Predicate
+results are supplied at the declared native boundary; this does not prove
+actual predicates, INFO history, result scripts or audio.
+
+Independent raw decoding of base Oblivion.esm agrees with the final typed dump
+on 390 quest keys and 719 root conditions, including count, order, byte size and
+every raw numeric field. The raw walk classified 3,784 total quest condition
+rows. This is a base-file comparison, not a winning installed-override claim.
+The complete official M14 and M15 inventories/count locks pass separately.
+These inventory checks do not establish native predicate semantics.
+The typed comparison also extends to every quest record in all 11 official
+plugins: 416 quest records, 726 root conditions and 4,080 total quest condition
+rows match independent raw decoding, with header-master-based identities.
+This is a per-file comparison, not a winning-override semantic merge.
+
+Normal components pass 3,009 tests; sanitized ESM4 suites pass 862. Both full
+engine inventories pass 1,857 tests. These are decoder, store and automated
+engine validation layers. No compiler/world gameplay, rendered audio, normal
+input or fresh-process acceptance is added. Leak detection is disabled.
+
+[M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json](M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json)
+pins source, tests, native composition, retained falsification, comparisons and
+the editable case protocol. Live Say/SayTo admission remains pending predicate
+authority fixes; this chunk adds the canonical data and composition helper.
+Automatic common-hit speech/resource/condition preparation and publication,
+INFO history/results and complete M15S4 gameplay/restart acceptance remain open.

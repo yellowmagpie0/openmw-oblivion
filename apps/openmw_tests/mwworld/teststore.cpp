@@ -1,6 +1,9 @@
 #include "apps/openmw/mwworld/worldmodel.hpp"
 #include <components/esm3/readerscache.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadqust.hpp>
+#include <components/esm4/loadpack.hpp>
+#include <zlib.h>
 #include <components/esm4/loadland.hpp>
 #include "apps/openmw/mwmechanics/spelllist.hpp"
 
@@ -9,6 +12,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <fstream>
 #include <span>
 #include <optional>
@@ -1972,4 +1976,80 @@ TEST(MWWorldStoreRetentionTest, ExchangeKeepsClearAndPublicationGenerationsInThe
     auto next = store.prepareDynamicRecords(std::make_unique<MWWorld::ESMStore>());
     ASSERT_TRUE(runtime.exchange()); runtime.discard();
     store.clearDynamic(); EXPECT_TRUE(next.commit());
+}
+
+TEST(MWWorldStoreTest, tes4QuestDialogueConditionsResolveMastersOverridesCompressionAndDeletion)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{{"base.esm", 1}, {"other.esm", 2}, {"patch.esp", 3}};
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, std::uint32_t reference, bool patch, bool deleted, bool compressed) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900}));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        ESM4::AIPackage::CTDA condition{};
+        condition.fnIndex = 72; condition.param1 = reference; condition.param2 = 0x11223344;
+        condition.compValue = 1;
+        if (patch)
+        {
+            condition.condition = 4;
+            const std::uint32_t global = 0x01000899;
+            std::memcpy(&condition.compValue, &global, sizeof(global));
+        }
+        std::string payload = sub(ESM::fourCC("DATA"), std::string("\x01\x32", 2))
+            + sub(ESM::fourCC("CTDA"), bytes(condition));
+        if (patch)
+        {
+            condition.fnIndex = 77;
+            payload += sub(ESM::fourCC("INDX"), bytes(std::uint16_t{10}))
+                + sub(ESM::fourCC("CTDA"), bytes(condition));
+        }
+        std::uint32_t flags = deleted ? ESM4::Rec_Deleted : 0u;
+        if (deleted) payload.clear();
+        else if (compressed)
+        {
+            uLongf length = compressBound(payload.size());
+            std::string encoded(length, '\0');
+            ASSERT_EQ(compress2(reinterpret_cast<Bytef*>(encoded.data()), &length,
+                reinterpret_cast<const Bytef*>(payload.data()), payload.size(), Z_BEST_SPEED), Z_OK);
+            encoded.resize(length);
+            payload = bytes(static_cast<std::uint32_t>(payload.size())) + encoded;
+            flags |= ESM4::Rec_Compressed;
+        }
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4, 0, ESM4::Rec_ESM, header)
+            + record(ESM4::REC_QUST, form, flags, payload), std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name)); reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 0x810, false, false, true);
+    load("other.esm", {}, 0x800, 0x820, false, false, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::Quest>(base), nullptr);
+    ASSERT_EQ(store.search<ESM4::Quest>(base)->mDialogueConditions.size(), 1u);
+    EXPECT_EQ(store.search<ESM4::Quest>(base)->mDialogueConditions[0].mParameter1.mReferenceKey,
+        ESM::FormKey::content("base.esm", 0x810));
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 0x888, true, false, false);
+    const auto* winning = store.search<ESM4::Quest>(base); ASSERT_NE(winning, nullptr);
+    ASSERT_EQ(winning->mDialogueConditions.size(), 1u);
+    ASSERT_EQ(winning->mTargetConditions.size(), 2u);
+    EXPECT_EQ(winning->mDialogueConditions[0].mParameter1.mReferenceKey, ESM::FormKey::content("other.esm", 0x888));
+    EXPECT_EQ(winning->mDialogueConditions[0].mComparisonGlobalKey, ESM::FormKey::content("base.esm", 0x899));
+    EXPECT_EQ(winning->mDialogueConditions[0].mParameter2.mRaw, 0x11223344u);
+    EXPECT_EQ(store.search<ESM4::Quest>(other)->mDialogueConditions[0].mParameter1.mReferenceKey,
+        ESM::FormKey::content("other.esm", 0x820));
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 0, false, true, false);
+    EXPECT_EQ(store.search<ESM4::Quest>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::Quest>(other), nullptr);
 }

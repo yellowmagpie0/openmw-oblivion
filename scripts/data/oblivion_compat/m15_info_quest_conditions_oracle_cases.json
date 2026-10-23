@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "scope": "Original 530830 quest/INFO Boolean condition composition",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "matrix": {
+    "info_lengths": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "quest_lengths": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "or_flags": "All masks over INFO rows followed by quest rows; each current-row bit joins following row in execution order",
+    "predicate_results": "All Boolean masks",
+    "x87_control_words": [
+      639,
+      895
+    ]
+  },
+  "expected_cases": 14450,
+  "expectation": "Quest rows precede INFO rows. Evaluate the concatenation lazily, including OR groups crossing the quest/INFO boundary; compare exact visitation and Boolean outcome.",
+  "boundaries": [
+    "Original 530830 and 56A510 execute",
+    "Predicate56AC50 returns supplied Boolean,clears extra-out byte,ret12",
+    "Null actor/target, nonnull quest; flags/deletion/history excluded"
+  ],
+  "retained_falsification": "Initial INFO-first expectation falsified at178 completed cases; exact visitation disagreed despite matching false result.",
+  "base_content_audit": {
+    "plugin": "Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "quests": 390,
+    "dialogue_conditions": 719,
+    "all_quest_conditions": 3784,
+    "root_ends_at": [
+      "INDX",
+      "QSDT",
+      "QSTA"
+    ],
+    "fields": [
+      "bytes",
+      "flags",
+      "function",
+      "comparisonBits",
+      "parameter1",
+      "parameter2",
+      "tail"
+    ]
+  },
+  "receipt": "docs/oblivion/M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json",
+  "official_per_file_comparison": {
+    "plugins": 11,
+    "quest_records": 416,
+    "dialogue_conditions": 726,
+    "all_quest_conditions": 4080,
+    "scope": "Every record in each official plugin independently; no winning-override semantic merge"
+  }
+}

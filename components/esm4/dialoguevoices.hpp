@@ -9,10 +9,20 @@
 #include <stdexcept>
 
 #include "loadinfo.hpp"
+#include "loadqust.hpp"
 #include "loadrace.hpp"
 
 namespace ESM4
 {
+    // Original530830 starts with quest eligibility and appends INFO predicates
+    // to the same list traversal. A final quest OR flag joins the first INFO.
+    inline std::vector<PackageCondition> dialogueInfoConditions(const Quest& quest, const DialogInfo& info)
+    {
+        auto conditions = quest.mDialogueConditions;
+        conditions.insert(conditions.end(), info.mCanonicalConditions.begin(), info.mCanonicalConditions.end());
+        return conditions;
+    }
+
     // Original52F010, after topic/quest/link/history admission. Conditions are
     // lazy: a matching RandomEnd or nonrandom entry ends traversal. Candidate
     // insertion446CB0 prepends; modulo selection therefore reverses acceptance

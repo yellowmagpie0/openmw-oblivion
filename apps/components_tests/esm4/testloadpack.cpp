@@ -5,6 +5,7 @@
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/idletree.hpp>
 #include <components/esm4/dialoguevoices.hpp>
+#include <components/esm4/aiconditions.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
 #include <components/toutf8/toutf8.hpp>
@@ -128,6 +129,21 @@ namespace
         EXPECT_TRUE(reader.getRecordHeader());
         reader.getRecordData();
         ESM4::DialogInfo result;
+        result.load(reader);
+        return result;
+    }
+
+    ESM4::Quest loadQuest(const std::vector<char>& payload)
+    {
+        std::vector<char> plugin = makeHeader();
+        appendRecord(plugin, ESM4::REC_QUST, 0, 0x4321, payload);
+        auto stream = std::make_unique<std::stringstream>(
+            std::string(plugin.begin(), plugin.end()), std::ios::in | std::ios::binary);
+        const ToUTF8::StatelessUtf8Encoder encoder(ToUTF8::WINDOWS_1252);
+        ESM4::Reader reader(std::move(stream), "memory.esm", nullptr, &encoder, true);
+        EXPECT_TRUE(reader.getRecordHeader());
+        reader.getRecordData();
+        ESM4::Quest result{};
         result.load(reader);
         return result;
     }
@@ -563,4 +579,72 @@ TEST(ESM4LoadInfo, EmptyOrRejectedInfoSelectionDoesNotDrawAndUsedDrawMustBeRawNa
     EXPECT_EQ(ESM4::selectDialogueInfo({}, [](const auto&) { return true; }, invalid), nullptr);
     EXPECT_EQ(ESM4::selectDialogueInfo(infos, [](const auto&) { return false; }, invalid), nullptr);
     EXPECT_THROW(ESM4::selectDialogueInfo(infos, [](const auto&) { return true; }, invalid), std::invalid_argument);
+}
+
+TEST(ESM4LoadQuest, DialogueConditionsExcludeStageAndTargetScopesAndRetainLegacyRows)
+{
+    for (const auto boundary : {ESM::fourCC("INDX"), ESM::fourCC("QSDT"), ESM::fourCC("QSTA")})
+    {
+        std::vector<char> payload;
+        ESM4::AIPackage::CTDA row{};
+        row.fnIndex = 72; row.param1 = 0x3456; row.compValue = 1; row.condition = 1;
+        appendSubRecord(payload, ESM::fourCC("CTDA"), bytes(row));
+        row.fnIndex = 58; row.condition = 0; row.compValue = 3;
+        auto legacy = bytes(row); legacy.resize(20);
+        appendSubRecord(payload, ESM::fourCC("CTDT"), legacy);
+        appendSubRecord(payload, boundary, boundary == ESM::fourCC("INDX")
+            ? bytes(std::uint16_t{10}) : std::vector<char>(boundary == ESM::fourCC("QSTA") ? 8 : 1, 0));
+        row.fnIndex = 77;
+        appendSubRecord(payload, ESM::fourCC("CTDA"), bytes(row));
+        const auto quest = loadQuest(payload);
+        ASSERT_EQ(quest.mTargetConditions.size(), 3u);
+        ASSERT_EQ(quest.mDialogueConditions.size(), 2u);
+        EXPECT_EQ(quest.mDialogueConditions[0].mFunction, 72);
+        EXPECT_TRUE(quest.mDialogueConditions[0].mOr);
+        EXPECT_EQ(quest.mDialogueConditions[0].mParameter1.mReferenceKey,
+            ESM::FormKey::content("memory.esm", 0x3456));
+        EXPECT_EQ(quest.mDialogueConditions[1].mFunction, 58);
+        EXPECT_EQ(quest.mDialogueConditions[1].mEncodedSize, 20);
+        EXPECT_EQ(quest.mTargetConditions[2].functionIndex, 77);
+    }
+}
+
+TEST(ESM4LoadQuest, RejectsMalformedNativeConditionLengths)
+{
+    for (const unsigned size : {0u, 20u, 23u, 25u, 28u})
+    {
+        std::vector<char> payload;
+        appendSubRecord(payload, ESM::fourCC("CTDA"), std::vector<char>(size));
+        EXPECT_THROW(loadQuest(payload), std::runtime_error);
+    }
+    for (const unsigned size : {0u, 19u, 21u, 24u})
+    {
+        std::vector<char> payload;
+        appendSubRecord(payload, ESM::fourCC("CTDT"), std::vector<char>(size));
+        EXPECT_THROW(loadQuest(payload), std::runtime_error);
+    }
+}
+
+TEST(ESM4LoadQuest, DialogueSequenceJoinsQuestBeforeInfoAcrossOrBoundary)
+{
+    ESM4::Quest quest{};
+    ESM4::DialogInfo info{};
+    ESM4::PackageCondition first;
+    first.mFunction = 77; first.mOr = true; first.mOperator = ESM4::ConditionOperator::Equal;
+    first.mComparisonValue = 1;
+    quest.mDialogueConditions.push_back(first);
+    auto last = first; last.mFunction = 14; last.mOr = false;
+    info.mCanonicalConditions.push_back(last);
+    const auto combined = ESM4::dialogueInfoConditions(quest, info);
+    ASSERT_EQ(combined.size(), 2u);
+    ESM4::ConditionEvaluationContext context;
+    unsigned calls = 0;
+    context.mResolve = [&](const auto& condition, auto) {
+        ++calls;
+        return ESM4::ConditionValue::value(condition.mFunction == 77 ? 1 : 0);
+    };
+    EXPECT_EQ(ESM4::evaluateConditions(combined, context), ESM4::ConditionResult::True);
+    EXPECT_EQ(calls, 1u);
+    quest.mDialogueConditions[0].mOr = false;
+    EXPECT_EQ(ESM4::evaluateConditions(ESM4::dialogueInfoConditions(quest, info), context), ESM4::ConditionResult::False);
 }
