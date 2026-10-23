@@ -648,3 +648,22 @@ TEST(ESM4LoadQuest, DialogueSequenceJoinsQuestBeforeInfoAcrossOrBoundary)
     quest.mDialogueConditions[0].mOr = false;
     EXPECT_EQ(ESM4::evaluateConditions(ESM4::dialogueInfoConditions(quest, info), context), ESM4::ConditionResult::False);
 }
+
+TEST(ESM4LoadInfo, NativeHistoryAdmissionAndResponseResultFlagsRemainSeparate)
+{
+    ESM4::DialogInfo info{};
+    info.mInfoFlags = ESM4::INFO_SayOnce;
+    EXPECT_TRUE(ESM4::dialogueInfoHistoryEligible(info, true, false));
+    EXPECT_FALSE(ESM4::dialogueInfoHistoryEligible(info, true, true));
+    EXPECT_FALSE(ESM4::dialogueInfoHistoryEligible(info, false, false));
+    info.mFlags = 0x20;
+    EXPECT_FALSE(ESM4::dialogueInfoHistoryEligible(info, true, false));
+    info.mFlags = 0;
+    info.mInfoFlags = ESM4::INFO_InfoRefusal;
+    EXPECT_TRUE(ESM4::dialogueInfoHistoryEligible(info, true, true));
+    EXPECT_TRUE(ESM4::dialogueResponseRunsResult(info.mInfoFlags, true));
+    EXPECT_FALSE(ESM4::dialogueResultMarksSpoken(info.mInfoFlags));
+    EXPECT_FALSE(ESM4::dialogueResponseRunsResult(0, false));
+    EXPECT_FALSE(ESM4::dialogueResponseRunsResult(ESM4::INFO_RunImmediately, true));
+    EXPECT_TRUE(ESM4::dialogueResultMarksSpoken(ESM4::INFO_RunImmediately)); // Direct core differs.
+}

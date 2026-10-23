@@ -17742,3 +17742,36 @@ Speech eligibility and result callbacks do not consume this authority yet.
 No rendered speech/history restart course or additional M15S4 gameplay gate is
 claimed. All 105 winning installed Hit INFOs have no NAME additional-topic
 entries; this inventory does not implement generic AddTopics effects.
+
+
+### Scripted speech response and spoken-history integration
+
+Loaded Say/SayTo now selects INFO identity before audio resolution. Deleted,
+null-quest and spoken SayOnce entries are rejected before condition/RNG visits.
+The response callback precedes voice resolution/playback, so missing audio still
+runs result/history effects. RunImmediately suppresses that callback; Refusal
+suppresses marking. Disabled/missing/failed result code still permits history
+marking after the VM attempt. The public VM-only result utility is unchanged.
+
+Production helpers match 38,912 original instruction observations, with both
+false-policy negative controls rejected. Full normal components pass 3,016 tests,
+sanitizer ESM4 components 869, both full engine profiles 1,866 and Python 393.
+Retained compile/predicate fixture failures and a deliberately aborted stale
+sanitizer run are distinguished from the final matching-source passes.
+
+An editable fixture preserves the already-SayOnce INFO `0x150C7` response bytes
+and flags while assigning an isolated topic/quest. Independent raw reinspection
+and typed parsing pass. A rendered 63.142601-second process speaks its original
+2.2205-second line once, then filters it. An 81.698547-second fresh process loads
+a protected copied save, returns zero for both Say calls and resaves the same
+schema-64 history without replay. The PIDs/epochs differ; binary/live histories,
+pristine save hashes, loaded archives, audio and reviewed captures are retained.
+Both processes compile 10,470 units without failures and have zero ScriptManager
+diagnostics. Separately, startup observation records 31 deferred commands in
+unrelated quests (AddTopic, SetUnconscious, RemoveSpell, ModDisposition); the
+continuation has none. These remain visible limitations, not speech failures.
+
+See [M15-SCRIPTED-SPEECH-HISTORY-VERIFICATION.json](M15-SCRIPTED-SPEECH-HISTORY-VERIFICATION.json).
+INFO AddTopics effects remain outside this change; the 105 winning installed Hit
+INFOs and this fixture have no NAME entries. Automatic common-hit speech wiring
+and the remaining normal-input/opponent/mastery/restart gates are still open.

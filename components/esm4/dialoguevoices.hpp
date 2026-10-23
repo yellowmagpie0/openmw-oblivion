@@ -14,6 +14,26 @@
 
 namespace ESM4
 {
+    // Original530830 rejects these entries before visiting any condition.
+    inline bool dialogueInfoHistoryEligible(const DialogInfo& info, bool hasQuest, bool hasSpoken)
+    {
+        return !(info.mFlags & 0x20) && hasQuest && (!(info.mInfoFlags & INFO_SayOnce) || !hasSpoken);
+    }
+
+    // Response6B7C30 suppresses the result callback for RunImmediately. The
+    // direct531470 core has no such flag gate; keep these phases distinct.
+    inline bool dialogueResponseRunsResult(std::uint16_t flags, bool actorPresent)
+    {
+        return !(flags & INFO_RunImmediately) && actorPresent;
+    }
+
+    // Read this AFTER the result VM. Neither a missing script nor a failed VM
+    // suppresses history, but InfoRefusal does (original531470).
+    inline bool dialogueResultMarksSpoken(std::uint16_t flags)
+    {
+        return !(flags & INFO_InfoRefusal);
+    }
+
     // Original530830 starts with quest eligibility and appends INFO predicates
     // to the same list traversal. A final quest OR flag joins the first INFO.
     inline std::vector<PackageCondition> dialogueInfoConditions(const Quest& quest, const DialogInfo& info)

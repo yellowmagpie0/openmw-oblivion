@@ -32813,12 +32813,14 @@ TEST(OblivionWorldTest, NativeSayForUnmaterializedActorsSkipsConditionsAndSelect
     const std::vector<ObScript::Value> arguments{
         ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x901), {}}};
     const auto before = contactSnapshot(fixture, {npc, creature});
-    for (const auto& key : {coldNpc.mFormKey, coldCreature.mFormKey})
+    for (const bool sayTo : {false, true}) for (const auto& key : {coldNpc.mFormKey, coldCreature.mFormKey})
     {
         ObScript::RuntimeContext context; context.mSelf = key;
         // Without the native process gate this real INFO lookup throws
         // MissingContext before any file lookup because its speaker is absent.
-        EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
+        auto supplied = arguments;
+        if (sayTo) supplied.insert(supplied.begin(), ObScript::ReferenceValue{});
+        EXPECT_EQ(ObScript::asNumber(scripts->call(sayTo ? "SayTo" : "Say", std::nullopt, supplied, context, {})), 0);
         EXPECT_EQ(contactSnapshot(fixture, {npc, creature}), before);
         EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(key));
     }
@@ -33202,4 +33204,93 @@ TEST(OblivionWorldTest, SpokenDialogueHistoryRestoresAtomicallyAndSurvivesRuntim
     auto legacy = scripts->prepareRestore(saved);
     ASSERT_TRUE(legacy.commit());
     EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+}
+
+TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersSpokenInfoBeforeRandomConditions)
+{
+    for (const bool sayTo : {false, true}) for (unsigned scenario = 0; scenario < 8; ++scenario)
+    {
+        SCOPED_TRACE(sayTo);
+        SCOPED_TRACE(scenario);
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto sub = [&](std::uint32_t tag, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+        };
+        const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(std::uint32_t{})
+                + bytes(id) + bytes(std::uint32_t{}) + data;
+        };
+        const unsigned flags = scenario == 1 ? 20 : scenario == 2 ? 12 : scenario == 6 ? 16 : scenario == 7 ? 0 : 4;
+        const auto quest = record(ESM4::REC_QUST, 0x900,
+            sub(ESM::fourCC("EDID"), std::string("VoiceQuest\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string("\x01\x32", 2)));
+        const auto topic = record(ESM4::REC_DIAL, 0x901,
+            sub(ESM::fourCC("EDID"), std::string("VoiceTopic\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(1, '\x02')));
+        ESM4::AIPackage::CTDA condition{};
+        condition.fnIndex = 77; condition.compValue = 101; condition.condition = 0x80; // Less.
+        std::string script;
+        if (scenario != 3)
+            script = sub(ESM::fourCC("SCTX"), scenario == 4
+                ? "SetAlert 1\nSetStage VoiceQuest 10\n" : "SetStage VoiceQuest 10\n");
+        const auto info = record(ESM4::REC_INFO, 0x902,
+            sub(ESM::fourCC("DATA"), std::string{'\x02', '\0', static_cast<char>(flags)})
+            + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{0x900}))
+            + sub(ESM::fourCC("CTDA"), bytes(condition)) + script);
+        const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
+            + bytes(std::uint32_t{0x901}) + bytes(std::uint32_t{7}) + bytes(std::uint32_t{}) + info;
+        NativeWorldFixture fixture(false, false, false, {}, {}, quest + topic + group, 4);
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0xa00);
+        world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto* scripts = world.getOblivionScriptManager(); ASSERT_NE(scripts, nullptr);
+        const auto questKey = ESM::FormKey::content("headless.esm", 0x900);
+        const auto infoKey = ESM::FormKey::content("headless.esm", 0x902);
+        ASSERT_NE(scripts->findQuestState(questKey), nullptr);
+        if (scenario == 5) { EXPECT_FALSE(world.toggleScripts()); }
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        std::vector<ObScript::Value> arguments;
+        if (sayTo) arguments.push_back(ObScript::ReferenceValue{});
+        arguments.push_back(ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x901), {}});
+        const auto before = world.getOblivionCombatService()->combatRandomState();
+        EXPECT_EQ(ObScript::asNumber(scripts->call(sayTo ? "SayTo" : "Say", std::nullopt, arguments, context, {})), 0);
+        const bool marked = scenario != 1 && scenario != 2 && scenario != 6;
+        EXPECT_EQ(scripts->hasSpokenDialogueInfo(infoKey), marked);
+        const bool ran = scenario != 2 && scenario != 3 && scenario != 4 && scenario != 5;
+        EXPECT_EQ(scripts->findQuestState(questKey)->mStage, ran ? 10 : 0);
+        ESM4::RuntimeState snapshot;
+        scripts->capture(snapshot);
+        const bool attemptedVm = scenario != 2 && scenario != 3 && scenario != 5;
+        EXPECT_EQ(std::any_of(snapshot.mScriptInstances.begin(), snapshot.mScriptInstances.end(),
+            [](const auto& instance) { return instance.mUnit.find("/dialogue-result/") != std::string::npos; }), attemptedVm);
+        const auto after = world.getOblivionCombatService()->combatRandomState();
+        EXPECT_NE(after, before);
+        EXPECT_EQ(ObScript::asNumber(scripts->call(sayTo ? "SayTo" : "Say", std::nullopt, arguments, context, {})), 0);
+        if (marked && (flags & 4))
+        {
+            EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), after);
+        }
+        else
+        {
+            EXPECT_NE(world.getOblivionCombatService()->combatRandomState(), after);
+        }
+        if (scenario == 2)
+        {
+            // The public VM utility remains independent of response policy and
+            // history, even for a RunImmediately INFO.
+            scripts->dispatchDialogueResult(infoKey, 0, actor);
+            EXPECT_EQ(scripts->findQuestState(questKey)->mStage, 10);
+            EXPECT_FALSE(scripts->hasSpokenDialogueInfo(infoKey));
+        }
+        if (scenario == 7)
+        {
+            scripts->clear();
+            scripts->dispatchDialogueResponseResult(infoKey, {});
+            EXPECT_FALSE(scripts->hasSpokenDialogueInfo(infoKey));
+            EXPECT_EQ(scripts->findQuestState(questKey)->mStage, 0);
+        }
+    }
 }

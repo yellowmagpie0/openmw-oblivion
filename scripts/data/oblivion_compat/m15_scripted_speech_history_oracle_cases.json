@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "scope": "Loaded scripted Say/SayTo INFO eligibility, result/history response callback and rendered save/restart",
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native": {
+    "admission_entry": "00530830",
+    "result_core": "00531470",
+    "response_callback": "006B7C30",
+    "high_process": "0062A9C0",
+    "callback_before_audio": [
+      "0062AD7E",
+      "0062ADF4"
+    ],
+    "rules": [
+      "Deleted INFO, null quest and SayOnce+HasSaid reject before conditions",
+      "Response RunImmediately skips results/history; direct core has no such flag gate",
+      "Actor null skips core VM/history",
+      "Script gate and code control VM only; history marks after VM even on failure unless InfoRefusal"
+    ],
+    "observations": {
+      "admission": 6144,
+      "result": 32768,
+      "total": 38912
+    },
+    "boundaries": [
+      "Native result VM, actor Script extras, AddTopics and ChangeManager I/O are boundaries in original probe",
+      "Caller timing uses static instruction and real vtable identity, not full composed ScriptSay execution"
+    ]
+  },
+  "engine": {
+    "cases": 16,
+    "commands": [
+      "Say",
+      "SayTo"
+    ],
+    "checks": [
+      "No audio still runs results/history",
+      "VM failure, disabled scripts, missing script, refusal, RunImmediately",
+      "Public VM-only utility preserved",
+      "SayOnce skips RNG predicates on repeat",
+      "Cold native Say/SayTo skips selection and RNG"
+    ]
+  },
+  "fixture": {
+    "info": "content:oblivion.esm:0150c7",
+    "original_info_flags": 4,
+    "topic": "content:m15speechhistory.esp:000800",
+    "quest": "content:m15speechhistory.esp:000801",
+    "plugin_sha256": "e336a5a2025818d7437da091debf6ce789d50e92863756f834ca92b99e54957e",
+    "allowed_INFO_payload_change": "QSTI only; group parent changes; voice bytes and flags preserved"
+  },
+  "runtime": {
+    "first": "one positive Say, one zero, one target playback; save64 history",
+    "continuation": "fresh process, both Say zero, no replay, history retained on resave",
+    "protected_input": true,
+    "actual_audio_and_reviewed_scene_captures": true
+  },
+  "limits": [
+    "Native AddTopics effects are not implemented here; all105 installed Hit INFOs and this fixture have no NAME entries",
+    "Portable result VM reused; native VM/cache/actor Script-extra ownership remains outside the original probe",
+    "This is scripted speech acceptance; common-hit caller, normal-input melee/opponent/mastery/restart gates remain open",
+    "Native topic quest-priority/predecessor assembly is not established by the single-candidate course"
+  ],
+  "full_M15S4_acceptance": false
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_plugin": "Oblivion.esm",
+  "plugin_name": "M15SpeechHistory.esp",
+  "source_info": 86215,
+  "source_payload_sha256": "ca8a311f9fb759f542ebe43ffdc0825814a9849fcbdd4a5a21c4c50cfe5cb96d",
+  "topic": 16779264,
+  "quest": 16779265,
+  "topic_editor_id": "M15SpeechHistoryTopic",
+  "quest_editor_id": "M15SpeechHistoryQuest"
+}

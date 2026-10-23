@@ -67,6 +67,7 @@ namespace MWWorld
         void setStage(const ESM::FormKey& quest, std::int32_t stage);
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
+        void dispatchDialogueResponseResult(const ESM::FormKey& info, const Ptr& actor);
         void dispatchDialogueResult(const ESM::FormKey& info, std::uint32_t ordinal, const Ptr& actor = {});
         void dispatchEffect(
             const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster = {});
@@ -189,8 +190,9 @@ namespace MWWorld
 
         void compileCorpus();
         void indexNativeVoices();
-        std::optional<NativeVoice> findNativeVoice(
-            const ESM::FormKey& topic, const Ptr& actor, const Ptr& target, const ESM::FormKey& voiceType) const;
+        std::optional<ESM::FormKey> selectNativeDialogueInfo(
+            const ESM::FormKey& topic, const Ptr& actor, const Ptr& target) const;
+        NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType) const;
         void loadScheduledEvents();
         void runScheduledEvents();
         void executeScheduledEvent(const ScheduledEvent& event);
