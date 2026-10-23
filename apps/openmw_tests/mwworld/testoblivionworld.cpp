@@ -33421,3 +33421,152 @@ TEST(OblivionWorldTest, NativeSayConsumesQuestPriorityAndPredecessorOrderFromAct
         EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(),1u);
     }
 }
+
+
+TEST(OblivionWorldTest, DialogueReferenceConditionsBindTheOppositeContextAfterRunOnTarget)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    MWMechanics::MechanicsManager mechanics;
+    fixture.mEnvironment.setMechanicsManager(mechanics);
+    world.initializePhysics(new osg::Group);
+    const auto speaker = addNativeNpc(fixture, 0x900), listener = addNativeNpc(fixture, 0x901);
+    const auto explicitActor = addNativeNpc(fixture, 0x902);
+    for (const auto& actor : {speaker, listener, explicitActor})
+        world.getWorldModel().registerPtr(actor);
+    { auto position = speaker.getRefData().getPosition(); position.pos[0] = 0;
+      speaker.getRefData().setPosition(position); }
+    { auto position = listener.getRefData().getPosition(); position.pos[0] = 100;
+      listener.getRefData().setPosition(position); }
+    { auto position = explicitActor.getRefData().getPosition(); position.pos[0] = 350;
+      explicitActor.getRefData().setPosition(position); }
+    auto& ai = *world.getOblivionAiService();
+    for (const bool runOnTarget : {false, true})
+    {
+        const auto subject = runOnTarget ? listener : speaker;
+        const auto opposite = runOnTarget ? speaker : listener;
+        for (const auto& argument : {MWWorld::Ptr{}, speaker, listener, explicitActor})
+        {
+            const auto comparison = argument.isEmpty() ? opposite : argument;
+            ESM4::PackageCondition condition{};
+            condition.mRunOnTarget = runOnTarget;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+            condition.mParameter1.mIsFormId = true;
+            if (!argument.isEmpty())
+                condition.mParameter1.mReferenceKey = argument.getCellRef().getFormKey();
+            const auto evaluate = [&]() {
+                return ai.evaluateDialogueConditions(speaker, listener, std::span(&condition, 1));
+            };
+            condition.mFunction = 1;
+            condition.mComparisonValue = (subject.getRefData().getPosition().asVec3()
+                - comparison.getRefData().getPosition().asVec3()).length();
+            EXPECT_EQ(evaluate(), ESM4::ConditionResult::True);
+            condition.mComparisonValue += 1;
+            EXPECT_EQ(evaluate(), ESM4::ConditionResult::False);
+            condition.mFunction = 136;
+            condition.mComparisonValue = subject == comparison ? 1 : 0;
+            EXPECT_EQ(evaluate(), ESM4::ConditionResult::True);
+            condition.mComparisonValue = 1 - condition.mComparisonValue;
+            EXPECT_EQ(evaluate(), ESM4::ConditionResult::False);
+            // These assertions check binding through the real detector, whose
+            // formula is independently tested elsewhere.
+            const auto detection = ai.detection(subject, comparison);
+            for (const auto [function, expected] : {std::pair{45, detection.mDetected ? 1.0 : 0.0},
+                     std::pair{180, detection.mLevel}})
+            {
+                condition.mFunction = function;
+                condition.mComparisonValue = expected;
+                EXPECT_EQ(evaluate(), ESM4::ConditionResult::True);
+                condition.mComparisonValue = expected + 1;
+                EXPECT_EQ(evaluate(), ESM4::ConditionResult::False);
+            }
+        }
+    }
+    // Preserve the actual bound reference even when it has no AI registration
+    // or cell. A default self condition must not compare the speaker to itself.
+    const MWWorld::Ptr noCell(listener.mRef, nullptr);
+    for (const bool runOnTarget : {false, true})
+    {
+        ESM4::PackageCondition condition{};
+        condition.mFunction = 32; condition.mRunOnTarget = runOnTarget;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = 0;
+        EXPECT_EQ(ai.evaluateDialogueConditions(speaker, noCell, std::span(&condition, 1)),
+            ESM4::ConditionResult::True);
+        condition.mComparisonValue = 1;
+        EXPECT_EQ(ai.evaluateDialogueConditions(speaker, listener, std::span(&condition, 1)),
+            ESM4::ConditionResult::True);
+    }
+}
+
+TEST(OblivionWorldTest, UnloadedReferenceConditionsBindExplicitAndOppositeActorsWithoutLoadingThem)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    auto& ai = *world.getOblivionAiService();
+    ESM4::AIPackage package{}; package.mId = {0xa51, 0};
+    package.mFormKey = ESM::FormKey::content("headless.esm", 0xa51);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    auto native = *fixture.mActor.get<ESM4::Npc>()->mBase;
+    native.mAIPackageKeys = {package.mFormKey};
+    store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    auto saved = world.captureOblivionRuntimeState();
+    saved.mActorAi.clear(); saved.mDetectionVectors.clear();
+    std::array<ESM::FormKey, 3> actors;
+    for (std::size_t i = 0; i < actors.size(); ++i)
+    {
+        ESM4::ActorCharacter cold{}; cold.mId = {static_cast<std::uint32_t>(0xa52 + i), 0};
+        cold.mFormKey = actors[i] = ESM::FormKey::content("headless.esm", 0xa52 + i);
+        cold.mBaseObj = native.mId; cold.mBaseKey = native.mFormKey;
+        cold.mParent = world.getPlayerPtr().getCell()->getCell()->getId();
+        cold.mParentKey = ESM::FormKey::content("headless.esm", 1);
+        cold.mPos.pos[0] = 100.f * i;
+        store.getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+        ESM4::RuntimeActorAiState actor;
+        actor.mActor = cold.mFormKey; actor.mBase = native.mFormKey;
+        actor.mCell = actor.mLastValidCell = cold.mParentKey;
+        actor.mLastValidPosition = cold.mPos;
+        actor.mTier = ESM4::ProcessTier::Low;
+        saved.mActorAi.push_back(actor);
+    }
+    saved.mActorAi[0].mTarget = actors[1];
+    for (std::size_t i = 0; i < actors.size(); ++i)
+        for (std::size_t j = 0; j < actors.size(); ++j)
+            if (i != j)
+                saved.mDetectionVectors.push_back({actors[i], actors[j], double(10 * i + j), i > j, i > j || j == 2});
+    for (const bool runOnTarget : {false, true})
+        for (std::size_t argument = 0; argument <= actors.size(); ++argument)
+        {
+            const std::size_t subject = runOnTarget ? 1 : 0;
+            const std::size_t comparison = argument == actors.size() ? (runOnTarget ? 0 : 1) : argument;
+            for (const auto [function, expected] : {std::pair{1, double(100 * (subject > comparison
+                         ? subject - comparison : comparison - subject))},
+                     std::pair{32, 1.0}, std::pair{136, subject == comparison ? 1.0 : 0.0},
+                     std::pair{180, subject == comparison ? 0.0 : double(10 * subject + comparison)},
+                     std::pair{45, subject > comparison ? 1.0 : 0.0},
+                     std::pair{27, subject != comparison && (subject > comparison || comparison == 2) ? 1.0 : 0.0}})
+                for (const bool matches : {false, true})
+                {
+                    ESM4::PackageCondition condition{};
+                    condition.mFunction = function; condition.mRunOnTarget = runOnTarget;
+                    condition.mOperator = ESM4::ConditionOperator::Equal;
+                    condition.mComparisonValue = expected + (matches ? 0 : 1);
+                    condition.mParameter1.mIsFormId = true;
+                    if (argument < actors.size())
+                        condition.mParameter1.mReferenceKey = actors[argument];
+                    package.mCanonicalConditions = {condition};
+                    store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+                    ASSERT_NO_THROW(ai.restore(saved));
+                    ai.updateUnloaded(.5f);
+                    const auto* selected = ai.state(actors[0]); ASSERT_TRUE(selected);
+                    EXPECT_EQ(selected->mConditionResult,
+                        matches ? ESM4::ConditionResult::True : ESM4::ConditionResult::False)
+                        << function << " target=" << runOnTarget << " argument=" << argument;
+                    EXPECT_EQ(selected->mPackage, matches ? package.mFormKey : ESM::FormKey{});
+                    for (const auto& actor : actors)
+                        EXPECT_TRUE(world.getWorldModel().getPtr(
+                            ESM::FormId{actor.localId(), 0}).isEmpty());
+                }
+        }
+}

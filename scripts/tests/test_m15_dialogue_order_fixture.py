@@ -52,6 +52,28 @@ class DialogueOrderFixtureTests(unittest.TestCase):
         bad=copy.deepcopy(recipe);bad['placements'][1]['info']=0x810
         with self.assertRaises(ValueError):build(source,bad)
 
+    def test_target_distance_guard_is_an_added_target_run_condition_on_only_the_named_info(self):
+        source,recipe,_=self.inputs()
+        recipe['target_distance_guard']=dict(info=0x812,greater_than=12.5)
+        base,patch,report=build(source,recipe)
+        for blob in (base,patch):
+            for tag,ident,body in records(blob):
+                if tag!='INFO':continue
+                conditions=[r['payload'] for r in reader._subrecords(body,'output','INFO') if r['name']=='CTDA']
+                self.assertEqual(conditions,[struct.pack('<B3xfIIII',0x42,12.5,1,0,0,0)] if ident==0x1000812 else [])
+        self.assertEqual(report['target_distance_guard'],recipe['target_distance_guard'])
+        # The override must keep the guard too when its INFO is the guarded one.
+        recipe['override_info']=0x812
+        _,patch,_=build(source,recipe)
+        body=next(b for t,i,b in records(patch) if t=='INFO')
+        self.assertEqual(sum(r['name']=='CTDA' for r in reader._subrecords(body,'output','INFO')),1)
+        for guard in (None,{},dict(info=True,greater_than=0),dict(info=0x999,greater_than=0),
+                      dict(info=0x812,greater_than=True),dict(info=0x812,greater_than=-1),
+                      dict(info=0x812,greater_than=float('nan')),dict(info=0x812,greater_than=float('inf')),
+                      dict(info=0x812,greater_than=1e39)):
+            recipe['target_distance_guard']=guard
+            with self.subTest(guard=guard),self.assertRaises(ValueError):build(source,recipe)
+
     def test_cli_checks_all_asset_hashes_before_creating_output(self):
         source,recipe,_=self.inputs()
         with tempfile.TemporaryDirectory() as temporary:

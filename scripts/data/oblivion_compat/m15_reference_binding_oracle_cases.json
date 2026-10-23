@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "scope": "First reference/Actor condition argument binding for native TES4 subject/target contexts; GetFriendHit ownership and insertion prerequisites",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "binding": {
+    "entry": "0056AC50",
+    "parameter_type_test": "0056B1D0",
+    "first_parameter_types": [
+      4,
+      6
+    ],
+    "null_rule": "Substitute the opposite context after the run-on-target swap; preserve a nonzero explicit argument and the raw second argument",
+    "functions": [
+      1,
+      27,
+      32,
+      45,
+      136,
+      180,
+      288
+    ],
+    "subjects": [
+      "null",
+      "Character",
+      "Player",
+      "Creature"
+    ],
+    "targets": [
+      "null",
+      "Character",
+      "Player",
+      "Creature"
+    ],
+    "first_arguments": [
+      "null",
+      "Character",
+      "Player",
+      "Creature"
+    ],
+    "run_on_target": [
+      false,
+      true
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "cases": 1792,
+    "friend_hit_condition_cases": 256,
+    "friend_hit_full_getter_invocations": 192,
+    "friend_hit_missing_parent_rejections": 64,
+    "full_eval_functions": [
+      "004F8E70/00420ED0/0042AAE0 GetFriendHit with actual actor eligibility",
+      "004F7220 GetIsReference",
+      "004F6CF0/006ECC80 GetInSameCell"
+    ],
+    "boundaries": [
+      "Extra lookup41E210 supplies actor-owned counter lists in binding probe",
+      "GetDistance/GetLineOfSight/GetDetected/GetDetectionLevel eval callbacks observe arguments and return a constant; their formulas are outside this binding probe"
+    ]
+  },
+  "allocation": {
+    "sequences": 7776,
+    "operations_per_sequence": 5,
+    "operations": [
+      "increment A",
+      "increment B",
+      "increment C",
+      "remove A",
+      "remove B",
+      "remove C"
+    ],
+    "snapshots": 38880,
+    "queries": 155520,
+    "boundaries": [
+      "Allocator401F00 supplies fresh nonzero-filled storage",
+      "Free401F20 records released list nodes"
+    ]
+  },
+  "ownership": {
+    "sequences": 4096,
+    "operations_per_sequence": 4,
+    "owners": 2,
+    "counter_targets": 2,
+    "snapshots": 16384,
+    "post_operation_queries": 65536,
+    "operations": [
+      "increment each owner/target pair",
+      "remove each owner/target pair"
+    ],
+    "boundaries": [
+      "Allocator/free401F00/401F20",
+      "Single-thread critical-section entry401020/leave401040"
+    ],
+    "rules": [
+      "First increment lazily attaches extra type4E to victim+44",
+      "Getter/removal do not create missing extras",
+      "Each victim/target pair owns a separate count",
+      "New target enters at head with count1 and timer+0",
+      "Targeted removal permits fresh reinsertion",
+      "Empty counters retain the allocated victim extra"
+    ]
+  },
+  "fixture": {
+    "recipe": "scripts/data/oblivion_compat/m15_reference_binding_fixture.json",
+    "first": "scripts/data/oblivion_compat/oblivion_m15_reference_binding_first.json",
+    "continuation": "scripts/data/oblivion_compat/oblivion_m15_reference_binding_continuation.json",
+    "guard": {
+      "info": "content:m15dialogueorder.esm:000812",
+      "flags": 66,
+      "function": 1,
+      "operator": "Greater",
+      "comparison": 0,
+      "parameter1": 0,
+      "parameter2": 0
+    },
+    "expected_first_infos": [
+      "812",
+      "811",
+      "813",
+      "810"
+    ],
+    "negative_control_first_infos": [
+      "811",
+      "813",
+      "810"
+    ],
+    "expected_fresh_process_repeats": 0
+  },
+  "open": [
+    "GetFriendHit hit classification, scheduler/expiry/lifecycle/persistence integration",
+    "Player audio identity",
+    "Automatic common-hit callback integration",
+    "Remaining complete M15S4 normal-input, opponent, mastery and restart gates"
+  ]
+}

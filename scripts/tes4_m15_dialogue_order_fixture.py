@@ -7,6 +7,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import shutil
 import struct
@@ -18,7 +19,7 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, bytes, dict]:
     required={'schema_version','source_sha256','source_info','source_payload_sha256','base_plugin','patch_plugin',
               'topic','low_quest','high_quest','low_priority','initial_high_priority','winning_high_priority',
               'placements','override_info','assets'}
-    if not isinstance(recipe,dict) or set(recipe)!=required or type(recipe['schema_version']) is not int or recipe['schema_version']!=1:
+    if not isinstance(recipe,dict) or not required <= set(recipe) or set(recipe) - required - {'target_distance_guard'} or type(recipe['schema_version']) is not int or recipe['schema_version']!=1:
         raise ValueError('dialogue order fixture recipe shape differs')
     for field,suffix in [('base_plugin','.esm'),('patch_plugin','.esp')]:
         name=recipe[field]
@@ -44,6 +45,13 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, bytes, dict]:
             raise ValueError('dialogue order predecessor must already be loaded')
         loaded.add(row['info']);ids.add(row['info'])
     if recipe['override_info'] not in loaded:raise ValueError('dialogue order override is not an existing INFO')
+    guard=recipe.get('target_distance_guard')
+    if 'target_distance_guard' in recipe:
+        if not isinstance(guard,dict) or set(guard)!={'info','greater_than'} or type(guard['info']) is not int or guard['info'] not in loaded:
+            raise ValueError('dialogue order target-distance guard identity differs')
+        threshold=guard['greater_than']
+        if type(threshold) not in (int,float) or not math.isfinite(threshold) or not 0<=threshold<=3.4028234663852886e38:
+            raise ValueError('dialogue order target-distance guard threshold differs')
     if not isinstance(recipe['assets'],list) or {r.get('extension') for r in recipe['assets']}!={'mp3','lip'} or len(recipe['assets'])!=2:
         raise ValueError('dialogue order voice assets differ')
     for asset in recipe['assets']:
@@ -67,6 +75,10 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, bytes, dict]:
         if not override and row['previous']!='append':
             previous=0 if row['previous'] is None else raw_id(row['previous'])
             out+=sub('PNAM',struct.pack('<I',previous))
+        if guard is not None and row['info']==guard['info']:
+            # Greater-than + run-on-target, required reference argument zero:
+            # native56AC50 must bind the original speaker as the comparison.
+            out+=sub('CTDA',struct.pack('<B3xfIIII',0x42,guard['greater_than'],1,0,0,0))
         return record('INFO',raw_id(row['info']),out)
     def header(name,count,masters,esm):
         body=sub('HEDR',struct.pack('<fII',1.,count,max(ids)+1))+string('CNAM','OpenMW dialogue order fixture')
@@ -86,6 +98,9 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, bytes, dict]:
         mutations=['Authored topic and two quests','Four independent voiced INFO identities with authored quest/PNAM',
                    'Patch changes high quest priority and overrides one INFO without PNAM'],
         compiler_world_validation=False,semantic_reinspection=False,runtime_acceptance=False)
+    if guard is not None:
+        report['mutations'].append('Added target-run GetDistance > threshold with null first reference argument')
+        report['target_distance_guard']=guard
     return base,patch,report
 
 

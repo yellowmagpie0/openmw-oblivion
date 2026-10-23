@@ -978,8 +978,12 @@ namespace MWMechanics
                 const auto found = mActors.find(subjectKey);
                 return found == mActors.end() ? nullptr : &found->second.mState;
             };
+            // Original56AC50/56B1D0 substitutes the opposite context for a
+            // null first reference/actor argument, after swapping run-on target.
+            const ESM::FormKey comparisonKey = ESM4::runtimeReferenceKey(!parameterKey.isNull() ? parameterKey
+                : subject == ESM4::ConditionSubject::Target ? snapshot.mActor : snapshot.mTarget);
             const auto comparisonLocation = [&]() -> std::optional<StableLocation> {
-                return parameterKey.isNull() ? locationFor(snapshot.mTarget) : locationFor(parameterKey);
+                return locationFor(comparisonKey);
             };
             const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(subjectLocation->mBase);
             const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(subjectLocation->mBase);
@@ -1176,15 +1180,19 @@ namespace MWMechanics
                 return value(found != mDetectionVectors.end() && found->second.mLineOfSight ? 1.0 : 0.0);
             }
             if (function == "GetIsInSameCell")
-                return value(subjectLocation->mCell == snapshot.mCell ? 1.0 : 0.0);
+            {
+                const auto comparison = comparisonLocation();
+                return value(comparison && !subjectLocation->mCell.isNull()
+                    && subjectLocation->mCell == comparison->mCell ? 1.0 : 0.0);
+            }
             if (function == "GetIsID")
                 return value(!parameterKey.isNull() && subjectLocation->mBase == parameterKey ? 1.0 : 0.0);
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase,
                     parameterKey) ? 1.0 : 0.0);
             if (function == "GetIsReference")
-                return value(!parameterKey.isNull()
-                    && subjectLocation->mReference == ESM4::runtimeReferenceKey(parameterKey) ? 1.0 : 0.0);
+                return value(!comparisonKey.isNull()
+                    && subjectLocation->mReference == ESM4::runtimeReferenceKey(comparisonKey) ? 1.0 : 0.0);
             if (function == "GetInCell")
                 return value(!parameterKey.isNull() && subjectLocation->mCell == parameterKey ? 1.0 : 0.0);
             if (function == "GetIsCreature")
@@ -1303,7 +1311,7 @@ namespace MWMechanics
             if (function == "GetDetectionLevel" || function == "GetDetected")
             {
                 const ESM::FormKey observerKey = subjectKey;
-                const ESM::FormKey targetKey = snapshot.mTarget;
+                const ESM::FormKey targetKey = ESM4::runtimeReferenceKey(comparisonKey);
                 if (targetKey.isNull())
                     return ESM4::ConditionValue::missing();
                 const MWWorld::Ptr observer = loadedPtrFor(observerKey);
@@ -1746,8 +1754,17 @@ namespace MWMechanics
             const std::string_view function = ESM4::conditionFunctionName(condition.mFunction);
             const ESM4::ConditionParameter& parameter = condition.mParameter1;
             const ESM::FormKey parameterKey = parameter.mReferenceKey;
+            const auto comparisonPtr = [&]() {
+                if (!parameterKey.isNull())
+                    return ptrFor(parameterKey);
+                // Native run-on-target swaps both contexts before the null
+                // first reference/actor parameter takes the opposite context.
+                return subject == ESM4::ConditionSubject::Target ? actor : target;
+            };
             const auto sameCell = [&]() {
-                return subjectPtr.isInCell() && actor.isInCell() && subjectPtr.getCell() == actor.getCell();
+                const MWWorld::Ptr comparison = comparisonPtr();
+                return !comparison.isEmpty() && subjectPtr.isInCell() && comparison.isInCell()
+                    && subjectPtr.getCell() == comparison.getCell();
             };
             const auto nativeStats = [&]() -> const CreatureStats& {
                 return subjectPtr.getClass().getCreatureStats(subjectPtr);
@@ -1834,7 +1851,7 @@ namespace MWMechanics
                 return actorValue();
             if (function == "GetDistance")
             {
-                const MWWorld::Ptr comparison = parameterKey.isNull() ? target : ptrFor(parameterKey);
+                const MWWorld::Ptr comparison = comparisonPtr();
                 return comparison.isEmpty() ? ESM4::ConditionValue::missing()
                                              : value((subjectPtr.getRefData().getPosition().asVec3()
                                                          - comparison.getRefData().getPosition().asVec3())
@@ -1842,7 +1859,7 @@ namespace MWMechanics
             }
             if (function == "GetLineOfSight")
             {
-                const MWWorld::Ptr comparison = parameterKey.isNull() ? target : ptrFor(parameterKey);
+                const MWWorld::Ptr comparison = comparisonPtr();
                 return comparison.isEmpty() ? ESM4::ConditionValue::missing()
                                              : value(mWorld.getLOS(subjectPtr, comparison) ? 1.0 : 0.0);
             }
@@ -1915,15 +1932,17 @@ namespace MWMechanics
                 return value(!parameterKey.isNull() && currentAi.mPackage == parameterKey ? 1.0 : 0.0);
             if (function == "GetDetectionLevel")
             {
-                if (target.isEmpty())
+                const MWWorld::Ptr comparison = comparisonPtr();
+                if (comparison.isEmpty())
                     return ESM4::ConditionValue::missing();
-                return value(detection(subjectPtr, target).mLevel);
+                return value(detection(subjectPtr, comparison).mLevel);
             }
             if (function == "GetDetected")
             {
-                if (target.isEmpty())
+                const MWWorld::Ptr comparison = comparisonPtr();
+                if (comparison.isEmpty())
                     return ESM4::ConditionValue::missing();
-                return value(detection(subjectPtr, target).mDetected ? 1.0 : 0.0);
+                return value(detection(subjectPtr, comparison).mDetected ? 1.0 : 0.0);
             }
             if (function == "GetSleeping")
                 return value(sleeping() ? 1.0 : 0.0);
@@ -2032,8 +2051,13 @@ namespace MWMechanics
                 return value(parameter.mNumber == (female ? 1 : 0) ? 1.0 : 0.0);
             }
             if (function == "GetIsReference")
-                return value(!parameterKey.isNull()
-                    && actorKey(subjectPtr) == ESM4::runtimeReferenceKey(parameterKey) ? 1.0 : 0.0);
+            {
+                const ESM::FormKey comparisonKey = !parameterKey.isNull() ? parameterKey
+                    : subject == ESM4::ConditionSubject::Target ? actorKey(actor)
+                    : target.isEmpty() ? ESM::FormKey{} : actorKey(target);
+                return value(!comparisonKey.isNull()
+                    && actorKey(subjectPtr) == ESM4::runtimeReferenceKey(comparisonKey) ? 1.0 : 0.0);
+            }
             if (function == "GetInCell")
                 return value(!parameterKey.isNull() && cellKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
             if (function == "GetDayofWeek")

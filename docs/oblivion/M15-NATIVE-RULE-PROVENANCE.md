@@ -17846,3 +17846,43 @@ See [M15-DIALOGUE-ORDER-VERIFICATION.json](M15-DIALOGUE-ORDER-VERIFICATION.json)
 This closes the ordered candidate input for scripted speech. Automatic common-hit
 callback wiring, GetFriendHit actor binding/storage, Player audio identity and
 the remaining normal-input/opponent/mastery/restart M15S4 gates remain open.
+
+
+### Native reference condition binding and friendly-hit ownership
+
+The native condition evaluator substitutes the opposite context for a null
+first reference/Actor argument after swapping both contexts for run-on-target.
+Explicit first arguments and raw second arguments remain unchanged. The full
+original binding path passes 1,792 cases, including 256 GetFriendHit cases:
+192 actual getter calls and 64 missing-parent rejections. GetIsReference
+and GetInSameCell also execute their original evaluators; four other predicate
+evaluators are declared argument-observation boundaries.
+
+Loaded and unloaded condition adapters now apply that binding to distance,
+line-of-sight, detection, reference identity and same-cell queries. Previously
+target-run distance could compare the target to itself, detection ignored an
+explicit actor argument, and same-cell ignored its comparison reference. Both
+full engine configurations pass 1,873 tests. The two new integration tests cover
+loaded contexts and unloaded selection without materializing cold actors. All
+398 Python tests pass; the writer exactly reproduces 20 old/new fixture files.
+Sanitizer leak detection is disabled.
+
+A guarded head response requires target-run GetDistance > 0 with argument zero.
+The previous committed executable skips it and speaks 811/813/810. The corrected
+executable, with identical content, actions and configuration, speaks
+812/811/813/810 and saves all four histories. A fresh process loads a protected
+copy and filters every repeat. Exact voice/LIP records, nonzero wave capture,
+compiler results and reviewed prison/HUD images are retained. The images do
+not show the speaking face. First-process unrelated startup diagnostics remain
+separate from the successful custom course.
+
+Additional original storage probes pass 38,880 insertion/removal snapshots and
+155,520 queries. Full extra-owner creation, native lookup/cache, insertion and
+removal pass another 16,384 snapshots/65,536 queries: counters belong to each
+victim/target pair, first increment creates type4E, queries/removals do not
+create it, and an empty counter list retains its allocated owner extra. These
+probes do not establish native hit classification, scheduling or persistence.
+
+See [M15-REFERENCE-BINDING-VERIFICATION.json](M15-REFERENCE-BINDING-VERIFICATION.json).
+GetFriendHit production state/producer/expiry integration, Player audio identity,
+automatic common-hit callbacks and the remaining M15S4 gameplay gates remain open.
