@@ -1576,7 +1576,12 @@ namespace MWWorld
             return std::int64_t(0);
         }
         if (name == "getrandompercent")
-            return std::int64_t(Misc::Rng::rollDice(100, mWorld.mPrng));
+        {
+            auto* combat = mWorld.getOblivionCombatService();
+            if (!combat)
+                throw std::runtime_error("Native GetRandomPercent requires the native random authority");
+            return std::int64_t(combat->drawNativeRandom() % 100);
+        }
 
         if (name == "additem" || name == "removeitem" || name == "getitemcount")
         {

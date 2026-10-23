@@ -93,44 +93,30 @@ namespace ESM4
     ConditionResult evaluateConditions(
         std::span<const PackageCondition> conditions, const ConditionEvaluationContext& context)
     {
-        if (conditions.empty())
-            return ConditionResult::True;
-
-        ConditionResult group = evaluateCondition(conditions.front(), context);
-        for (std::size_t i = 1; i < conditions.size(); ++i)
+        // Original56A510: bit0 on the current row joins the following row.
+        // Once an OR group is true, skip its remaining predicates. A failed
+        // complete group exits before evaluating any following AND group.
+        ConditionResult group = ConditionResult::False;
+        for (std::size_t i = 0; i < conditions.size(); ++i)
         {
-            const ConditionResult current = evaluateCondition(conditions[i], context);
-            if (conditions[i].mOr)
+            if (group != ConditionResult::True)
             {
-                if (group == ConditionResult::True || current == ConditionResult::True)
+                const ConditionResult current = evaluateCondition(conditions[i], context);
+                if (current == ConditionResult::True)
                     group = ConditionResult::True;
                 else if (current == ConditionResult::Unsupported || group == ConditionResult::Unsupported)
                     group = ConditionResult::Unsupported;
                 else if (current == ConditionResult::MissingContext || group == ConditionResult::MissingContext)
                     group = ConditionResult::MissingContext;
-                else
-                    group = ConditionResult::False;
-                continue;
             }
-
-            if (group != ConditionResult::True)
+            if (!conditions[i].mOr || i + 1 == conditions.size())
             {
-                if (group == ConditionResult::Unsupported)
-                    return ConditionResult::Unsupported;
-                if (group == ConditionResult::MissingContext)
-                    return ConditionResult::MissingContext;
-                return ConditionResult::False;
+                if (group != ConditionResult::True)
+                    return group;
+                group = ConditionResult::False;
             }
-            group = current;
         }
-
-        if (group == ConditionResult::True)
-            return ConditionResult::True;
-        if (group == ConditionResult::Unsupported)
-            return ConditionResult::Unsupported;
-        if (group == ConditionResult::MissingContext)
-            return ConditionResult::MissingContext;
-        return ConditionResult::False;
+        return ConditionResult::True;
     }
 
     std::string_view conditionFunctionName(std::int32_t function)

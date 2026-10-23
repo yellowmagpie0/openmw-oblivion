@@ -691,6 +691,10 @@ namespace MWMechanics
             // contact's staged resource changes. Missing/stale/miss/committed
             // plans have no queryable victim. Never publishes the candidate.
             std::optional<VictimHitValues> victimHitValues() const;
+            // Enabled participants' post-contact Health/Fatigue float getters,
+            // for dialogue conditions. Other AVs and disabled raw-form queries
+            // remain unchanged. Stale/committed/missing participants return none.
+            std::optional<float> resourceActorValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;

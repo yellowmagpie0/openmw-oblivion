@@ -17394,3 +17394,51 @@ in the evidence; owned leftover crash reporters were closed. Native Player
 setup/the older recipe must be reconciled before this regression can pass.
 Automatic common-hit speech/resource publication and full normal-input and
 fresh-process M15S4 acceptance remain open.
+
+
+## Dialogue condition order, RNG and prepared resource projection
+
+Original condition-list execution exposed two errors in the portable evaluator:
+the current row's OR flag joins the following row, and a failed AND group must
+stop before evaluating any subsequent predicate. True OR groups skip remaining
+predicates. The corrected evaluator matches all 682 original Boolean results
+and visitation sequences in normal and ASan/UBSan comparisons. Full original
+56A510 runs over lengths 0–4, all OR/truth masks and both x87 words, with Boolean
+predicate evaluation supplied. Diagnostic statuses and secondary-list
+composition remain outside this probe; portable status policy has separate
+tests. Earlier fixtures encoded the wrong previous-row rule and are corrected.
+
+Dialogue conditions and script-command GetRandomPercent now use a shared native
+raw sample modulo 100, replacing stableChoice and World PRNG calls respectively.
+A preparation context supplies its own raw draw provider and actor-value
+projections. A reached random condition cannot silently use live RNG when that
+provider is missing. Prepared contact queries expose enabled participants'
+staged Health/Fatigue float getters after attacker cost, block spending and
+damage, without publication. Stale, missing and committed plans have no
+projection. Other AVs and disabled raw-form queries retain their existing paths.
+Dialogue binds the supplied listener Ptr directly, preserving valid draft and
+dynamic targets that cannot yet be resolved through the AI registry.
+
+Normal components pass 3,006 tests; the sanitized ESM4 selection passes 859.
+Both full engine inventories pass 1,856 tests in 126 suites. New cases establish
+immediate condition results 41/67 followed by script result 34, staged modulo
+values, missing/invalid provider rejection, skipped random predicates, subject
+and target post-hit conditions, unchanged live/save bytes during preparation,
+same-packet RNG/resource publication, and stale-plan rejection without draws.
+Existing Player god-mode and Creature Fatigue matrices inspect these resource
+projections too. Leak checks remain disabled. No new rendered, audio or
+normal-input gameplay course was run.
+
+Engine builds were deliberately stopped after passing component checks to
+include the script caller and its test before committing. Unchanged component
+results are reused. The first full normal engine run then exposed registry
+re-resolution losing the staged test's listener and returning MissingContext.
+That failure and the matching deliberately stopped sanitizer build are retained;
+both final engines pass after binding the supplied target.
+
+[M15-DIALOGUE-CONDITION-INPUTS-VERIFICATION.json](M15-DIALOGUE-CONDITION-INPUTS-VERIFICATION.json)
+pins source, full checks, original list execution, comparisons and the editable
+case protocol. The preceding receipt supplies the original 131,072-case random
+condition/script proof. Generic package random policy remains separate.
+Automatic common-hit speech/publication, quest conditions, INFO history/results
+and full M15S4 normal-input and fresh-process acceptance remain open.

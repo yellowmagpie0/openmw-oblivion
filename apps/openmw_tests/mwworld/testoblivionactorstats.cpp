@@ -7194,9 +7194,11 @@ namespace
             const auto proposed = prepared->victimHitValues(); ASSERT_TRUE(proposed);
             EXPECT_EQ(proposed->mFatigue, static_cast<std::int32_t>(std::floor(expected)));
             EXPECT_FLOAT_EQ(proposed->mFatigueRatio, expected / (playerVictim ? 160.f : 60.f));
+            EXPECT_EQ(prepared->resourceActorValue(victim, 10), expected);
             service.capture(saved); EXPECT_EQ(saved.serializeBinary(), before);
             ASSERT_TRUE(prepared->commit());
             EXPECT_FALSE(prepared->victimHitValues());
+            EXPECT_FALSE(prepared->resourceActorValue(victim, 10));
             EXPECT_EQ(victim.getClass().getCreatureStats(victim).getFatigue().getCurrent(), expected);
             EXPECT_EQ(service.getPlayerValue(10), playerVictim ? expected : 2);
             EXPECT_EQ(service.getNonPlayerValue(creaturePtr, 10), playerVictim ? 2 : expected);

@@ -2806,6 +2806,23 @@ namespace MWMechanics
             ESM4::combatFatigueRatio(fatigue, ESM4::combatBaseValue(values.mValues[10].mBase))};
     }
 
+    std::optional<float> OblivionCombatService::PreparedPhysicalContact::resourceActorValue(
+        const MWWorld::Ptr& actor, std::uint8_t value) const
+    {
+        if (!isValid() || actor.isEmpty() || (value != 8 && value != 10))
+            return std::nullopt;
+        const ESM4::RuntimeActorValues* values = nullptr;
+        if (actor == mImpl->mAttacker.mActor)
+            values = &mImpl->mAttacking;
+        else if (mImpl->mVictim && actor == mImpl->mVictim->mActor && mImpl->mReceiving)
+            values = &*mImpl->mReceiving;
+        if (!values || !actor.getRefData().isEnabled())
+            return std::nullopt;
+        return values->mOwner == ESM4::ActorValueOwner::Player
+            ? ESM4::composeActorValue(values->mValues[value], values->mOwner, values->mProcess)
+            : nonPlayerFloat(*values, value, mImpl->mOwner->findActorBase(values->mBase));
+    }
+
     void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
     {
         if (!mImpl || !mImpl->mCommitted || mImpl->mIdentity.expired()) return;

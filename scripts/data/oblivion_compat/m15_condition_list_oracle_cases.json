@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "scope": "Original56A510 single Boolean condition list",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "matrix": {
+    "lengths": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "or_flags": "All 2^length masks; bit0 of each current row joins following row",
+    "predicate_results": "All 2^length Boolean masks",
+    "x87_control_words": [
+      639,
+      895
+    ]
+  },
+  "expected_cases": 682,
+  "expectation": "Visit each unresolved OR group until true; skip remaining group predicates; stop before the next AND group on failure. Empty true; trailing OR group returns its Boolean value.",
+  "boundaries": [
+    "Predicate56AC50 supplies declared Boolean and clears extra out byte,ret12",
+    "Null actor/target and secondary list"
+  ],
+  "receipt": "docs/oblivion/M15-DIALOGUE-CONDITION-INPUTS-VERIFICATION.json"
+}

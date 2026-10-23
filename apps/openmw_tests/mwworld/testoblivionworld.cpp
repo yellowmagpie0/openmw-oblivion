@@ -21121,8 +21121,16 @@ namespace
             EXPECT_EQ(service.getNonPlayerIntegerValue(victim, 8), health);
             EXPECT_EQ(service.getNonPlayerIntegerValue(victim, 10), 20);
             EXPECT_EQ(plan->victimHitValues(), query);
+            const auto projectedHealth = plan->resourceActorValue(victim, 8);
+            ASSERT_TRUE(projectedHealth);
+            EXPECT_EQ(plan->resourceActorValue(victim, 10), 17.25f);
+            EXPECT_EQ(plan->resourceActorValue(attacker, 10), service.getNonPlayerValue(attacker, 10) - 7);
+            EXPECT_FALSE(plan->resourceActorValue(victim, 9));
+            EXPECT_FALSE(plan->resourceActorValue({}, 8));
             ASSERT_TRUE(plan->commit());
             EXPECT_FALSE(plan->victimHitValues());
+            EXPECT_FALSE(plan->resourceActorValue(victim, 8));
+            EXPECT_EQ(*projectedHealth, service.getNonPlayerValue(victim, 8));
             EXPECT_EQ(query->mHealth, service.getNonPlayerIntegerValue(victim, 8));
             EXPECT_EQ(query->mFatigue, service.getNonPlayerIntegerValue(victim, 10));
             const auto missId = world.beginOblivionPhysicalAction(attacker);
@@ -32566,4 +32574,124 @@ TEST(OblivionWorldTest, StagedStaggerCounterMissStillPublishesMasterDropAndAttac
     EXPECT_EQ(after.mPhysicalActions.mNext, id + 1); EXPECT_TRUE(after.mPhysicalActions.mPending.empty());
     service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+}
+
+TEST(OblivionWorldTest, DialogueAndScriptRandomUseNativeDrawsOrAnExplicitStagedProvider)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto speaker = addNativeNpc(fixture, 0x900), target = addNativeNpc(fixture, 0x901);
+    ASSERT_TRUE(world.activateOblivionActor(speaker)); ASSERT_TRUE(world.activateOblivionActor(target));
+    auto& combat = *world.getOblivionCombatService();
+    auto& ai = *world.getOblivionAiService();
+    ESM4::PackageCondition condition;
+    condition.mFunction = 77; condition.mOperator = ESM4::ConditionOperator::Equal;
+    const auto evaluate = [&](const MWMechanics::OblivionAiService::DialogueConditionInputs* inputs = nullptr) {
+        return ai.evaluateDialogueConditions(speaker, target, std::span(&condition, 1), false, inputs);
+    };
+    condition.mComparisonValue = 41;
+    EXPECT_EQ(evaluate(), ESM4::ConditionResult::True);
+    EXPECT_EQ(combat.combatRandomState(), 2745024u);
+    condition.mComparisonValue = 67;
+    EXPECT_EQ(evaluate(), ESM4::ConditionResult::True);
+    EXPECT_EQ(combat.combatRandomState(), 3357800067u);
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const ObScript::RuntimeContext context;
+    EXPECT_EQ(ObScript::asNumber(scripts->call("GetRandomPercent", std::nullopt, {}, context, {})), 34);
+    EXPECT_EQ(combat.combatRandomState(), 415139642u);
+    const auto before = contactSnapshot(fixture, {speaker, target});
+    MWMechanics::OblivionAiService::DialogueConditionInputs inputs;
+    EXPECT_EQ(evaluate(&inputs), ESM4::ConditionResult::Unsupported);
+    unsigned calls = 0;
+    for (const unsigned raw : {0u, 99u, 100u, 32767u})
+    {
+        inputs.mRandomDraw = [&] { ++calls; return raw; };
+        condition.mComparisonValue = raw % 100;
+        EXPECT_EQ(evaluate(&inputs), ESM4::ConditionResult::True);
+    }
+    EXPECT_EQ(calls, 4u);
+    inputs.mRandomDraw = [] { return 32768u; };
+    EXPECT_THROW(evaluate(&inputs), std::invalid_argument);
+    EXPECT_EQ(contactSnapshot(fixture, {speaker, target}), before);
+    // An earlier failed AND term cannot consume the later random condition.
+    std::array conditions{condition, condition};
+    conditions[0].mFunction = 14; conditions[0].mParameter1.mNumber = 8;
+    conditions[0].mComparisonValue = -1;
+    EXPECT_EQ(ai.evaluateDialogueConditions(speaker, target, conditions), ESM4::ConditionResult::False);
+    EXPECT_EQ(contactSnapshot(fixture, {speaker, target}), before);
+}
+
+TEST(OblivionWorldTest, DialogueConditionsReadStagedContactResourcesAndPublishTheirRngWithTheContact)
+{
+    for (const bool stale : {false, true})
+    {
+        SCOPED_TRACE(stale);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& combat = *world.getOblivionCombatService();
+        auto& ai = *world.getOblivionAiService();
+        for (const auto& actor : {attacker, victim})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, 10, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 20));
+        const auto id = world.beginOblivionPhysicalAction(attacker);
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3.25f, -.5f, -2.25f};
+        auto preview = prepareContact(fixture, id, attacker, victim, packet);
+        ASSERT_TRUE(preview);
+        MWMechanics::OblivionAiService::DialogueConditionInputs inputs;
+        unsigned draws = 0;
+        std::uint32_t cursor = combat.combatRandomState();
+        inputs.mRandomDraw = [&]() -> unsigned {
+            const auto next = ESM4::combatRandomDraw(cursor);
+            cursor = next.mNextState; ++draws; return next.mValue;
+        };
+        inputs.mActorValue = [&](const MWWorld::Ptr& actor, std::uint8_t av)
+            -> std::optional<ESM4::ConditionValue> {
+            if ((actor != attacker && actor != victim) || (av != 8 && av != 10)) return std::nullopt;
+            if (const auto projected = preview->resourceActorValue(actor, av))
+                return ESM4::ConditionValue::value(*projected);
+            return ESM4::ConditionValue::missing();
+        };
+        std::array<ESM4::PackageCondition, 4> conditions{};
+        for (auto& condition : conditions)
+        {
+            condition.mFunction = 14;
+            condition.mOperator = ESM4::ConditionOperator::Equal;
+        }
+        conditions[0].mParameter1.mNumber = 8; conditions[0].mComparisonValue = 96.75f;
+        conditions[1].mParameter1.mNumber = 10; conditions[1].mComparisonValue = 17.25f;
+        conditions[2].mParameter1.mNumber = 10; conditions[2].mComparisonValue = 13;
+        conditions[2].mRunOn = ESM4::ConditionRunOn::Target;
+        conditions[3].mFunction = 77; conditions[3].mComparisonValue = 41;
+        const auto before = contactSnapshot(fixture, {attacker, victim});
+        EXPECT_EQ(ai.evaluateDialogueConditions(victim, attacker, conditions), ESM4::ConditionResult::False);
+        EXPECT_EQ(draws, 0u);
+        EXPECT_EQ(combat.combatRandomState(), 1u);
+        if (stale)
+        {
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 8, ESM4::ActorValueCommand::Mod,
+                ESM4::ActorValueCommandSource::Script, 1));
+            const auto changed = contactSnapshot(fixture, {attacker, victim});
+            EXPECT_EQ(ai.evaluateDialogueConditions(victim, attacker, conditions, false, &inputs),
+                ESM4::ConditionResult::MissingContext);
+            EXPECT_FALSE(preview->commit());
+            EXPECT_EQ(draws, 0u);
+            EXPECT_EQ(contactSnapshot(fixture, {attacker, victim}), changed);
+            continue;
+        }
+        ASSERT_EQ(ai.evaluateDialogueConditions(victim, attacker, conditions, false, &inputs), ESM4::ConditionResult::True);
+        EXPECT_EQ(draws, 1u); EXPECT_EQ(cursor, 2745024u);
+        EXPECT_EQ(contactSnapshot(fixture, {attacker, victim}), before);
+        ASSERT_TRUE(preview->isValid());
+        packet.mRandomTransition = combat.prepareCombatRandom(draws);
+        EXPECT_EQ(packet.mRandomTransition->mNextState, cursor);
+        auto final = prepareContact(fixture, id, attacker, victim, packet);
+        ASSERT_TRUE(final); ASSERT_TRUE(final->commit());
+        EXPECT_EQ(combat.combatRandomState(), 2745024u);
+        EXPECT_EQ(combat.getNonPlayerValue(victim, 8), 96.75f);
+        EXPECT_EQ(combat.getNonPlayerValue(victim, 10), 17.25f);
+        EXPECT_EQ(combat.getNonPlayerValue(attacker, 10), 13);
+        EXPECT_EQ(ai.evaluateDialogueConditions(victim, attacker, std::span(conditions).first(3)), ESM4::ConditionResult::True);
+    }
 }

@@ -11,6 +11,7 @@
 #define OPENMW_MWMECHANICS_OBLIVIONAI_H
 
 #include <fstream>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -113,8 +114,18 @@ namespace MWMechanics
         bool isRidingHorse(const MWWorld::ConstPtr& actor) const;
 
         bool getLOS(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
+        struct DialogueConditionInputs
+        {
+            // Original raw CRT sample, before modulo100. A supplied context
+            // without a draw provider rejects a reached random condition.
+            std::function<unsigned()> mRandomDraw;
+            // nullopt uses the normal native query. A supplied MissingContext
+            // rejects an expired projection instead of reading pre-hit state.
+            std::function<std::optional<ESM4::ConditionValue>(const MWWorld::Ptr&, std::uint8_t)> mActorValue;
+        };
         ESM4::ConditionResult evaluateDialogueConditions(const MWWorld::Ptr& speaker,
-            const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose = false) const;
+            const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose = false,
+            const DialogueConditionInputs* inputs = nullptr) const;
         ESM4::DetectionResult detection(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
 
         // Resolve a stable TES4 reference through the native actor/reference
@@ -252,7 +263,8 @@ namespace MWMechanics
         std::optional<ESM4::PackageCandidate> packageCandidate(const ESM::FormKey& key) const;
         ESM4::CalendarInstant now() const;
         ESM4::ConditionEvaluationContext conditionContext(
-            const MWWorld::Ptr& actor, const LiveActor& live) const;
+            const MWWorld::Ptr& actor, const LiveActor& live, const DialogueConditionInputs* dialogue = nullptr,
+            const MWWorld::Ptr* boundTarget = nullptr) const;
         ESM4::PackageSelection select(const MWWorld::Ptr& actor, LiveActor& live, bool restart = true);
 
         MWWorld::Ptr ptrFor(const ESM::FormKey& key) const;

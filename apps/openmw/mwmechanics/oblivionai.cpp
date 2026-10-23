@@ -1586,7 +1586,8 @@ namespace MWMechanics
     }
 
     ESM4::ConditionResult OblivionAiService::evaluateDialogueConditions(const MWWorld::Ptr& speaker,
-        const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose) const
+        const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose,
+        const DialogueConditionInputs* inputs) const
     {
         if (speaker.isEmpty() || !handles(speaker))
             return ESM4::ConditionResult::MissingContext;
@@ -1597,7 +1598,18 @@ namespace MWMechanics
         contextActor.mState.mBase = baseKey(speaker);
         contextActor.mState.mCell = cellKey(speaker);
         contextActor.mState.mTarget = target.isEmpty() ? ESM::FormKey{} : actorKey(target);
-        auto context = conditionContext(speaker, contextActor);
+        DialogueConditionInputs immediate;
+        if (!inputs)
+        {
+            immediate.mRandomDraw = [this]() -> unsigned {
+                const auto combat = mWorld.getOblivionCombatService();
+                if (!combat)
+                    throw std::invalid_argument("native dialogue requires a random authority");
+                return combat->drawNativeRandom();
+            };
+            inputs = &immediate;
+        }
+        auto context = conditionContext(speaker, contextActor, inputs, &target);
         if (diagnose)
         {
             const auto resolve = context.mResolve;
@@ -1614,10 +1626,13 @@ namespace MWMechanics
     }
 
     ESM4::ConditionEvaluationContext OblivionAiService::conditionContext(
-        const MWWorld::Ptr& actor, const LiveActor& live) const
+        const MWWorld::Ptr& actor, const LiveActor& live, const DialogueConditionInputs* dialogue,
+        const MWWorld::Ptr* boundTarget) const
     {
         ESM4::ConditionEvaluationContext context;
-        const MWWorld::Ptr target = ptrFor(live.mState.mTarget);
+        // Dialogue already owns a resolved listener. Keep that exact context,
+        // including valid draft/dynamic references not yet in the AI registry.
+        const MWWorld::Ptr target = boundTarget ? *boundTarget : ptrFor(live.mState.mTarget);
         context.mHasTarget = !target.isEmpty();
         // A reference run-on context is always syntactically available.  The
         // resolver still returns MissingContext when the encoded reference
@@ -1633,7 +1648,7 @@ namespace MWMechanics
             return static_cast<double>(mWorld.mGlobalVariables[MWWorld::GlobalVariableName(global->mEditorId)].getFloat());
         };
         const auto resolveGlobal = context.mResolveGlobal;
-        context.mResolve = [this, actor, target, &live, resolveGlobal](const ESM4::PackageCondition& condition,
+        context.mResolve = [this, actor, target, &live, resolveGlobal, dialogue](const ESM4::PackageCondition& condition,
                            ESM4::ConditionSubject subject) -> ESM4::ConditionValue {
             MWWorld::Ptr subjectPtr;
             switch (subject)
@@ -1697,6 +1712,10 @@ namespace MWMechanics
             const auto actorValue = [&]() -> ESM4::ConditionValue {
                 if (parameter.mNumber < 0 || parameter.mNumber >= 72)
                     return ESM4::ConditionValue::unsupported();
+                if (dialogue && dialogue->mActorValue)
+                    if (const auto projected = dialogue->mActorValue(subjectPtr,
+                            static_cast<std::uint8_t>(parameter.mNumber)))
+                        return *projected;
                 try
                 {
                     if (const auto native = mWorld.getOblivionScriptActorValue(
@@ -2036,7 +2055,18 @@ namespace MWMechanics
                 return global ? value(*global) : ESM4::ConditionValue::missing();
             }
             if (function == "GetRandomPercent")
+            {
+                if (dialogue)
+                {
+                    if (!dialogue->mRandomDraw)
+                        return ESM4::ConditionValue::unsupported();
+                    const unsigned raw = dialogue->mRandomDraw();
+                    if (raw > 32767)
+                        throw std::invalid_argument("invalid native dialogue condition random draw");
+                    return value(raw % 100);
+                }
                 return value(static_cast<double>(stableChoice(actorKey(actor), live.mState.mSelectionGeneration) % 100));
+            }
             return ESM4::ConditionValue::unsupported();
         };
         return context;
