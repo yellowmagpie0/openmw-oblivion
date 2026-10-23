@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "World contact preparation preserves staged Stagger when blocked Counter is selected; Counter miss retains Master disarm/Recoil eligibility",
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "b0bf624392e66208fdfaadecb8a9bf69661fb832",
+    "source_fingerprint": "20bed3fd57a4762186bf9eaa46fc9d61711ecdae79dc3f4c71894fc80d47d4df"
+  },
+  "tested_source_files": {
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "sha256": "03ed7f353987b73ce1e39e568460572a04706fae45c6809e90207d86e6f8500e",
+      "bytes": 99921
+    },
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": {
+      "path": "apps/openmw/mwmechanics/oblivionmelee.hpp",
+      "sha256": "f580cb5049faa2d1bf586a8870845ec31f8645975263cce8fc3b78dae54bf5d5",
+      "bytes": 9456
+    },
+    "apps/openmw/mwworld/worldimp.cpp": {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "049bf047fefdba031e439f236139b1a65631dc6bb30402e58015742026b71e16",
+      "bytes": 438765
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "eea011d6082b79163c884f22f7e5a54e544374dec2b3a9ae17214e97374426fb",
+      "bytes": 1939925
+    }
+  },
+  "checks": {
+    "normal": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-world-normal-02/verification.json",
+        "sha256": "f9978c0e4c0c52f3402c431100a7d003120893bad649f0167eec3ec6b65aee66",
+        "bytes": 2146
+      },
+      "source": {
+        "head": "b0bf624392e66208fdfaadecb8a9bf69661fb832",
+        "source_fingerprint": "20bed3fd57a4762186bf9eaa46fc9d61711ecdae79dc3f4c71894fc80d47d4df"
+      },
+      "engine": {
+        "executed": 1853,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "8cdd6de6701c831630fec0af2a3a80660895d0234ecccc6e33489d98a9f18b1f",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "b80911ca3ade553f1c2779bfd1140ec559d2e22c64fc3f2d35e6df6016d80ed1",
+        "inventory_sha256": "d73e0ee1c7f2682bccc357be3d2b545a989c163ebdb7653b1f1aa157b9b8207d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-world-sanitized-02/verification.json",
+        "sha256": "7e46a0f50d50e6a493c7755aadebbc7029de382515e96c7811b4f89c391484e3",
+        "bytes": 2236
+      },
+      "source": {
+        "head": "b0bf624392e66208fdfaadecb8a9bf69661fb832",
+        "source_fingerprint": "20bed3fd57a4762186bf9eaa46fc9d61711ecdae79dc3f4c71894fc80d47d4df"
+      },
+      "engine": {
+        "executed": 1853,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "540c1112b5f1244b94d833019c5f369c01bd01db7a12f167bcbab2d8bad83473",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "be0803e9f98d6ea4688cda8c21ae3a1197ae888763500d7a630a17aec396401e",
+        "inventory_sha256": "d73e0ee1c7f2682bccc357be3d2b545a989c163ebdb7653b1f1aa157b9b8207d",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "original_composition_reference": {
+    "path": "docs/oblivion/M15-PREPARED-HIT-VALUES-VERIFICATION.json",
+    "sha256": "c28806b4cdc6fc433644edb9d46a96a5ab2599851bd4c385195a957ab8a225f6",
+    "bytes": 20218
+  },
+  "original_composition": {
+    "original-exe.json": {
+      "path": "build/oblivion-compat/m15/S4/native-common-stagger-blocked-composition-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    "probe-07.py": {
+      "path": "build/oblivion-compat/m15/S4/native-common-stagger-blocked-composition-oracle-01/probe-07.py",
+      "sha256": "4e5798f1f102a64aeb06f1b8537297cce2d312cb312bea110bcb9431b9c23087",
+      "bytes": 13883
+    },
+    "verification07.json": {
+      "path": "build/oblivion-compat/m15/S4/native-common-stagger-blocked-composition-oracle-01/verification07.json",
+      "sha256": "c950fc4c466264bd250e4d59b74b69c452981b30260b4ec41a1399566ad02580",
+      "bytes": 471
+    },
+    "corpus07.json": {
+      "path": "build/oblivion-compat/m15/S4/native-common-stagger-blocked-composition-oracle-01/corpus07.json",
+      "sha256": "b059153e56f6d5f437800477cc3ac09fdc24e39711ba3a56f99a7a4c74257157",
+      "bytes": 1628433
+    }
+  },
+  "retained_failed_attempts": {
+    "build/oblivion-compat/m15/S4/native-stagger-blocked-world-normal-01/verification.json": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-world-normal-01/verification.json",
+      "sha256": "f57599cc9a02c05cc725b44e22466bf7509d206575e526a0b4bd14879bfafe3a",
+      "bytes": 630
+    },
+    "build/oblivion-compat/m15/S4/native-stagger-blocked-world-sanitized-01/intentional-stop.json": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-world-sanitized-01/intentional-stop.json",
+      "sha256": "7ba1d002a3a7a9ccfd14ddd1bf18f4e5f59ef6a82590bb3c0bc1d4ff0e82ef08",
+      "bytes": 374
+    },
+    "build/oblivion-compat/m15/S4/native-stagger-blocked-world-sanitized-01/verification.json": {
+      "path": "build/oblivion-compat/m15/S4/native-stagger-blocked-world-sanitized-01/verification.json",
+      "sha256": "7f43829b3b0fee4e4abee220b6747a34136a58d9e6edda597432b44f5edd5cb7",
+      "bytes": 647
+    }
+  },
+  "limits": [
+    "Caller still supplies the prepared common Stagger; automatic shared common-hit and speech publication remains open.",
+    "Paired Player World preparation test has a headless NPC Recoil no-op boundary; explicit NPC drop/Recoil transaction test uses owned renderer/physics fixtures.",
+    "No normal-input game process, fresh-process gameplay course, rendering or full M15S4 acceptance added."
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "scope": "Full native Hit INFO selector fixture protocol",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0052F010",
+  "lookup": "0052ED50",
+  "matrix": {
+    "info_flag_bytes": [
+      0,
+      2,
+      32,
+      34
+    ],
+    "info_count": 3,
+    "condition_acceptance_masks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "quest_active": [
+      false,
+      true
+    ],
+    "topic_deleted": [
+      false,
+      true
+    ],
+    "raw_rng": [
+      0,
+      1,
+      2,
+      32766,
+      32767
+    ]
+  },
+  "expected_cases": 10240,
+  "selection": "Prepend accepted raw-bit2 candidates; stop on accepted bit32 or later accepted non-bit2; raw modulo accumulated count selects reversed acceptance order; one draw for every nonempty accumulated set.",
+  "boundaries": [
+    "Supplied conditions and raw RNG",
+    "Successful8-byte allocation/free",
+    "No history or speaker constraints"
+  ],
+  "receipt": "docs/oblivion/M15-HIT-INFO-SELECTION-VERIFICATION.json"
+}

@@ -80,7 +80,13 @@ namespace MWMechanics
     // After a surviving blocked-contact preview, append the Expert defensive
     // query to this packet's wear RNG. Resource preparation chooses Counter
     // instead of BlockHit/Recoil; a Master miss can append immediate disarm.
-    bool prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
+    struct OblivionDefensiveBlockConsequences
+    {
+        bool mCounterSelected = false;
+    };
+    // Selection remains true when action8 suppresses Counter playback. No
+    // Counter owner is then requested, but the caller still skips disarm/Recoil.
+    std::optional<OblivionDefensiveBlockConsequences> prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
         OblivionPhysicalContactDeltas& deltas);
 

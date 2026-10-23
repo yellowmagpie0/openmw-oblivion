@@ -3667,16 +3667,24 @@ namespace MWWorld
             recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
         if (!contact) return nullptr;
         const bool defensiveQuery = blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive();
-        if (defensiveQuery && !MWMechanics::prepareOblivionDefensiveBlockConsequences(*this, attacker, victim, preparedDeltas))
-            return nullptr;
-        if (blockHit && !preparedDeltas.mVictimCounterRequested && contact->victimRemainsAlive()
+        bool counterSelected = deltas.mVictimCounterRequested;
+        if (defensiveQuery)
+        {
+            const auto outcome = MWMechanics::prepareOblivionDefensiveBlockConsequences(
+                *this, attacker, victim, preparedDeltas);
+            if (!outcome) return nullptr;
+            counterSelected = outcome->mCounterSelected;
+        }
+        const bool stagger = preparedDeltas.mVictimReaction
+            && preparedDeltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger;
+        if (blockHit && !counterSelected && !stagger && contact->victimRemainsAlive()
             && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
                 return change.mOwner == victim && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
             }))
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
         }
-        if (attackerRecoil && !preparedDeltas.mVictimCounterRequested && contact->victimRemainsAlive()
+        if (attackerRecoil && !counterSelected && contact->victimRemainsAlive()
             && !prepareOblivionContactReaction(id, attacker, ESM4::MeleeReactionKind::Recoil, true, preparedDeltas))
             return nullptr;
         if (preparedDeltas.mVictimCounterRequested && !preparedDeltas.mVictimCounter && contact->victimRemainsAlive()

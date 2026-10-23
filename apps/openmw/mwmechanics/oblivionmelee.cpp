@@ -398,7 +398,7 @@ namespace MWMechanics
         return deltas;
     }
 
-    bool prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
+    std::optional<OblivionDefensiveBlockConsequences> prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
         OblivionPhysicalContactDeltas& deltas)
     {
@@ -409,7 +409,7 @@ namespace MWMechanics
         if (!service || attacker.isEmpty() || defender.isEmpty() || attacker == defender
             || (defender != player && defender.getType() != ESM::REC_NPC_4)
             || !oblivionBlockingPosture(world, defender) || deltas.mVictimCounterRequested || deltas.mVictimCounter)
-            return false;
+            return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
@@ -440,19 +440,24 @@ namespace MWMechanics
             ? deltas.mRandomTransition->mNextState : service->combatRandomState());
         const auto proc = ESM4::blockMasteryStagger(input, draw.mValue % 100,
             ESM4::buildMasteryProcSettings(settings), mastery);
-        if (!proc.mConsumesDraw) return true;
+        if (!proc.mConsumesDraw) return OblivionDefensiveBlockConsequences{};
         if (attacker != player && attacker.getType() != ESM::REC_NPC_4)
-            return false; // Creature Counter-target Stagger/Recoil is not admitted.
-        if (deltas.mVictimReaction || deltas.mAttackerReaction || !deltas.mDisarms.empty()) return false;
-        if (proc.mTriggered && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
+            return std::nullopt; // Creature Counter-target Stagger/Recoil is not admitted.
+        const bool stagger = deltas.mVictimReaction
+            && deltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger;
+        if ((deltas.mVictimReaction && !stagger) || deltas.mAttackerReaction || !deltas.mDisarms.empty())
+            return std::nullopt;
+        if (proc.mTriggered && !stagger && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
                 [&](const auto& change) { return change.mOwner == defender
                     && change.mBreakDisposition != OblivionWeaponBreakDisposition::None; }))
-            return false; // Projected equipment-change Counter activation needs its own resource packet.
+            return std::nullopt; // Projected equipment-change Counter activation needs its own resource packet.
         const auto random = service->prepareCombatRandom((deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
-        if (random.mNextState != draw.mNextState) return false;
+        if (random.mNextState != draw.mNextState) return std::nullopt;
         auto candidate = deltas;
         candidate.mRandomTransition = random;
-        candidate.mVictimCounterRequested = proc.mTriggered;
+        // Original5F4E10 returns before playback when Stagger owns action8,
+        // for both BlockHit and Counter. Selection still controls the tail.
+        candidate.mVictimCounterRequested = proc.mTriggered && !stagger;
         if (master && !proc.mTriggered)
         {
             // Original600528 first queries Counter even at Master. Only its
@@ -474,7 +479,7 @@ namespace MWMechanics
                     world.getStore(), targetRight->getCellRef().getRefId());
                 const auto* form = id.getIf<ESM::FormId>();
                 targetWeapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
-                if (!targetWeapon) return false;
+                if (!targetWeapon) return std::nullopt;
             }
             const ESM4::DisarmTargetWeaponInput target{targetHasWeapon,
                 attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon,
@@ -487,21 +492,21 @@ namespace MWMechanics
             if (disarm.mConsumesDraw)
             {
                 const auto combined = service->prepareCombatRandom(random.mDraws + 1);
-                if (combined.mNextState != next.mNextState) return false;
+                if (combined.mNextState != next.mNextState) return std::nullopt;
                 candidate.mRandomTransition = combined;
             }
             if (disarm.mTriggered)
             {
                 // Player bound-centering and native spare-weapon replacement
                 // remain separate drop policies, as in Counter phase1.
-                if (attacker == player) return false;
+                if (attacker == player) return std::nullopt;
                 for (auto item = targetInventory.begin(); item != targetInventory.end(); ++item)
-                    if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return false;
+                    if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return std::nullopt;
                 candidate.mDisarms.push_back({attacker, *targetRight});
             }
         }
         deltas = std::move(candidate);
-        return true;
+        return OblivionDefensiveBlockConsequences{proc.mTriggered};
     }
 
     std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(

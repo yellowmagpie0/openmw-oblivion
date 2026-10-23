@@ -11738,3 +11738,37 @@ protocol. The next integration must use staged values, keep Counter selection
 separate from playback admission, and respect speech/sequence-selection RNG
 between the common prefix and later defensive rolls. Full common-hit runtime
 publication and M15S4 E2E acceptance remain open.
+
+
+## Staged Stagger through defensive Counter selection
+
+World preparation now retains a prepared victim Stagger when the defensive
+Counter query succeeds. The query returns selection separately from activation:
+action8 suppresses BlockHit/Counter playback, while a selected Counter still
+skips Master disarm and attacker Recoil. A Counter miss preserves Master drop
+and attacker Recoil preparation. Existing random transitions remain one packet;
+no new action owner or save format is introduced.
+
+Full normal and ASan/UBSan engine inventories each pass 1,853 tests in 125 suites
+without failures or skips at fingerprint
+`20bed3fd57a4762186bf9eaa46fc9d61711ecdae79dc3f4c71894fc80d47d4df`
+(parent b0bf624392). New tests cover paired Player Stagger, prior draws, selection
+and miss, stale-plan rollback, exact RNG/save persistence, and an NPC physical
+drop with attacker Recoil. The paired Player fixture has a headless NPC Recoil
+boundary; the drop transaction uses owned renderer/physics fixtures. An initial
+test macro compile error and the deliberately stopped matching sanitizer attempt
+are retained. Leak checks remain off.
+
+[M15-STAGGER-BLOCKED-WORLD-VERIFICATION.json](M15-STAGGER-BLOCKED-WORLD-VERIFICATION.json)
+pins this bounded integration and the earlier 512-case native composition.
+Callers still supply the common Stagger. Automatic common-hit/speech publication
+and normal-input/fresh-process M15S4 acceptance remain open.
+
+A separate full original INFO selector probe passes 10,240 cases. Accumulated
+raw-bit2 candidates prepend, reversing acceptance order; a nonempty set consumes
+one modulo draw even when it contains one entry. The first forward-order
+expectation was falsified and retained before registering the correction.
+[M15-HIT-INFO-SELECTION-VERIFICATION.json](M15-HIT-INFO-SELECTION-VERIFICATION.json)
+pins that probe and its editable case protocol. Conditions, raw RNG and node
+allocation are supplied boundaries. Serialized flag mapping, actual voice/audio,
+result scripts and production integration are not established by this probe.
