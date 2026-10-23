@@ -1,0 +1,852 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Live quest-root dialogue admission and initial native NPC/Creature membership queries; bounded rendered dialogue regression",
+  "tested_source": {
+    "head": "df1df11567838c63bed525fb94705963e76831ef",
+    "source_fingerprint": "ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e"
+  },
+  "tested_source_files": {
+    "apps/components_tests/esm4/crimerules.cpp": {
+      "path": "apps/components_tests/esm4/crimerules.cpp",
+      "sha256": "81985c03c6bfc8a07c14f1dd4d39c113c0fdea8bf525170fe1f11459e82a8eb1",
+      "bytes": 54010
+    },
+    "apps/openmw/mwmechanics/oblivionai.cpp": {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "37a2c3db22284566f6fc3599a091dadb01d07cdec050ebb4d4976b125e1817e6",
+      "bytes": 340256
+    },
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "9f458c0be9f69ef67898852258279e1af896c060fae6cea6b28dc84940e5764c",
+      "bytes": 142420
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "21317dfcd8fb354548ced43138c2fed9f04745120fe6166bd540c99f675853d0",
+      "bytes": 1963524
+    },
+    "components/esm4/factionrules.hpp": {
+      "path": "components/esm4/factionrules.hpp",
+      "sha256": "009053fd55b86dcf16cc000eb8df0a0d8cfda85d31efd81a4d0b46f02b9ed6c9",
+      "bytes": 966
+    }
+  },
+  "checks": {
+    "focused": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/verification.json",
+        "sha256": "ebda1e13f386e6bed5e4aec94369a9c2621e9f50ea4313d5fb6e158dd84506db",
+        "bytes": 4914
+      },
+      "source": {
+        "head": "df1df11567838c63bed525fb94705963e76831ef",
+        "source_fingerprint": "ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e"
+      },
+      "results": {
+        "engine": {
+          "executed": 3,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4FactionRules.*:OblivionWorldTest.NativeNpcAndCreatureFactionConditionsReadFirstSignedBaseMembership:OblivionWorldTest.NativeSayUsesQuestThenInfoEligibilityBeforeVoiceLookup:OblivionWorldTest.NativeSayForUnmaterializedActorsSkipsConditionsAndSelectionWithoutDrawing",
+          "binary_sha256": "696e5338fa4a09f9d228b9948e48250327a85d1a8482fa9a9f4f4bffeaf03248",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "0512203e79d8a5f3336d4c5c6451d6eb6ae205c15ad79c6b4b03621ba7190898",
+          "inventory_sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4FactionRules.*:OblivionWorldTest.NativeNpcAndCreatureFactionConditionsReadFirstSignedBaseMembership:OblivionWorldTest.NativeSayUsesQuestThenInfoEligibilityBeforeVoiceLookup:OblivionWorldTest.NativeSayForUnmaterializedActorsSkipsConditionsAndSelectionWithoutDrawing",
+          "binary_sha256": "bf6d5703bce689ee44da207165c907223c5919de9c14d971a5c60a83186141e1",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d188799b8f970f37aae3cf537fa145cc72291ca61163a580eae83fe9cf5a7867",
+          "inventory_sha256": "cd260b6d57a44f46c698a4565c9866f638428737603a4d2e20d3d4605a7bd7de",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/components-build.log",
+          "sha256": "3671d557142c1d2b186e14323a24437d48cc575db5461a49b299a46affa25df8",
+          "bytes": 617
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/components-inventory.txt",
+          "sha256": "cd260b6d57a44f46c698a4565c9866f638428737603a4d2e20d3d4605a7bd7de",
+          "bytes": 191626
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/components.log",
+          "sha256": "24b4413ddc4b5fd0dacec2af80c8ca0f6d34f3e6494631926b973b520c11e3cb",
+          "bytes": 874
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/components.xml",
+          "sha256": "d188799b8f970f37aae3cf537fa145cc72291ca61163a580eae83fe9cf5a7867",
+          "bytes": 621
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/engine-build.log",
+          "sha256": "20a754e487cd435570f1db60e498d6f9a9b6f0ac971469ca9ce3049163f09df9",
+          "bytes": 30274
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/engine-inventory.txt",
+          "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "bytes": 131709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/engine.log",
+          "sha256": "bbb46bae5108c75f8123ea695806e962fc8b29aca6f4e8a74a220b7ef9db2939",
+          "bytes": 7188
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-focused-01/engine.xml",
+          "sha256": "0512203e79d8a5f3336d4c5c6451d6eb6ae205c15ad79c6b4b03621ba7190898",
+          "bytes": 1280
+        }
+      ]
+    },
+    "normal": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/verification.json",
+        "sha256": "4982b0637f65fa07e873589e827167e493cedc5c53003da88f420e4e2bfb6f04",
+        "bytes": 3849
+      },
+      "source": {
+        "head": "df1df11567838c63bed525fb94705963e76831ef",
+        "source_fingerprint": "ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e"
+      },
+      "results": {
+        "engine": {
+          "executed": 1862,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "696e5338fa4a09f9d228b9948e48250327a85d1a8482fa9a9f4f4bffeaf03248",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "65127608946b63cacc1e73f6cbd046e57cddbe0dec7fccf7ef14988daaf75c5e",
+          "inventory_sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3010,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "bf6d5703bce689ee44da207165c907223c5919de9c14d971a5c60a83186141e1",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3616051856b3c051453d34389abd2298d071eb646fd849a99e7eafbe2e4e3cb8",
+          "inventory_sha256": "17d90f476bdc0f1e92a82d787d0740860d4466e8cced2ce12173b1d304ad3a08",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/components-build.log",
+          "sha256": "41306e75fb5e58d7f5c9d4b4a378fcf4fc6d7beefa874d5a5bea8d75633c8d5e",
+          "bytes": 461
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/components-inventory.txt",
+          "sha256": "17d90f476bdc0f1e92a82d787d0740860d4466e8cced2ce12173b1d304ad3a08",
+          "bytes": 191626
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/components.log",
+          "sha256": "f32de925318dc390b4dc6ab7eae263ad7e8ba550b1f935bd4e76481b54d2c3ee",
+          "bytes": 599311
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/components.xml",
+          "sha256": "3616051856b3c051453d34389abd2298d071eb646fd849a99e7eafbe2e4e3cb8",
+          "bytes": 2338172
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/engine-build.log",
+          "sha256": "9246613f7bd906f06fa198f9122469f28431b22fdebc0befbbb3a2f54b2bae26",
+          "bytes": 1522
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/engine-inventory.txt",
+          "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "bytes": 131709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/engine.log",
+          "sha256": "403b034a24ebe3d500f62326a1d077c71ebc799fd58cdb7ee6695ca43f0b65b1",
+          "bytes": 2180846
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-normal-01/engine.xml",
+          "sha256": "65127608946b63cacc1e73f6cbd046e57cddbe0dec7fccf7ef14988daaf75c5e",
+          "bytes": 613497
+        }
+      ]
+    },
+    "sanitized": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/verification.json",
+        "sha256": "a3d0545cd88acc12f05aad6dddd5d5ecda2837f0b9b5b477147858c3eddd8182",
+        "bytes": 4027
+      },
+      "source": {
+        "head": "df1df11567838c63bed525fb94705963e76831ef",
+        "source_fingerprint": "ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e"
+      },
+      "results": {
+        "engine": {
+          "executed": 1862,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "ca09e667bec025992b342d3213b37c83e3a73ad6cd0151e1137286252f615484",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "4238589f87c90b9ce4a7a9f0d2170649f8c4f23a98d1c05df66411fb5640b105",
+          "inventory_sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "sanitize": {
+          "executed": 863,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "a125d2733f2c78320df100f6e05911e77a0c81bbc86477c5831d1474068015c9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "5de6dd20624b192c1d6831314f3adcc815b2a668be9612d8278f013144453626",
+          "inventory_sha256": "56eb4f28abf2d658ff7d0af0db558c3737bd09282d569662dfb3b3af56eaa27a",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/engine-build.log",
+          "sha256": "c14aa38e32ce80815276bf7829810d515cab951ac4a0fceb375506c882aa6560",
+          "bytes": 28840
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/engine-inventory.txt",
+          "sha256": "99a0d5331bfa5a2d01c1da94db525d97ce1c27a610443f64095dba39502594ef",
+          "bytes": 131709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/engine.log",
+          "sha256": "982be9e87bb1fad2b7fb5721fb52e3ee6e09bf72c2aacd1652bbcb8e754043be",
+          "bytes": 2181404
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/engine.xml",
+          "sha256": "4238589f87c90b9ce4a7a9f0d2170649f8c4f23a98d1c05df66411fb5640b105",
+          "bytes": 615232
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/sanitize-build.log",
+          "sha256": "15ddb3a479ce37d2f7df43fbe72572046f9bd889311fdd0cf7d74ec77411f6ae",
+          "bytes": 617
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/sanitize-inventory.txt",
+          "sha256": "56eb4f28abf2d658ff7d0af0db558c3737bd09282d569662dfb3b3af56eaa27a",
+          "bytes": 191626
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/sanitize.log",
+          "sha256": "3962671374bad303a5d1c8550e595f526252032e46d3358930ed85e4064d0fb8",
+          "bytes": 159886
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-sanitized-01/sanitize.xml",
+          "sha256": "5de6dd20624b192c1d6831314f3adcc815b2a668be9612d8278f013144453626",
+          "bytes": 1614513
+        }
+      ]
+    }
+  },
+  "native_evidence": {
+    "faction_original": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+        "bytes": 661
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/preregistration.json",
+        "sha256": "ccf243018759669f4095ddf9662a58426040e0e326b97f8ceea8d0f781939c15",
+        "bytes": 3880
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/probe.py",
+        "sha256": "fdd551859cd3ec0551a27f8d4ee6e887c7555e1efa4641be1f55afb739061a4f",
+        "bytes": 5088
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/corpus.json",
+        "sha256": "2c4c85eeaebee4d1351866a200e54ef8d4ec46752c000b9f1e0ba7014aab2957",
+        "bytes": 35779169
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/verification.json",
+        "sha256": "c52b8a4ed117d5b4064808f0c303c5bfb4438b0091e046c400cf9e77ec33e6a1",
+        "bytes": 4722
+      }
+    ],
+    "faction_comparison": {
+      "passed": true,
+      "scope": "All196608 original GetInFaction observations compared to production factionMembership helper; identity/list/Player flag semantics only, no mutable membership or gameplay proof",
+      "source": {
+        "path": "components/esm4/factionrules.hpp",
+        "sha256": "009053fd55b86dcf16cc000eb8df0a0d8cfda85d31efd81a4d0b46f02b9ed6c9"
+      },
+      "oracle": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/verification.json",
+          "sha256": "c52b8a4ed117d5b4064808f0c303c5bfb4438b0091e046c400cf9e77ec33e6a1"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/corpus.json",
+          "sha256": "2c4c85eeaebee4d1351866a200e54ef8d4ec46752c000b9f1e0ba7014aab2957"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/probe.py",
+          "sha256": "fdd551859cd3ec0551a27f8d4ee6e887c7555e1efa4641be1f55afb739061a4f"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/preregistration.json",
+          "sha256": "ccf243018759669f4095ddf9662a58426040e0e326b97f8ceea8d0f781939c15"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-faction-membership-oracle-01/original-exe.json",
+          "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+        }
+      ],
+      "input": {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/inputs.tsv",
+        "sha256": "38dbba396b6d6969bf6d158e9137624c18ebdab1162331de5750413d4fb71686"
+      },
+      "harness": {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/compare.cpp",
+        "sha256": "6d1a4b44c50c3ac38889dc900e09fa3ba88d529fbd163ffa1d9fe9d0d461bcd7"
+      },
+      "commands": [
+        {
+          "argv": [
+            "g++",
+            "-std=c++20",
+            "-O2",
+            "-I",
+            "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/compare.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal"
+          ],
+          "exit_code": 0
+        },
+        {
+          "argv": [
+            "g++",
+            "-std=c++20",
+            "-O1",
+            "-g",
+            "-fsanitize=address,undefined",
+            "-fno-omit-frame-pointer",
+            "-I",
+            "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/compare.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized"
+          ],
+          "exit_code": 0
+        }
+      ],
+      "results": {
+        "normal": {
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal",
+            "sha256": "3f257380273df0231c66dfa2afae0786624830090bfbf4f92d90132888f277eb"
+          },
+          "output": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal-output.txt",
+            "sha256": "33554721f4b63fdada4c837e26b94a610c2062c6e4d7729d16241fae31c3ca0f"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal.log",
+            "sha256": "36b7600d650d8c32c9b7c827a24a17c416da5b598aa9e3b78a81eb1bd92337b4"
+          },
+          "cases": 196608,
+          "passed": true
+        },
+        "sanitized": {
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized",
+            "sha256": "fc9a3e5adb4d207019ca2cc7b51bf9680c90e31bf804824537c8abef10186d99"
+          },
+          "output": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized-output.txt",
+            "sha256": "33554721f4b63fdada4c837e26b94a610c2062c6e4d7729d16241fae31c3ca0f"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized.log",
+            "sha256": "36b7600d650d8c32c9b7c827a24a17c416da5b598aa9e3b78a81eb1bd92337b4"
+          },
+          "cases": 196608,
+          "passed": true
+        }
+      },
+      "negative_controls": {
+        "wrong": {
+          "rejected": true,
+          "exit_code": 3,
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/wrong.tsv",
+            "sha256": "53e8c4381ef6db7503e45d3d87dfb76524a7de6fb98183a56a47884e53936890"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/wrong.log",
+            "sha256": "d614fc387f23dbf8e6594b39fd3c639ec374f1627dba6c52c460aee62310c61e"
+          }
+        },
+        "missing": {
+          "rejected": true,
+          "exit_code": 4,
+          "input": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/missing.tsv",
+            "sha256": "65d6950f42008c6538e00ab643ddc8c2b4898b8fa2db3721cc2e1879ea8410f0"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/missing.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    "comparison_files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/compare.cpp",
+        "sha256": "6d1a4b44c50c3ac38889dc900e09fa3ba88d529fbd163ffa1d9fe9d0d461bcd7",
+        "bytes": 1412
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/inputs.tsv",
+        "sha256": "38dbba396b6d6969bf6d158e9137624c18ebdab1162331de5750413d4fb71686",
+        "bytes": 9867776
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/missing-output.txt",
+        "sha256": "8e895a1031f50131a7ef50d20246cd1d61df7831edb2ffa3980681d4b7110a99",
+        "bytes": 1658353
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/missing.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/missing.tsv",
+        "sha256": "65d6950f42008c6538e00ab643ddc8c2b4898b8fa2db3721cc2e1879ea8410f0",
+        "bytes": 9867706
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal",
+        "sha256": "3f257380273df0231c66dfa2afae0786624830090bfbf4f92d90132888f277eb",
+        "bytes": 24056
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal-build.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal-output.txt",
+        "sha256": "33554721f4b63fdada4c837e26b94a610c2062c6e4d7729d16241fae31c3ca0f",
+        "bytes": 1658362
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/normal.log",
+        "sha256": "36b7600d650d8c32c9b7c827a24a17c416da5b598aa9e3b78a81eb1bd92337b4",
+        "bytes": 35
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/run.log",
+        "sha256": "2aa0f2e60f6471967d3bbf9187a6ece7c051f7a92dcd70de10d7e2e87066e91c",
+        "bytes": 339
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/run.py",
+        "sha256": "7bef3567089f43bb227079ff7a627687d00cb88896b55bfca3cebe3f7acde3c7",
+        "bytes": 3030
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized",
+        "sha256": "fc9a3e5adb4d207019ca2cc7b51bf9680c90e31bf804824537c8abef10186d99",
+        "bytes": 267040
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized-build.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized-output.txt",
+        "sha256": "33554721f4b63fdada4c837e26b94a610c2062c6e4d7729d16241fae31c3ca0f",
+        "bytes": 1658362
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/sanitized.log",
+        "sha256": "36b7600d650d8c32c9b7c827a24a17c416da5b598aa9e3b78a81eb1bd92337b4",
+        "bytes": 35
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/verification.json",
+        "sha256": "ec9b3f9bb7fe0555a13a036809df86b1e71223e48624c91f15bd96a580d72384",
+        "bytes": 5236
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/wrong-output.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/wrong.log",
+        "sha256": "d614fc387f23dbf8e6594b39fd3c639ec374f1627dba6c52c460aee62310c61e",
+        "bytes": 15
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-faction-membership-comparison-01/wrong.tsv",
+        "sha256": "53e8c4381ef6db7503e45d3d87dfb76524a7de6fb98183a56a47884e53936890",
+        "bytes": 9867776
+      }
+    ],
+    "quest_original": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+        "bytes": 661
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/preregistration.json",
+        "sha256": "c42fc65e54d4ed301618ed0c5e0a57c05085ec41c40841915a0528a2fb125eb6",
+        "bytes": 720
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/preregistration02.json",
+        "sha256": "9ff8ac403e88c890c71512e8a7b6b950da81888d205d769e4b5b988f184b51a6",
+        "bytes": 1003
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/probe.py",
+        "sha256": "3845d4e583ecbc93340e8804daa7cb7eaff6dc582ac5d82b89488d12f86a37fd",
+        "bytes": 3516
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/probe-02.py",
+        "sha256": "1d60505163fa8110e28ed2363bd8d002d624a612c84e8d18fd48b592e8d6bc7e",
+        "bytes": 3577
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/failure.json",
+        "sha256": "c196ffb545874fa24b8d02747b620a970f5876f9aa09cf1e49412c2070219ecf",
+        "bytes": 267
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/corpus.json",
+        "sha256": "3c2cc8263ba0c77293fb89225e3e3151f0106264971a642316e1d105bfff3809",
+        "bytes": 1548611
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-oracle-01/verification.json",
+        "sha256": "70d3209c07b9b02f33ab50bd3f06f79cacd7a379971367943bb3db16ad0ee2b7",
+        "bytes": 352
+      }
+    ],
+    "quest_comparison": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-comparison-01/verification-normal.json",
+        "sha256": "374e624271892184bcfb8f8a5657195b0fa8f789a479d259409a6bf2f81489b4",
+        "bytes": 528
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-info-quest-conditions-comparison-01/verification-sanitized.json",
+        "sha256": "5af305639f5f748d37796abc25ad5b504ab2b630d9d0ad750ffa64cc78c02cc9",
+        "bytes": 531
+      }
+    ],
+    "prior_quest_codec_receipt": {
+      "path": "docs/oblivion/M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json",
+      "sha256": "a692c63ae5821c4d49d374b6decfcf2afe0809ade9a60c278aca3c07f26224ca",
+      "bytes": 26127
+    },
+    "unchanged_quest_composition_header": {
+      "path": "components/esm4/dialoguevoices.hpp",
+      "sha256": "7d17e6aecc577ff3321334e83a7885f26f99aa2b0f1b92e8a3e97b3c40c949da",
+      "bytes": 3653
+    }
+  },
+  "runtime": {
+    "verification": {
+      "passed": true,
+      "scope": "Rendered dialogue regression with quest-root admission; two realm queries and saved flag false; common melee acceptance remains open",
+      "schema": 63,
+      "player": "dynamic:player:0000000000000001",
+      "saved_realm": false,
+      "query_observations": [
+        {
+          "line": 12775,
+          "text": "[05:38:26.346 I] M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0"
+        },
+        {
+          "line": 21037,
+          "text": "[05:39:55.152 I] M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0"
+        }
+      ],
+      "duration_seconds": 140.46498,
+      "script_diagnostics": {
+        "Unsupported ObScript command setfactionreaction": 3,
+        "Unsupported ObScript command setalert": 3,
+        "ObScript value is not numeric": 99,
+        "native combat command requires an initialized resident actor": 2
+      },
+      "capture_review": "Viewed stone prison arch/chains, crosshair, native resource HUD and minimap",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/scenario.json",
+          "sha256": "ae3b4f3240ffb96c75b3124f8cf51507fc6e66497d9d73d4953afb8847ba8ae0",
+          "bytes": 4697
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/process.log",
+          "sha256": "25b4b689c988f8fb1188109312af76c75804a89ee71562ca2a2f9578f3a72238",
+          "bytes": 2816951
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/obscript-report.json",
+          "sha256": "5f90b87d302d89440d5b8cd80fe96cbf1d31cade8d8d102d5bf945b22a2c7490",
+          "bytes": 27638570
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/m15-events.jsonl",
+          "sha256": "bcb86161d12c827a75eda82cc2d7268a680f9cb0c7b53be42a0da6ccf0465b3e",
+          "bytes": 145104
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/real-quest-audio-weather.png",
+          "sha256": "6ea30e7d7b0cde354f0fb96b6099438f796a813fb16a1f942d764f0e8e63fc81",
+          "bytes": 1142356
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "556b1a8ace253c17f1938e190dc9e4b0531c5321c7bead24863d2553025f0755",
+          "bytes": 11310960
+        }
+      ],
+      "decoder": {
+        "path": "scripts/tes4_runtime_state.py",
+        "sha256": "7d2d84371099294a7146cb0e04822d6a68d3d50a45400b2a0623ff2d9fe604c9",
+        "bytes": 210689
+      }
+    },
+    "root_observation": {
+      "passed": true,
+      "scope": "Independent raw merge of the actual two-plugin runtime load order; selected voiced INFO has no365/254 terms, its quest supplies365/254 before the INFO predicates, matching actual ordered visits and true values. No native whole-selector ordering or common hit claim",
+      "sources": [
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+        },
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+        }
+      ],
+      "selected_info_proofs": [
+        {
+          "info": "content:oblivion.esm:0150c7",
+          "quest": "content:oblivion.esm:02466e",
+          "winning_info": {
+            "plugin": "Oblivion.esm",
+            "flags": 0,
+            "quest": "content:oblivion.esm:02466e",
+            "conditions": [
+              {
+                "function": 72,
+                "flags": 0,
+                "comparison_bits": 1065353216,
+                "parameter1": 144543
+              }
+            ]
+          },
+          "winning_quest": {
+            "plugin": "Oblivion.esm",
+            "flags": 0,
+            "quest": "null",
+            "conditions": [
+              {
+                "function": 365,
+                "flags": 0,
+                "comparison_bits": 0,
+                "parameter1": 0
+              },
+              {
+                "function": 254,
+                "flags": 0,
+                "comparison_bits": 1065353216,
+                "parameter1": 0
+              }
+            ]
+          },
+          "observed": {
+            "visits": [
+              {
+                "function": 365,
+                "actual": 0.0,
+                "status": 0,
+                "expected": 0.0,
+                "line": 14016
+              },
+              {
+                "function": 254,
+                "actual": 1.0,
+                "status": 0,
+                "expected": 1.0,
+                "line": 14017
+              },
+              {
+                "function": 72,
+                "actual": 1.0,
+                "status": 0,
+                "expected": 1.0,
+                "line": 14018
+              }
+            ],
+            "result": 0
+          }
+        }
+      ],
+      "log": {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-audio-normal-01/process.log",
+        "sha256": "25b4b689c988f8fb1188109312af76c75804a89ee71562ca2a2f9578f3a72238"
+      },
+      "runtime_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/audio-normal-01-manifest.json",
+        "sha256": "1b0c5024c534c1944ff9b565d5e62524c8c3d4fae5c2028ecbd6b15303b7145a"
+      }
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/runtime-verification.json",
+        "sha256": "233dfeba331c62cd9cce5756e647d20b6c0e3a87ee95ba31351475420694d150",
+        "bytes": 2586
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/verify-runtime.py",
+        "sha256": "730024b7cb0beb2b4ebb2ee7640a2d17620f522819e0f64cb27813636bd945ec",
+        "bytes": 2006
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/root-observation-verification.json",
+        "sha256": "7b116f1635d98f8cf99ce172932fa446c1d730aef42d9a2dc740c2f67b103e98",
+        "bytes": 2567
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/verify-root-observation.py",
+        "sha256": "d5ee90b843cd37a9c979a37f23e03f60d6af07ef74378e251a84896edfb7123e",
+        "bytes": 4028
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/audio-launch.json",
+        "sha256": "6a8fedc49e687c9ab9e22c2e252ae215ee0794778b9b347da73eb72159e26d89",
+        "bytes": 1209
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-launch-01/audio-completion.json",
+        "sha256": "81868a6e94ffc0178bf833deb1c9013d9fab4ee95ddb876a5e8ec4f1d26376d2",
+        "bytes": 21
+      }
+    ],
+    "scope": "Selected quest roots365/254 and INFO72 observed in real voiced dialogue; faction changes covered by world tests, not a new creature/unloaded runtime course"
+  },
+  "retained_binaries": {
+    "source": {
+      "head": "df1df11567838c63bed525fb94705963e76831ef",
+      "source_fingerprint": "ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e"
+    },
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-runtime-binaries-01/openmw-normal",
+      "sha256": "a73627722e831c2d342c66725b1c8dcd0fe1f45cf94a85db589f339098b8205f",
+      "bytes": 1391956376
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-runtime-binaries-01/openmw-sanitized",
+      "sha256": "e091c177e3b27ba23c77659947a200896ceee67898a9f43f7f46103906a2f0c8",
+      "bytes": 2583256320
+    },
+    "source_patch": {
+      "path": "build/oblivion-compat/m15/S4/native-quest-live-admission-runtime-binaries-01/tested-source.patch",
+      "sha256": "c2a5f2c9aa72f25aa0f58f3c8585f0a9d92005a8898a2bb454d51d82a183fb76",
+      "bytes": 15774
+    }
+  },
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_native_quest_live_admission_cases.json",
+    "sha256": "69909ebe8c59f07f411c5305ff2d7980794e1a4517654bc8304b0fcb7c1b4e1e",
+    "bytes": 2294
+  },
+  "runtime_manifest": {
+    "path": "scripts/data/oblivion_compat/oblivion_m15_quest_live_admission_audio.json",
+    "sha256": "1b0c5024c534c1944ff9b565d5e62524c8c3d4fae5c2028ecbd6b15303b7145a",
+    "bytes": 4402
+  },
+  "limitations": [
+    "Player faction query continues existing shared adapter; mutable faction state/commands are not implemented here",
+    "Live nonPlayer query uses existing base lists; changed-list ownership is a boundary",
+    "ASan leak checks disabled",
+    "Existing unsupported/numeric/native command diagnostics retained in runtime inventory",
+    "No common melee, INFO producer ordering, INFO history/results, controller/restart/FPS or full M15S4 acceptance claim"
+  ]
+}

@@ -43,6 +43,8 @@
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadmisc.hpp>
 #include <components/esm4/loadnpc.hpp>
+#include <components/esm4/loadfact.hpp>
+#include <components/esm4/factionrules.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/playermechanics.hpp>
@@ -1341,6 +1343,14 @@ namespace MWMechanics
                     const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
                     if (!factionId)
                         return value(0.0);
+                    if (loaded != mWorld.getPlayerPtr() && nativeActor(loaded))
+                    {
+                        const auto entries = loaded.getClass().getType() == ESM::REC_NPC_4
+                            ? std::span<const ESM4::ActorFaction>(loaded.get<ESM4::Npc>()->mBase->mFactions)
+                            : std::span<const ESM4::ActorFaction>(loaded.get<ESM4::Creature>()->mBase->mFactions);
+                        return value(mWorld.mStore.search<ESM4::Faction>(parameterKey)
+                            && ESM4::factionMembership(entries, {}, factionId->toUint32(), false, 0) ? 1.0 : 0.0);
+                    }
                     if (loaded.getClass().isNpc())
                         return value(loaded.getClass().getNpcStats(loaded).isInFaction(ESM::RefId(*factionId))
                                 ? 1.0
@@ -1350,13 +1360,11 @@ namespace MWMechanics
                 const std::optional<ESM::FormId> factionId = resolver.toFormId(parameterKey);
                 if (!factionId)
                     return value(0.0);
-                const auto containsFaction = [factionId](const auto* actor) {
-                    return actor != nullptr
-                        && std::any_of(actor->mFactions.begin(), actor->mFactions.end(), [factionId](const auto& item) {
-                               return ESM::FormId::fromUint32(item.faction) == *factionId;
-                           });
-                };
-                return value(containsFaction(npc) || containsFaction(creature) ? 1.0 : 0.0);
+                const auto factions = npc ? std::span<const ESM4::ActorFaction>(npc->mFactions)
+                    : creature ? std::span<const ESM4::ActorFaction>(creature->mFactions)
+                               : std::span<const ESM4::ActorFaction>{};
+                return value(mWorld.mStore.search<ESM4::Faction>(parameterKey)
+                    && ESM4::factionMembership(factions, {}, factionId->toUint32(), false, 0) ? 1.0 : 0.0);
             }
             if (function == "GetDeadCount")
             {
@@ -1728,6 +1736,16 @@ namespace MWMechanics
                         : ESM::FormId{});
                 if (faction.empty())
                     return false;
+                if (subjectPtr != mWorld.getPlayerPtr() && nativeActor(subjectPtr))
+                {
+                    const auto* definition = mWorld.mStore.search<ESM4::Faction>(factionKey);
+                    if (!definition)
+                        return false;
+                    const auto entries = subjectPtr.getClass().getType() == ESM::REC_NPC_4
+                        ? std::span<const ESM4::ActorFaction>(subjectPtr.get<ESM4::Npc>()->mBase->mFactions)
+                        : std::span<const ESM4::ActorFaction>(subjectPtr.get<ESM4::Creature>()->mBase->mFactions);
+                    return ESM4::factionMembership(entries, {}, faction.getIf<ESM::FormId>()->toUint32(), false, 0);
+                }
                 if (const NpcStats* stats = nativeNpcStats())
                     return stats->isInFaction(faction);
                 return subjectPtr.getClass().getPrimaryFaction(subjectPtr) == faction;

@@ -428,10 +428,14 @@ namespace MWWorld
             if (ai == nullptr)
                 return false;
             const ESM::FormKey quest = mResolver.toFormKey(info.mQuest);
-            const auto questState = mQuests.find(quest);
-            if (!quest.isNull() && (questState == mQuests.end() || !questState->second.mRunning))
+            if (quest.isNull())
                 return false;
-            const auto conditions = ai->evaluateDialogueConditions(actor, target, info.mCanonicalConditions, diagnose);
+            const auto* questDefinition = mStore.search<ESM4::Quest>(quest);
+            const auto questState = mQuests.find(quest);
+            if (!questDefinition || questState == mQuests.end() || !questState->second.mRunning)
+                return false;
+            const auto sequence = ESM4::dialogueInfoConditions(*questDefinition, info);
+            const auto conditions = ai->evaluateDialogueConditions(actor, target, sequence, diagnose);
             if (diagnose)
                 Log(Debug::Info) << "Native dialogue candidate: info=" << info.mFormKey.serialize()
                     << " result=" << static_cast<int>(conditions);

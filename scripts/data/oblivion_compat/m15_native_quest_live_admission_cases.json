@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "scope": "Quest root then INFO dialogue eligibility and native nonPlayer NPC/Creature initial base faction membership",
+  "native_rules": {
+    "quest_sequence": {
+      "cases": 14450,
+      "entrypoints": [
+        "00530830",
+        "0056A510"
+      ],
+      "order": "Quest root conditions followed by INFO conditions in one traversal; OR can span the boundary"
+    },
+    "faction": {
+      "cases": 196608,
+      "entrypoints": [
+        "004F70C0",
+        "005E02E0",
+        "00467510"
+      ],
+      "ranks": "all signed byte values",
+      "layouts": [
+        "empty",
+        "one_match",
+        "other_then_match",
+        "match_then_duplicate"
+      ],
+      "changed_list": [
+        "absent",
+        "nonempty",
+        "empty_falls_back_to_base"
+      ],
+      "faction_flags": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "player": [
+        false,
+        true
+      ],
+      "control_words": [
+        639,
+        895
+      ],
+      "rule": "Use nonempty changed list, otherwise base list; first matching signed rank is member unless -1; mask0x8 suppresses Player only"
+    }
+  },
+  "production_cases": [
+    "NPC/Creature queries use native faction entries with empty shared faction facade; all256 ranks, duplicate precedence, missing faction, preserved native snapshot/RNG",
+    "Root false skips INFO and random draws; quest OR can skip INFO; passing root permits INFO random query; missing/stopped quest rejects before selection",
+    "Existing cold Say gate still skips eligibility/RNG",
+    "Actual two-plugin rendered course; selected INFO0150C7 has only function72, quest root supplies365/254; runtime visits365/254/72 and plays its expected voice; saved Player flag agrees with live queries"
+  ],
+  "limits": [
+    "Production faction change covers existing base lists of nonPlayer actors",
+    "Player faction query retains the shared adapter; no mutable faction authority is added",
+    "Changed-list fallback and Player mask are verified in pure rule, not new live producers",
+    "INFO ordering/history and automatic common hit speech/reaction integration remain open"
+  ]
+}

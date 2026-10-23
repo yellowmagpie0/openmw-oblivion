@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <components/esm4/combatsettings.hpp>
+#include <components/esm4/factionrules.hpp>
 #include <components/esm4/loadgmst.hpp>
 
 #include <array>
@@ -1054,4 +1055,25 @@ TEST(ESM4CrimeRules, JailDoorDistinguishesLocalEscapeTeleportAndAlternateRealm)
                         EXPECT_FALSE(result.mBountyIncrement);
                     }
                 }
+}
+
+TEST(ESM4FactionRules, FirstSignedRankAndNonemptyChangedListOwnMembership)
+{
+    const ESM4::ActorFaction yes{10, 0, 0, 0, 0}, no{10, -1, 0, 0, 0}, other{11, 0, 0, 0, 0};
+    const std::array firstNo{other, no, yes}, firstYes{other, yes, no};
+    EXPECT_FALSE(ESM4::factionMembership(firstNo, {}, 10, false, 0));
+    EXPECT_TRUE(ESM4::factionMembership(firstYes, {}, 10, false, 0));
+    EXPECT_TRUE(ESM4::factionMembership(firstNo, std::span(&yes, 1), 10, false, 0));
+    EXPECT_FALSE(ESM4::factionMembership(firstYes, std::span(&no, 1), 10, false, 0));
+    EXPECT_FALSE(ESM4::factionMembership({}, {}, 10, false, 0));
+    EXPECT_FALSE(ESM4::factionMembership(firstYes, {}, 12, false, 0));
+    for (const std::int8_t rank : {-128, -2, 0, 127})
+    {
+        const ESM4::ActorFaction entry{10, rank, 0, 0, 0};
+        for (const std::uint8_t flags : {0, 1, 2, 4, 8, 15, 255})
+        {
+            EXPECT_TRUE(ESM4::factionMembership(std::span(&entry, 1), {}, 10, false, flags));
+            EXPECT_EQ(ESM4::factionMembership(std::span(&entry, 1), {}, 10, true, flags), (flags & 8) == 0);
+        }
+    }
 }

@@ -12001,3 +12001,20 @@ retains the observed false realm flag. See
 for source, independent native observations, content lock correction, retained
 fixture failures, and runtime limits. Quest root admission and full common hit
 speech and reaction integration remain incomplete; this does not close M15S4.
+
+### Live quest eligibility and native NPC/creature faction queries
+
+Voice selection now evaluates quest roots before INFO conditions. Native NPC
+and creature faction queries use their base memberships with the original first
+signed-rank rule. The Player faction adapter is unchanged. The pure rule matches
+196,608 original observations in both comparison profiles; focused and full
+engine/component checks pass. Both engine profiles execute 1,862 tests; normal
+components execute 3,010 and instrumented ESM4 components 863.
+
+The rendered command regression passes. Independent raw record reinspection
+shows quest terms 365/254 preceding INFO term 72 for the actually voiced
+CharacterGen response, matching runtime visitation and the expected audio clip.
+The save and two realm queries agree. See
+[M15-QUEST-LIVE-ADMISSION-VERIFICATION.json](M15-QUEST-LIVE-ADMISSION-VERIFICATION.json)
+for exact source, comparisons, diagnostics, captures, and scope limits. Automatic
+common hit speech/reactions and the remaining M15S4 acceptance cases stay open.

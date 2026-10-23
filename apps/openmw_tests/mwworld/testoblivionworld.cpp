@@ -109,6 +109,7 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadlvli.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/files/hash.hpp>
@@ -32861,4 +32862,114 @@ TEST(OblivionWorldTest, NativePlayableRaceUsesTheNpcRaceFlagAndCurrentPlayerProx
         world.getPlayer().set(prepared.commit());
     }
     EXPECT_EQ(ai.evaluateDialogueConditions(player, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);
+}
+
+TEST(OblivionWorldTest, NativeNpcAndCreatureFactionConditionsReadFirstSignedBaseMembership)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    const auto npc = addNativeNpc(fixture, 0xa00);
+    const auto creature = addEquipmentCreature(fixture);
+    const auto factionKey = ESM::FormKey::content("headless.esm", 0x850);
+    for (const auto id : {0x850u, 0x851u})
+    {
+        ESM4::Faction faction{};
+        faction.mId = {id, 0}; faction.mFormKey = ESM::FormKey::content("headless.esm", id);
+        faction.mFactionFlags = 0xff;
+        store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+    }
+    ASSERT_TRUE(world.activateOblivionActor(npc)); ASSERT_TRUE(world.activateOblivionActor(creature));
+    // The shared facade has no native faction entries; it cannot answer this query.
+    EXPECT_TRUE(npc.getClass().getNpcStats(npc).getFactionRanks().empty());
+    auto npcBase = *npc.get<ESM4::Npc>()->mBase;
+    auto creatureBase = *creature.get<ESM4::Creature>()->mBase;
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 71; condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mComparisonValue = 1;
+    condition.mParameter1.mIsFormId = true; condition.mParameter1.mReferenceKey = factionKey;
+    auto& ai = *world.getOblivionAiService();
+    const auto before = contactSnapshot(fixture, {npc, creature});
+    for (int rank = -128; rank < 128; ++rank)
+    {
+        SCOPED_TRACE(rank);
+        // A later duplicate with the opposite membership cannot replace the first.
+        const std::vector<ESM4::ActorFaction> entries{{0x851, 0, 0, 0, 0},
+            {0x850, static_cast<std::int8_t>(rank), 0, 0, 0},
+            {0x850, static_cast<std::int8_t>(rank == -1 ? 0 : -1), 0, 0, 0}};
+        npcBase.mFactions = entries; creatureBase.mFactions = entries;
+        store.getWritable<ESM4::Npc>().insertStatic(npcBase, npcBase.mFormKey);
+        store.getWritable<ESM4::Creature>().insertStatic(creatureBase, creatureBase.mFormKey);
+        for (const auto& actor : {npc, creature})
+            EXPECT_EQ(ai.evaluateDialogueConditions(actor, {}, std::span(&condition, 1)),
+                rank == -1 ? ESM4::ConditionResult::False : ESM4::ConditionResult::True);
+    }
+    condition.mParameter1.mReferenceKey = ESM::FormKey::content("headless.esm", 0x852);
+    EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);
+    EXPECT_EQ(contactSnapshot(fixture, {npc, creature}), before);
+    EXPECT_TRUE(npc.getClass().getNpcStats(npc).getFactionRanks().empty());
+}
+
+TEST(OblivionWorldTest, NativeSayUsesQuestThenInfoEligibilityBeforeVoiceLookup)
+{
+    // Actual ESMStore loading and ScriptManager lookup; the deliberately empty
+    // voice VFS stops after INFO eligibility/selection, before audio playback.
+    for (unsigned scenario = 0; scenario < 5; ++scenario)
+    {
+        SCOPED_TRACE(scenario);
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto sub = [&](std::uint32_t tag, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+        };
+        const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(std::uint32_t{})
+                + bytes(id) + bytes(std::uint32_t{}) + data;
+        };
+        ESM4::AIPackage::CTDA questCondition{}, infoCondition{}, stageCondition{};
+        questCondition.fnIndex = 14; questCondition.param1 = 8;
+        questCondition.compValue = scenario == 0 ? -1 : 0;
+        questCondition.condition = scenario == 0 ? 0 : 0x60;
+        infoCondition.fnIndex = 77; infoCondition.compValue = 41;
+        if (scenario == 1)
+        {
+            questCondition.fnIndex = 77; questCondition.condition = 0x61;
+            infoCondition.fnIndex = 14; infoCondition.param1 = 8; infoCondition.compValue = -1;
+        }
+        stageCondition.fnIndex = 14; stageCondition.param1 = 8; stageCondition.compValue = -1;
+        const auto quest = record(ESM4::REC_QUST, 0x900,
+            sub(ESM::fourCC("EDID"), std::string("VoiceQuest\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(scenario == 4 ? "\x00\x32" : "\x01\x32", 2))
+            + sub(ESM::fourCC("CTDA"), bytes(questCondition))
+            + sub(ESM::fourCC("INDX"), bytes(std::uint16_t{10}))
+            + sub(ESM::fourCC("CTDA"), bytes(stageCondition))
+            + sub(ESM::fourCC("QSTA"), std::string(8, '\0'))
+            + sub(ESM::fourCC("CTDA"), bytes(stageCondition)));
+        const auto topic = record(ESM4::REC_DIAL, 0x901,
+            sub(ESM::fourCC("EDID"), std::string("VoiceTopic\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(1, '\x02')));
+        const auto info = record(ESM4::REC_INFO, 0x902,
+            sub(ESM::fourCC("DATA"), std::string("\x02\x00\x02", 3))
+            + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{scenario == 3 ? 0u : 0x900u}))
+            + sub(ESM::fourCC("CTDA"), bytes(infoCondition)));
+        const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
+            + bytes(std::uint32_t{0x901}) + bytes(std::uint32_t{7}) + bytes(std::uint32_t{}) + info;
+        NativeWorldFixture fixture(false, false, false, {}, {}, quest + topic + group, 4);
+        auto& world = fixture.mWorld;
+        const auto* loadedQuest = world.getStore().search<ESM4::Quest>(ESM::FormKey::content("headless.esm", 0x900));
+        ASSERT_TRUE(loadedQuest); ASSERT_EQ(loadedQuest->mDialogueConditions.size(), 1u);
+        EXPECT_EQ(loadedQuest->mTargetConditions.size(), 3u);
+        const auto speaker = addNativeNpc(fixture, 0xa00);
+        world.getWorldModel().registerPtr(speaker);
+        ASSERT_EQ(world.getWorldModel().getPtr(ESM::FormId{0xa00, 0}), speaker);
+        ASSERT_TRUE(world.activateOblivionActor(speaker));
+        auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+        ObScript::RuntimeContext context; context.mSelf = speaker.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> arguments{
+            ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x901), {}}};
+        EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
+        EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(),
+            scenario == 1 || scenario == 2 ? 3357800067u : 1u);
+    }
 }

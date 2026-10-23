@@ -17600,3 +17600,44 @@ pins source, original evidence, checks, content comparison, runtime observations
 and retained binaries. Quest root admission, native faction queries, INFO
 ordering and history, and automatic hit speech and reactions remain open.
 Full M15S4 is incomplete.
+
+## Live quest-root dialogue admission and native base memberships
+
+Live voice selection now evaluates the running quest's root conditions before
+its INFO conditions through the existing combined sequence. Missing quest
+identity, a missing definition, and stopped quests reject before condition or
+selection draws. The independently verified 14,450-case quest/INFO composition
+remains unchanged, including OR across the boundary between the two lists.
+
+Native NPC and creature faction conditions now read their native base entries.
+The shared NPC statistics facade has no initial native memberships and cannot
+answer these queries. The first matching signed rank determines membership;
+only rank -1 rejects, including when a later duplicate has a different rank.
+The pure faction rule also models nonempty changed-list replacement, empty-list
+fallback, and the Player-only faction flag mask `0x8`. It matches all 196,608
+original executable observations in normal and ASan/UBSan comparisons. A changed
+observation and a missing row are both rejected by the comparison checker.
+Live changed-list ownership is not introduced: production faction changes cover
+existing nonPlayer base lists, and the Player keeps the existing shared adapter.
+
+Both full engine profiles pass 1,862 tests. Normal components pass 3,010;
+instrumented ESM4 components pass 863. The focused check separately verifies
+three engine cases and one component case. Source fingerprint:
+`ffa97a4dd6fb107ccd91d46e8ecd428e0db9260ad7ed4c8a84e3d597767cc43e`
+(parent `df1df11567`). Leak detection is disabled. The world tests cover all
+signed faction ranks for both NPCs and creatures, duplicate precedence, unchanged
+native state/RNG, quest rejection, cross-list OR, and quest-before-INFO draws.
+
+The rendered command course passes in 140.465 seconds with the existing speech,
+sound, weather, and save checks intact. Independent raw merging of its actual
+Oblivion.esm and Knights.esp load order identifies voiced INFO `0150C7` and its
+CharacterGen quest. The INFO supplies only function 72; quest roots supply
+functions 365 and 254. Runtime visits all three in that order with passing values,
+then plays the expected clip. The generated schema 63 save retains the Player's
+observed false realm flag. Existing script diagnostics remain recorded.
+
+[M15-QUEST-LIVE-ADMISSION-VERIFICATION.json](M15-QUEST-LIVE-ADMISSION-VERIFICATION.json)
+pins source, native comparisons, checks, raw record reinspection, runtime
+observations, and retained binaries. Player faction authority, mutable faction
+bindings, INFO producer ordering/history/results, and automatic common hit
+speech and reactions remain open. Full M15S4 is incomplete.
