@@ -1355,6 +1355,13 @@ namespace MWPhysics
             mBudget.update(mTimer->delta_s(timeStart, mTimer->tick()), 1, mBudgetCursor);
     }
 
+    void PhysicsTaskScheduler::synchronizeCompletedMovements()
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mSimulationMutex, mLockingPolicy);
+        syncWithMainThread();
+    }
+
     void PhysicsTaskScheduler::resetSimulation(const ActorMap& actors)
     {
         waitForWorkers();

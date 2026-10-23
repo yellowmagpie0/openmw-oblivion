@@ -537,6 +537,7 @@ namespace MWWorld
         size_t countSavedGameRecords() const override;
         size_t countSavedGameCells() const override;
 
+        void prepareSave() override;
         void write(ESM::ESMWriter& writer, Loading::Listener& progress) const override;
 
         void readRecord(ESM::ESMReader& reader, uint32_t type) override;

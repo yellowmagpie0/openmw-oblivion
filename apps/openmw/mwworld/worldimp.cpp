@@ -4913,6 +4913,15 @@ namespace MWWorld
         }
     }
 
+    void World::prepareSave()
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics)
+            return;
+        mPhysics->synchronizeCompletedMovements();
+        mPhysics->moveActors();
+        synchronizeLooseWeaponPoses(*this, *mPhysics);
+    }
+
     void World::write(ESM::ESMWriter& writer, Loading::Listener& progress) const
     {
         if (mGameProfile == ESM::GameProfile::Oblivion)

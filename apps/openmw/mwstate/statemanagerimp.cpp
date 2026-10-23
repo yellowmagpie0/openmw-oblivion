@@ -311,6 +311,8 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
     {
         const auto start = std::chrono::steady_clock::now();
 
+        MWBase::World& world = *MWBase::Environment::get().getWorld();
+        world.prepareSave();
         MWBase::Environment::get().getWindowManager()->asyncPrepareSaveMap();
 
         if (!character)
@@ -323,8 +325,6 @@ void MWState::StateManager::saveGame(std::string_view description, const Slot* s
         }
 
         ESM::SavedGame profile;
-
-        MWBase::World& world = *MWBase::Environment::get().getWorld();
 
         MWWorld::Ptr player = world.getPlayerPtr();
 

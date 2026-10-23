@@ -2867,6 +2867,46 @@ namespace
         scheduler.removeActorRagdoll(mPtr);
     }
 
+    TEST_P(RagdollSchedulerTest, SaveBarrierPublishesCompletedMovementOnceWithoutSteppingOrResettingHistory)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        MWPhysics::PhysicsSystem physics(&resources, new osg::Group);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);
+        scheduler.addActorRagdoll(mPtr, mGraph, 1, mPoses, 1, -1);
+        auto projectile = std::make_shared<MWPhysics::Projectile>(MWWorld::Ptr(), osg::Vec3f(0, 0, 1000),
+            .02f, &scheduler, &physics);
+        osg::ref_ptr<osg::Stats> stats = new osg::Stats("save movement barrier");
+        std::array<std::vector<MWPhysics::Simulation>, 2> jobs;
+        for (unsigned frame = 0; frame < jobs.size(); ++frame)
+        {
+            SCOPED_TRACE(frame);
+            projectile->setVelocity({10, 0, 0});
+            jobs[frame].emplace_back(MWPhysics::ProjectileSimulation{
+                projectile, MWPhysics::ProjectileFrameData{*projectile}});
+            scheduler.applyPreparedNativeFrame({.02f, .02f, .02f, 1}, .005f, jobs[frame],
+                osg::Timer::instance()->tick(), frame, *stats, MWPhysics::WorldFrameData(false, {}));
+            // Capturing bodies waits for workers but does not publish movement.
+            const auto completedBody = scheduler.captureActorRagdoll(mPtr)[0];
+            if (GetParam() != 0)
+            {
+                EXPECT_EQ(jobs[frame].size(), 1u);
+                EXPECT_NEAR(projectile->getSimulationPosition().x(), frame ? .05f : 0.f, 1e-6);
+            }
+            scheduler.synchronizeCompletedMovements();
+            EXPECT_TRUE(jobs[frame].empty());
+            EXPECT_NEAR(projectile->getPosition().x(), (frame + 1) * .2f, 1e-6);
+            EXPECT_NEAR(projectile->getPreviousPosition().x(), frame * .2f, 1e-6);
+            EXPECT_NEAR(projectile->getSimulationPosition().x(), frame * .2f + .05f, 1e-6);
+            scheduler.synchronizeCompletedMovements();
+            EXPECT_NEAR(projectile->getSimulationPosition().x(), frame * .2f + .05f, 1e-6);
+            const auto after = scheduler.captureActorRagdoll(mPtr)[0];
+            EXPECT_EQ(after.mPose, completedBody.mPose);
+            EXPECT_EQ(after.mLinearVelocity, completedBody.mLinearVelocity);
+        }
+        scheduler.removeActorRagdoll(mPtr);
+    }
+
     TEST_P(RagdollSchedulerTest, PreparedNativeNonpositiveFrameDoesNotStepOrConsumeSignedClock)
     {
         MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &mWorld, nullptr);

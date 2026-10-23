@@ -545,6 +545,7 @@ namespace MWPhysics
             bool skipSimulation, osg::Timer_t frameStart, unsigned int frameNumber, osg::Stats& stats);
 
         /// Apply new positions to actors
+        void synchronizeCompletedMovements();
         void moveActors();
         void debugDraw();
 

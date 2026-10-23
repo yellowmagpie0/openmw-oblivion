@@ -1534,6 +1534,11 @@ namespace MWPhysics
         }
     }
 
+    void PhysicsSystem::synchronizeCompletedMovements()
+    {
+        mTaskScheduler->synchronizeCompletedMovements();
+    }
+
     void PhysicsSystem::moveActors()
     {
         auto* player = getActor(MWMechanics::getPlayer());

@@ -11526,3 +11526,44 @@ linear/angular velocity projection from authoritative packed state is applied
 to the expected view. This strengthens load-state fidelity without asserting
 identical subsequent motion. Receipts and replayable checks are pinned in the
 active-Recoil restart verification index.
+
+
+## Native save movement publication
+
+Native saving now publishes completed movement/contact results before building
+the save profile, screenshot or records. The scheduler waits for the submitted
+frame and synchronizes it once; World moves actor references and loose poses.
+It submits no new frame, advances no clock and preserves movement history.
+Morrowind save preparation is unchanged. Native wire schema remains 61.
+
+The new scheduler regression covers zero, one and two workers, two submitted
+frames, fractional interpolation, preserved endpoints and repeated calls with
+no extra body step. Full normal and ASan/UBSan engine inventories each pass
+1,848 tests in 125 suites, without failures/skips, at source fingerprint
+`6075b46dbb71d86a020fdab0b2f36c917bd2f837fdd523ea40b306c2af8be13b`.
+Leak checking is disabled; UBSan halts on errors.
+
+Normal and instrumented actual active-Recoil forks each pass four exact native
+live/save pairs and an entire encoded load-payload check. Both select the real
+middle save at NPC Recoil time .1660003662109375. Player/NPC reactions recover
+naturally once; action next 4 has no pending contact, RNG 334604033 and the sole
+condition 55.7 drop survive without replay. Four post images were reviewed.
+The first normal control's second activation misses focus; its later new
+contacts and Counter are retained as failed-course evidence. The instrumented
+camera course waits actual save completion before its normal mouse input.
+
+Three separate read-only save-return observations match Player/NPC reference,
+simulation and decoded binary positions exactly. A separate first-five-entry
+load trace observes desired movement during World discard and initial Actor
+skip, before positions start advancing. These debugger runs are diagnostic,
+with timing altered by pauses. They establish no original Havok parity.
+
+Physical restart is still incomplete: both forks end NPC Y=66.3976058959961
+versus uninterrupted Y=70.79055786132812. The active save now records Y=64.8759079
+instead of the earlier Y=60. Living movement history/inertia/standing identity
+and first-load priming remain open. The process clock is not serialized.
+[M15-NATIVE-SAVE-MOVEMENT-VERIFICATION.json](M15-NATIVE-SAVE-MOVEMENT-VERIFICATION.json)
+pins source, fresh checks, four accepted processes, eight wire pairs, the
+retained failure and both read-only diagnostics. Editable manifests and case
+protocol accompany it. The remaining S4 mastery/effect/input/view/FPS and
+interruption campaigns are still required.

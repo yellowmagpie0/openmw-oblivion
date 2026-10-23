@@ -158,6 +158,9 @@ namespace MWBase
             std::unique_ptr<MWWorld::ESMStore> definitions) = 0;
         virtual ESM4::ObservationStream* getOblivionObservation() const { return nullptr; }
         virtual void observeOblivionState(std::string_view event, const std::filesystem::path& save) const {}
+        // Publish completed native physics before capturing the save profile,
+        // reference records or native runtime state.
+        virtual void prepareSave() {}
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
         // True means a registered native actor handled the request, including
         // native policy suppression. False permits the legacy stat adapter.

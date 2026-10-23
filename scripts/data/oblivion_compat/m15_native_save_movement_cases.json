@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "scope": "Synchronize completed native actor movement and loose poses before save profile, screenshot and records; preserve bounded logical active-Recoil restart while diagnosing remaining load-side movement loss",
+  "full_M15S4_acceptance": false,
+  "fixture_recipe": "m15_advanced_unarmed_natural_recovery_fixture.json",
+  "fixture_script": "m15_npc_recoil_opponent.obscript",
+  "input_sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+  "cases": [
+    {
+      "profile": "normal",
+      "control": "scripts/data/oblivion_compat/oblivion_m15_native_save_movement_normal_control.json",
+      "resume": "scripts/data/oblivion_compat/oblivion_m15_native_save_movement_normal_resume.json"
+    },
+    {
+      "profile": "sanitized",
+      "control": "scripts/data/oblivion_compat/oblivion_m15_native_save_movement_sanitized_control.json",
+      "resume": "scripts/data/oblivion_compat/oblivion_m15_native_save_movement_sanitized_resume.json"
+    }
+  ],
+  "save_selector": "Require three control snapshots, select second by numeric save event sequence; actual consumed contact2, NPCaction7 with active handtohandrecoil at positive time below0.733334, both Player BlockHit views, next3/RNG334604033/one drop. Pin actual output checksum before fresh continuation.",
+  "camera": "Normal control retains prior no-extra-aim course; instrumented control waits actual save completion before normal mouse0/0/80. Both continuations hold B and aim during load before natural recovery and second activation.",
+  "expected": {
+    "control_contacts": 1,
+    "resume_contacts": 0,
+    "wire_pairs_per_fork": 4,
+    "final_next": 4,
+    "pending": [],
+    "combat_rng": 334604033,
+    "drop_count": 1
+  },
+  "physical_expectation": "Measure positions and keep remaining mismatch open; current fix establishes save publication, not full movement persistence.",
+  "receipt": "docs/oblivion/M15-NATIVE-SAVE-MOVEMENT-VERIFICATION.json"
+}

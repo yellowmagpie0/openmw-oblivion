@@ -105,6 +105,9 @@ namespace MWPhysics
             osg::Stats& stats, const WorldFrameData& worldData);
 
         void resetSimulation(const ActorMap& actors);
+        // Wait for the submitted frame and publish its movement/contact results
+        // once. Does not submit a frame, advance time or reset actor history.
+        void synchronizeCompletedMovements();
         void suspendActorCollision(Actor& actor, bool suspended);
 
         class PreparedObjectRemoval
