@@ -17641,3 +17641,37 @@ pins source, native comparisons, checks, raw record reinspection, runtime
 observations, and retained binaries. Player faction authority, mutable faction
 bindings, INFO producer ordering/history/results, and automatic common hit
 speech and reactions remain open. Full M15S4 is incomplete.
+
+## Separate ordinary-hit reaction phases
+
+The numeric ordinary-hit API now exposes damage/mastery/speech decisions,
+a Stagger request using supplied current knocked/facing queries, and the lower
+block tail. The owner can interleave speech conditions, selection, results and
+resource draws between those phases. No phase advances live RNG. The original
+contiguous wrapper remains available for callers with no intervening callbacks.
+
+A new 768-case original-instruction campaign executes the ordinary caller and
+actual NPC speech prefix `5E7010`, actual High-process flag/handle/knocked
+getters, and forwarding to a declared voice/result boundary. SceneComplex
+consumes a raw draw before later block processing. An admitted voice boundary
+supplies raw knocked state 0 or 3; the original caller observes it before Stagger.
+The boundary executes no INFO selector, script VM or audio. AV/resource/facing
+inputs and Stagger/Recoil sinks retain explicit fixtures; the cached skill index
+12 is an abstract supplied query, not a weapon-skill producer claim.
+
+Fresh normal and sanitizer CMake objects match all 4,808 earlier original cases
+through both the contiguous wrapper and separate phases. Both profiles also
+match the 768 interleaved cases. Deliberately consuming the tail early or using
+stale knocked state fails the checker. Native Stagger sinks return zero while
+selected Stagger still suppresses general hit processing. The broader 17,280-case
+speech-prefix reference remains separate from these composed observations.
+
+Normal components pass 3,013 tests; instrumented ESM4 components pass 866.
+Source fingerprint:
+`7818cb5e4634f9814bf7340e3dec4bb2da4fc37f93549b4e1f7e7959fb85f846`
+(parent `e827df83d2`). Leak checks are disabled. There is no production caller
+for the new phases yet; no new engine or gameplay acceptance is claimed.
+[M15-COMMON-HIT-PHASES-VERIFICATION.json](M15-COMMON-HIT-PHASES-VERIFICATION.json)
+pins source, retained comparison objects, native corpora, controls and checks.
+Live contact argument/cache producers, speech/history/results preparation and
+resource/RNG publication remain open. Full M15S4 remains incomplete.

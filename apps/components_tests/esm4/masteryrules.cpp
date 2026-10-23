@@ -493,3 +493,57 @@ TEST(ESM4MasteryRules, OrdinaryHitKeepsPreScalingEntryAndPostContactHealthIdenti
     input.mPostHealth = 1;
     EXPECT_TRUE(ordinaryHit(input, {99, 25}).mHitSpeech);
 }
+
+TEST(ESM4MasteryRules, OrdinaryHitPhasesAllowSpeechDrawsBeforeTheLowerBlockRoll)
+{
+    auto input = ordinaryHitInput();
+    input.mHealthDamage = 1; input.mAttackerBaseSkill = 75;
+    const std::array<std::uint16_t, 5> stream{99, 32767, 0, 32767, 25};
+    const auto prefix = ESM4::ordinaryHitPrefix(input, stream, installedKnockdown,
+        installedPhysical, {.35f, .1f}, mastery);
+    EXPECT_EQ(prefix, (ESM4::OrdinaryHitPrefixResult{3, false, true}));
+    unsigned cursor = prefix.mDraws;
+    // Original5E7010's SceneComplex speech gate takes this draw and rejects
+    // before INFO selection. The caller, not the numeric phases, owns it.
+    EXPECT_EQ(stream[cursor++] % 8, 7);
+    const auto tail = ESM4::ordinaryHitBlockTail(input.mBlock,
+        std::span(stream).subspan(cursor), settings, mastery);
+    EXPECT_EQ(tail, (ESM4::OrdinaryHitBlockResult{1, false, true}));
+    EXPECT_EQ(cursor + tail.mDraws, stream.size());
+    // Consuming the tail before the callback would instead use raw32767.
+    const auto premature = ESM4::ordinaryHitReactions(input, stream, installedKnockdown,
+        installedPhysical, {.35f, .1f}, settings, mastery);
+    EXPECT_EQ(premature.mDraws, 4u);
+    EXPECT_FALSE(premature.mAttackerRecoil);
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitStaggerUsesProcessAndFacingQueriesAfterSpeech)
+{
+    auto input = ordinaryHitInput();
+    input.mKnocked = 3; input.mFacingAttacker = false;
+    const std::array<std::uint16_t, 1> draws{0};
+    const auto prefix = ESM4::ordinaryHitPrefix(input, draws, installedKnockdown,
+        installedPhysical, {.35f, .1f}, mastery);
+    EXPECT_EQ(prefix, (ESM4::OrdinaryHitPrefixResult{1, true, true}));
+    EXPECT_TRUE(ESM4::ordinaryHitStaggerRequested(prefix, 0, true));
+    EXPECT_FALSE(ESM4::ordinaryHitStaggerRequested(prefix, 3, true));
+    EXPECT_FALSE(ESM4::ordinaryHitStaggerRequested(prefix, 0, false));
+    EXPECT_FALSE(ESM4::ordinaryHitStaggerRequested({}, 0, true));
+}
+
+TEST(ESM4MasteryRules, OrdinaryHitPhasesRejectMissingConsumedDrawsAndIgnoreUnusedSuffixes)
+{
+    auto input = ordinaryHitInput();
+    EXPECT_THROW(ESM4::ordinaryHitPrefix(input, {}, installedKnockdown,
+        installedPhysical, {.35f, .1f}, mastery), std::invalid_argument);
+    EXPECT_THROW(ESM4::ordinaryHitBlockTail(input.mBlock, {}, settings, mastery), std::invalid_argument);
+    const std::array<std::uint16_t, 1> invalid{32768};
+    EXPECT_THROW(ESM4::ordinaryHitBlockTail(input.mBlock, invalid, settings, mastery), std::invalid_argument);
+    input.mVictimRemainsAlive = false;
+    EXPECT_EQ(ESM4::ordinaryHitPrefix(input, invalid, installedKnockdown,
+        installedPhysical, {.35f, .1f}, mastery), ESM4::OrdinaryHitPrefixResult{});
+    input.mBlock.mActiveBlock = false;
+    EXPECT_EQ(ESM4::ordinaryHitBlockTail(input.mBlock, invalid, settings, mastery), ESM4::OrdinaryHitBlockResult{});
+    input.mBlock.mAbsorbedFraction = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::ordinaryHitBlockTail(input.mBlock, {}, settings, mastery), std::invalid_argument);
+}

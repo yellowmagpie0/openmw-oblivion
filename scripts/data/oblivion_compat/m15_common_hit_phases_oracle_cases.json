@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "scope": "Numeric ordinary-hit phase API; owner interleaves speech and resource queries/draws before lower block tail",
+  "full_M15S4_acceptance": false,
+  "phases": [
+    "ordinaryHitPrefix: damage flag, unused ordinary Expert roll, speech request",
+    "Owner speech conditions/selection/results with staged raw stream",
+    "ordinaryHitStaggerRequested: supplied current knocked/facing; resource activation is owner responsibility",
+    "ordinaryHitBlockTail: blocked dispatch or lower Hand to Hand recoil"
+  ],
+  "original_observations": {
+    "contiguous": {
+      "cases": 4808,
+      "entry": "005FFEB5",
+      "stop": "005FFF52",
+      "groups": [
+        20,
+        21
+      ],
+      "source": "native-ordinary-hit-group-correction-oracle-01"
+    },
+    "speech_composed": {
+      "cases": 768,
+      "entry": "005FFEB5",
+      "stop": "005FFF52",
+      "speech_prefix": "005E7010",
+      "process_vtable": "00A71814",
+      "scene_complex": true,
+      "callback_raw": [
+        0,
+        7,
+        32767
+      ],
+      "voice_boundary_knocked": [
+        0,
+        3
+      ],
+      "control_words": [
+        639,
+        895
+      ],
+      "source": "native-common-hit-speech-order-oracle-01"
+    },
+    "speech_prefix_reference": {
+      "cases": 17280,
+      "scope": "Original actor dispatch prefix and process getters only; prefix gates remain caller-owned",
+      "source": "native-hit-speech-prefix-oracle-01"
+    }
+  },
+  "checks": [
+    "Both normal and sanitizer production-object comparisons match all contiguous and callback cases",
+    "Deliberately consuming the tail before the speech draw rejects",
+    "Deliberately using pre-callback knocked state rejects",
+    "3013 normal components and866 instrumented ESM4 components pass"
+  ],
+  "limits": [
+    "No live caller uses the new phase API yet",
+    "Voice/result boundary supplies process mutation; no original VM, INFO selection or audio execution in composed cases",
+    "Stagger/Recoil sinks return zero; selection request and suppression remain separate from activation",
+    "Resource sink/AV/animation/facing and raw draws retain explicit oracle boundaries; cached skill12 is an abstract supplied query, not a weapon-skill producer proof",
+    "No new engine or gameplay acceptance course for unused numeric API; existing engine integration evidence belongs to the preceding quest-admission chunk"
+  ]
+}

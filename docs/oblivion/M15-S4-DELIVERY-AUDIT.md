@@ -12018,3 +12018,14 @@ The save and two realm queries agree. See
 [M15-QUEST-LIVE-ADMISSION-VERIFICATION.json](M15-QUEST-LIVE-ADMISSION-VERIFICATION.json)
 for exact source, comparisons, diagnostics, captures, and scope limits. Automatic
 common hit speech/reactions and the remaining M15S4 acceptance cases stay open.
+
+### Ordinary-hit phase contract
+
+The numeric API separates damage/speech decisions, current-query Stagger
+selection and the lower block tail, allowing caller-owned speech/resource RNG
+between them. Fresh normal and sanitizer objects match 4,808 contiguous and
+768 composed original cases; premature-tail and stale-knocked controls fail.
+All 3,013 normal components and 866 instrumented ESM4 components pass. See
+[M15-COMMON-HIT-PHASES-VERIFICATION.json](M15-COMMON-HIT-PHASES-VERIFICATION.json).
+These APIs have no production caller yet. The live hit pipeline and full M15S4
+acceptance remain open; this numeric contract adds no gameplay acceptance claim.

@@ -85,6 +85,34 @@ namespace ESM4
         // path can reach the resource sink with both scaled arguments zero.
         bool mDamagePath = true;
     };
+    struct OrdinaryHitPrefixResult
+    {
+        unsigned mDraws = 0;
+        bool mDamageFlag = false;
+        bool mHitSpeech = false;
+        friend bool operator==(const OrdinaryHitPrefixResult&, const OrdinaryHitPrefixResult&) = default;
+    };
+    struct OrdinaryHitBlockResult
+    {
+        unsigned mDraws = 0;
+        bool mBlockedDispatch = false;
+        bool mAttackerRecoil = false;
+        friend bool operator==(const OrdinaryHitBlockResult&, const OrdinaryHitBlockResult&) = default;
+    };
+    // Prepare damage/mastery/speech decisions first. The owner can then run
+    // speech eligibility/selection before querying current knocked/facing and
+    // selecting Stagger resources. Only afterward may it prepare the block
+    // tail with the remaining raw stream. No phase advances live RNG.
+    OrdinaryHitPrefixResult ordinaryHitPrefix(const OrdinaryHitReactionInput& input,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const CombatMasterySettings& mastery);
+    bool ordinaryHitStaggerRequested(const OrdinaryHitPrefixResult& prefix,
+        std::int8_t currentKnocked, bool currentlyFacingAttacker) noexcept;
+    OrdinaryHitBlockResult ordinaryHitBlockTail(const UnarmedBlockRecoilInput& input,
+        std::span<const std::uint16_t> draws, const MasteryProcSettings& procs,
+        const CombatMasterySettings& mastery);
+
     struct OrdinaryHitReactionResult
     {
         unsigned mDraws = 0;
@@ -96,6 +124,8 @@ namespace ESM4
         bool mAttackerRecoil = false;
         friend bool operator==(const OrdinaryHitReactionResult&, const OrdinaryHitReactionResult&) = default;
     };
+    // Convenience composition without intervening callbacks. Runtime callers
+    // with speech/resource RNG must use the separate phases above.
     // Original ordinary-group caller5FFEB5..5FFF52: damage, otherwise-unused
     // Expert mastery, hit speech, then lower-HTH Recoil draws, in that order.
     // Draws are original raw CRT values [0,32767], not percentiles. Only the

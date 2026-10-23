@@ -1,0 +1,581 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "production_runtime_wiring": false,
+  "scope": "Separate ordinary-hit damage/speech prefix, post-speech Stagger decision and lower block tail without preconsuming intervening RNG; contiguous wrapper remains compatible",
+  "tested_source": {
+    "head": "e827df83d21d6b22bebbe47bf027ad19f260f062",
+    "source_fingerprint": "7818cb5e4634f9814bf7340e3dec4bb2da4fc37f93549b4e1f7e7959fb85f846"
+  },
+  "tested_source_files": {
+    "apps/components_tests/esm4/masteryrules.cpp": {
+      "path": "apps/components_tests/esm4/masteryrules.cpp",
+      "sha256": "3e9ae9415e02bbbefe6f7af4880ce6891fcd36156a4e3dc7709042de498c82f7",
+      "bytes": 30306
+    },
+    "components/esm4/masteryrules.cpp": {
+      "path": "components/esm4/masteryrules.cpp",
+      "sha256": "e67b54248d0fc57cc79ff45d492e53eb0b176fc60f8f5f20314cd5f31aa4762f",
+      "bytes": 14219
+    },
+    "components/esm4/masteryrules.hpp": {
+      "path": "components/esm4/masteryrules.hpp",
+      "sha256": "e20d508d56a43565f4860ac40ce30d469e958a023ba9787a585d680bd3a5ecb3",
+      "bytes": 8591
+    }
+  },
+  "checks": {
+    "report": {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/verification.json",
+      "sha256": "28b6bc9ab1e35c0b08f8d34290e0e6efa7b792ae6401fa80887a4e091d951489",
+      "bytes": 3931
+    },
+    "results": {
+      "components": {
+        "executed": 3013,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a762375b1e5ddb3345af20020a222b913ee1a3107d150a5a589f525a9b167551",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "1bfd8db580aee7716251af3d92d40a023307452bc5aa4e1867ea65904f4b50fa",
+        "inventory_sha256": "87e370fcf3fb15b75dcaf91283850dccc64de700c84e77f829c6c08fa2c4dcb1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 866,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "361d7e0be17d5ecda1541f66f518a89db26c43d783b724f2634f4e00a8b2638d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "fd79fc62a7dbca40284aeac4c29392b554e6425101e79f53d690b679bf545dba",
+        "inventory_sha256": "66b9754711a8f177fe8ce61724bab4c2e5fee43c99fa4e985923f1889d7761f5",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/components-build.log",
+        "sha256": "c8fec06dca26c77ce50e104d61eb78952a06b740008ada7544c99696e8f00442",
+        "bytes": 1671
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/components-inventory.txt",
+        "sha256": "87e370fcf3fb15b75dcaf91283850dccc64de700c84e77f829c6c08fa2c4dcb1",
+        "bytes": 191813
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/components.log",
+        "sha256": "ee5e43835af871bb5d4886b3e873f687018405c3ca34f2bb92d70968841c4857",
+        "bytes": 599876
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/components.xml",
+        "sha256": "1bfd8db580aee7716251af3d92d40a023307452bc5aa4e1867ea65904f4b50fa",
+        "bytes": 2339094
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/sanitize-build.log",
+        "sha256": "a9352d32b17b8be456e4c306763407b9c09a9ae73bb9cc6a1f5dd77b1daee368",
+        "bytes": 1671
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/sanitize-inventory.txt",
+        "sha256": "66b9754711a8f177fe8ce61724bab4c2e5fee43c99fa4e985923f1889d7761f5",
+        "bytes": 191813
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/sanitize.log",
+        "sha256": "68b06753c7d4a94753b79d943c99ca53da0d456510797118a67f6e8c768f3708",
+        "bytes": 160448
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/sanitize.xml",
+        "sha256": "fd79fc62a7dbca40284aeac4c29392b554e6425101e79f53d690b679bf545dba",
+        "bytes": 1615409
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-components-01/verification.json",
+        "sha256": "28b6bc9ab1e35c0b08f8d34290e0e6efa7b792ae6401fa80887a4e091d951489",
+        "bytes": 3931
+      }
+    ]
+  },
+  "comparison": {
+    "passed": true,
+    "source": {
+      "head": "e827df83d21d6b22bebbe47bf027ad19f260f062",
+      "source_fingerprint": "7818cb5e4634f9814bf7340e3dec4bb2da4fc37f93549b4e1f7e7959fb85f846"
+    },
+    "scope": "Fresh CMake production objects:4808 original contiguous cases match wrapper and separate phases;768 composed speech-prefix cases match interleaved phases. Premature tail and stale knocked controls reject in both profiles; no runtime caller integration",
+    "source_files": [
+      {
+        "path": "components/esm4/masteryrules.cpp",
+        "sha256": "e67b54248d0fc57cc79ff45d492e53eb0b176fc60f8f5f20314cd5f31aa4762f"
+      },
+      {
+        "path": "components/esm4/masteryrules.hpp",
+        "sha256": "e20d508d56a43565f4860ac40ce30d469e958a023ba9787a585d680bd3a5ecb3"
+      }
+    ],
+    "objects": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-masteryrules.o",
+        "sha256": "8643f8a24dd4e141ff96333117940ead8bae62139955f507920ecd564b552e52"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-physicalcombat.o",
+        "sha256": "7f93171c2322fbcda8b03504a65233c383e64f648c99f02e3bab9f2ee9910e64"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-masteryrules.o",
+        "sha256": "ab9927a6df5d7557bc4e84805575cdd0deb09aefb47dd0e7ecf86753649e3f85"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-physicalcombat.o",
+        "sha256": "c7727ee42ec0caeaff73eeb580ec9e6c05d94af9fa9d93ddeb0b7655f1422dfd"
+      }
+    ],
+    "commands": [
+      {
+        "argv": [
+          "g++",
+          "-std=c++20",
+          "-O1",
+          "-I",
+          "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-contiguous.cpp",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-masteryrules.o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-physicalcombat.o",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous"
+        ],
+        "exit_code": 0
+      },
+      {
+        "argv": [
+          "g++",
+          "-std=c++20",
+          "-O1",
+          "-I",
+          "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-callback.cpp",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-masteryrules.o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-physicalcombat.o",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback"
+        ],
+        "exit_code": 0
+      },
+      {
+        "argv": [
+          "g++",
+          "-std=c++20",
+          "-O1",
+          "-g",
+          "-fsanitize=address,undefined",
+          "-fno-omit-frame-pointer",
+          "-I",
+          "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-contiguous.cpp",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-masteryrules.o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-physicalcombat.o",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous"
+        ],
+        "exit_code": 0
+      },
+      {
+        "argv": [
+          "g++",
+          "-std=c++20",
+          "-O1",
+          "-g",
+          "-fsanitize=address,undefined",
+          "-fno-omit-frame-pointer",
+          "-I",
+          "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-callback.cpp",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-masteryrules.o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-physicalcombat.o",
+          "-o",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "profiles": {
+      "normal": {
+        "contiguous": {
+          "passed": true,
+          "cases": 4808,
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous",
+            "sha256": "0af4772d061017594e67f5fdce8f34ed940ae8701c2e48026d6efd21a4e34168"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous.log",
+            "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7"
+          }
+        },
+        "callback": {
+          "passed": true,
+          "cases": 768,
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback",
+            "sha256": "f6661257743faf3fe8f4ada1ed339ee1e0dc742b4ad71f657a804e5443e00c79"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback.log",
+            "sha256": "6003313b58e99fcc481aaf5f98473184fadcb1b4b22145068c370e367cb3b154"
+          }
+        },
+        "PRECONSUME_TAIL": {
+          "rejected": true,
+          "exit_code": 8,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-PRECONSUME_TAIL.log",
+            "sha256": "4133c891dafe07ed9972d140f04d9896d21f6af60d1d896d9c7049d613e1ea79"
+          }
+        },
+        "STALE_KNOCKED": {
+          "rejected": true,
+          "exit_code": 8,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-STALE_KNOCKED.log",
+            "sha256": "eef1cc58cddd3183d80baa98e8595ca7b1a15a5c4e1899589e17c5eed53a5c6f"
+          }
+        }
+      },
+      "sanitized": {
+        "contiguous": {
+          "passed": true,
+          "cases": 4808,
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous",
+            "sha256": "4943add92e12ac484474aa7670e12a5a9c828dd37f72cf2bc6b002c8a4e5e6da"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous.log",
+            "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7"
+          }
+        },
+        "callback": {
+          "passed": true,
+          "cases": 768,
+          "binary": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback",
+            "sha256": "c0e991d1b7ec9dca488434de529bd89059cce9424d0407b32cec0da86dbd3035"
+          },
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback.log",
+            "sha256": "6003313b58e99fcc481aaf5f98473184fadcb1b4b22145068c370e367cb3b154"
+          }
+        },
+        "PRECONSUME_TAIL": {
+          "rejected": true,
+          "exit_code": 8,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-PRECONSUME_TAIL.log",
+            "sha256": "4133c891dafe07ed9972d140f04d9896d21f6af60d1d896d9c7049d613e1ea79"
+          }
+        },
+        "STALE_KNOCKED": {
+          "rejected": true,
+          "exit_code": 8,
+          "log": {
+            "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-STALE_KNOCKED.log",
+            "sha256": "eef1cc58cddd3183d80baa98e8595ca7b1a15a5c4e1899589e17c5eed53a5c6f"
+          }
+        }
+      }
+    },
+    "inputs": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/contiguous.tsv",
+        "sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/callback.tsv",
+        "sha256": "303140ba9e0a2bf85973d5bcf5bfcaa65be6d81d7cf4865337b3b6feba855385"
+      }
+    ],
+    "native_sources": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/verification01.json",
+        "sha256": "62d89cb76dc229a60d0e171ebbfb16af7e1f425938486338b7ff06eb2d24af7a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/corpus01.json",
+        "sha256": "63df7b2ed945515eb9285c67ebc0c6bdd53a6aea081a5b45c0ad4739bc0b17bd"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/cases.tsv",
+        "sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/verification.json",
+        "sha256": "882ed5da88c8ec0e9f3fc41c6445e1db40174bb4a7d66e2714cd9800f8d0c9b3"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/corpus.json",
+        "sha256": "99a89f8515f3833677f7367ea55c2b2c6eb80863917472b2dc57811da8b926fa"
+      }
+    ]
+  },
+  "comparison_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/callback.tsv",
+      "sha256": "303140ba9e0a2bf85973d5bcf5bfcaa65be6d81d7cf4865337b3b6feba855385",
+      "bytes": 30226
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-callback.cpp",
+      "sha256": "f4defa60ef4c4253e26c0b1eac08ede816a1cc6438e96334f4f240dced3375ac",
+      "bytes": 2460
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/compare-contiguous.cpp",
+      "sha256": "24fb084dad6ab6f69cdc6e2ed91457dbe25c04d4bbdc11eada6285ec0589695f",
+      "bytes": 2819
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/contiguous.tsv",
+      "sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82",
+      "bytes": 344370
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-PRECONSUME_TAIL.log",
+      "sha256": "4133c891dafe07ed9972d140f04d9896d21f6af60d1d896d9c7049d613e1ea79",
+      "bytes": 32
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-STALE_KNOCKED.log",
+      "sha256": "eef1cc58cddd3183d80baa98e8595ca7b1a15a5c4e1899589e17c5eed53a5c6f",
+      "bytes": 31
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback",
+      "sha256": "f6661257743faf3fe8f4ada1ed339ee1e0dc742b4ad71f657a804e5443e00c79",
+      "bytes": 1074792
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-callback.log",
+      "sha256": "6003313b58e99fcc481aaf5f98473184fadcb1b4b22145068c370e367cb3b154",
+      "bytes": 46
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous",
+      "sha256": "0af4772d061017594e67f5fdce8f34ed940ae8701c2e48026d6efd21a4e34168",
+      "bytes": 1074744
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-contiguous.log",
+      "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7",
+      "bytes": 39
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-masteryrules.o",
+      "sha256": "8643f8a24dd4e141ff96333117940ead8bae62139955f507920ecd564b552e52",
+      "bytes": 133792
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/normal-physicalcombat.o",
+      "sha256": "7f93171c2322fbcda8b03504a65233c383e64f648c99f02e3bab9f2ee9910e64",
+      "bytes": 1807904
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/run.log",
+      "sha256": "b74bcf1b441bdbe4786bd838846fb66581d92e374d4acb599a80200869a4d18f",
+      "bytes": 228
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/run.py",
+      "sha256": "ba9b144d00253a29c24db58b073e11b09090537963cc9963f6fdc633b664e5c7",
+      "bytes": 3986
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-PRECONSUME_TAIL.log",
+      "sha256": "4133c891dafe07ed9972d140f04d9896d21f6af60d1d896d9c7049d613e1ea79",
+      "bytes": 32
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-STALE_KNOCKED.log",
+      "sha256": "eef1cc58cddd3183d80baa98e8595ca7b1a15a5c4e1899589e17c5eed53a5c6f",
+      "bytes": 31
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback",
+      "sha256": "c0e991d1b7ec9dca488434de529bd89059cce9424d0407b32cec0da86dbd3035",
+      "bytes": 2977720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-callback.log",
+      "sha256": "6003313b58e99fcc481aaf5f98473184fadcb1b4b22145068c370e367cb3b154",
+      "bytes": 46
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous",
+      "sha256": "4943add92e12ac484474aa7670e12a5a9c828dd37f72cf2bc6b002c8a4e5e6da",
+      "bytes": 3002480
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-contiguous.log",
+      "sha256": "ae8f79358b74d60f38957c683d8d7380e7d4073cd6ce4e7d6676f5e5dc47eae7",
+      "bytes": 39
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-masteryrules.o",
+      "sha256": "ab9927a6df5d7557bc4e84805575cdd0deb09aefb47dd0e7ecf86753649e3f85",
+      "bytes": 283112
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/sanitized-physicalcombat.o",
+      "sha256": "c7727ee42ec0caeaff73eeb580ec9e6c05d94af9fa9d93ddeb0b7655f1422dfd",
+      "bytes": 4713824
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/tested-source.patch",
+      "sha256": "b5432589b6d80d049f2822538ea2414d706a1cab986d1be77f1ac4f28a598ef0",
+      "bytes": 11410
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-phases-comparison-01/verification.json",
+      "sha256": "108ac8ac59e1fe7d8d476da74f780cf4397484eadd70d86e57133f3d0af6690b",
+      "bytes": 9808
+    }
+  ],
+  "original_composed": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/preregistration.json",
+      "sha256": "64e9cd07510958426f5b7b976e6a9efae96aefc17656655c7c6e2031144bb0d6",
+      "bytes": 1618
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/probe.py",
+      "sha256": "4baaa21ad14d4e8ceb2c7c118dde349ab821db3fb9e1336e57c4052c5c4e5166",
+      "bytes": 8292
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/probe.log",
+      "sha256": "0107b955ce06f9e0f8a0e55e726686212a86bbcf3fb1a54554e40931605a42c3",
+      "bytes": 239
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/corpus.json",
+      "sha256": "99a89f8515f3833677f7367ea55c2b2c6eb80863917472b2dc57811da8b926fa",
+      "bytes": 491009
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-hit-speech-order-oracle-01/verification.json",
+      "sha256": "882ed5da88c8ec0e9f3fc41c6445e1db40174bb4a7d66e2714cd9800f8d0c9b3",
+      "bytes": 2095
+    }
+  ],
+  "original_contiguous": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/preregistration.json",
+      "sha256": "c17456ff4f79019cf828c690ca7b5b93122f33e3c5f4efd883e59b8aa3617db6",
+      "bytes": 955
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/probe-01.py",
+      "sha256": "96bb7bbb4d40de443e74e6d84b2364afb933b322bee8c379c9b143411d98f78f",
+      "bytes": 9199
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/corpus01.json",
+      "sha256": "63df7b2ed945515eb9285c67ebc0c6bdd53a6aea081a5b45c0ad4739bc0b17bd",
+      "bytes": 2300779
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/verification01.json",
+      "sha256": "62d89cb76dc229a60d0e171ebbfb16af7e1f425938486338b7ff06eb2d24af7a",
+      "bytes": 456
+    }
+  ],
+  "original_speech_prefix": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-hit-speech-prefix-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-hit-speech-prefix-oracle-01/preregistration.json",
+      "sha256": "923d8f85a961949efd0a2278dc77e0f1e22fea492871442fead989de69ffc39f",
+      "bytes": 1531
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-hit-speech-prefix-oracle-01/probe.py",
+      "sha256": "edc46790955c8f4e549e8cfc572b89d571c33b26667b4a578367544393764785",
+      "bytes": 4158
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-hit-speech-prefix-oracle-01/corpus.json",
+      "sha256": "2c1829e3b6740764bdf200bfb9912d564ed929155eeadd23d12a61d008f22605",
+      "bytes": 4226931
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-hit-speech-prefix-oracle-01/verification.json",
+      "sha256": "8fa093623dfc5f1be6f910b37436757f6aed34b7ccc8a0171d24211378368b4f",
+      "bytes": 615
+    }
+  ],
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_common_hit_phases_oracle_cases.json",
+    "sha256": "8ec6e434c9b3b2749837eda633ff3132f198dbcfa8f48cf3afd471c8240c0a95",
+    "bytes": 2421
+  },
+  "limits": [
+    "Only immutable numeric decisions are changed; runtime contact integration remains open",
+    "No new engine or runtime acceptance claimed; these APIs have no production caller",
+    "Raw speech/result/resource callbacks remain owned by the future transaction adapter",
+    "ASan leak detection disabled"
+  ]
+}

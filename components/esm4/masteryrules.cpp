@@ -126,15 +126,14 @@ namespace ESM4
             throw std::invalid_argument("invalid native ordinary hit speech settings");
     }
 
-    OrdinaryHitReactionResult ordinaryHitReactions(const OrdinaryHitReactionInput& input,
+    OrdinaryHitPrefixResult ordinaryHitPrefix(const OrdinaryHitReactionInput& input,
         std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
         const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
-        const MasteryProcSettings& procs, const CombatMasterySettings& mastery)
+        const CombatMasterySettings& mastery)
     {
         validateKnockdownSettings(knockdown);
         validatePhysicalCombatSettings(physical);
         validateOrdinaryHitSpeechSettings(speech);
-        validateMasteryProcSettings(procs);
         validateCombatMasterySettings(mastery);
         if (!std::isfinite(input.mHealthDamage) || input.mHealthDamage < 0
             || !std::isfinite(input.mFatigueDamage) || input.mFatigueDamage < 0
@@ -143,7 +142,7 @@ namespace ESM4
             || input.mBlock.mAbsorbedFraction < 0 || input.mBlock.mAbsorbedFraction > 1
             || input.mBlock.mProjectile)
             throw std::invalid_argument("invalid native ordinary hit reaction input");
-        OrdinaryHitReactionResult result;
+        OrdinaryHitPrefixResult result;
         const auto next = [&]() -> unsigned {
             if (result.mDraws == draws.size() || draws[result.mDraws] > 32767)
                 throw std::invalid_argument("missing or invalid native ordinary hit random draw");
@@ -167,17 +166,50 @@ namespace ESM4
             result.mHitSpeech = result.mDamageFlag || exceedsThreshold;
             if (!result.mHitSpeech)
                 result.mHitSpeech = double(next()) / 32767.0 <= speech.mChance;
-            result.mStagger = result.mDamageFlag && input.mKnocked == 0 && input.mFacingAttacker;
-            result.mSuppressGeneralHit = result.mStagger;
         }
-        result.mBlockedDispatch = input.mBlock.mAbsorbedFraction > 0
-            || (input.mBlock.mUnarmed
-                && combatMastery(input.mBlock.mBaseHandToHand, mastery) >= CombatMastery::Journeyman);
-        // Native lower-HTH dispatch follows the common reaction decisions,
-        // including when the resource sink reported the victim dead.
-        if (!result.mBlockedDispatch && unarmedBlockRecoil(input.mBlock, 0, procs, mastery).mConsumesDraw)
-            result.mAttackerRecoil = unarmedBlockRecoil(input.mBlock, next() % 100, procs, mastery).mTriggered;
         return result;
+    }
+
+    bool ordinaryHitStaggerRequested(const OrdinaryHitPrefixResult& prefix,
+        std::int8_t currentKnocked, bool currentlyFacingAttacker) noexcept
+    {
+        return prefix.mDamageFlag && currentKnocked == 0 && currentlyFacingAttacker;
+    }
+
+    OrdinaryHitBlockResult ordinaryHitBlockTail(const UnarmedBlockRecoilInput& input,
+        std::span<const std::uint16_t> draws, const MasteryProcSettings& procs,
+        const CombatMasterySettings& mastery)
+    {
+        validateMasteryProcSettings(procs);
+        validateCombatMasterySettings(mastery);
+        if (!std::isfinite(input.mAbsorbedFraction) || input.mAbsorbedFraction < 0
+            || input.mAbsorbedFraction > 1 || input.mProjectile)
+            throw std::invalid_argument("invalid native ordinary hit block input");
+        OrdinaryHitBlockResult result;
+        result.mBlockedDispatch = input.mAbsorbedFraction > 0
+            || (input.mUnarmed && combatMastery(input.mBaseHandToHand, mastery) >= CombatMastery::Journeyman);
+        if (!result.mBlockedDispatch && unarmedBlockRecoil(input, 0, procs, mastery).mConsumesDraw)
+        {
+            if (draws.empty() || draws.front() > 32767)
+                throw std::invalid_argument("missing or invalid native ordinary hit random draw");
+            result.mDraws = 1;
+            result.mAttackerRecoil = unarmedBlockRecoil(input, draws.front() % 100, procs, mastery).mTriggered;
+        }
+        return result;
+    }
+
+    OrdinaryHitReactionResult ordinaryHitReactions(const OrdinaryHitReactionInput& input,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const MasteryProcSettings& procs, const CombatMasterySettings& mastery)
+    {
+        validateMasteryProcSettings(procs);
+        const auto prefix = ordinaryHitPrefix(input, draws, knockdown, physical, speech, mastery);
+        const bool stagger = ordinaryHitStaggerRequested(prefix, input.mKnocked, input.mFacingAttacker);
+        // This tail also runs when the damage sink reported the victim dead.
+        const auto tail = ordinaryHitBlockTail(input.mBlock, draws.subspan(prefix.mDraws), procs, mastery);
+        return {prefix.mDraws + tail.mDraws, prefix.mDamageFlag, prefix.mHitSpeech,
+            stagger, stagger, tail.mBlockedDispatch, tail.mAttackerRecoil};
     }
 
     void validateBowZoomSettings(const BowZoomSettings& settings)
