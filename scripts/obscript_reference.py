@@ -254,11 +254,14 @@ class Parser:
         return node("If", clauses=clauses)
 
     def parse_command_line(self) -> dict[str, Any]:
-        result = self.parse_expression()
+        result = self.parse_postfix()
         extra: list[dict[str, Any]] = []
         while self.peek().kind not in {"NEWLINE", "EOF"}:
-            if self.accept("OP", ",") is None:
-                extra.append(self.parse_expression())
+            if self.accept("OP", ",") is not None:
+                continue
+            negative = self.accept("OP", "-") is not None
+            argument = self.parse_postfix()
+            extra.append(node("Negate", value=argument) if negative else argument)
         if extra:
             if result["kind"] == "Call":
                 result["arguments"].extend(extra)

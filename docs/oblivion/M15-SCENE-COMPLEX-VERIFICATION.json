@@ -1,0 +1,3999 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Transient SceneIsComplex authority and following-frame physics substep limit",
+  "full_M15S4_acceptance": false,
+  "automatic_common_hit_acceptance": false,
+  "cpp_tested_source": {
+    "head": "063136e75a8c6611bbd4de0bb225524a6f33d244",
+    "source_fingerprint": "767eabe1010f4b903bbc060de0bd45fbaeaf21e47b18ee713af904fb876c45fb"
+  },
+  "tested_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/tested-source.patch",
+    "sha256": "93d7013f1c350eead4edf88ca0b9da35f4b6efc40fc3153e1ba83ed6411b605d",
+    "bytes": 15541
+  },
+  "tested_source_files": {
+    "components/obscript/parser.cpp": {
+      "path": "components/obscript/parser.cpp",
+      "sha256": "634bc8dd245ab7d710af6334e1e3e07381f20dd2f7d6cb52bbc022a40e68ebd1",
+      "bytes": 19313
+    },
+    "apps/components_tests/obscript/frontend.cpp": {
+      "path": "apps/components_tests/obscript/frontend.cpp",
+      "sha256": "43b7d3c81229ab1f3f7e47da1ddaee737170184687481fa69988687df4ca1429",
+      "bytes": 33423
+    },
+    "apps/openmw/engine.cpp": {
+      "path": "apps/openmw/engine.cpp",
+      "sha256": "51c2e676be4bf10b2894edccf38bf6bfcd52cd2b72fd863b3fcb1a48a3f6b9f2",
+      "bytes": 49007
+    },
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "18e7d5e9c941c4693353ce7f10d0e9e3f6c51f2c5d4434af5e2a871fbe66404c",
+      "bytes": 359661
+    },
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "602ba799306f93e7a55c4dec5a15629037f56aaac218d97326f00b1ac58dfd4f",
+      "bytes": 65171
+    },
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "914cddfce894e1ca106bbbbfa1e2982f0f446de70dc79140b4d8672f5b70de87",
+      "bytes": 145781
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "c3cd1a9a2904bde99eb25ac84db1a3e1dfd84921155277fdb4018661a602d174",
+      "bytes": 1984592
+    },
+    "apps/openmw_tests/testnativeframeclock.cpp": {
+      "path": "apps/openmw_tests/testnativeframeclock.cpp",
+      "sha256": "076f8f710e3310411968fd60e3cb8f878dc6c077a303d626b7ff17b19bb430e7",
+      "bytes": 6077
+    },
+    "scripts/obscript_reference.py": {
+      "path": "scripts/obscript_reference.py",
+      "sha256": "2f56290f6aafb71f6dfb9b114da74d93bb6b4f46855fda1bf05301b1c8f4ffef",
+      "bytes": 28629
+    },
+    "scripts/tests/test_oblivion_compat.py": {
+      "path": "scripts/tests/test_oblivion_compat.py",
+      "sha256": "af13c0e254879426565a6c80c9a93dbc7cd2a687356bfdb3cd623f4793dfb268",
+      "bytes": 79835
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_scene_complex.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_scene_complex.json",
+      "sha256": "8d5e6098d1a591288be9b8837a3e03ea87a4c16701b6a2c3e2e8eadc930d841c",
+      "bytes": 3192
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_scene_complex_60fps.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_scene_complex_60fps.json",
+      "sha256": "a7efb8add42289eb9d099f0415e0906a5a10d3146344eff697bebab2a7fc4c92",
+      "bytes": 3205
+    }
+  },
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_scene_complex_oracle_cases.json",
+    "sha256": "f911ee635526be35548cf9495ac8d7f0465a03dc87236b6c944a28ef9f13c9df",
+    "bytes": 2949
+  },
+  "checks": {
+    "normal_engine": {
+      "engine": {
+        "executed": 1869,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "2474d6f9d92f865a79d862fe3fccf947d7241797bac7792702ff3fa828c03193",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "df1d8c969695a93cd3d7585a2932e80baba567df213dac8ec480ddcc486225de",
+        "inventory_sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "components": {
+        "executed": 3017,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1848bf43ae042b9602aca82deb8ad9768ca267a29645b54cc4038f7a94b93894",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "0cf78a326b2a6a42da768b6ce119752c52d62efed0866057e4095327981810da",
+        "inventory_sha256": "7d4300fc30509216ef851a203bfad4ca8cf2b002574b8f1b35637266d8f60169",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "engine": {
+        "executed": 1869,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "de4c9ff89dfd1eeb94a1b290a4c31dc8dc496021d8cf53ee9faf318a1f2a8c8e",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "8ff2acd8b29d7222ea902dd89b8e1e8d72cdc57d10c4f22580379d0e309daa0f",
+        "inventory_sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 869,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "a8fa86fab79e382f6464c3eb161d833879ab21230d31c9ff8f4d0bd737ea2c1c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "7e16a38eb51d7712683eaa0d2e988cad91aaffd531092b2fb95c59b7a6f59a23",
+        "inventory_sha256": "d3de72849481352808719997b7044a5a45c0017c5625a0c5ea32c5a181f6dea5",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_obscript": {
+      "sanitize": {
+        "executed": 21,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ObScript*",
+        "binary_sha256": "a8fa86fab79e382f6464c3eb161d833879ab21230d31c9ff8f4d0bd737ea2c1c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "686d5c2d1058d4731571d4c1d42da13208402fa736c364371f5d125c1cff1e02",
+        "inventory_sha256": "a628554e2318e45305d87771e944ea70ea6ae76960a5e2df5176f86e1cf5fe80",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "python": {
+      "python": {
+        "executed": 394,
+        "passed": true,
+        "log_sha256": "914822872401663b047cb932181d5e32f69616c135255f7554508e1d88a86cf0"
+      }
+    }
+  },
+  "python_tested_source": {
+    "head": "063136e75a8c6611bbd4de0bb225524a6f33d244",
+    "source_fingerprint": "88bfcbb36246b75c2181b5e14574224bf6ee5595829339170af6d77186f167d5"
+  },
+  "official_corpus": {
+    "passed": true,
+    "official_units": 11098,
+    "frontend_failures": 0,
+    "unchanged_content_identity": "fnv1a64:0a9bd43a8a6fc49a",
+    "unchanged_native_scda_statistics": {
+      "decoded": 10720,
+      "header_size_matches": 10720,
+      "structure_matches": 10665,
+      "instruction_count": 94260,
+      "integer_literals": 17108,
+      "float_literals": 194,
+      "local_references": 40705,
+      "form_references": 58658
+    },
+    "changed_portable_units": 401,
+    "changes": [
+      {
+        "id": "content:dlcbattlehorncastle.esp:00c011@dlcbattlehorncastle.esp/object/unit=0",
+        "old_ast": "fnv1a64:7780a2b957b875e9",
+        "new_ast": "fnv1a64:cf4b8c1d53754e3e",
+        "old_program": "fnv1a64:abb57fffe60e3ff9",
+        "new_program": "fnv1a64:69ac05cf2aa64063"
+      },
+      {
+        "id": "content:dlchorsearmor.esp:003e9b@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:dffabf9d2b8976ed",
+        "new_ast": "fnv1a64:ec6b7a07318ff910",
+        "old_program": "fnv1a64:d8417a650932713a",
+        "new_program": "fnv1a64:80b7cfb6f4fc948c"
+      },
+      {
+        "id": "content:dlcorrery.esp:11b9fc@dlcorrery.esp/quest/unit=0",
+        "old_ast": "fnv1a64:44fe0aac027e88e6",
+        "new_ast": "fnv1a64:1aa98916b0d72263",
+        "old_program": "fnv1a64:b9a09d545fc53ed0",
+        "new_program": "fnv1a64:8aed41c3e363299f"
+      },
+      {
+        "id": "content:dlcvilelair.esp:001375@dlcvilelair.esp/object/unit=0",
+        "old_ast": "fnv1a64:f819a65fd959057b",
+        "new_ast": "fnv1a64:54c728406af65cde",
+        "old_program": "fnv1a64:5fbb4425278c66e0",
+        "new_program": "fnv1a64:153dc4f05459a7ca"
+      },
+      {
+        "id": "content:knights.esp:000d7f@knights.esp/object/unit=0",
+        "old_ast": "fnv1a64:6dedf129e1cf89c5",
+        "new_ast": "fnv1a64:5adf6c76047c871c",
+        "old_program": "fnv1a64:505a2164299af6a8",
+        "new_program": "fnv1a64:06aec4e130aa9518"
+      },
+      {
+        "id": "content:knights.esp:000d80@knights.esp/object/unit=0",
+        "old_ast": "fnv1a64:2fbeacd59cab4393",
+        "new_ast": "fnv1a64:1a4792cf5f529b48",
+        "old_program": "fnv1a64:412526709e10eaa3",
+        "new_program": "fnv1a64:7908e42fd576bfd7"
+      },
+      {
+        "id": "content:knights.esp:000da4@knights.esp/quest/unit=0",
+        "old_ast": "fnv1a64:40289235616f45a3",
+        "new_ast": "fnv1a64:5134b4962ca77de2",
+        "old_program": "fnv1a64:f985880736b76edb",
+        "new_program": "fnv1a64:7c1e3a76004093ff"
+      },
+      {
+        "id": "content:knights.esp:000dba@knights.esp/object/unit=0",
+        "old_ast": "fnv1a64:245a627102951e1c",
+        "new_ast": "fnv1a64:939a9e31d5fc5c8b",
+        "old_program": "fnv1a64:b4a52b5e6eaa6f8f",
+        "new_program": "fnv1a64:5e5a186ed505d041"
+      },
+      {
+        "id": "content:knights.esp:002a51@knights.esp/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b1d6133708c19a3c",
+        "new_ast": "fnv1a64:514b2b2fba6921eb",
+        "old_program": "fnv1a64:57535d199e8ecd0c",
+        "new_program": "fnv1a64:c080d8161abd7654"
+      },
+      {
+        "id": "content:knights.esp:002b8b@knights.esp/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:cf30ac6c2c8c688e",
+        "new_ast": "fnv1a64:3c7eec72f26c3901",
+        "old_program": "fnv1a64:621c815364f8967f",
+        "new_program": "fnv1a64:4cd1df3f88c50101"
+      },
+      {
+        "id": "content:knights.esp:002b8f@knights.esp/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:3a6529d545137510",
+        "new_ast": "fnv1a64:ff3be6e37798b871",
+        "old_program": "fnv1a64:eee7cb12aa135bc5",
+        "new_program": "fnv1a64:de290f550622624f"
+      },
+      {
+        "id": "content:knights.esp:002d3d@knights.esp/quest-result/stage=200/entry=0/unit=13",
+        "old_ast": "fnv1a64:5bce505e7bb17596",
+        "new_ast": "fnv1a64:528caa35454226ff",
+        "old_program": "fnv1a64:5f8890d07d32b4ef",
+        "new_program": "fnv1a64:3f313d8af8ead49d"
+      },
+      {
+        "id": "content:knights.esp:002d3e@knights.esp/quest-result/stage=30/entry=0/unit=3",
+        "old_ast": "fnv1a64:846d35e43a6af444",
+        "new_ast": "fnv1a64:2deffd89999cadf3",
+        "old_program": "fnv1a64:a6a13fa1b8894853",
+        "new_program": "fnv1a64:07f52121e618fbfd"
+      },
+      {
+        "id": "content:knights.esp:002d3e@knights.esp/quest-result/stage=31/entry=0/unit=4",
+        "old_ast": "fnv1a64:846d35e43a6af444",
+        "new_ast": "fnv1a64:2deffd89999cadf3",
+        "old_program": "fnv1a64:d1a038132f9b72b7",
+        "new_program": "fnv1a64:fba8d4eea8f47b61"
+      },
+      {
+        "id": "content:knights.esp:002d3e@knights.esp/quest-result/stage=50/entry=0/unit=5",
+        "old_ast": "fnv1a64:35b685ae96ffc03c",
+        "new_ast": "fnv1a64:35af2f34075e9b47",
+        "old_program": "fnv1a64:e0a9539c2be3e392",
+        "new_program": "fnv1a64:c19cb02d135e45e2"
+      },
+      {
+        "id": "content:knights.esp:002d42@knights.esp/quest-result/stage=14/entry=0/unit=7",
+        "old_ast": "fnv1a64:91441934da47a2c3",
+        "new_ast": "fnv1a64:9dc56a4c3e28d35c",
+        "old_program": "fnv1a64:209ad2a4d4c9fe5e",
+        "new_program": "fnv1a64:96f1b3ab2d4a8fee"
+      },
+      {
+        "id": "content:oblivion.esm:002dbb@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5aa1f45ba6da0e56",
+        "new_ast": "fnv1a64:676f218727e52b99",
+        "old_program": "fnv1a64:a5dbfa374fb3d0a9",
+        "new_program": "fnv1a64:b316eb2f02daa493"
+      },
+      {
+        "id": "content:oblivion.esm:002dd2@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5aa1f45ba6da0e56",
+        "new_ast": "fnv1a64:676f218727e52b99",
+        "old_program": "fnv1a64:be27c5ba18cd9347",
+        "new_program": "fnv1a64:7bf08f7634051bf5"
+      },
+      {
+        "id": "content:oblivion.esm:002dd5@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5aa1f45ba6da0e56",
+        "new_ast": "fnv1a64:676f218727e52b99",
+        "old_program": "fnv1a64:fb56c907ef055cb4",
+        "new_program": "fnv1a64:ef356fdb98aec374"
+      },
+      {
+        "id": "content:oblivion.esm:007b2e@oblivion.esm/quest-result/stage=100/entry=0/unit=5",
+        "old_ast": "fnv1a64:0915081dca30cf44",
+        "new_ast": "fnv1a64:2a360e9d0b14f217",
+        "old_program": "fnv1a64:d217c44ed9d465aa",
+        "new_program": "fnv1a64:3548f744c04b2a50"
+      },
+      {
+        "id": "content:oblivion.esm:009296@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5c62fc5c9cf27278",
+        "new_ast": "fnv1a64:7682bc9a904b3799",
+        "old_program": "fnv1a64:2d09aad6645794b2",
+        "new_program": "fnv1a64:588cfb9d177f1e24"
+      },
+      {
+        "id": "content:oblivion.esm:0092cf@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:4fb0cf61fe2b449e",
+        "new_ast": "fnv1a64:14bb0fe4018b8887",
+        "old_program": "fnv1a64:929591fcb7df95f5",
+        "new_program": "fnv1a64:67f3d6ac7994758b"
+      },
+      {
+        "id": "content:oblivion.esm:0092d0@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:4ba406bc86ea54dd",
+        "new_ast": "fnv1a64:0d1f870273fca356",
+        "old_program": "fnv1a64:a3f4e4cdc25e3c45",
+        "new_program": "fnv1a64:27d23086d0d3435b"
+      },
+      {
+        "id": "content:oblivion.esm:0096d9@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:e26e582af806c44f",
+        "new_ast": "fnv1a64:9ffdc8f188bd1fbe",
+        "old_program": "fnv1a64:cd8441c25bf710bf",
+        "new_program": "fnv1a64:598b9d5819758a1d"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=42/entry=1/unit=6",
+        "old_ast": "fnv1a64:4ed477a455639a29",
+        "new_ast": "fnv1a64:697567b4770e81d2",
+        "old_program": "fnv1a64:75f193b221bc1a2b",
+        "new_program": "fnv1a64:f4433b52c0aeec73"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=56/entry=0/unit=9",
+        "old_ast": "fnv1a64:3c60f6d2ac1420c7",
+        "new_ast": "fnv1a64:cee95e70ee9a2a1a",
+        "old_program": "fnv1a64:52b62d9c145bab29",
+        "new_program": "fnv1a64:86dbd97bad7c23af"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=64/entry=0/unit=14",
+        "old_ast": "fnv1a64:ade846fca99ab389",
+        "new_ast": "fnv1a64:db6ba9488b50b031",
+        "old_program": "fnv1a64:4dffa26eeafbd6b2",
+        "new_program": "fnv1a64:1b1e2db3be9fa4cc"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=66/entry=0/unit=16",
+        "old_ast": "fnv1a64:5db7d7c814e2d87b",
+        "new_ast": "fnv1a64:3a1ffc9fa2878a7e",
+        "old_program": "fnv1a64:477fbfa3ee239d7a",
+        "new_program": "fnv1a64:8eda22f086d544aa"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=67/entry=0/unit=17",
+        "old_ast": "fnv1a64:2fb8d3445f578719",
+        "new_ast": "fnv1a64:11514a66e6b5f708",
+        "old_program": "fnv1a64:918fb61eaa7eb6b9",
+        "new_program": "fnv1a64:ac48283fe48d8c03"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=72/entry=0/unit=20",
+        "old_ast": "fnv1a64:90e6209fc1136812",
+        "new_ast": "fnv1a64:55d6804784269c4f",
+        "old_program": "fnv1a64:02850226f30647ad",
+        "new_program": "fnv1a64:180515a0a8a6b6a7"
+      },
+      {
+        "id": "content:oblivion.esm:00c20b@oblivion.esm/quest-result/stage=85/entry=0/unit=26",
+        "old_ast": "fnv1a64:ad8c1e93c7bd4c5d",
+        "new_ast": "fnv1a64:e878643729bf4612",
+        "old_program": "fnv1a64:9e1ee80d4435a433",
+        "new_program": "fnv1a64:36a583df882b9345"
+      },
+      {
+        "id": "content:oblivion.esm:012069@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:04ffafa45df01812",
+        "new_ast": "fnv1a64:95440fd6c4960a70",
+        "old_program": "fnv1a64:450233450712d405",
+        "new_program": "fnv1a64:c17bb07df51db035"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=100/entry=1/unit=41",
+        "old_ast": "fnv1a64:8c952879d488853d",
+        "new_ast": "fnv1a64:aec506ca207b3aef",
+        "old_program": "fnv1a64:15f07cdfd9d38bdd",
+        "new_program": "fnv1a64:02aa7217414c62f7"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=200/entry=0/unit=59",
+        "old_ast": "fnv1a64:a798dec9fc981ced",
+        "new_ast": "fnv1a64:0403ba1d6129f02f",
+        "old_program": "fnv1a64:c5d53876246196f1",
+        "new_program": "fnv1a64:fac1ad772d63ea33"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=50/entry=3/unit=24",
+        "old_ast": "fnv1a64:8651b9fff7dcf1a4",
+        "new_ast": "fnv1a64:9baa1cf19ec24c3b",
+        "old_program": "fnv1a64:21ca37a985f86808",
+        "new_program": "fnv1a64:10a12744dc3b9458"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=51/entry=0/unit=27",
+        "old_ast": "fnv1a64:b70e704c6e635fe4",
+        "new_ast": "fnv1a64:557ac963fcb976bf",
+        "old_program": "fnv1a64:4f7d6e3b43795e51",
+        "new_program": "fnv1a64:411b73de134139a5"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=51/entry=1/unit=28",
+        "old_ast": "fnv1a64:b70e704c6e635fe4",
+        "new_ast": "fnv1a64:557ac963fcb976bf",
+        "old_program": "fnv1a64:df304299b72164ef",
+        "new_program": "fnv1a64:530cbf2a1bb60593"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=51/entry=2/unit=29",
+        "old_ast": "fnv1a64:b70e704c6e635fe4",
+        "new_ast": "fnv1a64:557ac963fcb976bf",
+        "old_program": "fnv1a64:0334900131e94201",
+        "new_program": "fnv1a64:7fa4902dd2525615"
+      },
+      {
+        "id": "content:oblivion.esm:0120e9@oblivion.esm/quest-result/stage=71/entry=0/unit=36",
+        "old_ast": "fnv1a64:27c0d12c9d20593b",
+        "new_ast": "fnv1a64:b6287327f6cb3afe",
+        "old_program": "fnv1a64:e75209166feb8bf8",
+        "new_program": "fnv1a64:2a2d79579244377c"
+      },
+      {
+        "id": "content:oblivion.esm:0131bd@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:5c37c0c57747a14d",
+        "new_ast": "fnv1a64:68cd087ba96bea40",
+        "old_program": "fnv1a64:152d9970d92e0fbd",
+        "new_program": "fnv1a64:6727dd70c1748a91"
+      },
+      {
+        "id": "content:oblivion.esm:0131be@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ea9f26cc5f917ea1",
+        "new_ast": "fnv1a64:41143a76806a1272",
+        "old_program": "fnv1a64:89d80b42c926cdbd",
+        "new_program": "fnv1a64:0aeb5ce6f4a1dccb"
+      },
+      {
+        "id": "content:oblivion.esm:01358a@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ebd54db02fa2e68a",
+        "new_ast": "fnv1a64:357ac7efd84ac1e3",
+        "old_program": "fnv1a64:d39def8f6de56910",
+        "new_program": "fnv1a64:5df9ef826e068ff8"
+      },
+      {
+        "id": "content:oblivion.esm:0135ec@oblivion.esm/quest-result/stage=200/entry=0/unit=10",
+        "old_ast": "fnv1a64:55f8a1c7b14e03bc",
+        "new_ast": "fnv1a64:f1a1f6ebd00721c3",
+        "old_program": "fnv1a64:0665c7eb6db146d4",
+        "new_program": "fnv1a64:470cd3285633a1aa"
+      },
+      {
+        "id": "content:oblivion.esm:0135ed@oblivion.esm/quest-result/stage=200/entry=0/unit=8",
+        "old_ast": "fnv1a64:4ba1ecf8c19b0fda",
+        "new_ast": "fnv1a64:18b0d9b32898f12f",
+        "old_program": "fnv1a64:fb6113972e4564ca",
+        "new_program": "fnv1a64:4485ff4c033f3230"
+      },
+      {
+        "id": "content:oblivion.esm:0146a6@oblivion.esm/quest-result/stage=36/entry=0/unit=3",
+        "old_ast": "fnv1a64:48103b24999a9a16",
+        "new_ast": "fnv1a64:e91098a050c43d6b",
+        "old_program": "fnv1a64:3f05d4f167f02cbd",
+        "new_program": "fnv1a64:bdb3098189586b9b"
+      },
+      {
+        "id": "content:oblivion.esm:0146a6@oblivion.esm/quest-result/stage=37/entry=0/unit=6",
+        "old_ast": "fnv1a64:0933c9ef9a3fda64",
+        "new_ast": "fnv1a64:fe2f5788a86a513d",
+        "old_program": "fnv1a64:56ecfb54c46a0098",
+        "new_program": "fnv1a64:c5db86847824a072"
+      },
+      {
+        "id": "content:oblivion.esm:0146a7@oblivion.esm/quest-result/stage=85/entry=1/unit=5",
+        "old_ast": "fnv1a64:4dacb12918f10934",
+        "new_ast": "fnv1a64:942843fb99fd6897",
+        "old_program": "fnv1a64:a10b112e9871a8fa",
+        "new_program": "fnv1a64:b20506f537ed7fb4"
+      },
+      {
+        "id": "content:oblivion.esm:0146ca@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:bcf47bfdeeee76a6",
+        "new_ast": "fnv1a64:2ae8b5b33ab33f22",
+        "old_program": "fnv1a64:f7cc78508f98ba6a",
+        "new_program": "fnv1a64:42047c2f49382ef4"
+      },
+      {
+        "id": "content:oblivion.esm:01473a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:04e2d9ee2524ed63",
+        "new_ast": "fnv1a64:dc64edff4b66e08e",
+        "old_program": "fnv1a64:267debf6850d9618",
+        "new_program": "fnv1a64:65fb525c941d67a2"
+      },
+      {
+        "id": "content:oblivion.esm:015202@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:70a0e5fcc30d39ee",
+        "new_ast": "fnv1a64:612f02772f70d565",
+        "old_program": "fnv1a64:996d8e5469d6d5ee",
+        "new_program": "fnv1a64:35b9b85a4ff22cfe"
+      },
+      {
+        "id": "content:oblivion.esm:016b57@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:029b4c8491362db8",
+        "new_ast": "fnv1a64:99377b724cb95315",
+        "old_program": "fnv1a64:8e00c6c802300df7",
+        "new_program": "fnv1a64:ac112bf8ed449b57"
+      },
+      {
+        "id": "content:oblivion.esm:016b5d@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:4ffbdcbafabe64b6",
+        "new_ast": "fnv1a64:05ad11f4c9c9b437",
+        "old_program": "fnv1a64:91dfde2d8533478d",
+        "new_program": "fnv1a64:b41e13988a418acd"
+      },
+      {
+        "id": "content:oblivion.esm:016b66@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:47a24196977e1d08",
+        "new_ast": "fnv1a64:81d31fdbfb784a57",
+        "old_program": "fnv1a64:38e1e397a605a9c2",
+        "new_program": "fnv1a64:ea26243b57c5fe84"
+      },
+      {
+        "id": "content:oblivion.esm:016b6b@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:487d6a7603e3f8f5",
+        "new_ast": "fnv1a64:08f7b72614a7fa44",
+        "old_program": "fnv1a64:3af450b8d047a18a",
+        "new_program": "fnv1a64:0ac07d48c6e793ba"
+      },
+      {
+        "id": "content:oblivion.esm:016b6c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1f7d5f883c951b34",
+        "new_ast": "fnv1a64:9412e42cc7b65de5",
+        "old_program": "fnv1a64:de907656e539b434",
+        "new_program": "fnv1a64:9b97c7bb51357412"
+      },
+      {
+        "id": "content:oblivion.esm:016b73@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1f7d5f883c951b34",
+        "new_ast": "fnv1a64:9412e42cc7b65de5",
+        "old_program": "fnv1a64:9dbcc5264133c0c1",
+        "new_program": "fnv1a64:1b6a4bfd509584d5"
+      },
+      {
+        "id": "content:oblivion.esm:017838@oblivion.esm/quest-result/stage=95/entry=2/unit=12",
+        "old_ast": "fnv1a64:e132c9398ba073a9",
+        "new_ast": "fnv1a64:6f2ea06e95c831c7",
+        "old_program": "fnv1a64:933c7f1d77f4f1b3",
+        "new_program": "fnv1a64:4dec0ccd7c18b7cd"
+      },
+      {
+        "id": "content:oblivion.esm:018704@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:60bff7ac22aa9beb",
+        "new_ast": "fnv1a64:86890c958aa96f48",
+        "old_program": "fnv1a64:c7b829185c85ea09",
+        "new_program": "fnv1a64:751b1a470a432f59"
+      },
+      {
+        "id": "content:oblivion.esm:018db9@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:ec0c85bfef125829",
+        "new_program": "fnv1a64:9ae277db267ec6e7"
+      },
+      {
+        "id": "content:oblivion.esm:018dba@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:493f4117223a4fe1",
+        "new_program": "fnv1a64:739e134cb10034ff"
+      },
+      {
+        "id": "content:oblivion.esm:018dbb@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:0d47ad43cea0ee1e",
+        "new_program": "fnv1a64:26415a77f681950a"
+      },
+      {
+        "id": "content:oblivion.esm:018dc6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:15a8968b95c79f8e",
+        "new_ast": "fnv1a64:22c4e0fe1fa1c52f",
+        "old_program": "fnv1a64:6546cdd6c2eb67c4",
+        "new_program": "fnv1a64:ef4e6e2aa607090e"
+      },
+      {
+        "id": "content:oblivion.esm:018ffc@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:53826b340a2480fa",
+        "new_ast": "fnv1a64:5d7e560a952776bf",
+        "old_program": "fnv1a64:0da7a75b0b3f12bb",
+        "new_program": "fnv1a64:151b39630ddefa65"
+      },
+      {
+        "id": "content:oblivion.esm:019cd3@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:ae940f019afc1d6c",
+        "new_ast": "fnv1a64:2e0be5451b97e2b1",
+        "old_program": "fnv1a64:c5cd4a018246e267",
+        "new_program": "fnv1a64:8d1c009e1aa7af47"
+      },
+      {
+        "id": "content:oblivion.esm:019cf4@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:26ad06092984a22c",
+        "new_ast": "fnv1a64:255a9d3e17cb8f70",
+        "old_program": "fnv1a64:b0b10d5b1e461c0b",
+        "new_program": "fnv1a64:4384c2483ee43535"
+      },
+      {
+        "id": "content:oblivion.esm:019f70@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:4dec8fd0c12c0d6b",
+        "new_ast": "fnv1a64:27742bf1e75b37e9",
+        "old_program": "fnv1a64:a90aa93942cca003",
+        "new_program": "fnv1a64:175a19ef7491a4d9"
+      },
+      {
+        "id": "content:oblivion.esm:019fc7@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:43e656fd0293cbd4",
+        "new_ast": "fnv1a64:b59c00b10b6a1725",
+        "old_program": "fnv1a64:3052ba2571da37e9",
+        "new_program": "fnv1a64:5384992f4336729b"
+      },
+      {
+        "id": "content:oblivion.esm:01a387@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:6aa8b0451096fe22",
+        "new_ast": "fnv1a64:6d94cd86739f6a2d",
+        "old_program": "fnv1a64:cbddb937c5f2dc46",
+        "new_program": "fnv1a64:dc5195192f1eb6e2"
+      },
+      {
+        "id": "content:oblivion.esm:01a7ea@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:314b9ac97365b400",
+        "new_ast": "fnv1a64:b6b299f6b15f8fdf",
+        "old_program": "fnv1a64:eeb5c2b2b3de4e75",
+        "new_program": "fnv1a64:a81db473ac762f23"
+      },
+      {
+        "id": "content:oblivion.esm:01ac89@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:fcf5fa32f9f7180d",
+        "new_ast": "fnv1a64:7d4aa365451fca28",
+        "old_program": "fnv1a64:88cbee68f998e654",
+        "new_program": "fnv1a64:18d0aa5e79a0554a"
+      },
+      {
+        "id": "content:oblivion.esm:01ac8a@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:74e39948b5ec9b6d",
+        "new_ast": "fnv1a64:61d1410603fad6d6",
+        "old_program": "fnv1a64:a8ce81571e23b547",
+        "new_program": "fnv1a64:1fdcda18b1951a1d"
+      },
+      {
+        "id": "content:oblivion.esm:01bb30@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5570cdec55c843ed",
+        "new_ast": "fnv1a64:d4911b39bb182c6a",
+        "old_program": "fnv1a64:6db28305a398621a",
+        "new_program": "fnv1a64:377609e74a02d4ec"
+      },
+      {
+        "id": "content:oblivion.esm:01ce05@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:b5ae7619a969ad33",
+        "new_ast": "fnv1a64:5de2dc78c504e0f8",
+        "old_program": "fnv1a64:9536c36aa14e03d9",
+        "new_program": "fnv1a64:a45d509e2df90c69"
+      },
+      {
+        "id": "content:oblivion.esm:01d045@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:c7333eb9be955970",
+        "new_ast": "fnv1a64:deb5f587bbac2a3f",
+        "old_program": "fnv1a64:491d2d3bda3af76d",
+        "new_program": "fnv1a64:2a674ea710e13917"
+      },
+      {
+        "id": "content:oblivion.esm:01d21c@oblivion.esm/quest-result/stage=85/entry=0/unit=5",
+        "old_ast": "fnv1a64:10a583e323e4f06e",
+        "new_ast": "fnv1a64:a5a0a94f11d1a5d5",
+        "old_program": "fnv1a64:37434765f3729149",
+        "new_program": "fnv1a64:78e4e23b4c6ef5a7"
+      },
+      {
+        "id": "content:oblivion.esm:01e092@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0404b46c91e8d5e3",
+        "new_ast": "fnv1a64:61ee8f21985560fa",
+        "old_program": "fnv1a64:15191fe1cd86e467",
+        "new_program": "fnv1a64:2d01c88981fcbca7"
+      },
+      {
+        "id": "content:oblivion.esm:01e726@oblivion.esm/quest-result/stage=10/entry=0/unit=4",
+        "old_ast": "fnv1a64:bf325aeff0da9a06",
+        "new_ast": "fnv1a64:5387562d29e843db",
+        "old_program": "fnv1a64:15264334ae05dc37",
+        "new_program": "fnv1a64:4488deeed593a7fd"
+      },
+      {
+        "id": "content:oblivion.esm:01e726@oblivion.esm/quest-result/stage=100/entry=0/unit=18",
+        "old_ast": "fnv1a64:632bfd3e3250f1b6",
+        "new_ast": "fnv1a64:8c51bde7a882acf4",
+        "old_program": "fnv1a64:ef69dd6f7e0cd668",
+        "new_program": "fnv1a64:eb70320305475f50"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=20/entry=0/unit=2",
+        "old_ast": "fnv1a64:08f5b0d461612d98",
+        "new_ast": "fnv1a64:a88fcddb14be272d",
+        "old_program": "fnv1a64:d851a4f1324912c4",
+        "new_program": "fnv1a64:8014d41cbffce86e"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=31/entry=0/unit=5",
+        "old_ast": "fnv1a64:b23df12d6fe174b9",
+        "new_ast": "fnv1a64:1f6e595c195a8f3a",
+        "old_program": "fnv1a64:df4c1274545227df",
+        "new_program": "fnv1a64:d0ed0be0b90fb659"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=35/entry=0/unit=7",
+        "old_ast": "fnv1a64:70c4d87c77fb11a9",
+        "new_ast": "fnv1a64:d6a6316895ed2d96",
+        "old_program": "fnv1a64:91d7a6c23d133c99",
+        "new_program": "fnv1a64:e81243acde80767f"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=85/entry=0/unit=27",
+        "old_ast": "fnv1a64:3d55ad722f23696d",
+        "new_ast": "fnv1a64:cb89840f2db9ffd0",
+        "old_program": "fnv1a64:27a7aaec0f29cd95",
+        "new_program": "fnv1a64:4159f179aef920c9"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=90/entry=0/unit=28",
+        "old_ast": "fnv1a64:1adf1704c1929988",
+        "new_ast": "fnv1a64:e7e57d43ded8b669",
+        "old_program": "fnv1a64:3c685e4cc9e3c7d9",
+        "new_program": "fnv1a64:982aff2933861223"
+      },
+      {
+        "id": "content:oblivion.esm:01e727@oblivion.esm/quest-result/stage=91/entry=0/unit=29",
+        "old_ast": "fnv1a64:5350a5b746e39ef5",
+        "new_ast": "fnv1a64:0dbce5ea69076ab9",
+        "old_program": "fnv1a64:b39de6092856e106",
+        "new_program": "fnv1a64:f679080c987f9846"
+      },
+      {
+        "id": "content:oblivion.esm:01e728@oblivion.esm/quest-result/stage=41/entry=0/unit=4",
+        "old_ast": "fnv1a64:ef25a416de19fd6e",
+        "new_ast": "fnv1a64:78bcda75e7524320",
+        "old_program": "fnv1a64:3e7430fcc26a173c",
+        "new_program": "fnv1a64:5da93cdbfa4dd14a"
+      },
+      {
+        "id": "content:oblivion.esm:01e728@oblivion.esm/quest-result/stage=51/entry=0/unit=11",
+        "old_ast": "fnv1a64:76ff0dd04f90effd",
+        "new_ast": "fnv1a64:67db23100d54630f",
+        "old_program": "fnv1a64:ea7423c8f36a8ed5",
+        "new_program": "fnv1a64:bc7cc93aee50ec8b"
+      },
+      {
+        "id": "content:oblivion.esm:01e728@oblivion.esm/quest-result/stage=70/entry=0/unit=13",
+        "old_ast": "fnv1a64:5daf4d330e2fbe1e",
+        "new_ast": "fnv1a64:b32a5cc5c1e3117a",
+        "old_program": "fnv1a64:836df3a4232cfd99",
+        "new_program": "fnv1a64:b137e41b6aad5a37"
+      },
+      {
+        "id": "content:oblivion.esm:01e729@oblivion.esm/quest-result/stage=70/entry=0/unit=10",
+        "old_ast": "fnv1a64:db406658659434ab",
+        "new_ast": "fnv1a64:3f36b2c0149ac344",
+        "old_program": "fnv1a64:59f0ec926b962963",
+        "new_program": "fnv1a64:582422194ff3a54d"
+      },
+      {
+        "id": "content:oblivion.esm:01e729@oblivion.esm/quest-result/stage=70/entry=1/unit=11",
+        "old_ast": "fnv1a64:db406658659434ab",
+        "new_ast": "fnv1a64:3f36b2c0149ac344",
+        "old_program": "fnv1a64:e2d5d32ba247191b",
+        "new_program": "fnv1a64:1a644a4332f33e65"
+      },
+      {
+        "id": "content:oblivion.esm:01e72c@oblivion.esm/quest-result/stage=50/entry=1/unit=11",
+        "old_ast": "fnv1a64:fcbdb5a6308d577d",
+        "new_ast": "fnv1a64:738e17ca43e6d08d",
+        "old_program": "fnv1a64:536b9ad2405d9dd8",
+        "new_program": "fnv1a64:ce825b05cac93472"
+      },
+      {
+        "id": "content:oblivion.esm:01e730@oblivion.esm/quest-result/stage=100/entry=1/unit=10",
+        "old_ast": "fnv1a64:76d84ee68fbbcb48",
+        "new_ast": "fnv1a64:3ae18ee6c4b134d6",
+        "old_program": "fnv1a64:059540041c5dcfd2",
+        "new_program": "fnv1a64:21727818b543746c"
+      },
+      {
+        "id": "content:oblivion.esm:01e853@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:429e99ae4119a349",
+        "new_program": "fnv1a64:65f51ad35421fb7b"
+      },
+      {
+        "id": "content:oblivion.esm:01ebc4@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:be877472e21a240a",
+        "new_ast": "fnv1a64:21a31b9379a1cdd1",
+        "old_program": "fnv1a64:c8e70628930168ae",
+        "new_program": "fnv1a64:865eae62a065a074"
+      },
+      {
+        "id": "content:oblivion.esm:01ec30@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:90e81b8dde0c8936",
+        "new_ast": "fnv1a64:fa7e486130869815",
+        "old_program": "fnv1a64:19c908ecd8dca05d",
+        "new_program": "fnv1a64:8d56669aae0a801f"
+      },
+      {
+        "id": "content:oblivion.esm:01eef5@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:5c8e85f4114847a4",
+        "new_ast": "fnv1a64:efc373835e15aa41",
+        "old_program": "fnv1a64:7f7488be8b69f30f",
+        "new_program": "fnv1a64:d8f9c56e1632aa39"
+      },
+      {
+        "id": "content:oblivion.esm:0224e7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:dd71d33e5026d50f",
+        "new_program": "fnv1a64:95418853ae82cf7d"
+      },
+      {
+        "id": "content:oblivion.esm:02250a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:688d15a4db53fe3f",
+        "new_program": "fnv1a64:8454c20d7efaa641"
+      },
+      {
+        "id": "content:oblivion.esm:022b54@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:5ffa2f47fbb1a623",
+        "new_ast": "fnv1a64:c6f3c1006ece1aaa",
+        "old_program": "fnv1a64:c720c2387df1182d",
+        "new_program": "fnv1a64:583a81de6a3f3f09"
+      },
+      {
+        "id": "content:oblivion.esm:022b56@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:13fa3acc4da5f610",
+        "new_program": "fnv1a64:f015514b54b8d7b0"
+      },
+      {
+        "id": "content:oblivion.esm:022ca6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:fef094a0ddf97d8a",
+        "new_ast": "fnv1a64:80a9d653f7fbeebd",
+        "old_program": "fnv1a64:86ed3e7ad7269b99",
+        "new_program": "fnv1a64:fbe606e981f7f24b"
+      },
+      {
+        "id": "content:oblivion.esm:022cad@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0b74a47cabd43980",
+        "new_ast": "fnv1a64:619aef3b22113f4c",
+        "old_program": "fnv1a64:2df8d08deddc8b90",
+        "new_program": "fnv1a64:334485154fa4f380"
+      },
+      {
+        "id": "content:oblivion.esm:023686@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:088b8c594b6b6d43",
+        "new_ast": "fnv1a64:82085b8783339904",
+        "old_program": "fnv1a64:a72325fe88941564",
+        "new_program": "fnv1a64:5d8ead2a0734da54"
+      },
+      {
+        "id": "content:oblivion.esm:023687@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:061ca817b8ec4f7f",
+        "new_ast": "fnv1a64:e34a44698bb43046",
+        "old_program": "fnv1a64:7267b5631218a3fe",
+        "new_program": "fnv1a64:bc6c1aab059ce7ee"
+      },
+      {
+        "id": "content:oblivion.esm:023688@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:c609b4e1a251616d",
+        "new_ast": "fnv1a64:d17e1c9f827ed827",
+        "old_program": "fnv1a64:761ef8af5e23d77b",
+        "new_program": "fnv1a64:b16bce72821a40c7"
+      },
+      {
+        "id": "content:oblivion.esm:023e85@oblivion.esm/quest-result/stage=20/entry=0/unit=1",
+        "old_ast": "fnv1a64:a3fd449fd2ddcf43",
+        "new_ast": "fnv1a64:cd09ed780ca2987f",
+        "old_program": "fnv1a64:3c89570be9ee053a",
+        "new_program": "fnv1a64:86f450c1d2f6b090"
+      },
+      {
+        "id": "content:oblivion.esm:023f3d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:daff430892bf85ba",
+        "new_ast": "fnv1a64:d08a0612f8f3a5d1",
+        "old_program": "fnv1a64:fec04adfcb34db3e",
+        "new_program": "fnv1a64:577054ea263c203e"
+      },
+      {
+        "id": "content:oblivion.esm:023f3e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:daff430892bf85ba",
+        "new_ast": "fnv1a64:d08a0612f8f3a5d1",
+        "old_program": "fnv1a64:3674d017eb2352dd",
+        "new_program": "fnv1a64:90d06ab1737dd787"
+      },
+      {
+        "id": "content:oblivion.esm:023f3f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:daff430892bf85ba",
+        "new_ast": "fnv1a64:d08a0612f8f3a5d1",
+        "old_program": "fnv1a64:aaaf185a1b1a4dbc",
+        "new_program": "fnv1a64:dae50aada78fe550"
+      },
+      {
+        "id": "content:oblivion.esm:02466e@oblivion.esm/quest-result/stage=0/entry=0/unit=0",
+        "old_ast": "fnv1a64:7e7040db7fb7ab65",
+        "new_ast": "fnv1a64:28e33f3f9ba4d392",
+        "old_program": "fnv1a64:14f1717e07a56d69",
+        "new_program": "fnv1a64:b9a59f26fd8807c3"
+      },
+      {
+        "id": "content:oblivion.esm:02466e@oblivion.esm/quest-result/stage=23/entry=0/unit=21",
+        "old_ast": "fnv1a64:026f5d5b95e6d553",
+        "new_ast": "fnv1a64:9c73220ed0c2f7cc",
+        "old_program": "fnv1a64:83d3ee0390d59a93",
+        "new_program": "fnv1a64:60c16ba4a4ee2a09"
+      },
+      {
+        "id": "content:oblivion.esm:02466e@oblivion.esm/quest-result/stage=34/entry=0/unit=30",
+        "old_ast": "fnv1a64:466ce96fdc4d6116",
+        "new_ast": "fnv1a64:ad183a1d94ed68e1",
+        "old_program": "fnv1a64:cb86bea7aaf9a983",
+        "new_program": "fnv1a64:9080979615d975c1"
+      },
+      {
+        "id": "content:oblivion.esm:02466e@oblivion.esm/quest-result/stage=68/entry=0/unit=50",
+        "old_ast": "fnv1a64:ab5e8326a2ef6fbe",
+        "new_ast": "fnv1a64:e2f5635fdf3e442c",
+        "old_program": "fnv1a64:cd44fee86a3ac317",
+        "new_program": "fnv1a64:ebdb7f2645a9d957"
+      },
+      {
+        "id": "content:oblivion.esm:02466e@oblivion.esm/quest-result/stage=80/entry=0/unit=58",
+        "old_ast": "fnv1a64:061191eccc75a0c3",
+        "new_ast": "fnv1a64:5a57858c626bb32c",
+        "old_program": "fnv1a64:c2f94863cef7b50c",
+        "new_program": "fnv1a64:f72ff7d96199532e"
+      },
+      {
+        "id": "content:oblivion.esm:024dd6@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:231ad2f79d6a2674",
+        "new_ast": "fnv1a64:47270df9719930ca",
+        "old_program": "fnv1a64:6111f1a04988c0b9",
+        "new_program": "fnv1a64:f9f40734c17bfdbb"
+      },
+      {
+        "id": "content:oblivion.esm:024ff0@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:e39f0a66aaececaa",
+        "new_ast": "fnv1a64:a2d128340cc0df10",
+        "old_program": "fnv1a64:1e53252e63453aff",
+        "new_program": "fnv1a64:3a1b5a483293e1d9"
+      },
+      {
+        "id": "content:oblivion.esm:026ad2@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9f9d0e99b16fb651",
+        "new_ast": "fnv1a64:91a9147e6dc1be2a",
+        "old_program": "fnv1a64:902a1ceeec80ee90",
+        "new_program": "fnv1a64:e7d1e5b01523d650"
+      },
+      {
+        "id": "content:oblivion.esm:026af8@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:09ad014817b357aa",
+        "new_ast": "fnv1a64:7fe7191616fbb9dd",
+        "old_program": "fnv1a64:dea94f5f19a24514",
+        "new_program": "fnv1a64:f84c73eebaaa9c84"
+      },
+      {
+        "id": "content:oblivion.esm:026d96@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:3109853f6d4f75d6",
+        "new_program": "fnv1a64:2553b7e1c04435d2"
+      },
+      {
+        "id": "content:oblivion.esm:026d97@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:031cf0ea36159e37",
+        "new_program": "fnv1a64:ba52e5f3d9909ac5"
+      },
+      {
+        "id": "content:oblivion.esm:026ddf@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:cbff00a1366c109d",
+        "new_program": "fnv1a64:cacbac57e842b45f"
+      },
+      {
+        "id": "content:oblivion.esm:026de0@oblivion.esm/quest-result/stage=100/entry=0/unit=1",
+        "old_ast": "fnv1a64:acb1d093a6132308",
+        "new_ast": "fnv1a64:b9ee06bd355ac51f",
+        "old_program": "fnv1a64:aa781692872d5744",
+        "new_program": "fnv1a64:140e6e309ca8cdd4"
+      },
+      {
+        "id": "content:oblivion.esm:026de1@oblivion.esm/quest-result/stage=100/entry=0/unit=1",
+        "old_ast": "fnv1a64:acb1d093a6132308",
+        "new_ast": "fnv1a64:b9ee06bd355ac51f",
+        "old_program": "fnv1a64:0ecaba6b29138b4d",
+        "new_program": "fnv1a64:408d8ccdaf30f663"
+      },
+      {
+        "id": "content:oblivion.esm:026de2@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:1ca8f8c3ea0e28b1",
+        "new_ast": "fnv1a64:b5a11deb76f2f58a",
+        "old_program": "fnv1a64:abd367d5927cf8a4",
+        "new_program": "fnv1a64:0a9dec219065ead0"
+      },
+      {
+        "id": "content:oblivion.esm:027815@oblivion.esm/quest-result/stage=80/entry=0/unit=5",
+        "old_ast": "fnv1a64:42ea38ba014d1c10",
+        "new_ast": "fnv1a64:d6df35777191131f",
+        "old_program": "fnv1a64:59c4f83bc171914e",
+        "new_program": "fnv1a64:60c6908e4bfae066"
+      },
+      {
+        "id": "content:oblivion.esm:0279a2@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:bc10a3ae65b7af4e",
+        "new_ast": "fnv1a64:37949b95c2974083",
+        "old_program": "fnv1a64:ab820bb4d7b0a3d0",
+        "new_program": "fnv1a64:2664d9dacc89e9d4"
+      },
+      {
+        "id": "content:oblivion.esm:027fa3@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:c4fbc4ccc4496066",
+        "new_program": "fnv1a64:95e7ab467d2060a2"
+      },
+      {
+        "id": "content:oblivion.esm:027fc9@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:461ba7c685c80e18",
+        "new_program": "fnv1a64:16f5cf40ce09687c"
+      },
+      {
+        "id": "content:oblivion.esm:0280b6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d69ee1566dbfd124",
+        "new_ast": "fnv1a64:790b57c34a89b3eb",
+        "old_program": "fnv1a64:b61ac44be3c670c7",
+        "new_program": "fnv1a64:edbd40960942a2a1"
+      },
+      {
+        "id": "content:oblivion.esm:0280bc@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:a2d847c2e2beeb43",
+        "new_ast": "fnv1a64:6ef148272828845a",
+        "old_program": "fnv1a64:c128d81377c63f4f",
+        "new_program": "fnv1a64:f5dbcc599ac6476f"
+      },
+      {
+        "id": "content:oblivion.esm:0280c1@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:dc4b47252ae57460",
+        "new_ast": "fnv1a64:6664138b00d959b8",
+        "old_program": "fnv1a64:a6135bbd7889cc73",
+        "new_program": "fnv1a64:fbdc5878a94df0d1"
+      },
+      {
+        "id": "content:oblivion.esm:02823d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:dc682de317d9d8e1",
+        "new_ast": "fnv1a64:e51813c5a54c2888",
+        "old_program": "fnv1a64:f095f68d7faecaf0",
+        "new_program": "fnv1a64:60de2262994b44b8"
+      },
+      {
+        "id": "content:oblivion.esm:028248@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d55f3f50f9db2ce3",
+        "new_ast": "fnv1a64:6ca8c00195308f92",
+        "old_program": "fnv1a64:67e22dbcaf521860",
+        "new_program": "fnv1a64:95a2840fa26b720a"
+      },
+      {
+        "id": "content:oblivion.esm:028256@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:613a9de9465a565f",
+        "new_ast": "fnv1a64:157db47c6ac00f34",
+        "old_program": "fnv1a64:ded32155da43e0ef",
+        "new_program": "fnv1a64:a7e356c37dca1f23"
+      },
+      {
+        "id": "content:oblivion.esm:028264@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:cdc3ba4d29583a8f",
+        "new_ast": "fnv1a64:718b54142b6dee68",
+        "old_program": "fnv1a64:60d63424a43e1083",
+        "new_program": "fnv1a64:9a847a9fce195cfd"
+      },
+      {
+        "id": "content:oblivion.esm:028275@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ca8567b30a17897a",
+        "new_ast": "fnv1a64:72f58ee701433062",
+        "old_program": "fnv1a64:3f5b59860e6bb68f",
+        "new_program": "fnv1a64:6c0d5d1aa2bc1047"
+      },
+      {
+        "id": "content:oblivion.esm:028550@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ddcfe6a5451f8f93",
+        "new_ast": "fnv1a64:83fd496db1462521",
+        "old_program": "fnv1a64:196fd6b3c49e405d",
+        "new_program": "fnv1a64:aa65af846d436481"
+      },
+      {
+        "id": "content:oblivion.esm:0286da@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:946cf2854faecea4",
+        "new_ast": "fnv1a64:8c80aae37cd3832b",
+        "old_program": "fnv1a64:b7b0a38d1e5f4e60",
+        "new_program": "fnv1a64:ba8819a1feb79f68"
+      },
+      {
+        "id": "content:oblivion.esm:0286ea@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0d3c845f53249447",
+        "new_ast": "fnv1a64:5c2605fe28290768",
+        "old_program": "fnv1a64:16a9ee3cad724e7d",
+        "new_program": "fnv1a64:5ba73a196f182787"
+      },
+      {
+        "id": "content:oblivion.esm:0286f4@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:42f5a839ae05c7e9",
+        "new_ast": "fnv1a64:294fef5112c27ad2",
+        "old_program": "fnv1a64:b4d7b95cbd63c554",
+        "new_program": "fnv1a64:2cf335585ed04b92"
+      },
+      {
+        "id": "content:oblivion.esm:028702@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:43f96c75a4c72afd",
+        "new_ast": "fnv1a64:6001ed570b969848",
+        "old_program": "fnv1a64:b2b9a026ffa54c5e",
+        "new_program": "fnv1a64:7a0074a4586f3aaa"
+      },
+      {
+        "id": "content:oblivion.esm:02878d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:09af6d187379abf7",
+        "new_ast": "fnv1a64:5ab0c7bc58dc01b2",
+        "old_program": "fnv1a64:32ae28734964f3d2",
+        "new_program": "fnv1a64:c6e5285af02f858a"
+      },
+      {
+        "id": "content:oblivion.esm:02879c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9d075dcdca9a0b7d",
+        "new_ast": "fnv1a64:869c0f9ad77b0a92",
+        "old_program": "fnv1a64:b90de9c7995dab64",
+        "new_program": "fnv1a64:15c7d8bdfa31e9ec"
+      },
+      {
+        "id": "content:oblivion.esm:028a00@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:22eee27ca27cf72d",
+        "new_ast": "fnv1a64:c5fb9ac652431e4e",
+        "old_program": "fnv1a64:562972372012b467",
+        "new_program": "fnv1a64:7314454dabda999f"
+      },
+      {
+        "id": "content:oblivion.esm:028c0a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:df94fb88be73b03f",
+        "new_program": "fnv1a64:629242e01dcf2c41"
+      },
+      {
+        "id": "content:oblivion.esm:028c30@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6f60cdb32c745c4f",
+        "new_ast": "fnv1a64:12b690f7ec4f4028",
+        "old_program": "fnv1a64:39529b81b96be813",
+        "new_program": "fnv1a64:34069e656cbc0a6d"
+      },
+      {
+        "id": "content:oblivion.esm:028cd4@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:cc0427bc6a4b1dc5",
+        "new_ast": "fnv1a64:0074c055d8140376",
+        "old_program": "fnv1a64:a354a486b18991a3",
+        "new_program": "fnv1a64:6ab6362e08e9c25b"
+      },
+      {
+        "id": "content:oblivion.esm:028d34@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:ec84545ba6cb0081",
+        "new_ast": "fnv1a64:69135ba9ebdea98e",
+        "old_program": "fnv1a64:4753cc193f9e4ef3",
+        "new_program": "fnv1a64:2ec47093031df94b"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=100/entry=0/unit=27",
+        "old_ast": "fnv1a64:637c45b6ac84e293",
+        "new_ast": "fnv1a64:7f8008fb8f284704",
+        "old_program": "fnv1a64:c05eda9fb0c246e8",
+        "new_program": "fnv1a64:334a4e0a44e47e98"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=20/entry=1/unit=6",
+        "old_ast": "fnv1a64:b46f0f6e5a62c1d4",
+        "new_ast": "fnv1a64:6accea41f57e0f59",
+        "old_program": "fnv1a64:cbae28f895a61165",
+        "new_program": "fnv1a64:172bb3c85b748a7f"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=30/entry=1/unit=9",
+        "old_ast": "fnv1a64:29b0a351e0f49d66",
+        "new_ast": "fnv1a64:41078bcda09f1ee7",
+        "old_program": "fnv1a64:f405e0a8b70cf02b",
+        "new_program": "fnv1a64:c24dfdf6fd95d395"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=30/entry=2/unit=10",
+        "old_ast": "fnv1a64:af52e8fa015ff9df",
+        "new_ast": "fnv1a64:238e7e44d258418e",
+        "old_program": "fnv1a64:94410325fb0fdd43",
+        "new_program": "fnv1a64:512456f6752d6fa3"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=40/entry=0/unit=12",
+        "old_ast": "fnv1a64:c0dd0ac2fbd97640",
+        "new_ast": "fnv1a64:5a8c5697502b7f23",
+        "old_program": "fnv1a64:20366a1918fba032",
+        "new_program": "fnv1a64:709c79ffb2237316"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=60/entry=0/unit=21",
+        "old_ast": "fnv1a64:146f07d31a7a7a5d",
+        "new_ast": "fnv1a64:2862253ba5d08384",
+        "old_program": "fnv1a64:3fd6f5d3933b6eaa",
+        "new_program": "fnv1a64:ee7b3d16632b150a"
+      },
+      {
+        "id": "content:oblivion.esm:028d83@oblivion.esm/quest-result/stage=9/entry=0/unit=2",
+        "old_ast": "fnv1a64:d90f2955e1774d90",
+        "new_ast": "fnv1a64:6e00e03445645c49",
+        "old_program": "fnv1a64:04a4f89009351412",
+        "new_program": "fnv1a64:61d4256d1ac6438c"
+      },
+      {
+        "id": "content:oblivion.esm:028f52@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d455dde03b76cde7",
+        "new_ast": "fnv1a64:dde2ffa71454354e",
+        "old_program": "fnv1a64:c59b2bdb67fdc4c5",
+        "new_program": "fnv1a64:095e4662fc0bca81"
+      },
+      {
+        "id": "content:oblivion.esm:02a38f@oblivion.esm/quest-result/stage=14/entry=0/unit=6",
+        "old_ast": "fnv1a64:11e424c142b357d3",
+        "new_ast": "fnv1a64:0dc010c2db8941aa",
+        "old_program": "fnv1a64:ff5131e094649512",
+        "new_program": "fnv1a64:c1a94c9baa14cd60"
+      },
+      {
+        "id": "content:oblivion.esm:02b19e@oblivion.esm/quest-result/stage=44/entry=0/unit=18",
+        "old_ast": "fnv1a64:55fe23be35d19cb5",
+        "new_ast": "fnv1a64:2e6cf83ce798d77a",
+        "old_program": "fnv1a64:216db5ae6e7c55d2",
+        "new_program": "fnv1a64:bcfdc0c018b48d68"
+      },
+      {
+        "id": "content:oblivion.esm:02b19e@oblivion.esm/quest-result/stage=55/entry=0/unit=23",
+        "old_ast": "fnv1a64:604b4ffd10c32e1f",
+        "new_ast": "fnv1a64:8f673908100fb0b8",
+        "old_program": "fnv1a64:31efed085b4239e1",
+        "new_program": "fnv1a64:98210fb7878a1637"
+      },
+      {
+        "id": "content:oblivion.esm:02b19e@oblivion.esm/quest-result/stage=60/entry=0/unit=24",
+        "old_ast": "fnv1a64:9aaf46c259b755fe",
+        "new_ast": "fnv1a64:07ad2fd1c7339a5a",
+        "old_program": "fnv1a64:23fbeee69af167ce",
+        "new_program": "fnv1a64:37e6aba2300cc04a"
+      },
+      {
+        "id": "content:oblivion.esm:02b19e@oblivion.esm/quest-result/stage=72/entry=0/unit=26",
+        "old_ast": "fnv1a64:96f11c5942869568",
+        "new_ast": "fnv1a64:b635cca006aa96b7",
+        "old_program": "fnv1a64:a2e11bffa3f7ad21",
+        "new_program": "fnv1a64:f7da7ac4dafd2c2f"
+      },
+      {
+        "id": "content:oblivion.esm:02b8db@oblivion.esm/quest-result/stage=60/entry=0/unit=4",
+        "old_ast": "fnv1a64:8f035954b19fe6ce",
+        "new_ast": "fnv1a64:d7622cef2f4532db",
+        "old_program": "fnv1a64:13396d52732886be",
+        "new_program": "fnv1a64:824dede856613bc2"
+      },
+      {
+        "id": "content:oblivion.esm:02ba46@oblivion.esm/quest-result/stage=100/entry=0/unit=4",
+        "old_ast": "fnv1a64:733d3ef6b6f9b9a9",
+        "new_ast": "fnv1a64:55c89855af5a6d2d",
+        "old_program": "fnv1a64:656f602c8270c01f",
+        "new_program": "fnv1a64:b06c69790a42a11b"
+      },
+      {
+        "id": "content:oblivion.esm:02c51c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:5a541581048622ad",
+        "new_program": "fnv1a64:17d2b072103dbfef"
+      },
+      {
+        "id": "content:oblivion.esm:02c6db@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:07a3916622e8aa5b",
+        "new_ast": "fnv1a64:e9848d9a18449718",
+        "old_program": "fnv1a64:0b7f1e097e76e29c",
+        "new_program": "fnv1a64:8e948a2f54b8d142"
+      },
+      {
+        "id": "content:oblivion.esm:02c826@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:7e19de682e5013f9",
+        "new_ast": "fnv1a64:cf1549d0d93749e0",
+        "old_program": "fnv1a64:2455a75663113317",
+        "new_program": "fnv1a64:cc8a397a0bab8a1d"
+      },
+      {
+        "id": "content:oblivion.esm:02c82c@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:61a8e42956c75524",
+        "new_ast": "fnv1a64:801359337f089a3e",
+        "old_program": "fnv1a64:a7dbc1554d83b3bc",
+        "new_program": "fnv1a64:34ecce6cf42b4956"
+      },
+      {
+        "id": "content:oblivion.esm:02d079@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:dfe201450cdba66c",
+        "new_ast": "fnv1a64:ac0290dfe8d7c6b2",
+        "old_program": "fnv1a64:36432989d425f29c",
+        "new_program": "fnv1a64:0515c446467fd86e"
+      },
+      {
+        "id": "content:oblivion.esm:02e59d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:e1a886ba1524f2f9",
+        "new_ast": "fnv1a64:cdc5e9fdf31b7db4",
+        "old_program": "fnv1a64:08dea6f05cc53e17",
+        "new_program": "fnv1a64:af7465d3f1c40f35"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=100/entry=1/unit=20",
+        "old_ast": "fnv1a64:43a36e644f8b4b03",
+        "new_ast": "fnv1a64:279c70da93846d57",
+        "old_program": "fnv1a64:8624dc332f301ffe",
+        "new_program": "fnv1a64:7d0b6dc68f67e67e"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=5/entry=0/unit=1",
+        "old_ast": "fnv1a64:6d24333ba40c82fd",
+        "new_ast": "fnv1a64:ddb934d23acebeae",
+        "old_program": "fnv1a64:7d6db37b2cb16d78",
+        "new_program": "fnv1a64:ce2e7095483a0ab0"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=80/entry=0/unit=8",
+        "old_ast": "fnv1a64:4863e188aa85544c",
+        "new_ast": "fnv1a64:c8a9d2fff9df2761",
+        "old_program": "fnv1a64:35c86a2029239665",
+        "new_program": "fnv1a64:3c205f87a2dc7c81"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=84/entry=0/unit=9",
+        "old_ast": "fnv1a64:fda619290aa72db0",
+        "new_ast": "fnv1a64:daedbb996e057910",
+        "old_program": "fnv1a64:c1cf9a32b5258063",
+        "new_program": "fnv1a64:c80037e18c30be17"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=86/entry=0/unit=13",
+        "old_ast": "fnv1a64:b0c67ae32154b171",
+        "new_ast": "fnv1a64:b2c600b8fa608111",
+        "old_program": "fnv1a64:bebd65847e5ac322",
+        "new_program": "fnv1a64:bfe2140b625eaf46"
+      },
+      {
+        "id": "content:oblivion.esm:02e5be@oblivion.esm/quest-result/stage=90/entry=0/unit=17",
+        "old_ast": "fnv1a64:ef36b44ab78a661c",
+        "new_ast": "fnv1a64:fa4900f5778d8ff9",
+        "old_program": "fnv1a64:47ee15142ffa1267",
+        "new_program": "fnv1a64:85f648a32bd02a65"
+      },
+      {
+        "id": "content:oblivion.esm:02e5dd@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:08742f03e2891a5e",
+        "new_ast": "fnv1a64:007a561d261167ad",
+        "old_program": "fnv1a64:72deac68a87c8e5e",
+        "new_program": "fnv1a64:b374a637d862a018"
+      },
+      {
+        "id": "content:oblivion.esm:02ee2f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9e4d90ead934a8bb",
+        "new_ast": "fnv1a64:b995334399f8714a",
+        "old_program": "fnv1a64:83f87e67ad405b6a",
+        "new_program": "fnv1a64:07da42c9ace75c30"
+      },
+      {
+        "id": "content:oblivion.esm:02ee30@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9e4d90ead934a8bb",
+        "new_ast": "fnv1a64:b995334399f8714a",
+        "old_program": "fnv1a64:51c923233e280cd3",
+        "new_program": "fnv1a64:ed5bc2d99767bbcb"
+      },
+      {
+        "id": "content:oblivion.esm:02f088@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:e7f8b2e043bd4a91",
+        "new_ast": "fnv1a64:10eb936283675547",
+        "old_program": "fnv1a64:7ee7788c874a21df",
+        "new_program": "fnv1a64:75896282e5185fb7"
+      },
+      {
+        "id": "content:oblivion.esm:02f86b@oblivion.esm/quest-result/stage=42/entry=0/unit=4",
+        "old_ast": "fnv1a64:0241140fdc5d4445",
+        "new_ast": "fnv1a64:df6c7d7810032042",
+        "old_program": "fnv1a64:d99ebda75537db3f",
+        "new_program": "fnv1a64:39925e4b1421e04d"
+      },
+      {
+        "id": "content:oblivion.esm:02f86b@oblivion.esm/quest-result/stage=46/entry=0/unit=5",
+        "old_ast": "fnv1a64:90959c16e61d9dd4",
+        "new_ast": "fnv1a64:cd25605b8cc356f7",
+        "old_program": "fnv1a64:3b2cd69951cb8499",
+        "new_program": "fnv1a64:3f356739768f212d"
+      },
+      {
+        "id": "content:oblivion.esm:02f86b@oblivion.esm/quest-result/stage=60/entry=0/unit=7",
+        "old_ast": "fnv1a64:5a586a50251d7950",
+        "new_ast": "fnv1a64:7314ddba04a03d67",
+        "old_program": "fnv1a64:dbed6e609e231085",
+        "new_program": "fnv1a64:94b01a59ad7ed7eb"
+      },
+      {
+        "id": "content:oblivion.esm:02fbac@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:def5fd3b9eec919d",
+        "new_ast": "fnv1a64:b6a5b994d10dc095",
+        "old_program": "fnv1a64:59ed8b34caff3ba0",
+        "new_program": "fnv1a64:b9be7047440208fa"
+      },
+      {
+        "id": "content:oblivion.esm:02fda1@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:a2f2b5aff8f129d4",
+        "new_ast": "fnv1a64:d310b9a170eeee88",
+        "old_program": "fnv1a64:afda60d1451fa952",
+        "new_program": "fnv1a64:56b3b0207f17de5e"
+      },
+      {
+        "id": "content:oblivion.esm:02ff1e@oblivion.esm/quest-result/stage=20/entry=0/unit=1",
+        "old_ast": "fnv1a64:db399ece9bdbe241",
+        "new_ast": "fnv1a64:6dc5841fcc1f77b6",
+        "old_program": "fnv1a64:38f7f8f27273c10c",
+        "new_program": "fnv1a64:e00f48dbbe436ef0"
+      },
+      {
+        "id": "content:oblivion.esm:02ff24@oblivion.esm/quest-result/stage=10/entry=0/unit=0",
+        "old_ast": "fnv1a64:7847c6b4c7956516",
+        "new_ast": "fnv1a64:0d56ae43ea083840",
+        "old_program": "fnv1a64:cc8e906e4256d671",
+        "new_program": "fnv1a64:e0549ef893fdf1d1"
+      },
+      {
+        "id": "content:oblivion.esm:02ff26@oblivion.esm/quest-result/stage=10/entry=0/unit=0",
+        "old_ast": "fnv1a64:788d5b100064f924",
+        "new_ast": "fnv1a64:0b76960ad9e06dd3",
+        "old_program": "fnv1a64:07729238e61192bb",
+        "new_program": "fnv1a64:da8c3f34183ddf61"
+      },
+      {
+        "id": "content:oblivion.esm:02ff26@oblivion.esm/quest-result/stage=20/entry=0/unit=1",
+        "old_ast": "fnv1a64:14acf46382e0d526",
+        "new_ast": "fnv1a64:73f6649ccaccec0f",
+        "old_program": "fnv1a64:4f814adbc55d4b2f",
+        "new_program": "fnv1a64:1430bc38765bcd59"
+      },
+      {
+        "id": "content:oblivion.esm:030019@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:078d7b8bb96b6b7a",
+        "new_ast": "fnv1a64:e89797b2a786e529",
+        "old_program": "fnv1a64:21fa4e55be6a3c1e",
+        "new_program": "fnv1a64:a507230d3873dae4"
+      },
+      {
+        "id": "content:oblivion.esm:030060@oblivion.esm/quest-result/stage=26/entry=0/unit=3",
+        "old_ast": "fnv1a64:78b75f567e3a0eb3",
+        "new_ast": "fnv1a64:4225b60d44b426a0",
+        "old_program": "fnv1a64:df7a240d1c7d1b3b",
+        "new_program": "fnv1a64:7d93f3a9af0954bb"
+      },
+      {
+        "id": "content:oblivion.esm:030062@oblivion.esm/quest-result/stage=60/entry=0/unit=3",
+        "old_ast": "fnv1a64:4ae0a7b128fb04f5",
+        "new_ast": "fnv1a64:f440fa5cfb20ec7f",
+        "old_program": "fnv1a64:63a9e801b86b5a82",
+        "new_program": "fnv1a64:c01f1e7bd73c934a"
+      },
+      {
+        "id": "content:oblivion.esm:03150f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:7807c6acd9ffd76d",
+        "new_ast": "fnv1a64:05de860f356ba5f8",
+        "old_program": "fnv1a64:893bb227a21f17b3",
+        "new_program": "fnv1a64:0d6b524b1448f48f"
+      },
+      {
+        "id": "content:oblivion.esm:031521@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:ef9546b0ea27b6dd",
+        "new_program": "fnv1a64:328357809fa4e51f"
+      },
+      {
+        "id": "content:oblivion.esm:03155c@oblivion.esm/quest-result/stage=2/entry=0/unit=1",
+        "old_ast": "fnv1a64:1d0abfd1ccdb5fdb",
+        "new_ast": "fnv1a64:6ac77a7184a5f7be",
+        "old_program": "fnv1a64:5f4d7dd6b747ed6f",
+        "new_program": "fnv1a64:828ece13883b3519"
+      },
+      {
+        "id": "content:oblivion.esm:031b77@oblivion.esm/quest-result/stage=100/entry=0/unit=9",
+        "old_ast": "fnv1a64:0cbb0d717a9f3160",
+        "new_ast": "fnv1a64:69c16b959fc0282d",
+        "old_program": "fnv1a64:9ca0b1c470f54121",
+        "new_program": "fnv1a64:686ac4ee67753e31"
+      },
+      {
+        "id": "content:oblivion.esm:031b77@oblivion.esm/quest-result/stage=105/entry=0/unit=10",
+        "old_ast": "fnv1a64:0cbb0d717a9f3160",
+        "new_ast": "fnv1a64:69c16b959fc0282d",
+        "old_program": "fnv1a64:97c71748230a2539",
+        "new_program": "fnv1a64:90a412591e6d2d49"
+      },
+      {
+        "id": "content:oblivion.esm:031b77@oblivion.esm/quest-result/stage=110/entry=0/unit=11",
+        "old_ast": "fnv1a64:325ea66d15879fe4",
+        "new_ast": "fnv1a64:eb9c175f8b8f7595",
+        "old_program": "fnv1a64:4b2c0f9261e5fc1f",
+        "new_program": "fnv1a64:429b7a7642cdee99"
+      },
+      {
+        "id": "content:oblivion.esm:031b77@oblivion.esm/quest-result/stage=115/entry=0/unit=12",
+        "old_ast": "fnv1a64:78402c31c7b4936a",
+        "new_ast": "fnv1a64:a88b9e58211197c7",
+        "old_program": "fnv1a64:54752d10496be3d9",
+        "new_program": "fnv1a64:a8ebfc13d6ffb7f7"
+      },
+      {
+        "id": "content:oblivion.esm:031b77@oblivion.esm/quest-result/stage=150/entry=0/unit=13",
+        "old_ast": "fnv1a64:80fcaa198e2bbd47",
+        "new_ast": "fnv1a64:26a0f9188fda8364",
+        "old_program": "fnv1a64:a3dc9cedafab2725",
+        "new_program": "fnv1a64:196648cc6e1ff563"
+      },
+      {
+        "id": "content:oblivion.esm:031d2c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:aefd6e4d0ef07531",
+        "new_ast": "fnv1a64:3e0471af927f31c0",
+        "old_program": "fnv1a64:91dc44b30cbc933c",
+        "new_program": "fnv1a64:2f244706e9fbf574"
+      },
+      {
+        "id": "content:oblivion.esm:03378f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:4f3f69f75759cd5e",
+        "new_ast": "fnv1a64:aa3edf4f06642725",
+        "old_program": "fnv1a64:667e97dcd1609bcf",
+        "new_program": "fnv1a64:e63ac257e092ef31"
+      },
+      {
+        "id": "content:oblivion.esm:034ea2@oblivion.esm/quest-result/stage=75/entry=0/unit=8",
+        "old_ast": "fnv1a64:b946b36f956ab591",
+        "new_ast": "fnv1a64:554d399d1bc7b162",
+        "old_program": "fnv1a64:2e3bdb3b343b91a4",
+        "new_program": "fnv1a64:7d4d9b58424fef7e"
+      },
+      {
+        "id": "content:oblivion.esm:03559f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:af4122071c40aeb7",
+        "new_ast": "fnv1a64:77447dbbfb980cdc",
+        "old_program": "fnv1a64:c586ad747f6e48b0",
+        "new_program": "fnv1a64:352875b7886e806c"
+      },
+      {
+        "id": "content:oblivion.esm:0355e1@oblivion.esm/quest-result/stage=10/entry=0/unit=1",
+        "old_ast": "fnv1a64:7196025e4d049cba",
+        "new_ast": "fnv1a64:57b74d45278d0ab2",
+        "old_program": "fnv1a64:c4bcc60b5ab9e751",
+        "new_program": "fnv1a64:ded63d97552bcf0b"
+      },
+      {
+        "id": "content:oblivion.esm:0355e1@oblivion.esm/quest-result/stage=100/entry=0/unit=14",
+        "old_ast": "fnv1a64:b7af82eaa309d4dd",
+        "new_ast": "fnv1a64:b1339222c6a7bae2",
+        "old_program": "fnv1a64:35e9e01aecf28eff",
+        "new_program": "fnv1a64:5da2edd6de36ee55"
+      },
+      {
+        "id": "content:oblivion.esm:0355e1@oblivion.esm/quest-result/stage=30/entry=0/unit=7",
+        "old_ast": "fnv1a64:6ff338ac90b754c2",
+        "new_ast": "fnv1a64:2c9fa617d492786f",
+        "old_program": "fnv1a64:a7af9b88a0e43a6d",
+        "new_program": "fnv1a64:65dbd957769dade3"
+      },
+      {
+        "id": "content:oblivion.esm:03564e@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:95a1ac6a058178e9",
+        "new_ast": "fnv1a64:2b9aa42cb3a316e6",
+        "old_program": "fnv1a64:ce33cab0268a21f2",
+        "new_program": "fnv1a64:8beebbf52be2f6b0"
+      },
+      {
+        "id": "content:oblivion.esm:03565f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d455dde03b76cde7",
+        "new_ast": "fnv1a64:dde2ffa71454354e",
+        "old_program": "fnv1a64:10a6217a8eac66df",
+        "new_program": "fnv1a64:9be0e1c676dff37f"
+      },
+      {
+        "id": "content:oblivion.esm:0356c9@oblivion.esm/quest-result/stage=70/entry=0/unit=4",
+        "old_ast": "fnv1a64:2ea557dab2c50e0f",
+        "new_ast": "fnv1a64:3729d49133255a7c",
+        "old_program": "fnv1a64:26b1ddf39565a606",
+        "new_program": "fnv1a64:1d52220e7161fb96"
+      },
+      {
+        "id": "content:oblivion.esm:035707@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:43accbb75ec8910b",
+        "new_ast": "fnv1a64:dbe06809740872b6",
+        "old_program": "fnv1a64:9973163829082f2e",
+        "new_program": "fnv1a64:5bfeb38b7bfaf6d0"
+      },
+      {
+        "id": "content:oblivion.esm:035a95@oblivion.esm/quest-result/stage=70/entry=0/unit=3",
+        "old_ast": "fnv1a64:416dd52fa9627b60",
+        "new_ast": "fnv1a64:4fd1cba5fa3b9bef",
+        "old_program": "fnv1a64:93d4bb58b4fd2111",
+        "new_program": "fnv1a64:865c0183c806ae97"
+      },
+      {
+        "id": "content:oblivion.esm:035c5a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:327921f2e1e4fb0e",
+        "new_program": "fnv1a64:cddffaa0d6b3bcaa"
+      },
+      {
+        "id": "content:oblivion.esm:035c5c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:5dd22c43b3ee27f8",
+        "new_program": "fnv1a64:fc29ba276e258ef8"
+      },
+      {
+        "id": "content:oblivion.esm:035c9f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:72eb8c10ad7c700f",
+        "new_ast": "fnv1a64:08aa24722457a098",
+        "old_program": "fnv1a64:5f51f3425029f473",
+        "new_program": "fnv1a64:77ffc03133e16527"
+      },
+      {
+        "id": "content:oblivion.esm:035ca2@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d4f582f01e47e72c",
+        "new_ast": "fnv1a64:52aec3eb41d7bbdb",
+        "old_program": "fnv1a64:d525d1b8e06f9a90",
+        "new_program": "fnv1a64:69f5edd01a04a3a0"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=100/entry=0/unit=12",
+        "old_ast": "fnv1a64:1a75dce640934bac",
+        "new_ast": "fnv1a64:73ebeefd6448515f",
+        "old_program": "fnv1a64:0d9d13fe8253a0b4",
+        "new_program": "fnv1a64:d41492ab3de853b0"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=71/entry=0/unit=4",
+        "old_ast": "fnv1a64:f75c02b70a9fc61d",
+        "new_ast": "fnv1a64:61ece376cadc143e",
+        "old_program": "fnv1a64:4adedf615ccc0475",
+        "new_program": "fnv1a64:768d4241027e0d0b"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=76/entry=0/unit=6",
+        "old_ast": "fnv1a64:ba5092e98faebc94",
+        "new_ast": "fnv1a64:621de3de5df118f3",
+        "old_program": "fnv1a64:9b5dfb2d1e79aebc",
+        "new_program": "fnv1a64:f23685340821e2ec"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=80/entry=0/unit=7",
+        "old_ast": "fnv1a64:c12651b7edbf38a8",
+        "new_ast": "fnv1a64:08ac3902ca849036",
+        "old_program": "fnv1a64:a78ee21c69d6db45",
+        "new_program": "fnv1a64:cf25d020ca92b131"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=89/entry=0/unit=8",
+        "old_ast": "fnv1a64:5ad07ed4a8798418",
+        "new_ast": "fnv1a64:5f1c1c595c2b9b39",
+        "old_program": "fnv1a64:a038fe3c70d0b336",
+        "new_program": "fnv1a64:0a2302571534aa38"
+      },
+      {
+        "id": "content:oblivion.esm:035ca8@oblivion.esm/quest-result/stage=95/entry=0/unit=11",
+        "old_ast": "fnv1a64:0c4d308bbcada6d5",
+        "new_ast": "fnv1a64:a0a5770ef646fd98",
+        "old_program": "fnv1a64:a5366a52e315db6f",
+        "new_program": "fnv1a64:1ba80e398549ee1f"
+      },
+      {
+        "id": "content:oblivion.esm:035de0@oblivion.esm/quest-result/stage=100/entry=0/unit=12",
+        "old_ast": "fnv1a64:10871a0bee9294cd",
+        "new_ast": "fnv1a64:7c165360ad0f69e4",
+        "old_program": "fnv1a64:92258f5355bc6ce5",
+        "new_program": "fnv1a64:a756b4d7a753ed15"
+      },
+      {
+        "id": "content:oblivion.esm:035de0@oblivion.esm/quest-result/stage=80/entry=0/unit=11",
+        "old_ast": "fnv1a64:e32b4ae3d2bce7b1",
+        "new_ast": "fnv1a64:57cd65124a029d29",
+        "old_program": "fnv1a64:78bdf2fdf8eca065",
+        "new_program": "fnv1a64:9ff0316ab8d6681b"
+      },
+      {
+        "id": "content:oblivion.esm:036333@oblivion.esm/quest-result/stage=50/entry=0/unit=7",
+        "old_ast": "fnv1a64:a014ffc092124f6d",
+        "new_ast": "fnv1a64:1cafabdfccc3f73d",
+        "old_program": "fnv1a64:478b556db4f93f8d",
+        "new_program": "fnv1a64:f9563b3141f18be3"
+      },
+      {
+        "id": "content:oblivion.esm:036333@oblivion.esm/quest-result/stage=65/entry=0/unit=10",
+        "old_ast": "fnv1a64:abb5841ea77ffe55",
+        "new_ast": "fnv1a64:15912b6294cd45d8",
+        "old_program": "fnv1a64:7a8b4c6660ccbd7a",
+        "new_program": "fnv1a64:859c0382f29e9af6"
+      },
+      {
+        "id": "content:oblivion.esm:036334@oblivion.esm/quest-result/stage=80/entry=0/unit=8",
+        "old_ast": "fnv1a64:bfee3e2d921310ac",
+        "new_ast": "fnv1a64:dca9fd3be2098e5f",
+        "old_program": "fnv1a64:f221c3394be82ef6",
+        "new_program": "fnv1a64:c2aa46540f9f1034"
+      },
+      {
+        "id": "content:oblivion.esm:036334@oblivion.esm/quest-result/stage=85/entry=0/unit=9",
+        "old_ast": "fnv1a64:1fb1ce53033d17ea",
+        "new_ast": "fnv1a64:47f8e08d3600d368",
+        "old_program": "fnv1a64:9d35a2c1e394c187",
+        "new_program": "fnv1a64:4f2250406bc35b11"
+      },
+      {
+        "id": "content:oblivion.esm:036336@oblivion.esm/quest-result/stage=50/entry=0/unit=11",
+        "old_ast": "fnv1a64:301b05bcfcc138be",
+        "new_ast": "fnv1a64:7248d0461eb4309d",
+        "old_program": "fnv1a64:39cf517c9be62ec5",
+        "new_program": "fnv1a64:3379c8fdc3f4dca3"
+      },
+      {
+        "id": "content:oblivion.esm:036338@oblivion.esm/quest-result/stage=199/entry=0/unit=22",
+        "old_ast": "fnv1a64:c842c3e735f086b5",
+        "new_ast": "fnv1a64:38a5c01a7f16399b",
+        "old_program": "fnv1a64:563e47313fab2ee2",
+        "new_program": "fnv1a64:831e8619a363b314"
+      },
+      {
+        "id": "content:oblivion.esm:036338@oblivion.esm/quest-result/stage=200/entry=0/unit=23",
+        "old_ast": "fnv1a64:43bd7885984d7ccd",
+        "new_ast": "fnv1a64:71ff9058803913ed",
+        "old_program": "fnv1a64:8efc08e53d0d67a3",
+        "new_program": "fnv1a64:c33b9fdee7aaddc3"
+      },
+      {
+        "id": "content:oblivion.esm:03636f@oblivion.esm/quest-result/stage=120/entry=0/unit=7",
+        "old_ast": "fnv1a64:72e5472595f56bb4",
+        "new_ast": "fnv1a64:ca2a0307323c6b59",
+        "old_program": "fnv1a64:0f0640b953d81831",
+        "new_program": "fnv1a64:c29f08fb573ceaa1"
+      },
+      {
+        "id": "content:oblivion.esm:036617@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:547bb66a3d830576",
+        "new_ast": "fnv1a64:5179f7c1c4956e79",
+        "old_program": "fnv1a64:deb8048d2742db88",
+        "new_program": "fnv1a64:36b221da5b0e9a78"
+      },
+      {
+        "id": "content:oblivion.esm:037869@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:25254f5c0dc63c6c",
+        "new_ast": "fnv1a64:ba386fdcdace08d7",
+        "old_program": "fnv1a64:a4292d6d92fdd86d",
+        "new_program": "fnv1a64:581fb1985c498ab7"
+      },
+      {
+        "id": "content:oblivion.esm:03786a@dlcthievesden.esp/object/unit=0",
+        "old_ast": "fnv1a64:285a085816b77ef9",
+        "new_ast": "fnv1a64:27bf6ec6e08c5117",
+        "old_program": "fnv1a64:6958e3bb600ec0fa",
+        "new_program": "fnv1a64:a5281e5a82923424"
+      },
+      {
+        "id": "content:oblivion.esm:03786a@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:285a085816b77ef9",
+        "new_ast": "fnv1a64:27bf6ec6e08c5117",
+        "old_program": "fnv1a64:c351d184b282ff2c",
+        "new_program": "fnv1a64:ad70707297180816"
+      },
+      {
+        "id": "content:oblivion.esm:037ffd@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:3c6aab26b20e356c",
+        "new_ast": "fnv1a64:f89c4d8cec061fff",
+        "old_program": "fnv1a64:5b9c75a2aa05e6c7",
+        "new_program": "fnv1a64:a7808b2cc855b1a7"
+      },
+      {
+        "id": "content:oblivion.esm:038586@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:2f439dfbfbe4db4c",
+        "new_ast": "fnv1a64:af7223d00613539d",
+        "old_program": "fnv1a64:0de1911abe924342",
+        "new_program": "fnv1a64:3a29e7721e6580f4"
+      },
+      {
+        "id": "content:oblivion.esm:03a8fb@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:8d7bcf7223aa3655",
+        "new_ast": "fnv1a64:cec60c2a3f7295ca",
+        "old_program": "fnv1a64:6f2e1f3c378d5284",
+        "new_program": "fnv1a64:ff69e46fa5f36994"
+      },
+      {
+        "id": "content:oblivion.esm:03b661@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:26907830320a5efb",
+        "new_ast": "fnv1a64:b8df575db9a7cbca",
+        "old_program": "fnv1a64:7fe90154cf9c7870",
+        "new_program": "fnv1a64:45b48f860559dc3e"
+      },
+      {
+        "id": "content:oblivion.esm:03c298@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:b22a54fc2b80d474",
+        "new_ast": "fnv1a64:54fbdde7e58d5287",
+        "old_program": "fnv1a64:f86ef15499b4c93a",
+        "new_program": "fnv1a64:d5ef42c033c354b4"
+      },
+      {
+        "id": "content:oblivion.esm:03c80b@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:8a1c23d0046469cb",
+        "new_program": "fnv1a64:57e6ffc2a3401b89"
+      },
+      {
+        "id": "content:oblivion.esm:03e8f6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:d388acd908f4bf3f",
+        "new_program": "fnv1a64:d7c2930dc4c9466d"
+      },
+      {
+        "id": "content:oblivion.esm:03e8f7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:54b1ea7f341acd9c",
+        "new_ast": "fnv1a64:836f8115f895b9e3",
+        "old_program": "fnv1a64:f7bfbad32e0c7788",
+        "new_program": "fnv1a64:77afd2d2ddb88e78"
+      },
+      {
+        "id": "content:oblivion.esm:03e8f9@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:88667c5ffe248afc",
+        "new_program": "fnv1a64:2e2592e83d2e3dac"
+      },
+      {
+        "id": "content:oblivion.esm:03eac4@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:74515ff36bec9d4b",
+        "new_ast": "fnv1a64:b1ed1b0751b5ea38",
+        "old_program": "fnv1a64:7fa59c383ea256d0",
+        "new_program": "fnv1a64:367f70732257259a"
+      },
+      {
+        "id": "content:oblivion.esm:03fd3c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1082a7b1d9c75230",
+        "new_ast": "fnv1a64:5b1b581aabe4e79f",
+        "old_program": "fnv1a64:93a48c0600f0c960",
+        "new_program": "fnv1a64:616b56daf37f1230"
+      },
+      {
+        "id": "content:oblivion.esm:03fd3d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:58404f5c28ccf6e6",
+        "new_ast": "fnv1a64:dc395bc9457a9928",
+        "old_program": "fnv1a64:d8a1538078ebf179",
+        "new_program": "fnv1a64:d32c494b0d6f222d"
+      },
+      {
+        "id": "content:oblivion.esm:03fd3e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1082a7b1d9c75230",
+        "new_ast": "fnv1a64:5b1b581aabe4e79f",
+        "old_program": "fnv1a64:80ca14aca7d6c59e",
+        "new_program": "fnv1a64:bf4ca651883e64ea"
+      },
+      {
+        "id": "content:oblivion.esm:040ba2@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:15eba1750aab44d3",
+        "new_ast": "fnv1a64:feedab2c52bde615",
+        "old_program": "fnv1a64:6473224649edcc59",
+        "new_program": "fnv1a64:cf00524b007d5991"
+      },
+      {
+        "id": "content:oblivion.esm:041094@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:e9fa74ca3772a2bc",
+        "new_ast": "fnv1a64:ecfa09aa67dbaef3",
+        "old_program": "fnv1a64:d239079e7ca90570",
+        "new_program": "fnv1a64:95ddf68d2c974d78"
+      },
+      {
+        "id": "content:oblivion.esm:041095@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:613e05edd60a3105",
+        "new_ast": "fnv1a64:5413c82ec6a2c53c",
+        "old_program": "fnv1a64:cc232793d59ee298",
+        "new_program": "fnv1a64:f7141a8bd37792c0"
+      },
+      {
+        "id": "content:oblivion.esm:041096@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:613e05edd60a3105",
+        "new_ast": "fnv1a64:5413c82ec6a2c53c",
+        "old_program": "fnv1a64:7d4f46fc6c68bf55",
+        "new_program": "fnv1a64:75ae848a3c687343"
+      },
+      {
+        "id": "content:oblivion.esm:041097@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:613e05edd60a3105",
+        "new_ast": "fnv1a64:5413c82ec6a2c53c",
+        "old_program": "fnv1a64:4355fe9e89b0508a",
+        "new_program": "fnv1a64:ccfd6c3efeb08dae"
+      },
+      {
+        "id": "content:oblivion.esm:041098@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:613e05edd60a3105",
+        "new_ast": "fnv1a64:5413c82ec6a2c53c",
+        "old_program": "fnv1a64:28356db81638ef47",
+        "new_program": "fnv1a64:beb592adf6c717c9"
+      },
+      {
+        "id": "content:oblivion.esm:041208@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1a2818285d591c90",
+        "new_ast": "fnv1a64:0b628fa32b9b1ccf",
+        "old_program": "fnv1a64:64d8de4dde242354",
+        "new_program": "fnv1a64:b88916793b61090c"
+      },
+      {
+        "id": "content:oblivion.esm:043435@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0fc8241834a90a0d",
+        "new_ast": "fnv1a64:ff0731cce9241384",
+        "old_program": "fnv1a64:d847e1c4866e455a",
+        "new_program": "fnv1a64:4903f1e2c7b8917e"
+      },
+      {
+        "id": "content:oblivion.esm:043436@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0fc8241834a90a0d",
+        "new_ast": "fnv1a64:ff0731cce9241384",
+        "old_program": "fnv1a64:d301e26310d06d07",
+        "new_program": "fnv1a64:4ed46c85a66d0409"
+      },
+      {
+        "id": "content:oblivion.esm:043437@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:0fc8241834a90a0d",
+        "new_ast": "fnv1a64:ff0731cce9241384",
+        "old_program": "fnv1a64:b0ab499127f58dac",
+        "new_program": "fnv1a64:4cef64310c9ba9e4"
+      },
+      {
+        "id": "content:oblivion.esm:04575e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:8f4a7558046135cb",
+        "new_program": "fnv1a64:0250ac13e0d611d5"
+      },
+      {
+        "id": "content:oblivion.esm:045767@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:be38a25493557c1c",
+        "new_program": "fnv1a64:d47345a0ca4aaa10"
+      },
+      {
+        "id": "content:oblivion.esm:045768@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:0f65b8f67fe5ec83",
+        "new_program": "fnv1a64:e64af407f1f1ddad"
+      },
+      {
+        "id": "content:oblivion.esm:04576a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:2b88e2069dd06542",
+        "new_program": "fnv1a64:6a49957d349e3072"
+      },
+      {
+        "id": "content:oblivion.esm:04576b@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:be05c9f1244eb6a1",
+        "new_program": "fnv1a64:7c63dc9af4f27617"
+      },
+      {
+        "id": "content:oblivion.esm:0459c6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:5fdc5dcb9f8c18d4",
+        "new_program": "fnv1a64:9cb712bf3b89bbe8"
+      },
+      {
+        "id": "content:oblivion.esm:0459c7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:db72087fd68edf35",
+        "new_program": "fnv1a64:0d7b017ad6245f9b"
+      },
+      {
+        "id": "content:oblivion.esm:0459d1@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b0e481b1e92063f",
+        "new_ast": "fnv1a64:042622f43c410358",
+        "old_program": "fnv1a64:8e14949c541b15d2",
+        "new_program": "fnv1a64:202e4fc303687e02"
+      },
+      {
+        "id": "content:oblivion.esm:0493af@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:10d0eced83807c38",
+        "new_ast": "fnv1a64:6129ce495ffdc908",
+        "old_program": "fnv1a64:16797dc6d07e4603",
+        "new_program": "fnv1a64:05411e960fcef44f"
+      },
+      {
+        "id": "content:oblivion.esm:04a7d9@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:e9d232d846c36c2b",
+        "new_ast": "fnv1a64:21e8965b2c032552",
+        "old_program": "fnv1a64:a18e914a2124c9c7",
+        "new_program": "fnv1a64:721c3bd44a77ff0f"
+      },
+      {
+        "id": "content:oblivion.esm:04d175@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:ff901dcc61217095",
+        "new_ast": "fnv1a64:c19d9bce59d96df8",
+        "old_program": "fnv1a64:849e15823d98b116",
+        "new_program": "fnv1a64:f410e274609e14c2"
+      },
+      {
+        "id": "content:oblivion.esm:04d175@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:51912a9126380362",
+        "new_ast": "fnv1a64:2c3fb64d19ff4e11",
+        "old_program": "fnv1a64:ce6f4e2164fe6902",
+        "new_program": "fnv1a64:e3450881e13f95ce"
+      },
+      {
+        "id": "content:oblivion.esm:04de92@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:d1c404666be33278",
+        "new_ast": "fnv1a64:e863de43fec720c5",
+        "old_program": "fnv1a64:8085447c819284e4",
+        "new_program": "fnv1a64:029e7cb9ccb3b86a"
+      },
+      {
+        "id": "content:oblivion.esm:04de92@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:fd6e9b72e7413986",
+        "new_ast": "fnv1a64:b690690e43b1cf1b",
+        "old_program": "fnv1a64:1b0a2316d3f53646",
+        "new_program": "fnv1a64:26a68a4230789a68"
+      },
+      {
+        "id": "content:oblivion.esm:04de93@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:09445396a9692803",
+        "new_ast": "fnv1a64:db55abb32f87f2e0",
+        "old_program": "fnv1a64:f865cb6e06371421",
+        "new_program": "fnv1a64:bf029eb2515d0c13"
+      },
+      {
+        "id": "content:oblivion.esm:04de93@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:6d2b2b7090c6d451",
+        "new_ast": "fnv1a64:599302ea588ce2e2",
+        "old_program": "fnv1a64:0e75fce40841902d",
+        "new_program": "fnv1a64:03c0b01782f5767f"
+      },
+      {
+        "id": "content:oblivion.esm:04e99f@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:27fbfcaa2a9261aa",
+        "new_ast": "fnv1a64:3f997daaf8d92b79",
+        "old_program": "fnv1a64:de1f6a2928554750",
+        "new_program": "fnv1a64:fc429adf3950e7e4"
+      },
+      {
+        "id": "content:oblivion.esm:04e99f@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:243cb9117f127cc4",
+        "new_ast": "fnv1a64:960d99728a454d8f",
+        "old_program": "fnv1a64:e2e2549b9d4729c2",
+        "new_program": "fnv1a64:60bfbde91c763f66"
+      },
+      {
+        "id": "content:oblivion.esm:04e9a0@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:b4f4bc98606e57a0",
+        "new_ast": "fnv1a64:9d349ba16c042923",
+        "old_program": "fnv1a64:67479deed0bfe013",
+        "new_program": "fnv1a64:c651118059cf3aeb"
+      },
+      {
+        "id": "content:oblivion.esm:04e9a0@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:75a8df13a7c0a342",
+        "new_ast": "fnv1a64:95df3b52937146cd",
+        "old_program": "fnv1a64:f819f2c1512bdf03",
+        "new_program": "fnv1a64:6d55cbef5022de3f"
+      },
+      {
+        "id": "content:oblivion.esm:04e9a2@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:14f0251a108c3788",
+        "new_ast": "fnv1a64:4245233e32d69937",
+        "old_program": "fnv1a64:b0600e3cd6b383b8",
+        "new_program": "fnv1a64:f3bfdd8f88528c94"
+      },
+      {
+        "id": "content:oblivion.esm:04e9a2@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:8b338bec0b12240e",
+        "new_ast": "fnv1a64:ffe80ef73f6d959d",
+        "old_program": "fnv1a64:2fbc53c974a0f8fe",
+        "new_program": "fnv1a64:e4d947921f3fc9ba"
+      },
+      {
+        "id": "content:oblivion.esm:04ed7d@dlchorsearmor.esp/object/unit=0",
+        "old_ast": "fnv1a64:86233158b52eff72",
+        "new_ast": "fnv1a64:2dec36379293a1d7",
+        "old_program": "fnv1a64:d883e5cb27a40cb5",
+        "new_program": "fnv1a64:a388826d4dfc6b11"
+      },
+      {
+        "id": "content:oblivion.esm:04ed7d@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:d2aa760d096ee710",
+        "new_ast": "fnv1a64:86ab88d653694d3d",
+        "old_program": "fnv1a64:02db341b23d388f1",
+        "new_program": "fnv1a64:aa9d86e70f1be559"
+      },
+      {
+        "id": "content:oblivion.esm:04f297@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:482540e20e5b66e0",
+        "new_ast": "fnv1a64:2d5cb502e6cb0849",
+        "old_program": "fnv1a64:c116a9b285fe6f94",
+        "new_program": "fnv1a64:1face39d0d2c21ca"
+      },
+      {
+        "id": "content:oblivion.esm:04f9de@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ca8fa732fdc4a4f9",
+        "new_ast": "fnv1a64:b04411c277e1a32c",
+        "old_program": "fnv1a64:fb065377484a7e80",
+        "new_program": "fnv1a64:86604326e2cc9104"
+      },
+      {
+        "id": "content:oblivion.esm:050ecb@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:389188a662dd0cec",
+        "new_ast": "fnv1a64:b2a346fda67f2b7c",
+        "old_program": "fnv1a64:2eb79ebb826d4f39",
+        "new_program": "fnv1a64:92998cd2253e049d"
+      },
+      {
+        "id": "content:oblivion.esm:050ecc@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:134718549a538884",
+        "new_ast": "fnv1a64:ffda489d5e72455c",
+        "old_program": "fnv1a64:dc541c8729263c56",
+        "new_program": "fnv1a64:65145022a9c147f2"
+      },
+      {
+        "id": "content:oblivion.esm:05179b@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:a233097a5be14613",
+        "new_ast": "fnv1a64:7583e7d4e2b926a6",
+        "old_program": "fnv1a64:fa81214d33b0be50",
+        "new_program": "fnv1a64:94e8513e66a1f2ba"
+      },
+      {
+        "id": "content:oblivion.esm:05179c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:a233097a5be14613",
+        "new_ast": "fnv1a64:7583e7d4e2b926a6",
+        "old_program": "fnv1a64:c571db22b99454ed",
+        "new_program": "fnv1a64:a7f6dedd69b0a171"
+      },
+      {
+        "id": "content:oblivion.esm:05179d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:a233097a5be14613",
+        "new_ast": "fnv1a64:7583e7d4e2b926a6",
+        "old_program": "fnv1a64:d184bf358c8848c2",
+        "new_program": "fnv1a64:08753d537c2c0d98"
+      },
+      {
+        "id": "content:oblivion.esm:052f4d@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:d82a1c661355d5f9",
+        "new_ast": "fnv1a64:192d336b3b4d336f",
+        "old_program": "fnv1a64:c38563948ecd97f1",
+        "new_program": "fnv1a64:15f65f237b528d95"
+      },
+      {
+        "id": "content:oblivion.esm:053d7c@oblivion.esm/quest-result/stage=56/entry=0/unit=11",
+        "old_ast": "fnv1a64:f68fb01f791d4753",
+        "new_ast": "fnv1a64:11a2a9a64414381e",
+        "old_program": "fnv1a64:4683841764ab476b",
+        "new_program": "fnv1a64:23af4a0b981fec35"
+      },
+      {
+        "id": "content:oblivion.esm:053d7c@oblivion.esm/quest-result/stage=56/entry=1/unit=12",
+        "old_ast": "fnv1a64:0b10c6e4f5953c77",
+        "new_ast": "fnv1a64:7813d89dd86cf73e",
+        "old_program": "fnv1a64:d86fc75b9632fa75",
+        "new_program": "fnv1a64:6f823d7f3ef18899"
+      },
+      {
+        "id": "content:oblivion.esm:0654e1@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:f8680f1ee13af829",
+        "new_ast": "fnv1a64:6d6bbf306322596a",
+        "old_program": "fnv1a64:cb7bcca16fc9e444",
+        "new_program": "fnv1a64:fae86d245bcc8d8a"
+      },
+      {
+        "id": "content:oblivion.esm:0654e5@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:29d22fb1c74b112d",
+        "new_ast": "fnv1a64:981103176fcc88ee",
+        "old_program": "fnv1a64:a53e6075930e7953",
+        "new_program": "fnv1a64:3a5fe5fad17094df"
+      },
+      {
+        "id": "content:oblivion.esm:065561@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:c45b6aafe6127401",
+        "new_ast": "fnv1a64:b6fabae11aa879cd",
+        "old_program": "fnv1a64:63aa3cbdad52d896",
+        "new_program": "fnv1a64:ae3a9537ec08e46a"
+      },
+      {
+        "id": "content:oblivion.esm:066f2a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b2c7e5df706838c9",
+        "new_ast": "fnv1a64:b95f0604b5819f58",
+        "old_program": "fnv1a64:830d259976404daf",
+        "new_program": "fnv1a64:01635a65fd9e3411"
+      },
+      {
+        "id": "content:oblivion.esm:06a841@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b1d6133708c19a3c",
+        "new_ast": "fnv1a64:514b2b2fba6921eb",
+        "old_program": "fnv1a64:de35749ea4ae2647",
+        "new_program": "fnv1a64:e9533996a7b40969"
+      },
+      {
+        "id": "content:oblivion.esm:06a843@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b1d6133708c19a3c",
+        "new_ast": "fnv1a64:514b2b2fba6921eb",
+        "old_program": "fnv1a64:9e68bcf9c96425b5",
+        "new_program": "fnv1a64:35e9b37a42c2e2ab"
+      },
+      {
+        "id": "content:oblivion.esm:06c685@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ce16b33a22afc915",
+        "new_ast": "fnv1a64:82fe77e4af2cdc76",
+        "old_program": "fnv1a64:3879a14419f85c96",
+        "new_program": "fnv1a64:d3bbd30596068534"
+      },
+      {
+        "id": "content:oblivion.esm:06d6a5@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:ddce9224cc555260",
+        "new_ast": "fnv1a64:1186b91538e704e3",
+        "old_program": "fnv1a64:926d8511ecb7cd7b",
+        "new_program": "fnv1a64:9aded2538980118b"
+      },
+      {
+        "id": "content:oblivion.esm:071fe1@oblivion.esm/quest-result/stage=100/entry=0/unit=0",
+        "old_ast": "fnv1a64:3fe955010909e464",
+        "new_ast": "fnv1a64:b7cdc1db60f021b3",
+        "old_program": "fnv1a64:785234f44f76266e",
+        "new_program": "fnv1a64:985ec95f09414f64"
+      },
+      {
+        "id": "content:oblivion.esm:072da1@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:dc9ef5ab41376f0f",
+        "new_ast": "fnv1a64:189dca40b70c2d29",
+        "old_program": "fnv1a64:e7e122f493bac1f5",
+        "new_program": "fnv1a64:23f5d372f6876cb5"
+      },
+      {
+        "id": "content:oblivion.esm:073a58@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:dfd146eeb8ffd3c4",
+        "new_ast": "fnv1a64:d7f3d335a71c8469",
+        "old_program": "fnv1a64:db0d097f4c338f88",
+        "new_program": "fnv1a64:6c22346465dd7416"
+      },
+      {
+        "id": "content:oblivion.esm:07695a@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:08f7fa524e2c9380",
+        "new_ast": "fnv1a64:60e2e16b3ed8e51b",
+        "old_program": "fnv1a64:a138e8014ca50494",
+        "new_program": "fnv1a64:b64fe1575547413e"
+      },
+      {
+        "id": "content:oblivion.esm:076966@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:457db54ab1f1104a",
+        "new_ast": "fnv1a64:e3d37597ad413dad",
+        "old_program": "fnv1a64:53a39c5025066278",
+        "new_program": "fnv1a64:40ca633e5c365ae4"
+      },
+      {
+        "id": "content:oblivion.esm:076967@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:c3bd39564dfb5f95",
+        "new_ast": "fnv1a64:60161eb82cddba30",
+        "old_program": "fnv1a64:f4182f4b847ad1be",
+        "new_program": "fnv1a64:7bb8a881e472e252"
+      },
+      {
+        "id": "content:oblivion.esm:076968@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:a053aa40a04f6808",
+        "new_ast": "fnv1a64:1b46fce6be21fc53",
+        "old_program": "fnv1a64:ef531ffaa1da8468",
+        "new_program": "fnv1a64:2065076745338ee6"
+      },
+      {
+        "id": "content:oblivion.esm:077c05@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:c2fd63ab0365f5a2",
+        "new_ast": "fnv1a64:ba87dd0c2c3ad91d",
+        "old_program": "fnv1a64:ac033a32dce268a8",
+        "new_program": "fnv1a64:76a1b1a8af84a5d8"
+      },
+      {
+        "id": "content:oblivion.esm:07ff43@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:77c33697114114d0",
+        "new_ast": "fnv1a64:f97565529e88dfdb",
+        "old_program": "fnv1a64:acef35fa3ce803c9",
+        "new_program": "fnv1a64:f1bb1a1de39b38df"
+      },
+      {
+        "id": "content:oblivion.esm:0805f1@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:b63836708167826d",
+        "new_program": "fnv1a64:98ef57c83233bbdb"
+      },
+      {
+        "id": "content:oblivion.esm:0805f3@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:32e74c444441dd3f",
+        "new_program": "fnv1a64:5de801bca60fcb41"
+      },
+      {
+        "id": "content:oblivion.esm:080d40@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f3b0bb8d74be0fe1",
+        "new_ast": "fnv1a64:37e86d002e4fc460",
+        "old_program": "fnv1a64:9a05d803ded0249f",
+        "new_program": "fnv1a64:e769a4a1d51033cd"
+      },
+      {
+        "id": "content:oblivion.esm:080d42@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:101c51a209e88edd",
+        "new_ast": "fnv1a64:aac71d7cbc2d78c8",
+        "old_program": "fnv1a64:f33dacaaa98b4037",
+        "new_program": "fnv1a64:03383bedc5ab5ff9"
+      },
+      {
+        "id": "content:oblivion.esm:080d43@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:77c33697114114d0",
+        "new_ast": "fnv1a64:f97565529e88dfdb",
+        "old_program": "fnv1a64:fcfabbf2598f378e",
+        "new_program": "fnv1a64:53614ea817bd04ce"
+      },
+      {
+        "id": "content:oblivion.esm:080d79@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:77c33697114114d0",
+        "new_ast": "fnv1a64:f97565529e88dfdb",
+        "old_program": "fnv1a64:92b1b41f2c834ad1",
+        "new_program": "fnv1a64:5d1b3d89d01b8ca7"
+      },
+      {
+        "id": "content:oblivion.esm:080d7e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bf1184f81197f1dd",
+        "new_ast": "fnv1a64:f6938febe1a36d38",
+        "old_program": "fnv1a64:b2cf8846913a7381",
+        "new_program": "fnv1a64:657d64ee12b2d5ad"
+      },
+      {
+        "id": "content:oblivion.esm:0811c7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:77c33697114114d0",
+        "new_ast": "fnv1a64:f97565529e88dfdb",
+        "old_program": "fnv1a64:14711e0322b2cea1",
+        "new_program": "fnv1a64:871417ddfd0b4377"
+      },
+      {
+        "id": "content:oblivion.esm:0811ca@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:24fc3c7fff74b0b3",
+        "new_ast": "fnv1a64:6c185925cb043558",
+        "old_program": "fnv1a64:4bfdafd74d013062",
+        "new_program": "fnv1a64:5b13b00c7ded0246"
+      },
+      {
+        "id": "content:oblivion.esm:0819a2@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:2a9e7e535364d5f7",
+        "new_ast": "fnv1a64:65fa59f36e777526",
+        "old_program": "fnv1a64:f8a96005fdcf0276",
+        "new_program": "fnv1a64:ca2829aece4e8118"
+      },
+      {
+        "id": "content:oblivion.esm:081af0@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:8b9a1d061156850b",
+        "new_ast": "fnv1a64:1103c6f009b6b4e2",
+        "old_program": "fnv1a64:88b526e41d2f84d3",
+        "new_program": "fnv1a64:2a4b29358fead3e5"
+      },
+      {
+        "id": "content:oblivion.esm:083f39@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:890002e65252c88a",
+        "new_program": "fnv1a64:ae03e6aa449835ae"
+      },
+      {
+        "id": "content:oblivion.esm:083f49@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:11491552b69a7805",
+        "new_program": "fnv1a64:62f6f9259dbd39b3"
+      },
+      {
+        "id": "content:oblivion.esm:083f4a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:2bee28e6fa8e192d",
+        "new_program": "fnv1a64:4997d30fdda2861b"
+      },
+      {
+        "id": "content:oblivion.esm:083f4c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:1c6bccabec6342ff",
+        "new_program": "fnv1a64:51924586f26c6281"
+      },
+      {
+        "id": "content:oblivion.esm:083f4d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:b25d298669cfa74e",
+        "new_program": "fnv1a64:683dc6a21b0f2232"
+      },
+      {
+        "id": "content:oblivion.esm:083f4f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:12ea0f9b725f95c0",
+        "new_program": "fnv1a64:9434097b3dc93008"
+      },
+      {
+        "id": "content:oblivion.esm:083f50@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:efc58ffdbd4d9e7f",
+        "new_program": "fnv1a64:940dcaaf2747d901"
+      },
+      {
+        "id": "content:oblivion.esm:08547e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9e201f0d4019f00a",
+        "new_ast": "fnv1a64:92fce9fc18a86ad3",
+        "old_program": "fnv1a64:ef6e4d4a257cb441",
+        "new_program": "fnv1a64:5f05d11d8e7ddb8f"
+      },
+      {
+        "id": "content:oblivion.esm:085484@oblivion.esm/quest-result/stage=10/entry=0/unit=0",
+        "old_ast": "fnv1a64:3c99e8ed7cfa7904",
+        "new_ast": "fnv1a64:efc67297db0bdb75",
+        "old_program": "fnv1a64:bf89aae7eb21334b",
+        "new_program": "fnv1a64:ed0048a0befa8353"
+      },
+      {
+        "id": "content:oblivion.esm:08567d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:35d6b8d5c73dbf27",
+        "new_program": "fnv1a64:31dfbc4dce15f5a9"
+      },
+      {
+        "id": "content:oblivion.esm:08585e@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:da208d1bc21d5801",
+        "new_ast": "fnv1a64:fc1784d0201ea94c",
+        "old_program": "fnv1a64:23d93696e82b206b",
+        "new_program": "fnv1a64:8e031f0871167c13"
+      },
+      {
+        "id": "content:oblivion.esm:085860@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:30034c5debebf3c3",
+        "new_ast": "fnv1a64:050a27f35f6dede8",
+        "old_program": "fnv1a64:e0636fc7fd1ea932",
+        "new_program": "fnv1a64:09504f145f7ca878"
+      },
+      {
+        "id": "content:oblivion.esm:085993@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:84257d02540601c4",
+        "new_ast": "fnv1a64:6e9c5d7892818313",
+        "old_program": "fnv1a64:04c83886de1952da",
+        "new_program": "fnv1a64:a979ffbd94b0a892"
+      },
+      {
+        "id": "content:oblivion.esm:085996@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:84257d02540601c4",
+        "new_ast": "fnv1a64:6e9c5d7892818313",
+        "old_program": "fnv1a64:dd3e2ab6096ee9e1",
+        "new_program": "fnv1a64:a98c6503af8e15c7"
+      },
+      {
+        "id": "content:oblivion.esm:085a65@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:82856c8a80798a28",
+        "new_ast": "fnv1a64:275a45dfe1e2ff37",
+        "old_program": "fnv1a64:3dc460cb2b0c3b25",
+        "new_program": "fnv1a64:395aff47acbc0cef"
+      },
+      {
+        "id": "content:oblivion.esm:0860c3@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:fb7be44214b6021b",
+        "new_ast": "fnv1a64:e4a77eeb69b50270",
+        "old_program": "fnv1a64:13eaf2875a1eed5c",
+        "new_program": "fnv1a64:302f42dd93646c76"
+      },
+      {
+        "id": "content:oblivion.esm:0860c7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d455dde03b76cde7",
+        "new_ast": "fnv1a64:dde2ffa71454354e",
+        "old_program": "fnv1a64:e2c578172c565eac",
+        "new_program": "fnv1a64:b7281fc97e9ff446"
+      },
+      {
+        "id": "content:oblivion.esm:089614@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:2a9e7e535364d5f7",
+        "new_ast": "fnv1a64:65fa59f36e777526",
+        "old_program": "fnv1a64:13c937a9e105f697",
+        "new_program": "fnv1a64:5ee2d3417e694dd7"
+      },
+      {
+        "id": "content:oblivion.esm:089615@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:77c33697114114d0",
+        "new_ast": "fnv1a64:f97565529e88dfdb",
+        "old_program": "fnv1a64:ac3cb90aa277546a",
+        "new_program": "fnv1a64:f4aff74cbf87739a"
+      },
+      {
+        "id": "content:oblivion.esm:089616@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:2a9e7e535364d5f7",
+        "new_ast": "fnv1a64:65fa59f36e777526",
+        "old_program": "fnv1a64:6e45982c6168ce8d",
+        "new_program": "fnv1a64:2f293f5fe6edd739"
+      },
+      {
+        "id": "content:oblivion.esm:089618@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:1f923b96850a0f51",
+        "new_ast": "fnv1a64:85e1a48ce6c05184",
+        "old_program": "fnv1a64:55a9066c5c189695",
+        "new_program": "fnv1a64:111b3ccdc0409561"
+      },
+      {
+        "id": "content:oblivion.esm:08e336@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:443727eeddf535ba",
+        "new_program": "fnv1a64:56033081d2c58e5e"
+      },
+      {
+        "id": "content:oblivion.esm:08e337@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:a75b23f1262aa775",
+        "new_program": "fnv1a64:527a7aa024a211e3"
+      },
+      {
+        "id": "content:oblivion.esm:08e338@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:2aec2d5950efbaa0",
+        "new_program": "fnv1a64:cba599202a9a0a68"
+      },
+      {
+        "id": "content:oblivion.esm:08e504@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:2ae9355aadfeb9e9",
+        "new_program": "fnv1a64:48eca4268044d357"
+      },
+      {
+        "id": "content:oblivion.esm:08e505@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:528588e3ec5d7f1e",
+        "new_program": "fnv1a64:886d15350a521042"
+      },
+      {
+        "id": "content:oblivion.esm:08e506@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:abfd5bc15b1cec3b",
+        "new_program": "fnv1a64:78c4fa028b480e8d"
+      },
+      {
+        "id": "content:oblivion.esm:08e507@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:45dcdce8dcea4d10",
+        "new_program": "fnv1a64:4ef7392b327e0118"
+      },
+      {
+        "id": "content:oblivion.esm:08e508@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:0d3f9ff945550b65",
+        "new_program": "fnv1a64:a58324a055cd9993"
+      },
+      {
+        "id": "content:oblivion.esm:08e511@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:8b746394fa6e35eb",
+        "new_program": "fnv1a64:591403ec40700ffd"
+      },
+      {
+        "id": "content:oblivion.esm:08e512@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:d506887baf8ad34e",
+        "new_program": "fnv1a64:869b1100d4994632"
+      },
+      {
+        "id": "content:oblivion.esm:08e513@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:6d34f2b63224a7d9",
+        "new_program": "fnv1a64:2c07025291b3c087"
+      },
+      {
+        "id": "content:oblivion.esm:08efb9@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:3dd24e2de1e8cd3e",
+        "new_ast": "fnv1a64:241b0d4cbb4c74b9",
+        "old_program": "fnv1a64:7cc3c147a98d7d87",
+        "new_program": "fnv1a64:370445e5988764c1"
+      },
+      {
+        "id": "content:oblivion.esm:08f670@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:bd8d24ab2032c8e2",
+        "new_program": "fnv1a64:0c215070ad9986ce"
+      },
+      {
+        "id": "content:oblivion.esm:08f784@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:bf5b669588605b42",
+        "new_program": "fnv1a64:867fabe65503f62e"
+      },
+      {
+        "id": "content:oblivion.esm:08f786@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f23289a9b2b5b286",
+        "new_ast": "fnv1a64:f0a65df7dd3eecf9",
+        "old_program": "fnv1a64:69b8fa552cdc9ae0",
+        "new_program": "fnv1a64:42a881d350582140"
+      },
+      {
+        "id": "content:oblivion.esm:090b78@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:be454ba7ce1b7deb",
+        "new_ast": "fnv1a64:1cbd4e4382a11b78",
+        "old_program": "fnv1a64:f7d8a6f240a6c0ef",
+        "new_program": "fnv1a64:d068746c1c6e7e1b"
+      },
+      {
+        "id": "content:oblivion.esm:090b79@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:be454ba7ce1b7deb",
+        "new_ast": "fnv1a64:1cbd4e4382a11b78",
+        "old_program": "fnv1a64:64699d560d30e4d0",
+        "new_program": "fnv1a64:8d41b3c9501eadca"
+      },
+      {
+        "id": "content:oblivion.esm:091c58@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d455dde03b76cde7",
+        "new_ast": "fnv1a64:dde2ffa71454354e",
+        "old_program": "fnv1a64:ab78628b8948ba36",
+        "new_program": "fnv1a64:c789d3a04e8dee1c"
+      },
+      {
+        "id": "content:oblivion.esm:09215d@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:d0919a96626f3143",
+        "new_ast": "fnv1a64:24ca57acfab55344",
+        "old_program": "fnv1a64:994a9b972ad65cc9",
+        "new_program": "fnv1a64:e58cc630c71145ef"
+      },
+      {
+        "id": "content:oblivion.esm:092ae9@oblivion.esm/quest/unit=0",
+        "old_ast": "fnv1a64:70de039a792b751a",
+        "new_ast": "fnv1a64:e69268f17bc2b7c7",
+        "old_program": "fnv1a64:1c6d976b1e64c282",
+        "new_program": "fnv1a64:61267449f43150fe"
+      },
+      {
+        "id": "content:oblivion.esm:094818@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:b12774c842522dd5",
+        "new_ast": "fnv1a64:db58309237047c4a",
+        "old_program": "fnv1a64:cfa37e787902212f",
+        "new_program": "fnv1a64:37f0c5c15b1c9f59"
+      },
+      {
+        "id": "content:oblivion.esm:094c37@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:89edb2c5943864a3",
+        "new_program": "fnv1a64:585bd5a16eedf581"
+      },
+      {
+        "id": "content:oblivion.esm:094c38@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:013cc67e67593488",
+        "new_program": "fnv1a64:624c54aaebe8c788"
+      },
+      {
+        "id": "content:oblivion.esm:094c39@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b1d6133708c19a3c",
+        "new_ast": "fnv1a64:514b2b2fba6921eb",
+        "old_program": "fnv1a64:76bed993c905c701",
+        "new_program": "fnv1a64:245bfbc0544d4de7"
+      },
+      {
+        "id": "content:oblivion.esm:097ca8@oblivion.esm/quest-result/stage=40/entry=0/unit=0",
+        "old_ast": "fnv1a64:054b55850bd56c03",
+        "new_ast": "fnv1a64:a45e7c5e7490a6e7",
+        "old_program": "fnv1a64:021721acea7fc662",
+        "new_program": "fnv1a64:10aa62b1508c7930"
+      },
+      {
+        "id": "content:oblivion.esm:098127@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:7c6427e1ed64398b",
+        "new_ast": "fnv1a64:b70c5d2c14e3f206",
+        "old_program": "fnv1a64:92c64a693da11e80",
+        "new_program": "fnv1a64:ed494cf602f53052"
+      },
+      {
+        "id": "content:oblivion.esm:09813a@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:fad5838fa7caca1f",
+        "new_program": "fnv1a64:b428385fc04fbb21"
+      },
+      {
+        "id": "content:oblivion.esm:09839c@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:9dbe79a73a03a242",
+        "new_ast": "fnv1a64:6ff977c93372f979",
+        "old_program": "fnv1a64:5f776f45cb4f3b9e",
+        "new_program": "fnv1a64:6a79711ab8301d64"
+      },
+      {
+        "id": "content:oblivion.esm:09839f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:f1ccfb50ad08fbd0",
+        "new_ast": "fnv1a64:117f0365d75023cf",
+        "old_program": "fnv1a64:99d003158a4d2992",
+        "new_program": "fnv1a64:59298aff08f0efa8"
+      },
+      {
+        "id": "content:oblivion.esm:09ea91@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:e27a4f970e79d991",
+        "new_ast": "fnv1a64:830b9a67229a168f",
+        "old_program": "fnv1a64:147636ddef287f58",
+        "new_program": "fnv1a64:25f934fcf630d038"
+      },
+      {
+        "id": "content:oblivion.esm:09fd6a@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:6a498797e6377f71",
+        "new_ast": "fnv1a64:22d516e70690db72",
+        "old_program": "fnv1a64:deedf510ea91b617",
+        "new_program": "fnv1a64:bc23800881908d6d"
+      },
+      {
+        "id": "content:oblivion.esm:0a31c6@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b5da71e4c6cffcaa",
+        "new_ast": "fnv1a64:921c56921bd8f4af",
+        "old_program": "fnv1a64:e0322141ac8f0fb5",
+        "new_program": "fnv1a64:1360c4b17045e575"
+      },
+      {
+        "id": "content:oblivion.esm:0a31c7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b5da71e4c6cffcaa",
+        "new_ast": "fnv1a64:921c56921bd8f4af",
+        "old_program": "fnv1a64:231e50d75237d81a",
+        "new_program": "fnv1a64:36bb0cb3bff698e4"
+      },
+      {
+        "id": "content:oblivion.esm:0a31c8@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:b5da71e4c6cffcaa",
+        "new_ast": "fnv1a64:921c56921bd8f4af",
+        "old_program": "fnv1a64:55b76e7f0ae84707",
+        "new_program": "fnv1a64:091b697a21f32fcb"
+      },
+      {
+        "id": "content:oblivion.esm:0a5602@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:c56c71a8a313db25",
+        "new_program": "fnv1a64:7be623b1f84ed5c7"
+      },
+      {
+        "id": "content:oblivion.esm:0a5658@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:eee16dec4bf47f3f",
+        "new_ast": "fnv1a64:a534a2b31aca7099",
+        "old_program": "fnv1a64:08c8c097c9c250ac",
+        "new_program": "fnv1a64:4f3a381788fdfb5c"
+      },
+      {
+        "id": "content:oblivion.esm:0a984f@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:e6d0e650f4dbf8eb",
+        "new_program": "fnv1a64:eae3f73d4cdb10a9"
+      },
+      {
+        "id": "content:oblivion.esm:0aee99@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:8bbcddb91caad819",
+        "new_ast": "fnv1a64:dfe64169a94119e1",
+        "old_program": "fnv1a64:c06390a358d1c31a",
+        "new_program": "fnv1a64:48e4ffb64db9382c"
+      },
+      {
+        "id": "content:oblivion.esm:0b1298@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:6c13d2fcad195c80",
+        "new_ast": "fnv1a64:7917cd0bba566e1f",
+        "old_program": "fnv1a64:0b52e0c04a67dd33",
+        "new_program": "fnv1a64:9bfa2c80494fa905"
+      },
+      {
+        "id": "content:oblivion.esm:0bb9b7@oblivion.esm/dialogue-result/unit=0",
+        "old_ast": "fnv1a64:bcbea5cfbfe87b0a",
+        "new_ast": "fnv1a64:978529742d28e6fd",
+        "old_program": "fnv1a64:7d8cffe4125e46ff",
+        "new_program": "fnv1a64:0ca7e7762478d2ad"
+      },
+      {
+        "id": "content:oblivion.esm:0bf01c@oblivion.esm/quest-result/stage=41/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:bdee9440e69ee446",
+        "new_program": "fnv1a64:59fc0df58580280a"
+      },
+      {
+        "id": "content:oblivion.esm:0bf01d@oblivion.esm/quest-result/stage=51/entry=0/unit=1",
+        "old_ast": "fnv1a64:563e6831e161e632",
+        "new_ast": "fnv1a64:09dd63ee45750bc1",
+        "old_program": "fnv1a64:04586a6b90a1f1d7",
+        "new_program": "fnv1a64:40ad6106b02a28c7"
+      },
+      {
+        "id": "content:oblivion.esm:0bf01e@oblivion.esm/quest-result/stage=61/entry=0/unit=1",
+        "old_ast": "fnv1a64:0e88625869adfa97",
+        "new_ast": "fnv1a64:1043cc06fac99c6c",
+        "old_program": "fnv1a64:9dd188dacf29f1ba",
+        "new_program": "fnv1a64:5ba89dafe20dd5e8"
+      },
+      {
+        "id": "content:oblivion.esm:0bf01f@oblivion.esm/quest-result/stage=21/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:0af35e25ea6dbb5d",
+        "new_program": "fnv1a64:4decc1d7778576b3"
+      },
+      {
+        "id": "content:oblivion.esm:0bf020@oblivion.esm/quest-result/stage=71/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:de95fe62e75b02b7",
+        "new_program": "fnv1a64:007bf8b2d0ceab61"
+      },
+      {
+        "id": "content:oblivion.esm:0bf022@oblivion.esm/quest-result/stage=81/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:113e0264cb6a3232",
+        "new_program": "fnv1a64:cbdc263f1c04e776"
+      },
+      {
+        "id": "content:oblivion.esm:0bf023@oblivion.esm/quest-result/stage=91/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:48c6225aa9e7cb82",
+        "new_program": "fnv1a64:2197993f2114a7c6"
+      },
+      {
+        "id": "content:oblivion.esm:0bf024@oblivion.esm/quest-result/stage=31/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:721153ec87bc94c7",
+        "new_program": "fnv1a64:702c404c0482fab1"
+      },
+      {
+        "id": "content:oblivion.esm:0bf025@oblivion.esm/quest-result/stage=101/entry=0/unit=1",
+        "old_ast": "fnv1a64:090ff047f6d85e8f",
+        "new_ast": "fnv1a64:1a8bd5a5b4b14a78",
+        "old_program": "fnv1a64:0252ac803dcd6adf",
+        "new_program": "fnv1a64:c2bbb73ed3b246c9"
+      },
+      {
+        "id": "content:oblivion.esm:0cd2e0@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:6c35ff6244d240fe",
+        "new_ast": "fnv1a64:cb19b36e7d846aeb",
+        "old_program": "fnv1a64:e85dfc87c1bb7240",
+        "new_program": "fnv1a64:056a48c60b6f5b1c"
+      },
+      {
+        "id": "content:oblivion.esm:0cd2e1@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:22e519f35c62366a",
+        "new_ast": "fnv1a64:28547ca27d985083",
+        "old_program": "fnv1a64:986ee8e379b57287",
+        "new_program": "fnv1a64:6154cc3ea1d55661"
+      },
+      {
+        "id": "content:oblivion.esm:0cd2e2@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:391de43f50a83298",
+        "new_ast": "fnv1a64:66bbc0aa56e8cf49",
+        "old_program": "fnv1a64:349d40c193593be6",
+        "new_program": "fnv1a64:024412f14df4bf4c"
+      },
+      {
+        "id": "content:oblivion.esm:0cd2e3@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:43449c4f14ccbe90",
+        "new_ast": "fnv1a64:e725c39c185083a5",
+        "old_program": "fnv1a64:031f10b262ac3bc3",
+        "new_program": "fnv1a64:f2b2ad63baaa9cef"
+      },
+      {
+        "id": "content:oblivion.esm:0cd2e4@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:315790170d8331ac",
+        "new_ast": "fnv1a64:9b8045b4e3e0627d",
+        "old_program": "fnv1a64:7010c06d4f7030ec",
+        "new_program": "fnv1a64:73e1b102b77e8f48"
+      },
+      {
+        "id": "content:oblivion.esm:0f5942@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:f6fb85ca4fbd57d2",
+        "new_ast": "fnv1a64:ebc64641e15bdcaf",
+        "old_program": "fnv1a64:efe8f8fbd703bdc9",
+        "new_program": "fnv1a64:96d56b71bf881ecf"
+      },
+      {
+        "id": "content:oblivion.esm:0f5944@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:82fd9973e152d156",
+        "new_ast": "fnv1a64:50f3acf0efdc2ad3",
+        "old_program": "fnv1a64:308e8e3fd1e0ae77",
+        "new_program": "fnv1a64:0498c1445809e997"
+      },
+      {
+        "id": "content:oblivion.esm:14c71e@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:d467cf795b27171b",
+        "new_ast": "fnv1a64:ad9af4fc9f856dfc",
+        "old_program": "fnv1a64:773c00613c82485a",
+        "new_program": "fnv1a64:2d293959da62031e"
+      },
+      {
+        "id": "content:oblivion.esm:177a33@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:b7e346c3861e14ad",
+        "new_ast": "fnv1a64:224847f097ba5da5",
+        "old_program": "fnv1a64:44d2b29d16ca5404",
+        "new_program": "fnv1a64:3b3c81f23cd4e366"
+      },
+      {
+        "id": "content:oblivion.esm:18ae7e@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:049365a4bf0c96b7",
+        "new_ast": "fnv1a64:1db327c6f0df9621",
+        "old_program": "fnv1a64:524904f3052e60b3",
+        "new_program": "fnv1a64:f02fbf74af2694d7"
+      },
+      {
+        "id": "content:oblivion.esm:18ae7f@oblivion.esm/object/unit=0",
+        "old_ast": "fnv1a64:85f7ea34fecf17bb",
+        "new_ast": "fnv1a64:e1573923194fe716",
+        "old_program": "fnv1a64:49e053fbb6acad8b",
+        "new_program": "fnv1a64:5c5242bf4a2251ed"
+      },
+      {
+        "id": "content:oblivion.esm:18bd5b@oblivion.esm/effect/unit=0",
+        "old_ast": "fnv1a64:8f0f1c037fd52e63",
+        "new_ast": "fnv1a64:2820ab1a0dcea030",
+        "old_program": "fnv1a64:42f1527fcc79757f",
+        "new_program": "fnv1a64:835bb295c4cbb443"
+      }
+    ],
+    "scope": "Full installed official source compilation and unchanged source/native SCDA identity; not a claim of complete native bytecode equivalence"
+  },
+  "independent_portable_reference": {
+    "checked_units": 11098,
+    "failure_count": 0,
+    "failures": [],
+    "schema_version": 1
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "native_oracle": {
+    "passed": true,
+    "cases": 1806,
+    "setter_cases": 270,
+    "three_frame_cycles": 1536,
+    "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "675a062cb7063156224bd899dc77bcb5b5be5dcd6c00dbd0692dff4e35a142ff",
+    "scope": "Full50E9D0 with argument extraction boundary; real40D8B0..40D8CD flag read + full889810, real40DBB9..40DBF1 resets before resource/global-script/actor callbacks. Callback bodies supply None/0/1/-1 via actual50EA06 setter instructions. No whole parent frame, script scheduler or runtime acceptance."
+  },
+  "native_comparison": {
+    "cycles": 1536,
+    "frames": 4608,
+    "actual_frames": 4608,
+    "mismatches": [],
+    "corpus_sha256": "675a062cb7063156224bd899dc77bcb5b5be5dcd6c00dbd0692dff4e35a142ff",
+    "passed": true
+  },
+  "negative_controls": {
+    "missing-reset": {
+      "differing_frames": 1032,
+      "total_frames": 4608,
+      "rejected": true
+    },
+    "ignored-limit": {
+      "differing_frames": 296,
+      "total_frames": 4608,
+      "rejected": true
+    }
+  },
+  "runtime_acceptance": {
+    "passed": true,
+    "courses": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02",
+        "passed": true,
+        "pid": 1634587,
+        "epoch": 1,
+        "duration_seconds": 61.934585,
+        "commands": [
+          {
+            "run_id": "native-scene-complex-owner",
+            "epoch": 1,
+            "pid": 1634587,
+            "sequence": 33,
+            "tick": 19,
+            "event": "scene-complex-command",
+            "value": true
+          },
+          {
+            "run_id": "native-scene-complex-owner",
+            "epoch": 1,
+            "pid": 1634587,
+            "sequence": 35,
+            "tick": 31,
+            "event": "scene-complex-command",
+            "value": true
+          },
+          {
+            "run_id": "native-scene-complex-owner",
+            "epoch": 1,
+            "pid": 1634587,
+            "sequence": 37,
+            "tick": 43,
+            "event": "scene-complex-command",
+            "value": false
+          }
+        ],
+        "frames": [
+          {
+            "run_id": "native-scene-complex-owner",
+            "epoch": 1,
+            "pid": 1634587,
+            "sequence": 34,
+            "tick": 19,
+            "event": "scene-complex-frame",
+            "input_seconds": 0.16600000858306885,
+            "limited": true,
+            "step_seconds": 0.016699999570846558,
+            "substeps": 2
+          },
+          {
+            "run_id": "native-scene-complex-owner",
+            "epoch": 1,
+            "pid": 1634587,
+            "sequence": 36,
+            "tick": 31,
+            "event": "scene-complex-frame",
+            "input_seconds": 0.16600000858306885,
+            "limited": true,
+            "step_seconds": 0.016699999570846558,
+            "substeps": 2
+          }
+        ],
+        "save_sha256": "3c569890143d636929dcfef983adce631db87081243b1ba7d2927f20dfae034e",
+        "save_schema": 64,
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {
+          "removespell": 1,
+          "addtopic": 24,
+          "setunconscious": 5,
+          "moddisposition": 1
+        },
+        "run_end": {
+          "run_id": "native-scene-complex-owner",
+          "epoch": 1,
+          "pid": 1634587,
+          "sequence": 39,
+          "tick": 60,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 38,
+          "pending_count": 0,
+          "unsupported_count": 31
+        },
+        "capture_review": "Imperial prison niche/chains, crosshair, native HUD and minimap visible; scoped frame-command course, no melee/audio/restart acceptance"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02",
+        "passed": true,
+        "pid": 1635099,
+        "epoch": 1,
+        "duration_seconds": 63.013594,
+        "commands": [
+          {
+            "run_id": "native-scene-complex-owner-60fps",
+            "epoch": 1,
+            "pid": 1635099,
+            "sequence": 33,
+            "tick": 19,
+            "event": "scene-complex-command",
+            "value": true
+          },
+          {
+            "run_id": "native-scene-complex-owner-60fps",
+            "epoch": 1,
+            "pid": 1635099,
+            "sequence": 35,
+            "tick": 31,
+            "event": "scene-complex-command",
+            "value": true
+          },
+          {
+            "run_id": "native-scene-complex-owner-60fps",
+            "epoch": 1,
+            "pid": 1635099,
+            "sequence": 37,
+            "tick": 43,
+            "event": "scene-complex-command",
+            "value": false
+          }
+        ],
+        "frames": [
+          {
+            "run_id": "native-scene-complex-owner-60fps",
+            "epoch": 1,
+            "pid": 1635099,
+            "sequence": 34,
+            "tick": 19,
+            "event": "scene-complex-frame",
+            "input_seconds": 0.16600000858306885,
+            "limited": true,
+            "step_seconds": 0.016699999570846558,
+            "substeps": 2
+          },
+          {
+            "run_id": "native-scene-complex-owner-60fps",
+            "epoch": 1,
+            "pid": 1635099,
+            "sequence": 36,
+            "tick": 31,
+            "event": "scene-complex-frame",
+            "input_seconds": 0.16600000858306885,
+            "limited": true,
+            "step_seconds": 0.016699999570846558,
+            "substeps": 2
+          }
+        ],
+        "save_sha256": "b1e1855eca45abd7ead6f0a79dbf03b8336adb5fa19b7c0ea1fdfe011ae89f56",
+        "save_schema": 64,
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {
+          "removespell": 1,
+          "addtopic": 24,
+          "setunconscious": 5,
+          "moddisposition": 1
+        },
+        "run_end": {
+          "run_id": "native-scene-complex-owner-60fps",
+          "epoch": 1,
+          "pid": 1635099,
+          "sequence": 39,
+          "tick": 60,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 38,
+          "pending_count": 0,
+          "unsupported_count": 31
+        },
+        "capture_review": "Imperial prison niche/chains, crosshair, native HUD and minimap visible; scoped frame-command course, no melee/audio/restart acceptance"
+      }
+    ]
+  },
+  "limitations": [
+    "Native BA7A04 rendering flag is observed in the oracle but not implemented by this mechanical authority",
+    "Caller slices and substituted callback bodies do not execute the whole original main loop or scheduler",
+    "Rendered script-command/frame courses and save are not normal-input melee, audio, opponent or fresh-restart acceptance",
+    "Automatic common-hit speech and remaining M15S4 gates remain open"
+  ],
+  "retained_failures": [
+    "01 normal and sanitizer builds: new lifecycle test called private World methods; corrected test to use public retained-simulation detach/restore path",
+    "02 both profiles: compiled negative command parsed as subtraction; fixed command-statement argument parser, retained direct-command runtime01/60fps01 as earlier-binary evidence",
+    "03 launch error: sanitizer engine command omitted --build-dir and collided with normal static archive; both failed and are retained;04 uses separate configurations"
+  ],
+  "evidence": [
+    {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+      "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "bytes": 2211935
+    },
+    {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "bytes": 277504985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/compare",
+      "sha256": "c814aa5d5219e4b07253818e3ae06b0d0146c40be0fa6a629401da4aa6332d9d",
+      "bytes": 191016
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/compare.cpp",
+      "sha256": "1657200a76b7f81f001ceba2ed5270d26100a95a6da7561e4a8b0a0021567e48",
+      "bytes": 1449
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/comparison.json",
+      "sha256": "3171486d64c1c84680970987914dd44c1792d5a9c3323371db76164b92b37bb6",
+      "bytes": 189
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/ignored-limit",
+      "sha256": "54c50efc717d0c9e6140c92ecc79206902457caccc966f341f0aac002e781186",
+      "bytes": 191024
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/ignored-limit-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/ignored-limit-output.txt",
+      "sha256": "c337e43284a5707ea767b5a445889a6d347c82762e0962070d67678c22c5afcb",
+      "bytes": 196992
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/ignored-limit.cpp",
+      "sha256": "eeaa5d014fb1b22f303648a66152daa38c4c7911e48ccfe4177ab3e76afa653d",
+      "bytes": 1447
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/input.txt",
+      "sha256": "6158203fc118f4c61a838fb7729159caedcc179ea50e1adfa167eecb59a70d6f",
+      "bytes": 30080
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/missing-reset",
+      "sha256": "9a4895320445f041f28a4d23a3f955f5b39ebff2141a1a9b7a4f459faf14998f",
+      "bytes": 190928
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/missing-reset-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/missing-reset-output.txt",
+      "sha256": "51a0a8618cff7f2fc0eb85616cda553aa2055cbe4e706a9c71eba358a7ed64e1",
+      "bytes": 196992
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/missing-reset.cpp",
+      "sha256": "1ea2df79f3571834ed6680c7d67ab27c7d58460ef3fbbd576d9dc1182caf86fe",
+      "bytes": 1418
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/negative-controls.json",
+      "sha256": "ccf57d059fcb583797c54aeb5f60a6d27f6fc32b9b79a3e6d92fd98a4dd99799",
+      "bytes": 208
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/output.txt",
+      "sha256": "e0fc5239c43d34bd71d7c4ac3252d74f4e7264d0b9ced4a84b3bcaf2b1e4d659",
+      "bytes": 196992
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-comparison-01/replay.py",
+      "sha256": "b0383c1c868d5c56c2b17737e0961eb87bd96b8bba642f72c9f70f68b4469b02",
+      "bytes": 1306
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-inspection-01/command-and-frame.txt",
+      "sha256": "692c75207cd24fe0fa8fbfb30005c4fc56226d370b64463018d1f417c7db25ae",
+      "bytes": 10452
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-inspection-01/frame-prefix.txt",
+      "sha256": "79f3c6998bea540c936830ad809a996a288c86f2a105a7cea43451b5f2f79594",
+      "bytes": 1943
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-inspection-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-01/engine-build.log",
+      "sha256": "f1a3b84ebae39267153ddfeb6c4c1c46ba0157872083362648b981097b5ada7f",
+      "bytes": 35524
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-01/verification.json",
+      "sha256": "e946441caa402468fce04994e7d6969f97ef2505db31d0846bdecd6845a51ec6",
+      "bytes": 630
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-02/engine-build.log",
+      "sha256": "832e6462203a089262dd8f30caddba49c959e80b776f8ed3951ff7e7d902958d",
+      "bytes": 29950
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-02/engine-inventory.txt",
+      "sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+      "bytes": 132211
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-02/engine.log",
+      "sha256": "34871783e5d935ce74e81601751af0d2d54050ae29f18e70c5552e5886e998f0",
+      "bytes": 4224
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-02/engine.xml",
+      "sha256": "62f415d6a321794936a21d49ed1f2a1a1274d5f8df6884b980c12a259157c835",
+      "bytes": 3876
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-02/verification.json",
+      "sha256": "d4cc03de3c6e876be7b56d8ca68572af88854b8d1de11d2f1b327b96f1e00803",
+      "bytes": 1320
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-03/engine-build.log",
+      "sha256": "2f7ef21ebe9976d4bc2f042653bb00b7c8d6bd86def50d99fa8e24e850a61519",
+      "bytes": 957
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-03/verification.json",
+      "sha256": "731fad09c09d15cf0deec61c6d111875b9099b33bff1e6c8633639cab401039e",
+      "bytes": 628
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/components-build.log",
+      "sha256": "003dc26f4f0af082013a51362091682841867f1956a60b3977a658deb5940385",
+      "bytes": 619
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/components-inventory.txt",
+      "sha256": "7d4300fc30509216ef851a203bfad4ca8cf2b002574b8f1b35637266d8f60169",
+      "bytes": 192083
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/components.log",
+      "sha256": "6e083f19764f142c625b23b903b4b5f0fc83f65e506138c3ebef16c80c63f1b4",
+      "bytes": 600655
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/components.xml",
+      "sha256": "0cf78a326b2a6a42da768b6ce119752c52d62efed0866057e4095327981810da",
+      "bytes": 2340285
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/engine-build.log",
+      "sha256": "d405cc2fd2ca9eefe1d9c3da676ad7fc42e1b04647a5c45f887de783d0843fee",
+      "bytes": 1708
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/engine-inventory.txt",
+      "sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+      "bytes": 132211
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/engine.log",
+      "sha256": "ea30d68594f44e33056a89b8e7f6d4f14092f115382300e0d42e2a803619581b",
+      "bytes": 2217586
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/engine.xml",
+      "sha256": "df1d8c969695a93cd3d7585a2932e80baba567df213dac8ec480ddcc486225de",
+      "bytes": 615682
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-normal-04/verification.json",
+      "sha256": "0a1fd13d1b37e7a353a191caaffaa397b2e9ff1e3d72e6afb4acc971a05bff89",
+      "bytes": 3849
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-oracle-01/corpus.json",
+      "sha256": "675a062cb7063156224bd899dc77bcb5b5be5dcd6c00dbd0692dff4e35a142ff",
+      "bytes": 800310
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-oracle-01/probe.py",
+      "sha256": "93e3cf537be74d273cc1195e54209109370f393bbf308ea6aeb6b9f093ec9c71",
+      "bytes": 4812
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-oracle-01/verification.json",
+      "sha256": "0ae5e0b90dee08fc111961084d21edaa9dbc9d38e8061a00b235ec1218345b72",
+      "bytes": 579
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-python-01/python.log",
+      "sha256": "914822872401663b047cb932181d5e32f69616c135255f7554508e1d88a86cf0",
+      "bytes": 495
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-python-01/verification.json",
+      "sha256": "030bf201cb0eb047dec5390aafea2028f2f8eb38ff290ba396f02c913b68847c",
+      "bytes": 819
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/config/MyGUI.log",
+      "sha256": "300279df7625bc8868a05ff3c6e4e5af6e3f645ee1c85aee765996ca3b47f892",
+      "bytes": 34963
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/config/openmw.cfg",
+      "sha256": "c2d5d0c181206ae0828db18737f3501e021527bdb9b155553e988a1bb84371c8",
+      "bytes": 427
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/config/openmw.log",
+      "sha256": "86ebf901d900498c4f37d6f661f52104f53cac17c80904d82896c96a6e2f72a2",
+      "bytes": 2137658
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/config/settings.cfg",
+      "sha256": "1bd140ff16a327a42945120675ff3207b9bac10d8a11c59585ae9483374476a9",
+      "bytes": 1276
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/live-1-38.json",
+      "sha256": "4bf04f309176c3e4be755980fc8073ad4fd1a21d4d8c177336a4c135f6f94e63",
+      "bytes": 24798466
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/m15-events.jsonl",
+      "sha256": "c8344c1f2460771fd9c45a1216ea85f3b79cb7b09f5d3e0a1585f2d1c098ac9b",
+      "bytes": 8458
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/obscript-report.json",
+      "sha256": "99c97c18274d8b5a08b6692de22c964423bfdfcbbd5abb07646bd54afc5a510e",
+      "bytes": 24928259
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/process.log",
+      "sha256": "86ebf901d900498c4f37d6f661f52104f53cac17c80904d82896c96a6e2f72a2",
+      "bytes": 2137658
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/scenario.json",
+      "sha256": "e9e06f4fe009a64fc2ffee785061845154e0eda0915b0ece7a5acc95f8120a57",
+      "bytes": 4229
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/scene-complex.png",
+      "sha256": "759799fc45e4a5b89952212f5dd90eee1c4d89296140ab8fc5b63a907121ac5b",
+      "bytes": 1163319
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/scene-events.txt",
+      "sha256": "d5de5aadbc9d20afb23393cd78b2ef3daa9e9b3500bac3a129307574dc51ae72",
+      "bytes": 160
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "afd7374dc058f0a76f0917cfc7c093e7575b55a3b708aeb5e76f0db80127bda4",
+      "bytes": 10418983
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/config/MyGUI.log",
+      "sha256": "93b185ca3774a04761973ec074a2bdd256cb2422ac12f3358dace0fc51c19e83",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/config/openmw.cfg",
+      "sha256": "3fafee2569610c6e2ddffa3c6fd02efdb8c572c4c6f38adc38c984de068508fa",
+      "bytes": 427
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/config/openmw.log",
+      "sha256": "c96db36b10299f11ab7633b7fb14d9e55b32a627fbaca9df62dc9d80e71ae44b",
+      "bytes": 2137657
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/config/settings.cfg",
+      "sha256": "1bd140ff16a327a42945120675ff3207b9bac10d8a11c59585ae9483374476a9",
+      "bytes": 1276
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/live-1-38.json",
+      "sha256": "4bf04f309176c3e4be755980fc8073ad4fd1a21d4d8c177336a4c135f6f94e63",
+      "bytes": 24798466
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/m15-events.jsonl",
+      "sha256": "30f0a6013cae412887bcdd01b4894c608f9f064bb2728a3ad52a6823366c9056",
+      "bytes": 8458
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/obscript-report.json",
+      "sha256": "99c97c18274d8b5a08b6692de22c964423bfdfcbbd5abb07646bd54afc5a510e",
+      "bytes": 24928259
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/process.log",
+      "sha256": "c96db36b10299f11ab7633b7fb14d9e55b32a627fbaca9df62dc9d80e71ae44b",
+      "bytes": 2137657
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/scenario.json",
+      "sha256": "365f76d46213fd1b6eecfa810c4f48415329a7708824c50613f54e63021782e9",
+      "bytes": 4226
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/scene-complex.png",
+      "sha256": "51435bdfe755dd439931634c32c8848ea0b6ee242cce08aff6ecf0b8f20a6b1f",
+      "bytes": 1144491
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/scene-events.txt",
+      "sha256": "d5de5aadbc9d20afb23393cd78b2ef3daa9e9b3500bac3a129307574dc51ae72",
+      "bytes": 160
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3c569890143d636929dcfef983adce631db87081243b1ba7d2927f20dfae034e",
+      "bytes": 10416167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-02/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/config/MyGUI.log",
+      "sha256": "c28d378db42464c2315bfa7e5c9315225b57c1f42714ff5d69bf159e4d6734fd",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/config/openmw.cfg",
+      "sha256": "8d9f7dbf93a3f5810f90ca1d3862f9ecff82294fbebb49630feb8d68d9396c43",
+      "bytes": 433
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/config/openmw.log",
+      "sha256": "354c5baae3be2097dba2f38e51206321c722367f8d4b9bc271f698578ed73e27",
+      "bytes": 2137730
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/config/settings.cfg",
+      "sha256": "09c56b829702348816d4a94981c3c55dff9a7ba16cbfea09e950b4f32adb493f",
+      "bytes": 1277
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/live-1-38.json",
+      "sha256": "4bf04f309176c3e4be755980fc8073ad4fd1a21d4d8c177336a4c135f6f94e63",
+      "bytes": 24798466
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/m15-events.jsonl",
+      "sha256": "72d0800ea7e768c39c535b985bfc50cf077ca51130bded6dd7aa720f984c85c7",
+      "bytes": 8698
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/obscript-report.json",
+      "sha256": "99c97c18274d8b5a08b6692de22c964423bfdfcbbd5abb07646bd54afc5a510e",
+      "bytes": 24928259
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/process.log",
+      "sha256": "354c5baae3be2097dba2f38e51206321c722367f8d4b9bc271f698578ed73e27",
+      "bytes": 2137730
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/scenario.json",
+      "sha256": "13cab4b419f3deb404cc871b9756365c2cc9b1704fc56998f89965f89ecf02c4",
+      "bytes": 4281
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/scene-complex.png",
+      "sha256": "68f7750ede436b05b5d2bb6f9f2292bd8e32acf4038472a53016811b320608e6",
+      "bytes": 1136276
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/scene-events.txt",
+      "sha256": "d5de5aadbc9d20afb23393cd78b2ef3daa9e9b3500bac3a129307574dc51ae72",
+      "bytes": 160
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3846e5c65997c6858e4c6186229b7efe083398d45432e2a54bb7d68fd92aa1c5",
+      "bytes": 10415338
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/config/MyGUI.log",
+      "sha256": "4b4348331d8c1d07faa2a553c4a95b749a6e0d02cfc451d3da4ac47a5a6b11c4",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/config/openmw.cfg",
+      "sha256": "0e11d45f91a5fec7b7b85e2a9bad6621105fb655bd48de35a92af24322fd58d9",
+      "bytes": 433
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/config/openmw.log",
+      "sha256": "ba468aceae7cd703e3eaeb6604078eecde8af7c3a2b333cdb47d4fc5d89dc115",
+      "bytes": 2137730
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/config/settings.cfg",
+      "sha256": "09c56b829702348816d4a94981c3c55dff9a7ba16cbfea09e950b4f32adb493f",
+      "bytes": 1277
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/live-1-38.json",
+      "sha256": "4bf04f309176c3e4be755980fc8073ad4fd1a21d4d8c177336a4c135f6f94e63",
+      "bytes": 24798466
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/m15-events.jsonl",
+      "sha256": "f07112601d48edb70f6ad07fcd3dfe3bb4eb370548e844fee92c09bd6ca46c82",
+      "bytes": 8698
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/obscript-report.json",
+      "sha256": "99c97c18274d8b5a08b6692de22c964423bfdfcbbd5abb07646bd54afc5a510e",
+      "bytes": 24928259
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/process.log",
+      "sha256": "ba468aceae7cd703e3eaeb6604078eecde8af7c3a2b333cdb47d4fc5d89dc115",
+      "bytes": 2137730
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/scenario.json",
+      "sha256": "04e56bceb01d90aea27551e6dde5e35c535e59845dd8ad187d57ef25cf83672d",
+      "bytes": 4280
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/scene-complex.png",
+      "sha256": "9dc51b7d2446bda592a0f53f4b2f360901edf691124e6b4b729f72d6a0c6c86c",
+      "bytes": 1146289
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/scene-events.txt",
+      "sha256": "d5de5aadbc9d20afb23393cd78b2ef3daa9e9b3500bac3a129307574dc51ae72",
+      "bytes": 160
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "b1e1855eca45abd7ead6f0a79dbf03b8336adb5fa19b7c0ea1fdfe011ae89f56",
+      "bytes": 10416335
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-60fps-02/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/defaults.bin",
+      "sha256": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "bytes": 61692
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/openmw-normal",
+      "sha256": "1e4ba60ec7f335a0cd7b09aba18dc1ea4ad05a95a7a37facc01c901140422610",
+      "bytes": 1392876784
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/openmw.cfg",
+      "sha256": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66",
+      "bytes": 28865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/retention.json",
+      "sha256": "0a611951d40a412ce962fd1128fb8038711490841acef4a77005a967e2a71702",
+      "bytes": 260
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/runtime-verification.json",
+      "sha256": "257e1e33f72071e2978b4a622ad6313835ee0cce048604895f45979df580abb0",
+      "bytes": 5080
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/scenario-60fps.json",
+      "sha256": "a7efb8add42289eb9d099f0415e0906a5a10d3146344eff697bebab2a7fc4c92",
+      "bytes": 3205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/scenario.json",
+      "sha256": "8d5e6098d1a591288be9b8837a3e03ea87a4c16701b6a2c3e2e8eadc930d841c",
+      "bytes": 3192
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-01/verify_runtime.py",
+      "sha256": "329f647e659865dca0a8e7e7293114cb6a5722db8a0e9b4d214211ea58ec4718",
+      "bytes": 2599
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/defaults.bin",
+      "sha256": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "bytes": 61692
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/native-scene-complex-owner-runtime-02-launch.log",
+      "sha256": "365f76d46213fd1b6eecfa810c4f48415329a7708824c50613f54e63021782e9",
+      "bytes": 4226
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/native-scene-complex-owner-runtime-60fps-02-launch.log",
+      "sha256": "04e56bceb01d90aea27551e6dde5e35c535e59845dd8ad187d57ef25cf83672d",
+      "bytes": 4280
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/openmw-normal",
+      "sha256": "43bd961e81ba2bf2623c0eabfae408c9f900a0ffbd461ebfaa5caf2d39a6ed19",
+      "bytes": 1392892152
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/openmw.cfg",
+      "sha256": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66",
+      "bytes": 28865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/publish.py",
+      "sha256": "9ade1062f83ec195acf875ac577b502f107419708503c3871b350b500cd85e2b",
+      "bytes": 10837
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/retention.json",
+      "sha256": "bf267df2622fde8e5476da1d395ced3cfc50c0005919583a2116f677482e0741",
+      "bytes": 260
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/runtime-verification.json",
+      "sha256": "69238560cd2c3b3e5f89adbbc8b87bdaf2208dd3377e792f77e3eeb8475494bd",
+      "bytes": 5080
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/scenario-60fps.json",
+      "sha256": "a7efb8add42289eb9d099f0415e0906a5a10d3146344eff697bebab2a7fc4c92",
+      "bytes": 3205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/scenario.json",
+      "sha256": "8d5e6098d1a591288be9b8837a3e03ea87a4c16701b6a2c3e2e8eadc930d841c",
+      "bytes": 3192
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/tested-source.patch",
+      "sha256": "93d7013f1c350eead4edf88ca0b9da35f4b6efc40fc3153e1ba83ed6411b605d",
+      "bytes": 15541
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-runtime-binaries-02/verify_runtime.py",
+      "sha256": "1b0a83884a159c7b86e4f4b1da0027dc44776a2d3bc59d3eea55aab530a4515a",
+      "bytes": 2599
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-01/engine-build.log",
+      "sha256": "d99dabce8aa205c45bfd642512f01ee455c5cd5ae29921f6a11c3ecb5246aadc",
+      "bytes": 34249
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-01/verification.json",
+      "sha256": "e9600edd823055d6b961f5a778f78170fcda1e01054e0abc50c90776e7dd6487",
+      "bytes": 643
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-02/engine-build.log",
+      "sha256": "bbdb2fd30f1797efb418238e4cbfb2a33ad9f45c58acb2fe0a95d5cc2a8484f7",
+      "bytes": 28516
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-02/engine-inventory.txt",
+      "sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+      "bytes": 132211
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-02/engine.log",
+      "sha256": "9082880cdb510a0c115628b59d7dc88e663d1f04bb5f8b7748ae4b357f582687",
+      "bytes": 4227
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-02/engine.xml",
+      "sha256": "58e0b2767b01d3c0773b65188948415d29172fe5b6b0591ca8d5fb623195654a",
+      "bytes": 3876
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-02/verification.json",
+      "sha256": "ce1a46b9f2df078b3653785ded44588c5589e04557903140ac9746001e5fa19c",
+      "bytes": 1362
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-03/engine-build.log",
+      "sha256": "6ad016c0e8610c971b5ba9c17743755e1fcf2f9dea675300a48ddaf5f59f271e",
+      "bytes": 965
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-03/verification.json",
+      "sha256": "afac463939a7f8cd30be6b8002468ee620f665c0bd3ee84b245f1c9854516607",
+      "bytes": 628
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/engine-build.log",
+      "sha256": "503e4753b55a1b40fbec5f27d85ea9ed043924a6512daa655fd2a71ef49e9581",
+      "bytes": 1794
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/engine-inventory.txt",
+      "sha256": "b328b860edd64eeb723066fce3c0178026e7a29ed062bddae893e7d6bff6590a",
+      "bytes": 132211
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/engine.log",
+      "sha256": "242c76565b08fafe23424a09338d32a37f0e81453a980ba366470bed00bf9ae0",
+      "bytes": 2218132
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/engine.xml",
+      "sha256": "8ff2acd8b29d7222ea902dd89b8e1e8d72cdc57d10c4f22580379d0e309daa0f",
+      "bytes": 617434
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/sanitize-build.log",
+      "sha256": "2831518130a3c20e835940fda73b2f564fee5c36a6832b94eae40eae40dc32e8",
+      "bytes": 619
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/sanitize-inventory.txt",
+      "sha256": "d3de72849481352808719997b7044a5a45c0017c5625a0c5ea32c5a181f6dea5",
+      "bytes": 192083
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/sanitize.log",
+      "sha256": "f85ff87bc5444d19958b545497e3b77091ec850678b1ed98fc7952f981eda6ad",
+      "bytes": 161029
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/sanitize.xml",
+      "sha256": "7e16a38eb51d7712683eaa0d2e988cad91aaffd531092b2fb95c59b7a6f59a23",
+      "bytes": 1616313
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-04/verification.json",
+      "sha256": "0e1c4659854ce2aafa9e8ee6e9fbebaddcae0ece065673d6212c147b7f5a0ca2",
+      "bytes": 4025
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-obscript-01/sanitize-build.log",
+      "sha256": "b556c099a28afb8557995faff9a685cc989cba175f450623aace32999ba04555",
+      "bytes": 461
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-obscript-01/sanitize-inventory.txt",
+      "sha256": "a628554e2318e45305d87771e944ea70ea6ae76960a5e2df5176f86e1cf5fe80",
+      "bytes": 192083
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-obscript-01/sanitize.log",
+      "sha256": "b666846c56ce0df4bf9889eaacac37f89e5710c74f89bd507c13c80afcd12055",
+      "bytes": 4386
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-obscript-01/sanitize.xml",
+      "sha256": "686d5c2d1058d4731571d4c1d42da13208402fa736c364371f5d125c1cff1e02",
+      "bytes": 7149
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-owner-sanitized-obscript-01/verification.json",
+      "sha256": "f785d6a41e179b68fdde8c5cb70ee45b3659f62a6310bdc6c745ef5cfb088609",
+      "bytes": 2238
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/after.json",
+      "sha256": "13889cc69c9875721ca6c9f73bc9c57c0546fffb2965b4db8d1d01d3adec1d33",
+      "bytes": 19998138
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/after.log",
+      "sha256": "c6216ca901b4f7a93d88e4d6303a063693105a460611a622cad80100e2bb35d0",
+      "bytes": 162
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/before.json",
+      "sha256": "b581647d5ffc625a849be0b9a6f59cb8f1feb5e57d7b5d6c129b5b8062fe3186",
+      "bytes": 19998413
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/before.log",
+      "sha256": "37f79d924213c6d9660479a72ef492833a660d89461373211918c96934d4b510",
+      "bytes": 162
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/changed-calls.json",
+      "sha256": "14a7ab858136358a657d8579f0684649d62778a08647fa36222ab953ef5f2d95",
+      "bytes": 143237
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/comparison.json",
+      "sha256": "0544fd82f35c953b3970f4dd359ea0dabf19f5e8bfe542ea253c1c32749ae991",
+      "bytes": 113388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/obscript_reference.py",
+      "sha256": "2f56290f6aafb71f6dfb9b114da74d93bb6b4f46855fda1bf05301b1c8f4ffef",
+      "bytes": 28629
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/reference-old-parser-control.json",
+      "sha256": "31b092705ccb857d6cea60d2daaec7c84204a444899dc66e1ed12dfa08f56061",
+      "bytes": 165480
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/reference-old-parser-control.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/reference.json",
+      "sha256": "80476e8590b2669cea9cdfc996e08292af19b9ff7951925c816ad529b7a1627b",
+      "bytes": 92
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-scene-complex-signed-arguments-01/test_oblivion_compat.py",
+      "sha256": "af13c0e254879426565a6c80c9a93dbc7cd2a687356bfdb3cd623f4793dfb268",
+      "bytes": 79835
+    }
+  ]
+}

@@ -326,12 +326,24 @@ namespace ObScript
 
     Expression Parser::parseCommandLine()
     {
-        Expression result = parseExpression();
+        // A statement starts with a command and whitespace-separated
+        // arguments. In this context a minus introduces a signed argument;
+        // arithmetic remains inside set/if expressions or parentheses.
+        Expression result = parsePostfix();
         std::vector<Expression> extra;
         while (peek().mKind != TokenKind::Newline && peek().mKind != TokenKind::End)
         {
-            if (!accept(TokenKind::Operator, ","))
-                extra.push_back(parseExpression());
+            if (accept(TokenKind::Operator, ","))
+                continue;
+            const auto minus = accept(TokenKind::Operator, "-");
+            Expression argument = parsePostfix();
+            if (minus)
+            {
+                Expression negative = node(ExpressionKind::Negate, minus->mLocation);
+                negative.mChildren.push_back(std::move(argument));
+                argument = std::move(negative);
+            }
+            extra.push_back(std::move(argument));
         }
         if (!extra.empty())
         {

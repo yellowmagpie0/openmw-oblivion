@@ -79,6 +79,7 @@ namespace
         std::map<std::string, ObScript::Value, std::less<>> mExternal;
         std::map<std::pair<std::string, std::string>, ObScript::Value> mMembers;
         std::vector<std::string> mCalls;
+        std::vector<std::vector<ObScript::Value>> mArguments;
         std::function<void(const ObScript::RuntimeContext&)> mOnNested;
 
         ObScript::Value resolveName(std::string_view name, const ObScript::RuntimeContext&) override
@@ -114,6 +115,7 @@ namespace
             const ObScript::SourceLocation&) override
         {
             mCalls.push_back(std::string(name));
+            mArguments.push_back(arguments);
             if (name == "nested" && mOnNested)
             {
                 mOnNested(context);
@@ -427,6 +429,32 @@ end
         EXPECT_EQ(report.mDiagnostics[0].mCommand, "unsupported");
         EXPECT_EQ(report.mDiagnostics[0].mSequence, 42);
         EXPECT_EQ(report.mDiagnostics[0].mUnit, id);
+    }
+
+    TEST(ObScriptVm, commandStatementsPassSignedArgumentsAndPreserveExpressionSubtraction)
+    {
+        const auto unit = makeUnit(8,
+            "short amount\nbegin gamemode\nset amount to 4 - 5\n"
+            "SetSceneIsComplex -1\nplayer.bump -2\nCapture 8 -3 -0.5 (amount - 2)\n"
+            "player.bump amount\nend\n");
+        const auto compiled = ObScript::CompilationCache{}.compile(unit);
+        ASSERT_TRUE(compiled.mProgram);
+        auto locals = ObScript::VirtualMachine::makeLocals(*compiled.mProgram);
+        TestRuntimeHost host;
+        ObScript::RuntimeContext context;
+        context.mUnit = compiled.mProgram->mUnit;
+        context.mEvent = "gamemode";
+        const auto result = ObScript::VirtualMachine{}.execute(*compiled.mProgram,
+            compiled.mProgram->mEntryPoints.front(), locals, host, context);
+        ASSERT_TRUE(result.mCompleted);
+        EXPECT_TRUE(result.mDiagnostics.empty());
+        EXPECT_EQ(host.mCalls, (std::vector<std::string>{"setsceneiscomplex", "bump", "capture", "bump"}));
+        ASSERT_EQ(host.mArguments.size(), 4u);
+        EXPECT_EQ(host.mArguments[0], (std::vector<ObScript::Value>{std::int64_t(-1)}));
+        EXPECT_EQ(host.mArguments[1], (std::vector<ObScript::Value>{std::int64_t(-2)}));
+        EXPECT_EQ(host.mArguments[2], (std::vector<ObScript::Value>{std::int64_t(8), std::int64_t(-3),
+            -0.5, std::int64_t(-3)}));
+        EXPECT_EQ(host.mArguments[3], (std::vector<ObScript::Value>{std::int64_t(-1)}));
     }
 
     TEST(ObScriptVm, nullReferenceLocalsCompareEqualToNumericZero)

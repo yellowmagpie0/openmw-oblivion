@@ -695,6 +695,7 @@ namespace MWMechanics
         mPreparedRagdollIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
+        mSceneIsComplex = false;
         mCrimeContracts = {};
         mActionOwners.clear();
         mMeleeStates.clear();

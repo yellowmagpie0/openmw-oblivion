@@ -91,6 +91,7 @@
 #include "mwdialogue/scripttest.hpp"
 
 #include "mwmechanics/mechanicsmanagerimp.hpp"
+#include "mwmechanics/oblivioncombat.hpp"
 
 #include "mwstate/statemanagerimp.hpp"
 
@@ -217,8 +218,16 @@ bool OMW::Engine::frame(unsigned frameNumber, float& frametime)
             {
                 frametime = 0.f;
                 mInputManager->captureEvents(false);
+                const auto* combat = mWorld->getOblivionCombatService();
+                const bool sceneComplex = combat && combat->sceneIsComplex();
                 nativeFrame = mNativeFrameClock->advance(SDL_GetTicks(),
-                    mWorld->getTimeManager()->getSimulationTimeScale(), !mWindowManager->isWindowVisible());
+                    mWorld->getTimeManager()->getSimulationTimeScale(), !mWindowManager->isWindowVisible(), sceneComplex);
+                if (sceneComplex && mWindowManager->isWindowVisible())
+                    if (auto* observation = mWorld->getOblivionObservation())
+                        observation->record("scene-complex-frame", {{"limited", sceneComplex},
+                            {"substeps", std::uint64_t(nativeFrame->mSubstepCount)},
+                            {"input_seconds", double(nativeFrame->mInputDelta)},
+                            {"step_seconds", double(nativeFrame->mSubstepSeconds)}});
                 frametime = nativeFrame->mInputDelta;
                 mEnvironment.setFrameDuration(frametime);
                 mInputManager->updateControls(frametime, false);
@@ -267,6 +276,13 @@ bool OMW::Engine::frame(unsigned frameNumber, float& frametime)
         bool paused = mWorld->getTimeManager()->isPaused();
         if (auto* observation = mWorld->getOblivionObservation())
             observation->advance(paused || mStateManager->getState() == MWBase::StateManager::State_NoGame);
+
+        // Original40D8B0 consumes the previous flag for frame preparation;
+        // 40DBCB then clears it before scripts4402F0 and actors674A20, even
+        // when script processing is disabled. Hidden frames returned above.
+        if (mStateManager->getState() != MWBase::StateManager::State_NoGame)
+            if (auto* combat = mWorld->getOblivionCombatService())
+                combat->beginScriptActorFrame();
 
         {
             ScopedProfile<UserStatsType::Script> profile(frameStart, frameNumber, *timer, *stats);

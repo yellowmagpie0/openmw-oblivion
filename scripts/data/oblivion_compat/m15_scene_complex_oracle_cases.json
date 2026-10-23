@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "scope": "Transient SceneIsComplex authority and following-frame physics substep limit",
+  "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_paths": {
+    "command": "Full50E9D0; only argument extraction4FAE80 supplied at boundary",
+    "frame": "Actual40D8B0..40D8CD flag read and full889810",
+    "reset": "Actual40DBB9..40DBF1 resets before4F5DB0,4402F0,674A20; callback bodies supplied None/0/1/-1 through actual parsed setter50EA06"
+  },
+  "domains": {
+    "setter_cases": 270,
+    "parse_success": [
+      false,
+      true
+    ],
+    "signed_values": [
+      -2147483648,
+      -1,
+      0,
+      1,
+      2147483647
+    ],
+    "old_scene_and_render_bytes": [
+      0,
+      1,
+      255
+    ],
+    "fpu_control_words": [
+      127,
+      639,
+      895
+    ],
+    "three_frame_cycles": 1536,
+    "old_scene_flags": [
+      0,
+      1
+    ],
+    "raw_modes": [
+      0,
+      1,
+      10
+    ],
+    "delta_seconds": [
+      0,
+      0.001,
+      0.033,
+      0.167
+    ],
+    "first_frame_callback_choices": [
+      null,
+      0,
+      1,
+      -1
+    ]
+  },
+  "expected": {
+    "nonzero_sets_true": true,
+    "zero_clears": true,
+    "parse_failure_preserves_both_native_flags": true,
+    "prior_flag_consumed_before_reset": true,
+    "callbacks_see_reset_before_any_setter": true,
+    "last_callback_setter_wins": true,
+    "no_setters_next_frame_clears": true,
+    "heavy_fixed_step_counts": [
+      3,
+      2,
+      3
+    ],
+    "heavy_frame_bits": [
+      1028470184,
+      1023987312,
+      1028470184
+    ],
+    "cpp_comparison_frames": 4608
+  },
+  "negative_controls": {
+    "missing-reset": {
+      "differing_frames": 1032,
+      "total_frames": 4608,
+      "rejected": true
+    },
+    "ignored-limit": {
+      "differing_frames": 296,
+      "total_frames": 4608,
+      "rejected": true
+    }
+  },
+  "portable_grammar": {
+    "scope": "Command statements accept signed atomic arguments; arithmetic is retained in set/if/parenthesized expressions",
+    "official_units": 11098,
+    "frontend_failures": 0,
+    "changed_portable_units": 401,
+    "independent_ast_and_program_failures": 0,
+    "old_reference_parser_mismatches": 802
+  },
+  "runtime": {
+    "courses": 2,
+    "fps_limits": [
+      5,
+      60
+    ],
+    "signed_command_values": [
+      1,
+      -1,
+      0
+    ],
+    "exact_nonzero_frame_events": 2,
+    "heavy_frame_substeps": 2,
+    "normal_F5_save_schema": 64
+  },
+  "limits": [
+    "Native BA7A04 rendering flag is observed in the oracle but not implemented by this mechanical authority",
+    "Caller slices and substituted callback bodies do not execute the whole original main loop or scheduler",
+    "Rendered script-command/frame courses and save are not normal-input melee, audio, opponent or fresh-restart acceptance",
+    "Automatic common-hit speech and remaining M15S4 gates remain open"
+  ],
+  "full_M15S4_acceptance": false
+}

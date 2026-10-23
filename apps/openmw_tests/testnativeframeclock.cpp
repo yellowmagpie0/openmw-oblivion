@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "apps/openmw/nativeframeclock.hpp"
+#include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 
 #include <array>
 #include <bit>
@@ -104,4 +105,25 @@ TEST(NativeFrameClock, ProcessSettingsRejectUnsupportedDurationsBeforeFirstFrame
     OMW::NativeFrameClock clock(0, 2.f, .05f, 0);
     const auto frame = clock.advance(1000, 1.f, false);
     EXPECT_EQ(frame.mSubstepCount, 0u); // capped timer delta is below half the capped1s fixed step.
+}
+
+TEST(NativeFrameClock, SceneComplexityIsConsumedBeforeScriptResetAndLimitsOnlyTheFollowingFrame)
+{
+    // Original40D8B0 + full889810 and40DBB9 reset/callback slice:
+    // raw mode0, heavy delta, callbacks(None,1,None), then no setters.
+    OMW::NativeFrameClock clock(0, .0167f, .05f, 0);
+    MWMechanics::OblivionCombatService combat;
+    const auto first = clock.advance(167, 1.f, false, combat.sceneIsComplex());
+    EXPECT_EQ(first.mSubstepCount, 3u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(first.mFrameSeconds), 1028470184u);
+    combat.beginScriptActorFrame();
+    combat.setSceneIsComplex(true);
+    const auto second = clock.advance(334, 1.f, false, combat.sceneIsComplex());
+    EXPECT_EQ(second.mSubstepCount, 2u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(second.mFrameSeconds), 1023987312u);
+    combat.beginScriptActorFrame();
+    const auto third = clock.advance(501, 1.f, false, combat.sceneIsComplex());
+    EXPECT_EQ(third.mSubstepCount, 3u);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(third.mFrameSeconds), 1028470184u);
+    EXPECT_FALSE(combat.sceneIsComplex());
 }

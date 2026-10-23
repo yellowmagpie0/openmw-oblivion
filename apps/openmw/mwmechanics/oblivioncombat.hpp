@@ -403,6 +403,9 @@ namespace MWMechanics
         PreparedReleaseIdentity mPreparedRagdollIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
+        // Process-frame flag B333B8: consumed by the next frame clock, then
+        // cleared before global scripts and actor updates. Never saved.
+        bool mSceneIsComplex = false;
         ESM4::CrimeStateContracts mCrimeContracts;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
@@ -524,6 +527,9 @@ namespace MWMechanics
         // actors survive; stale input or invalid later updates leave all unchanged.
         bool syncActorRagdolls(const PhysicalPoseUpdates& updates);
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
+        bool sceneIsComplex() const noexcept { return mSceneIsComplex; }
+        void setSceneIsComplex(bool value) noexcept { mSceneIsComplex = value; }
+        void beginScriptActorFrame() noexcept { mSceneIsComplex = false; }
         const ESM4::CrimeStateContracts& crimeContracts() const noexcept { return mCrimeContracts; }
         // Legal bounty differs from AV37: realm routing and sub-one minimum,
         // without generic AV modifiers. Absence denotes legacy unowned storage.

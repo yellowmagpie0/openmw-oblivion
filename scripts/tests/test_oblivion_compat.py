@@ -319,6 +319,28 @@ class OblivionCompatTests(unittest.TestCase):
         self.assertEqual(first_ir, second_ir)
         self.assertEqual(REFERENCE.fingerprint(first_ir), "fnv1a64:94e1c309fb0c1d26")
 
+    def test_independent_obscript_frontend_distinguishes_signed_arguments_from_subtraction(self):
+        source = (
+            "short amount\nbegin gamemode\nset amount to 4 - 5\n"
+            "SetSceneIsComplex -1\nCapture 8 -3 -0.5 (amount - 2)\nend\n"
+        )
+        script = REFERENCE.Parser(REFERENCE.tokenize(source)).parse()
+        body = script["blocks"][0]["body"]
+        self.assertEqual(body[0]["value"]["kind"], "Binary")
+        self.assertEqual(body[0]["value"]["operator"], "-")
+        call = body[1]["value"]
+        self.assertEqual(call["kind"], "Call")
+        self.assertEqual(call["callee"]["value"], "SetSceneIsComplex")
+        self.assertEqual(call["arguments"], [
+            {"kind": "Negate", "value": {"kind": "Integer", "value": 1}},
+        ])
+        arguments = body[2]["value"]["arguments"]
+        self.assertEqual(len(arguments), 4)
+        self.assertEqual(arguments[1], {"kind": "Negate", "value": {"kind": "Integer", "value": 3}})
+        self.assertEqual(arguments[2], {"kind": "Negate", "value": {"kind": "Float", "value": 0.5}})
+        self.assertEqual(arguments[3]["kind"], "Binary")
+        self.assertEqual(arguments[3]["operator"], "-")
+
     def test_m6_validator_rejects_duplicate_unit_identity(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary)

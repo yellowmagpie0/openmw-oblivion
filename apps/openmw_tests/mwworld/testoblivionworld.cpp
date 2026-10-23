@@ -33294,3 +33294,73 @@ TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersS
         }
     }
 }
+
+TEST(OblivionWorldTest, SceneComplexCommandUsesFrameAuthorityAndNeverAddsPersistentState)
+{
+    PopulatedMigrationFixture fixture(true,
+        "scn ActivationReceiver\nshort calls\nBegin OnActivate\nSetSceneIsComplex -1\nset calls to calls + 1\nEnd\n");
+    auto& world = fixture.mWorld;
+    auto* combat = world.getOblivionCombatService();
+    auto* scripts = world.getOblivionScriptManager();
+    ASSERT_NE(combat, nullptr);
+    ASSERT_NE(scripts, nullptr);
+    EXPECT_FALSE(combat->sceneIsComplex());
+    const auto original = world.captureOblivionRuntimeState().serializeBinary();
+    ObScript::RuntimeContext context;
+    for (std::int64_t value : std::array<std::int64_t, 5>{std::numeric_limits<std::int32_t>::min(), -1, 0, 1,
+             std::numeric_limits<std::int32_t>::max()})
+    {
+        SCOPED_TRACE(value);
+        EXPECT_EQ(ObScript::asInteger(scripts->call("SetSceneIsComplex", std::nullopt, {value}, context, {})), 0);
+        EXPECT_EQ(combat->sceneIsComplex(), value != 0);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), original);
+        auto candidate = *combat;
+        EXPECT_EQ(candidate.sceneIsComplex(), combat->sceneIsComplex());
+        candidate.beginScriptActorFrame();
+        EXPECT_FALSE(candidate.sceneIsComplex());
+        EXPECT_EQ(combat->sceneIsComplex(), value != 0);
+        combat->beginScriptActorFrame();
+        EXPECT_FALSE(combat->sceneIsComplex());
+    }
+    combat->setSceneIsComplex(true);
+    EXPECT_THROW(scripts->call("SetSceneIsComplex", std::nullopt, {}, context, {}), ObScript::RuntimeError);
+    EXPECT_TRUE(combat->sceneIsComplex());
+    EXPECT_FALSE(world.toggleScripts());
+    combat->beginScriptActorFrame();
+    EXPECT_FALSE(combat->sceneIsComplex());
+    EXPECT_TRUE(world.toggleScripts());
+    ASSERT_TRUE(scripts->dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    EXPECT_TRUE(combat->sceneIsComplex());
+    const auto scripted = world.captureOblivionRuntimeState();
+    ASSERT_EQ(scripted.mScriptInstances.size(), 1u);
+    ASSERT_FALSE(scripted.mScriptInstances.front().mLocals.empty());
+    EXPECT_EQ(std::get<std::int64_t>(scripted.mScriptInstances.front().mLocals.front()), 1);
+    combat->clear();
+    EXPECT_FALSE(combat->sceneIsComplex());
+}
+
+TEST(OblivionWorldTest, SceneComplexFlagFollowsRuntimeAuthoritySwapsAndScriptMutationGuard)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto* original = world.getOblivionCombatService();
+    auto* scripts = world.getOblivionScriptManager();
+    ASSERT_NE(original, nullptr);
+    ASSERT_NE(scripts, nullptr);
+    original->setSceneIsComplex(true);
+    auto archive = world.retainSimulation();
+    ASSERT_TRUE(archive.detach());
+    auto* candidate = world.getOblivionCombatService();
+    ASSERT_NE(candidate, original);
+    EXPECT_FALSE(candidate->sceneIsComplex());
+    candidate->setSceneIsComplex(true);
+    candidate->beginScriptActorFrame();
+    ASSERT_TRUE(archive.restore());
+    EXPECT_EQ(world.getOblivionCombatService(), original);
+    EXPECT_TRUE(original->sceneIsComplex());
+    auto retained = scripts->retainRuntime();
+    ObScript::RuntimeContext context;
+    EXPECT_THROW(scripts->call("SetSceneIsComplex", std::nullopt, {std::int64_t(0)}, context, {}), std::logic_error);
+    EXPECT_TRUE(original->sceneIsComplex());
+    ASSERT_TRUE(retained.restore());
+}

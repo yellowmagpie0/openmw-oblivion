@@ -17775,3 +17775,37 @@ See [M15-SCRIPTED-SPEECH-HISTORY-VERIFICATION.json](M15-SCRIPTED-SPEECH-HISTORY-
 INFO AddTopics effects remain outside this change; the 105 winning installed Hit
 INFOs and this fixture have no NAME entries. Automatic common-hit speech wiring
 and the remaining normal-input/opponent/mastery/restart gates are still open.
+
+
+### Transient scene complexity and frame ownership
+
+`SetSceneIsComplex` now writes the active native combat authority. The next
+physical frame consumes the previous value, limiting fixed physics substeps to
+two rather than three; the engine clears it before script/actor processing,
+including frames with scripts disabled. Command statements now pass signed
+arguments to their callee; set/if arithmetic keeps expression subtraction. The
+independent Python frontend follows this grammar. The flag follows retained
+simulation exchange and is absent from save state; schema 64 is unchanged.
+
+The hash-identified original executable passes 270 full setter cases and 1,536
+three-frame caller/reset cycles. Production results match all 4,608 frame
+observations exactly. Missing-reset and ignored-limit controls fail 1,032 and 296
+frames respectively. Both full engine profiles pass 1,869 tests; sanitizer leak
+detection is disabled. Normal components pass 3,017 tests, sanitizer ESM4
+components pass 869, and all 21 ObScript sanitizer cases and 394 Python
+tests pass. All 11,098 official units compile with zero frontend failures; the
+independent Python AST/IR comparison agrees. The changed grammar affects 401
+portable units while original source/SCDA identity remains unchanged. Compile,
+parser and build-launch failures are retained.
+
+Rendered 5/60 FPS courses issue signed values 1, -1, 0 through the loaded command
+path. Each has exactly two following-frame limit events, no later flag leakage,
+and a normal F5 schema 64 save. Both reviewed captures show the prison scene,
+HUD and minimap. Both compile 10,470 units without failures or ScriptManager
+diagnostics; each separately records 31 unrelated deferred startup commands
+(AddTopic 24, SetUnconscious 5, RemoveSpell 1, ModDisposition 1).
+
+See [M15-SCENE-COMPLEX-VERIFICATION.json](M15-SCENE-COMPLEX-VERIFICATION.json).
+The original rendering byte BA7A04 remains outside this mechanical implementation.
+These courses do not close normal-input melee or fresh-restart gates. Automatic
+common-hit speech and the remaining M15S4 delivery gates are still open.

@@ -2303,6 +2303,17 @@ namespace MWWorld
             }
             return std::int64_t(0);
         }
+        if (name == "setsceneiscomplex")
+        {
+            auto* combat = mWorld.getOblivionCombatService();
+            if (!combat || arguments.empty())
+                throw ObScript::RuntimeError("OBSV115", "SetSceneIsComplex requires native frame authority and an integer", name);
+            combat->setSceneIsComplex(boundedCount(argument(0)) != 0);
+            trace("setsceneiscomplex value=" + std::string(combat->sceneIsComplex() ? "true" : "false"));
+            if (auto* observation = mWorld.getOblivionObservation())
+                observation->record("scene-complex-command", {{"value", combat->sceneIsComplex()}});
+            return std::int64_t(0);
+        }
         if (name == "getplayerinseworld")
         {
             const auto* combat = mWorld.getOblivionCombatService();
