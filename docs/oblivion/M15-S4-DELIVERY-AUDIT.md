@@ -12302,3 +12302,36 @@ See [M15-BASE-IDENTITY-VERIFICATION.json](M15-BASE-IDENTITY-VERIFICATION.json).
 Automatic common-hit notifications, GetFriendHit producer/expiry/lifecycle/
 persistence, Player audio dispatch and the remaining full M15S4 gameplay gates
 remain open.
+
+
+### Friend-hit counter storage (intermediate component)
+
+`ESM4::FriendHitCounters` implements one actor's ordered extra-0x4E state:
+lazy owner presence, first-match queries/removal, head insertion, wrapping
+unsigned-short counts and unchanged timers on repeated hits. It retains
+allocated-empty owners, zero counts, duplicate order and finite timer bits.
+Updates advance every timer before expiry. Native removal resets traversal to
+head.next; a promoted expired head survives until the next admitted update.
+Invalid supported-domain inputs fail without partially advancing timers.
+
+Full original instruction probes establish ownership, all count values and
+ordered expiry. Direct C++ comparison matches 327,706 observations: 65,536
+owner/target queries, 131,072 wrap queries, 131,072 entry snapshots and 26 expiry
+cases. A count-only comparison initially missed a timer-reset mutation; the
+expanded comparison rejects that mutation plus inclusive expiry and promoted
+head rechecking. Both attempts are retained. Seven new component tests cover
+the native boundaries and invalid-input atomicity.
+
+The independent extra save/load probe passes nine cases, preserving exact
+count/timer bits and allocated-empty presence, and reversing entry order on
+load. Its form-ID encoder/decoder are identity boundaries. Postload target
+fixup, outer actor save admission and actual game persistence remain unproved.
+Expiry is admitted through a current combat package; Player's virtual package
+getter returns null. Global counter delta differs from actor update duration.
+
+See [M15-FRIEND-HIT-STORAGE-VERIFICATION.json](M15-FRIEND-HIT-STORAGE-VERIFICATION.json)
+and the editable [probe recipe](../../scripts/data/oblivion_compat/m15_friend_hit_storage_oracle_cases.json).
+This component has no production caller yet. GetFriendHit, notification
+classification/disposition inputs, actor update scheduling, fork save schema,
+automatic common-hit phases, Player audio and full M15S4 runtime gates remain
+open. This chunk adds no runtime or end-to-end acceptance claim.

@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "purpose": "Native extra 0x4E storage only; producer, scheduler and fork save integration remain open.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_points": {
+    "owner_increment": "0x420e00",
+    "owner_remove": "0x420eb0",
+    "owner_query": "0x420ed0",
+    "constructor": "0x42a980",
+    "entry_increment": "0x42aa70",
+    "entry_query": "0x42aae0",
+    "entry_remove": "0x42afc0",
+    "update": "0x42aff0",
+    "list_remove": "0x65c620",
+    "extra_save": "0x421a00",
+    "extra_load": "0x426a90"
+  },
+  "layout": {
+    "actor_extra_offset": 68,
+    "extra_type": 78,
+    "extra_list_offset": 12,
+    "entry_target_offset": 0,
+    "entry_count_offset": 4,
+    "entry_timer_offset": 8
+  },
+  "owner_sequences": {
+    "operations": [
+      "increment owner0 target0",
+      "increment owner0 target1",
+      "increment owner1 target0",
+      "increment owner1 target1",
+      "remove owner0 target0",
+      "remove owner0 target1",
+      "remove owner1 target0",
+      "remove owner1 target1"
+    ],
+    "length": 4,
+    "all_sequences": 4096,
+    "queries_after_each_operation": 4,
+    "boundaries": [
+      "allocator 0x401f00",
+      "free 0x401f20",
+      "single-thread locks 0x401020/0x401040"
+    ]
+  },
+  "increment": {
+    "starting_counts": [
+      0,
+      65535
+    ],
+    "enumerate_every_count": true,
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "existing_timer_bits": 1067450368,
+    "first_matching_duplicate": true,
+    "existing_timer_unchanged": true,
+    "new_entry_at_head": true
+  },
+  "expiry": {
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "timer_delta_global": "0xb33e9c",
+    "threshold_global": "0xb368a0",
+    "cases": [
+      {
+        "cw": 639,
+        "times": [
+          0
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          0.0
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": []
+      },
+      {
+        "cw": 639,
+        "times": [
+          1
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          1.0
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": []
+      },
+      {
+        "cw": 639,
+        "times": [
+          1.0000001192092896
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          1.0000001192092896
+        ],
+        "remaining": [],
+        "freed_payloads": [
+          0
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          0.9999999403953552
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          0.9999999403953552
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": []
+      },
+      {
+        "cw": 639,
+        "times": [
+          0
+        ],
+        "delta": 1,
+        "threshold": 1,
+        "after_times": [
+          1.0
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": []
+      },
+      {
+        "cw": 639,
+        "times": [
+          0
+        ],
+        "delta": 1.0000001192092896,
+        "threshold": 1,
+        "after_times": [
+          1.0000001192092896
+        ],
+        "remaining": [],
+        "freed_payloads": [
+          0
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          -1
+        ],
+        "delta": 0,
+        "threshold": 0,
+        "after_times": [
+          -1.0
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": []
+      },
+      {
+        "cw": 639,
+        "times": [
+          0,
+          0
+        ],
+        "delta": 2,
+        "threshold": 1,
+        "after_times": [
+          2.0,
+          2.0
+        ],
+        "remaining": [
+          1
+        ],
+        "freed_payloads": [
+          0
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          0,
+          0,
+          0
+        ],
+        "delta": 2,
+        "threshold": 1,
+        "after_times": [
+          2.0,
+          2.0,
+          2.0
+        ],
+        "remaining": [
+          1
+        ],
+        "freed_payloads": [
+          0,
+          2
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "delta": 2,
+        "threshold": 1,
+        "after_times": [
+          2.0,
+          2.0,
+          2.0,
+          2.0
+        ],
+        "remaining": [
+          1
+        ],
+        "freed_payloads": [
+          0,
+          2,
+          3
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          0,
+          2,
+          2
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          0.0,
+          2.0,
+          2.0
+        ],
+        "remaining": [
+          0
+        ],
+        "freed_payloads": [
+          1,
+          2
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          2,
+          0,
+          2
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          2.0,
+          0.0,
+          2.0
+        ],
+        "remaining": [
+          1
+        ],
+        "freed_payloads": [
+          0,
+          2
+        ]
+      },
+      {
+        "cw": 639,
+        "times": [
+          2,
+          2,
+          0
+        ],
+        "delta": 0,
+        "threshold": 1,
+        "after_times": [
+          2.0,
+          2.0,
+          0.0
+        ],
+        "remaining": [
+          1,
+          2
+        ],
+        "freed_payloads": [
+          0
+        ]
+      }
+    ],
+    "algorithm": "Advance every timer with a float store. Remove strictly greater than threshold; after ANY removal restart at head.next. Retain allocated-empty owner.",
+    "boundaries": [
+      "free 0x401f20"
+    ]
+  },
+  "persistence_probe": {
+    "entry_counts": [
+      0,
+      1,
+      2
+    ],
+    "save_flags": [
+      0,
+      32,
+      4294967295
+    ],
+    "boundaries": [
+      "generic buffer write 0x45b9a0/read 0x4534d0",
+      "identity form-ID encode 0x45f7a0/decode 0x45ba00",
+      "debug block predicate 0x45a170 false",
+      "same allocation/lock boundaries as owner probe"
+    ],
+    "wire": "uint16 extra count, byte 0x4e, uint16 entry count, then target FormID uint32/count uint16/timer bits uint32 for each entry",
+    "observed": "Allocated empty extra survives. Zero count, negative zero and adjacent float timer bits survive. Native loader prepends, reversing wire order.",
+    "unexecuted": [
+      "postload reference fixup",
+      "outer actor save admission",
+      "actual game save/reload"
+    ]
+  },
+  "expiry_admission": {
+    "actor_update": "0x5faae0",
+    "requires": [
+      "not dead",
+      "current combat package through virtual +0x330",
+      "Player byte +0x6e5 and signed Player +0x590 suppression gate absent"
+    ],
+    "notes": [
+      "Character/Creature +0x330 is 0x5e6190: process+8 package with type byte +0x20 == 0x0c",
+      "Player +0x330 is 0x6f7070 and returns null",
+      "Actor elapsed time supplied to combat update differs from global delta read by counter expiry",
+      "Meanings of suppression inputs and live disposition/controller projections remain under investigation"
+    ]
+  }
+}

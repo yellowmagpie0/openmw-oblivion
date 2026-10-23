@@ -1,0 +1,406 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Native extra-0x4E friend-hit storage component only",
+  "full_M15S4_acceptance": false,
+  "production_integration": false,
+  "runtime_acceptance": false,
+  "fork_persistence_acceptance": false,
+  "tested_source": {
+    "head": "52ab36117aaf10942a608f631b87d1374fdce439",
+    "source_fingerprint": "4008eb88e09aa0a9e51d3c0924e0af220d65b801447e2af62501916f6ce0c615"
+  },
+  "tested_source_files": [
+    {
+      "path": "components/CMakeLists.txt",
+      "sha256": "3421c4ebd5f7ba9b4546d322111ed8288be6a3fbbc6890fe589353fa4872405a",
+      "bytes": 21867
+    },
+    {
+      "path": "apps/components_tests/CMakeLists.txt",
+      "sha256": "464b4c3d7bfb6f6f45a3e70e2b6baa00a00727b8b71ae9b8322fc8871e917fef",
+      "bytes": 5602
+    },
+    {
+      "path": "components/esm4/friendhit.hpp",
+      "sha256": "143117e360a1ee769401f9c818598cf2c638cf6379e06c99f01a3a2e9fd1dbc7",
+      "bytes": 1365
+    },
+    {
+      "path": "components/esm4/friendhit.cpp",
+      "sha256": "1ce23ea626f8903ef487f8abf6aa7cc9cba8f063704344e395bec851be2e2b0a",
+      "bytes": 2541
+    },
+    {
+      "path": "apps/components_tests/esm4/friendhit.cpp",
+      "sha256": "a46434e49652178c73a50674c7431b775c4bf8a9a6fcd5a3ed529c42fed2171b",
+      "bytes": 6322
+    }
+  ],
+  "tested_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/tested-cpp.patch",
+    "sha256": "9c62c8b32f2e88468793c6b2c3d9469cf0ebd26b6146acb5d704f97ce3a4ed39",
+    "bytes": 11878
+  },
+  "editable_probe_recipe": {
+    "path": "scripts/data/oblivion_compat/m15_friend_hit_storage_oracle_cases.json",
+    "sha256": "0cad99b6b103a9277a6edd96574f21f597ef98f4b693ac827eb063ddd3e6eddc",
+    "bytes": 7285
+  },
+  "checks": {
+    "schema_version": 1,
+    "passed": true,
+    "commands": [
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+          "--target",
+          "components-tests",
+          "-j",
+          "6"
+        ],
+        "log": "components-build.log",
+        "returncode": 0,
+        "seconds": 9.892
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "components-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.065
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+          "--gtest_filter=*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/components.xml"
+        ],
+        "log": "components.log",
+        "returncode": 0,
+        "seconds": 13.203
+      },
+      {
+        "argv": [
+          "cmake",
+          "--build",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+          "--target",
+          "components-tests",
+          "-j",
+          "6"
+        ],
+        "log": "sanitize-build.log",
+        "returncode": 0,
+        "seconds": 14.259
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+          "--gtest_list_tests"
+        ],
+        "log": "sanitize-inventory.txt",
+        "returncode": 0,
+        "seconds": 0.266
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+          "--gtest_filter=ESM4*",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/sanitize.xml"
+        ],
+        "log": "sanitize.log",
+        "returncode": 0,
+        "seconds": 32.47
+      }
+    ],
+    "results": {
+      "components": {
+        "executed": 3032,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e02c5944622893e668ad44f8ec8d57d4dfb9bc5ed5eb7ef83db53d67df7508c5",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "57b64e8b72c449c3866bc3a46989304dd7f6738f8828ce37d1509b39c676b2b4",
+        "inventory_sha256": "4a31f124b05b5aef84852ea00897932aa78375bcfd868c6a7fcd9e64601af122",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 883,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "a37eed9cd7cabdcd285a4a1e393f565faa375e9290e3cac5c389c6bc1b234623",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "620142119cf9ed39812c65e8fb48cf115d958e148f678d755050134a61027db4",
+        "inventory_sha256": "5ae0ed9ff2481a35b03dd9a2cb003b03628f7464bb628970bfdfbaeb769110b4",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "source_before": {
+      "head": "52ab36117aaf10942a608f631b87d1374fdce439",
+      "source_fingerprint": "4008eb88e09aa0a9e51d3c0924e0af220d65b801447e2af62501916f6ce0c615"
+    },
+    "source_after": {
+      "head": "52ab36117aaf10942a608f631b87d1374fdce439",
+      "source_fingerprint": "4008eb88e09aa0a9e51d3c0924e0af220d65b801447e2af62501916f6ce0c615"
+    }
+  },
+  "independent_comparison": {
+    "passed": true,
+    "owner_sequences": 4096,
+    "owner_queries": 65536,
+    "wrap_queries": 131072,
+    "wrap_state_snapshots": 131072,
+    "expiry_cases": 26,
+    "total_observations": 327706,
+    "corpora": {
+      "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/corpus.json": "ca844d9cec822db070c896dbcb2d12326036515caa67a113723485f9b27d5018",
+      "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/corpus.bin": "2174c3b643659118a9fc7d0907301d9c016218a61233c1160175b72287c2c596",
+      "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry-corpus.json": "3c4ddd944f15da68093f8649b41310ef5e976c3e5832d57968a9ecb8e535de5b"
+    },
+    "request_sha256": "d181806cf3458b921fc9065916d5f09311b53cefc60dea4f5266559929c8854e",
+    "observed_sha256": "02cd75c58fb5c8c16c1f72bd4cfd336e4fd4c9669be002926f150472044711cd",
+    "scope": "Standalone C++ friendhit.cpp + formkey.cpp direct comparison with original executable corpora. No runtime producer, actor update admission, codec, dialogue or gameplay claim.",
+    "cpp_comparator": {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/cpp-comparator",
+      "sha256": "0d8b7a24e8d2a3ce03008576c68ef57f88632abae316c2b73cdaf41230b6dedb",
+      "bytes": 126784,
+      "compile_argv": [
+        "c++",
+        "-std=c++20",
+        "-O2",
+        "-I",
+        ".",
+        "/tmp/m15-friend-hit-compare.cpp",
+        "components/esm4/friendhit.cpp",
+        "components/esm/formkey.cpp",
+        "-o",
+        "/tmp/m15-friend-hit-compare"
+      ]
+    }
+  },
+  "mutation_checks": {
+    "passed": true,
+    "mutations": [
+      {
+        "mutation": "expiry-equality",
+        "rejected": true,
+        "mismatched_observations": 4,
+        "first_mismatch": 327681,
+        "observed": "1 0",
+        "expected": "1 1 0 5 1065353216",
+        "source_sha256": "4221150e1a34d01cc59a0a4b84a3e28329c66baec00a8e59265085236d2719d4"
+      },
+      {
+        "mutation": "recheck-promoted-head",
+        "rejected": true,
+        "mismatched_observations": 8,
+        "first_mismatch": 327687,
+        "observed": "1 0",
+        "expected": "1 1 1 5 1073741824",
+        "source_sha256": "a5b2110d077330f1cff1763aafee84d93decfd074cb3e6b99a03cf23e4361c35"
+      },
+      {
+        "mutation": "reset-existing-timer",
+        "rejected": true,
+        "mismatched_observations": 131072,
+        "first_mismatch": 65537,
+        "observed": "1 1 0 1 0",
+        "expected": "1 1 0 1 1067450368",
+        "source_sha256": "b8bf684b6ce4604f00d4e9b91d706aa65575e146066091576ceef53a436d2205"
+      }
+    ]
+  },
+  "independent_native_persistence_probe": {
+    "passed": true,
+    "cases": 9,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "28bf954183c83831648953771111d7135260af20f47bc1592263e8ffac562d69",
+    "scope": "Full421A00 extra-data save and426A90 load, actual RTTI and constructor/head insertion, owned native ExtraFriendHitList4E. Generic byte buffer write45B9A0/read4534D0 and form-ID encode45F7A0/decode45BA00 are boundaries; identity mapping supplied. Debug-block predicate45A170false. Native field bytes count ushort/timer float bits preserved, list order reverses on load, empty allocated owner persists. Restored reference fixup and outer actor save-admission/runtime are not executed."
+  },
+  "retained_failed_attempt": "friend-hit-storage-comparison-01 initially queried only counts after increments and missed a timer-reset mutant; comparison-02 adds raw timer snapshots and rejects it.",
+  "limitations": [
+    "No production callers added; GetFriendHit integration remains open.",
+    "Expiry actor scheduling/admission and notification classification need runtime projections.",
+    "Original persistence probe excludes postload reference fixup and outer actor save admission; fork codec not changed.",
+    "No engine/runtime/rendered/save-restart course run for this component.",
+    "Sanitizer selection ESM4* covers 883 cases, ASan leak detection disabled.",
+    "Full M15S4 common hit, Player audio and remaining normal-input acceptance gates remain open."
+  ],
+  "evidence_pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/verification.json",
+      "sha256": "bd51091500c6e6587b71e796669d93c9752996fc940bb819467efffd76ed9d44",
+      "bytes": 891
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/corpus.json",
+      "sha256": "ca844d9cec822db070c896dbcb2d12326036515caa67a113723485f9b27d5018",
+      "bytes": 497585
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/probe.py",
+      "sha256": "93c2f1029168662b07ba16f2eb92289c1d0f392f818cce92e83957b36573bb19",
+      "bytes": 4419
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/verification.json",
+      "sha256": "563881aef02e47bc4ab8e7a74b598193fd12a1be0c322605372fa6cb74be3d99",
+      "bytes": 726
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/corpus.bin",
+      "sha256": "2174c3b643659118a9fc7d0907301d9c016218a61233c1160175b72287c2c596",
+      "bytes": 786432
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/probe.py",
+      "sha256": "30779347d1d6bad13e5884ff17963ee103af08f6c395ec1f9a1ce6c3c5575a1a",
+      "bytes": 3088
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry-verification.json",
+      "sha256": "4a5ece9b45dfc2bb9c9085e49adfea6f23ff650f4679fac7cd24994c66306ba2",
+      "bytes": 607
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry-corpus.json",
+      "sha256": "3c4ddd944f15da68093f8649b41310ef5e976c3e5832d57968a9ecb8e535de5b",
+      "bytes": 3055
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry.py",
+      "sha256": "20aaf724a2e9b47b22d362ff02b272b4512ae23e71124cbf2561273ca4d1d445",
+      "bytes": 3542
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-save-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-save-oracle-01/verification.json",
+      "sha256": "bb484202d950d1a40301db8037891945aaac057ce8df83392cb65e1daa2516d9",
+      "bytes": 719
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-save-oracle-01/corpus.json",
+      "sha256": "28bf954183c83831648953771111d7135260af20f47bc1592263e8ffac562d69",
+      "bytes": 4093
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-save-oracle-01/probe.py",
+      "sha256": "78e0c5916ac57b031cbcfd80932e8d5325a65b89c7395a90403270e2a5c647b6",
+      "bytes": 4826
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-01/verification.json",
+      "sha256": "e36138e7596faa7ad0f07ab1fe0f0f547499985acdcde34c93a9e6f86a406fde",
+      "bytes": 999
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-01/mutation-attempt-failure.json",
+      "sha256": "7a6f85da2ade25d01f0dc7a8a76f02b05943fd95dc8c9a3cb616f31b3996edd8",
+      "bytes": 231
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/verification.json",
+      "sha256": "0c43710ace2ac6d6fcd134c2daf3043b2f84cfecab65b863d806a52d201d2dd7",
+      "bytes": 1516
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/compare.py",
+      "sha256": "44f9f13eb208e51de726404de6dc4ee185d8038d11952e5c15c952cf0307d06a",
+      "bytes": 2734
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/driver.cpp",
+      "sha256": "ba804a6d1ebaa8a094f174bc34a4c103aa1537c8bcb294276c4b905870daf53e",
+      "bytes": 1320
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/requests.txt",
+      "sha256": "d181806cf3458b921fc9065916d5f09311b53cefc60dea4f5266559929c8854e",
+      "bytes": 8072886
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/observed.txt",
+      "sha256": "02cd75c58fb5c8c16c1f72bd4cfd336e4fd4c9669be002926f150472044711cd",
+      "bytes": 3888112
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/mutations.json",
+      "sha256": "1fd05d7c4c0de656eac03883af6e012555817ecef170df9fbb71c4d1648b30d9",
+      "bytes": 954
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/mutations.py",
+      "sha256": "651ecf4d3d23c58f5dab62383974242dfabf34d95979861fb4e56a8051ff45c2",
+      "bytes": 1628
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-comparison-02/tested-cpp.patch",
+      "sha256": "9c62c8b32f2e88468793c6b2c3d9469cf0ebd26b6146acb5d704f97ce3a4ed39",
+      "bytes": 11878
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-01/verification.json",
+      "sha256": "f40d466992ee775794c04c0713a64fc9be007bd82c6b543d588eb27b400efcf9",
+      "bytes": 3950
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-02/verification.json",
+      "sha256": "b109e86fcaffdf5f7331c6f34456aad4d3317f92b3fec0efadcea5dee28f3eaf",
+      "bytes": 3908
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/verification.json",
+      "sha256": "c245ce98cc1cf40ec2c4c0c487e7fb4c898537844f19e96721b3aa17f176b20c",
+      "bytes": 3909
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/components.xml",
+      "sha256": "57b64e8b72c449c3866bc3a46989304dd7f6738f8828ce37d1509b39c676b2b4",
+      "bytes": 2345130
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/components-inventory.txt",
+      "sha256": "4a31f124b05b5aef84852ea00897932aa78375bcfd868c6a7fcd9e64601af122",
+      "bytes": 193001
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/sanitize.xml",
+      "sha256": "620142119cf9ed39812c65e8fb48cf115d958e148f678d755050134a61027db4",
+      "bytes": 1620853
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/friend-hit-storage-checks-03/sanitize-inventory.txt",
+      "sha256": "5ae0ed9ff2481a35b03dd9a2cb003b03628f7464bb628970bfdfbaeb769110b4",
+      "bytes": 193001
+    }
+  ]
+}
