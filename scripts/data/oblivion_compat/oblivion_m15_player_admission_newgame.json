@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "name": "native-player-admission-sanitized-new-game-five-frames-save",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\ncontent=Knights.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/readiness\"\ncontent=m15-player-ready.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Sound]\nmaster volume = 1.0\nmusic volume = 0.4\nsfx volume = 1.0\nvoice volume = 1.0\n[General]\nscreenshot format = png\n"
+    },
+    {
+      "path": "readiness/m15-player-ready.omwscripts",
+      "content": "PLAYER: scripts/player-ready.lua\n"
+    },
+    {
+      "path": "readiness/scripts/player-ready.lua",
+      "content": "local frames=0\nreturn {{engineHandlers={{onFrame=function() frames=frames+1; if frames==5 then print('M15 player-admission frame-ready') end end}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "M15 player-admission frame-ready",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "path": "m15-events.jsonl",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 90
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "fresh-player-load.png",
+      "minimum_entropy": 0.04
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": [
+        "T4ST",
+        "OMW4STATE"
+      ]
+    }
+  ],
+  "timeout_seconds": 420,
+  "terminate_after_actions": true,
+  "expected_exit": 0,
+  "expected_log": [
+    "Writing saved game 'Quicksave'",
+    "M15 player-admission frame-ready"
+  ],
+  "forbidden_log": [
+    "Failed to load saved game",
+    "Failed to save game",
+    "Failed to start new game",
+    "native player values have not been initialized",
+    "Error in frame",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "ERROR: AddressSanitizer",
+    "runtime error:"
+  ],
+  "environment": {
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "native-player-admission-newgame-sanitized-01",
+    "OPENMW_M15_EPOCH": "3",
+    "ALSOFT_DRIVERS": "null",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "OPENMW_DISABLE_CRASH_CATCHER": "1"
+  }
+}

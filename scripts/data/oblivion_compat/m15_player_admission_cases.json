@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "scope": "Native Player admission before first-person renderer construction; bounded new-game/save/fresh-load checks only",
+  "readiness": "Added Player Lua module prints after five actual onFrame calls; official plugins unchanged",
+  "expected": {
+    "schema": 63,
+    "owner": 0,
+    "process": 1,
+    "process_action": -1,
+    "process_knocked_state": 0,
+    "source_equals_live_load": "Native Player stored float bits and metadata; shared combat RNG cursor",
+    "resave": "Native Player identity/inventory, base slots, form contributions, passive ledger, process metadata; modifiers may advance during unpaused frames",
+    "process_evidence": "Different source/restart PIDs, matching save and pristine/load hashes, save tick after load tick",
+    "engine_errors": "Zero in positive instrumented newgame and fresh normal-load courses"
+  },
+  "input_preparation": "Copy a fresh newgame Quicksave to OUTPUT/userdata/saves/PlayerAdmission/Quicksave.omwsave and retain OUTPUT/input-pristine.omwsave before running the restart manifest. Never overwrite historical evidence.",
+  "validation_declaration": "Frontend action contracts were in launch manifests; semantic comparisons were authored at launch or afterward, not a formal preregistered native-rule experiment.",
+  "open_failures": [
+    "Fullaudio01 fixed wall wait missed later scripted commands",
+    "Fullaudio02 stage-gated course still fails Say: unresolved speaker produces MissingContext on INFO content:oblivion.esm:0807ef",
+    "First restart manifest waited for music with no-sound=1; corrected readiness uses five Player frames",
+    "Vanilla scripted audio course also emits numeric/actor-initialization diagnostics; separate clean boot/load courses have zero engine errors"
+  ],
+  "full_M15S4_acceptance": false,
+  "receipt": "docs/oblivion/M15-PLAYER-ADMISSION-VERIFICATION.json"
+}

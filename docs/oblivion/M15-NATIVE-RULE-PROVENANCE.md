@@ -17486,3 +17486,38 @@ the editable case protocol. Live Say/SayTo admission remains pending predicate
 authority fixes; this chunk adds the canonical data and composition helper.
 Automatic common-hit speech/resource/condition preparation and publication,
 INFO history/results and complete M15S4 gameplay/restart acceptance remain open.
+
+
+## Native Player admission before first-person construction
+
+A fresh debugger trace identifies the new-game failure before any audio course:
+first-person NpcAnimation construction queries the native process action, which
+reads Player values before Actors::addActor admits them. World::startNewGame now
+uses normal native admission immediately after setupPlayer and before rendering.
+Initial native construction already supplies action -1 and knocked state 0.
+
+Both full engine inventories pass 1,857 tests after this change. The instrumented
+new-game frontend and a distinct normal process loading its save each reach five
+actual Player Lua frames, save through F5, render the prison/HUD and exit cleanly
+with zero engine errors. The observation module only counts Player frames;
+official record plugins are unchanged. Independent Python save decoding and the
+actual load-complete live snapshot establish exact native Player storage bits
+and shared RNG cursor at load, plus selected Player identity, inventory, base
+slots, form contributions, passive ledger and process metadata on resave. This
+is bounded startup/persistence acceptance, not a full S4 combat trajectory.
+
+The full scripted audio regression still fails. The first wall-clock wait ended
+before later stages; a retained retry waits for the final actual stage without
+removing expected command checks. SayTo, sound and weather execute, but Say has
+an unresolved speaker and stops on missing INFO condition context. The scripted
+course also reports vanilla VM numeric and actor-initialization diagnostics.
+Those failures are retained separately from the positive clean boot/load course.
+A first restart readiness check incorrectly waited for music with sound
+disabled; the corrected manifest waits for five actual Player frames.
+
+[M15-PLAYER-ADMISSION-VERIFICATION.json](M15-PLAYER-ADMISSION-VERIFICATION.json)
+pins source, both engine checks, debugger evidence, captures, saved/live states,
+semantic comparisons, editable manifests and retained failures. Leak checks
+remain disabled. Automatic common-hit integration, quest predicate authority,
+INFO history/results, general Say context and complete M15S4 normal-input and
+fresh-process combat acceptance remain open.

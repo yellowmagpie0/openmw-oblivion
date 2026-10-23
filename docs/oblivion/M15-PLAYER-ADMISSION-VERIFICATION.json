@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Early native Player admission fixes new-game first-person constructor query; bounded startup/save/fresh-load validation only. Full scripted audio remains failed.",
+  "tested_source": {
+    "head": "0389474680dc134d8f364ba7235e5fb12f59f325",
+    "source_fingerprint": "d07f05219632f438b651b2465c0c0853d635917d15f8c0ff185721401b55e5ab"
+  },
+  "tested_source_files": {
+    "apps/openmw/mwworld/worldimp.cpp": {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "6c632290daaa6150e6dd1856450c3a8926c8cacb5d0aef5b14bebe4e1945a4d6",
+      "bytes": 438993
+    }
+  },
+  "checks": {
+    "normal": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-normal-01/verification.json",
+        "sha256": "d9e4e4b628778bed42650c75dd4563a4bf19cf885d39c5cf4754e0854d855006",
+        "bytes": 2149
+      },
+      "source": {
+        "head": "0389474680dc134d8f364ba7235e5fb12f59f325",
+        "source_fingerprint": "d07f05219632f438b651b2465c0c0853d635917d15f8c0ff185721401b55e5ab"
+      },
+      "results": {
+        "engine": {
+          "executed": 1857,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d90747a15871c48ca9baa3638d447798656932226b64699bbd39136f9cf7c7bb",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d109315a80218a3da5b3757c3574bab630a5838b7c5061611cda9e47eecb855a",
+          "inventory_sha256": "4d6d2451a2196ab06335aa2c2eb2702175dae123b648425c958480872482c44c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-sanitized-01/verification.json",
+        "sha256": "0ab8d86f960a6c0638505bc35c69a38eb389caf806e8cd9b3a84016cae0ffa20",
+        "bytes": 2239
+      },
+      "source": {
+        "head": "0389474680dc134d8f364ba7235e5fb12f59f325",
+        "source_fingerprint": "d07f05219632f438b651b2465c0c0853d635917d15f8c0ff185721401b55e5ab"
+      },
+      "results": {
+        "engine": {
+          "executed": 1857,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a9483eed6237ed0fab4c199edb68206f60ed039dfab3d7574c40a38b6a2917dc",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "68767ec636486acb0edf8c67e113f786fe034518d66ee3f1887ec36412b20a64",
+          "inventory_sha256": "4d6d2451a2196ab06335aa2c2eb2702175dae123b648425c958480872482c44c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "previous_unchanged_component_checks": {
+    "path": "docs/oblivion/M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json",
+    "sha256": "a692c63ae5821c4d49d374b6decfcf2afe0809ade9a60c278aca3c07f26224ca",
+    "bytes": 26127
+  },
+  "diagnostic": {
+    "launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-diagnostic-01/launch.json",
+      "sha256": "914fc938ba59095c5b9e5921ef4a622262fb88a48c7da8693de0b2991d07c758",
+      "bytes": 864
+    },
+    "run.py": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-diagnostic-01/run.py",
+      "sha256": "b2677eb4d35c471af17c6dd67f1c6ac13dababa0a491b49f178387f687153f4d",
+      "bytes": 1779
+    },
+    "gdb.log": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-diagnostic-01/gdb.log",
+      "sha256": "25b0772bb849ed6da9126d5218ebffce8c77f4a9868c574bae960a6b9445d1f5",
+      "bytes": 14991
+    },
+    "completion.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-diagnostic-01/completion.json",
+      "sha256": "d88d1c147780e5afcecb37d59fc5af07e35d199f569f54976ee42b2477b4970b",
+      "bytes": 76
+    }
+  },
+  "public_manifests_and_protocol": {
+    "scripts/data/oblivion_compat/oblivion_m15_player_admission_newgame.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_admission_newgame.json",
+      "sha256": "61ddf47dbc39ff3c7e283ac74e63f4f87b8835f1e6c306d38ee4eea46cab4287",
+      "bytes": 3073
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_player_admission_restart.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_admission_restart.json",
+      "sha256": "1dc9f00db49ae4d7c33fa47462babbddcc4895d0969fd8ef937977421ed0b863",
+      "bytes": 3136
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_player_admission_audio.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_player_admission_audio.json",
+      "sha256": "6afbe9a0030da86479a9d586c136a5da2841008d8522f8b0c3c82ee7b5adc9a3",
+      "bytes": 3669
+    },
+    "scripts/data/oblivion_compat/m15_player_admission_cases.json": {
+      "path": "scripts/data/oblivion_compat/m15_player_admission_cases.json",
+      "sha256": "b112a80a754d379abc05983ad4c29125e2b220dd9bb0df9d5af8acd106f6b0b4",
+      "bytes": 1881
+    }
+  },
+  "positive_frontend_courses": {
+    "sanitized_newgame": {
+      "scenario.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/scenario.json",
+        "sha256": "312fdc9f896a1b05cbbb59c25d8256ad67a2ecd58c464409f85986c3b5d3a4e7",
+        "bytes": 3667
+      },
+      "process.log": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/process.log",
+        "sha256": "ccc90aec7a47ec3aac37ce104939bf24d0d9160a8f30339ba1a4d78092ebe520",
+        "bytes": 1462622
+      },
+      "m15-events.jsonl": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/m15-events.jsonl",
+        "sha256": "15fe7c1336aefc2077079121871bce3d28a11a510f318077a1aedf003c71ae2e",
+        "bytes": 8248
+      },
+      "fresh-player-load.png": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/fresh-player-load.png",
+        "sha256": "0735c1d31613d3f5a59e33d5f7ead6daf2827078e022d34f66426a9e9a4b65d5",
+        "bytes": 1152221
+      },
+      "live-3-33.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/live-3-33.json",
+        "sha256": "70cc75f9ae1b534e99c8f8e5b71e13786a928c5b32af082a1da847cf5cbefd65",
+        "bytes": 7846116
+      },
+      "userdata/saves/Bendu_Olo/Quicksave.omwsave": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-newgame-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "f30a5cdb5af3131db42834f617b5a896f9fd912ce03a9aaf72b2b02d92306233",
+        "bytes": 3202000
+      }
+    },
+    "normal_fresh_load": {
+      "scenario.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/scenario.json",
+        "sha256": "a7e7602939ce0f5bdb39e0793b421acc9ecbd8e3ae49abe5bb95070e386e4ee6",
+        "bytes": 4176
+      },
+      "process.log": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/process.log",
+        "sha256": "fc90c27ebcfba23a37aa38dd686c4e2af2c3fe1663a2c96124f96a0a670dde9f",
+        "bytes": 897482
+      },
+      "m15-events.jsonl": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/m15-events.jsonl",
+        "sha256": "db7d71d44c038f2b7c9411976f80bfe07b61c5ae9eaf33b7678a495b246cb309",
+        "bytes": 1643
+      },
+      "fresh-player-load.png": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/fresh-player-load.png",
+        "sha256": "9aa759fffaccb788c0765d92d113783178dba4d56291574daf2da3bde5dd1085",
+        "bytes": 1147506
+      },
+      "live-4-2.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/live-4-2.json",
+        "sha256": "70cc75f9ae1b534e99c8f8e5b71e13786a928c5b32af082a1da847cf5cbefd65",
+        "bytes": 7846116
+      },
+      "live-4-3.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/live-4-3.json",
+        "sha256": "f611038e3fd47839804b493629b7f888f0395e5295c07efe3ac94e3400f66917",
+        "bytes": 22372407
+      },
+      "userdata/saves/PlayerAdmission/Quicksave.omwsave": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/userdata/saves/PlayerAdmission/Quicksave.omwsave",
+        "sha256": "490823bd942882c690d37adca42b5927f76cae389822e9c27d2f1796e90e5f63",
+        "bytes": 9406850
+      },
+      "input-pristine.omwsave": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-03/input-pristine.omwsave",
+        "sha256": "f30a5cdb5af3131db42834f617b5a896f9fd912ce03a9aaf72b2b02d92306233",
+        "bytes": 3202000
+      }
+    }
+  },
+  "restart_comparison": {
+    "verify_restart_normal03.py": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/verify_restart_normal03.py",
+      "sha256": "7b172f1b0fcfcf04b075ed539e7ede54c85cf1baee836ad0f72455c61c98557f",
+      "bytes": 4338
+    },
+    "restart-normal-03-verification.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-normal-03-verification.json",
+      "sha256": "c1e7b7eb9412e5363207cc0faad515099d5e6b21c515a9f88b16bed0e95c0700",
+      "bytes": 1398
+    },
+    "restart-normal-03-validation-contract.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-normal-03-validation-contract.json",
+      "sha256": "73779cd2324180a1c03d6b41fdbeb0f959852518ae6dc0db4cd383a5509697d3",
+      "bytes": 511
+    }
+  },
+  "additional_selected_restart": {
+    "verify_restart.py": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/verify_restart.py",
+      "sha256": "5fc24dcb343e0035a3a83bd5a9d0729107e8349f6809f69ae4057d6f9f06e0ff",
+      "bytes": 4146
+    },
+    "restart-verification.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-verification.json",
+      "sha256": "101d97651394dbf5051763f6131466b3ce4a5c81b0db8dfd1c8f9debea86f9cf",
+      "bytes": 1610
+    },
+    "restart-validation-contract.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-validation-contract.json",
+      "sha256": "67ff1cd2219e53f1a25fdf0c5a33e067226359f5d01119854d2b085cfc703499",
+      "bytes": 1423
+    }
+  },
+  "retained_failed_courses": {
+    "native-newgame-player-admission-audio-normal-01": {
+      "scenario.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-01/scenario.json",
+        "sha256": "c18564a4c34f76e6befd835fbb9fc7f3553780634b69fab5a4dab4a8d08855b9",
+        "bytes": 4660
+      },
+      "process.log": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-01/process.log",
+        "sha256": "3aa43254443f358057382abc8a78e4da31de0395ccbbc3470c60c5edf559dca1",
+        "bytes": 2146109
+      },
+      "obscript-report.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-01/obscript-report.json",
+        "sha256": "de3b9255386ae81ac3eaadbfc2ca1742d7272cf9246865920f32072aa1821c45",
+        "bytes": 24927000
+      }
+    },
+    "native-newgame-player-admission-audio-normal-02": {
+      "scenario.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/scenario.json",
+        "sha256": "5e8c78005ce2d1d2e506f3ee283a794e32beff32a168356e5fae23e2d7336d29",
+        "bytes": 4797
+      },
+      "process.log": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/process.log",
+        "sha256": "b805f6fd0e4bf6d0a94da607cf71883f8ddf7a5140c2a421f24f4b6d2f5b53d9",
+        "bytes": 2813631
+      },
+      "m15-events.jsonl": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/m15-events.jsonl",
+        "sha256": "c28d917bfb32c93fd1629aa0fa718b23382d171b2fbbc6b1ad83a1bb970a2643",
+        "bytes": 142740
+      },
+      "obscript-report.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/obscript-report.json",
+        "sha256": "deae245b84a7eb14af7c3c98c91ef59f518211421c07e6ed874611f982dd0f56",
+        "bytes": 27638460
+      }
+    },
+    "native-newgame-player-admission-restart-normal-01": {
+      "scenario.json": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-01/scenario.json",
+        "sha256": "ea9c2df8b2e1f051eaae4ff6ecedf50a1b13b6f71189aa493868016881378dc8",
+        "bytes": 4277
+      },
+      "process.log": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-01/process.log",
+        "sha256": "9d4287478c590b68b9309dcc9027671964e27cfa9d0ef9d14393f78bae72a1f2",
+        "bytes": 6856748
+      },
+      "m15-events.jsonl": {
+        "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-restart-normal-01/m15-events.jsonl",
+        "sha256": "8a8e2d63faae7406dba723f24445c33ebfabfd87e9df92eda38e67c3f7240882",
+        "bytes": 3133944
+      }
+    }
+  },
+  "launches": {
+    "normal.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/normal.json",
+      "sha256": "6f6771db07d167c75907408ed134b262e5a0c87b23f23106897655c266beba98",
+      "bytes": 550
+    },
+    "sanitized.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/sanitized.json",
+      "sha256": "5ff56fb7c5a628ed2958d50d51f856e51148e5a30dea9c99e5b1d83f639cf051",
+      "bytes": 598
+    },
+    "audio-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/audio-launch.json",
+      "sha256": "649fe8fa3643607ab979a2acaba0369b583d2e46859ebe8a566faeba0bf8ae41",
+      "bytes": 1208
+    },
+    "audio-normal-02-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/audio-normal-02-launch.json",
+      "sha256": "0eb6eb4a2ba2d933d9291a497f788ed2e4c33d9d8a67fc0d5de745c46aab8e5b",
+      "bytes": 1135
+    },
+    "restart-normal-01-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-normal-01-launch.json",
+      "sha256": "5693d2c98dcb69c716fc315a82ed2033272c85831097b51259758b9ac8a6585b",
+      "bytes": 1331
+    },
+    "restart-normal-02-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-normal-02-launch.json",
+      "sha256": "db31a865c620dc528b7d3d0eab9e2422472ba5bb93766a1b6894931c2c1a1373",
+      "bytes": 1318
+    },
+    "newgame-sanitized-01-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/newgame-sanitized-01-launch.json",
+      "sha256": "fe10d1d3b7f1c5811c9afe0ca52cbc10e6bd75aff5c1f1657d5a42585397c4d6",
+      "bytes": 1085
+    },
+    "restart-normal-03-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-newgame-player-admission-launch-01/restart-normal-03-launch.json",
+      "sha256": "a60c71c86007de632b5e35eaf85ada243ee7fbfe0fccee6a4095d1856037429e",
+      "bytes": 1310
+    }
+  },
+  "findings": [
+    "Fresh debugger stack stops at playerValues with a null authority: first-person NpcAnimation construction calls updateOblivionFirstPersonRoot -> oblivionProcessAction -> getPlayerValue before Actors::addActor.",
+    "World::startNewGame now invokes its normal native actor admission after setupPlayer and before renderPlayer. Initial Player construction already provides action-1 and knocked0; no query fallback or new numeric rule is added.",
+    "Full normal and ASan/UBSan engine checks each pass1857 tests; component code is unchanged after the linked decoder receipt.",
+    "Instrumented newgame and distinct normal-process load each reach five real Player frames, save via F5, render the prison/HUD and exit0 with zero engine errors. Leak checks are disabled.",
+    "Independent Python save decoding and actual load-complete live snapshot verify exact Player float storage bits/metadata and shared cursor at load; selected Player base fields, inventory, identity, passive ledger and process metadata survive resave. Source/restart PIDs differ and save/pristine/load hashes match.",
+    "The full M10 audio course remains failed. The initial fixed wall wait was replaced by final-stage acknowledgement without removing expected command checks. SayTo, sound and weather commands execute, but Say with an unresolved speaker aborts on missing condition context; vanilla VM diagnostics are retained."
+  ],
+  "limits": [
+    "Readiness-only Lua module adds an observation hook; official record plugins remain unchanged. No complete native combat-input trajectory or FPS/controller/interruption coverage is claimed.",
+    "These bounded positive courses do not waive failed fullaudio courses or other vanilla VM diagnostics. General Say/unloaded-speaker admission remains open.",
+    "Automatic common-hit speech/resource/condition preparation/publication, quest predicate authority, INFO history/results and complete M15S4 acceptance remain open.",
+    "No new original-game numerical oracle was required: this fixes ordering in the fork. Semantic inspection contracts are not described as pre-launch preregistration."
+  ],
+  "runtime_binaries": {
+    "normal": {
+      "path": "build/openmw",
+      "sha256": "3dc3eb0c6fb246bb75c6b3eeb88c2cb859a49882c8cdf8d2f055041ad5a54839",
+      "bytes": 1391802008
+    },
+    "sanitized": {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "ab3123003c7a121b7ba209a93035337288ac663d4937933e4ae4bac7319a5418",
+      "bytes": 2582740568
+    }
+  }
+}

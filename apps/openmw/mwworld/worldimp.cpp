@@ -1036,6 +1036,10 @@ namespace MWWorld
 
         // Rebuild player
         setupPlayer();
+        // First-person construction queries the native process action before
+        // rendering adds the Player to the mechanics actor registry.
+        if (mOblivionCombat)
+            activateOblivionActor(getPlayerPtr());
 
         renderPlayer();
         mRendering->getCamera()->reset();
