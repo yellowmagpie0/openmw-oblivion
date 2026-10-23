@@ -11608,3 +11608,27 @@ remain open. Full M15S4 is incomplete.
 [M15-ACTOR-MOVEMENT-RESTART-VERIFICATION.json](M15-ACTOR-MOVEMENT-RESTART-VERIFICATION.json)
 pins the tested source, selected checks, actual saves, reports, editable course
 manifests, retained failed attempts and diagnostic scripts.
+
+
+## General-hit continuation boundary
+
+A separate512-case original-instruction campaign executes5FFF52..6000B4.
+A supplied nonzero byte4F suppresses both the visual callback and force. With
+zero, the actual caller forwards five verified lanes through defender virtual398
+after attacker vector and process310 queries, then runs the existing force path.
+NPC/Creature, Speed, controller, damage, FatigueRatio, directions, both x87 words
+and CPU conversion branches are crossed. The full force suffix agrees with the
+retained independent force probe, including actual8907A0 acceleration/time stores.
+The rendering callbacks and primitive getters remain explicit boundaries.
+
+Private instruction review places general-hit reaction decisions before the
+lower-skill block Recoil roll at5FFEDF, rather than after5FFF52. Suppression4F
+initializes0 at5FECAD and can become1 after the facing predicate6131D0 at6004E0.
+The earlier general reaction/effect decisions still require independent
+composition and integration before lower-Hand-to-Hand admission. This campaign
+changes no production behavior and closes no runtime gate.
+
+[M15-GENERAL-HIT-CONTINUATION-ORACLE-VERIFICATION.json](M15-GENERAL-HIT-CONTINUATION-ORACLE-VERIFICATION.json)
+pins the hash-identified executable,512-case corpus, successful script,
+preregistrations and retained fixture failures; the editable case matrix is
+`m15_general_hit_continuation_oracle_cases.json`. Full M15S4 remains incomplete.

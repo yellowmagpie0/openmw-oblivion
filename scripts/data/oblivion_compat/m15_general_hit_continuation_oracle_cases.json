@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "Independent original general-hit visual/force continuation, separate from upstream reaction admission",
+  "receipt": "docs/oblivion/M15-GENERAL-HIT-CONTINUATION-ORACLE-VERIFICATION.json",
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x5FFF52",
+  "stop": "0x6000B4",
+  "matrix": {
+    "defender": [
+      "NPC",
+      "Creature"
+    ],
+    "suppressed": [
+      false,
+      true
+    ],
+    "speed": [
+      0,
+      13
+    ],
+    "controller": [
+      false,
+      true
+    ],
+    "prearmor_damage": [
+      0,
+      8
+    ],
+    "fatigue_ratio": [
+      0,
+      1
+    ],
+    "direction": [
+      [
+        0,
+        40,
+        0
+      ],
+      [
+        1,
+        2,
+        3
+      ]
+    ],
+    "x87": [
+      639,
+      895
+    ],
+    "cpu_conversion": [
+      0,
+      1
+    ]
+  },
+  "cases": 512,
+  "visual_inputs": {
+    "Health": 20,
+    "fraction": 0.75,
+    "process310_result": "0x12345678"
+  },
+  "full_M15S4_acceptance": false,
+  "boundaries": [
+    "Suppression byte ESP+4F supplied; no upstream decision inferred.",
+    "Attacker vector getter5E6A40, process310 and defender visual398 are recorded sinks. Exact five argument lanes checked; actual rendering is excluded.",
+    "Process2C0 supplies flags0 for actual position getter5F10E0 reference fallback; fixture correction preregistered before passing rerun.",
+    "Parent integer AV and FatigueRatio getters supplied; native NPC/Creature virtual dispatch, force547690, normalization/cap/duration and8907A0 acceleration/time storage execute.",
+    "Defender NPC/Creature only; stops6000B4 before Player-specific trailing callback or common epilogue."
+  ]
+}

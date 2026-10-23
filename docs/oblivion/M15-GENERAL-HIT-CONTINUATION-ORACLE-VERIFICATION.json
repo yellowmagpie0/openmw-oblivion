@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Independent original general-hit visual/force continuation, separate from upstream reaction admission",
+  "source_parent": "e088351a05",
+  "full_M15S4_acceptance": false,
+  "verification": {
+    "passed": true,
+    "cases": 512,
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "6844cbcbba1cb6b9637a4ffb3c6a3b5e767d5a4ab3d50ec6007a24f047bf42fd",
+    "scope": "Original5FFF52..6000B4 visual callback and force continuation; no upstream reaction or runtime acceptance",
+    "suffix_matches_existing_independent_force_probe": true,
+    "full_M15S4_acceptance": false
+  },
+  "preregistered_cases": 512,
+  "boundaries": [
+    "Suppression byte ESP+4F supplied; no upstream decision inferred.",
+    "Attacker vector getter5E6A40, process310 and defender visual398 are recorded sinks. Exact five argument lanes checked; actual rendering is excluded.",
+    "Process2C0 supplies flags0 for actual position getter5F10E0 reference fallback; fixture correction preregistered before passing rerun.",
+    "Parent integer AV and FatigueRatio getters supplied; native NPC/Creature virtual dispatch, force547690, normalization/cap/duration and8907A0 acceleration/time storage execute.",
+    "Defender NPC/Creature only; stops6000B4 before Player-specific trailing callback or common epilogue."
+  ],
+  "findings": [
+    "Suppression nonzero bypasses visual callback and force. Otherwise vector and process310 queries precede one visual398 call, which receives attacker, Health20, fraction.75, process result and output-vector pointer.",
+    "Positive Speed queries4,7,3 in that order, then controller availability; zero Speed queries4 alone. All force suffix output matches retained independent force-probe observations for identical primitives.",
+    "Private instruction review places the general reaction body600193..600523 before5FFEDF lower-skill block Recoil dispatch. Byte4F initializes0 at5FECAD and can become1 at6004E0 after the facing predicate6131D0. That predicate is the already-audited facing cone; do not label it a knockdown request.",
+    "Production lower-Hand-to-Hand admission remains disabled until the upstream general-hit decisions and their reaction/effect publication are independently verified and integrated."
+  ],
+  "retained_failures": "Attempt01 supplied wrong float stack slots to visual callback. Attempts02/03 lacked attacker process2C0 registration after adding a process for310. Corrected fixture explicitly supplies flags0; no production change or gameplay acceptance from these attempts.",
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/corpus04.json",
+      "sha256": "6844cbcbba1cb6b9637a4ffb3c6a3b5e767d5a4ab3d50ec6007a24f047bf42fd",
+      "bytes": 128713
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/failure01.json",
+      "sha256": "b9691a7a6b827bead86e37156a8e92586848b041aac052f4505ac884e0cb1c02",
+      "bytes": 381
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/failure02.json",
+      "sha256": "1999059d5b077fdc24bf9fc657ebd6a60639229f614c9dfcf3b8d2923041feac",
+      "bytes": 402
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/failure03.json",
+      "sha256": "72ff451219277742f01417a7b591604c7dc15c78d9374079f3efaf2211e502ac",
+      "bytes": 1140
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/fixture-correction-preregistration.json",
+      "sha256": "be56f0bc7858264531f9771f03f2d743f9fc69ba442cb5ba2f3e5b047c066565",
+      "bytes": 496
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/preregistration.json",
+      "sha256": "0708a1079dd2599f1487c9e43b70751f8e21adb21a303b317ce20310be38be7a",
+      "bytes": 1100
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/probe-01.py",
+      "sha256": "a46248ab952a9b87bbb4fad033b5b314d8351ca8b79ae349d96c54002524bb0f",
+      "bytes": 4299
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/probe-02.py",
+      "sha256": "58c7739d32b5357cefcb6095cd0739e5127a47dd89dc49dff2e187520aef68dd",
+      "bytes": 4304
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/probe-03.py",
+      "sha256": "54bdefffcb9c80cc3c10bfa2b51a1e68a3af29bf27e70b6780fccc9e971e9196",
+      "bytes": 4418
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/probe-04.py",
+      "sha256": "3bcbd87510c620ee2160755c77bbdd606d289b885066acf31ea44b5c79b58e3a",
+      "bytes": 4489
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-general-hit-continuation-oracle-01/verification04.json",
+      "sha256": "ca7941bb2d514c938c0d5ba1296483fcd8f3ee5e1344db242566b366a8dbf401",
+      "bytes": 430
+    }
+  ],
+  "suffix_reference": {
+    "path": "build/oblivion-compat/m15/S4/native-creature-target-reaction-03/force-report.json",
+    "sha256": "7fdb8df358eb5fd46c25b282bf3112c80ea8d6e8d529695cfa1aab6add783cf1",
+    "bytes": 596756
+  }
+}
