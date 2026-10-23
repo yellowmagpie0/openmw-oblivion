@@ -1667,6 +1667,14 @@ namespace ESM4
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
         }
+        checkSize(mDispositionModifiers.size(), "disposition modifier map");
+        if (mVersion < 66 && !mDispositionModifiers.empty())
+            throw std::runtime_error("Disposition modifiers require runtime schema66");
+        for (const auto& [pair, value] : mDispositionModifiers)
+            for (const auto& actor : {pair.first, pair.second})
+                if (!nativeActors.contains(actor) || runtimeReferenceKey(actor) != actor
+                    || ESM::FormKey::deserialize(actor.serialize()) != actor)
+                    throw std::runtime_error("Invalid or dangling disposition actor identity");
         checkSize(mNativeActorUpdateTimes.size(), "native actor update time map");
         if (mVersion < 16 && (mNativeActorManagerTime != 0.f || !mNativeActorUpdateTimes.empty()))
             throw std::runtime_error("TES4 native actor clocks require runtime-state version 16");
@@ -3185,6 +3193,16 @@ namespace ESM4
                 writer.integer<std::uint8_t>(ignored);
             }
         }
+        if (mVersion >= 66)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mDispositionModifiers.size()));
+            for (const auto& [pair, value] : mDispositionModifiers)
+            {
+                writeKey(writer, pair.first);
+                writeKey(writer, pair.second);
+                writer.integer<std::int32_t>(value);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4300,6 +4318,22 @@ namespace ESM4
                     throw std::runtime_error("Invalid friendly-hit reference boolean");
                 result.mIgnoreFriendlyHits.emplace(key, ignored != 0);
                 previous = key;
+            }
+        }
+        if (result.mVersion >= 66)
+        {
+            const auto count = reader.count();
+            std::optional<std::pair<ESM::FormKey, ESM::FormKey>> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto actorText = reader.string();
+                const auto targetText = reader.string();
+                const auto pair = std::pair{ESM::FormKey::deserialize(actorText), ESM::FormKey::deserialize(targetText)};
+                if (pair.first.isNull() || pair.second.isNull() || pair.first.serialize() != actorText
+                    || pair.second.serialize() != targetText || (previous && !(*previous < pair)))
+                    throw std::runtime_error("Noncanonical disposition modifier map");
+                result.mDispositionModifiers.emplace(pair, reader.integer<std::int32_t>());
+                previous = pair;
             }
         }
         if (!reader.eof())
@@ -5530,6 +5564,19 @@ namespace ESM4
                 stream << '\"' << escapeJson(key.serialize()) << "\":" << (ignored ? "true" : "false");
             }
             stream << '}';
+        }
+        if (mVersion >= 66)
+        {
+            stream << ",\"disposition_modifiers\":[";
+            bool first = true;
+            for (const auto& [pair, value] : mDispositionModifiers)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(pair.first.serialize()) << "\",\"target\":\""
+                    << escapeJson(pair.second.serialize()) << "\",\"value\":" << value << '}';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();

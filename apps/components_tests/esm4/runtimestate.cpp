@@ -1741,7 +1741,7 @@ namespace
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
-                + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0);
+                + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5298,4 +5298,33 @@ TEST(ESM4RuntimeState, FriendlyHitFlags65RejectNoncanonicalOrMalformedWireBefore
         EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire(rows)), std::exception);
     auto bytes = wire({{a,0}}); bytes.pop_back();
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bytes), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, Disposition66RetainsSignedZeroEntriesAndRejectsLegacyOrDanglingOwnership)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues = {actor};
+    for (const auto value : {0, -7, std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::max()})
+    {
+        state.mDispositionModifiers[{actor.mActor, actor.mActor}] = value;
+        const auto bytes = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_EQ(restored.mDispositionModifiers, state.mDispositionModifiers);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        auto truncated = bytes; truncated.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+    auto bad = state;
+    bad.mDispositionModifiers[{actor.mActor, ESM::FormKey::content("oblivion.esm", 0xdead)}] = 1;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    state.mVersion = 65;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mDispositionModifiers.clear();
+    const auto old = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(old.mDispositionModifiers.empty());
+    EXPECT_EQ(old.canonicalJson().find("disposition_modifiers"), std::string::npos);
 }

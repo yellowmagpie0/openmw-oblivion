@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "source": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/pristine.omwsave",
+  "source_sha256": "c5b1de6995b5dbc103d03f6f5e3b012d79e768fe0b8f0b14cc60a33102aa0215",
+  "target_schema": 66,
+  "disposition_modifiers": [
+    {
+      "actor": "dynamic:player:0000000000000001",
+      "target": "dynamic:player:0000000000000001",
+      "value": -7
+    }
+  ],
+  "scope": "Independent Python write_save into a private copy, then real fresh-process load/query/F5/resave. Storage and read coverage; no ModDisposition producer."
+}

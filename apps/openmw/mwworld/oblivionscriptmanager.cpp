@@ -1944,6 +1944,16 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "getdisposition")
+        {
+            const auto other = keyFromValue(argument(0));
+            if (!other) return std::int64_t(0);
+            const auto value = mWorld.getOblivionScriptDisposition(objectKey(), *other);
+            if (!value)
+                throw ObScript::RuntimeError("OBSV117", "Native disposition inputs are not ready", name);
+            return std::int64_t(*value);
+        }
+
         if (name == "getisid" || name == "getisreference")
         {
             const auto expected = keyFromValue(argument(0));

@@ -1,0 +1,1988 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Live native disposition read dependency, frame cache and typed schema66 per-pair modifier storage",
+  "full_M15S4_acceptance": false,
+  "production_integration": true,
+  "normal_input_combat_acceptance": false,
+  "moddisposition_writer": false,
+  "tested_source": {
+    "head": "d50b54c5f05b5b924b4761350bc71e86350d075f",
+    "source_fingerprint": "7ee0530ce53eea0276cf1540bf51d6177ab710be162fb41a205713d841ced190"
+  },
+  "tested_source_files": [
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "03d80b74560e913eb76a114f63cf6e740e96bb3cd38b5a325b723454e631ba32",
+      "bytes": 284040
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "7ed13b16a4ff97e7ad9db7fcc6662aeee6a214b966211e41864061860b400efb",
+      "bytes": 344480
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "359eb77e223dfb84cb748770ee8b8fae45e97727225089f95dfa4b28cd174d0d",
+      "bytes": 359741
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "f929e6ce9bbfb077c5fcd4e7f39e4bb5577450da5475b8150ddf03999f47b454",
+      "bytes": 66005
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "dececa13de1eb111b7d41ad250202e93e2cd9a378f531d75ae286bfd2ebddabb",
+      "bytes": 146694
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "0154692e2e116fc0a9a6c8fc1c192a15a0718d0779d68883091e3a2ca6254d5b",
+      "bytes": 456113
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "2e6342b69f04edeb8eb1e79af4381ce16360810ec35562b8717c4f483d5169f5",
+      "bytes": 53581
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "4056cb90b130c22397917358b34574e121ccd57f10ebaf973854c1a0e7fc1e63",
+      "bytes": 2023365
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "6b422ffb790a2bff1cddba565f25d41d2697da3305d14d896939adf1e5a11116",
+      "bytes": 297338
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "9c97043f784473a166430e1b2ed649d927b3f656718b00a0e783c0cccc2080a8",
+      "bytes": 37058
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+      "sha256": "5b934c5bd55195bf799a96a27c6abff53bcab32ff73463b95f64ffc1874dd043",
+      "bytes": 808
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json",
+      "sha256": "b6161581adfc603200d2f5ea7e56625b53edba9c1ef2a2a8eb87f245368d04ae",
+      "bytes": 1901
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json",
+      "sha256": "dcdca904ebe02c6b2337c1b29687f5ae449beecf9bf1b04e9420e6abd471c95c",
+      "bytes": 3861
+    },
+    {
+      "path": "scripts/tes4_m15_cached_block_input.py",
+      "sha256": "fffa9ba27352cbaf27d8b679f602b728b4964ba4414dda9551ea9cc24cdea6f9",
+      "bytes": 5719
+    },
+    {
+      "path": "scripts/tes4_m15_npc_passive_fixture.py",
+      "sha256": "f4f93a4e956a4ebfefd4bf64372b2404081129d8b3cd1c2e6864b090ec7aa6c2",
+      "bytes": 6667
+    },
+    {
+      "path": "scripts/tes4_m15_passive_slot3_fixture.py",
+      "sha256": "ce7b687a6adeddb8b11d72868cb0a3fbfa901c3ba9face8e477d8d4c3244b91f",
+      "bytes": 6559
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "884ed489be7f6272239f94798c002429af8a39fe771b8e2f0b447a0825d9f42e",
+      "bytes": 216304
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_cached_block_input.py",
+      "sha256": "ee93ed7c5bded6776605cb8781facbe07c025f036e0581ed921327d17fb46878",
+      "bytes": 5144
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_npc_passive_fixture.py",
+      "sha256": "8a9a7bbda46efa22aa963381e18c7e3f4f7c3d50c6c7e727306bd7cf09dd3b41",
+      "bytes": 6340
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_passive_slot3_fixture.py",
+      "sha256": "c0ffc8b39fb3ac91516886f511fd0e66274246aa22243a474826580316a43c93",
+      "bytes": 6397
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "b8ddf29e9b6423c4d9e543a82cc8f4bc26566ad9706824a783045340fab030ab",
+      "bytes": 241450
+    },
+    {
+      "path": "components/esm4/combatairules.cpp",
+      "sha256": "8ed46dddd8b75de5c870bdc5c38828c51e00b6719e372cba5ddfa328cb4a9c60",
+      "bytes": 9268
+    },
+    {
+      "path": "components/esm4/combatairules.hpp",
+      "sha256": "28d1bf7f3a82bc0fc2e88c18c90a6e70dc7152e3f29037e41ba5f222d0a92f59",
+      "bytes": 3788
+    },
+    {
+      "path": "components/esm4/combatsettings.cpp",
+      "sha256": "bfca0514b9a809821c3f5222e8e49121a8ee5aad844ac13334e52753eb5e3747",
+      "bytes": 35616
+    },
+    {
+      "path": "components/esm4/combatsettings.hpp",
+      "sha256": "c6c1d5e747028c29c273bdf2cd49cad15a71a0fe5265890edaa5fb680b918314",
+      "bytes": 5722
+    }
+  ],
+  "tested_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/tested-cpp.patch",
+    "sha256": "c52efbf1ccbbe9757e00514be5c93aed28a985108b7270796c9344f6c5cb348e",
+    "bytes": 36450
+  },
+  "runtime_binary": {
+    "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/openmw-normal",
+    "sha256": "f1d14ab6cc34b3b0f16bd84e9c0c7e7a607075185e86c88073045355ee108db3",
+    "negative_binary_sha256": "710a40993ee8928b93c11dfe90199f0c7fa0af1cec42c7d2b63dd1f67029ada1"
+  },
+  "editable_protocols": [
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_disposition_first.json",
+      "sha256": "aa713437e9693c16187803b28bf5e9fa71506bf812b63a66228a2925b00c6026",
+      "bytes": 3543
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_disposition_continuation.json",
+      "sha256": "ce2b3e6264360a40adb401ff6cb3513d144d211a9235348e4414f795e2ac12be",
+      "bytes": 3755
+    }
+  ],
+  "editable_modifier_recipe": {
+    "path": "scripts/data/oblivion_compat/m15_disposition_modifier_roundtrip.json",
+    "sha256": "eb24a752c6b5e425443b545d626bd9fa10db795f97e87d8c543fa3aefe9242d6",
+    "bytes": 560
+  },
+  "editable_oracle_recipe": {
+    "path": "scripts/data/oblivion_compat/m15_disposition_query_oracle_cases.json",
+    "sha256": "d787e2f9280d360cb309309ccab24046e833c28cc9aa2d33b333f1f09060d0da",
+    "bytes": 20102
+  },
+  "checks": {
+    "normal": {
+      "engine": {
+        "executed": 1884,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5e0b6d7aab99061a65e110383b9c905888e1b42330b590d3e9db168fbcff8516",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "de4f24dbb185d169b63e7f205899d13df46633a54747d291463bd03d3a1616ba",
+        "inventory_sha256": "f3e28af98d0eb7e88d61fa16ebd13c223175ab14f0b16b4391f90438327b0709",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "components": {
+        "executed": 3040,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e8faa880a830b6c072706c5e5b1446c328d7e9860302c12c5892433c5ed5d316",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "61adfd4f158a40e4e9fdd8e9f44df1924216b074666c03b18c698a73570bc47f",
+        "inventory_sha256": "cd0bf89c959ca38c6c172155e4a022f079abe3f4e024606b9612e730a32df3de",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitizer": {
+      "engine": {
+        "executed": 1884,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "3c4bb9a21479099f68ab6a7a1b2c0070082bca7485d2940d0432c93975089ef6",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "9108dd084a3629a7213b1e7d739787d98fd31266ed39ebbc44d031356357b940",
+        "inventory_sha256": "f3e28af98d0eb7e88d61fa16ebd13c223175ab14f0b16b4391f90438327b0709",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitize": {
+        "executed": 891,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "52a80662e502ed0a12380d9facb44470c9511df75d4afd9c50f9aa6fa2760b9c",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "fb1b938d38a2d76e215cb309e1a6fe57a9a3b8eccc0d7f2b4354a2ed57fd28a4",
+        "inventory_sha256": "b9d5d222a1ce5fb05b91d36c4c9c4fea03fa4654c19c81ccbb4fad8f81f3e221",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "focused_and_python": {
+      "engine": {
+        "executed": 4,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*Disposition*",
+        "binary_sha256": "5e0b6d7aab99061a65e110383b9c905888e1b42330b590d3e9db168fbcff8516",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "9adc4d29005ab2163b39efbf4591373c5de5fc730740bb53bb767e8e029afed3",
+        "inventory_sha256": "f3e28af98d0eb7e88d61fa16ebd13c223175ab14f0b16b4391f90438327b0709",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "components": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*Disposition*",
+        "binary_sha256": "e8faa880a830b6c072706c5e5b1446c328d7e9860302c12c5892433c5ed5d316",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "f363e9060d413ae3a7309a3a5f3600ea3a80a21235552c26ff48a7a92fb789ba",
+        "inventory_sha256": "0ef762fa49407d5484a09db8114fec300bb37eece7d309f194864535507357d1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "python": {
+        "executed": 401,
+        "passed": true,
+        "log_sha256": "da466d772e990a58d11696d7b5161d9c554f8b8be6166710f52efdbfd148cb9d"
+      }
+    }
+  },
+  "runtime": {
+    "passed": true,
+    "courses": [
+      {
+        "phase": "first",
+        "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02",
+        "passed": true,
+        "scenario_passed": true,
+        "capture_review": "Directly viewed prison/HUD capture; exact query results establish semantics, not pixels",
+        "expected_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "actual_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "positive_contract_matches": true,
+        "pid": 1714559,
+        "schema": 66,
+        "save_sha256": "c5b1de6995b5dbc103d03f6f5e3b012d79e768fe0b8f0b14cc60a33102aa0215",
+        "run_end": {
+          "run_id": "native-disposition-first",
+          "epoch": 1,
+          "pid": 1714559,
+          "sequence": 34,
+          "tick": 96,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 33,
+          "pending_count": 0,
+          "unsupported_count": 31
+        },
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "diagnostics": []
+      },
+      {
+        "phase": "continuation",
+        "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02",
+        "passed": true,
+        "scenario_passed": true,
+        "capture_review": "Directly viewed prison/HUD capture; exact query results establish semantics, not pixels",
+        "expected_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "actual_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "positive_contract_matches": true,
+        "pid": 1714725,
+        "schema": 66,
+        "save_sha256": "1c7006142522170de369ae2fa4668cf5f26b15090de2d809bee23b778fc4f8eb",
+        "run_end": {
+          "run_id": "native-disposition-continuation",
+          "epoch": 2,
+          "pid": 1714725,
+          "sequence": 4,
+          "tick": 96,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 3,
+          "pending_count": 0,
+          "unsupported_count": 0
+        },
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "diagnostics": []
+      },
+      {
+        "phase": "populated",
+        "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02",
+        "passed": true,
+        "scenario_passed": true,
+        "capture_review": "Directly viewed prison/HUD capture; exact query results establish semantics, not pixels",
+        "expected_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "73"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "73"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "43"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "23"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "83"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "actual_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "73"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "73"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "43"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "23"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "83"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "positive_contract_matches": true,
+        "pid": 1714915,
+        "schema": 66,
+        "save_sha256": "95ff85bbb723bec8e7fcdfae7c493466e265d26655bdbc8676bd199f71f6346d",
+        "run_end": {
+          "run_id": "native-disposition-populated",
+          "epoch": 2,
+          "pid": 1714915,
+          "sequence": 4,
+          "tick": 96,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 3,
+          "pending_count": 0,
+          "unsupported_count": 0
+        },
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "diagnostics": []
+      },
+      {
+        "phase": "negative",
+        "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02",
+        "passed": true,
+        "scenario_passed": false,
+        "capture_review": "Directly viewed prison/HUD capture; exact query results establish semantics, not pixels",
+        "expected_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "actual_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "positive_contract_matches": false,
+        "pid": 1715098,
+        "schema": 65,
+        "save_sha256": "857e08e71d0cf4332ef5ff150f9171654d04f5b7031b9de3712c49fe8c0a4f93",
+        "run_end": {
+          "run_id": "native-disposition-negative",
+          "epoch": 1,
+          "pid": 1715098,
+          "sequence": 39,
+          "tick": 98,
+          "event": "run-end",
+          "error_count": 5,
+          "event_count": 38,
+          "pending_count": 0,
+          "unsupported_count": 31
+        },
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "diagnostics": []
+      },
+      {
+        "phase": "legacy",
+        "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02",
+        "passed": true,
+        "scenario_passed": true,
+        "capture_review": "Directly viewed prison/HUD capture; exact query results establish semantics, not pixels",
+        "expected_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "actual_queries": [
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "80"
+          ],
+          [
+            "GetAV",
+            "20"
+          ],
+          [
+            "GetDisposition",
+            "50"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "30"
+          ],
+          [
+            "SetAV",
+            "0"
+          ],
+          [
+            "GetDisposition",
+            "90"
+          ],
+          [
+            "GetAV",
+            "0"
+          ],
+          [
+            "GetPlayerInSEWorld",
+            "0"
+          ]
+        ],
+        "positive_contract_matches": true,
+        "pid": 1719363,
+        "schema": 66,
+        "save_sha256": "230d8b6ed0b984d5ec2932811ba45a0774255a619e34969f74b8df9ab4edbe07",
+        "run_end": {
+          "run_id": "native-disposition-legacy",
+          "epoch": 2,
+          "pid": 1719363,
+          "sequence": 4,
+          "tick": 96,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 3,
+          "pending_count": 0,
+          "unsupported_count": 0
+        },
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "diagnostics": []
+      }
+    ],
+    "pristine": {
+      "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-disposition-first-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "c5b1de6995b5dbc103d03f6f5e3b012d79e768fe0b8f0b14cc60a33102aa0215"
+    },
+    "original_expected": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Scheduled host GetDisposition/SetAV reads, same-frame cache and next-frame reset, private fresh-process reload/resave, injected -7 typed modifier and actual schema65-to66 migration. Old-executable control must reject positive query contract. Not compiled query argument binding, ModDisposition writer, common-hit, sound or normal-input combat acceptance."
+  },
+  "oracles": {
+    "native-disposition-cache-oracle-01": {
+      "passed": true,
+      "cases": 60,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "85bc8607e7a6e43436aa5142cca63430a366e70c5f3c07c4f8124b8d853d6759",
+      "scope": "Full4F4E20 script/condition helper + actual4F5DB0 reset + actual5EA800/546260 on synthetic unowned NPC actors. Prescribed current integer AV6/36 only (plus owner-bootstrap allocator/locks). Actual actor eligibility/base/race/empty-faction/zero-bounty/modifier helpers execute. Same ordered pair caches across AV changes; reverse/different pair replaces; null target yields0 and preserves pair; frame reset causes recomputation. Reset callsite40DBD1 statically inspected, engine main loop not executed."
+    },
+    "native-faction-storage-oracle-01": {
+      "passed": true,
+      "sequences": 1296,
+      "snapshots": 5184,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "8517130270da67c9872b6dc8d91497907797dc9706e3f9c3340663c41ea6ea27",
+      "scope": "Full4675E0 faction setter + actual446CB0 head insertion/list removal. Boundaries: actorBaseData MarkModified4672F0 checks0x40; heap/free from owned original bootstrap. NPC loader527E40 statically dispatches SNAM5280FD..528122 through this setter. Authored order projects as head insertion of first occurrence, in-place rank updates, removal of existing entry on rank-1, new rank-1 retained. Whole plugin loader/linking not executed."
+    },
+    "native-faction-query-oracle-01": {
+      "passed": true,
+      "cases": 6000,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "3a19cd9f8f76cc6018859adab3698b3cd2602abcbb0ebeb840e20b76840c8d0e",
+      "scope": "Full467920+46E8D0+5E02E0 on synthetic ordered faction lists. Multi-membership source/target ordering, negative source ranks, negative target rank exclusion, Player-base bit8 exclusion, same-positive priority, strict10000 sentinel and ties compared to explicit Python projection. Seed467920. No runtime faction mutations or gameplay acceptance."
+    },
+    "native-disposition-runtime-oracle-01": {
+      "passed": true,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "sources": [
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+        },
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+        }
+      ],
+      "settings": [
+        {
+          "storage": "0xb367b8",
+          "name": "fDispActorPerBase",
+          "value": 0.0,
+          "bits": 0,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367c0",
+          "name": "fDispActorPerMult",
+          "value": 1.0,
+          "bits": 1069547520,
+          "source": "Oblivion.esm",
+          "form_id": 165798
+        },
+        {
+          "storage": "0xb367c8",
+          "name": "fDispTargetPerBase",
+          "value": 0.0,
+          "bits": 0,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367d0",
+          "name": "fDispTargetPerMult",
+          "value": 1.0,
+          "bits": 1056964608,
+          "source": "Oblivion.esm",
+          "form_id": 165797
+        },
+        {
+          "storage": "0xb367d8",
+          "name": "fDispTargetFameMult",
+          "value": 0.30000001192092896,
+          "bits": 1050253722,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367e0",
+          "name": "fDispTargetInfamyMult",
+          "value": -0.30000001192092896,
+          "bits": 3197737370,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367e8",
+          "name": "fDispActorInfamyBase",
+          "value": -1.0,
+          "bits": 3212836864,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367f0",
+          "name": "fDispActorInfamyMult",
+          "value": 0.019999999552965164,
+          "bits": 1017370378,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb367f8",
+          "name": "fDispTargetBountyMult",
+          "value": -0.003000000026077032,
+          "bits": 3141835686,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36800",
+          "name": "fDispActorBountyBase",
+          "value": -1.0,
+          "bits": 3212836864,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36808",
+          "name": "fDispActorBountyMult",
+          "value": 0.019999999552965164,
+          "bits": 1017370378,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36810",
+          "name": "fDispTargetRaceMult",
+          "value": 1.0,
+          "bits": 1065353216,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36818",
+          "name": "fDispTargetFactionMult",
+          "value": 1.0,
+          "bits": 1065353216,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36820",
+          "name": "fDispTargetFactionRankBase",
+          "value": 1.0,
+          "bits": 1065353216,
+          "source": "Oblivion.esm",
+          "form_id": 165796
+        },
+        {
+          "storage": "0xb36828",
+          "name": "fDispTargetFactionRankMult",
+          "value": 0.5,
+          "bits": 1056964608,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36830",
+          "name": "fDispTargetWeaponBase",
+          "value": -10.0,
+          "bits": 3240099840,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36838",
+          "name": "fDispTargetDiseaseBase",
+          "value": -10.0,
+          "bits": 3240099840,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36ce8",
+          "name": "iDispFameMax",
+          "value": 20,
+          "bits": 20,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36cf0",
+          "name": "iDispBountyMax",
+          "value": 20,
+          "bits": 20,
+          "source": "original executable default"
+        },
+        {
+          "storage": "0xb36cf8",
+          "name": "fDispInfamyMax",
+          "value": 20.0,
+          "bits": 1101004800,
+          "source": "original executable default"
+        }
+      ],
+      "player": {
+        "base": 7,
+        "race": 2311,
+        "factions": [
+          [
+            121805,
+            30
+          ]
+        ]
+      },
+      "rows": [
+        {
+          "word": 639,
+          "personality": 0,
+          "modifier": 0,
+          "args": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 30
+        },
+        {
+          "word": 639,
+          "personality": 20,
+          "modifier": 0,
+          "args": [
+            20,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 50
+        },
+        {
+          "word": 639,
+          "personality": 50,
+          "modifier": 0,
+          "args": [
+            50,
+            50,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 80
+        },
+        {
+          "word": 639,
+          "personality": 60,
+          "modifier": 0,
+          "args": [
+            60,
+            60,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 90
+        },
+        {
+          "word": 639,
+          "personality": 80,
+          "modifier": 0,
+          "args": [
+            80,
+            80,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 639,
+          "personality": 100,
+          "modifier": 0,
+          "args": [
+            100,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 639,
+          "personality": 0,
+          "modifier": -7,
+          "args": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 23
+        },
+        {
+          "word": 639,
+          "personality": 20,
+          "modifier": -7,
+          "args": [
+            20,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 43
+        },
+        {
+          "word": 639,
+          "personality": 50,
+          "modifier": -7,
+          "args": [
+            50,
+            50,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 73
+        },
+        {
+          "word": 639,
+          "personality": 60,
+          "modifier": -7,
+          "args": [
+            60,
+            60,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 83
+        },
+        {
+          "word": 639,
+          "personality": 80,
+          "modifier": -7,
+          "args": [
+            80,
+            80,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 639,
+          "personality": 100,
+          "modifier": -7,
+          "args": [
+            100,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 895,
+          "personality": 0,
+          "modifier": 0,
+          "args": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 30
+        },
+        {
+          "word": 895,
+          "personality": 20,
+          "modifier": 0,
+          "args": [
+            20,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 50
+        },
+        {
+          "word": 895,
+          "personality": 50,
+          "modifier": 0,
+          "args": [
+            50,
+            50,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 80
+        },
+        {
+          "word": 895,
+          "personality": 60,
+          "modifier": 0,
+          "args": [
+            60,
+            60,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 90
+        },
+        {
+          "word": 895,
+          "personality": 80,
+          "modifier": 0,
+          "args": [
+            80,
+            80,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 895,
+          "personality": 100,
+          "modifier": 0,
+          "args": [
+            100,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 895,
+          "personality": 0,
+          "modifier": -7,
+          "args": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 23
+        },
+        {
+          "word": 895,
+          "personality": 20,
+          "modifier": -7,
+          "args": [
+            20,
+            20,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 43
+        },
+        {
+          "word": 895,
+          "personality": 50,
+          "modifier": -7,
+          "args": [
+            50,
+            50,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 73
+        },
+        {
+          "word": 895,
+          "personality": 60,
+          "modifier": -7,
+          "args": [
+            60,
+            60,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 83
+        },
+        {
+          "word": 895,
+          "personality": 80,
+          "modifier": -7,
+          "args": [
+            80,
+            80,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 100
+        },
+        {
+          "word": 895,
+          "personality": 100,
+          "modifier": -7,
+          "args": [
+            100,
+            100,
+            0,
+            0,
+            0,
+            0,
+            0,
+            30,
+            0,
+            0,
+            0,
+            -7,
+            0
+          ],
+          "result": 100
+        }
+      ],
+      "scope": "Actual5EA800+546260 on synthetic Player self pair using independently audited winning content/default GMSTs and raw Player/race/faction records. Current AV6/36 prescribed; raw Fame/Infamy/Bounty zero, no process/ownership. Not original-game live acceptance."
+    }
+  },
+  "evidence_artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-04/verification.json",
+      "sha256": "16650e1432a76c04c9146009557c1f727726605f94dd72157a670b2bc81faecc",
+      "bytes": 4262
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-05/verification.json",
+      "sha256": "e231023889ccf904f258ce93cd124edaf4b0fb6f32af12aabbb2374b9cb445e1",
+      "bytes": 3832
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-05/engine.xml",
+      "sha256": "de4f24dbb185d169b63e7f205899d13df46633a54747d291463bd03d3a1616ba",
+      "bytes": 620617
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-05/components.xml",
+      "sha256": "61adfd4f158a40e4e9fdd8e9f44df1924216b074666c03b18c698a73570bc47f",
+      "bytes": 2347560
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-05/engine-inventory.txt",
+      "sha256": "f3e28af98d0eb7e88d61fa16ebd13c223175ab14f0b16b4391f90438327b0709",
+      "bytes": 133312
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-05/components-inventory.txt",
+      "sha256": "cd0bf89c959ca38c6c172155e4a022f079abe3f4e024606b9612e730a32df3de",
+      "bytes": 193520
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-06/verification.json",
+      "sha256": "2999091d6a7d795bd82d780e7756ee1cb9d0104a52b785272bc623a13e713cb3",
+      "bytes": 4007
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-06/engine.xml",
+      "sha256": "9108dd084a3629a7213b1e7d739787d98fd31266ed39ebbc44d031356357b940",
+      "bytes": 622205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-06/sanitize.xml",
+      "sha256": "fb1b938d38a2d76e215cb309e1a6fe57a9a3b8eccc0d7f2b4354a2ed57fd28a4",
+      "bytes": 1623293
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-06/engine-inventory.txt",
+      "sha256": "f3e28af98d0eb7e88d61fa16ebd13c223175ab14f0b16b4391f90438327b0709",
+      "bytes": 133312
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-06/sanitize-inventory.txt",
+      "sha256": "b9d5d222a1ce5fb05b91d36c4c9c4fea03fa4654c19c81ccbb4fad8f81f3e221",
+      "bytes": 193520
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/binary.json",
+      "sha256": "039544a9ff7dc47ac879a4d51fa7d3a3ff44ad49167c68e4740db16e8416153b",
+      "bytes": 319
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/runtime-verification.json",
+      "sha256": "48c22d74aec96d710bf8c273caa43c98dd2e9ddd38a70d20706e8ad1dad8f1a7",
+      "bytes": 12204
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/run_runtime.py",
+      "sha256": "24c5a1de77f9b32e1a1815a11a6aa6b2f1a58ad6079285066f53a1c8a572786e",
+      "bytes": 3908
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/verify_runtime.py",
+      "sha256": "86c8ea9db7388553a1491ef5f55622f57be81971cd416e58e50c714c6fd21abf",
+      "bytes": 5424
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/pristine.omwsave",
+      "sha256": "c5b1de6995b5dbc103d03f6f5e3b012d79e768fe0b8f0b14cc60a33102aa0215",
+      "bytes": 10748783
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/pristine.json",
+      "sha256": "59b80edc86add77dda883f1e1bc0fe17f22f9417975fc0f17f06928739301859",
+      "bytes": 250
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/continuation-input.json",
+      "sha256": "790766b9f682a49c614b08a2e88fa8ee8afa5c764fd32f439af7fd5e91f71d95",
+      "bytes": 255
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/populated-input.json",
+      "sha256": "adc2304851f5474e6e26a3e71f092c2bc59c6298e9de25d851fcdcf48e22a5de",
+      "bytes": 252
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/legacy-pristine.omwsave",
+      "sha256": "857e08e71d0cf4332ef5ff150f9171654d04f5b7031b9de3712c49fe8c0a4f93",
+      "bytes": 10748484
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/legacy-input.json",
+      "sha256": "ba439760b7f1cee729b578b77cf9f153aedf0e48f83ac55b12d5a4e4374e7c03",
+      "bytes": 573
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/legacy.json",
+      "sha256": "29a744a6ca6c638509b8753a35726f93e82398f0ab90aa8c53112447e8c50835",
+      "bytes": 3737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-binaries-02/run_legacy.py",
+      "sha256": "5d9b51b668ed210ade1f406f39e0aa3620c7f9a5d6e77f562daf8a2ecee8d4aa",
+      "bytes": 1645
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-cache-oracle-01/corpus.json",
+      "sha256": "85bc8607e7a6e43436aa5142cca63430a366e70c5f3c07c4f8124b8d853d6759",
+      "bytes": 6207
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-cache-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-cache-oracle-01/probe.py",
+      "sha256": "0c98e14b64e178586bc0362739807b955b0dd364231c8ecbb94ec985daa4dd1d",
+      "bytes": 3136
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-cache-oracle-01/verification.json",
+      "sha256": "baaea1d55512616a63371ac7442aef498f47bbcbe3252c10a8b245c05c786719",
+      "bytes": 739
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-storage-oracle-01/corpus.json",
+      "sha256": "8517130270da67c9872b6dc8d91497907797dc9706e3f9c3340663c41ea6ea27",
+      "bytes": 94645
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-storage-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-storage-oracle-01/probe.py",
+      "sha256": "70e5cdc36da3cc2bc3f1a825b1564a72131ade0b493c1f5024b7e90ae6d81cd4",
+      "bytes": 2604
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-storage-oracle-01/verification.json",
+      "sha256": "bfe91be10c3c8d1e31ae5b02e5e58e41c2bfdbf319b0a46d78d4078f6a932fbf",
+      "bytes": 697
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-query-oracle-01/corpus.json",
+      "sha256": "3a19cd9f8f76cc6018859adab3698b3cd2602abcbb0ebeb840e20b76840c8d0e",
+      "bytes": 810613
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-query-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-query-oracle-01/probe.py",
+      "sha256": "fa63c623d7b984cb69f87027a6703c1264f850e792fde0442c9edbac2490135a",
+      "bytes": 3380
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-query-oracle-01/verification.json",
+      "sha256": "5e73973c8a71c130f8340ca6ba03343d17db9982357f8b59c41d02f2d44102a9",
+      "bytes": 583
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01/probe.py",
+      "sha256": "78a944f84f6005eef787d7d05c70ae573c135f7f51aadb42a500b04d7df7a9f6",
+      "bytes": 3652
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01/verification.json",
+      "sha256": "0b7966d1b647aec90496fe4d39b7c2fb5ca0386afc17d67c1eba1c65399ac631",
+      "bytes": 10897
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/scenario.json",
+      "sha256": "6260a1f866f2243848b96831f2173624130ad2ed7f0c55a95a3c8a10083ced7b",
+      "bytes": 4170
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/process.log",
+      "sha256": "950f735e5ad14eb2f048be39b69d14b51f9bf44b9ec69d6f179d23203b1e4684",
+      "bytes": 2367950
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/m15-events.jsonl",
+      "sha256": "f18103827ec4334e52ad8cbe801eb5dd5fc70ea7173a7729d5058d60746559f1",
+      "bytes": 7551
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/obscript-report.json",
+      "sha256": "8a7d3cfd621ed2f96b80918db38cff5656af6ad33c9cab0d95d598efc8eb41b4",
+      "bytes": 25801755
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/first.png",
+      "sha256": "a4b438a1a929a5edb2c071a506846e73c002aa45ed46984cd419429629fe09e5",
+      "bytes": 1129902
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "c5b1de6995b5dbc103d03f6f5e3b012d79e768fe0b8f0b14cc60a33102aa0215",
+      "bytes": 10748783
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/scenario.json",
+      "sha256": "db16c3a91358d25447c78b1be3af37706e4acc99989421d9b033022c598b44f0",
+      "bytes": 4757
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/process.log",
+      "sha256": "71a40f17263423a5d0851dc85e67fd72ac52759eddf816118ec63368b6a5a492",
+      "bytes": 872682
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/m15-events.jsonl",
+      "sha256": "b5efbef6f9dd7c69e15de4c722c4d754b745dd571e1edadbd5908ada811cdadd",
+      "bytes": 1576
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/obscript-report.json",
+      "sha256": "6a287e7a6c7137ec49874c85b930aa90787adb38066c0850f14531fa00a5faa2",
+      "bytes": 27614558
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/continuation.png",
+      "sha256": "cb9bcf6db23a8243a6795c57694781d5afd5faaf6bd9b9b39af69944e9a45313",
+      "bytes": 1141915
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-continuation-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "1c7006142522170de369ae2fa4668cf5f26b15090de2d809bee23b778fc4f8eb",
+      "bytes": 11509720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/scenario.json",
+      "sha256": "c5897217d3becb668bd0fcdddecf5c278d99b39686ed21ea4f45fcd328dd3d1b",
+      "bytes": 4715
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/process.log",
+      "sha256": "7f25e74a97cd77d755cc85da5592933f075e400a9133aedd1c739c376b24e67e",
+      "bytes": 872643
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/m15-events.jsonl",
+      "sha256": "73e20f91e3fe517bcf503a1d3271412a1c227378f93f1df7f0dde6ef24f1795e",
+      "bytes": 1558
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/obscript-report.json",
+      "sha256": "a16ff5313ac0373a68f9adfc2b0db6237790bd871c9d18a4e31312fb953d08fd",
+      "bytes": 27614655
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/populated.png",
+      "sha256": "71e7aeff6ecddbeaf89c4163a10f2e0bd08a5d2ca3e3ffe63292792a4d67f988",
+      "bytes": 1140125
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-populated-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "95ff85bbb723bec8e7fcdfae7c493466e265d26655bdbc8676bd199f71f6346d",
+      "bytes": 11510871
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/scenario.json",
+      "sha256": "a7a713d854daad3905606e6dcf2e415490d2cb8a0c2890c6da264e8e9b68d3ae",
+      "bytes": 5115
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/process.log",
+      "sha256": "277d0cd0b5bbe1b145fe3d23e6001405a2c38bb93fe1e7a93c78f2186ce43486",
+      "bytes": 2347544
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/m15-events.jsonl",
+      "sha256": "f6c93960307ad5a239620b4150800d4164ceb7ac54ee29c1f03fd4e9b7e67b2f",
+      "bytes": 8496
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/obscript-report.json",
+      "sha256": "640c5d87bcdc1a8392916d3b7934ad6517824643c71f05ab4321a735a412ae15",
+      "bytes": 25798164
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/negative.png",
+      "sha256": "21115c135ec5e990c3efb7ba24525a7db969b86b72e6142065591e56e5b06242",
+      "bytes": 1142860
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-negative-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "857e08e71d0cf4332ef5ff150f9171654d04f5b7031b9de3712c49fe8c0a4f93",
+      "bytes": 10748484
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/scenario.json",
+      "sha256": "d8cefea0a38eec8dc3c22ddcdfca7a263291e6b0cafd1acbbbf86a4725f7ceb1",
+      "bytes": 4678
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/process.log",
+      "sha256": "dbc3049624437475c65adf3e43f20a4f8beca87333fe467b2421faf315fc8b22",
+      "bytes": 883733
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/m15-events.jsonl",
+      "sha256": "215ce2e70075a5a4c75a2c976cfddf2e53d97810dd915bf2569109a0db70aae9",
+      "bytes": 1540
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/obscript-report.json",
+      "sha256": "213aa37a28045c92efbe1261dfe97296d1577abcf48acea3e03e115b84948d33",
+      "bytes": 27614657
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/legacy.png",
+      "sha256": "2d8659a7a8bc3346d07f1a4a70f89cce55616ff97a733bbdaf0c6922c0c028cd",
+      "bytes": 1169893
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-legacy-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "230d8b6ed0b984d5ec2932811ba45a0774255a619e34969f74b8df9ab4edbe07",
+      "bytes": 11510461
+    }
+  ],
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-01",
+      "reason": "Initial missing GMST include compile failure"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-02",
+      "reason": "Initial test referenced nonexistent restore helper"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/disposition-runtime-checks-03",
+      "reason": "Python fixture recipes still targeted schema65"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-first-normal-01",
+      "reason": "Scheduled string Player resolved authored NPC7, correctly returned0; deliberately terminated after incorrect protocol was identified. Corrected course02 uses explicit reference 14."
+    }
+  ],
+  "validation_layers": {
+    "structural": "C++/independent Python schema66 signed/zero/owner validation; actual loaded/resaved -7 entry",
+    "compiler": "10470 existing source units compile without failures; scheduled commands bypass compiled query argument evaluation",
+    "world_semantics": "Four new World tests; actual host reads and same-frame cache; native instruction/faction probes",
+    "runtime": "Four normal rendered processes for first/reload/injected modifier/legacy migration plus old-binary negative control, isolated Xvfb, protected pristine save, F5 committed",
+    "audio": "Disabled; no audio acceptance"
+  },
+  "remaining": [
+    "Owned/process Creature and leveled-base projection",
+    "ModDisposition writer and reference binding VM-specific acceptance",
+    "Full overflow domain outside existing numeric scorer readiness",
+    "Common-hit callbacks/speech/counters and producer/expiry/save lifecycle",
+    "Player audio and full M15S4 input/opponent/mastery/effects/drop/view/device/FPS/windup/block/recovery restart gates"
+  ]
+}

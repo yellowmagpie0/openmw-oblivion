@@ -696,6 +696,7 @@ namespace MWMechanics
         mActions = {};
         mCombatRngState = 1;
         mSceneIsComplex = false;
+        mScriptDispositionPair.reset();
         mCrimeContracts = {};
         mActionOwners.clear();
         mMeleeStates.clear();
@@ -6544,6 +6545,7 @@ namespace MWMechanics
         mPreparedReleaseIdentity.mValue.reset();
         mPreparedRagdollIdentity.mValue.reset();
         mActions = std::move(actions);
+        mScriptDispositionPair.reset();
         mCombatRngState = state.mCombatRngState;
         std::swap(mCrimeContracts, crime);
         mActionOwners.swap(actionOwners);

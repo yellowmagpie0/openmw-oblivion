@@ -152,6 +152,28 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    def test_disposition_v66_preserves_signed_entries_and_rejects_old_or_dangling_state(self):
+        state = make_state()
+        state["schema_version"] = 66
+        state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor, "base": "content:oblivion.esm:000007",
+            "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)]}]
+        for value in (0, -7, -(1 << 31), (1 << 31) - 1):
+            state["disposition_modifiers"] = [{"actor": actor, "target": actor, "value": value}]
+            payload = state_io.encode_payload(state)
+            self.assertEqual(state_io.decode_payload(payload)["disposition_modifiers"], state["disposition_modifiers"])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-1])
+        for value in (True, 1 << 31, -(1 << 31) - 1):
+            bad = copy.deepcopy(state); bad["disposition_modifiers"][0]["value"] = value
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state); bad["disposition_modifiers"][0]["target"] = "content:oblivion.esm:00dead"
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 65
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["disposition_modifiers"] = []
+        self.assertNotIn("disposition_modifiers", state_io.decode_payload(state_io.encode_payload(state)))
+
     def test_friendly_hit_flags65_exact_wire_and_migration(self):
         state = self.movement_state(); state['schema_version'] = 64
         legacy = state_io.encode_payload(state)

@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "name": "native-disposition-continuation",
+  "cwd": "{source}",
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/disposition-events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/obscript-report.json",
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "native-disposition-continuation",
+    "OPENMW_M15_EPOCH": "2"
+  },
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\ncontent=Knights.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Sound]\nmaster volume = 1.0\nmusic volume = 0.4\nsfx volume = 1.0\nvoice volume = 1.0\n[General]\nscreenshot format = png\n[Physics]\noblivion fixed substep = 0.0167\noblivion update type = 0\noblivion chase delta mult = 0.05\n"
+    },
+    {
+      "path": "disposition-events.txt",
+      "content": "at 3 command Player SetAV Personality 50\nat 4 command Player GetDisposition content:oblivion.esm:000014\nat 4 command Player SetAV Personality 20\nat 4 command Player GetDisposition content:oblivion.esm:000014\nat 4 command Player GetAV Personality\nat 5 command Player GetDisposition content:oblivion.esm:000014\nat 6 command Player SetAV Personality 0\nat 7 command Player GetDisposition content:oblivion.esm:000014\nat 8 command Player SetAV Personality 60\nat 9 command Player GetDisposition content:oblivion.esm:000014\nat 10 command Player GetAV Responsibility\nat 15 command Player GetPlayerInSEWorld\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-grab",
+    "--no-sound=1",
+    "--load-savegame={output}/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 120
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "continuation.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": [
+        "T4ST",
+        "OMW4STATE"
+      ]
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "obscript-report.json",
+      "expected_count": 1,
+      "minimum_size": 1000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 240,
+  "expected_exit": 0,
+  "expected_log": [
+    "Writing saved game 'Quicksave'",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0"
+  ],
+  "forbidden_log": [
+    "Failed to (inspect|open) audio",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to load saved game",
+    "Failed to save game",
+    "Failed to start new game"
+  ]
+}

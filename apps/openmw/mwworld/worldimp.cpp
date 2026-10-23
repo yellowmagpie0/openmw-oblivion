@@ -1,4 +1,7 @@
 #include <components/esm4/referenceflags.hpp>
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadfact.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include "worldimp.hpp"
 #include "oblivionweapondrop.hpp"
 #include "savedreference.hpp"
@@ -1850,7 +1853,10 @@ namespace MWWorld
     {
         ESM4::RuntimeState state;
         if (mOblivionRuntimeState)
+        {
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
+            state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
+        }
         state.mNextDynamicSerial = mNextOblivionDynamicSerial;
         for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
             state.mContent.push_back({ plugin, fingerprint });
@@ -2391,6 +2397,193 @@ namespace MWWorld
         if (const auto* object = mStore.search<ESM4::Reference>(key))
             return base(*object);
         return std::nullopt;
+    }
+
+    std::optional<std::int32_t> World::getOblivionDisposition(
+        const ESM::FormKey& actor, const ESM::FormKey& target) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat)
+            return std::nullopt;
+        const auto source = ESM4::runtimeReferenceKey(actor);
+        const auto destination = ESM4::runtimeReferenceKey(target);
+        const auto sourceBase = getOblivionReferenceBaseKey(source);
+        const auto targetBase = getOblivionReferenceBaseKey(destination);
+        if (!sourceBase || !targetBase)
+            return std::nullopt;
+        const auto* sourceNpc = mStore.search<ESM4::Npc>(*sourceBase);
+        const auto* sourceCreature = mStore.search<ESM4::Creature>(*sourceBase);
+        const auto* targetNpc = mStore.search<ESM4::Npc>(*targetBase);
+        const auto* targetCreature = mStore.search<ESM4::Creature>(*targetBase);
+        if ((!sourceNpc && !sourceCreature) || (!targetNpc && !targetCreature))
+            return std::nullopt;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        const auto resident = [&](const ESM::FormKey& key) {
+            if (key == ESM::FormKey::dynamic("player", 1))
+                return const_cast<World*>(this)->getPlayerPtr();
+            if (key.isDynamic()) return mWorldModel.getDynamicNativePtr(key);
+            const auto id = resolver.toFormId(key);
+            return id ? mWorldModel.getPtr(*id) : Ptr{};
+        };
+        const auto saved = [&](const ESM::FormKey& key) -> const ESM4::RuntimeReferenceState* {
+            if (mOblivionRuntimeState)
+                for (const auto& reference : mOblivionRuntimeState->mReferences)
+                    if (reference.mKey == key) return &reference;
+            return nullptr;
+        };
+        ESM::FormKey owner;
+        const auto sourcePtr = resident(source);
+        if (!sourcePtr.isEmpty())
+        {
+            const auto ownerId = sourcePtr.getCellRef().getOwner();
+            if (const auto* id = ownerId.getIf<ESM::FormId>())
+                owner = resolver.toFormKey(*id);
+        }
+        else if (const auto* reference = saved(source); reference && reference->mOwner)
+            owner = *reference->mOwner;
+        else if (const auto* placed = mStore.search<ESM4::ActorCharacter>(source))
+            owner = resolver.toFormKey(placed->mOwner);
+        else if (const auto* creaturePlaced = mStore.search<ESM4::ActorCreature>(source))
+            owner = resolver.toFormKey(creaturePlaced->mOwner);
+        if (!owner.isNull() && owner == *targetBase && mStore.search<ESM4::Npc>(owner))
+            return 100;
+        // Creature ownership/current-process targets select a different base
+        // context in 5EA800. Do not substitute the creature's ordinary inputs.
+        // Those live contexts need their own verified projection before use.
+        if (sourceCreature && (!owner.isNull()
+                || (mOblivionCombat->findMeleeState(source)
+                    && mOblivionCombat->findMeleeState(source)->mAiIntent)))
+            return std::nullopt;
+        const auto* sourceValues = mOblivionCombat->findActorValues(source);
+        const auto* targetValues = mOblivionCombat->findActorValues(destination);
+        if (!sourceValues || !targetValues) return std::nullopt;
+        const bool playerTarget = destination == ESM::FormKey::dynamic("player", 1);
+        const auto integerValue = [&](const ESM::FormKey& key, std::uint8_t value) {
+            return key == ESM::FormKey::dynamic("player", 1)
+                ? mOblivionCombat->getPlayerIntegerValue(value)
+                : mOblivionCombat->getNonPlayerIntegerValue(key, value, mStore);
+        };
+        std::optional<ESM4::PlayerReputationState> reputation;
+        if (playerTarget)
+        {
+            reputation = mOblivionCombat->playerReputation();
+            if (!reputation) return std::nullopt;
+        }
+        std::int32_t bounty = 0;
+        if (!targetCreature)
+        {
+            const auto current = mOblivionCombat->crimeBounty(destination);
+            if (!current) return std::nullopt;
+            bounty = ESM4::convertActorBaseFloat(*current, ESM4::ActorValueConversionMode::NonSse);
+        }
+        const auto targetPtr = resident(destination);
+        std::optional<ESM4::ActorDrawState> drawn;
+        if (!playerTarget && targetValues->mProcess == ESM4::ActorValueProcess::Low)
+            drawn = ESM4::ActorDrawState::Nothing; // LowProcess +304 is 69D990, always false.
+        else if (!targetPtr.isEmpty())
+        {
+            const auto state = targetPtr.getClass().getCreatureStats(targetPtr).getDrawState();
+            drawn = state == MWMechanics::DrawState::Weapon ? ESM4::ActorDrawState::Weapon
+                : state == MWMechanics::DrawState::Spell ? ESM4::ActorDrawState::Spell : ESM4::ActorDrawState::Nothing;
+        }
+        else if (const auto* reference = saved(destination))
+            drawn = reference->mActorDrawState;
+        if (!drawn) return std::nullopt;
+        const auto playerBase = getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1));
+        const auto race = [&](const ESM::FormKey& key, const ESM4::Npc* npc) -> const ESM4::Race* {
+            if (!npc) return nullptr;
+            if (getOblivionReferenceBaseKey(key) == playerBase)
+            {
+                const auto* id = getPlayerConstPtr().get<ESM::NPC>()->mBase->mRace.getIf<ESM::FormId>();
+                return id ? mStore.get<ESM4::Race>().search(ESM::RefId(*id)) : nullptr;
+            }
+            return mStore.get<ESM4::Race>().search(ESM::RefId(npc->mRace));
+        };
+        std::int32_t raceReaction = 0;
+        if (const auto* from = race(source, sourceNpc))
+            if (const auto* to = race(destination, targetNpc))
+                if (const auto value = from->mDisposition.find(to->mId); value != from->mDisposition.end())
+                    raceReaction = value->second;
+        const auto nativeFactions = [](const auto& authored) {
+            std::vector<ESM4::ActorFaction> result;
+            // NPC SNAM loading calls 4675E0: new membership at the head,
+            // existing membership updates in place; rank -1 removes it only
+            // when it already exists. Keep the editable record order intact.
+            for (const auto& entry : authored)
+            {
+                if (ESM::FormId::fromUint32(entry.faction).isZeroOrUnset()) continue;
+                const auto found = std::ranges::find(result, entry.faction, &ESM4::ActorFaction::faction);
+                if (found == result.end()) result.insert(result.begin(), entry);
+                else if (entry.rank == -1) result.erase(found);
+                else found->rank = entry.rank;
+            }
+            return result;
+        };
+        const auto sourceFactions = nativeFactions(sourceNpc ? sourceNpc->mFactions : sourceCreature->mFactions);
+        const auto targetFactions = nativeFactions(targetNpc ? targetNpc->mFactions : targetCreature->mFactions);
+        std::int32_t sameReaction = 0, otherReaction = 10000, sameRank = -1, otherRank = -1;
+        for (const auto& from : sourceFactions)
+        {
+            const auto fromKey = resolver.toFormKey(ESM::FormId::fromUint32(from.faction));
+            const auto* faction = mStore.search<ESM4::Faction>(fromKey);
+            if (!faction) return std::nullopt;
+            for (const auto& to : targetFactions)
+            {
+                if (to.rank < 0) continue;
+                const auto toKey = resolver.toFormKey(ESM::FormId::fromUint32(to.faction));
+                const auto* targetFaction = mStore.search<ESM4::Faction>(toKey);
+                if (!targetFaction) return std::nullopt;
+                if ((targetFaction->mFactionFlags.value_or(0) & 8) && playerBase == targetBase) continue;
+                // FACT loading appends XNAM entries through 67B1E0; the
+                // lookup returns the first match, including an explicit zero.
+                const auto relationship = std::ranges::find(faction->mRelationships, toKey,
+                    &ESM4::FactionRelationship::mFaction);
+                const auto value = relationship == faction->mRelationships.end() ? 0 : relationship->mModifier;
+                if (fromKey == toKey && value > sameReaction)
+                {
+                    sameReaction = value; sameRank = to.rank;
+                }
+                else if (value && value < otherReaction)
+                {
+                    otherReaction = value; otherRank = to.rank;
+                }
+            }
+        }
+        const auto factionReaction = sameReaction ? sameReaction : otherReaction == 10000 ? 0 : otherReaction;
+        const auto rank = sameReaction ? sameRank : otherReaction == 10000 ? -1 : otherRank;
+        std::int32_t modifier = 0;
+        if (mOblivionRuntimeState)
+            if (const auto found = mOblivionRuntimeState->mDispositionModifiers.find({source, destination});
+                found != mOblivionRuntimeState->mDispositionModifiers.end()) modifier = found->second;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : mStore.get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second)
+                settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
+        const ESM4::DispositionInput input{integerValue(source, 6), integerValue(destination, 6), integerValue(source, 36),
+            reputation ? reputation->mFame : 0, reputation ? reputation->mInfamy : 0, bounty,
+            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, modifier,
+            sourceCreature != nullptr};
+        return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings)), 0, 100);
+    }
+
+    std::optional<std::int32_t> World::getOblivionScriptDisposition(
+        const ESM::FormKey& actor, const ESM::FormKey& target)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat) return std::nullopt;
+        const auto source = ESM4::runtimeReferenceKey(actor);
+        const auto destination = ESM4::runtimeReferenceKey(target);
+        // 4F4E20 tests both reference/actor identities before consulting its
+        // cache. A null/nonactor argument returns zero without replacing it.
+        for (const auto& key : {source, destination})
+        {
+            const auto base = getOblivionReferenceBaseKey(key);
+            if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return 0;
+        }
+        if (mOblivionCombat)
+            if (const auto value = mOblivionCombat->cachedScriptDisposition(source, destination)) return value;
+        const auto value = getOblivionDisposition(source, destination);
+        if (value) mOblivionCombat->cacheScriptDisposition(source, destination, *value);
+        return value;
     }
 
     std::optional<bool> World::getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const

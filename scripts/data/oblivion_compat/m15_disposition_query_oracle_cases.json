@@ -1,0 +1,843 @@
+{
+  "version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "script_condition_helper": "0x4f4e20",
+    "frame_reset": "0x4f5db0",
+    "main_reset_callsite": "0x40dbd1",
+    "disposition_wrapper": "0x5ea800",
+    "numeric_score": "0x546260",
+    "snam_setter": "0x4675e0",
+    "npc_loadform": "0x527e40",
+    "npc_snam_callsite": "0x52811d",
+    "fact_loadform": "0x51f8c0",
+    "fact_xnam_append": "0x67b1e0",
+    "reaction_first_lookup": "0x46e8d0",
+    "faction_selection": "0x467920"
+  },
+  "cache_cases": {
+    "personalities": [
+      [
+        0,
+        100
+      ],
+      [
+        50,
+        80
+      ],
+      [
+        100,
+        0
+      ],
+      [
+        1,
+        99
+      ],
+      [
+        99,
+        1
+      ]
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "sequence": [
+      "query pair",
+      "change current AV6",
+      "query same pair retains prior",
+      "reverse pair recomputes",
+      "original pair recomputes",
+      "null target returns0 preserving cache",
+      "reset and query recomputes"
+    ]
+  },
+  "snam_cases": {
+    "factions": [
+      0,
+      1
+    ],
+    "ranks": [
+      -1,
+      0,
+      5
+    ],
+    "sequence_length": 4,
+    "expected_sequences": 1296,
+    "rule": "New nonnull faction prepends even rank -1; existing rank -1 removes, otherwise updates in place."
+  },
+  "faction_cases": {
+    "seed": 467920,
+    "cases": 6000,
+    "factions": 3,
+    "source_ranks": [
+      -128,
+      -1,
+      0,
+      1,
+      5,
+      127
+    ],
+    "target_ranks": [
+      -128,
+      -1,
+      0,
+      2,
+      4,
+      127
+    ],
+    "reactions": [
+      -10000,
+      -15,
+      -1,
+      0,
+      5,
+      10,
+      10000,
+      10001
+    ],
+    "flags": [
+      0,
+      8
+    ]
+  },
+  "runtime_cases": {
+    "personalities": [
+      0,
+      20,
+      50,
+      60,
+      80,
+      100
+    ],
+    "modifiers": [
+      0,
+      -7
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ],
+    "context": "Raw winning NPC7 Player: race907 no XNAM; faction1dbcd rank0, self reaction30, flags1. Source/target Player self. Current AV6 and36 prescribed, Fame/Infamy/Bounty0, no source ownership/process."
+  },
+  "retained_oracles": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-cache-oracle-01",
+      "verification": {
+        "passed": true,
+        "cases": 60,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "85bc8607e7a6e43436aa5142cca63430a366e70c5f3c07c4f8124b8d853d6759",
+        "scope": "Full4F4E20 script/condition helper + actual4F5DB0 reset + actual5EA800/546260 on synthetic unowned NPC actors. Prescribed current integer AV6/36 only (plus owner-bootstrap allocator/locks). Actual actor eligibility/base/race/empty-faction/zero-bounty/modifier helpers execute. Same ordered pair caches across AV changes; reverse/different pair replaces; null target yields0 and preserves pair; frame reset causes recomputation. Reset callsite40DBD1 statically inspected, engine main loop not executed."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-storage-oracle-01",
+      "verification": {
+        "passed": true,
+        "sequences": 1296,
+        "snapshots": 5184,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "8517130270da67c9872b6dc8d91497907797dc9706e3f9c3340663c41ea6ea27",
+        "scope": "Full4675E0 faction setter + actual446CB0 head insertion/list removal. Boundaries: actorBaseData MarkModified4672F0 checks0x40; heap/free from owned original bootstrap. NPC loader527E40 statically dispatches SNAM5280FD..528122 through this setter. Authored order projects as head insertion of first occurrence, in-place rank updates, removal of existing entry on rank-1, new rank-1 retained. Whole plugin loader/linking not executed."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-faction-query-oracle-01",
+      "verification": {
+        "passed": true,
+        "cases": 6000,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "3a19cd9f8f76cc6018859adab3698b3cd2602abcbb0ebeb840e20b76840c8d0e",
+        "scope": "Full467920+46E8D0+5E02E0 on synthetic ordered faction lists. Multi-membership source/target ordering, negative source ranks, negative target rank exclusion, Player-base bit8 exclusion, same-positive priority, strict10000 sentinel and ties compared to explicit Python projection. Seed467920. No runtime faction mutations or gameplay acceptance."
+      }
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01",
+      "verification": {
+        "passed": true,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "sources": [
+          {
+            "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+            "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+          },
+          {
+            "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+            "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+          }
+        ],
+        "settings": [
+          {
+            "storage": "0xb367b8",
+            "name": "fDispActorPerBase",
+            "value": 0.0,
+            "bits": 0,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367c0",
+            "name": "fDispActorPerMult",
+            "value": 1.0,
+            "bits": 1069547520,
+            "source": "Oblivion.esm",
+            "form_id": 165798
+          },
+          {
+            "storage": "0xb367c8",
+            "name": "fDispTargetPerBase",
+            "value": 0.0,
+            "bits": 0,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367d0",
+            "name": "fDispTargetPerMult",
+            "value": 1.0,
+            "bits": 1056964608,
+            "source": "Oblivion.esm",
+            "form_id": 165797
+          },
+          {
+            "storage": "0xb367d8",
+            "name": "fDispTargetFameMult",
+            "value": 0.30000001192092896,
+            "bits": 1050253722,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367e0",
+            "name": "fDispTargetInfamyMult",
+            "value": -0.30000001192092896,
+            "bits": 3197737370,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367e8",
+            "name": "fDispActorInfamyBase",
+            "value": -1.0,
+            "bits": 3212836864,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367f0",
+            "name": "fDispActorInfamyMult",
+            "value": 0.019999999552965164,
+            "bits": 1017370378,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb367f8",
+            "name": "fDispTargetBountyMult",
+            "value": -0.003000000026077032,
+            "bits": 3141835686,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36800",
+            "name": "fDispActorBountyBase",
+            "value": -1.0,
+            "bits": 3212836864,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36808",
+            "name": "fDispActorBountyMult",
+            "value": 0.019999999552965164,
+            "bits": 1017370378,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36810",
+            "name": "fDispTargetRaceMult",
+            "value": 1.0,
+            "bits": 1065353216,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36818",
+            "name": "fDispTargetFactionMult",
+            "value": 1.0,
+            "bits": 1065353216,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36820",
+            "name": "fDispTargetFactionRankBase",
+            "value": 1.0,
+            "bits": 1065353216,
+            "source": "Oblivion.esm",
+            "form_id": 165796
+          },
+          {
+            "storage": "0xb36828",
+            "name": "fDispTargetFactionRankMult",
+            "value": 0.5,
+            "bits": 1056964608,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36830",
+            "name": "fDispTargetWeaponBase",
+            "value": -10.0,
+            "bits": 3240099840,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36838",
+            "name": "fDispTargetDiseaseBase",
+            "value": -10.0,
+            "bits": 3240099840,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36ce8",
+            "name": "iDispFameMax",
+            "value": 20,
+            "bits": 20,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36cf0",
+            "name": "iDispBountyMax",
+            "value": 20,
+            "bits": 20,
+            "source": "original executable default"
+          },
+          {
+            "storage": "0xb36cf8",
+            "name": "fDispInfamyMax",
+            "value": 20.0,
+            "bits": 1101004800,
+            "source": "original executable default"
+          }
+        ],
+        "player": {
+          "base": 7,
+          "race": 2311,
+          "factions": [
+            [
+              121805,
+              30
+            ]
+          ]
+        },
+        "rows": [
+          {
+            "word": 639,
+            "personality": 0,
+            "modifier": 0,
+            "args": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 30
+          },
+          {
+            "word": 639,
+            "personality": 20,
+            "modifier": 0,
+            "args": [
+              20,
+              20,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 50
+          },
+          {
+            "word": 639,
+            "personality": 50,
+            "modifier": 0,
+            "args": [
+              50,
+              50,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 80
+          },
+          {
+            "word": 639,
+            "personality": 60,
+            "modifier": 0,
+            "args": [
+              60,
+              60,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 90
+          },
+          {
+            "word": 639,
+            "personality": 80,
+            "modifier": 0,
+            "args": [
+              80,
+              80,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 639,
+            "personality": 100,
+            "modifier": 0,
+            "args": [
+              100,
+              100,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 639,
+            "personality": 0,
+            "modifier": -7,
+            "args": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 23
+          },
+          {
+            "word": 639,
+            "personality": 20,
+            "modifier": -7,
+            "args": [
+              20,
+              20,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 43
+          },
+          {
+            "word": 639,
+            "personality": 50,
+            "modifier": -7,
+            "args": [
+              50,
+              50,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 73
+          },
+          {
+            "word": 639,
+            "personality": 60,
+            "modifier": -7,
+            "args": [
+              60,
+              60,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 83
+          },
+          {
+            "word": 639,
+            "personality": 80,
+            "modifier": -7,
+            "args": [
+              80,
+              80,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 639,
+            "personality": 100,
+            "modifier": -7,
+            "args": [
+              100,
+              100,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 895,
+            "personality": 0,
+            "modifier": 0,
+            "args": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 30
+          },
+          {
+            "word": 895,
+            "personality": 20,
+            "modifier": 0,
+            "args": [
+              20,
+              20,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 50
+          },
+          {
+            "word": 895,
+            "personality": 50,
+            "modifier": 0,
+            "args": [
+              50,
+              50,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 80
+          },
+          {
+            "word": 895,
+            "personality": 60,
+            "modifier": 0,
+            "args": [
+              60,
+              60,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 90
+          },
+          {
+            "word": 895,
+            "personality": 80,
+            "modifier": 0,
+            "args": [
+              80,
+              80,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 895,
+            "personality": 100,
+            "modifier": 0,
+            "args": [
+              100,
+              100,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 895,
+            "personality": 0,
+            "modifier": -7,
+            "args": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 23
+          },
+          {
+            "word": 895,
+            "personality": 20,
+            "modifier": -7,
+            "args": [
+              20,
+              20,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 43
+          },
+          {
+            "word": 895,
+            "personality": 50,
+            "modifier": -7,
+            "args": [
+              50,
+              50,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 73
+          },
+          {
+            "word": 895,
+            "personality": 60,
+            "modifier": -7,
+            "args": [
+              60,
+              60,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 83
+          },
+          {
+            "word": 895,
+            "personality": 80,
+            "modifier": -7,
+            "args": [
+              80,
+              80,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 100
+          },
+          {
+            "word": 895,
+            "personality": 100,
+            "modifier": -7,
+            "args": [
+              100,
+              100,
+              0,
+              0,
+              0,
+              0,
+              0,
+              30,
+              0,
+              0,
+              0,
+              -7,
+              0
+            ],
+            "result": 100
+          }
+        ],
+        "scope": "Actual5EA800+546260 on synthetic Player self pair using independently audited winning content/default GMSTs and raw Player/race/faction records. Current AV6/36 prescribed; raw Fame/Infamy/Bounty zero, no process/ownership. Not original-game live acceptance."
+      }
+    }
+  ],
+  "limitations": [
+    "No original-game live course",
+    "No source owned/process Creature context",
+    "No leveled-base runtime projection",
+    "No runtime faction mutations",
+    "No ModDisposition producer",
+    "No common-hit or normal-input combat acceptance"
+  ]
+}

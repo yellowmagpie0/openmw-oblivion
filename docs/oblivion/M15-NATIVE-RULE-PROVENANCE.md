@@ -18031,3 +18031,53 @@ Player NPC base still receives the faction-bit8 membership exclusion: this
 check uses base identity. The probe supplies current AV6/36 values and has no
 process/owner/leveled context or multiple memberships. It proves native input
 contracts, not a fork runtime adapter.
+
+
+### Live disposition reads and typed modifiers (schema66; intermediate)
+
+The native numeric rule now has a World caller. `GetDisposition` and loaded/
+unloaded condition reads use current native actor values, raw Player reputation
+and bounty, current draw posture, mutable Player-base race and ordered native
+faction selection. The direct World query bypasses the script pair cache;
+script/condition reads retain the same pair until the next frame, including
+after actor-value writes. Null/nonactor arguments return zero without replacing
+the cached pair. Creature ownership/process cases beyond the direct owner-match
+fast path remain explicitly unavailable.
+Runtime faction mutation and leveled-base projection are not claimed.
+
+Schema66 appends signed per-actor/target disposition modifiers, preserving an
+explicit zero entry and rejecting dangling/noncanonical actor endpoints. Older
+schemas migrate empty because the fork deferred ModDisposition. The writer is
+still deferred. The three current fixture staging recipes now target 66.
+
+Full normal checks pass 1,884 engine and 3,040 component tests; ASan/UBSan pass
+1,884 engine and 891 ESM4 component tests. All 401 Python tests pass, with no
+skips. Four new World cases exercise current reads/cache, persisted modifiers,
+native faction insertion/ties/removal/first-XNAM selection, Low-process draw
+and references sharing the Player's mutable race. ASan leak detection is off.
+
+Original executable probes cover 60 cache observations, 1,296 faction setter
+sequences (5,184 snapshots), 6,000 multi-faction selection cases and 24 audited
+Player-self disposition cases. The installed Player faction contributes 30;
+winning personality multipliers are 1.5 and 0.5. Thus Personality 50 returns 80,
+then changing to 20 in the same frame retains 80 and next frame returns 50.
+Rendered original-content courses verify that sequence, F5 and protected-input
+fresh-process reload/resave; an independently injected -7 modifier produces
+73/73/43/23/83 and survives resave. A real schema65 save migrates to66 with
+an empty modifier map through another fresh process. The old executable fails
+the positive query contract. Captures show the rendered prison/HUD. Sound is
+disabled.
+
+The initial runtime protocol passed string `Player` to a scheduled host command;
+that resolves authored NPC7 rather than the reference and correctly returned 0.
+That failed attempt is retained; the accepted protocol uses explicit reference 14.
+Scheduled commands do not prove compiled GetDisposition reference binding. The
+existing 10,470 source units compile without failures, but are a separate layer.
+
+See [M15-DISPOSITION-RUNTIME-VERIFICATION.json](M15-DISPOSITION-RUNTIME-VERIFICATION.json),
+the editable [first](../../scripts/data/oblivion_compat/oblivion_m15_disposition_first.json)/
+[continuation](../../scripts/data/oblivion_compat/oblivion_m15_disposition_continuation.json)
+protocols and [native probe recipe](../../scripts/data/oblivion_compat/m15_disposition_query_oracle_cases.json).
+This closes a bounded disposition-read/storage dependency. ModDisposition,
+automatic common-hit callbacks/speech/counters and their producer/expiry/save
+lifecycle, Player audio and the full S4 normal-input/restart matrix remain open.

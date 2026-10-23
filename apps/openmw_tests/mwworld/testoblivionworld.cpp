@@ -33861,3 +33861,147 @@ TEST(OblivionWorldTest, BaseObjectIdentityCompiledNamesAndReferenceLocalsSurvive
     ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
     EXPECT_EQ(std::get<std::int64_t>(world.captureOblivionRuntimeState().mScriptInstances.front().mLocals[0]), 3);
 }
+
+TEST(OblivionWorldTest, DispositionReadsLiveActorValuesAndCachesOnlyScriptQueriesWithinAFrame)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const auto actor = fixture.mActor.getCellRef().getFormKey();
+    const auto setPersonality = [&](int value) {
+        scripts->call("SetAV", ObScript::ReferenceValue{actor, {}},
+            {std::string("Personality"), std::int64_t(value)}, {}, {});
+    };
+    const auto query = [&] {
+        return ObScript::asInteger(scripts->call("GetDisposition", ObScript::ReferenceValue{actor, {}},
+            {ObScript::ReferenceValue{actor, {}}}, {}, {}));
+    };
+    setPersonality(50);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 50);
+    EXPECT_EQ(query(), 50);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    setPersonality(80);
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 80);
+    EXPECT_EQ(query(), 50); // Original 4F4E20 cache is not invalidated by a write.
+    EXPECT_EQ(world.getOblivionScriptDisposition(actor, {}), 0);
+    EXPECT_EQ(query(), 50); // A rejected target leaves the cached pair alone.
+    world.getOblivionCombatService()->beginScriptActorFrame();
+    EXPECT_EQ(query(), 80);
+    const auto saved = world.captureOblivionRuntimeState();
+    EXPECT_TRUE(saved.mDispositionModifiers.empty());
+}
+
+TEST(OblivionWorldTest, DispositionConsumesPersistedModifiersAndKeepsUnavailableActorsExplicit)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    const auto actor = fixture.mActor.getCellRef().getFormKey();
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    scripts->call("SetAV", ObScript::ReferenceValue{actor, {}},
+        {std::string("Personality"), std::int64_t(50)}, {}, {});
+    auto state = world.captureOblivionRuntimeState();
+    state.mDispositionModifiers[{actor, actor}] = -7;
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 43);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mDispositionModifiers, state.mDispositionModifiers);
+    EXPECT_FALSE(world.getOblivionDisposition(actor, ESM::FormKey::content("headless.esm", 0xdead)));
+    EXPECT_FALSE(world.getOblivionDisposition(ESM::FormKey::content("headless.esm", 0x940), actor));
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 76;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mComparisonValue = 43;
+    condition.mParameter1.mIsFormId = true;
+    condition.mParameter1.mReferenceKey = actor;
+    EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(fixture.mActor, fixture.mActor,
+        std::span(&condition, 1)), ESM4::ConditionResult::True);
+}
+
+TEST(OblivionWorldTest, DispositionUsesNativeSnamInsertionOrderForEqualFactionReactions)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    auto target = addNativeNpc(fixture, 0xa60, 100, 0xa70);
+    target = target.getCell()->moveTo(target, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(target);
+    const auto sourceKey = fixture.mActor.getCellRef().getFormKey();
+    const auto targetKey = target.getCellRef().getFormKey();
+    for (std::uint32_t id : {0xa80, 0xa81, 0xa82})
+    {
+        ESM4::Faction faction{};
+        faction.mId = {id, 0}; faction.mFormKey = ESM::FormKey::content("headless.esm", id);
+        if (id == 0xa80)
+            faction.mRelationships = {{ESM::FormKey::content("headless.esm", 0xa81), 10},
+                {ESM::FormKey::content("headless.esm", 0xa82), 10}};
+        store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+    }
+    const auto sourceBase = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+    auto sourceNpc = *store.search<ESM4::Npc>(sourceBase);
+    sourceNpc.mFactions = {{0xa80, 1, 0, 0, 0}};
+    store.getWritable<ESM4::Npc>().insertStatic(sourceNpc, sourceBase);
+    const auto targetBase = target.get<ESM4::Npc>()->mBase->mFormKey;
+    auto targetNpc = *store.search<ESM4::Npc>(targetBase);
+    targetNpc.mFactions = {{0xa81, 1, 0, 0, 0}, {0xa82, 3, 0, 0, 0}};
+    store.getWritable<ESM4::Npc>().insertStatic(targetNpc, targetBase);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(target, ESM4::ActorValueProcess::Active));
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    for (const auto& actor : {sourceKey, targetKey})
+        scripts->call("SetAV", ObScript::ReferenceValue{actor, {}},
+            {std::string("Personality"), std::int64_t(50)}, {}, {});
+    // Native loading prepends a82; the equal reaction keeps its rank3.
+    EXPECT_EQ(world.getOblivionDisposition(sourceKey, targetKey), 90);
+    target.getClass().getCreatureStats(target).setDrawState(MWMechanics::DrawState::Weapon);
+    EXPECT_EQ(world.getOblivionDisposition(sourceKey, targetKey), 80);
+    EXPECT_EQ(store.search<ESM4::Npc>(targetBase)->mFactions.front().faction, 0xa81u);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(target, ESM4::ActorValueProcess::Low, true));
+    ASSERT_EQ(world.getOblivionCombatService()->findActorValues(targetKey)->mProcess, ESM4::ActorValueProcess::Low);
+    EXPECT_EQ(world.getOblivionDisposition(sourceKey, targetKey), 90); // Low process cannot report weapon out.
+    auto faction = *store.search<ESM4::Faction>(ESM::FormKey::content("headless.esm", 0xa80));
+    faction.mRelationships = {{ESM::FormKey::content("headless.esm", 0xa81), 5},
+        {ESM::FormKey::content("headless.esm", 0xa81), 25},
+        {ESM::FormKey::content("headless.esm", 0xa82), 10}};
+    store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+    EXPECT_EQ(world.getOblivionDisposition(sourceKey, targetKey), 60); // FACT XNAM keeps its first match.
+    faction.mRelationships.back().mModifier = -15;
+    store.getWritable<ESM4::Faction>().insertStatic(faction, faction.mFormKey);
+    targetNpc.mFactions = {{0xa81, 1, 0, 0, 0}, {0xa82, 3, 0, 0, 0},
+        {0xa82, -1, 0, 0, 0}, {0xa81, 2, 0, 0, 0}};
+    store.getWritable<ESM4::Npc>().insertStatic(targetNpc, targetBase);
+    EXPECT_EQ(world.getOblivionDisposition(sourceKey, targetKey), 65); // Removed a82 cannot supply its old reaction.
+}
+
+TEST(OblivionWorldTest, DispositionUsesTheMutablePlayerRaceForReferencesSharingThePlayerBase)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    auto target = addNativeNpc(fixture, 0xa60, 100, 0xa70);
+    target = target.getCell()->moveTo(target, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(target);
+    const auto source = fixture.mActor.getCellRef().getFormKey();
+    const auto destination = target.getCellRef().getFormKey();
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(target, ESM4::ActorValueProcess::Active));
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    for (const auto& actor : {source, destination})
+        scripts->call("SetAV", ObScript::ReferenceValue{actor, {}},
+            {std::string("Personality"), std::int64_t(50)}, {}, {});
+    ESM4::Race race{};
+    race.mId = {0xa90, 0}; race.mDisposition[{0x810, 0}] = 10;
+    store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0xa90));
+    ESM::Race projection{}; projection.blank(); projection.mId = ESM::RefId(race.mId);
+    store.getWritable<ESM::Race>().insertStatic(projection);
+    auto character = *world.getPlayerPtr().get<ESM::NPC>()->mBase;
+    character.mRace = projection.mId;
+    auto metadata = store.preparePlayerRecord(character);
+    world.getPlayer().set(metadata.commit());
+    ASSERT_EQ(world.getOblivionReferenceBaseKey(source),
+        world.getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1)));
+    EXPECT_EQ(world.getOblivionDisposition(source, destination), 60);
+    EXPECT_EQ(world.getOblivionDisposition(destination, source), 50);
+}

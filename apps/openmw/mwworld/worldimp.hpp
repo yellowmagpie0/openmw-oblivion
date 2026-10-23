@@ -433,6 +433,12 @@ namespace MWWorld
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const;
         std::optional<ESM::FormKey> getOblivionReferenceBaseKey(const ESM::FormKey& reference) const;
+        // Direct actor query bypasses the per-frame script cache. Unavailable
+        // native ownership/process inputs return nullopt rather than a score.
+        std::optional<std::int32_t> getOblivionDisposition(
+            const ESM::FormKey& actor, const ESM::FormKey& target) const;
+        std::optional<std::int32_t> getOblivionScriptDisposition(
+            const ESM::FormKey& actor, const ESM::FormKey& target);
         bool setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value);
         std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
         // Borrow the current actor renderer with an already resolved native

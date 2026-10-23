@@ -1190,6 +1190,11 @@ namespace MWMechanics
                 return value(comparison && !subjectLocation->mCell.isNull()
                     && subjectLocation->mCell == comparison->mCell ? 1.0 : 0.0);
             }
+            if (function == "GetDisposition")
+            {
+                const auto disposition = mWorld.getOblivionScriptDisposition(subjectKey, parameterKey);
+                return disposition ? value(*disposition) : ESM4::ConditionValue::missing();
+            }
             if (function == "GetIsID")
             {
                 const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
@@ -2035,6 +2040,11 @@ namespace MWMechanics
                 const std::optional<ESM::FormId> factionId
                     = ESM::FormKeyResolver(mWorld.mContentFiles).toFormId(parameterKey);
                 return value(factionId && playerNpcStats()->isInFaction(ESM::RefId(*factionId)) ? 1.0 : 0.0);
+            }
+            if (function == "GetDisposition")
+            {
+                const auto disposition = mWorld.getOblivionScriptDisposition(actorKey(subjectPtr), parameterKey);
+                return disposition ? value(*disposition) : ESM4::ConditionValue::missing();
             }
             if (function == "GetIsID")
             {

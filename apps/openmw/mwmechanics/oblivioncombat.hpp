@@ -406,6 +406,8 @@ namespace MWMechanics
         // Process-frame flag B333B8: consumed by the next frame clock, then
         // cleared before global scripts and actor updates. Never saved.
         bool mSceneIsComplex = false;
+        std::optional<std::pair<ESM::FormKey, ESM::FormKey>> mScriptDispositionPair;
+        std::int32_t mScriptDispositionValue = 0;
         ESM4::CrimeStateContracts mCrimeContracts;
         std::map<std::uint64_t, ESM::FormKey> mActionOwners;
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> mMeleeStates;
@@ -529,7 +531,20 @@ namespace MWMechanics
         std::uint32_t combatRandomState() const noexcept { return mCombatRngState; }
         bool sceneIsComplex() const noexcept { return mSceneIsComplex; }
         void setSceneIsComplex(bool value) noexcept { mSceneIsComplex = value; }
-        void beginScriptActorFrame() noexcept { mSceneIsComplex = false; }
+        void beginScriptActorFrame() noexcept { mSceneIsComplex = false; mScriptDispositionPair.reset(); }
+        std::optional<std::int32_t> cachedScriptDisposition(
+            const ESM::FormKey& actor, const ESM::FormKey& target) const
+        {
+            return mScriptDispositionPair && mScriptDispositionPair->first == actor
+                && mScriptDispositionPair->second == target
+                ? std::optional(mScriptDispositionValue) : std::nullopt;
+        }
+        void cacheScriptDisposition(const ESM::FormKey& actor, const ESM::FormKey& target, std::int32_t value)
+        {
+            auto prepared = std::optional(std::pair{actor, target});
+            mScriptDispositionPair.swap(prepared);
+            mScriptDispositionValue = value;
+        }
         const ESM4::CrimeStateContracts& crimeContracts() const noexcept { return mCrimeContracts; }
         // Legal bounty differs from AV37: realm routing and sub-one minimum,
         // without generic AV modifiers. Absence denotes legacy unowned storage.

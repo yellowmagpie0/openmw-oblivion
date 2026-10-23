@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 65
+CURRENT_VERSION = 66
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1074,6 +1074,22 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         raise RuntimeStateError("TES4 native actor lifecycle requires version 12")
     if type(next_death) is not int or not 1 <= next_death < 1 << 64:
         raise RuntimeStateError("Invalid TES4 next death event identity")
+    modifiers = check_collection(state.get("disposition_modifiers", []), "disposition modifier list")
+    if version < 66 and modifiers:
+        raise RuntimeStateError("Disposition modifiers require runtime schema66")
+    modifier_pairs = set()
+    for entry in modifiers:
+        if not isinstance(entry, dict):
+            raise RuntimeStateError("Invalid disposition modifier")
+        pair = (entry.get("actor"), entry.get("target"))
+        for key in pair:
+            native_key(key)
+            if key not in native_keys or key == "content:oblivion.esm:000014":
+                raise RuntimeStateError("Invalid or dangling disposition actor identity")
+        value = entry.get("value")
+        if pair in modifier_pairs or type(value) is not int or not -(1 << 31) <= value < 1 << 31:
+            raise RuntimeStateError("Invalid or duplicate disposition modifier")
+        modifier_pairs.add(pair)
     value_bases = {actor["actor"]: actor["base"] for actor in native_actors}
     legacy_refs = {reference["key"]: reference for reference in references}
     life_keys: set[str] = set()
@@ -2719,6 +2735,17 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             friendly[key] = bool(ignored)
             previous = order
         result["ignore_friendly_hits"] = friendly
+    if version >= 66:
+        modifiers = []
+        previous = None
+        for _ in range(reader.count()):
+            actor, target = reader.string(), reader.string()
+            order = (tuple(actor.split(":")), tuple(target.split(":")))
+            if previous is not None and previous >= order:
+                raise RuntimeStateError("Noncanonical disposition modifier map")
+            modifiers.append({"actor": actor, "target": target, "value": reader.unpack("<i")})
+            previous = order
+        result["disposition_modifiers"] = modifiers
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3358,6 +3385,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for key, ignored in friendly:
             writer.string(key)
             writer.pack("<B", int(ignored))
+    if version >= 66:
+        modifiers = sorted(state.get("disposition_modifiers", []),
+                           key=lambda entry: (tuple(entry["actor"].split(":")), tuple(entry["target"].split(":"))))
+        writer.pack("<I", len(modifiers))
+        for entry in modifiers:
+            writer.string(entry["actor"])
+            writer.string(entry["target"])
+            writer.pack("<i", entry["value"])
     return writer.finish()
 
 
@@ -3638,6 +3673,12 @@ def _upgrade_friendly_hit_flags(state: dict[str, Any]) -> None:
     state.setdefault("ignore_friendly_hits", {})
 
 
+def _upgrade_disposition_modifiers(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 66 and state.get("disposition_modifiers"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry disposition modifiers")
+    state.setdefault("disposition_modifiers", [])
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
@@ -3662,6 +3703,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_bow_states(state)
     _upgrade_spoken_dialogue_history(state)
     _upgrade_friendly_hit_flags(state)
+    _upgrade_disposition_modifiers(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3746,6 +3788,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_bow_states(result)
     _upgrade_spoken_dialogue_history(result)
     _upgrade_friendly_hit_flags(result)
+    _upgrade_disposition_modifiers(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)
