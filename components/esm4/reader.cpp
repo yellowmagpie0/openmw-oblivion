@@ -944,6 +944,18 @@ namespace ESM4
         return true;
     }
 
+    bool Reader::getFormId(ESM::FormId& id, ESM::FormKey& key)
+    {
+        FormId32 raw;
+        if (!getExact(raw))
+            return false;
+        id = FormId::fromUint32(raw);
+        key = resolveRawFormId(id);
+        recordRawFormId(id);
+        adjustFormId(id);
+        return true;
+    }
+
     ESM::FormId Reader::getFormIdFromHeader() const
     {
         FormId formId = hdr().record.getFormId();

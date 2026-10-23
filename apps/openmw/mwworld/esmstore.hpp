@@ -14,6 +14,7 @@
 #include <components/esm/refid.hpp>
 #include <components/esm3/loadgmst.hpp>
 #include <components/esm4/loadinfo.hpp>
+#include <components/esm4/dialoguetopics.hpp>
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/loadclmt.hpp>
 #include <components/esm4/loadeyes.hpp>
@@ -252,6 +253,7 @@ namespace MWWorld
         std::vector<DynamicStore*> mDynamicStores;
 
         ESM::FormKeyIndex mFormKeyIndex;
+        ESM4::DialogueTopicIndex mOblivionDialogueTopics;
         std::map<std::string, ESM::FormKey, std::less<>> mEsm4EditorIds;
 
         uint64_t mDynamicCount;
@@ -387,6 +389,7 @@ namespace MWWorld
         void loadESM4(ESM4::Reader& esm, Loading::Listener* listener);
 
         const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
+        const ESM4::DialogueTopicIndex& getOblivionDialogueTopics() const { return mOblivionDialogueTopics; }
         std::optional<ESM::FormKey> findEsm4FormKey(std::string_view editorId) const;
         // Native integer FormIDs count TES4 plugins, excluding Lua/TES3 files.
         // Return the corresponding resolved fork ID, or no ID for null/missing

@@ -12152,3 +12152,40 @@ See [M15-SCENE-COMPLEX-VERIFICATION.json](M15-SCENE-COMPLEX-VERIFICATION.json).
 The original rendering byte BA7A04 remains outside this mechanical implementation.
 These courses do not close normal-input melee or fresh-restart gates. Automatic
 common-hit speech and the remaining M15S4 delivery gates are still open.
+
+
+### Native quest groups and INFO predecessor order
+
+Dialogue queries now consume a content-load index that replays INFO revisions
+in file order. Quest groups retain first-seen order on equal priority and sort
+by the winning unsigned priority. Missing PNAM appends only a new entry; explicit
+zero inserts first. Linked overrides clear the stored ordinal before resolving
+the predecessor and compact at the native point. Deleted INFO memberships stay
+in the index while live lookup rejects their missing definitions; deleted
+topics return before visiting arrays. Each eligibility visit uses its owning
+quest group, including duplicate INFO identities.
+
+Stable QSTI/PNAM keys are decoded before global index remapping, preserving null
+and absent-field distinctions. The original executable passes 781 priority
+cases and 1,503 insertion/loader sequences. All 18,799 production comparisons
+match; three false-policy controls are rejected. Independent raw/typed audits
+match all 20,338 INFO revisions across the official files and authored fixtures.
+Both full engine profiles pass 1,871 tests; normal components pass 3,021 and
+sanitizer ESM4 components pass 873 with unchanged component inputs. All 397
+Python tests pass. Sanitizer leak detection is disabled.
+
+An editable fixture authors four separately identified voiced INFOs and a
+priority/INFO override patch. The rendered course selects 812, 811, 813, 810,
+plays four original 2.2205-second clips with their LIP companions, filters the
+next call and saves schema 64 history. A fresh process loads a protected copy,
+filters every repeat and resaves the same history. The existing original-INFO
+history fixture now explicitly supplies PNAM zero for native head insertion;
+its rendered save/restart course also passes. Both fixture families retain
+compiler results, actual playback and wave captures, reviewed prison/HUD images
+and unrelated startup diagnostics separately. These captures do not show the
+speaking actor's face.
+
+See [M15-DIALOGUE-ORDER-VERIFICATION.json](M15-DIALOGUE-ORDER-VERIFICATION.json).
+This closes the ordered candidate input for scripted speech. Automatic common-hit
+callback wiring, GetFriendHit actor binding/storage, Player audio identity and
+the remaining normal-input/opponent/mastery/restart M15S4 gates remain open.

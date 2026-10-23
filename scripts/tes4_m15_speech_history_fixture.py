@@ -38,7 +38,7 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     if sum(s['name'] == 'QSTI' and len(s['payload']) == 4 for s in parts) != 1:
         raise ValueError('speech history fixture requires one quest binding')
     after = b''.join(sub(s['name'], struct.pack('<I', recipe['quest']) if s['name'] == 'QSTI' else s['payload'])
-                     for s in parts)
+                     for s in parts) + sub('PNAM', struct.pack('<I', 0))
     topic = record('DIAL', recipe['topic'], string('EDID', recipe['topic_editor_id'])
                    + sub('QSTI', struct.pack('<I', recipe['quest']))
                    + string('FULL', 'Speech history test') + sub('DATA', bytes([data[0][0]])))
@@ -50,7 +50,7 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
                 + group(struct.pack('<I', recipe['topic']), 7, record('INFO', recipe['source_info'], after)))
     return output, dict(schema_version=1, structural_write_success=True,
         source_info_sha256=recipe['source_payload_sha256'], plugin_sha256=hashlib.sha256(output).hexdigest(),
-        mutations=['New DIAL and start-enabled QUST', 'Existing INFO reparented to new DIAL; QSTI replaced'],
+        mutations=['New DIAL and start-enabled QUST', 'Existing INFO reparented to new DIAL; QSTI replaced; explicit PNAM zero inserts at head'],
         original_SayOnce_flags_preserved=data[0][2], voice_owner_and_response_bytes_preserved=True,
         compiler_world_validation=False, semantic_reinspection=False, runtime_acceptance=False)
 

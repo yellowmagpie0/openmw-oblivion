@@ -225,6 +225,13 @@ namespace EsmTool
                               << " reference1=" << condition.mParameter1.mReferenceKey.serialize()
                               << " reference2=" << condition.mParameter2.mReferenceKey.serialize();
             }
+            if constexpr (std::is_same_v<T, ESM4::DialogInfo>)
+            {
+                std::cout << "\n  DialogueInfoForm: " << reader.getFormKeyFromHeader().serialize()
+                          << "\n  DialogueInfoQuest: " << value.mQuestKey.serialize()
+                          << "\n  DialogueInfoPrevious: "
+                          << (value.mPreviousInfoKey ? value.mPreviousInfoKey->serialize() : "absent");
+            }
             if constexpr (std::is_same_v<T, ESM4::Skill>)
             {
                 if (value.mData)

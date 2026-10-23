@@ -28,6 +28,7 @@
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadcont.hpp>
 #include <components/esm4/loadcrea.hpp>
+#include <components/esm4/loaddial.hpp>
 #include <components/esm4/loaddoor.hpp>
 #include <components/esm4/loadflor.hpp>
 #include <components/esm4/loadfurn.hpp>
@@ -275,9 +276,6 @@ namespace MWWorld
         for (const ESM4::DialogInfo& info : mStore.get<ESM4::DialogInfo>())
         {
             corpus.add(info, revision(info.mFormKey));
-            const ESM::FormRecordMetadata* metadata = mStore.getFormKeyIndex().resolve(info.mFormKey);
-            if (metadata != nullptr && metadata->mParent)
-                mTopicInfos[*metadata->mParent].push_back(info.mFormKey);
         }
         corpus.finalize();
 
@@ -393,30 +391,42 @@ namespace MWWorld
         const ESM::FormKey& topic, const Ptr& actor, const Ptr& target) const
     {
         requireMutableRuntime();
+        // Original52F010 rejects a deleted topic before visiting its arrays.
+        // Deleted definitions are absent from the live typed store.
+        if (!mStore.search<ESM4::Dialogue>(topic))
+            return std::nullopt;
         const bool diagnose = mDiagnosedVoiceTopics.emplace(topic, keyFor(actor)).second;
-        const auto topicInfos = mTopicInfos.find(topic);
+        const auto groups = mStore.getOblivionDialogueTopics().ordered(topic, [&](const ESM::FormKey& key) {
+            const auto* quest = mStore.search<ESM4::Quest>(key);
+            return quest ? int(quest->mData.priority) : -1;
+        });
+        std::vector<const ESM4::DialogInfo*> infos;
+        std::vector<const ESM4::Quest*> quests;
+        for (const auto& group : groups)
+        {
+            const auto* quest = mStore.search<ESM4::Quest>(group.mQuest);
+            const auto state = mQuests.find(group.mQuest);
+            if (!quest || state == mQuests.end() || !state->second.mRunning)
+                continue;
+            for (const auto& key : group.mInfos)
+            {
+                infos.push_back(mStore.search<ESM4::DialogInfo>(key));
+                quests.push_back(quest);
+            }
+        }
         if (diagnose)
             Log(Debug::Info) << "Native dialogue lookup: topic=" << topic.serialize()
                 << " actor=" << keyFor(actor).serialize()
-                << " infos=" << (topicInfos == mTopicInfos.end() ? 0 : topicInfos->second.size());
-        if (topicInfos == mTopicInfos.end())
+                << " infos=" << infos.size();
+        if (infos.empty())
             return std::nullopt;
-        std::vector<const ESM4::DialogInfo*> infos;
-        infos.reserve(topicInfos->second.size());
-        for (const auto& info : topicInfos->second)
-            infos.push_back(mStore.search<ESM4::DialogInfo>(info));
-        const auto* definition = ESM4::selectDialogueInfo(infos, [&](const ESM4::DialogInfo& info) {
+        const auto* definition = ESM4::selectDialogueInfo(infos, [&](const ESM4::DialogInfo& info, std::size_t index) {
             const auto* ai = mWorld.getOblivionAiService();
             if (ai == nullptr)
                 return false;
-            const ESM::FormKey quest = mResolver.toFormKey(info.mQuest);
-            if (!ESM4::dialogueInfoHistoryEligible(info, !quest.isNull(), hasSpokenDialogueInfo(info.mFormKey)))
+            if (!ESM4::dialogueInfoHistoryEligible(info, true, hasSpokenDialogueInfo(info.mFormKey)))
                 return false;
-            const auto* questDefinition = mStore.search<ESM4::Quest>(quest);
-            const auto questState = mQuests.find(quest);
-            if (!questDefinition || questState == mQuests.end() || !questState->second.mRunning)
-                return false;
-            const auto sequence = ESM4::dialogueInfoConditions(*questDefinition, info);
+            const auto sequence = ESM4::dialogueInfoConditions(*quests[index], info);
             const auto conditions = ai->evaluateDialogueConditions(actor, target, sequence, diagnose);
             if (diagnose)
                 Log(Debug::Info) << "Native dialogue candidate: info=" << info.mFormKey.serialize()

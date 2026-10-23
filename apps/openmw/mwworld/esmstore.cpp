@@ -339,6 +339,14 @@ namespace MWWorld
                             if (!deleted)
                                 value.preparePassiveValueModifierDefinition(store.searchStatic(key));
                         }
+                        if constexpr (std::is_same_v<T, ESM4::DialogInfo>)
+                        {
+                            if (!deleted && metadata.mParent)
+                            {
+                                stores.mOblivionDialogueTopics.insert(*metadata.mParent,
+                                    value.mQuestKey, key, value.mPreviousInfoKey);
+                            }
+                        }
                         stores.mFormKeyIndex.apply(std::move(metadata));
                         if constexpr (requires { std::string_view(value.mEditorId); })
                         {

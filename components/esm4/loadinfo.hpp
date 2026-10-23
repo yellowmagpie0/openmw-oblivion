@@ -28,6 +28,7 @@
 #define ESM4_INFO_H
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include "script.hpp" // TargetCondition
@@ -71,6 +72,7 @@ namespace ESM4
         std::string mEditorId; // FIXME: no such record for INFO, but keep here to avoid extra work for now
 
         ESM::FormId mQuest;
+        ESM::FormKey mQuestKey;
         ESM::FormId mSound; // unused?
 
         TargetResponseData mResponseData{};
@@ -90,6 +92,7 @@ namespace ESM4
         std::vector<Response> mResponses;
         std::vector<PackageCondition> mCanonicalConditions;
         ESM::FormId mPreviousInfo;
+        std::optional<ESM::FormKey> mPreviousInfoKey;
 
         std::vector<ScriptDefinition> mResultScripts;
 

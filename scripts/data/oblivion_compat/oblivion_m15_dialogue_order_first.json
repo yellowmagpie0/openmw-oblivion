@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "name": "native-dialogue-order-first",
+  "cwd": "{source}",
+  "environment": {
+    "ALSOFT_DRIVERS": "wave",
+    "ALSOFT_CONF": "{output}/config/alsoft.conf",
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/order-events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/obscript-report.json",
+    "OPENMW_M15_EVENTS": "{output}/m15-events.jsonl",
+    "OPENMW_M15_RUN_ID": "native-dialogue-order-first",
+    "OPENMW_M15_EPOCH": "1"
+  },
+  "files": [
+    {
+      "path": "config/alsoft.conf",
+      "content": "[wave]\nfile = {output}/m10-runtime.wav\n"
+    },
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{order_fixture}\"\ncontent=Oblivion.esm\ncontent=Knights.esp\ncontent=M15DialogueOrder.esm\ncontent=M15DialogueOrder.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Sound]\nmaster volume = 1.0\nmusic volume = 0.4\nsfx volume = 1.0\nvoice volume = 1.0\n[General]\nscreenshot format = png\n"
+    },
+    {
+      "path": "order-events.txt",
+      "content": "at 3 command content:oblivion.esm:032a15 Say content:m15dialogueorder.esm:000800\nat 7 command content:oblivion.esm:032a15 Say content:m15dialogueorder.esm:000800\nat 11 command content:oblivion.esm:032a15 Say content:m15dialogueorder.esm:000800\nat 15 command content:oblivion.esm:032a15 Say content:m15dialogueorder.esm:000800\nat 19 command content:oblivion.esm:032a15 Say content:m15dialogueorder.esm:000800\nat 21 command Player GetPlayerInSEWorld\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-grab"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "screenshot",
+      "name": "dialogue-order-first.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 30
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/*.omwsave",
+      "expected_count": 1,
+      "minimum_size": 1024,
+      "contains_ascii": [
+        "T4ST",
+        "OMW4STATE"
+      ]
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "obscript-report.json",
+      "expected_count": 1,
+      "minimum_size": 1000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 300,
+  "expected_exit": 0,
+  "expected_log": [
+    "Writing saved game 'Quicksave'",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=Say result=0",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0",
+    "M7 ObScript: say topic=content:m15dialogueorder.esm:000800 info=content:m15dialogueorder.esm:000812 responses=1",
+    "M7 ObScript: say topic=content:m15dialogueorder.esm:000800 info=content:m15dialogueorder.esm:000811 responses=1",
+    "M7 ObScript: say topic=content:m15dialogueorder.esm:000800 info=content:m15dialogueorder.esm:000813 responses=1",
+    "M7 ObScript: say topic=content:m15dialogueorder.esm:000800 info=content:m15dialogueorder.esm:000810 responses=1",
+    "M10 voice playback: .*dialogueorder_00000812_1.mp3",
+    "M10 voice playback: .*dialogueorder_00000811_1.mp3",
+    "M10 voice playback: .*dialogueorder_00000813_1.mp3",
+    "M10 voice playback: .*dialogueorder_00000810_1.mp3"
+  ],
+  "forbidden_log": [
+    "Failed to (inspect|open) audio",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "Failed to load saved game",
+    "Failed to save game",
+    "Failed to start new game"
+  ]
+}

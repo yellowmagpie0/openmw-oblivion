@@ -63,7 +63,8 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
         switch (subHdr.typeId)
         {
             case ESM::fourCC("QSTI"):
-                reader.getFormId(mQuest);
+                if (subHdr.dataSize != 4 || !reader.getFormId(mQuest, mQuestKey))
+                    reader.fail("INFO QSTI must have four bytes");
                 break; // FormId quest id
             case ESM::fourCC("SNDD"):
                 reader.getFormId(mSound);
@@ -244,8 +245,13 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("PNAM"):
-                reader.getFormId(mPreviousInfo);
+            {
+                ESM::FormKey previous;
+                if (subHdr.dataSize != 4 || !reader.getFormId(mPreviousInfo, previous))
+                    reader.fail("INFO PNAM must have four bytes");
+                mPreviousInfoKey = std::move(previous);
                 break;
+            }
             case ESM::fourCC("NAME"): // FormId add topic (not always present)
             case ESM::fourCC("SCHD"): // 28 bytes
             case ESM::fourCC("TCLT"): // FormId choice

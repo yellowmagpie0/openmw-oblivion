@@ -151,7 +151,6 @@ namespace MWWorld
         std::map<ESM::FormKey, std::shared_ptr<const ObScript::Program>> mBaseScripts;
         std::map<ESM::FormKey, ESM::FormKey> mReferenceBases;
         std::map<ESM::FormKey, std::vector<std::shared_ptr<const ObScript::Program>>> mDialogueResults;
-        std::map<ESM::FormKey, std::vector<ESM::FormKey>> mTopicInfos;
         std::map<ESM::FormKey, std::vector<std::string>> mNativeVoiceFiles;
         struct NativeVoice
         {

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "scope": "Native content-load quest grouping, stable priority and PNAM insertion consumed by loaded dialogue queries",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "paths": {
+    "priority": "Full52F330, descending unsigned quest priority, missing quest=-1, stable ties",
+    "insertion": "Full52FD20/52FC40 plus real list/array mutations/compaction/memmove",
+    "loader": "Full530FB0 QSTI/PNAM dispatch/defaults/caller with record-I/O/header/FormID-rebase boundaries",
+    "deleted_topic": "52F010 rejects topic flag20 before array visits"
+  },
+  "domains": {
+    "deleted_topic_cases": 24,
+    "priority_cases": 781,
+    "priorities": [
+      null,
+      0,
+      1,
+      128,
+      255
+    ],
+    "group_counts": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "insertion_sequences": 1503,
+    "insertion_snapshots": 18018,
+    "total_comparisons": 18799,
+    "seed": "0x52FD20",
+    "random_operations_per_sequence": 12,
+    "random_info_count": 8,
+    "random_quest_for_info": "info index modulo3; three additional new-record edge courses",
+    "previous_cases": [
+      "absent",
+      "explicit zero",
+      "earlier/forward/self/foreign/missing INFO identity"
+    ]
+  },
+  "expected": {
+    "absent_pnam": "append only if INFO ordinal is unset",
+    "zero_pnam": "insert first",
+    "linked_override": "clear stored ordinal before resolving predecessor; compact after insertion position calculation",
+    "missing_predecessor": "native diagnostic then front insertion",
+    "null_quest": "no new membership",
+    "deleted_info": "membership retained; deleted winning definition rejected at query",
+    "history_schema": 64
+  },
+  "negative_controls": {
+    "zero-appends": {
+      "rejected": true,
+      "differing_comparisons": 3056,
+      "total": 18799
+    },
+    "ascending-priority": {
+      "rejected": true,
+      "differing_comparisons": 760,
+      "total": 18799
+    },
+    "override-appends": {
+      "rejected": true,
+      "differing_comparisons": 2919,
+      "total": 18799
+    }
+  },
+  "runtime": {
+    "first_info_order": [
+      "000812",
+      "000811",
+      "000813",
+      "000810"
+    ],
+    "first_voice_durations": [
+      2.2205,
+      2.2205,
+      2.2205,
+      2.2205
+    ],
+    "exhausted_result": 0,
+    "fresh_process_no_replay": true,
+    "protected_input_unchanged": true,
+    "legacy_history_fixture_explicit_pnam_zero_regression": true
+  },
+  "limits": [
+    "Outer native file override dispatcher, native VM/cache ownership and arbitrary post-link hot loading are outside the instruction probe",
+    "Rendered script-command speech, history and restart courses do not close automatic common-hit or normal-input melee gates",
+    "Actual audio playback/LIP records and wave captures are retained; speaking actor faces are outside the reviewed prison captures",
+    "Inconsistent unindexed cross-quest predecessor data that drives an invalid native array index is rejected",
+    "No full TES4 editor world lint or imported TES3 MCP capability claim"
+  ],
+  "full_M15S4_acceptance": false,
+  "fixture_inputs": {
+    "recipe": "scripts/data/oblivion_compat/m15_dialogue_order_fixture.json",
+    "source_plugin": "Oblivion.esm",
+    "source_info": "0150C7",
+    "voice_archive": "Oblivion - Voices2.bsa",
+    "voice_members": [
+      "sound/voice/oblivion.esm/imperial/f/charactergen_chargenvoice_000150c7_1.mp3",
+      "sound/voice/oblivion.esm/imperial/f/charactergen_chargenvoice_000150c7_1.lip"
+    ],
+    "extract_command": [
+      "build/bsatool",
+      "extract",
+      "ARCHIVE",
+      "MEMBER",
+      "ASSET_DIRECTORY"
+    ],
+    "generate_command": [
+      "python3",
+      "scripts/tes4_m15_dialogue_order_fixture.py",
+      "SOURCE_ESM",
+      "RECIPE_JSON",
+      "ASSET_DIRECTORY",
+      "NEW_OUTPUT_DIRECTORY"
+    ]
+  }
+}

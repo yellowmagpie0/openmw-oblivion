@@ -33364,3 +33364,60 @@ TEST(OblivionWorldTest, SceneComplexFlagFollowsRuntimeAuthoritySwapsAndScriptMut
     EXPECT_TRUE(original->sceneIsComplex());
     ASSERT_TRUE(retained.restore());
 }
+
+TEST(OblivionWorldTest, NativeSayConsumesQuestPriorityAndPredecessorOrderFromActualContentLoad)
+{
+    const auto bytes=[](const auto& v){return std::string(reinterpret_cast<const char*>(&v),sizeof(v));};
+    const auto sub=[&](std::uint32_t tag,const std::string& data){return bytes(tag)+bytes(static_cast<std::uint16_t>(data.size()))+data;};
+    const auto record=[&](std::uint32_t tag,std::uint32_t id,const std::string& data,std::uint32_t flags=0){
+        return bytes(tag)+bytes(static_cast<std::uint32_t>(data.size()))+bytes(flags)+bytes(id)+bytes(std::uint32_t{})+data;
+    };
+    for(int scenario=0;scenario<6;++scenario)
+    {
+        SCOPED_TRACE(scenario);
+        const auto quest=[&](std::uint32_t id,unsigned char priority){
+            return record(ESM4::REC_QUST,id,sub(ESM::fourCC("DATA"),std::string{char(1),char(priority)}));
+        };
+        const auto info=[&](std::uint32_t id,std::uint32_t owner,std::optional<std::uint32_t> previous){
+            auto data=sub(ESM::fourCC("DATA"),std::string("\x02\x00\x04",3))
+                +sub(ESM::fourCC("QSTI"),bytes(owner))+sub(ESM::fourCC("TRDT"),std::string(16,'\0'));
+            if(previous)data+=sub(ESM::fourCC("PNAM"),bytes(*previous));
+            return record(ESM4::REC_INFO,id,data);
+        };
+        const auto infos=info(0x902,0x900,std::nullopt)+info(0x912,0x910,std::nullopt)
+            +info(0x913,0x910,0)+info(0x914,0x910,scenario==3?0x999:0x912)
+            +(scenario==4?info(0x912,0x910,std::nullopt):std::string{});
+        const auto group=bytes(ESM::fourCC("GRUP"))+bytes(static_cast<std::uint32_t>(20+infos.size()))
+            +bytes(std::uint32_t{0x901})+bytes(std::uint32_t{7})+bytes(std::uint32_t{})+infos;
+        const auto topic=record(ESM4::REC_DIAL,0x901,sub(ESM::fourCC("DATA"),std::string(1,'\x02')),scenario==5?static_cast<std::uint32_t>(ESM4::Rec_Deleted):0u);
+        NativeWorldFixture fixture(false,false,false,{},{},quest(0x900,10)+quest(0x910,scenario==1?10:50)+topic+group,scenario==4?8:7);
+        auto& world=fixture.mWorld;
+        const auto speaker=addNativeNpc(fixture,0xa00);
+        world.getWorldModel().registerPtr(speaker);
+        ASSERT_TRUE(world.activateOblivionActor(speaker));
+        auto* scripts=world.getOblivionScriptManager();ASSERT_TRUE(scripts);
+        ObScript::RuntimeContext context;context.mSelf=speaker.getCellRef().getFormKey();
+        if(scenario==2)
+            scripts->call("StopQuest",std::nullopt,{ObScript::ReferenceValue{ESM::FormKey::content("headless.esm",0x910),{}}},context,{});
+        std::vector<unsigned> expected{0x913,0x912,0x914,0x902};
+        if(scenario==1)expected={0x902,0x913,0x912,0x914};
+        if(scenario==2)expected={0x902};
+        if(scenario==3)expected={0x914,0x913,0x912,0x902};
+        if(scenario==5)expected.clear();
+        for(const auto id:expected)
+        {
+            const auto key=ESM::FormKey::content("headless.esm",id);
+            ASSERT_FALSE(scripts->hasSpokenDialogueInfo(key));
+            EXPECT_EQ(ObScript::asNumber(scripts->call("Say",std::nullopt,
+                {ObScript::ReferenceValue{ESM::FormKey::content("headless.esm",0x901),{}}},context,{})),0);
+            EXPECT_TRUE(scripts->hasSpokenDialogueInfo(key));
+        }
+        ESM4::RuntimeState before;
+        scripts->capture(before);
+        scripts->call("Say",std::nullopt,{ObScript::ReferenceValue{ESM::FormKey::content("headless.esm",0x901),{}}},context,{});
+        ESM4::RuntimeState after;
+        scripts->capture(after);
+        EXPECT_EQ(after.mSpokenDialogueInfos,before.mSpokenDialogueInfos);
+        EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(),1u);
+    }
+}

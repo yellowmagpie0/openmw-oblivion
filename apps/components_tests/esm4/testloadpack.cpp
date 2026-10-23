@@ -5,6 +5,7 @@
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/idletree.hpp>
 #include <components/esm4/dialoguevoices.hpp>
+#include <components/esm4/dialoguetopics.hpp>
 #include <components/esm4/aiconditions.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/readerutils.hpp>
@@ -12,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -666,4 +668,79 @@ TEST(ESM4LoadInfo, NativeHistoryAdmissionAndResponseResultFlagsRemainSeparate)
     EXPECT_FALSE(ESM4::dialogueResponseRunsResult(0, false));
     EXPECT_FALSE(ESM4::dialogueResponseRunsResult(ESM4::INFO_RunImmediately, true));
     EXPECT_TRUE(ESM4::dialogueResultMarksSpoken(ESM4::INFO_RunImmediately)); // Direct core differs.
+}
+
+TEST(ESM4LoadInfo, PreservesPredecessorPresenceAndStableQuestKeys)
+{
+    const auto missing = loadInfo({});
+    EXPECT_FALSE(missing.mPreviousInfoKey);
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("QSTI"), bytes(std::uint32_t{0x1234}));
+    appendSubRecord(payload, ESM::fourCC("PNAM"), bytes(std::uint32_t{0}));
+    const auto zero = loadInfo(payload);
+    EXPECT_EQ(zero.mQuestKey, ESM::FormKey::content("memory.esm", 0x1234));
+    ASSERT_TRUE(zero.mPreviousInfoKey);
+    EXPECT_TRUE(zero.mPreviousInfoKey->isNull());
+    appendSubRecord(payload, ESM::fourCC("PNAM"), bytes(std::uint32_t{0x4321}));
+    EXPECT_EQ(loadInfo(payload).mPreviousInfoKey, ESM::FormKey::content("memory.esm", 0x4321));
+    appendSubRecord(payload, ESM::fourCC("PNAM"), bytes(std::uint32_t{0}));
+    ASSERT_TRUE(loadInfo(payload).mPreviousInfoKey);
+    EXPECT_TRUE(loadInfo(payload).mPreviousInfoKey->isNull());
+    for (const std::size_t size : {0, 1, 3, 5})
+    {
+        payload.clear();
+        appendSubRecord(payload, ESM::fourCC("PNAM"), std::vector<char>(size));
+        EXPECT_THROW(loadInfo(payload), std::runtime_error);
+    }
+}
+
+TEST(ESM4DialogueTopicIndex, ReplaysPresenceAndOverridesBeforeCompactingStoredOrdinals)
+{
+    const auto key = [](unsigned i) { return ESM::FormKey::content("memory.esm", i); };
+    ESM4::DialogueTopicIndex index;
+    const auto topic=key(1), quest=key(2), a=key(3), b=key(4), c=key(5);
+    ASSERT_TRUE(index.insert(topic,quest,a,std::nullopt));
+    ASSERT_TRUE(index.insert(topic,quest,b,std::nullopt));
+    ASSERT_TRUE(index.insert(topic,quest,c,ESM::FormKey{}));
+    ASSERT_TRUE(index.insert(topic,quest,a,std::nullopt)); // An override without PNAM keeps its slot.
+    ASSERT_TRUE(index.find(topic));
+    EXPECT_EQ(index.find(topic)->front().mInfos, (std::vector<ESM::FormKey>{c,a,b}));
+    ASSERT_TRUE(index.insert(topic,quest,a,b));
+    EXPECT_EQ(index.find(topic)->front().mInfos, (std::vector<ESM::FormKey>{c,b,a}));
+    // The previous ordinal is calculated BEFORE compacting a's cleared slot.
+    ASSERT_TRUE(index.insert(topic,quest,c,b));
+    EXPECT_EQ(index.find(topic)->front().mInfos, (std::vector<ESM::FormKey>{b,a,c}));
+    ASSERT_TRUE(index.insert(topic,quest,a,key(99))); // Native missing-PNAM fallback inserts first.
+    EXPECT_EQ(index.find(topic)->front().mInfos, (std::vector<ESM::FormKey>{a,b,c}));
+    EXPECT_FALSE(index.insert(topic,{},a,std::nullopt));
+}
+
+TEST(ESM4DialogueTopicIndex, KeepsFirstSeenQuestOrderForEqualPrioritiesAndUnresolvedAfterZero)
+{
+    const auto key = [](unsigned i) { return ESM::FormKey::content("memory.esm", i); };
+    ESM4::DialogueTopicIndex index;
+    for (unsigned i=0; i<4; ++i)
+        ASSERT_TRUE(index.insert(key(1),key(10+i),key(20+i),std::nullopt));
+    const std::array priorities{10,50,10,-1};
+    const auto groups=index.ordered(key(1),[&](const auto& quest){return priorities[quest.localId()-10];});
+    ASSERT_EQ(groups.size(),4u);
+    EXPECT_EQ(groups[0].mQuest,key(11));
+    EXPECT_EQ(groups[1].mQuest,key(10));
+    EXPECT_EQ(groups[2].mQuest,key(12));
+    EXPECT_EQ(groups[3].mQuest,key(13));
+    EXPECT_EQ(index.find(key(1))->front().mQuest,key(10));
+}
+
+TEST(ESM4LoadInfo, DialogueEligibilityReceivesEachArrayVisitForDuplicateInfo)
+{
+    ESM4::DialogInfo info{};
+    const std::array<const ESM4::DialogInfo*,2> infos{&info,&info};
+    std::vector<std::size_t> visits;
+    unsigned draws=0;
+    const auto* chosen=ESM4::selectDialogueInfo(infos,[&](const auto&,std::size_t i){
+        visits.push_back(i);return i==1;
+    },[&](){++draws;return 0u;});
+    EXPECT_EQ(chosen,&info);
+    EXPECT_EQ(visits,(std::vector<std::size_t>{0,1}));
+    EXPECT_EQ(draws,0u);
 }

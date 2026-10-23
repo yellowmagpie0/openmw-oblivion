@@ -405,6 +405,7 @@ namespace ESM4
         void adjustFormId(ESM::FormId32& id);
 
         bool getFormId(ESM::FormId& id);
+        bool getFormId(ESM::FormId& id, ESM::FormKey& key);
         ESM::FormId getFormIdFromHeader() const;
 
         bool getFormKey(ESM::FormKey& key);

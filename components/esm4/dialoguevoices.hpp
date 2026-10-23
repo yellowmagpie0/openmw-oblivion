@@ -7,6 +7,7 @@
 #include <set>
 #include <span>
 #include <stdexcept>
+#include <type_traits>
 
 #include "loadinfo.hpp"
 #include "loadqust.hpp"
@@ -53,9 +54,20 @@ namespace ESM4
         Accept&& accept, Draw&& draw)
     {
         std::vector<const DialogInfo*> candidates;
-        for (const DialogInfo* info : infos)
+        for (std::size_t index = 0; index < infos.size(); ++index)
         {
-            if (info == nullptr || !accept(*info))
+            const DialogInfo* info = infos[index];
+            if (info == nullptr)
+                continue;
+            // The same INFO can occur in multiple native quest arrays after
+            // content overrides. Its eligibility uses this visit's quest.
+            const bool accepted = [&] {
+                if constexpr (std::is_invocable_v<Accept, const DialogInfo&, std::size_t>)
+                    return accept(*info, index);
+                else
+                    return accept(*info);
+            }();
+            if (!accepted)
                 continue;
             if ((info->mInfoFlags & INFO_Random) == 0)
             {

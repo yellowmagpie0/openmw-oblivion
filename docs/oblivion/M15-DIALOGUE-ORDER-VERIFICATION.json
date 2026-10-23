@@ -1,0 +1,2424 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Native content-load quest grouping, stable priority and PNAM insertion consumed by loaded dialogue queries",
+  "full_M15S4_acceptance": false,
+  "automatic_common_hit_acceptance": false,
+  "cpp_tested_source": {
+    "head": "a51710fa05ef5586359f28dfb080cdfe5dd6281f",
+    "source_fingerprint": "d6522ac5a60345cddd70d0af9dbf822624496397c9123fce55161bfd4f21b350"
+  },
+  "python_tested_source": {
+    "head": "a51710fa05ef5586359f28dfb080cdfe5dd6281f",
+    "source_fingerprint": "4efa680a369de34dfb1a2c1b6209ed0c710b7ba78484c3a5d6d5c690e68888db"
+  },
+  "tested_tracked_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/final-tested-source.patch",
+    "sha256": "82263831ba8b0504d00c7655fac8d9b3377c0a60d17fbd177a8d338ff11bb517",
+    "bytes": 26047
+  },
+  "new_cpp_header": {
+    "path": "components/esm4/dialoguetopics.hpp",
+    "sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7",
+    "bytes": 4752
+  },
+  "tested_source_files": {
+    "apps/components_tests/esm4/testloadpack.cpp": {
+      "path": "apps/components_tests/esm4/testloadpack.cpp",
+      "sha256": "9ed3c95ca677d27e7693923ef6151cd1ce5668f428784ee948033a8a9686f108",
+      "bytes": 32924
+    },
+    "apps/esmtool/tes4.cpp": {
+      "path": "apps/esmtool/tes4.cpp",
+      "sha256": "40f48b0ffb4d6841098b7137eaa069704ce6450eb5b6e3f897c0e59b7603d462",
+      "bytes": 53404
+    },
+    "apps/openmw/mwworld/esmstore.cpp": {
+      "path": "apps/openmw/mwworld/esmstore.cpp",
+      "sha256": "36fe5d355d0c0b254a8a82d51ac5204c6b6b9033fb975d070cee397003bc73b6",
+      "bytes": 76604
+    },
+    "apps/openmw/mwworld/esmstore.hpp": {
+      "path": "apps/openmw/mwworld/esmstore.hpp",
+      "sha256": "78e15d54e3bd679a489431801b3966eff6885a6213c85a1fa5a75b89c06f4756",
+      "bytes": 19688
+    },
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "ece1e0c45ec130bbfb163ce4e4a35ef54e623737d9883f005cff2392dada083c",
+      "bytes": 145971
+    },
+    "apps/openmw/mwworld/oblivionscriptmanager.hpp": {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.hpp",
+      "sha256": "d4f96a58155ca6869f518a77ebfe10bbf4ab0b61528c96eb8258caf45ca059f1",
+      "bytes": 10600
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "b3443ee84864d5903d160631b408b8b8779b7ec4ba947d04b5a6fec5d28fa01d",
+      "bytes": 1988257
+    },
+    "apps/openmw_tests/mwworld/teststore.cpp": {
+      "path": "apps/openmw_tests/mwworld/teststore.cpp",
+      "sha256": "e93c1d0dabfa397dba3c6d27e68ea4b2f814aa4ac23048617bf2ea688954c566",
+      "bytes": 101061
+    },
+    "components/esm4/dialoguevoices.hpp": {
+      "path": "components/esm4/dialoguevoices.hpp",
+      "sha256": "d4aca16a283bfd91948b4cb1a7b0b6b4eb7236cbee94fea203a765e29f3fd676",
+      "bytes": 5063
+    },
+    "components/esm4/dialoguetopics.hpp": {
+      "path": "components/esm4/dialoguetopics.hpp",
+      "sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7",
+      "bytes": 4752
+    },
+    "components/esm4/loadinfo.cpp": {
+      "path": "components/esm4/loadinfo.cpp",
+      "sha256": "ee91424d423cbb19a47b62a4e1e727d814fb6722874232a98154f137bf14c7a4",
+      "bytes": 12484
+    },
+    "components/esm4/loadinfo.hpp": {
+      "path": "components/esm4/loadinfo.hpp",
+      "sha256": "0bb70a7acd5c5f006f3f70dbc4ae185c5b020a75d9604d496673287e036f6e8c",
+      "bytes": 3398
+    },
+    "components/esm4/reader.cpp": {
+      "path": "components/esm4/reader.cpp",
+      "sha256": "223cd2495e597ccd6268e9b08cf2a2ed7665fb7302468279c0227b550073aded",
+      "bytes": 47274
+    },
+    "components/esm4/reader.hpp": {
+      "path": "components/esm4/reader.hpp",
+      "sha256": "d972effdd855205d5b5297de13b9b55a45e8befc7123470fc772f3bf36524509",
+      "bytes": 18265
+    },
+    "scripts/tes4_m15_dialogue_order_fixture.py": {
+      "path": "scripts/tes4_m15_dialogue_order_fixture.py",
+      "sha256": "9622f4bd43156bf16ae2953ff3cf42480d3b23cbd6e12cdbb3d8ac368d738643",
+      "bytes": 7827
+    },
+    "scripts/tests/test_m15_dialogue_order_fixture.py": {
+      "path": "scripts/tests/test_m15_dialogue_order_fixture.py",
+      "sha256": "223d47916f4e960a98d149c86fb8e3e18c7cad34952a9906c4ca92afc37170f2",
+      "bytes": 5054
+    },
+    "scripts/tes4_m15_speech_history_fixture.py": {
+      "path": "scripts/tes4_m15_speech_history_fixture.py",
+      "sha256": "a351e1d610409a84b651f2cf082e71e63a533f9a50f28bc776a8e63561735714",
+      "bytes": 4844
+    },
+    "scripts/tests/test_m15_speech_history_fixture.py": {
+      "path": "scripts/tests/test_m15_speech_history_fixture.py",
+      "sha256": "9c35d77225b3401b52c5efd34c7973fa3c7eacbf790ec84d792788a69f8352c7",
+      "bytes": 3420
+    },
+    "scripts/data/oblivion_compat/m15_dialogue_order_fixture.json": {
+      "path": "scripts/data/oblivion_compat/m15_dialogue_order_fixture.json",
+      "sha256": "07cf01bf96604f59285d4749f28db7e075275fd3ab2654b0df6207fbfc55d585",
+      "bytes": 1220
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_dialogue_order_first.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_dialogue_order_first.json",
+      "sha256": "490e2e476fb19bdc2b3e5da29447aeaa85db603df8e256476f21ef947fa85433",
+      "bytes": 4334
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_dialogue_order_continuation.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_dialogue_order_continuation.json",
+      "sha256": "5e5adce39c23b732528b26bd4f0f60996df5f30306e3c771a2340a55e8c534cd",
+      "bytes": 4015
+    }
+  },
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_dialogue_order_oracle_cases.json",
+    "sha256": "86b7b68aba29114d9c79f5548e7f03ecea08dc323ec293687d121478f69aae8c",
+    "bytes": 3871
+  },
+  "checks": {
+    "normal_engine": {
+      "engine": {
+        "executed": 1871,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "9421f0ae360be6f9300e845abf583a993660f01cfdf35b7c438e7489cf358c66",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "718889a382dff447a0735a6c1ec3566fbe02429900a8bc39c8631e45d1422cbd",
+        "inventory_sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized_engine": {
+      "engine": {
+        "executed": 1871,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "79e5e9f0db3a094edd5ec53295543def3a84c33061a01a3071bf18e688acc46b",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "89180846ad594247a9cd8680585e09fba52bdd7e7e1fa3c4ee6e2dbdd4f0947a",
+        "inventory_sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "components": {
+      "normal": {
+        "executed": 3021,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "816bfd3372a374249102f04e190e21662d6b11d56563ca652a4e91075728cb92",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "e8995e7d66a8a6dbc32188b49bb7c726b8956d459814dc20d18b58cced80770d",
+        "inventory_sha256": "8d61806e7db3b19be43c038afe25f236b2d1fe8b1899b89d18299042b313cb6e",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "sanitized": {
+        "executed": 873,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "9a18e992bf331dbf9eacbef553ef29d515837ad94e4f5e3ff4fb708f7e909c96",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "73e26689557ab0e141439029b71a794cf78f199980d58efea0439b7bd4e511f5",
+        "inventory_sha256": "de7ac8769ffe1dee5ac1a9ab60dc8de73fbcdb77c96a79f58be188ddbea02aa2",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "python": {
+      "python": {
+        "executed": 397,
+        "passed": true,
+        "log_sha256": "3614484ac882c360a679c01de6f80170845c1b8c819942e8fd428020f6b78ed1"
+      }
+    }
+  },
+  "component_input_proof": {
+    "tracked_component_patch_unchanged_from": {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/tracked-source.patch",
+      "sha256": "29b2fb8533b58e10a9041924d95e0ac2a3b701dc7934f6af844496a4accf0b8b",
+      "bytes": 25232
+    },
+    "new_header_unchanged_from": {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/dialoguetopics.hpp",
+      "sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7",
+      "bytes": 4752
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "native_oracle": {
+    "passed": true,
+    "priority_cases": 781,
+    "insertion_sequences": 1503,
+    "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "6637d9dc4d0f5ae67fd7a28a146b66d74a6f1d9b547f63a1ff02cf5751e46c78",
+    "scope": "Full530FB0 INFO field dispatch/defaults/caller with header/type/record-I/O/FormID-rebase boundaries, full52FD20/52FC40 with actual dynamic group allocation/list/array code and original memmove. Alloc/free/debug/name boundaries supplied. Full52F330 group priority sort; quest pointer resolution supplied before sorting. Outer file override dispatcher remains outside this probe."
+  },
+  "deleted_topic_oracle": {
+    "passed": true,
+    "cases": 24,
+    "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "c7cf907feb17eee4663c1b51b04aedf3745d01282c46e7d48332b0390e51e1aa",
+    "scope": "Full52F010 deleted-topic early return, no game-function stubs; invalid arrays/actors demonstrate no allocation, condition, actor or candidate-array visit. Live store tombstone handling is tested separately."
+  },
+  "native_comparison": {
+    "passed": true,
+    "priority_cases": 781,
+    "insertion_sequences": 1503,
+    "insertion_snapshots": 18018,
+    "total_comparisons": 18799,
+    "mismatches": [],
+    "corpus_sha256": "6637d9dc4d0f5ae67fd7a28a146b66d74a6f1d9b547f63a1ff02cf5751e46c78",
+    "header_sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7"
+  },
+  "negative_controls": {
+    "zero-appends": {
+      "rejected": true,
+      "differing_comparisons": 3056,
+      "total": 18799
+    },
+    "ascending-priority": {
+      "rejected": true,
+      "differing_comparisons": 760,
+      "total": 18799
+    },
+    "override-appends": {
+      "rejected": true,
+      "differing_comparisons": 2919,
+      "total": 18799
+    }
+  },
+  "typed_reinspection": {
+    "passed": true,
+    "plugins": [
+      {
+        "plugin": "Oblivion.esm",
+        "infos": 19278,
+        "presence_counts": {
+          "absent": 19278,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      },
+      {
+        "plugin": "DLCShiveringIsles.esp",
+        "infos": 0,
+        "presence_counts": {
+          "absent": 0,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      },
+      {
+        "plugin": "DLCBattlehornCastle.esp",
+        "infos": 120,
+        "presence_counts": {
+          "absent": 0,
+          "null": 62
+        },
+        "nonzero_predecessors": 58
+      },
+      {
+        "plugin": "DLCFrostcrag.esp",
+        "infos": 0,
+        "presence_counts": {
+          "absent": 0,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      },
+      {
+        "plugin": "DLCHorseArmor.esp",
+        "infos": 14,
+        "presence_counts": {
+          "absent": 0,
+          "null": 10
+        },
+        "nonzero_predecessors": 4
+      },
+      {
+        "plugin": "DLCMehrunesRazor.esp",
+        "infos": 0,
+        "presence_counts": {
+          "absent": 0,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      },
+      {
+        "plugin": "DLCOrrery.esp",
+        "infos": 3,
+        "presence_counts": {
+          "absent": 0,
+          "null": 1
+        },
+        "nonzero_predecessors": 2
+      },
+      {
+        "plugin": "DLCSpellTomes.esp",
+        "infos": 0,
+        "presence_counts": {
+          "absent": 0,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      },
+      {
+        "plugin": "DLCThievesDen.esp",
+        "infos": 41,
+        "presence_counts": {
+          "absent": 0,
+          "null": 13
+        },
+        "nonzero_predecessors": 28
+      },
+      {
+        "plugin": "DLCVileLair.esp",
+        "infos": 9,
+        "presence_counts": {
+          "absent": 0,
+          "null": 5
+        },
+        "nonzero_predecessors": 4
+      },
+      {
+        "plugin": "Knights.esp",
+        "infos": 868,
+        "presence_counts": {
+          "absent": 0,
+          "null": 233
+        },
+        "nonzero_predecessors": 635
+      },
+      {
+        "plugin": "M15DialogueOrder.esm",
+        "infos": 4,
+        "presence_counts": {
+          "absent": 2,
+          "null": 1
+        },
+        "nonzero_predecessors": 1
+      },
+      {
+        "plugin": "M15DialogueOrder.esp",
+        "infos": 1,
+        "presence_counts": {
+          "absent": 1,
+          "null": 0
+        },
+        "nonzero_predecessors": 0
+      }
+    ],
+    "total_infos": 20338,
+    "scope": "Independent raw QSTI/PNAM presence/FormKey comparison with actual typed esmtool across installed official files and authored base/patch; not whole editor world lint"
+  },
+  "fixture_semantic_reinspection": {
+    "passed": true,
+    "scope": "Independent binary group/header/master/identity/QSTI/PNAM/priority and unchanged original INFO response/condition/result bytes; audio and LIP copies match extracted source hashes. Compiler/world and rendered acceptance are separate.",
+    "source_pin": {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+    },
+    "mutations": [
+      {
+        "plugin": "M15DialogueOrder.esm",
+        "info": 16779280,
+        "parent": 16779264,
+        "quest": 16779265,
+        "predecessor": "absent",
+        "response_condition_result_bytes_equal_original": true
+      },
+      {
+        "plugin": "M15DialogueOrder.esm",
+        "info": 16779281,
+        "parent": 16779264,
+        "quest": 16779266,
+        "predecessor": "absent",
+        "response_condition_result_bytes_equal_original": true
+      },
+      {
+        "plugin": "M15DialogueOrder.esm",
+        "info": 16779282,
+        "parent": 16779264,
+        "quest": 16779266,
+        "predecessor": [
+          0
+        ],
+        "response_condition_result_bytes_equal_original": true
+      },
+      {
+        "plugin": "M15DialogueOrder.esm",
+        "info": 16779283,
+        "parent": 16779264,
+        "quest": 16779266,
+        "predecessor": [
+          16779281
+        ],
+        "response_condition_result_bytes_equal_original": true
+      },
+      {
+        "plugin": "M15DialogueOrder.esp",
+        "info": 16779281,
+        "parent": 16779264,
+        "quest": 16779266,
+        "predecessor": "absent",
+        "response_condition_result_bytes_equal_original": true
+      }
+    ],
+    "pins": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/M15DialogueOrder.esm",
+        "sha256": "a83746d331daede4014abfbf41b6281af0fffc52ec37b0cb1ff6a032c06265dd",
+        "bytes": 1026
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/M15DialogueOrder.esp",
+        "sha256": "ab5bcfa97220f682d1c7d61e8ab8f029b72989d0d97a8d262b4a4ff3428a9c3c",
+        "bytes": 489
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.mp3",
+        "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+        "bytes": 17764
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.lip",
+        "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+        "bytes": 2040
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.mp3",
+        "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+        "bytes": 17764
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.lip",
+        "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+        "bytes": 2040
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.mp3",
+        "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+        "bytes": 17764
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.lip",
+        "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+        "bytes": 2040
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.mp3",
+        "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+        "bytes": 17764
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.lip",
+        "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+        "bytes": 2040
+      }
+    ]
+  },
+  "runtime_acceptance": {
+    "passed": true,
+    "courses": [
+      {
+        "passed": true,
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02",
+        "pid": 1654564,
+        "epoch": 1,
+        "duration_seconds": 114.382904,
+        "selected": [
+          2066,
+          2065,
+          2067,
+          2064
+        ],
+        "playbacks": [
+          2066,
+          2065,
+          2067,
+          2064
+        ],
+        "lip_companions": [
+          2066,
+          2065,
+          2067,
+          2064
+        ],
+        "command_results": [
+          2.2205,
+          2.2205,
+          2.2205,
+          2.2205,
+          0.0
+        ],
+        "save_sha256": "316451e449167912ba70c89210a4449843c0ed21a5bd16e46b32144aa7fc7456",
+        "save_schema": 64,
+        "spoken_dialogue_infos": [
+          "content:m15dialogueorder.esm:000810",
+          "content:m15dialogueorder.esm:000811",
+          "content:m15dialogueorder.esm:000812",
+          "content:m15dialogueorder.esm:000813"
+        ],
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {
+          "removespell": 1,
+          "addtopic": 24,
+          "setunconscious": 5,
+          "moddisposition": 1
+        },
+        "audio": {
+          "channels": 2,
+          "sample_width": 4,
+          "sample_format": "float32",
+          "format_tag": 65534,
+          "rate": 48000,
+          "frames": 5424000,
+          "duration_seconds": 113.0,
+          "peak": 0.39591920375823975,
+          "rms": 0.041639049052283716,
+          "scope": "Nonzero wave capture and exact playback/LIP records; not perceptual audio quality or visual face acceptance"
+        },
+        "capture_review": "Directly reviewed prison niche/chains, crosshair, native HUD and minimap; speaking actor face is outside the capture",
+        "run_end": {
+          "run_id": "native-dialogue-order-first",
+          "epoch": 1,
+          "pid": 1654564,
+          "sequence": 34,
+          "tick": 132,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 33,
+          "pending_count": 0,
+          "unsupported_count": 31
+        }
+      },
+      {
+        "passed": true,
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02",
+        "pid": 1654663,
+        "epoch": 2,
+        "duration_seconds": 143.662254,
+        "selected": [],
+        "playbacks": [],
+        "lip_companions": [],
+        "command_results": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "save_sha256": "9bf0413d26a3a9c098ec455f0725f57d79f01afbc49145aab6b59f21e587271b",
+        "save_schema": 64,
+        "spoken_dialogue_infos": [
+          "content:m15dialogueorder.esm:000810",
+          "content:m15dialogueorder.esm:000811",
+          "content:m15dialogueorder.esm:000812",
+          "content:m15dialogueorder.esm:000813"
+        ],
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {},
+        "audio": {
+          "channels": 2,
+          "sample_width": 4,
+          "sample_format": "float32",
+          "format_tag": 65534,
+          "rate": 48000,
+          "frames": 6838080,
+          "duration_seconds": 142.46,
+          "peak": 0.23500384390354156,
+          "rms": 0.02429804228926685,
+          "scope": "Nonzero wave capture and exact playback/LIP records; not perceptual audio quality or visual face acceptance"
+        },
+        "capture_review": "Directly reviewed prison niche/chains, crosshair, native HUD and minimap; speaking actor face is outside the capture",
+        "run_end": {
+          "run_id": "native-dialogue-order-continuation",
+          "epoch": 2,
+          "pid": 1654663,
+          "sequence": 4,
+          "tick": 134,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 3,
+          "pending_count": 0,
+          "unsupported_count": 0
+        }
+      }
+    ],
+    "protected_input": {
+      "pristine_sha256": "316451e449167912ba70c89210a4449843c0ed21a5bd16e46b32144aa7fc7456",
+      "source_save": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "seed_save": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+    },
+    "scope": "Native content-load priority/PNAM query, four actual voiced responses and INFO-history save/fresh-process filtering; not common-hit or normal-input melee acceptance"
+  },
+  "history_fixture_regression": {
+    "passed": true,
+    "courses": [
+      {
+        "passed": true,
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01",
+        "pid": 1658531,
+        "epoch": 1,
+        "duration_seconds": 64.320563,
+        "selected": [
+          86215
+        ],
+        "playbacks": [
+          86215
+        ],
+        "lip_companions": [
+          86215
+        ],
+        "command_results": [
+          2.2205,
+          0.0
+        ],
+        "save_sha256": "a101f5bbaec26f7c1d8f61f2be225a7234a5af2ea54e18b9d1ba982f4aa72e3c",
+        "save_schema": 64,
+        "spoken_dialogue_infos": [
+          "content:oblivion.esm:0150c7"
+        ],
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {
+          "removespell": 1,
+          "addtopic": 24,
+          "setunconscious": 5,
+          "moddisposition": 1
+        },
+        "audio": {
+          "channels": 2,
+          "sample_width": 4,
+          "sample_format": "float32",
+          "format_tag": 65534,
+          "rate": 48000,
+          "frames": 3011520,
+          "duration_seconds": 62.74,
+          "peak": 0.23500384390354156,
+          "rms": 0.02548806511493177,
+          "scope": "Nonzero wave capture and exact playback/LIP records; not perceptual audio quality or visual face acceptance"
+        },
+        "capture_review": "Directly reviewed prison niche/chains, crosshair, native HUD and minimap; speaking actor face is outside the capture",
+        "run_end": {
+          "run_id": "native-speech-history-first",
+          "epoch": 1,
+          "pid": 1658531,
+          "sequence": 34,
+          "tick": 60,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 33,
+          "pending_count": 0,
+          "unsupported_count": 31
+        }
+      },
+      {
+        "passed": true,
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01",
+        "pid": 1658657,
+        "epoch": 2,
+        "duration_seconds": 82.787065,
+        "selected": [],
+        "playbacks": [],
+        "lip_companions": [],
+        "command_results": [
+          0.0,
+          0.0
+        ],
+        "save_sha256": "fbb62545bcaa5b5f8ff47654b282a3368140b64a5699956f73eb46d1a7054e1b",
+        "save_schema": 64,
+        "spoken_dialogue_infos": [
+          "content:oblivion.esm:0150c7"
+        ],
+        "compiled_units": 10470,
+        "compilation_failures": 0,
+        "script_diagnostics": 0,
+        "unrelated_deferred_commands": {},
+        "audio": {
+          "channels": 2,
+          "sample_width": 4,
+          "sample_format": "float32",
+          "format_tag": 65534,
+          "rate": 48000,
+          "frames": 3919680,
+          "duration_seconds": 81.66,
+          "peak": 0.27918437123298645,
+          "rms": 0.034688744054775726,
+          "scope": "Nonzero wave capture and exact playback/LIP records; not perceptual audio quality or visual face acceptance"
+        },
+        "capture_review": "Directly reviewed prison niche/chains, crosshair, native HUD and minimap; speaking actor face is outside the capture",
+        "run_end": {
+          "run_id": "native-speech-history-continuation",
+          "epoch": 2,
+          "pid": 1658657,
+          "sequence": 4,
+          "tick": 62,
+          "event": "run-end",
+          "error_count": 0,
+          "event_count": 3,
+          "pending_count": 0,
+          "unsupported_count": 0
+        }
+      }
+    ],
+    "protected_input": {
+      "pristine_sha256": "a101f5bbaec26f7c1d8f61f2be225a7234a5af2ea54e18b9d1ba982f4aa72e3c",
+      "source_save": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "seed_save": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave"
+    },
+    "scope": "Native content-load priority/PNAM query, one actual original INFO voiced response and INFO-history save/fresh-process filtering; not common-hit or normal-input melee acceptance"
+  },
+  "limitations": [
+    "Outer native file override dispatcher, native VM/cache ownership and arbitrary post-link hot loading are outside the instruction probe",
+    "Rendered script-command speech, history and restart courses do not close automatic common-hit or normal-input melee gates",
+    "Actual audio playback/LIP records and wave captures are retained; speaking actor faces are outside the reviewed prison captures",
+    "Inconsistent unindexed cross-quest predecessor data that drives an invalid native array index is rejected",
+    "No full TES4 editor world lint or imported TES3 MCP capability claim"
+  ],
+  "retained_failures": [
+    "Initial insertion fixture supplied resolved quest pointers to raw-ID load-time helpers; corrected fixture uses unresolved IDs and then actual group allocation",
+    "Intermediate priority snapshot lost null-quest group identity; corrected snapshot fixture",
+    "Initial engine integration test captured a full world without registering Player; fixed to capture script-owned history; normal failed and owned sanitizer compile was intentionally stopped, both retained",
+    "Initial independent wave verifier expected integer PCM; actual OpenAL capture is WAVE extensible IEEE float32; corrected verifier without rerunning accepted courses"
+  ],
+  "evidence": [
+    {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+      "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+      "bytes": 2211935
+    },
+    {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion - Voices2.bsa",
+      "sha256": "2614300372de611b6d5644e73e6f7fcd0638d0621583da855e4f337dd450eba4",
+      "bytes": 1005007382
+    },
+    {
+      "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+      "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "bytes": 277504985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-deleted-topic-oracle-01/corpus.json",
+      "sha256": "c7cf907feb17eee4663c1b51b04aedf3745d01282c46e7d48332b0390e51e1aa",
+      "bytes": 1931
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-deleted-topic-oracle-01/probe.log",
+      "sha256": "2f9b0230ec9d0447c398043f049db04e790e43402aa5c8d9137bd8c2ca0fae55",
+      "bytes": 421
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-deleted-topic-oracle-01/probe.py",
+      "sha256": "6c0a5e887e195b1e9da1e7e11999818537e42db977ae28f2b3a7dbce13274b54",
+      "bytes": 2021
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-deleted-topic-oracle-01/verification.json",
+      "sha256": "fb37ab8e0e178f1f18db04d29a5415886ea7a4b7bbd0ebe269481254f1eb9b6b",
+      "bytes": 433
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/config/MyGUI.log",
+      "sha256": "c81b80042074353c7e865ecad4387a95f5155868f5099ce6c491bfeef58bc7ce",
+      "bytes": 44561
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/config/alsoft.conf",
+      "sha256": "88364c9fcabe9fc81fd3d69f0e51495c6d313d195cccab4da3ec08f435234452",
+      "bytes": 157
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/config/openmw.cfg",
+      "sha256": "f5a7eb7b3771a235efbcbe6c2d9700c43d2b3fc885a2d755c431267bc3fdfebd",
+      "bytes": 593
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/config/openmw.log",
+      "sha256": "777774f3da2b5149a1d361c5e42c3556e8305660b8ac2bc9d1cd5e9513d5ceef",
+      "bytes": 784536
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/history-events.txt",
+      "sha256": "1e33c5697321305e2a42100e43acc80fca40f83a05d3aab0669276a5728d4642",
+      "bytes": 201
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/live-2-2.json",
+      "sha256": "4a82cecc04250d00b3e32fe826cab5dc97f476894cee80da190e64454ef7cd3f",
+      "bytes": 24798712
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/live-2-3.json",
+      "sha256": "38b11bdf84e59410ba986a4265012e1285d72aa21becde7258de1ca1388ad549",
+      "bytes": 25988617
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/m10-runtime.wav",
+      "sha256": "3c42a3f89f7613a28197f9df04c50452c09e5219a67f3dcda1aa8c17c50d570a",
+      "bytes": 31357508
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/m15-events.jsonl",
+      "sha256": "14558bf108116d510d3945347fb59543a23d27a8de65314c9cb0b8f523c1cef0",
+      "bytes": 1610
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/obscript-report.json",
+      "sha256": "122f6a3a86f5b7b42bc767a42eded36cdeec0e6e8f8d0ed1e2e0f9eb057c9049",
+      "bytes": 26164163
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/process.log",
+      "sha256": "777774f3da2b5149a1d361c5e42c3556e8305660b8ac2bc9d1cd5e9513d5ceef",
+      "bytes": 784536
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/scenario.json",
+      "sha256": "c41c704fbe0bbe4893be5e5e3b8d073b535a7419b3960e8fc48e893411f33429",
+      "bytes": 4856
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/speech-history-continuation.png",
+      "sha256": "9135093c73382e36b0fe6f65a508ea1490f6075bd25bd436bf215a237848b5d9",
+      "bytes": 1171494
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "fbb62545bcaa5b5f8ff47654b282a3368140b64a5699956f73eb46d1a7054e1b",
+      "bytes": 10917017
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-continuation-normal-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/config/MyGUI.log",
+      "sha256": "4eacfe08d173c1991cf6c68f3d522a6260008a191b00094d5c48fc410865f890",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/config/alsoft.conf",
+      "sha256": "9b3beda26e4b51dea68cf49797e8abad7b03e7654209e067f741d99cfb03fd4c",
+      "bytes": 150
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/config/openmw.cfg",
+      "sha256": "1e9e8f80d3f754b55e8e64a2fce5e81e6915909a0c877d18eb51c61b3f56d974",
+      "bytes": 586
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/config/openmw.log",
+      "sha256": "f0964100ebcf6c5318b54acde331f9394c8a56ae12630f436ef6c164822d1daf",
+      "bytes": 2140787
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/history-events.txt",
+      "sha256": "1e33c5697321305e2a42100e43acc80fca40f83a05d3aab0669276a5728d4642",
+      "bytes": 201
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/live-1-33.json",
+      "sha256": "4a82cecc04250d00b3e32fe826cab5dc97f476894cee80da190e64454ef7cd3f",
+      "bytes": 24798712
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/m10-runtime.wav",
+      "sha256": "27c265ae1ae90b8b6615efb6af6333ca897b4ca89d81e1388f923b79d04ae2cf",
+      "bytes": 24092228
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/m15-events.jsonl",
+      "sha256": "3eb00a5718861d70a9e66301335df87fc15461ad88a09f95b587bf525e181f90",
+      "bytes": 7664
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/obscript-report.json",
+      "sha256": "c272761a3b8b259c94bac6ad2dbcae7c36505b3f44437eab3d2559a920f5bcad",
+      "bytes": 24928508
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/process.log",
+      "sha256": "f0964100ebcf6c5318b54acde331f9394c8a56ae12630f436ef6c164822d1daf",
+      "bytes": 2140787
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/scenario.json",
+      "sha256": "8d63b84bedb94a527f9e63aa5ad6fe5ab95a3a21765041e1fd7c91f15a6eac90",
+      "bytes": 4253
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/speech-history-first.png",
+      "sha256": "bc4b00267299f70dbae88cac9a262e45dfdbe0bcaefb9eb4c7c461b501e66be1",
+      "bytes": 1137069
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "a101f5bbaec26f7c1d8f61f2be225a7234a5af2ea54e18b9d1ba982f4aa72e3c",
+      "bytes": 10418638
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-first-normal-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-fixture-01/M15SpeechHistory.esp",
+      "sha256": "2f0a232e8ba8a05e41daddb703f70ed614debefa0cdd34c2e77fc49276b2b535",
+      "bytes": 499
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-fixture-01/fixture-report.json",
+      "sha256": "cbe074972668654cbfd7b1b4672a40f95934e24c37b1ce518828977fcd64b928",
+      "bytes": 592
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-fixture-reproduced-01/M15SpeechHistory.esp",
+      "sha256": "2f0a232e8ba8a05e41daddb703f70ed614debefa0cdd34c2e77fc49276b2b535",
+      "bytes": 499
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-fixture-reproduced-01/fixture-report.json",
+      "sha256": "cbe074972668654cbfd7b1b4672a40f95934e24c37b1ce518828977fcd64b928",
+      "bytes": 592
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-runtime-01/pristine.omwsave",
+      "sha256": "a101f5bbaec26f7c1d8f61f2be225a7234a5af2ea54e18b9d1ba982f4aa72e3c",
+      "bytes": 10418638
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-runtime-01/restart-input.json",
+      "sha256": "c7971cbc59de15c2244f4a2cf32bc0ce967b4dd02186465022dea539482f1078",
+      "bytes": 373
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-history-order-runtime-01/runtime-verification.json",
+      "sha256": "5755a26a2f254598951f9a0d5e41a26ffabcd181ef59e76812bf92575aef773f",
+      "bytes": 3912
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/charactergen_chargenvoice_000150c7_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/charactergen_chargenvoice_000150c7_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/extract-lip.log",
+      "sha256": "542288e6e3cde2f1218b9db831308ff05b2bf15d299c2fe959ba2d9352f19366",
+      "bytes": 193
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/extract-mp3.log",
+      "sha256": "9039f055ea44397411b037e391cc66a13b96420cc9e5e44aa190b16ccee80f9b",
+      "bytes": 193
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/voices1-list.txt",
+      "sha256": "9047737e05225489e82c23bb857dba5aeb7c3229cb1d53255fc656e0cd3235a9",
+      "bytes": 2452799
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-assets-01/voices2-list.txt",
+      "sha256": "d803dbb7b2e73702dc4e21bbed7a9d9254dbe8fe3a55c17ffc1697b130f467c7",
+      "bytes": 3254120
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/all-comparison.json",
+      "sha256": "021eaa8fed5ac6ced3eb8796ef732d5b05e5ea1ad81558db3cbce43cca9584ec",
+      "bytes": 333
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/all-input.txt",
+      "sha256": "51943c7bc9b8852a2ee8fdec91b56a90dd7d5ed8f7a3276e1044d33f160b3208",
+      "bytes": 128569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/all-output.txt",
+      "sha256": "6ca58aa98ae3cf8519307f6f7d1f8a942191a084fc1e45354124351f177f2f0b",
+      "bytes": 382990
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/ascending-priority",
+      "sha256": "5e1977197047c5a5b0487e25fe5635a717f1180e8a7f7f07ec558030b00f8591",
+      "bytes": 425760
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/ascending-priority-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/ascending-priority-output.txt",
+      "sha256": "1a390715ea004fd80002dcfa09d611ff789b90cddb54d986240d183b026436ef",
+      "bytes": 382990
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/ascending-priority.cpp",
+      "sha256": "6b589532e9f2a57d6503098fcc15ba1f83cd5467a1dce0e79d53a74e8eafc220",
+      "bytes": 1530
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/ascending-priority.hpp",
+      "sha256": "5a197a91179c95e62fd39667471ac866c569ee8124ee28c7c9597bf5be7ec862",
+      "bytes": 4752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/compare",
+      "sha256": "d25eed841023b188739eb267d5d3f53cd0d78be3c252522d548035524631ff92",
+      "bytes": 425752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/compare.cpp",
+      "sha256": "8e1969b416e71449a642c1f079101ca4ffb5ad5bbb2e5aff36f210ed2c69b17b",
+      "bytes": 1542
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/comparison.json",
+      "sha256": "9ab0ac194d90495dbed3223d0aa49159a8b1101865033ef107251dea0e6a360f",
+      "bytes": 84
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/input.txt",
+      "sha256": "4ebef592efa9188867910655d3626b9bba21163e517e7666c42c19e1513c7dfc",
+      "bytes": 117435
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/negative-controls.json",
+      "sha256": "3716d806c087147308a5e1ba7bbfd84991b97bf5954b65fe7ed10a4b14ffa660",
+      "bytes": 315
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/negative_controls.py",
+      "sha256": "ec5cdcfd28e108b46593dd999a86d615202d4b02a3933b335e455a0110a79bcd",
+      "bytes": 1573
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/output.txt",
+      "sha256": "68563620347e395a3318cbdfe3223abf0e63b1539618ac05ec696271c5788d50",
+      "bytes": 375568
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/override-appends",
+      "sha256": "5602cd557a587ec7e1e0b5a4edc98363af0331a5abeeed24b2ab3e16d6180690",
+      "bytes": 425760
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/override-appends-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/override-appends-output.txt",
+      "sha256": "1578017b5de8e8ff5225c78a136367f3964a1349d204b11ec56863fdf28a0758",
+      "bytes": 389532
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/override-appends.cpp",
+      "sha256": "aab3d72fd4b074e56afed02f50dc324d95868f596451f9ae5d3fb51d822ac99d",
+      "bytes": 1528
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/override-appends.hpp",
+      "sha256": "6640ac76e94901bc05f552eebeefda03f06815bfdf61b6ad8bf6b7a2ca37b15b",
+      "bytes": 4713
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/zero-appends",
+      "sha256": "d82a717a6f64074d5ecd8cb9a341767709b324799db0eb892a51f42707d0bbff",
+      "bytes": 425752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/zero-appends-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/zero-appends-output.txt",
+      "sha256": "f587c7cefe1036486fc6ed8f959f7897c73518adfdf632d60428c69021909437",
+      "bytes": 382990
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/zero-appends.cpp",
+      "sha256": "61c613f685c78de6bfa8208038f9d3161fd8f3db339fcfe9c05e4042fbf294e7",
+      "bytes": 1524
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-comparison-01/zero-appends.hpp",
+      "sha256": "b96ce509cb8716e982084dff8f8bd81511ad6499149152d9783511a58224c81f",
+      "bytes": 4763
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-components-01/components-build.log",
+      "sha256": "b138587e0a7b76bfb6028ae0ff1dc09dfc01d5fea818d29a2a5ce91a7a86ff41",
+      "bytes": 2187
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-components-01/components-inventory.txt",
+      "sha256": "5515a5a0ae11cddb2257df99c69e622fd73b3c673f68a63ec9c072034e61eeed",
+      "bytes": 192343
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-components-01/components.log",
+      "sha256": "33c37bdd716914cfe58798d2a609c23dc114f9faf1b2cf10f34a77963ef80ec7",
+      "bytes": 2985
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-components-01/components.xml",
+      "sha256": "33061a0fca9af0d94b85e6ed02813e1a46f28043d572b0619021f798f41fa6cd",
+      "bytes": 4560
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-components-01/verification.json",
+      "sha256": "74e5d2c4433cf9f97461ffab5d5b8081ff3fbaec2c5671b85859c581eadba6c2",
+      "bytes": 2188
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/config/MyGUI.log",
+      "sha256": "c885c368aea6bdded5d32b28674ffbbf75a18813b27f0d8ce66820fee59a9583",
+      "bytes": 44561
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/config/alsoft.conf",
+      "sha256": "d95bc65d2cf61942f7ae95907bd4776c30e88b802c712cf88e9417b0ad71d565",
+      "bytes": 149
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/config/openmw.cfg",
+      "sha256": "c16959c910170f8ddf8c2880808dc370d26c0913e1d48ea6174bc902fcac2b61",
+      "bytes": 606
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/config/openmw.log",
+      "sha256": "ceeea0a76a5203fe287c963342944a757cfc2600032a360e925c5bf544faf93e",
+      "bytes": 983659
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/dialogue-order-continuation.png",
+      "sha256": "fb5dcf97ccdbea3b8c28e71f29d3bc5e132cdc126ddf77d8766b5d7d19170d51",
+      "bytes": 1169623
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/live-2-2.json",
+      "sha256": "dfd6dd3caf3feed23ab0ffa82fb436d67c74d5e06f696e4ed416fce76beec277",
+      "bytes": 26398388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/live-2-3.json",
+      "sha256": "2be02e3698e117c02b9e9329282c8c0f23ed80aaaf619e105dc0d271679f9128",
+      "bytes": 27906785
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/m10-runtime.wav",
+      "sha256": "559cd33704d7fbdee3ece088f25b7d695048727bb909753e73645c5d420fd8a8",
+      "bytes": 54389828
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/m15-events.jsonl",
+      "sha256": "c657677a92eb7c2ca0fe0d86c192d8aa3b5bd59db900616ad2b96c077ed57d3b",
+      "bytes": 1596
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/obscript-report.json",
+      "sha256": "2f7e3c05a452c809d374bf099e3113045d5f2e1d5ad38299a872516807d0dded",
+      "bytes": 28387179
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/order-events.txt",
+      "sha256": "40588aefc04e24557cc8270b6f2461ace4191c098f550f299316c3f310522146",
+      "bytes": 448
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/process.log",
+      "sha256": "ceeea0a76a5203fe287c963342944a757cfc2600032a360e925c5bf544faf93e",
+      "bytes": 983659
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/scenario.json",
+      "sha256": "642956986fa206af1d564b1789bfd4116947bafcd4fac6f961de9e7743faa68d",
+      "bytes": 4827
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "2d7abac44de5cee13f995fa02c8831ec97dca1fbcd1e89560a9880758ac08d0a",
+      "bytes": 11720667
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/config/MyGUI.log",
+      "sha256": "f605349f98ae499520f5a87fbc87a118241b7331bba79ce20d60a733fbceafea",
+      "bytes": 44561
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/config/alsoft.conf",
+      "sha256": "046ea5ed7cc20508ec5e95fa7596136dea5020d37de22c98da5d78e44090e49e",
+      "bytes": 149
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/config/openmw.cfg",
+      "sha256": "d92c1a6ddfc612cb1da05fc852460032bcde7f681d3a61bbd2975490865af926",
+      "bytes": 606
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/config/openmw.log",
+      "sha256": "d18e169ac2d583d4234573138fe1ac2698ceab22ce997674f53677dac5c2b6ae",
+      "bytes": 983659
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/dialogue-order-continuation.png",
+      "sha256": "ff905e16a735e3f41b4972ddeba19f0e12562c3f6cf1fe1555d21587f0b3bfb6",
+      "bytes": 1169777
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/live-2-2.json",
+      "sha256": "dfd6dd3caf3feed23ab0ffa82fb436d67c74d5e06f696e4ed416fce76beec277",
+      "bytes": 26398388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/live-2-3.json",
+      "sha256": "2be02e3698e117c02b9e9329282c8c0f23ed80aaaf619e105dc0d271679f9128",
+      "bytes": 27906785
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/m10-runtime.wav",
+      "sha256": "c89d0ecb73add0771734a11339f1c7615d90360dbe09436d95169374b33d9f00",
+      "bytes": 54704708
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/m15-events.jsonl",
+      "sha256": "94bab5f8d2cc0bb8deeaafb52602acd212b20bfd9858d6b0fc7e388f97a5369e",
+      "bytes": 1596
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/obscript-report.json",
+      "sha256": "2f7e3c05a452c809d374bf099e3113045d5f2e1d5ad38299a872516807d0dded",
+      "bytes": 28387179
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/order-events.txt",
+      "sha256": "40588aefc04e24557cc8270b6f2461ace4191c098f550f299316c3f310522146",
+      "bytes": 448
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/process.log",
+      "sha256": "d18e169ac2d583d4234573138fe1ac2698ceab22ce997674f53677dac5c2b6ae",
+      "bytes": 983659
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/scenario.json",
+      "sha256": "9c044784396f69069bfa02d12cbdd430b96c9c56f8cd35cb222c0fcc85f0d6f3",
+      "bytes": 4828
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "9bf0413d26a3a9c098ec455f0725f57d79f01afbc49145aab6b59f21e587271b",
+      "bytes": 11720661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-continuation-normal-02/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/config/MyGUI.log",
+      "sha256": "8180fdd14e1b0a5491cc0988f0813e80412b854b9ebb2afa26efa19b27404d67",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/config/alsoft.conf",
+      "sha256": "30ff1e06d3eca1dd82e666dca97e483fb05bb0bc7c412e0ab10ed22bc703b0e6",
+      "bytes": 142
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/config/openmw.cfg",
+      "sha256": "0bfcd6d1834e1ebcd930511024b9ca57aba5bbe976009cad25f5675a1894bfa6",
+      "bytes": 599
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/config/openmw.log",
+      "sha256": "0a9b4c3a757a8cbbe9cb792731d8158c7bc63bcd7f85a295ce549a26c359a3ee",
+      "bytes": 2556707
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/dialogue-order-first.png",
+      "sha256": "67af590dc828a793c42b8a857cce605be263d4e104fe8f99284ab05debd87ed1",
+      "bytes": 1150276
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/live-1-33.json",
+      "sha256": "dfd6dd3caf3feed23ab0ffa82fb436d67c74d5e06f696e4ed416fce76beec277",
+      "bytes": 26398388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/m10-runtime.wav",
+      "sha256": "cf7097df054c4d1d1a78a0b48555c24b2a475e85ace27cb1bef14c0fede4bb14",
+      "bytes": 43307588
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/m15-events.jsonl",
+      "sha256": "7561a29196d46bba2894461269bc8c6c1dbe0dff5873243da6f9a0e7ba4b63d8",
+      "bytes": 7658
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/obscript-report.json",
+      "sha256": "e578b2f7ddb468e4db823a2660612208a574cf6e11e1cf5df7f45b76660c0b2e",
+      "bytes": 26685344
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/order-events.txt",
+      "sha256": "40588aefc04e24557cc8270b6f2461ace4191c098f550f299316c3f310522146",
+      "bytes": 448
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/process.log",
+      "sha256": "0a9b4c3a757a8cbbe9cb792731d8158c7bc63bcd7f85a295ce549a26c359a3ee",
+      "bytes": 2556707
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/scenario.json",
+      "sha256": "88e27f7b4dc0ca8d76a1f549e4a70c02e4a11bfe3bc6644689930461b67f89f5",
+      "bytes": 4238
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "3ac521faba17bace5c8f41a605416ebd2d07d7fa9c9ceeb69dbe492e016086fb",
+      "bytes": 11081122
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-01/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/config/MyGUI.log",
+      "sha256": "c53b0646be0e76e352080ec5938313ffbeed4ab880d75cf19ec9d2f7e0a3c696",
+      "bytes": 34978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/config/alsoft.conf",
+      "sha256": "d408948b53f157eb4d1aed21960a2edc7f6a5987d6fb50e448628671ccb2f2dc",
+      "bytes": 142
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/config/openmw.cfg",
+      "sha256": "774b2eb85b711db1826e4bf16a9fe263f48380d0a335d20b15644a2122163dd2",
+      "bytes": 599
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/config/openmw.log",
+      "sha256": "3769129f53a328e30fb6d9890c26455a3d0a3dd66ceed4ae42fcddba3da78b79",
+      "bytes": 2556701
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/config/settings.cfg",
+      "sha256": "1fff37daff79390733e9db25b3f5098b201422d4be70b390b2b45d7d8923d990",
+      "bytes": 1176
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/dialogue-order-first.png",
+      "sha256": "8c6dc4bf6f2b3803f8758828e6f5cbcf7630344652073f3a5f0f9fc4bd70b652",
+      "bytes": 1157529
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/live-1-33.json",
+      "sha256": "dfd6dd3caf3feed23ab0ffa82fb436d67c74d5e06f696e4ed416fce76beec277",
+      "bytes": 26398388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/m10-runtime.wav",
+      "sha256": "86435342edf61eccb105119f8d65c0f1f642b7b9d4f78ccf2f5645ef7697dbff",
+      "bytes": 43392068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/m15-events.jsonl",
+      "sha256": "162d889207443e75712f225f3c7d201502a2c4cf7f31aa1dd40108af0fafad0e",
+      "bytes": 7658
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/obscript-report.json",
+      "sha256": "e578b2f7ddb468e4db823a2660612208a574cf6e11e1cf5df7f45b76660c0b2e",
+      "bytes": 26685344
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/order-events.txt",
+      "sha256": "40588aefc04e24557cc8270b6f2461ace4191c098f550f299316c3f310522146",
+      "bytes": 448
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/process.log",
+      "sha256": "3769129f53a328e30fb6d9890c26455a3d0a3dd66ceed4ae42fcddba3da78b79",
+      "bytes": 2556701
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/scenario.json",
+      "sha256": "0164e0ed980397a979e5e9839b485ac133e341b87c1c8c9656e6944cecee9b5d",
+      "bytes": 4237
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "316451e449167912ba70c89210a4449843c0ed21a5bd16e46b32144aa7fc7456",
+      "bytes": 11082220
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-first-normal-02/xvfb.log",
+      "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/M15DialogueOrder.esm",
+      "sha256": "a83746d331daede4014abfbf41b6281af0fffc52ec37b0cb1ff6a032c06265dd",
+      "bytes": 1026
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/M15DialogueOrder.esp",
+      "sha256": "ab5bcfa97220f682d1c7d61e8ab8f029b72989d0d97a8d262b4a4ff3428a9c3c",
+      "bytes": 489
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/fixture-report.json",
+      "sha256": "5a7e7f9679ca835c5cb9036f5f0c0d039bb83878e8825dc8e398bebb9bbf24be",
+      "bytes": 737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCBattlehornCastle.esp.typed.txt",
+      "sha256": "918dec86e88a5abfbf86a413fbb1f1d0133211a5a7cbe9519d96e74bfd9b3698",
+      "bytes": 31611
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCFrostcrag.esp.typed.txt",
+      "sha256": "59913753f09bf637c3a670cd1242e8e082daadedc3a617b0d0ddca627c3cffb4",
+      "bytes": 739
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCHorseArmor.esp.typed.txt",
+      "sha256": "58a95e515e6ccac1a6300406781fa5c52f1f5dc3cc1ae65b4196e4a4677aca1e",
+      "bytes": 3875
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCMehrunesRazor.esp.typed.txt",
+      "sha256": "f09f7a47e81e46bbbab33dd14f409b1a6b8efd26c2ef7223a852f87dc97942e3",
+      "bytes": 1036
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCOrrery.esp.typed.txt",
+      "sha256": "112dcb9a4d8ddfb7664f54e1d13fb0cd5d269ec8434b8e1961488b5dd7c48a39",
+      "bytes": 1219
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCShiveringIsles.esp.typed.txt",
+      "sha256": "c1898b18fef8dc01e95768e5d26cca0f0114a9542a554656b692c53eaf603c71",
+      "bytes": 231
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCSpellTomes.esp.typed.txt",
+      "sha256": "0805dee5490dba3ae06947cec8094227ae8c418eaf159be63a1f5726d1e09a44",
+      "bytes": 372
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCThievesDen.esp.typed.txt",
+      "sha256": "42886a3b8d3f027f48a7301d5f0285361356bb28254722355fe9745e8f8d833e",
+      "bytes": 11249
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/DLCVileLair.esp.typed.txt",
+      "sha256": "aed07d387bcf94fda0d9cabb9ac51e7c6214f208658de0deeb89796465ece275",
+      "bytes": 3131
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/Knights.esp.typed.txt",
+      "sha256": "e585cabd630383f2e7e834f01c7d69ba55de8a806dda0193479fda847c59334a",
+      "bytes": 201619
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/M15DialogueOrder.esm.typed.txt",
+      "sha256": "d4762231d184f2799777215c568133db1fcaa4e1edff590bef2272d394a48abd",
+      "bytes": 1263
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/M15DialogueOrder.esp.typed.txt",
+      "sha256": "3bd21f930eec4b49a878ca2f56c68dd1ed6fc41fe7b3600b66bf8b80cf67a3d8",
+      "bytes": 572
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/Oblivion.esm.typed.txt",
+      "sha256": "e607fa6b08c5e8a634083f05c4b30941cfb48292d66b8b0c99ca4703d652ccb0",
+      "bytes": 4264168
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/all-speaker-candidates.json",
+      "sha256": "803ce9bfd15ee6dcc2533e5d6afac26f51d99a4711d8a4c41d726bc3a75d79b4",
+      "bytes": 3726
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/audit_typed.py",
+      "sha256": "2d5661ab7924b4bdb6a4a5ba00ee2c2c2561a9dd6207a5119e69b02ae42b2997",
+      "bytes": 2440
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/base-typed-dump.txt",
+      "sha256": "ae3514e322387deba6a23760a85b76669ed3252296d47dd255574fd6cd9c89bf",
+      "bytes": 1616
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/build.log",
+      "sha256": "c7a1808441f06dc85d3a5f604d66dba21f359f2a96f1682ba79967436949086c",
+      "bytes": 697
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/candidates.json",
+      "sha256": "0037663a6220e19b8ad57451f4ba9458cf35425421e636bf1b9f0d81b8b8aec8",
+      "bytes": 378
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/fixture-tests.log",
+      "sha256": "7794239c30e415d1007dd2b37fa1fc0a2eae2d0d78466fa35b600c29a5a18d10",
+      "bytes": 725
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/history-runtime-verification.log",
+      "sha256": "215ebb173f9a942caca590aa47011cff079445b07c85b69767974a16f9340489",
+      "bytes": 141
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/history-semantic-reinspection.json",
+      "sha256": "22bf390e824d4bccfd4bd08fb1e1129f86cfa4d6f808fa6fcb5a0797a15549f6",
+      "bytes": 623
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/history-typed-dump.txt",
+      "sha256": "f493d4eff9fba0285419c572e204ce8834c204a34aae6d521725caf20477daf8",
+      "bytes": 548
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/inspect_fixture.py",
+      "sha256": "e0d2c7402573f835a6a48a2a131ad7e9de3ec969b90d3ade91735748476b543c",
+      "bytes": 4221
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/inspect_history_fixture.py",
+      "sha256": "d96aa7a18b30bce12c1879c2ddd83477a5f21a2e78b6b286e1cacbc3b183103f",
+      "bytes": 1649
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/oblivion_m15_dialogue_order_continuation.json",
+      "sha256": "5e5adce39c23b732528b26bd4f0f60996df5f30306e3c771a2340a55e8c534cd",
+      "bytes": 4015
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/oblivion_m15_dialogue_order_first.json",
+      "sha256": "490e2e476fb19bdc2b3e5da29447aeaa85db603df8e256476f21ef947fa85433",
+      "bytes": 4334
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/patch-typed-dump.txt",
+      "sha256": "9eee03d51d612fc2a897240c071e7464865880a9b7618a1dda2b49a93b2442b3",
+      "bytes": 726
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/published-history-tests.log",
+      "sha256": "199ba496f288116d36c62f29346d4fbf0bd75745a1c893abfcbdaa4c6d5b1033",
+      "bytes": 101
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/published-order-tests.log",
+      "sha256": "fa6a66c0b41ab9c8599db31c4e39c3e7a661a7542cf6c0948bee5393742172e3",
+      "bytes": 101
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/recipe.json",
+      "sha256": "07cf01bf96604f59285d4749f28db7e075275fd3ab2654b0df6207fbfc55d585",
+      "bytes": 1220
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/reproduce-history.log",
+      "sha256": "250cf79dea3da616acc2d49cbdec83d6865fd430673254e7227982f569f98ea1",
+      "bytes": 558
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/reproduce-order.log",
+      "sha256": "c7a1808441f06dc85d3a5f604d66dba21f359f2a96f1682ba79967436949086c",
+      "bytes": 697
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/reproduction.json",
+      "sha256": "9ce5fc8dc7f2da6f2901575a0ec07b466bed4ff96863c3a1be62249ffb72e97d",
+      "bytes": 4373
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/run_runtime.py",
+      "sha256": "65eec601d0fd108baf695abee96bdb43f9b989f2a5fa4962fa2f77da4beb4dd0",
+      "bytes": 2860
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/run_runtime_02.py",
+      "sha256": "3d296872289936aefa587ebe8a5008e58f4097bffaf372a8f3bf94b3ed8bcfef",
+      "bytes": 4830
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/runtime-verification-02.log",
+      "sha256": "993b4059ab4e64ffec2a80c5b99315a66f32d7fb96695077502daa0905ca57a9",
+      "bytes": 141
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/runtime-verification-03.log",
+      "sha256": "08bae78f4d39938270698b1e5c7e0887870c8b9ebae6f40b7015a709678763a7",
+      "bytes": 141
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/runtime-verification.log",
+      "sha256": "32b06a716bbb6025f10cc5fcf610d5c3ee4da09ced5d5f0da2488e9dbf12a6d8",
+      "bytes": 783
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/semantic-reinspection.json",
+      "sha256": "c0427f9eeafd550366f85d8bfb665b071c012ada68b4c40a61411331b99e6ebb",
+      "bytes": 4668
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/speaker-candidates.json",
+      "sha256": "7f1ce1063b22bd89a95d9aed16a01797eec671285c7775cd9b7713c930e3deb9",
+      "bytes": 164
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/tes4_m15_dialogue_order_fixture.py",
+      "sha256": "9622f4bd43156bf16ae2953ff3cf42480d3b23cbd6e12cdbb3d8ac368d738643",
+      "bytes": 7827
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/tes4_m15_speech_history_fixture.py",
+      "sha256": "a351e1d610409a84b651f2cf082e71e63a533f9a50f28bc776a8e63561735714",
+      "bytes": 4844
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/test_m15_dialogue_order_fixture.py",
+      "sha256": "223d47916f4e960a98d149c86fb8e3e18c7cad34952a9906c4ca92afc37170f2",
+      "bytes": 5054
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/test_m15_speech_history_fixture.py",
+      "sha256": "9c35d77225b3401b52c5efd34c7973fa3c7eacbf790ec84d792788a69f8352c7",
+      "bytes": 3420
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/typed-audit.log",
+      "sha256": "b2c88080122658b98c5467aa81b0f7a897fd5ae1f7296df2bd979840df899e0e",
+      "bytes": 380
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/typed-verification.json",
+      "sha256": "99f1544aed60c2899ff46bb78c468bbec25053f44363d26c66c030a7cbf553e8",
+      "bytes": 2542
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/verify_history_runtime.py",
+      "sha256": "5ce3a45038fba9f6286dddb3709e0df11f0912b572a4841edece275aa410a1a0",
+      "bytes": 5485
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/verify_runtime.py",
+      "sha256": "0c1c45a9a71014b3855d62ac2be591861acde3eaafcdd42c3e08445214f1882f",
+      "bytes": 4764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/verify_runtime_02.py",
+      "sha256": "1f91db88649038c3fc4881326c6accfe40946df59469926e3773d2049a8f7a4a",
+      "bytes": 5507
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-draft-01/verify_runtime_03.py",
+      "sha256": "3666f9e1fa56879337800067d33de40f7deb9d749b23bba3412adbdc56d2519a",
+      "bytes": 5507
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/M15DialogueOrder.esm",
+      "sha256": "a83746d331daede4014abfbf41b6281af0fffc52ec37b0cb1ff6a032c06265dd",
+      "bytes": 1026
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/M15DialogueOrder.esp",
+      "sha256": "ab5bcfa97220f682d1c7d61e8ab8f029b72989d0d97a8d262b4a4ff3428a9c3c",
+      "bytes": 489
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/fixture-report.json",
+      "sha256": "5a7e7f9679ca835c5cb9036f5f0c0d039bb83878e8825dc8e398bebb9bbf24be",
+      "bytes": 737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000810_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000811_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000812_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29",
+      "bytes": 2040
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-fixture-reproduced-01/sound/voice/m15dialogueorder.esm/imperial/f/dialogueorder_00000813_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a",
+      "bytes": 17764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/array-finalize.txt",
+      "sha256": "b942bd62c8b5be8a662d6b3ea760f46825a8cbcdb3417322b42c9f951b25e42a",
+      "bytes": 9170
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/form-modify.txt",
+      "sha256": "6a5446969afd8c5c724f7fc927a2a035a266b092b50af793dc24e255d9ee67a9",
+      "bytes": 2104
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/group-insert.txt",
+      "sha256": "01d8336aee7f7f96f466881f85a8efe55fd99a76c2d934d82bee614eb5c08de9",
+      "bytes": 10748
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/info-loader.txt",
+      "sha256": "395fa4a521332d2f94465dbcccad44ade9888e4453302d88822aef05e972f5dc",
+      "bytes": 11624
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/insert-info.txt",
+      "sha256": "6c017598a7ba4c22c86dc3ba3c4ccc78bf34820dac9d1c9c9a3367f9337fd720",
+      "bytes": 12663
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/load-form-prefix.txt",
+      "sha256": "13527b5b2582604417eaa52bc606ff9397594501681f0b528a4025a3686a34d7",
+      "bytes": 2728
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/priority-004af121.txt",
+      "sha256": "6df8e83396eaa6692390758c3de151230c4d2d1a4bc236ff173fc04de4288f71",
+      "bytes": 1336
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/priority-00509bfb.txt",
+      "sha256": "1b381a8540648defe178e277692a16b737f9694e5d459b1c2fa364ab6480cbe5",
+      "bytes": 1108
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/priority-0052f37f.txt",
+      "sha256": "7fd06678a2ada48a4e752deaf94b05897ef095defe4ed6cc839ed04b60e82b64",
+      "bytes": 1163
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/priority-0052f38e.txt",
+      "sha256": "d7a70e5736f752cb58e3cec385c35b2bd91e9ad1a095bf7cb54962e2158dbefd",
+      "bytes": 1011
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/quest-priority-comparator.txt",
+      "sha256": "061ec8248d3af0de96c8ea44dc7d7b282429a1112809b3efd442265ecea0a538",
+      "bytes": 3678
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/record-header-apply.txt",
+      "sha256": "ebee2cadf9ab44218a2aaef3b8194caf8d612f1a8b1533d6c50a9c75d3b606e2",
+      "bytes": 5314
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/selector-prefix.txt",
+      "sha256": "c152423229621be55a65f5a1bc00915619eb72c03177f445a97f5e50807e3c8a",
+      "bytes": 21240
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/selector.txt",
+      "sha256": "a0c67c4e2f0886808512175b955307a582b10bf0d907961e1fd114aa9f1f410c",
+      "bytes": 12988
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/topic-arrays.txt",
+      "sha256": "9430b9ccd9853d76864b3bf4f3d5629d790d2b9485775fa0a0f208cb5b0d62cb",
+      "bytes": 22378
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/topic-load.txt",
+      "sha256": "bcc447248923a9f0a8ed406ba492d629643acfc36bcb8061799e3b9fe55c3efc",
+      "bytes": 87452
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xref-0044df7e.txt",
+      "sha256": "5b4a3cbc2a02bb14f28326f3c4e4364db906f4ec7d20eccaa1732c389605d0ca",
+      "bytes": 2975
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xref-0052f655.txt",
+      "sha256": "b2d96747635539464993eadde02e00ee3678716f3f4eb47924e7fe78fe7bc266",
+      "bytes": 4508
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xref-0052fb23.txt",
+      "sha256": "c9b4cf3cf37a4d4d82d1fdd4a1a3a25426b28c9af71b7a8b85838c0dc2ae0fef",
+      "bytes": 3197
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xref-0052fe56.txt",
+      "sha256": "46ae2299f8b2e849ece628bcd37d799b66bf5615bd1dffae22b1756afd8334fa",
+      "bytes": 3697
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xref-005311bd.txt",
+      "sha256": "3ff38f64bf1df6739f2d21119533feb53d4832249c430cd83ccb3b4482a228c8",
+      "bytes": 2748
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-inspection-01/xrefs.json",
+      "sha256": "c04153efe5710a63e4f8ff84a1621857dc0abdf3999de64846e8d7924cda89fe",
+      "bytes": 507
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-loader-oracle-01/corpus.json",
+      "sha256": "6637d9dc4d0f5ae67fd7a28a146b66d74a6f1d9b547f63a1ff02cf5751e46c78",
+      "bytes": 2833924
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-loader-oracle-01/probe.log",
+      "sha256": "728703dfd5210fa1fe63c0d8438cb016f74145e1c28ef7719c167aa5ec1802b1",
+      "bytes": 631
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-loader-oracle-01/probe.py",
+      "sha256": "b8faa30fb528a270cb84e9e4902c5b6a62adf1735ad795992e997aade356aed3",
+      "bytes": 6769
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-loader-oracle-01/verification.json",
+      "sha256": "008372a6fe679c7ed2c244170bce03f174efa493dfc6aaaa10e2bfeefc4665cd",
+      "bytes": 645
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-01/engine-build.log",
+      "sha256": "bbced2e539ffa42796d66a402cc265d327ba14c6a2606c1edfae7e10c5605050",
+      "bytes": 135074
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-01/engine-inventory.txt",
+      "sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+      "bytes": 132351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-01/engine.log",
+      "sha256": "b1254b8401f7a497faa16e8de2f8876b581aaf97e900a2003316da5ecf722441",
+      "bytes": 8617
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-01/engine.xml",
+      "sha256": "5b00590f193740cea1d34251a80fb4cc235833352e6b305a5d0fd833555a8580",
+      "bytes": 2077
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-01/verification.json",
+      "sha256": "5b2fc68efa06610a9a4afaa1e0c3e9774f322ea0079a4630bfc721167302b515",
+      "bytes": 1354
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/components-build.log",
+      "sha256": "2c79b5d81368fa1dd32183a9581f67c5b66637fa83056fdce110f5b44970cfde",
+      "bytes": 461
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/components-inventory.txt",
+      "sha256": "8d61806e7db3b19be43c038afe25f236b2d1fe8b1899b89d18299042b313cb6e",
+      "bytes": 192343
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/components.log",
+      "sha256": "5c6e257b0c3649e0757aba16eb057f14c2087316d60582687c269efe4e845a9e",
+      "bytes": 601491
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/components.xml",
+      "sha256": "e8995e7d66a8a6dbc32188b49bb7c726b8956d459814dc20d18b58cced80770d",
+      "bytes": 2341644
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/engine-build.log",
+      "sha256": "ac6c15b17847615dbe9f7ab3d4a9a76d29b5e6f5d127212caccaf480c393b53d",
+      "bytes": 29806
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/engine-inventory.txt",
+      "sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+      "bytes": 132351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/engine.log",
+      "sha256": "0057a531488599e95ab4e822d2a2ed2857f5cbe1f5afa43e3df61f4d8ed2d82c",
+      "bytes": 2223733
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/engine.xml",
+      "sha256": "9c07b497e041a37a22889e32d13073e93d8fa1ead1b0f6c389b24777b7ba5df7",
+      "bytes": 616362
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-02/verification.json",
+      "sha256": "fc1b1064063b86b363d72b95044ea9c81b71f4ee7e983e12b8deab9b000a2cea",
+      "bytes": 3839
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-03/engine-build.log",
+      "sha256": "60beb51a0c43b067c0f6c5276a3e8055fb4371a161f279191123e91e2685a034",
+      "bytes": 30097
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-03/engine-inventory.txt",
+      "sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+      "bytes": 132351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-03/engine.log",
+      "sha256": "330a16e6be0467c086298faccd72ebfaf3f29bdc7a820abcd1b14d1485490d03",
+      "bytes": 2224313
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-03/engine.xml",
+      "sha256": "718889a382dff447a0735a6c1ec3566fbe02429900a8bc39c8631e45d1422cbd",
+      "bytes": 616408
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-normal-03/verification.json",
+      "sha256": "cb0c2f42930f9b77ad2947ef9af3abbe12fcb352f5c3723198dc100d8c9ae3e0",
+      "bytes": 2139
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-01/failure.json",
+      "sha256": "6c81b9dc023f36183c0f93957e989258049f2fd934a3c8bea39155d68457974f",
+      "bytes": 740
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-01/probe.log",
+      "sha256": "888bc1db5e15f948ccf599f90b2a40593893ec9e90ae96bd077a37562d7ceab0",
+      "bytes": 816
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-01/probe.py",
+      "sha256": "47406b2b5583da2fb8442ada2ce346d00b0a8b3b824fcbff261b9cecbf362a16",
+      "bytes": 5629
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-02/failure.json",
+      "sha256": "3aac3b7ea1d3eddc18634f73bb8b0350e4fd57b1aba72567b480332d3cbdeb6c",
+      "bytes": 1141
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-02/probe.log",
+      "sha256": "d9dcb5456800196f2a80815ae0851ef98e112e3c205463f5a575a657487e762e",
+      "bytes": 816
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-02/probe.py",
+      "sha256": "c4b06da5869424b15aea8dcc37a7487519e8800b95088f67fa74bab7ddbfeab2",
+      "bytes": 5840
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-03/corpus.json",
+      "sha256": "08e7f968e8f068eb04fd6ab7e548a2597ce8b1b2c7d44ab0697b9dfceb743490",
+      "bytes": 3056863
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-03/probe.log",
+      "sha256": "574b86f5e3ec97106d64137094effb066960f90a927b8af3ff0c8dd447a7f2a1",
+      "bytes": 621
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-03/probe.py",
+      "sha256": "c231a090e2409baa48dd18585ce8ed2932ba1247f7c2047cd01f2b1d80774a2d",
+      "bytes": 5892
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-03/verification.json",
+      "sha256": "d3a57f025ed9bc5c7d96191ac0117824c0d9b261c20202e5f7173ff92d998a16",
+      "bytes": 635
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-04/failure.json",
+      "sha256": "38c3a1502c47431211edebd73a90853221978bc2866a5d7262b2ba5ae2b46aa4",
+      "bytes": 286
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-04/probe.log",
+      "sha256": "f764c577c0011dfa0fe9074ed0058fd0ecda65678d8beefadf8e27a52000f924",
+      "bytes": 614
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-04/probe.py",
+      "sha256": "9f58519b90136c2e5340260047cd3c06badbc0bf349b1253f2db3535ea54ba21",
+      "bytes": 6154
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-05/corpus.json",
+      "sha256": "6637d9dc4d0f5ae67fd7a28a146b66d74a6f1d9b547f63a1ff02cf5751e46c78",
+      "bytes": 2833924
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-05/probe.log",
+      "sha256": "9cc120213af1d308a56c569fd5abc1d932fb25d9ce45793c72ddf62111f49fd1",
+      "bytes": 687
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-05/probe.py",
+      "sha256": "c649b3ff534bb5f506f251f72919bbaee04c2a980795254fa09eeaba01ab267b",
+      "bytes": 6166
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-oracle-05/verification.json",
+      "sha256": "0693646899364d3eae550b9d8240300baf1187862f614320f938ffdd0d86c8ec",
+      "bytes": 701
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-python-01/python.log",
+      "sha256": "3614484ac882c360a679c01de6f80170845c1b8c819942e8fd428020f6b78ed1",
+      "bytes": 498
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-python-01/verification.json",
+      "sha256": "02fd5d990c2011ec64dadb62a3fa7e5c066cd8d40388cb67510b65e5a598c028",
+      "bytes": 818
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/continuation-launch.log",
+      "sha256": "642956986fa206af1d564b1789bfd4116947bafcd4fac6f961de9e7743faa68d",
+      "bytes": 4827
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/defaults.bin",
+      "sha256": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "bytes": 61692
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/dialoguetopics.hpp",
+      "sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7",
+      "bytes": 4752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/first-launch.log",
+      "sha256": "88e27f7b4dc0ca8d76a1f549e4a70c02e4a11bfe3bc6644689930461b67f89f5",
+      "bytes": 4238
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/openmw-normal",
+      "sha256": "ed05cbe8920bd337c5b798f2487b602d3620e5bccd5f4b7fd48c9312d839da30",
+      "bytes": 1399099440
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/openmw.cfg",
+      "sha256": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66",
+      "bytes": 28865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/pristine.omwsave",
+      "sha256": "3ac521faba17bace5c8f41a605416ebd2d07d7fa9c9ceeb69dbe492e016086fb",
+      "bytes": 11081122
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/restart-input.json",
+      "sha256": "a94bb61e831a976364c1764823ca11dab527d317245799b4a5bff0be40d0293c",
+      "bytes": 357
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/retention.json",
+      "sha256": "456e9821ef893561c9a55211b1eb42d3053cc6e3bbf54c772c730ef24bf1ffef",
+      "bytes": 852
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/runtime-verification.json",
+      "sha256": "2619fca496c9384d96e383ff11666b53e0f661d45a60213251e02b440de0e52f",
+      "bytes": 4380
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-01/tracked-source.patch",
+      "sha256": "29b2fb8533b58e10a9041924d95e0ac2a3b701dc7934f6af844496a4accf0b8b",
+      "bytes": 25232
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/continuation-launch.log",
+      "sha256": "9c044784396f69069bfa02d12cbdd430b96c9c56f8cd35cb222c0fcc85f0d6f3",
+      "bytes": 4828
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/defaults.bin",
+      "sha256": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "bytes": 61692
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/dialoguetopics.hpp",
+      "sha256": "bd4ee3e92dac80a75a1bda997897b8e2cfd4ded6f266a10b8f39717cd023eeb7",
+      "bytes": 4752
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/final-tested-source.patch",
+      "sha256": "82263831ba8b0504d00c7655fac8d9b3377c0a60d17fbd177a8d338ff11bb517",
+      "bytes": 26047
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/first-launch.log",
+      "sha256": "0164e0ed980397a979e5e9839b485ac133e341b87c1c8c9656e6944cecee9b5d",
+      "bytes": 4237
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/history-continuation-launch.log",
+      "sha256": "c41c704fbe0bbe4893be5e5e3b8d073b535a7419b3960e8fc48e893411f33429",
+      "bytes": 4856
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/history-first-launch.log",
+      "sha256": "8d63b84bedb94a527f9e63aa5ad6fe5ab95a3a21765041e1fd7c91f15a6eac90",
+      "bytes": 4253
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/history-fixture-build.log",
+      "sha256": "250cf79dea3da616acc2d49cbdec83d6865fd430673254e7227982f569f98ea1",
+      "bytes": 558
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/openmw-normal",
+      "sha256": "cc8a758056089c2e20efdca23b1fbef8cb6936e961660872f31ef06912c7d276",
+      "bytes": 1399100304
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/openmw.cfg",
+      "sha256": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66",
+      "bytes": 28865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/pristine.omwsave",
+      "sha256": "316451e449167912ba70c89210a4449843c0ed21a5bd16e46b32144aa7fc7456",
+      "bytes": 11082220
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/publish.py",
+      "sha256": "e5ecc84b13b8efc7603f82c8ee0676fbb051258018c2afb0a4cb5735e671da06",
+      "bytes": 13488
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/restart-input.json",
+      "sha256": "2d167403ef41a9273ef27782eca40bb65201e565bfda44deace610f3263a0991",
+      "bytes": 357
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/retention.json",
+      "sha256": "48b70fd1a64f5e60b9812023f7ccd9355131dbcb901024fa61e39c527ff75887",
+      "bytes": 852
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/runtime-verification.json",
+      "sha256": "79abd6a5ed337952389aa59ccaa9c9c19dec12f75a72ad062e5fa2723e96e3ed",
+      "bytes": 4381
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-runtime-binaries-02/tracked-source.patch",
+      "sha256": "82263831ba8b0504d00c7655fac8d9b3377c0a60d17fbd177a8d338ff11bb517",
+      "bytes": 26047
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-01/engine-build.log",
+      "sha256": "2c1e7f267d1375d87f80157480afa046a67ec2d155fb1bdb2e7799b498de87f9",
+      "bytes": 42744
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-01/intentional-stop.json",
+      "sha256": "e1779c3cc5b9f9b83c623cf57d812fed29b4146347674b1e88be20c70e674891",
+      "bytes": 524
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-01/verification.json",
+      "sha256": "65819d3eab4c1289107cec44b3b207c4210111e46450dfe676a11441662a9255",
+      "bytes": 648
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/engine-build.log",
+      "sha256": "8f22162c6b3f16bd1a93fdd21c51a01e8c1e7a4765c9da6cb86b43e78ca03c4e",
+      "bytes": 36635
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/engine-inventory.txt",
+      "sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+      "bytes": 132351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/engine.log",
+      "sha256": "ab0cb4840ebf45a68943d7a413c13383133904f9033ffad5d5525044f5083741",
+      "bytes": 2224282
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/engine.xml",
+      "sha256": "4413991f18a552c5510547080bfe0e4700d56b53f3dfd966648f9174aec8d41c",
+      "bytes": 618049
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/sanitize-build.log",
+      "sha256": "ef3251aaebd710b54925780f21bc65b9f563594001c5fff773cf14669345e3ac",
+      "bytes": 2187
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/sanitize-inventory.txt",
+      "sha256": "de7ac8769ffe1dee5ac1a9ab60dc8de73fbcdb77c96a79f58be188ddbea02aa2",
+      "bytes": 192343
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/sanitize.log",
+      "sha256": "b61649ab857ab6cdf160826978186499d4c0cac0b0c058609f83aada3599eb18",
+      "bytes": 161872
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/sanitize.xml",
+      "sha256": "73e26689557ab0e141439029b71a794cf78f199980d58efea0439b7bd4e511f5",
+      "bytes": 1617670
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-02/verification.json",
+      "sha256": "0d10235a213b32588c3814d662657c3c23849c5fa8ef53a5f1b01ab4cfc888f0",
+      "bytes": 4016
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-03/engine-build.log",
+      "sha256": "ecaefb505734a30d972dcf27d3fb45cff29bc908a72dd7a6d9270ddfac07111d",
+      "bytes": 28663
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-03/engine-inventory.txt",
+      "sha256": "9a2f1c7a6f6700226e649988cc47805425c3997f9113e8cc91fc38311114d8cb",
+      "bytes": 132351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-03/engine.log",
+      "sha256": "20b3666b4fa1fdee731ba85724c4bd7995cbe1a2c0b9b43cbfc6ea26e22d8ef2",
+      "bytes": 2224867
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-03/engine.xml",
+      "sha256": "89180846ad594247a9cd8680585e09fba52bdd7e7e1fa3c4ee6e2dbdd4f0947a",
+      "bytes": 618056
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-order-sanitized-03/verification.json",
+      "sha256": "a62b552568a55fbb2590aa5c22482fe4c560ce5d1920934c51d091c02021e2d7",
+      "bytes": 2229
+    }
+  ],
+  "validation_layers": {
+    "structural_write_and_binary_readback": true,
+    "independent_raw_semantic_reinspection": true,
+    "actual_engine_content_load": true,
+    "portable_compiler_units": 10470,
+    "portable_compilation_failures": 0,
+    "full_TES4_editor_world_lint": false,
+    "actual_scoped_runtime_and_fresh_process": true
+  }
+}

@@ -17,7 +17,7 @@ class SpeechHistoryFixtureTests(unittest.TestCase):
             plugin_name='M15SpeechHistory.esp',source_info=0x150c7,source_payload_sha256=hashlib.sha256(info).hexdigest(),
             topic=0x1000800,quest=0x1000801,topic_editor_id='M15SpeechHistoryTopic',quest_editor_id='M15SpeechHistoryQuest')
         return source,recipe,info
-    def test_only_info_quest_binding_changes_and_authored_records_are_consistent(self):
+    def test_info_binding_and_explicit_native_head_insertion_preserve_response_bytes(self):
         source,recipe,info=self.source()
         output,report=build(source,recipe)
         loaded={tag:(ident,payload) for tag,ident,payload in records(output)}
@@ -25,10 +25,12 @@ class SpeechHistoryFixtureTests(unittest.TestCase):
         before=reader._subrecords(info,'source','INFO')
         after=reader._subrecords(loaded['INFO'][1],'output','INFO')
         self.assertEqual(loaded['INFO'][0],0x150c7)
-        for a,b in zip(before,after):
+        for a,b in zip(before,after[:-1]):
             self.assertEqual(a['name'],b['name'])
             self.assertEqual(b['payload'],struct.pack('<I',0x1000801) if a['name']=='QSTI' else a['payload'])
-        self.assertEqual(len(before),len(after))
+        self.assertEqual(len(after),len(before)+1)
+        self.assertEqual(after[-1]['name'],'PNAM')
+        self.assertEqual(after[-1]['payload'],bytes(4))
         topic=reader._subrecords(loaded['DIAL'][1],'output','DIAL')
         self.assertEqual(next(s['payload'] for s in topic if s['name']=='QSTI'),struct.pack('<I',0x1000801))
         quest=reader._subrecords(loaded['QUST'][1],'output','QUST')

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_info": 86215,
+  "source_payload_sha256": "ca8a311f9fb759f542ebe43ffdc0825814a9849fcbdd4a5a21c4c50cfe5cb96d",
+  "base_plugin": "M15DialogueOrder.esm",
+  "patch_plugin": "M15DialogueOrder.esp",
+  "topic": 2048,
+  "low_quest": 2049,
+  "high_quest": 2050,
+  "low_priority": 10,
+  "initial_high_priority": 5,
+  "winning_high_priority": 75,
+  "override_info": 2065,
+  "placements": [
+    {
+      "info": 2064,
+      "quest": "low",
+      "previous": "append"
+    },
+    {
+      "info": 2065,
+      "quest": "high",
+      "previous": "append"
+    },
+    {
+      "info": 2066,
+      "quest": "high",
+      "previous": null
+    },
+    {
+      "info": 2067,
+      "quest": "high",
+      "previous": 2065
+    }
+  ],
+  "assets": [
+    {
+      "extension": "mp3",
+      "source_file": "charactergen_chargenvoice_000150c7_1.mp3",
+      "sha256": "265f3933c8dc280d5fede88cae86391351ad7f4d63044a773108369d0546935a"
+    },
+    {
+      "extension": "lip",
+      "source_file": "charactergen_chargenvoice_000150c7_1.lip",
+      "sha256": "cd598bf927017e585f98bc13fcb5c012c1620ba47219a6ec431d096e4f85ed29"
+    }
+  ]
+}

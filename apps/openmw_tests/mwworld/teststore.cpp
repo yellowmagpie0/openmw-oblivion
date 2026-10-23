@@ -2053,3 +2053,51 @@ TEST(MWWorldStoreTest, tes4QuestDialogueConditionsResolveMastersOverridesCompres
     EXPECT_EQ(store.search<ESM4::Quest>(base), nullptr);
     EXPECT_NE(store.search<ESM4::Quest>(other), nullptr);
 }
+
+TEST(MWWorldStoreTest, tes4DialogueTopicIndexReplaysMasterRemappingOverridesAndDeletion)
+{
+    const auto bytes=[](const auto& v){return std::string(reinterpret_cast<const char*>(&v),sizeof(v));};
+    const auto sub=[&](std::uint32_t tag,const std::string& data){return bytes(tag)+bytes(static_cast<std::uint16_t>(data.size()))+data;};
+    const auto record=[&](std::uint32_t tag,std::uint32_t id,std::uint32_t flags,const std::string& data){
+        return bytes(tag)+bytes(static_cast<std::uint32_t>(data.size()))+bytes(flags)+bytes(id)+bytes(std::uint32_t{})+data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string,int> indices{{"base.esm",1},{"other.esm",2},{"patch.esp",3}};
+    const auto load=[&](const std::string& file,const std::vector<std::string>& masters,
+                        std::uint32_t id,std::uint32_t quest,std::optional<std::uint32_t> previous,bool deleted){
+        auto header=sub(ESM::fourCC("HEDR"),bytes(1.f)+bytes(std::uint32_t{1})+bytes(std::uint32_t{0x900}));
+        for(const auto& master:masters)header+=sub(ESM::fourCC("MAST"),master+'\0')+sub(ESM::fourCC("DATA"),std::string(8,'\0'));
+        auto data=sub(ESM::fourCC("QSTI"),bytes(quest));
+        if(previous)data+=sub(ESM::fourCC("PNAM"),bytes(*previous));
+        const auto info=record(ESM4::REC_INFO,id,deleted?static_cast<std::uint32_t>(ESM4::Rec_Deleted):0u,deleted?std::string{}:data);
+        const auto group=bytes(ESM::fourCC("GRUP"))+bytes(static_cast<std::uint32_t>(20+info.size()))
+            +bytes(std::uint32_t{0x01000900})+bytes(std::uint32_t{7})+bytes(std::uint32_t{})+info;
+        // The patch reverses the two masters relative to global load order.
+        auto stream=std::make_unique<std::stringstream>(record(ESM4::REC_TES4,0,1,header)+group,std::ios::in|std::ios::binary);
+        ESM4::Reader reader(std::move(stream),file,nullptr,nullptr,true);
+        reader.setModIndex(indices.at(file));reader.updateModIndices(indices);
+        store.loadESM4(reader,&dummyListener);
+    };
+    const std::vector<std::string> masters{"other.esm","base.esm"};
+    load("base.esm",{},0x801,0x800,std::nullopt,false);
+    load("base.esm",{},0x802,0x800,std::nullopt,true);
+    load("patch.esp",masters,0x01000801,0x01000800,std::nullopt,false);
+    load("patch.esp",masters,0x01000802,0x01000800,0,false);
+    load("patch.esp",masters,0x01000801,0x01000800,std::nullopt,false);
+    const auto topic=ESM::FormKey::content("base.esm",0x900);
+    const auto a=ESM::FormKey::content("base.esm",0x801),b=ESM::FormKey::content("base.esm",0x802);
+    ASSERT_NE(store.getOblivionDialogueTopics().find(topic),nullptr);
+    const auto& groups=*store.getOblivionDialogueTopics().find(topic);
+    ASSERT_EQ(groups.size(),1u);
+    EXPECT_EQ(groups[0].mQuest,ESM::FormKey::content("base.esm",0x800));
+    EXPECT_EQ(groups[0].mInfos,(std::vector<ESM::FormKey>{b,a}));
+    ASSERT_TRUE(store.search<ESM4::DialogInfo>(b)->mPreviousInfoKey);
+    EXPECT_TRUE(store.search<ESM4::DialogInfo>(b)->mPreviousInfoKey->isNull());
+    EXPECT_EQ(store.search<ESM4::DialogInfo>(b)->mQuest,(ESM::FormId{0x800,1}));
+    load("patch.esp",masters,0x01000802,0x01000800,std::nullopt,true);
+    EXPECT_EQ(store.search<ESM4::DialogInfo>(b),nullptr);
+    EXPECT_EQ(groups[0].mInfos,(std::vector<ESM::FormKey>{b,a}));
+    load("patch.esp",masters,0x01000802,0x01000800,std::nullopt,false);
+    EXPECT_NE(store.search<ESM4::DialogInfo>(b),nullptr);
+    EXPECT_EQ(groups[0].mInfos,(std::vector<ESM::FormKey>{b,a}));
+}
