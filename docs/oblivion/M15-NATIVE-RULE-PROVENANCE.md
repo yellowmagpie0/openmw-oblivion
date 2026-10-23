@@ -17919,3 +17919,43 @@ See [M15-IGNORE-FRIENDLY-HITS-VERIFICATION.json](M15-IGNORE-FRIENDLY-HITS-VERIFI
 GetFriendHit production counters/expiry/lifecycle/persistence, automatic common-hit
 callbacks, Player audio identity and the remaining full M15S4 gameplay gates
 remain open.
+
+
+### Base-object identity for scripts and native hit conditions
+
+GetIsID now queries the addressed reference's base through the existing World
+reference graph. Loaded/unloaded conditions use the same lookup. Player queries
+use the authored NPC source (Oblivion.esm:000007 in original content), while the
+mutable mechanics proxy retains its internal save identity. GetIsReference
+accepts the canonical Player reference aliases. Queries preserve save state
+and the existing residency of loaded, cold and dynamic references.
+
+The compiler resolves GetIsID's bare ObjectID names as records, preserving
+reference-local evaluation and builtin Player expressions in reference contexts.
+The full original command/evaluator passes 679 cases with actual base getter
+and object-eligibility virtuals; argument extraction is a declared boundary.
+Original parameter metadata and raw content identify the ObjectID contract.
+The original compiler is not executed. Across all 11,098 official source units,
+source/AST/native SCDA fingerprints remain unchanged. Exactly 99 ObjectID
+operand sites change portable IR in 23 programs. Independent Python
+reconstruction matches every program; the previous reference rejects those 23.
+
+Four new World tests cover identity distinctions, cold/loaded/dynamic owners,
+unloaded target conditions and compiled script restoration. Full normal checks
+pass 1,880 engine and 3,025 component tests. The sanitizer engine passes 1,880;
+its focused run also passes all 22 ObScript component cases. All 400 Python
+tests pass. Leak detection is disabled.
+
+The archived pre-change executable produces six wrong answers in an
+original-content query course. The corrected executable produces all twelve
+expected results, saves, then repeats the results after a protected-input
+fresh-process reload/resave. Each process compiles 10,470 units with zero
+failures/diagnostics. Deferred startup commands are reported separately.
+Reviewed prison/HUD captures establish rendering; exact commands/events/saves
+establish query behavior. Sound is disabled. Compiled-name/local behavior is
+separately exercised through the engine's parser/compiler/VM/World pipeline.
+
+See [M15-BASE-IDENTITY-VERIFICATION.json](M15-BASE-IDENTITY-VERIFICATION.json).
+Automatic common-hit notifications, GetFriendHit producer/expiry/lifecycle/
+persistence, Player audio dispatch and the remaining full M15S4 gameplay gates
+remain open.

@@ -1191,7 +1191,10 @@ namespace MWMechanics
                     && subjectLocation->mCell == comparison->mCell ? 1.0 : 0.0);
             }
             if (function == "GetIsID")
-                return value(!parameterKey.isNull() && subjectLocation->mBase == parameterKey ? 1.0 : 0.0);
+            {
+                const auto base = mWorld.getOblivionReferenceBaseKey(subjectKey);
+                return value(base && !parameterKey.isNull() && *base == parameterKey ? 1.0 : 0.0);
+            }
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase,
                     parameterKey) ? 1.0 : 0.0);
@@ -2034,7 +2037,10 @@ namespace MWMechanics
                 return value(factionId && playerNpcStats()->isInFaction(ESM::RefId(*factionId)) ? 1.0 : 0.0);
             }
             if (function == "GetIsID")
-                return value(!parameterKey.isNull() && baseKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
+            {
+                const auto base = mWorld.getOblivionReferenceBaseKey(actorKey(subjectPtr));
+                return value(base && !parameterKey.isNull() && *base == parameterKey ? 1.0 : 0.0);
+            }
             if (function == "GetIsClass")
                 return value(nativeClassMatches(mWorld, subjectPtr, baseKey(subjectPtr), parameterKey) ? 1.0 : 0.0);
             if (function == "GetIsRace" || function == "GetIsSex")

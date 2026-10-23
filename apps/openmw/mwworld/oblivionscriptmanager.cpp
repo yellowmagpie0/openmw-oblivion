@@ -1947,7 +1947,12 @@ namespace MWWorld
         if (name == "getisid" || name == "getisreference")
         {
             const auto expected = keyFromValue(argument(0));
-            return std::int64_t(expected && objectKey() == *expected);
+            const auto base = mWorld.getOblivionReferenceBaseKey(objectKey());
+            if (!expected || !base)
+                return std::int64_t(0);
+            if (name == "getisid")
+                return std::int64_t(!base->isNull() && *base == *expected);
+            return std::int64_t(ESM4::runtimeReferenceKey(objectKey()) == ESM4::runtimeReferenceKey(*expected));
         }
         if (name == "getparentref")
         {

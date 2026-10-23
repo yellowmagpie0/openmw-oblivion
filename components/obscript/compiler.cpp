@@ -249,7 +249,21 @@ namespace ObScript
                     name = "__expression";
                 }
                 for (std::size_t i = 1; i < value.mChildren.size(); ++i)
-                    compileExpression(value.mChildren[i], entry, program, role);
+                {
+                    const auto& argument = value.mChildren[i];
+                    if (i == 1 && lowerCase(name) == "getisid" && argument.mKind == ExpressionKind::Name
+                        && !findLocal(argument.mValue, program))
+                    {
+                        // ObjectID names resolve records, including the Player
+                        // NPC base, rather than builtin placed references.
+                        // Reference locals still evaluate as their stored value.
+                        Instruction literal = instruction(OpCode::PushString, ValueType::String, argument.mLocation);
+                        literal.mText = lowerCase(argument.mValue);
+                        entry.mCode.push_back(std::move(literal));
+                    }
+                    else
+                        compileExpression(argument, entry, program, role);
+                }
                 Instruction item = instruction(OpCode::Call, ValueType::Unknown, value.mLocation);
                 item.mText = lowerCase(name);
                 item.mArgumentCount = static_cast<std::uint32_t>(value.mChildren.size() - 1);

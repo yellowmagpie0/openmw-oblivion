@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "scope": "Native GetIsID base-object identity, canonical GetIsReference and loaded/unloaded hit-dialogue conditions",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native": {
+    "command": "005035F0",
+    "evaluator": "004F4CE0",
+    "reference_base_virtual": "0x170",
+    "argument_eligibility_virtual": "0xA4",
+    "required_parameter": {
+      "descriptor": "00B0A7D4",
+      "name": "ObjectID",
+      "type": 21
+    },
+    "cases": 679,
+    "rules": [
+      "A valid ObjectID argument matches the subject base object",
+      "Null or placed-reference arguments produce zero",
+      "Failed argument extraction preserves the supplied result"
+    ],
+    "boundaries": [
+      "Argument extraction004FAE80 supplies the declared parsed form",
+      "Actor/base cross-product tests evaluator mechanics; installed pairing validity is separately audited"
+    ],
+    "native_compiler_executed": false
+  },
+  "fork": {
+    "identity_authority": "Existing World reference/base graph and authored Player NPC source",
+    "player_original_base": "content:oblivion.esm:000007",
+    "player_reference_alias": [
+      "content:oblivion.esm:000014",
+      "dynamic:player:0000000000000001"
+    ],
+    "internal_player_base_save_identity": "dynamic:player-base:0000000000000001",
+    "schema": 65,
+    "new_save_fields": false,
+    "name_lowering": "GetIsID first bare nonlocal name resolves a record; reference locals evaluate their stored values",
+    "query_side_effects": "No cell materialization or save-state creation"
+  },
+  "runtime": {
+    "scenarios": [
+      "scripts/data/oblivion_compat/oblivion_m15_base_identity_first.json",
+      "scripts/data/oblivion_compat/oblivion_m15_base_identity_continuation.json"
+    ],
+    "expected_results": [
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0
+    ],
+    "old_executable_results": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0
+    ],
+    "negative_mismatches": 6,
+    "sound_enabled": false,
+    "scope": "Scheduled original-content Player/NPC/ACRE queries, protected-save fresh-process reload/resave; compiled-name and local evaluation are covered by engine integration"
+  },
+  "open": [
+    "GetFriendHit producer/counter expiry/lifecycle/persistence integration",
+    "Automatic ordered common-hit callbacks",
+    "Player audio dispatch",
+    "Remaining full M15S4 normal-input opponent/mastery/views/devices/FPS/restart gates"
+  ]
+}

@@ -457,6 +457,32 @@ end
         EXPECT_EQ(host.mArguments[3], (std::vector<ObScript::Value>{std::int64_t(-1)}));
     }
 
+    TEST(ObScriptVm, baseObjectIdentityNamesResolveRecordsWhileReferenceLocalsRetainTheirValues)
+    {
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(9,
+            "ref argument\nbegin gamemode\nset argument to Player\n"
+            "GetIsID Player\nPlayer.GetIsID argument\nPlayer.GetIsReference Player\n"
+            "GetIsID GetUnusualNPC\nend\n"));
+        ASSERT_TRUE(compiled.mProgram);
+        ASSERT_TRUE(compiled.mDiagnostics.empty());
+        auto locals = ObScript::VirtualMachine::makeLocals(*compiled.mProgram);
+        TestRuntimeHost host;
+        const auto player = ObScript::ReferenceValue{ESM::FormKey::dynamic("player", 1), "player"};
+        host.mExternal["player"] = player;
+        ObScript::RuntimeContext context; context.mUnit = compiled.mProgram->mUnit;
+        context.mEvent = "gamemode";
+        const auto result = ObScript::VirtualMachine{}.execute(*compiled.mProgram,
+            compiled.mProgram->mEntryPoints.front(), locals, host, context);
+        ASSERT_TRUE(result.mCompleted);
+        EXPECT_TRUE(result.mDiagnostics.empty());
+        EXPECT_EQ(host.mCalls, (std::vector<std::string>{"getisid", "getisid", "getisreference", "getisid"}));
+        ASSERT_EQ(host.mArguments.size(), 4u);
+        EXPECT_EQ(host.mArguments[0], (std::vector<ObScript::Value>{std::string("player")}));
+        EXPECT_EQ(host.mArguments[1], (std::vector<ObScript::Value>{player}));
+        EXPECT_EQ(host.mArguments[2], (std::vector<ObScript::Value>{player}));
+        EXPECT_EQ(host.mArguments[3], (std::vector<ObScript::Value>{std::string("getunusualnpc")}));
+    }
+
     TEST(ObScriptVm, nullReferenceLocalsCompareEqualToNumericZero)
     {
         const auto unit = makeUnit(7, "ref target\nbegin gamemode\nif target != 0\nfail\nendif\nend");

@@ -549,8 +549,12 @@ class Emitter:
             else:
                 self.emit_expression(callee, code)
                 name = "__expression"
-            for argument in value["arguments"]:
-                self.emit_expression(argument, code)
+            for index, argument in enumerate(value["arguments"]):
+                if (index == 0 and name.lower() == "getisid" and argument["kind"] == "Name"
+                        and self.find_local(argument["value"]) is None):
+                    code.append(instruction("push-string", "string", text=argument["value"].lower()))
+                else:
+                    self.emit_expression(argument, code)
             code.append(instruction("call", "unknown", text=name.lower(),
                                     arguments=len(value["arguments"]), member=member))
             return "unknown"

@@ -341,6 +341,21 @@ class OblivionCompatTests(unittest.TestCase):
         self.assertEqual(arguments[3]["kind"], "Binary")
         self.assertEqual(arguments[3]["operator"], "-")
 
+    def test_independent_obscript_object_identity_names_and_reference_arguments(self):
+        source = ("ref argument\nbegin gamemode\nset argument to Player\n"
+                  "GetIsID Player\nPlayer.GetIsID argument\nPlayer.GetIsReference Player\n"
+                  "GetIsID GetUnusualNPC\nend\n")
+        script = REFERENCE.Parser(REFERENCE.tokenize(source)).parse()
+        emitted = REFERENCE.Emitter("identity", script).emit()
+        code = emitted["entries"][0]["code"]
+        calls = [(i, item) for i, item in enumerate(code) if item["opcode"] == "call"]
+        self.assertEqual([item["text"] for _, item in calls],
+                         ["getisid", "getisid", "getisreference", "getisid"])
+        arguments = [code[i - 1] for i, _ in calls]
+        self.assertEqual([(item["opcode"], item["text"]) for item in arguments],
+                         [("push-string", "player"), ("load-local", ""),
+                          ("load-ref", "player"), ("push-string", "getunusualnpc")])
+
     def test_m6_validator_rejects_duplicate_unit_identity(self):
         with tempfile.TemporaryDirectory() as temporary:
             data = Path(temporary)

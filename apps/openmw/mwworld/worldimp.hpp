@@ -432,6 +432,7 @@ namespace MWWorld
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const;
+        std::optional<ESM::FormKey> getOblivionReferenceBaseKey(const ESM::FormKey& reference) const;
         bool setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value);
         std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
         // Borrow the current actor renderer with an already resolved native

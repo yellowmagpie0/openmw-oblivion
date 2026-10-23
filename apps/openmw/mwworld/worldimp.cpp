@@ -2348,6 +2348,51 @@ namespace MWWorld
         return mOblivionCombat->getScriptActorValue(key, value, base, disabled, mStore);
     }
 
+    std::optional<ESM::FormKey> World::getOblivionReferenceBaseKey(const ESM::FormKey& reference) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion)
+            return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(reference);
+        if (key.isNull())
+            return std::nullopt;
+        if (key == ESM::FormKey::dynamic("player", 1))
+        {
+            if (!mPlayer || getPlayerConstPtr().isEmpty())
+                return std::nullopt;
+            // Use the authored NPC that supplies profile construction (000007
+            // in Oblivion.esm), not the mutable mechanics proxy's save key.
+            const auto authored = mStore.findEsm4FormKey("Player");
+            return authored && mStore.search<ESM4::Npc>(*authored) ? authored : std::nullopt;
+        }
+        const auto base = [this](const auto& placed) {
+            return placed.mBaseKey.isNull()
+                ? ESM::FormKeyResolver(mContentFiles).toFormKey(placed.mBaseObj) : placed.mBaseKey;
+        };
+        Ptr resident;
+        if (key.isDynamic())
+            resident = mWorldModel.getDynamicNativePtr(key);
+        else if (const auto id = ESM::FormKeyResolver(mContentFiles).toFormId(key))
+            resident = mWorldModel.getPtr(*id);
+        if (!resident.isEmpty())
+        {
+            if (const auto* actor = resident.getCellRef().getNativeActor())
+                return base(*actor);
+            if (const auto* object = resident.getCellRef().getNativeReference())
+                return base(*object);
+        }
+        if (mOblivionRuntimeState)
+            for (const auto& saved : mOblivionRuntimeState->mReferences)
+                if (saved.mKey == key)
+                    return saved.mBase;
+        if (const auto* actor = mStore.search<ESM4::ActorCharacter>(key))
+            return base(*actor);
+        if (const auto* creature = mStore.search<ESM4::ActorCreature>(key))
+            return base(*creature);
+        if (const auto* object = mStore.search<ESM4::Reference>(key))
+            return base(*object);
+        return std::nullopt;
+    }
+
     std::optional<bool> World::getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion)

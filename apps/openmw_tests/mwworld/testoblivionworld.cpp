@@ -33690,3 +33690,174 @@ TEST(OblivionWorldTest, FriendlyHitFlagsAreVisibleToUnloadedPackageConditionsWit
         EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
     }
 }
+
+TEST(OblivionWorldTest, BaseObjectIdentitySeparatesScriptBaseAndReferenceQueriesWithoutMutatingState)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    const auto alias = ESM::FormKey::content("oblivion.esm", 0x14);
+    const auto npc = fixture.mActor.getCellRef().getFormKey();
+    const auto base = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+    const auto call = [&](std::string_view command, const ESM::FormKey& subject, const ESM::FormKey& argument) {
+        return ObScript::asInteger(scripts->call(command,
+            ObScript::ReferenceValue{subject, {}}, {ObScript::ReferenceValue{argument, {}}}, {}, {}));
+    };
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    for (const auto& subject : {player, alias, npc})
+    {
+        EXPECT_EQ(world.getOblivionReferenceBaseKey(subject), base);
+        EXPECT_EQ(call("GetIsID", subject, base), 1);
+        for (const auto& argument : {player, alias, npc, ESM::FormKey::dynamic("player-base", 1),
+                 ESM::FormKey::content("headless.esm", 0x940), ESM::FormKey{}})
+            EXPECT_EQ(call("GetIsID", subject, argument), 0);
+    }
+    EXPECT_EQ(call("GetIsReference", player, alias), 1);
+    EXPECT_EQ(call("GetIsReference", alias, player), 1);
+    EXPECT_EQ(call("GetIsReference", npc, npc), 1);
+    EXPECT_EQ(call("GetIsReference", npc, base), 0);
+    EXPECT_EQ(call("GetIsReference", base, base), 0);
+    EXPECT_EQ(call("GetIsID", base, base), 0);
+    EXPECT_EQ(call("GetIsID", ESM::FormKey::content("headless.esm", 0xdead), base), 0);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    auto& ai = *world.getOblivionAiService();
+    ESM4::PackageCondition condition{}; condition.mFunction = 72;
+    condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = 1;
+    condition.mParameter1.mIsFormId = true; condition.mParameter1.mReferenceKey = base;
+    EXPECT_EQ(ai.evaluateDialogueConditions(world.getPlayerPtr(), fixture.mActor, std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    condition.mParameter1.mReferenceKey = player;
+    EXPECT_EQ(ai.evaluateDialogueConditions(world.getPlayerPtr(), fixture.mActor, std::span(&condition, 1)),
+        ESM4::ConditionResult::False);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mPlayer.mReference, player);
+}
+
+TEST(OblivionWorldTest, BaseObjectIdentityReadsColdNpcCreatureAndObjectAndUnloadedTargetPlayer)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    const auto npcBase = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+    const auto cell = ESM::FormKey::content("headless.esm", 1);
+    ESM4::ActorCharacter npc{}; npc.mId = {0xa60, 0};
+    npc.mFormKey = ESM::FormKey::content("headless.esm", 0xa60);
+    npc.mBaseKey = npcBase; npc.mBaseObj = fixture.mActor.get<ESM4::Npc>()->mBase->mId;
+    npc.mParent = world.getPlayerPtr().getCell()->getCell()->getId(); npc.mParentKey = cell;
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(npc, npc.mFormKey);
+    ESM4::Creature creature{}; creature.mId = {0xa61, 0};
+    creature.mFormKey = ESM::FormKey::content("headless.esm", 0xa61);
+    store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+    ESM4::ActorCreature acre{}; acre.mId = {0xa62, 0};
+    acre.mFormKey = ESM::FormKey::content("headless.esm", 0xa62);
+    acre.mBaseObj = creature.mId; acre.mBaseKey = creature.mFormKey;
+    acre.mParent = npc.mParent; acre.mParentKey = cell;
+    store.getWritable<ESM4::ActorCreature>().insertStatic(acre, acre.mFormKey);
+    ESM4::Reference object{}; object.mId = {0xa63, 0};
+    object.mFormKey = ESM::FormKey::content("headless.esm", 0xa63);
+    object.mBaseObj = {0x940, 0}; object.mParent = npc.mParent; object.mParentKey = cell;
+    // Exercise the remapped FormId fallback when the stable base key is absent.
+    store.getWritable<ESM4::Reference>().insertStatic(object, object.mFormKey);
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    for (const auto& [reference, expected] : std::array{
+             std::pair{npc.mFormKey, npcBase}, std::pair{acre.mFormKey, creature.mFormKey},
+             std::pair{object.mFormKey, ESM::FormKey::content("headless.esm", 0x940)}})
+    {
+        EXPECT_EQ(world.getOblivionReferenceBaseKey(reference), expected);
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetIsID", ObScript::ReferenceValue{reference, {}},
+            {ObScript::ReferenceValue{expected, {}}}, {}, {})), 1);
+        EXPECT_TRUE(world.getWorldModel().getPtr(ESM::FormId{reference.localId(), 0}).isEmpty());
+    }
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    ESM4::AIPackage package{}; package.mId = {0xa64, 0};
+    package.mFormKey = ESM::FormKey::content("headless.esm", 0xa64);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    ESM4::PackageCondition condition{}; condition.mFunction = 72;
+    condition.mOperator = ESM4::ConditionOperator::Equal; condition.mComparisonValue = 1;
+    condition.mRunOnTarget = true;
+    condition.mParameter1.mIsFormId = true; condition.mParameter1.mReferenceKey = npcBase;
+    package.mCanonicalConditions = {condition};
+    store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+    auto native = *fixture.mActor.get<ESM4::Npc>()->mBase; native.mAIPackageKeys = {package.mFormKey};
+    store.getWritable<ESM4::Npc>().insertStatic(native, npcBase);
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState actor;
+    actor.mActor = npc.mFormKey; actor.mBase = npcBase; actor.mCell = actor.mLastValidCell = cell;
+    actor.mTarget = ESM::FormKey::dynamic("player", 1); actor.mTargetBase = ESM::FormKey::dynamic("player-base", 1);
+    actor.mTier = ESM4::ProcessTier::Low; saved.mActorAi = {actor};
+    auto& ai = *world.getOblivionAiService(); ASSERT_NO_THROW(ai.restore(saved)); ai.updateUnloaded(.5f);
+    const auto* selected = ai.state(npc.mFormKey); ASSERT_TRUE(selected);
+    EXPECT_EQ(selected->mConditionResult, ESM4::ConditionResult::True);
+    EXPECT_EQ(selected->mPackage, package.mFormKey);
+    EXPECT_TRUE(world.getWorldModel().getPtr(npc.mId).isEmpty());
+}
+
+TEST(OblivionWorldTest, BaseObjectIdentityUsesDynamicResidentAndRestoredReferenceAuthority)
+{
+    const auto dynamic = ESM::FormKey::dynamic("native-reference", 1);
+    ESM4::RuntimeState saved;
+    {
+        PopulatedMigrationFixture fixture;
+        auto& world = fixture.mWorld;
+        auto serial = world.prepareOblivionDynamicReferenceKey(); ASSERT_EQ(serial->key(), dynamic);
+        ESM4::Reference object{}; object.mFormKey = dynamic;
+        object.mBaseObj = {0x940, 0}; object.mBaseKey = ESM::FormKey::content("headless.esm", 0x940);
+        ASSERT_TRUE(serial->commit());
+        MWWorld::LiveCellRef<ESM4::Weapon> live(object, world.getStore().get<ESM4::Weapon>().search(object.mBaseObj));
+        live.mRef.setCount(1);
+        auto* cell = world.getPlayerPtr().getCell();
+        const MWWorld::Ptr resident(cell->insert(&live), cell);
+        world.getWorldModel().registerPtr(resident);
+        EXPECT_EQ(world.getOblivionReferenceBaseKey(dynamic), object.mBaseKey);
+        saved = world.captureOblivionRuntimeState();
+        EXPECT_EQ(saved.mNextDynamicSerial, 2u);
+        ESM4::RuntimeReferenceState cold;
+        cold.mKey = ESM::FormKey::dynamic("cold-actor", 2);
+        cold.mBase = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+        cold.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(cold);
+        saved.mNextDynamicSerial = 3;
+    }
+    {
+        PopulatedMigrationFixture fresh;
+        auto& world = fresh.mWorld;
+        readNativeSnapshot(fresh, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        const auto resident = world.getWorldModel().getDynamicNativePtr(dynamic);
+        ASSERT_FALSE(resident.isEmpty());
+        auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetIsID", ObScript::ReferenceValue{dynamic, {}},
+            {ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x940), {}}}, {}, {})), 1);
+        EXPECT_EQ(world.getWorldModel().getDynamicNativePtr(dynamic), resident);
+        const auto cold = ESM::FormKey::dynamic("cold-actor", 2);
+        EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(cold).isEmpty());
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetIsID", ObScript::ReferenceValue{cold, {}},
+            {ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x800), {}}}, {}, {})), 1);
+        EXPECT_TRUE(world.getWorldModel().getDynamicNativePtr(cold).isEmpty());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    }
+}
+
+TEST(OblivionWorldTest, BaseObjectIdentityCompiledNamesAndReferenceLocalsSurviveScriptRestore)
+{
+    PopulatedMigrationFixture fixture(true,
+        "scn ActivationReceiver\nshort calls\nref argument\nBegin OnActivate\n"
+        "set argument to Player\nset calls to Player.GetIsID Player\n"
+        "set calls to calls + (Player.GetIsReference argument) * 2\nEnd\n");
+    auto& world = fixture.mWorld;
+    auto& scripts = *world.getOblivionScriptManager();
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    const auto saved = world.captureOblivionRuntimeState();
+    ASSERT_EQ(saved.mScriptInstances.size(), 1u);
+    ASSERT_EQ(saved.mScriptInstances.front().mLocals.size(), 2u);
+    EXPECT_EQ(std::get<std::int64_t>(saved.mScriptInstances.front().mLocals[0]), 3);
+    EXPECT_EQ(std::get<ESM::FormKey>(saved.mScriptInstances.front().mLocals[1]),
+        ESM::FormKey::dynamic("player", 1));
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mScriptInstances, saved.mScriptInstances);
+    ASSERT_TRUE(scripts.dispatchObjectEvent(fixture.mActor, "onactivate", world.getPlayerPtr()));
+    EXPECT_EQ(std::get<std::int64_t>(world.captureOblivionRuntimeState().mScriptInstances.front().mLocals[0]), 3);
+}
