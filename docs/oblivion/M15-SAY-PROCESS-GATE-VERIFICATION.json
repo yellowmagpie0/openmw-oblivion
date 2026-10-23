@@ -1,0 +1,341 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Correct native Say zero result for unmaterialized known actors before INFO/conditions/RNG; full shipped command course with resident SayTo audio, not resident Say playback",
+  "tested_source": {
+    "head": "9ff72e25f62c04d6c34131692a2ab3543db187a5",
+    "source_fingerprint": "a62818653c92416ddb3924a0f7eb8b79217246416b1511f350a541d3574c85a9"
+  },
+  "tested_source_files": {
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "c4a76495fdf92198144193b3e7f2a4af351c1d436aaae4d0f0b21d4787373541",
+      "bytes": 142319
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "67afddb356457d7b40c31ca69e9261acecd41722d588d091e4ec56c870e3ddef",
+      "bytes": 1951557
+    }
+  },
+  "checks": {
+    "normal": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-say-process-gate-normal-01/verification.json",
+        "sha256": "235e1c2e99735f39a203eb22ca183fa37f4de66dab05dc97f8201ddc214dac0a",
+        "bytes": 2141
+      },
+      "source": {
+        "head": "9ff72e25f62c04d6c34131692a2ab3543db187a5",
+        "source_fingerprint": "a62818653c92416ddb3924a0f7eb8b79217246416b1511f350a541d3574c85a9"
+      },
+      "results": {
+        "engine": {
+          "executed": 1858,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "06784247b313389fb33f570f5dc5de08c6f216a0f484024e71eecb427813b9df",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "621efe51678c1c3d8080fdce4cecb4ca433bf196081d23827acad9a5116fe9c7",
+          "inventory_sha256": "35740dce463bb6fd3b055383b2b2e0f6023840c8d26bebde6a972d6f248e6e0c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-say-process-gate-sanitized-01/verification.json",
+        "sha256": "8a2ff20afeb8d0700a9e848af249b21d68cb7a5fe00dc76d69e5f2059b8e081c",
+        "bytes": 2231
+      },
+      "source": {
+        "head": "9ff72e25f62c04d6c34131692a2ab3543db187a5",
+        "source_fingerprint": "a62818653c92416ddb3924a0f7eb8b79217246416b1511f350a541d3574c85a9"
+      },
+      "results": {
+        "engine": {
+          "executed": 1858,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "65c312e457e8434b18ff7fd829a1a069a2db76ba9fb9b16a8a91d5bdb53a054a",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ac9072415dbb20067a0b6684641b16da3a8150f199cf1dbb2cf80be1d01ac437",
+          "inventory_sha256": "35740dce463bb6fd3b055383b2b2e0f6023840c8d26bebde6a972d6f248e6e0c",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "unchanged_components": {
+    "path": "docs/oblivion/M15-QUEST-DIALOGUE-CODEC-VERIFICATION.json",
+    "sha256": "a692c63ae5821c4d49d374b6decfcf2afe0809ade9a60c278aca3c07f26224ca",
+    "bytes": 26127
+  },
+  "original_oracle": {
+    "original-exe.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    "commands.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/commands.json",
+      "sha256": "3a4c61ad4a72d08685b0cdf1f41df77767d14f4939940e4ae0ebe875ae894d3d",
+      "bytes": 1123
+    },
+    "process-vtables.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/process-vtables.json",
+      "sha256": "64c5e30ad16df319edd89d0ca107004468d4ad1c632536456c40479313c0e018",
+      "bytes": 1029
+    },
+    "quest-records.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/quest-records.json",
+      "sha256": "0d2229e806526fe77dace90c4c505c477197096b5da771f9fc15862b43abe3b0",
+      "bytes": 748
+    },
+    "referenced-records.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/referenced-records.json",
+      "sha256": "5b8b1d077fee5c7401fc0e0cb022024d82f4a0762231afe00fa6c7f2c505c669",
+      "bytes": 10845
+    },
+    "preregistration.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/preregistration.json",
+      "sha256": "dd748c869eda924193b315e270495668dd2eeae52cebe880500437f9d09554ce",
+      "bytes": 878
+    },
+    "probe.py": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe.py",
+      "sha256": "0256883d22ab2352d7afe6a7e3df94c854610c02b1b8016c39f5df739871d838",
+      "bytes": 4062
+    },
+    "probe.log": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe.log",
+      "sha256": "1ad05fc5efd7130f251737dac04493733682380aed0144ebb80ab1a955c12b58",
+      "bytes": 639
+    },
+    "failure.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/failure.json",
+      "sha256": "dbb6ec00886c459638b1861cd265515f968a9bd014ae9ab78068b16106979220",
+      "bytes": 238
+    },
+    "preregistration02.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/preregistration02.json",
+      "sha256": "3261438cb52cb925538a1bcbea2c6a62964dc1f71dc41174a1463b9e2f6694f3",
+      "bytes": 1117
+    },
+    "probe-02.py": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe-02.py",
+      "sha256": "5beb4536b2d2845c99bd96bc6c01a57824aa31faaa71d78592f93c214f8a7764",
+      "bytes": 4140
+    },
+    "probe-02.log": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe-02.log",
+      "sha256": "ace43af9f53e37b350d38d3d327e3b274eaa236254e0a2ea46202909e02e7776",
+      "bytes": 521
+    },
+    "verification02.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/verification02.json",
+      "sha256": "d4d0d12abf00b5b6956cb79b53472822ab9816ac438e4ad0003feb7c4d8fe527",
+      "bytes": 533
+    },
+    "corpus02.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/corpus02.json",
+      "sha256": "aea0681a2421681155f1b3b75f90a672074c3d9d6e842f0e87270d9c22b6e223",
+      "bytes": 54209
+    },
+    "preregistration03.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/preregistration03.json",
+      "sha256": "7d33b293d57758d4f7ae3f911d886eb0e3845a83f4c76ab8c7bc4c4401261e46",
+      "bytes": 1326
+    },
+    "probe-03.py": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe-03.py",
+      "sha256": "17310a80024ef32e13dabca258ffa7b6c4639693cceab9332276bd20a9308406",
+      "bytes": 4162
+    },
+    "probe-03.log": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/probe-03.log",
+      "sha256": "ace43af9f53e37b350d38d3d327e3b274eaa236254e0a2ea46202909e02e7776",
+      "bytes": 521
+    },
+    "verification03.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/verification03.json",
+      "sha256": "d4d0d12abf00b5b6956cb79b53472822ab9816ac438e4ad0003feb7c4d8fe527",
+      "bytes": 533
+    },
+    "corpus03.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-command-context-01/corpus03.json",
+      "sha256": "aea0681a2421681155f1b3b75f90a672074c3d9d6e842f0e87270d9c22b6e223",
+      "bytes": 54209
+    }
+  },
+  "runtime_binaries": {
+    "normal": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-runtime-binaries-01/openmw-normal",
+      "sha256": "e1343862c8c325db90aaec9f48c19673b4cc380f06f494879036161764c137da",
+      "bytes": 1391813824
+    },
+    "sanitized": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-runtime-binaries-01/openmw-sanitized",
+      "sha256": "2bb386a56abc2a7204de93dfba79bc39de0ae9cea68796ba32f01bc1fea2c2e8",
+      "bytes": 2582876216
+    }
+  },
+  "retention": {
+    "tested-source.patch": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-runtime-binaries-01/tested-source.patch",
+      "sha256": "a8e4b86d36865d9169f286bb86f8194e4e58fa4ba3166bbafe00f4549d172390",
+      "bytes": 8101
+    },
+    "retention.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-runtime-binaries-01/retention.json",
+      "sha256": "e7bcc1118f2ea5657529b983a25b809841cb865e5d74f0e10e3bbf04a72b2a7c",
+      "bytes": 870
+    }
+  },
+  "runtime_course": {
+    "scenario.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/scenario.json",
+      "sha256": "bd6b2a887ee5283dd12c8f6511fbdcbae6866c089fb17caa41d183a07d3c34e0",
+      "bytes": 4663
+    },
+    "process.log": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/process.log",
+      "sha256": "24b42e2ec59dda3ea7a65f327814a69aa1e58ae8f96585c20a208ba4b97f5a62",
+      "bytes": 2803133
+    },
+    "m15-events.jsonl": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/m15-events.jsonl",
+      "sha256": "aa0633d2d6b0f82dc66d37b4e9317f723d1281a6374f72c75e3303c9f0990fe0",
+      "bytes": 138487
+    },
+    "real-quest-audio-weather.png": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/real-quest-audio-weather.png",
+      "sha256": "839365b289518ddb2b10ec764c873ec4378f437a270ab1e61765ec1df45f7661",
+      "bytes": 1150019
+    },
+    "obscript-report.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/obscript-report.json",
+      "sha256": "10a4ff1e35208b94e2870f9a8760ac42a6e4f9ab368a10444b79e5db0310582d",
+      "bytes": 27632416
+    },
+    "m10-runtime.wav": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/m10-runtime.wav",
+      "sha256": "1da7b80196c5ddbb32930617e0ba9cdecebfb30b4619de0e4bbe8a07873ca679",
+      "bytes": 53245508
+    },
+    "wave-reader-attempt01.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/wave-reader-attempt01.json",
+      "sha256": "c1d720c7af9bcc9dca4040f317a5c71d724257d179d58e087dfc84e04fce430f",
+      "bytes": 250
+    },
+    "audio-probe.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/audio-probe.json",
+      "sha256": "4a5b4de995118da4a5a932466b1c8480098886090fb4a82b8c2c97a1e9845f3a",
+      "bytes": 332
+    },
+    "audio-probe.stderr": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/audio-probe.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "audio-volume.log": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/audio-volume.log",
+      "sha256": "d1f3269ee1836af21b6c26b7a66c669390cd2293144049578678bc8db3e773d8",
+      "bytes": 1252
+    },
+    "audio-inspection.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/audio-inspection.json",
+      "sha256": "d4bfd673f539d01f0e3cd6150d0556f5b64d40637723ca58f975deb368f9cd3d",
+      "bytes": 843
+    },
+    "userdata/saves/Bendu_Olo/Quicksave.omwsave": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-audio-normal-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+      "sha256": "cb459afc52d6cdfbf8ef070d916f8b9ef0d00889a3e3e1805795c45dbc09169c",
+      "bytes": 11311719
+    }
+  },
+  "launches": {
+    "normal.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/normal.json",
+      "sha256": "a411c5d2f658b42ce8ec89f686de7dae307a6b233baba054d9938e9a3856e27d",
+      "bytes": 542
+    },
+    "sanitized.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/sanitized.json",
+      "sha256": "66c22d06412bfc2a78548592b71dcbcd0a2878d3150d80c4658dea965bd963bf",
+      "bytes": 590
+    },
+    "audio-coordinator.py": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/audio-coordinator.py",
+      "sha256": "9e1d237bd54cf220edbe531da61fd85e0cde9d138639a3be0d96b87bfd3a3b02",
+      "bytes": 1825
+    },
+    "audio-launch.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/audio-launch.json",
+      "sha256": "bd5cc9c9b895185d8dfb6623641bddf537ad83126332ddf16c30818bd97da411",
+      "bytes": 1188
+    },
+    "audio-completion.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/audio-completion.json",
+      "sha256": "81868a6e94ffc0178bf833deb1c9013d9fab4ee95ddb876a5e8ec4f1d26376d2",
+      "bytes": 21
+    },
+    "audio-normal-01-manifest.json": {
+      "path": "build/oblivion-compat/m15/S4/native-say-process-gate-launch-01/audio-normal-01-manifest.json",
+      "sha256": "62302d8444a3437a377f0c6a6ddd5c3a8454e9adf2258aa49ad20fe851fffb30",
+      "bytes": 3852
+    }
+  },
+  "editable_protocol": {
+    "path": "scripts/data/oblivion_compat/m15_say_process_gate_oracle_cases.json",
+    "sha256": "035c232723d5a8a951d824efa62925da43550c99c6b1ea843a07b5ff22599fe2",
+    "bytes": 2281
+  },
+  "editable_audio_manifest": {
+    "path": "scripts/data/oblivion_compat/oblivion_m15_say_process_gate_audio.json",
+    "sha256": "62302d8444a3437a377f0c6a6ddd5c3a8454e9adf2258aa49ad20fe851fffb30",
+    "bytes": 3852
+  },
+  "retained_previous_audio_failures": {
+    "path": "docs/oblivion/M15-PLAYER-ADMISSION-VERIFICATION.json",
+    "sha256": "979f33d71f61bda35acde0001a0ca792464cf28df2f20064e44990cfe7ad4b67",
+    "bytes": 18589
+  },
+  "observed_engine_error_inventory": {
+    "ObScript value is not numeric": 97,
+    "native combat command requires an initialized resident actor": 2
+  },
+  "findings": [
+    "Full original Say plus actual CRT RTTI and non-High process virtuals returns success 1/duration 0 in 384 cases without entering RNG/INFO/conditions. Only argument extraction is supplied. The first thread-fixture failure and opaque parameter-pointer correction remain recorded.",
+    "All Low/MiddleLow/MiddleHigh process vtables use 5E17C0 RET20 as their speech dispatcher. Actual High dispatch 62A9C0 is separate and outside this proof.",
+    "The shipped MS48 stage 70 result explicitly addresses native actor 028A7A and topic GOODBYE (0000D4). The prison course has no resident speaker Ptr for that reference. The original non-High result is zero, so inventing a voice by evaluating candidates is incorrect.",
+    "ScriptManager now returns double0 for Say with an empty speaker Ptr and a known typed native ActorCharacter/ActorCreature reference. Nonactor voice overrides and SayTo are not blanket-skipped. No actor authority, INFO result or speech queue is created.",
+    "The actual-store test supplies a real random INFO candidate: cold NPC/Creature calls return0 without actor state or RNG changes; resident NPC/Creature calls still reach the candidate and draw twice before empty VFS stops audio.",
+    "Both full engine inventories pass 1,858 tests. The stage-gated real-script course now passes all existing command/audio/weather/save checks plus explicit remote zero trace and absence of a null-speaker dialogue lookup. The generated mixed audio is valid non-silent 48kHz stereo float WAVE; this does not isolate voice samples."
+  ],
+  "limits": [
+    "The host rule is a necessary no-resident-actor gate, not a complete mapping of all materialized process tiers. Native High speech, nonactor voice overrides, and all SayTo options have separate open work.",
+    "Native oracle scope supplies command arguments and fixture fields. No compiled original-script parsing, real original-game input or actual High-process audio is claimed.",
+    "The real course still reports vanilla numeric and uninitialized-actor command diagnostics, enumerated in this receipt; passing the bounded command/audio checks is not error-free general gameplay.",
+    "Prior startup and audio failures remain retained. No arbitrary missing-speaker fallback, forced actor activation or weakened expected command check was used.",
+    "Automatic common-hit speech/resource/condition preparation/publication, root quest predicate authority, INFO history/results and complete S4 combat input/restart acceptance remain open.",
+    "Sanitizer leak detection disabled. The audio inspection validates the mixed output and format/levels only."
+  ]
+}

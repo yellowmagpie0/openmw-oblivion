@@ -17521,3 +17521,44 @@ semantic comparisons, editable manifests and retained failures. Leak checks
 remain disabled. Automatic common-hit integration, quest predicate authority,
 INFO history/results, general Say context and complete M15S4 normal-input and
 fresh-process combat acceptance remain open.
+
+
+## Native Say process admission
+
+The original Say wrapper returns zero duration before voice selection for an
+actor with no process or a Low, MiddleLow or MiddleHigh process. Full wrapper
+execution with actual CRT RTTI and native process virtuals passes 384 cases
+across Character, Player and Creature, optional flags/voice override and both
+x87 words. Only argument extraction is supplied. No INFO, condition or RNG
+entry occurs; callee registers, stack, SEH head, fixture bytes and global
+B36798 are preserved. Its broader identity is not assigned here. High process
+speech dispatch remains outside this oracle. The initial missing Windows
+thread fixture and later parameter-pointer correction are retained.
+
+Independent record inspection establishes that MS48 stage 70 addresses remote
+actor 028A7A and topic GOODBYE (0000D4). The prison course has no resident Ptr for
+that actor. Say now returns zero for this known native actor case before
+INFO/condition/RNG queries, instead of throwing MissingContext or selecting an
+arbitrary voice. It does not blanket-skip nonactors or SayTo. An actual-store
+regression verifies cold NPC/Creature zero results without actor-state/RNG
+changes, while resident actors still select the loaded Random candidate and
+consume both expected draws before the empty voice VFS stops playback.
+
+Both full engine inventories pass 1,858 tests. The actual shipped command
+course passes all existing SayTo, sound, weather, save and exit checks, plus
+the explicit remote Say zero trace and absence of a null-speaker INFO lookup.
+Mixed audio is valid non-silent 48kHz stereo float WAVE, and the prison/HUD
+capture was visually inspected. This establishes remote Say skipping and
+resident SayTo playback, not actual resident Say playback or isolated audio
+equivalence. The course still reports vanilla numeric and actor-initialization
+diagnostics; they are enumerated and remain open. Earlier failed courses are
+retained. The implementation does not invent a missing speaker or force it
+into an active process.
+
+[M15-SAY-PROCESS-GATE-VERIFICATION.json](M15-SAY-PROCESS-GATE-VERIFICATION.json)
+pins source, full engine checks, native oracle, immutable retained runtime
+binaries, course/capture/audio/save evidence and editable protocols. Component
+code is unchanged from the preceding decoder checks. Leak checks are disabled.
+Root quest predicate authority, automatic common-hit speech/resource/condition
+preparation/publication, INFO history/results and complete M15S4 normal-input
+and fresh-process combat acceptance remain open.

@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "scope": "Original Say wrapper before High-process speech; unmaterialized native actor host integration",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "5118D0",
+  "actual_rtti": "9832E6",
+  "argument_extraction_boundary": "4FAE80 supplies declared topic/optional values; compiled-script parsing excluded",
+  "matrix": {
+    "actors": [
+      "Character",
+      "Player",
+      "Creature"
+    ],
+    "process": [
+      "null",
+      "LowProcess",
+      "MiddleLowProcess",
+      "MiddleHighProcess"
+    ],
+    "optional_boolean_masks": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "voice_override_pointer": [
+      false,
+      true
+    ],
+    "x87_control_words": [
+      639,
+      895
+    ]
+  },
+  "expected_cases": 384,
+  "expected": {
+    "command_success": 1,
+    "duration": 0,
+    "random_and_info_condition_entries": 0,
+    "nonnull_process_calls": [
+      "4943A0",
+      "60D0A0",
+      "68F970",
+      "5E17C0"
+    ],
+    "null_process_calls": []
+  },
+  "invariants": [
+    "callee-saved registers and stack return",
+    "emulated FS:0 SEH head restored",
+    "actor/process fixture memory unchanged",
+    "global B36798 restored; its broader identity not established"
+  ],
+  "host_test": "Real QUST/DIAL/INFO with Random candidate, two unmaterialized typed NPC/Creature references: no draw or actor authority creation; two resident actors still select and draw before empty VFS.",
+  "real_content": {
+    "quest": "content:oblivion.esm:0224d8",
+    "stage": 70,
+    "speaker": "content:oblivion.esm:028a7a",
+    "topic": "content:oblivion.esm:0000d4",
+    "topic_editor_id": "GOODBYE",
+    "expected": "Remote known native actor returns0 before INFO lookup; resident SayTo still plays. Script reference and topic were inspected independently from base record data."
+  },
+  "limits": [
+    "High-process selection/playback not proved by this oracle",
+    "Host change only covers known native actor references without Ptr, not every materialized process tier or nonactor voice override",
+    "No actual original-game normal-input playback observation is claimed"
+  ],
+  "receipt": "docs/oblivion/M15-SAY-PROCESS-GATE-VERIFICATION.json"
+}

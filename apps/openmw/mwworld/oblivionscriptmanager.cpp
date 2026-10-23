@@ -2531,6 +2531,18 @@ namespace MWWorld
             const auto topic = keyFromValue(argument(topicArg));
             const auto voiceType = keyFromValue(argument(voiceArg));
             const auto targetKey = name == "sayto" ? keyFromValue(argument(0)) : std::nullopt;
+            // Original5118D0 skips speech before INFO/condition/RNG queries
+            // without a speech process. An unmaterialized native actor cannot
+            // supply that process; do not turn its zero result into dialogue.
+            const ESM::FormKey speakerKey = objectKey();
+            if (name == "say" && speaker.isEmpty()
+                && (mStore.get<ESM4::ActorCharacter>().search(speakerKey)
+                    || mStore.get<ESM4::ActorCreature>().search(speakerKey)))
+            {
+                trace(name + " topic=" + (topic ? topic->serialize() : std::string("null"))
+                    + " ref=" + speakerKey.serialize() + " duration=0 resident=false");
+                return double(0);
+            }
             const Ptr listener = targetKey ? ptrFor(*targetKey) : mWorld.getPlayerPtr();
             const auto voice = topic ? findNativeVoice(*topic, speaker, listener, voiceType.value_or(ESM::FormKey{}))
                                      : std::nullopt;

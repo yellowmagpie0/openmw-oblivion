@@ -162,7 +162,8 @@ namespace
         std::unique_ptr<MWSound::SoundManager> mSoundManager;
 
         explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false,
-            const std::string& scriptSource = {}, const std::filesystem::path& luaLibs = {})
+            const std::string& scriptSource = {}, const std::filesystem::path& luaLibs = {},
+            const std::string& extraRecords = {}, std::uint32_t extraRecordCount = 0)
         {
             mEnvironment.setResourceSystem(mResources);
             mEnvironment.setWorld(mWorld);
@@ -193,8 +194,8 @@ namespace
             attributes.fill(40);
             const auto header = record(ESM4::REC_TES4, 0,
                 subrecord(ESM::fourCC("HEDR"), bytes(1.f)
-                    + bytes(std::uint32_t{activationScript ? 2u : 1u})
-                    + bytes(std::uint32_t{activationScript ? 0x881u : 0x801u})));
+                    + bytes(std::uint32_t{(activationScript ? 2u : 1u) + extraRecordCount})
+                    + bytes(std::uint32_t{extraRecords.empty() ? (activationScript ? 0x881u : 0x801u) : 0x1000u})));
             const auto npc = record(ESM4::REC_NPC_, 0x800,
                 subrecord(ESM::fourCC("EDID"), std::string("Player\0", 7))
                 + subrecord(ESM::fourCC("ACBS"), bytes(config).substr(0, 16))
@@ -202,7 +203,7 @@ namespace
                 + (activationScript ? subrecord(ESM::fourCC("SCRI"), bytes(std::uint32_t{0x880})) : std::string{}));
             {
                 std::ofstream stream(mDirectory / "headless.esm", std::ios::binary);
-                stream << header << npc;
+                stream << header << npc << extraRecords;
                 if (activationScript)
                 {
                     const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
@@ -32694,4 +32695,71 @@ TEST(OblivionWorldTest, DialogueConditionsReadStagedContactResourcesAndPublishTh
         EXPECT_EQ(combat.getNonPlayerValue(attacker, 10), 13);
         EXPECT_EQ(ai.evaluateDialogueConditions(victim, attacker, std::span(conditions).first(3)), ESM4::ConditionResult::True);
     }
+}
+
+
+TEST(OblivionWorldTest, NativeSayForUnmaterializedActorsSkipsConditionsAndSelectionWithoutDrawing)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(std::uint32_t{})
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    ESM4::AIPackage::CTDA condition{};
+    condition.fnIndex = 14; condition.param1 = 8; condition.condition = 0x60;
+    const auto quest = record(ESM4::REC_QUST, 0x900,
+        sub(ESM::fourCC("EDID"), std::string("VoiceQuest\0", 11))
+        + sub(ESM::fourCC("DATA"), std::string("\x01\x32", 2)));
+    const auto topic = record(ESM4::REC_DIAL, 0x901,
+        sub(ESM::fourCC("EDID"), std::string("VoiceTopic\0", 11))
+        + sub(ESM::fourCC("DATA"), std::string(1, '\x02')));
+    const auto info = record(ESM4::REC_INFO, 0x902,
+        sub(ESM::fourCC("DATA"), std::string("\x02\x00\x02", 3))
+        + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{0x900}))
+        + sub(ESM::fourCC("CTDA"), bytes(condition)));
+    const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
+        + bytes(std::uint32_t{0x901}) + bytes(std::uint32_t{7}) + bytes(std::uint32_t{}) + info;
+    NativeWorldFixture fixture(false, false, false, {}, {}, quest + topic + group, 4);
+    auto& world = fixture.mWorld;
+    const auto npc = addNativeNpc(fixture, 0xa00), creature = addEquipmentCreature(fixture);
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc)); ASSERT_TRUE(world.activateOblivionActor(creature));
+    ESM4::ActorCharacter coldNpc{}; coldNpc.mId = {0xa10, 0};
+    coldNpc.mFormKey = ESM::FormKey::content("headless.esm", 0xa10);
+    coldNpc.mBaseObj = npc.get<ESM4::Npc>()->mBase->mId;
+    coldNpc.mBaseKey = npc.get<ESM4::Npc>()->mBase->mFormKey;
+    world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(coldNpc, coldNpc.mFormKey);
+    ESM4::ActorCreature coldCreature{}; coldCreature.mId = {0xa11, 0};
+    coldCreature.mFormKey = ESM::FormKey::content("headless.esm", 0xa11);
+    coldCreature.mBaseObj = creature.get<ESM4::Creature>()->mBase->mId;
+    coldCreature.mBaseKey = creature.get<ESM4::Creature>()->mBase->mFormKey;
+    world.getStore().getWritable<ESM4::ActorCreature>().insertStatic(coldCreature, coldCreature.mFormKey);
+    ASSERT_TRUE(world.getWorldModel().getPtr(coldNpc.mId).isEmpty());
+    ASSERT_TRUE(world.getWorldModel().getPtr(coldCreature.mId).isEmpty());
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    const std::vector<ObScript::Value> arguments{
+        ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x901), {}}};
+    const auto before = contactSnapshot(fixture, {npc, creature});
+    for (const auto& key : {coldNpc.mFormKey, coldCreature.mFormKey})
+    {
+        ObScript::RuntimeContext context; context.mSelf = key;
+        // Without the native process gate this real INFO lookup throws
+        // MissingContext before any file lookup because its speaker is absent.
+        EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
+        EXPECT_EQ(contactSnapshot(fixture, {npc, creature}), before);
+        EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(key));
+    }
+    // Both resident actors still reach the same loaded candidate and consume
+    // the singleton Random INFO draw before the empty voice VFS returns zero.
+    for (const auto& actor : {npc, creature})
+    {
+        ObScript::RuntimeContext context; context.mSelf = actor.getCellRef().getFormKey();
+        EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
+    }
+    EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), 3357800067u);
 }
