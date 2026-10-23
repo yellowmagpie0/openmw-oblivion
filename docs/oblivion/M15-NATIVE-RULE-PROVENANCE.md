@@ -17695,3 +17695,27 @@ pins source, original observations and full engine checks in both profiles.
 Creature natural attacks bypass that HTH store in ten original cases; the packet leaves their used-skill field
 unavailable255 pending the later query semantics.
 This is producer wiring, not common speech/reaction or gameplay acceptance.
+
+### Native GetIsClass dialogue/package adapter
+
+Original `0x4F6EC0` requires NPC base type `0x23` and parameter type `0x05`,
+then compares the NPC class pointer at `+0x104`. Actor base getter `0x4D9B40` executes for Character,
+Player and Creature vtables. The 288-case oracle covers null/mismatched types,
+matching/distinct identities and both x87 words; debug diagnostics are disabled
+and no game-function callee is stubbed. Engine identity resolution uses winning
+CLAS records and native NPC class FormIDs; the current Player mechanics proxy
+owns character-generation class changes. The unloaded package adapter shares
+this query without loading the actor. Two low-process ticks are needed by the
+restored idle fixture to reach selection; failed one-tick checks are retained.
+
+Normal and ASan/UBSan full inventories pass 1,864 cases each, and Python passes 388.
+A pinned INFO override adds condition 68 after its existing 72 term, preserving
+all response/result bytes and the DIAL. Independent raw merge and actual
+rendered visits match quest conditions 365/254 then INFO conditions 72/68; source NPC.CNAM resolves to
+CLAS `0x836`, and the original `0x150C7` voice plays. Runtime source, immutable executable,
+default-settings bundle, capture, audio, save and pre-content launch failures
+are pinned in
+[M15-NATIVE-DIALOGUE-CLASS-VERIFICATION.json](M15-NATIVE-DIALOGUE-CLASS-VERIFICATION.json).
+Structural writing, compiler/world loading, semantic record reinspection and
+actual class/voice acceptance are separate recorded layers. This adds neither
+a standalone ObScript command nor automatic common hit/reaction acceptance.

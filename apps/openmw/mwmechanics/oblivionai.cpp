@@ -39,6 +39,7 @@
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadcell.hpp>
+#include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadclot.hpp>
 #include <components/esm4/loadglob.hpp>
 #include <components/esm4/loadmisc.hpp>
@@ -94,6 +95,29 @@ namespace MWMechanics
                 return false;
             const unsigned type = ptr.getClass().getType();
             return type == ESM::REC_NPC_4 || type == ESM::REC_CREA4;
+        }
+
+        bool nativeClassMatches(MWWorld::World& world, const MWWorld::Ptr& actor,
+            const ESM::FormKey& base, const ESM::FormKey& expected)
+        {
+            // Original4F6EC0 requires an NPC base and a CLAS parameter before
+            // comparing identity. Names/specialization/shared projections do
+            // not determine native NPC class membership.
+            if (expected.isNull() || !world.getStore().search<ESM4::Class>(expected))
+                return false;
+            ESM::RefId actual;
+            if (!actor.isEmpty() && actor == world.getPlayerPtr())
+                actual = actor.get<ESM::NPC>()->mBase->mClass;
+            else
+            {
+                const ESM4::Npc* npc = !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
+                    ? actor.get<ESM4::Npc>()->mBase : world.getStore().search<ESM4::Npc>(base);
+                if (!npc)
+                    return false;
+                actual = ESM::RefId(npc->mClass);
+            }
+            const auto* id = actual.getIf<ESM::FormId>();
+            return id && ESM::FormKeyResolver(world.getContentFiles()).toFormKey(*id) == expected;
         }
 
         float distanceSquared(const osg::Vec3f& left, const osg::Vec3f& right)
@@ -1155,6 +1179,9 @@ namespace MWMechanics
                 return value(subjectLocation->mCell == snapshot.mCell ? 1.0 : 0.0);
             if (function == "GetIsID")
                 return value(!parameterKey.isNull() && subjectLocation->mBase == parameterKey ? 1.0 : 0.0);
+            if (function == "GetIsClass")
+                return value(nativeClassMatches(mWorld, loadedPtrFor(subjectKey), subjectLocation->mBase,
+                    parameterKey) ? 1.0 : 0.0);
             if (function == "GetIsReference")
                 return value(!parameterKey.isNull()
                     && subjectLocation->mReference == ESM4::runtimeReferenceKey(parameterKey) ? 1.0 : 0.0);
@@ -1979,6 +2006,8 @@ namespace MWMechanics
             }
             if (function == "GetIsID")
                 return value(!parameterKey.isNull() && baseKey(subjectPtr) == parameterKey ? 1.0 : 0.0);
+            if (function == "GetIsClass")
+                return value(nativeClassMatches(mWorld, subjectPtr, baseKey(subjectPtr), parameterKey) ? 1.0 : 0.0);
             if (function == "GetIsRace" || function == "GetIsSex")
             {
                 // The TES4 player intentionally uses the shared ESM::NPC

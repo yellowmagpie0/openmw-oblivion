@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "Native GetIsClass68 in loaded dialogue and unloaded package conditions; NPC class identity/current Player proxy",
+  "full_M15S4_acceptance": false,
+  "original": {
+    "entry": "004F6EC0",
+    "base_getter": "004D9B40",
+    "actor_vtables": [
+      "00A6FC9C",
+      "00A73A0C",
+      "00A710F4"
+    ],
+    "base_types": [
+      35,
+      36,
+      5
+    ],
+    "parameter_types": [
+      null,
+      0,
+      5,
+      35
+    ],
+    "control_words": [
+      639,
+      895
+    ],
+    "cases": 288,
+    "game_function_stubs": [],
+    "diagnostic_output": false
+  },
+  "engine_checks": [
+    "Native CLAS parameter required; missing/null/wrong-type false",
+    "Same-name/data classes retain distinct identities",
+    "Native NPC current base class is queried after definition changes",
+    "Creature false",
+    "Player current proxy class follows character-generation replacement; custom string class does not alias a content CLAS",
+    "Unloaded NPC package selection reaches the class query after two low-process ticks and keeps the actor unloaded"
+  ],
+  "runtime_fixture": {
+    "recipe": "scripts/data/oblivion_compat/m15_dialogue_class_audio_fixture.json",
+    "writer": "scripts/tes4_m15_dialogue_class_fixture.py",
+    "scenario": "scripts/data/oblivion_compat/oblivion_m15_dialogue_class_audio.json",
+    "load_order": [
+      "Oblivion.esm",
+      "Knights.esp",
+      "NativeClassCondition.esp"
+    ],
+    "npc_base": "Oblivion.esm:0002349f",
+    "topic": "Oblivion.esm:00014a1e",
+    "info": "Oblivion.esm:000150c7",
+    "native_class": "Oblivion.esm:000836",
+    "only_added_info_condition": 68,
+    "expected_visit_order": [
+      365,
+      254,
+      72,
+      68
+    ],
+    "expected_query": 1,
+    "expected_voice": "sound/voice/oblivion.esm/imperial/f/charactergen_chargenvoice_000150c7_1.mp3"
+  },
+  "limits": [
+    "No automatic melee hit speech/reaction caller yet",
+    "No standalone ObScript GetIsClass command is added",
+    "Original whole-selector candidate ordering remains separate",
+    "No new normal-input melee/restart acceptance claim",
+    "First cold fixture inspected before its selection tick; both failed focused runs and debugger confirmation retained",
+    "First two rendered launches lacked an active default-settings configuration and stopped before content loading; third launch uses retained executable, defaults.bin and local openmw.cfg"
+  ]
+}

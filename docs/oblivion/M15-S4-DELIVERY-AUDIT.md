@@ -12043,3 +12043,22 @@ Both normal and ASan/UBSan full engine inventories pass (1,862 tests each).
 See [M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json](M15-COMMON-HIT-ARGUMENTS-VERIFICATION.json).
 The common phase APIs still have no live consumer; no new gameplay/restart gate
 is claimed. Unsupported contact domains and remaining M15S4 gates stay open.
+
+### Native dialogue class conditions
+
+GetIsClass68 now reads native NPC class identity and the Player's current class
+proxy in live dialogue; unloaded package conditions use the same predicate.
+A native CLAS parameter is required. Both full engine profiles pass 1,864 tests;
+388 Python tests pass, including the bounded fixture writer. The independent
+original predicate passes 288 cases with actual base getters and no callee stubs.
+
+A rendered course loads one INFO override with an added class condition while
+retaining its original response data. Independent record reinspection and live
+visits agree on `365 → 254 → 72 → 68`, class `0x836` and original response `0x150C7`.
+The audio/weather/save course passes in 131.029146 seconds; the reviewed capture,
+save schema 63 and 107 existing runtime diagnostics are retained. Compilation reports
+10,470 units with zero compilation failures. The two failed cold-fixture checks
+and two pre-content configuration failures remain recorded. See
+[M15-NATIVE-DIALOGUE-CLASS-VERIFICATION.json](M15-NATIVE-DIALOGUE-CLASS-VERIFICATION.json).
+This validates the class/voice path, not automatic melee hit speech or the
+remaining normal-input/restart gates. Full M15S4 remains open.

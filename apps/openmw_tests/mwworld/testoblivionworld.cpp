@@ -109,6 +109,7 @@
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
 #include <components/esm4/loadglob.hpp>
+#include <components/esm4/loadclas.hpp>
 #include <components/esm4/loadqust.hpp>
 #include <components/esm4/loadlvli.hpp>
 #include <components/esm4/loadcont.hpp>
@@ -33037,5 +33038,112 @@ TEST(OblivionWorldTest, NativeSayUsesQuestThenInfoEligibilityBeforeVoiceLookup)
         EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
         EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(),
             scenario == 1 || scenario == 2 ? 3357800067u : 1u);
+    }
+}
+
+TEST(OblivionWorldTest, NativeClassConditionUsesNpcClassIdentityAndCurrentPlayerProxy)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    const auto npc = addNativeNpc(fixture, 0xa00);
+    const auto creature = addEquipmentCreature(fixture);
+    auto& ai = *world.getOblivionAiService();
+    const auto classKey = ESM::FormKey::content("headless.esm", 0x850);
+    const auto otherKey = ESM::FormKey::content("headless.esm", 0x851);
+    for (const auto id : {0x850u, 0x851u})
+    {
+        ESM4::Class definition{}; definition.mId = {id, 0};
+        definition.mFullName = "Same name"; // Names and class data cannot merge identities.
+        store.getWritable<ESM4::Class>().insertStatic(definition, ESM::FormKey::content("headless.esm", id));
+    }
+    auto native = *npc.get<ESM4::Npc>()->mBase;
+    native.mClass = {0x850, 0};
+    store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 68; condition.mComparisonValue = 1;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mParameter1.mIsFormId = true;
+    for (const auto& expected : {classKey, otherKey, ESM::FormKey{},
+             ESM::FormKey::content("headless.esm", 0x810), // An existing RACE is not a CLAS.
+             ESM::FormKey::content("headless.esm", 0xfffffe)})
+    {
+        condition.mParameter1.mReferenceKey = expected;
+        EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)),
+            expected == classKey ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        EXPECT_EQ(ai.evaluateDialogueConditions(creature, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);
+    }
+    native.mClass = {0x851, 0};
+    store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    condition.mParameter1.mReferenceKey = classKey;
+    EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)), ESM4::ConditionResult::False);
+    condition.mParameter1.mReferenceKey = otherKey;
+    EXPECT_EQ(ai.evaluateDialogueConditions(npc, {}, std::span(&condition, 1)), ESM4::ConditionResult::True);
+
+    MWClass::Npc::registerSelf(); world.setupPlayer();
+    const auto player = world.getPlayerPtr();
+    auto proxy = *player.get<ESM::NPC>()->mBase;
+    for (const auto& actual : {ESM::RefId(ESM::FormId{0x850, 0}), ESM::RefId(ESM::FormId{0x851, 0}),
+             ESM::RefId::stringRefId("custom-player-class")})
+    {
+        proxy.mClass = actual;
+        auto prepared = store.preparePlayerRecord(proxy);
+        world.getPlayer().set(prepared.commit());
+        for (const auto& expected : {classKey, otherKey})
+        {
+            condition.mParameter1.mReferenceKey = expected;
+            const bool matches = actual == ESM::RefId(*ESM::FormKeyResolver(world.getContentFiles()).toFormId(expected));
+            EXPECT_EQ(ai.evaluateDialogueConditions(player, {}, std::span(&condition, 1)),
+                matches ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        }
+    }
+}
+
+TEST(OblivionWorldTest, UnloadedPackageClassConditionUsesNativeBaseWithoutLoadingTheActor)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    auto& ai = *world.getOblivionAiService();
+    ESM4::Class definition{}; definition.mId = {0xa50, 0};
+    const auto classKey = ESM::FormKey::content("headless.esm", 0xa50);
+    store.getWritable<ESM4::Class>().insertStatic(definition, classKey);
+    ESM4::AIPackage package{}; package.mId = {0xa51, 0};
+    package.mFormKey = ESM::FormKey::content("headless.esm", 0xa51);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 68; condition.mComparisonValue = 1;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mParameter1.mIsFormId = true;
+    condition.mParameter1.mReferenceKey = classKey;
+    package.mCanonicalConditions = {condition};
+    store.getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+    auto native = *fixture.mActor.get<ESM4::Npc>()->mBase;
+    native.mAIPackageKeys = {package.mFormKey};
+    ESM4::ActorCharacter cold{}; cold.mId = {0xa52, 0};
+    cold.mFormKey = ESM::FormKey::content("headless.esm", 0xa52);
+    cold.mBaseObj = native.mId; cold.mBaseKey = native.mFormKey;
+    cold.mParent = world.getPlayerPtr().getCell()->getCell()->getId();
+    cold.mParentKey = ESM::FormKey::content("headless.esm", 1);
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+    auto saved = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState actor;
+    actor.mActor = cold.mFormKey; actor.mBase = native.mFormKey;
+    actor.mCell = actor.mLastValidCell = cold.mParentKey;
+    actor.mTier = ESM4::ProcessTier::Low;
+    saved.mActorAi = {actor};
+    ASSERT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
+    for (const bool matches : {false, true})
+    {
+        native.mClass = matches ? definition.mId : ESM::FormId{};
+        store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+        ASSERT_NO_THROW(ai.restore(saved));
+        // Restored Select first reaches idle Wait; the next low tick selects.
+        ai.updateUnloaded(.5f);
+        const auto* selected = ai.state(cold.mFormKey);
+        ASSERT_TRUE(selected);
+        EXPECT_EQ(selected->mConditionResult, matches ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+        EXPECT_EQ(selected->mPackage, matches ? package.mFormKey : ESM::FormKey{});
+        EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
     }
 }

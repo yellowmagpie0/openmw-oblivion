@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "source_plugin": "Oblivion.esm",
+  "plugin_name": "NativeClassCondition.esp",
+  "npc": 144543,
+  "topic": 84510,
+  "info": 86215,
+  "class": 2102,
+  "source_payload_sha256": {
+    "NPC_": "465157bdbbda02727797a87516bcae19b5c889befa0cf383247ce5c9d991c27f",
+    "DIAL": "e7517dd974faa095950b33d1b9e15734ef6987aebaac496071fa493a682dd77d",
+    "INFO": "ca8a311f9fb759f542ebe43ffdc0825814a9849fcbdd4a5a21c4c50cfe5cb96d",
+    "CLAS": "75487a569025747f65356038e3d8531c7fb93462bec34e77f88e9b2f79f42419"
+  }
+}

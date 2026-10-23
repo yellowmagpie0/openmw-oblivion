@@ -1,0 +1,899 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "automatic_common_hit_wiring": false,
+  "scope": "Native GetIsClass68 in loaded dialogue and unloaded package conditions; NPC class identity/current Player proxy",
+  "cpp_tested_source": {
+    "head": "749087a54f0d8262094b75e52ab91db9a1f76417",
+    "source_fingerprint": "1a8baad749a5fc4b1a4e145821774ec87859ddb80fa71cfeff85346b74b3bbd9"
+  },
+  "python_tested_source": {
+    "head": "749087a54f0d8262094b75e52ab91db9a1f76417",
+    "source_fingerprint": "adb2004cfce00adcf7bff3ef9125b659e3cefaf18a6773bb466acdd68223e624"
+  },
+  "tested_source_files": {
+    "apps/openmw/mwmechanics/oblivionai.cpp": {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "00dc31662efde90225eb53d7c8fc18734b82b5825129a5ddd929fda8eb9c13f5",
+      "bytes": 341815
+    },
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "fa93f4b43eb9f98dc70691d5dff46f7641a48d007c2881f3a1b0a55f406b1d7a",
+      "bytes": 1973436
+    },
+    "scripts/tes4_m15_dialogue_class_fixture.py": {
+      "path": "scripts/tes4_m15_dialogue_class_fixture.py",
+      "sha256": "e7547ec0b215f6dd35edfd3217314473887747a9b2eb5c9b0f917005e675364e",
+      "bytes": 4465
+    },
+    "scripts/tests/test_m15_dialogue_class_fixture.py": {
+      "path": "scripts/tests/test_m15_dialogue_class_fixture.py",
+      "sha256": "a1474e2e0fb6ed776dc4781b36bfe00d70711d81bd61da36749b0e5ebc39494c",
+      "bytes": 3377
+    },
+    "scripts/data/oblivion_compat/m15_dialogue_class_audio_fixture.json": {
+      "path": "scripts/data/oblivion_compat/m15_dialogue_class_audio_fixture.json",
+      "sha256": "c5b901da971f5e25b6f6d807d0abfc5ec1ae9bffe6d1b781d9eb255baa7f1d05",
+      "bytes": 615
+    },
+    "scripts/data/oblivion_compat/oblivion_m15_dialogue_class_audio.json": {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_dialogue_class_audio.json",
+      "sha256": "60f4440f82b5f773bc265278c47a0f97e6c6285d7179dce858c8484fa6e667c5",
+      "bytes": 4574
+    }
+  },
+  "tested_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/tested-source.patch",
+    "sha256": "8107ee394735598c8cba7890d391a5b9deea437ffb644a520e744c67ad4fe7ac",
+    "bytes": 9731
+  },
+  "protocol": {
+    "path": "scripts/data/oblivion_compat/m15_dialogue_class_oracle_cases.json",
+    "sha256": "c2078c4282f43276718b5225f00ae37e96e2d24344f7d73aae5c46759e8805af",
+    "bytes": 2429
+  },
+  "checks": {
+    "normal_engine": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/verification.json",
+        "sha256": "c11697cc8a18530672c08fa0144644faee094ff7d03e4a7ed77e8dd5ab9d8df7",
+        "bytes": 2138
+      },
+      "results": {
+        "engine": {
+          "executed": 1864,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "12937a94f2e6ebe3c03323ad4bf6d6e92765ec221633a5edcc8185e73d6965c3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fa752ae5699f02305aac9ff8e2583b3b5d734382f9b5c23d5775c5c0112d3adb",
+          "inventory_sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/engine-build.log",
+          "sha256": "cd5f0bfa36941d6abf9bf5fc981f86e40b3593be80de6eefe819f2b3334d27d1",
+          "bytes": 29806
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/engine-inventory.txt",
+          "sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+          "bytes": 131841
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/engine.log",
+          "sha256": "b7411e4a57bc1edcc19c1f32afd378b28185ed20caa871ff383c64c822f77164",
+          "bytes": 2182353
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/engine.xml",
+          "sha256": "fa752ae5699f02305aac9ff8e2583b3b5d734382f9b5c23d5775c5c0112d3adb",
+          "bytes": 614230
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-02/verification.json",
+          "sha256": "c11697cc8a18530672c08fa0144644faee094ff7d03e4a7ed77e8dd5ab9d8df7",
+          "bytes": 2138
+        }
+      ]
+    },
+    "sanitized_engine": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/verification.json",
+        "sha256": "9150d8b326a3389007fe2b99504fc148a5d80a81c1c98988b7b0bb5e97338256",
+        "bytes": 2235
+      },
+      "results": {
+        "engine": {
+          "executed": 1864,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f9afe99e85523a41d8f0e24fa4009f990267f09fe937a485628a4e316aaeb344",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f08b7432435d397c44fa4291c19da9d92fc16b849c2d362755b56734cb4e2b45",
+          "inventory_sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/engine-build.log",
+          "sha256": "83bde0359e36a57939f9b3361374ec8bdc67f562ae1c3556bad9920a65161b13",
+          "bytes": 28372
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/engine-inventory.txt",
+          "sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+          "bytes": 131841
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/engine.log",
+          "sha256": "7772023f89dbf4f43283634606f9ba50b3a0c04fbe023deab4dd1e0daa22a57f",
+          "bytes": 2182887
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/engine.xml",
+          "sha256": "f08b7432435d397c44fa4291c19da9d92fc16b849c2d362755b56734cb4e2b45",
+          "bytes": 615839
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-02/verification.json",
+          "sha256": "9150d8b326a3389007fe2b99504fc148a5d80a81c1c98988b7b0bb5e97338256",
+          "bytes": 2235
+        }
+      ]
+    },
+    "python": {
+      "report": {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-fixture-python-01/verification.json",
+        "sha256": "5c47f4ec035bf85336e581d9fc8e33ee916f9543578b77f5a5909d0c6f7a2e9b",
+        "bytes": 819
+      },
+      "results": {
+        "python": {
+          "executed": 388,
+          "passed": true,
+          "log_sha256": "44b206361ea2003a308c54593075f485f82ce1f0f0eb0249701dd959796a5a03"
+        }
+      },
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-fixture-python-01/python.log",
+          "sha256": "44b206361ea2003a308c54593075f485f82ce1f0f0eb0249701dd959796a5a03",
+          "bytes": 489
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-fixture-python-01/verification.json",
+          "sha256": "5c47f4ec035bf85336e581d9fc8e33ee916f9543578b77f5a5909d0c6f7a2e9b",
+          "bytes": 819
+        }
+      ]
+    }
+  },
+  "original_class_oracle": {
+    "report": {
+      "passed": true,
+      "cases": 288,
+      "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "b451199199e4fc710ae4b1bf8c848b89ed9be7a3ee189f88459ed5523f3c4caf",
+      "scope": "Full GetIsClass condition4F6EC0 with actual actor+170 base getter4D9B40 for all3 actor vtables. No game-function stubs; debug diagnostic disabled. Input pointers/base/class identity fixtures; no current class mutation or INFO selection."
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-oracle-01/corpus.json",
+        "sha256": "b451199199e4fc710ae4b1bf8c848b89ed9be7a3ee189f88459ed5523f3c4caf",
+        "bytes": 34369
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+        "bytes": 661
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-oracle-01/probe.py",
+        "sha256": "cb23fc7218be298937c6cc35083f4a67768be3e3f4b1750678cc1cfd1694af2d",
+        "bytes": 3117
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-oracle-01/verification.json",
+        "sha256": "b293745510b43a06b218f8ae207ff2ce72dd775a560cc1ad6a010bc85c3f9ec1",
+        "bytes": 468
+      }
+    ]
+  },
+  "fixture_layers": {
+    "structural_write_success": true,
+    "semantic_reinspection": true,
+    "engine_world_loading": true,
+    "obscript_compiled_units": 10470,
+    "obscript_compilation_failures": 0,
+    "retained_runtime_script_diagnostics": 107,
+    "runtime_acceptance": true,
+    "scope": "Class-conditioned voiced INFO plus preserved command/audio/weather/save course; not common melee acceptance"
+  },
+  "fixture_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/recipe.json",
+      "sha256": "c5b901da971f5e25b6f6d807d0abfc5ec1ae9bffe6d1b781d9eb255baa7f1d05",
+      "bytes": 615
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/reinspect.py",
+      "sha256": "91b5d2b6429cc0f30e3308025979f1a8930d6b85a07b810848a7b2b61d3c800d",
+      "bytes": 3709
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/semantic-reinspection.json",
+      "sha256": "9a39634d68062347ff283e1212617ab4f1725481eb52e41e97644e6fe5c50e02",
+      "bytes": 1313
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/source-inspection.json",
+      "sha256": "4515ffb7fb80f0f2099749ee9927d26a68cd55e51babfe8f61f19d44c08637f3",
+      "bytes": 1404
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/tes4_m15_dialogue_class_fixture.py",
+      "sha256": "e7547ec0b215f6dd35edfd3217314473887747a9b2eb5c9b0f917005e675364e",
+      "bytes": 4465
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/data/NativeClassCondition.esp",
+      "sha256": "66a94480c25f1512f1c08daee9501d455c4ccd087d0b688619cfc0f5bd9a847a",
+      "bytes": 427
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/data/fixture-report.json",
+      "sha256": "374a2e68b16d77deb32bbde96424b826826cae7affd9afad096d3b7a092c7381",
+      "bytes": 691
+    }
+  ],
+  "fixture_dependencies": [
+    {
+      "path": "scripts/tes4_m15_fixture.py",
+      "sha256": "140c8bc991eef09ccdd7c1794b97642d7daf6fbef0818dbeecf0821963874d4e",
+      "bytes": 6849
+    },
+    {
+      "path": "scripts/tes4_m14_audit.py",
+      "sha256": "ba26e54ad2929188533ccc67e5f4efecf2491151733e3e253db4fc240a3882fe",
+      "bytes": 49374
+    }
+  ],
+  "rendered_course": {
+    "report": {
+      "actions": [
+        {
+          "duration_seconds": 18.770339,
+          "passed": true,
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/process.log",
+          "pattern": "M10 native music state music/dungeon:",
+          "poll_interval_seconds": 0.1,
+          "type": "wait_log"
+        },
+        {
+          "duration_seconds": 97.123619,
+          "passed": true,
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/process.log",
+          "pattern": "M7 ObScript: setstage quest=content:oblivion.esm:0253bf stage=30",
+          "poll_interval_seconds": 0.1,
+          "type": "wait_log"
+        },
+        {
+          "duration_seconds": 2.000141383963637,
+          "passed": true,
+          "type": "sleep"
+        },
+        {
+          "command": [
+            "/usr/bin/xdotool",
+            "search",
+            "--onlyvisible",
+            "--name",
+            "OpenMW",
+            "windowfocus",
+            "--sync",
+            "%@"
+          ],
+          "duration_seconds": 0.019962,
+          "exit_code": 0,
+          "output": "",
+          "passed": true,
+          "type": "focus_window"
+        },
+        {
+          "command": [
+            "/usr/bin/import",
+            "-window",
+            "root",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/real-quest-audio-weather.png"
+          ],
+          "duration_seconds": 0.488889,
+          "exit_code": 0,
+          "image_inspection": {
+            "entropy": 0.890765,
+            "height": 720,
+            "mean": 0.268031,
+            "passed": true,
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/real-quest-audio-weather.png",
+            "thresholds": {
+              "maximum_mean": 0.999,
+              "minimum_entropy": 0.04,
+              "minimum_mean": 0.001
+            },
+            "width": 1280
+          },
+          "output": "",
+          "passed": true,
+          "type": "screenshot"
+        },
+        {
+          "command": [
+            "/usr/bin/xdotool",
+            "key",
+            "F5"
+          ],
+          "duration_seconds": 0.018709,
+          "exit_code": 0,
+          "output": "",
+          "passed": true,
+          "type": "key"
+        },
+        {
+          "duration_seconds": 9.000078363053035,
+          "passed": true,
+          "type": "sleep"
+        },
+        {
+          "duration_seconds": 0.027374,
+          "expected_count": 1,
+          "matches": [
+            {
+              "missing_ascii": [],
+              "passed": true,
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/m10-runtime.wav",
+              "size": 48734276,
+              "unexpected_ascii": []
+            }
+          ],
+          "passed": true,
+          "path_glob": "m10-runtime.wav",
+          "type": "assert_file"
+        },
+        {
+          "duration_seconds": 0.011304,
+          "expected_count": 1,
+          "matches": [
+            {
+              "missing_ascii": [],
+              "passed": true,
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/obscript-report.json",
+              "size": 27632796,
+              "unexpected_ascii": []
+            }
+          ],
+          "passed": true,
+          "path_glob": "obscript-report.json",
+          "type": "assert_file"
+        },
+        {
+          "duration_seconds": 0.013267,
+          "expected_count": 1,
+          "matches": [
+            {
+              "missing_ascii": [],
+              "passed": true,
+              "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+              "size": 11312001,
+              "unexpected_ascii": []
+            }
+          ],
+          "passed": true,
+          "path_glob": "userdata/saves/*/*.omwsave",
+          "type": "assert_file"
+        }
+      ],
+      "actions_complete": true,
+      "command": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/openmw-normal",
+        "--replace=config",
+        "--config",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/config",
+        "--no-grab"
+      ],
+      "duration_seconds": 131.029146,
+      "exit_code": 0,
+      "expected_exit": 0,
+      "forbidden_log_findings": [],
+      "m14": {
+        "enabled": false,
+        "events": 0,
+        "passed": true
+      },
+      "manifest": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-normal-03-manifest.json",
+      "missing_expected_log": [],
+      "name": "native-class-condition-command-audio-regression",
+      "passed": true,
+      "schema_version": 1,
+      "shutdown_requested": true,
+      "timed_out": false,
+      "unreviewed_error_log_findings": []
+    },
+    "verification": {
+      "passed": true,
+      "scope": "Rendered native class-conditioned dialogue/audio/weather/save regression; two realm queries and saved flag false; common melee acceptance remains open",
+      "schema": 63,
+      "player": "dynamic:player:0000000000000001",
+      "saved_realm": false,
+      "query_observations": [
+        {
+          "line": 12777,
+          "text": "[07:58:31.138 I] M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0"
+        },
+        {
+          "line": 21040,
+          "text": "[07:59:56.924 I] M7 ObScript: acceptance-command actor=dynamic:player:0000000000000001 name=GetPlayerInSEWorld result=0"
+        }
+      ],
+      "duration_seconds": 131.029146,
+      "script_diagnostics": {
+        "Unsupported ObScript command setfactionreaction": 3,
+        "Unsupported ObScript command setalert": 3,
+        "ObScript value is not numeric": 99,
+        "native combat command requires an initialized resident actor": 2
+      },
+      "capture_review": "Viewed stone prison arch/chains, crosshair, native resource HUD and minimap",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/scenario.json",
+          "sha256": "249f14ada3c27512737d23467f0a52054918b79955466a9c282eda3371f6cde8",
+          "bytes": 4710
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/process.log",
+          "sha256": "3069385140f993708abfc62aa9bf61112ad905ca40ff5acf4c18a2eea0a902e9",
+          "bytes": 2817468
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/obscript-report.json",
+          "sha256": "8cb9e6fee1fead86d6ebd3e2b93a11f7d3ce79d1897b0746d1ae3198b3314134",
+          "bytes": 27638696
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/m15-events.jsonl",
+          "sha256": "8320f40957454877a20f11919077d8d78701b98f82fc21a233432dfb1e49fb53",
+          "bytes": 141228
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/real-quest-audio-weather.png",
+          "sha256": "1f65cbf01f944303c34c8fb5136c7238c07836b40c9049d650fa4c4421346d78",
+          "bytes": 1140843
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "sha256": "6f41cfd96f8abe5931ff712b642fdbeebdb1b6e215cbe0cb65801f808bc8b828",
+          "bytes": 11312001
+        }
+      ],
+      "decoder": {
+        "path": "scripts/tes4_runtime_state.py",
+        "sha256": "7d2d84371099294a7146cb0e04822d6a68d3d50a45400b2a0623ff2d9fe604c9",
+        "bytes": 210689
+      }
+    },
+    "ordered_class_observation": {
+      "passed": true,
+      "scope": "Independent raw merge of three runtime plugins: quest365/254 then INFO72/68 match actual ordered true observations; class parameter836 equals raw NPC.CNAM independently reinspected. Selected original voice remains150C7. No native whole-selector ordering or common melee claim",
+      "sources": [
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+        },
+        {
+          "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-fixture-01/data/NativeClassCondition.esp",
+          "sha256": "66a94480c25f1512f1c08daee9501d455c4ccd087d0b688619cfc0f5bd9a847a"
+        }
+      ],
+      "selected_info_proofs": [
+        {
+          "info": "content:oblivion.esm:0150c7",
+          "quest": "content:oblivion.esm:02466e",
+          "winning_info": {
+            "plugin": "NativeClassCondition.esp",
+            "flags": 0,
+            "quest": "content:oblivion.esm:02466e",
+            "conditions": [
+              {
+                "function": 72,
+                "flags": 0,
+                "comparison_bits": 1065353216,
+                "parameter1": 144543
+              },
+              {
+                "function": 68,
+                "flags": 0,
+                "comparison_bits": 1065353216,
+                "parameter1": 2102
+              }
+            ]
+          },
+          "winning_quest": {
+            "plugin": "Oblivion.esm",
+            "flags": 0,
+            "quest": "null",
+            "conditions": [
+              {
+                "function": 365,
+                "flags": 0,
+                "comparison_bits": 0,
+                "parameter1": 0
+              },
+              {
+                "function": 254,
+                "flags": 0,
+                "comparison_bits": 1065353216,
+                "parameter1": 0
+              }
+            ]
+          },
+          "observed": {
+            "visits": [
+              {
+                "function": 365,
+                "actual": 0.0,
+                "status": 0,
+                "expected": 0.0,
+                "line": 14018
+              },
+              {
+                "function": 254,
+                "actual": 1.0,
+                "status": 0,
+                "expected": 1.0,
+                "line": 14019
+              },
+              {
+                "function": 72,
+                "actual": 1.0,
+                "status": 0,
+                "expected": 1.0,
+                "line": 14020
+              },
+              {
+                "function": 68,
+                "actual": 1.0,
+                "status": 0,
+                "expected": 1.0,
+                "line": 14021
+              }
+            ],
+            "result": 0
+          }
+        }
+      ],
+      "log": {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/process.log",
+        "sha256": "3069385140f993708abfc62aa9bf61112ad905ca40ff5acf4c18a2eea0a902e9"
+      },
+      "runtime_manifest": {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-normal-03-manifest.json",
+        "sha256": "60f4440f82b5f773bc265278c47a0f97e6c6285d7179dce858c8484fa6e667c5"
+      }
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/scenario.json",
+        "sha256": "249f14ada3c27512737d23467f0a52054918b79955466a9c282eda3371f6cde8",
+        "bytes": 4710
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/process.log",
+        "sha256": "3069385140f993708abfc62aa9bf61112ad905ca40ff5acf4c18a2eea0a902e9",
+        "bytes": 2817468
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/obscript-report.json",
+        "sha256": "8cb9e6fee1fead86d6ebd3e2b93a11f7d3ce79d1897b0746d1ae3198b3314134",
+        "bytes": 27638696
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/m15-events.jsonl",
+        "sha256": "8320f40957454877a20f11919077d8d78701b98f82fc21a233432dfb1e49fb53",
+        "bytes": 141228
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/real-quest-audio-weather.png",
+        "sha256": "1f65cbf01f944303c34c8fb5136c7238c07836b40c9049d650fa4c4421346d78",
+        "bytes": 1140843
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/m10-runtime.wav",
+        "sha256": "d57ff276eb54e6d8491b47e52591c6998aa374f893103663ffd57e6ed576a60b",
+        "bytes": 49820228
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "6f41cfd96f8abe5931ff712b642fdbeebdb1b6e215cbe0cb65801f808bc8b828",
+        "bytes": 11312001
+      }
+    ]
+  },
+  "runtime_bundle": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/defaults.bin",
+      "sha256": "435f20b9b069b0b5f5ee686272b9d1df9022f2e1e3ce6bab274faa5123ba8b77",
+      "bytes": 61692
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/openmw-normal",
+      "sha256": "1088a61961e4d6f8a6f37ac863ec451ff77bb670ce6aca2a9060e39f14c78545",
+      "bytes": 1392030376
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/openmw.cfg",
+      "sha256": "2291eb4e130b803938b26be461475bef76e9f9035e6889e5d778a5b52423ea66",
+      "bytes": 28865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/retention.json",
+      "sha256": "783bdc20f23f0245cd204aaa2f83c39f6e60e4d681d7f9e9b1c22bc8560fcd34",
+      "bytes": 439
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-runtime-binaries-01/tested-source.patch",
+      "sha256": "8107ee394735598c8cba7890d391a5b9deea437ffb644a520e744c67ad4fe7ac",
+      "bytes": 9731
+    }
+  ],
+  "launch_evidence": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-02.log",
+      "sha256": "6b78d770640c4d6d145925628b2f1322d94ab69f656585c8c2d03e9aca52976c",
+      "bytes": 2103
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-03.log",
+      "sha256": "249f14ada3c27512737d23467f0a52054918b79955466a9c282eda3371f6cde8",
+      "bytes": 4710
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-completion-02.json",
+      "sha256": "56296949d3a02e635b050fd6b4762f0f0b52c23d05b925203095f7daf8e19027",
+      "bytes": 21
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-completion-03.json",
+      "sha256": "81868a6e94ffc0178bf833deb1c9013d9fab4ee95ddb876a5e8ec4f1d26376d2",
+      "bytes": 21
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-completion.json",
+      "sha256": "56296949d3a02e635b050fd6b4762f0f0b52c23d05b925203095f7daf8e19027",
+      "bytes": 21
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-launch-02.json",
+      "sha256": "4e97bc5a7014f0d4ba37d3fcd1e37e3719a1b2dd1c463a2aba82537f1ee734af",
+      "bytes": 1287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-launch-03.json",
+      "sha256": "e2f944ddc4307cd73123a162d36842a9cb36d62b362c6f73e6a55f950cb6aed1",
+      "bytes": 1287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-launch.json",
+      "sha256": "54af79349c217a8dd474f7c41436bf06243311f34d1b1ada0dc460d2733b54b8",
+      "bytes": 1287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-normal-01-manifest.json",
+      "sha256": "b44632322d221770fb5d899e3d88a568b53ee785d5f19b31887902efeb605193",
+      "bytes": 4574
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-normal-02-manifest.json",
+      "sha256": "bc2e2a8e8f2767ab83bd86bee6588f053519a56454be18405882242d7265c465",
+      "bytes": 4574
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio-normal-03-manifest.json",
+      "sha256": "60f4440f82b5f773bc265278c47a0f97e6c6285d7179dce858c8484fa6e667c5",
+      "bytes": 4574
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/audio.log",
+      "sha256": "94642f8aac5d5c67e0a4cdf5b9efb409732603ebd1504c8772d8d043cd1c2a5e",
+      "bytes": 2104
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/root-observation-verification.json",
+      "sha256": "f0663819bff3539fb77266a5240ec54d6c077912a02faa625863597e93e8703b",
+      "bytes": 3100
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/run-02.py",
+      "sha256": "4768e7c50c6a82d2028c54cf64ab5eda0488431d043d63f97829fb85460e6b5e",
+      "bytes": 360
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/run-03.py",
+      "sha256": "c0061b8ba7da807b3c6479b800c53c937b219ca71e9f4842d1562b3af4034f6a",
+      "bytes": 360
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/run.py",
+      "sha256": "9a91b60e69e300ab11bf6e676a80d70f7b48b2106584df9ea1eb87f17c98cb0d",
+      "bytes": 351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/runtime-verification.json",
+      "sha256": "914410808c82266f51735f61fa971a4e48dd6a09d757ec391533f620da83556b",
+      "bytes": 2569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/verify-root-observation.py",
+      "sha256": "88fd5231eecba2c4ea1485acd2a02c7f92bc64ff80149e90ce7ee80123acd6df",
+      "bytes": 4245
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-launch-01/verify-runtime.py",
+      "sha256": "73ad0336bd3c54b72f2a0d09809dc08799912b7925988dbaaf04eb2c70d61b06",
+      "bytes": 2018
+    }
+  ],
+  "failed_focused_fixture": {
+    "reason": "One .25s tick left restored Select in idle Wait before package selection; debugger verified .5s and the corrected full inventories pass",
+    "patch": {
+      "path": "build/oblivion-compat/m15/S4/native-dialogue-class-one-tick-fixture-01.patch",
+      "sha256": "1f81b9e70e71de90777f75cf30b93ee37fa52db1b20f63a268bb1a1b1661ef54",
+      "bytes": 9652
+    },
+    "evidence": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-01/engine-build.log",
+        "sha256": "17000d3e1e3c899c922a01c5c684f75b0a35c8791c747288befe4f64a8fa780f",
+        "bytes": 30173
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-01/engine-inventory.txt",
+        "sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+        "bytes": 131841
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-01/engine.log",
+        "sha256": "74e0df487501a8e573caa887d5045f6985cf529a652d54db285229c1d2984d36",
+        "bytes": 2732
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-01/engine.xml",
+        "sha256": "a3fdecc769612eb115c5275ec117a60970816492e6dbcc5b9ad655dcdcc93237",
+        "bytes": 2294
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-engine-01/verification.json",
+        "sha256": "b54ab8ce9b049b13dc328c6b3e50180d2ce6410529a216f15c5b9d8ee0fe7bd5",
+        "bytes": 1428
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-01/engine-build.log",
+        "sha256": "3ce163a1edfc4057bea1fb3463529716eb845532163392c76b706a95691cb6b5",
+        "bytes": 28739
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-01/engine-inventory.txt",
+        "sha256": "a2b810b00a86e83c5f31b4462b328c97727430c0a14dd66bdebb7e30332e40ab",
+        "bytes": 131841
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-01/engine.log",
+        "sha256": "d0ebada527d9d89a7144b60963b30ea8361fa0a7fa23141523721d9b493d6df1",
+        "bytes": 2735
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-01/engine.xml",
+        "sha256": "6a3b3d2233073e84bb87a2e2224c9d766a8bc4003cb9caa4286d113b3685a6c5",
+        "bytes": 2294
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-sanitized-engine-01/verification.json",
+        "sha256": "ca8b5d128477faf62f1b0e6fc1921788ffb3c99ecf5e83889469519e286f2ebb",
+        "bytes": 1476
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-fixture-inspection-01/two-ticks.gdb",
+        "sha256": "f3d3ecefb2183513148a0a2d17afd24f697f9b3b50caf0c3a6c4347b954fd7ff",
+        "bytes": 255
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-dialogue-class-fixture-inspection-01/two-ticks.log",
+        "sha256": "4a66725e951b7b20ef5b3950ad48f48bd66fc567012e30791b2288fd0ea971b4",
+        "bytes": 2398
+      }
+    ]
+  },
+  "failed_runtime_launches": [
+    {
+      "reason": "Retained executable lacked defaults.bin and local base config; stopped before content loading",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-01/process.log",
+          "sha256": "0d37d9e600aba8ff29d1722778c8a418b16b2b63425e56be5333d9720fe6d455",
+          "bytes": 347
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-01/realm-events.txt",
+          "sha256": "e2514999236791b3d2e121e0464c986842c625200bc93cde307be31615bbfb1c",
+          "bytes": 462
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-01/scenario.json",
+          "sha256": "94642f8aac5d5c67e0a4cdf5b9efb409732603ebd1504c8772d8d043cd1c2a5e",
+          "bytes": 2104
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-01/xvfb.log",
+          "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+          "bytes": 1068
+        }
+      ]
+    },
+    {
+      "reason": "Defaults present, but no local base config activated their directory; stopped before content loading",
+      "evidence": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-02/process.log",
+          "sha256": "14ee2d1f7a2e37b8024ea88c53630d6aa080da66fee3ee74415ae19dc63c51c6",
+          "bytes": 347
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-02/realm-events.txt",
+          "sha256": "e2514999236791b3d2e121e0464c986842c625200bc93cde307be31615bbfb1c",
+          "bytes": 462
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-02/scenario.json",
+          "sha256": "6b78d770640c4d6d145925628b2f1322d94ab69f656585c8c2d03e9aca52976c",
+          "bytes": 2103
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-dialogue-class-audio-normal-02/xvfb.log",
+          "sha256": "cb7160605228444182ffb7b884e47778aeaff391c114cbf26e67b3342d506f39",
+          "bytes": 1068
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "No automatic melee hit speech/reaction caller yet",
+    "No standalone ObScript GetIsClass command is added",
+    "Original whole-selector candidate ordering remains separate",
+    "No new normal-input melee/restart acceptance claim",
+    "First cold fixture inspected before its selection tick; both failed focused runs and debugger confirmation retained",
+    "First two rendered launches lacked an active default-settings configuration and stopped before content loading; third launch uses retained executable, defaults.bin and local openmw.cfg"
+  ]
+}
