@@ -1,0 +1,20 @@
+{
+  "scope": "Original common-hit damage/reaction prefix composed with full blocked Counter-first/Master query while Stagger action8 suppresses playback",
+  "matrix": "Player bare defender HTH75/100, Counterraw25/26, Masterraw5/6, NPC incomingWEAPpresence0/1, quest0/1, drawn0/1, drop-sink success0/1, x87PC53/64, camera0/1. Body/FP clocks.5, priorBlockHit slot3 present.",
+  "expectation": "Common damage raw0 selects Stagger with facing true; real Stagger5F4FD0 activates. Actual Counter5F3C30 uses second raw draw. Actual5F4E10 sees action8 and performs no playback for either result. Counter success suppresses Master query and attacker Recoil despite no Counter activation; Counter miss queries full5FC2B0, conditionally consumes third Master draw/drops then requests attacker Recoil. Player action8 and Stagger/passive slot3 persist.",
+  "boundaries": "Inherited original cache/scene/notification/atomic fixture; explicit primitive AV/FatigueRatio/facing/resource-sink/speech boundaries. Equipped entries, forced raw RNG, target drop/relation/action/controller and target Recoil sinks declared. No resource damage application, target animation or rendering/gameplay acceptance.",
+  "unchanged_tolerance": "Exact call/draw/order/action/slot/stack/register assertions; no numeric tolerance.",
+  "schema_version": 1,
+  "cases": 512,
+  "full_M15S4_acceptance": false,
+  "receipt": "docs/oblivion/M15-PREPARED-HIT-VALUES-VERIFICATION.json",
+  "summary": {
+    "counter_selected": 256,
+    "counter_activated": 0,
+    "master_queries": 256,
+    "master_draws": 16,
+    "drop_requests": 8,
+    "drop_sink_nonnull": 4,
+    "recoil_requests": 256
+  }
+}

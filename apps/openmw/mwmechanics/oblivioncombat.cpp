@@ -2781,6 +2781,24 @@ namespace MWMechanics
         return mImpl && mImpl->mReceivingLife && mImpl->mReceivingLife->mPhase == ESM4::ActorLifePhase::Alive;
     }
 
+    std::optional<OblivionCombatService::PreparedPhysicalContact::VictimHitValues>
+    OblivionCombatService::PreparedPhysicalContact::victimHitValues() const
+    {
+        if (!isValid() || !mImpl->mReceiving) return std::nullopt;
+        const auto& values = *mImpl->mReceiving;
+        const bool player = values.mOwner == ESM4::ActorValueOwner::Player;
+        const auto* base = player ? nullptr : mImpl->mOwner->findActorBase(values.mBase);
+        const auto integer = [&](std::uint8_t av) {
+            return player ? ESM4::composeIntegerActorValue(ESM4::combatBaseValue(values.mValues[av].mBase),
+                values.mValues[av].mModifiers, values.mOwner, values.mProcess)
+                          : nonPlayerInteger(values, av, base);
+        };
+        const float fatigue = player ? ESM4::composeActorValue(values.mValues[10], values.mOwner, values.mProcess)
+                                     : nonPlayerFloat(values, 10, base);
+        return VictimHitValues{integer(8), integer(10), integer(3), integer(7),
+            ESM4::combatFatigueRatio(fatigue, ESM4::combatBaseValue(values.mValues[10].mBase))};
+    }
+
     void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
     {
         if (!mImpl || !mImpl->mCommitted || mImpl->mIdentity.expired()) return;

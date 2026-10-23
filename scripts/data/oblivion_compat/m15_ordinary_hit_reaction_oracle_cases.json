@@ -57,5 +57,16 @@
     "Join common reaction/RNG preparation before blocked Counter/BlockHit routing and lower Recoil. Preserve independently resident native slot0 Stagger and slot3 sequences when later dispatch changes process authority.",
     "Prepare speech/voice/combat notification, resource selection RNG and lifetime bindings within the complete contact transaction before removing rejection. No separate live RNG mutation or callback during speculative preparation.",
     "Complete normal-input and real-output fresh-process courses with the full-caller expected RNG and all remaining M15S4 gates."
-  ]
+  ],
+  "ordinary_group_ids": {
+    "hexadecimal": [
+      "0x14",
+      "0x15"
+    ],
+    "decimal": [
+      20,
+      21
+    ]
+  },
+  "group_correction_receipt": "docs/oblivion/M15-PREPARED-HIT-VALUES-VERIFICATION.json"
 }

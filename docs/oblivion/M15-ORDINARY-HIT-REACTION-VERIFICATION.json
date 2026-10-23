@@ -83,8 +83,8 @@
     "passed": true,
     "cases": 4808,
     "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
-    "corpus_sha256": "c7ab5cfcdfe13c56736cd9fc0ee5db6e9eca347e8fa019661d69764ac4b5f061",
-    "scope": "Original5FFEB5 through general-hit reaction and lower-HTH Recoil routing to5FFF52; ordinary source groups only, primitive/resource/action/speech boundaries explicit",
+    "corpus_sha256": "63df7b2ed945515eb9285c67ebc0c6bdd53a6aea081a5b45c0ad4739bc0b17bd",
+    "scope": "Correct ordinary source group identities to hexadecimal14/15 (decimal20/21) in the complete4808-case original caller corpus; preserve previous artifacts and compare all numeric observations",
     "full_M15S4_acceptance": false
   },
   "comparison": {
@@ -683,7 +683,8 @@
   ],
   "preregistration_errata": [
     "Earlier initial prose baseHealth100 names a supplied virtual284 current integer Health100. Post-health preregistration corrects that identity before edge-case reruns.",
-    "The harness field killed supplies the common resource sink boolean. Separate instruction inspection verifies that both sink exits return virtual198; the numeric mVictimRemainsAlive input means its inverse. Runtime must resolve the exact native predicate, not substitute a broader lifecycle convenience gate."
+    "The harness field killed supplies the common resource sink boolean. Separate instruction inspection verifies that both sink exits return virtual198; the numeric mVictimRemainsAlive input means its inverse. Runtime must resolve the exact native predicate, not substitute a broader lifecycle convenience gate.",
+    "Ordinary group identity corrected by a fresh4808-case original execution. Scalar inputs, expected flags, consumed draws and row order are byte-identical to the already passing normal/SAN comparison table. See ordinary_group_correction; no original artifacts overwritten."
   ],
   "retained_failures": "Attempts01-03 are retained fixture failures: missing actor base/wrong FatigueRatio return cleanup, then omitted positive base-Speed followup on true resource-sink return. Attempt04 and later compositions pass. Component checks01/02 passed their earlier sources; final03 includes denominator/entry corrections and current tests. No failed attempt is promoted to acceptance.",
   "validation_layers": {
@@ -699,5 +700,81 @@
     "Join common reaction/RNG preparation before blocked Counter/BlockHit routing and lower Recoil. Preserve independently resident native slot0 Stagger and slot3 sequences when later dispatch changes process authority.",
     "Prepare speech/voice/combat notification, resource selection RNG and lifetime bindings within the complete contact transaction before removing rejection. No separate live RNG mutation or callback during speculative preparation.",
     "Complete normal-input and real-output fresh-process courses with the full-caller expected RNG and all remaining M15S4 gates."
-  ]
+  ],
+  "ordinary_group_correction": {
+    "passed": true,
+    "scope": "Previous fixture used decimal14/15 (hex0E/0F) while describing ordinary groups. Corrected original execution explicitly uses0x14/0x15 (decimal20/21). Earlier artifacts retained.",
+    "verification": {
+      "passed": true,
+      "cases": 4808,
+      "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "63df7b2ed945515eb9285c67ebc0c6bdd53a6aea081a5b45c0ad4739bc0b17bd",
+      "scope": "Correct ordinary source group identities to hexadecimal14/15 (decimal20/21) in the complete4808-case original caller corpus; preserve previous artifacts and compare all numeric observations",
+      "full_M15S4_acceptance": false
+    },
+    "numeric_table_audit": {
+      "passed": true,
+      "cases": 4808,
+      "corrected_original_groups": [
+        20,
+        21
+      ],
+      "numeric_table_byte_identical": true,
+      "table_sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82",
+      "prior_comparison": "native-ordinary-hit-reactions-comparison-01/verification.json",
+      "scope": "Only original group identities corrected. All scalar inputs, original expected flags, consumed raw draws and exact row order match the table already compared in normal and SAN builds. No unchanged C++ rerun claimed."
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/cases.tsv",
+        "sha256": "b30123aa23da6f0c6069a85aeabd1d0b7ed7e9931a906a630aabab98aca59e82",
+        "bytes": 344370
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/corpus01.json",
+        "sha256": "63df7b2ed945515eb9285c67ebc0c6bdd53a6aea081a5b45c0ad4739bc0b17bd",
+        "bytes": 2300779
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/extract-numeric.py",
+        "sha256": "95400d5e2b8f46914626016e6182def5e2334d1d8531a2bd39203ed32eb760e8",
+        "bytes": 1258
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/numeric-table-audit.json",
+        "sha256": "2eb370da686fe389a8112bc8c327e4297f4561ab2b030884567ede0a0157687b",
+        "bytes": 534
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/original-exe.json",
+        "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+        "bytes": 661
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/preregistration.json",
+        "sha256": "c17456ff4f79019cf828c690ca7b5b93122f33e3c5f4efd883e59b8aa3617db6",
+        "bytes": 955
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/probe-01.py",
+        "sha256": "96bb7bbb4d40de443e74e6d84b2364afb933b322bee8c379c9b143411d98f78f",
+        "bytes": 9199
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/probe.log",
+        "sha256": "eccc16bbd42dad3ea169fa08d43cdc53a6a6ee2a96346df21570b9cdcb5b6f64",
+        "bytes": 442
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/provenance.json",
+        "sha256": "1fca7cceef9021843a91b566416cec286506cb4576d84d614c12dffe70664be2",
+        "bytes": 342
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-ordinary-hit-group-correction-oracle-01/verification01.json",
+        "sha256": "62d89cb76dc229a60d0e171ebbfb16af7e1f425938486338b7ff06eb2d24af7a",
+        "bytes": 456
+      }
+    ]
+  }
 }

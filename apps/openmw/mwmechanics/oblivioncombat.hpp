@@ -669,6 +669,12 @@ namespace MWMechanics
             explicit PreparedPhysicalContact(std::unique_ptr<Impl> impl);
             friend class OblivionCombatService;
         public:
+            struct VictimHitValues
+            {
+                std::int32_t mHealth, mFatigue, mAgility, mLuck;
+                float mFatigueRatio;
+                friend bool operator==(const VictimHitValues&, const VictimHitValues&) = default;
+            };
             ~PreparedPhysicalContact();
             PreparedPhysicalContact(PreparedPhysicalContact&&) noexcept;
             PreparedPhysicalContact& operator=(PreparedPhysicalContact&&) noexcept;
@@ -678,6 +684,10 @@ namespace MWMechanics
             // Inspect the prepared lifecycle, including this contact's damage,
             // without publishing it or creating a second lifecycle authority.
             bool victimRemainsAlive() const noexcept;
+            // Native current integer queries and Fatigue ratio after this
+            // contact's staged resource changes. Missing/stale/miss/committed
+            // plans have no queryable victim. Never publishes the candidate.
+            std::optional<VictimHitValues> victimHitValues() const;
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;

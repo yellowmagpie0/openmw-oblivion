@@ -11696,3 +11696,45 @@ to manufacture a BlockHit over this guarded action.
 pins the original executable identity, complete probe and corpus. The editable
 case protocol accompanies it. Production common-hit integration and full M15S4
 acceptance remain open.
+
+
+## Prepared post-contact hit queries and blocked continuation
+
+Prepared contacts now expose a copied, validated snapshot of post-resource
+current integer Health/Fatigue/Agility/Luck and the post-Fatigue ratio. The
+query uses staged block spending and hostile resource changes without publishing
+them. Exact NPC form Health above binary32 precision remains intact; Player
+composition, god mode and Creature Fatigue policy match the commit path. Stale,
+missed, committed and destroyed-owner plans have no queryable victim. No RNG,
+callback, wire change or new automatic contact admission is added.
+
+Full normal and ASan/UBSan engine inventories each pass1,851 tests in125 suites
+with no failures/skips at fingerprint
+`f87b68d24317a8502b79faac7d2a7e95845cbe3a4e5d36fa15b5f323db0442c9`
+(parentad624d679b). Tests establish fractional pre-commit visibility, unchanged
+live/serialized state, exact integerHealth16777213 after fractional damage to
+formHealth16777217, post-commit equality and expired lease rejection. The five
+numeric helper/component-test source pins from the prior checkpoint remain
+unchanged. Earlier original fixtures supplied decimal14/15 while naming
+ordinary groups0x14/0x15. A fresh corrected4,808-case native run explicitly
+uses decimal20/21 and yields a byte-identical numeric table; this preserves
+the normal/SAN C++ comparison evidence. The old receipt now records the
+correction and retains its earlier artifacts. Leak checking is off; UBSan halts on errors.
+
+A separate512-case original instruction composition now joins the common hit
+resource prefix and actual paired Stagger activation to full Counter and Master
+queries. Counter is selected256 times but activates zero times: action8 guards
+blocked playback. Counter success skips Master/Recoil; misses make256 Master
+queries and256 attacker Recoil requests. Eligible Master paths take16 draws and
+make8 drop requests, with4 null and4 nonnull supplied sink returns. These are
+request/order observations, not actual dropped-item acceptance. Player action8,
+Stagger slot0 and existing slot3 bindings persist. Earlier combined-fixture
+errors are retained. Primitive/resource/speech/target-drop/target-action/scene
+boundaries exclude real damage, inventory publication, rendering and gameplay.
+
+[M15-PREPARED-HIT-VALUES-VERIFICATION.json](M15-PREPARED-HIT-VALUES-VERIFICATION.json)
+pins code, final engine checks, the original composition and editable case
+protocol. The next integration must use staged values, keep Counter selection
+separate from playback admission, and respect speech/sequence-selection RNG
+between the common prefix and later defensive rolls. Full common-hit runtime
+publication and M15S4 E2E acceptance remain open.

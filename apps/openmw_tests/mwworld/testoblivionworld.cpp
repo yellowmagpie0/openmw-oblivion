@@ -21093,6 +21093,44 @@ namespace
         EXPECT_TRUE(service.isActionConsumed(action));
     }
 
+    TEST(OblivionWorldTest, PreparedHitQueriesUsePostDamageIntegersWithoutPublishing)
+    {
+        for (int health : {100, 16777217})
+        {
+            SCOPED_TRACE(health);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901, health);
+            ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+            auto& service = *world.getOblivionCombatService();
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 10, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 20));
+            ASSERT_EQ(service.getNonPlayerValue(victim, 10), 20);
+            ASSERT_EQ(service.getNonPlayerIntegerValue(victim, 8), health);
+            const auto id = world.beginOblivionPhysicalAction(attacker);
+            const auto before = contactSnapshot(fixture, {attacker, victim});
+            auto plan = prepareContact(fixture, id, attacker, victim, {-7, -3.25f, -.5f, -2.25f});
+            ASSERT_TRUE(plan);
+            const auto query = plan->victimHitValues(); ASSERT_TRUE(query);
+            EXPECT_EQ(query->mHealth, health - 4); // Includes exact int32 form Health above binary32 precision.
+            EXPECT_EQ(query->mFatigue, 17);
+            EXPECT_EQ(query->mAgility, service.getNonPlayerIntegerValue(victim, 3));
+            EXPECT_EQ(query->mLuck, service.getNonPlayerIntegerValue(victim, 7));
+            EXPECT_FLOAT_EQ(query->mFatigueRatio, 17.25f / 20);
+            EXPECT_EQ(contactSnapshot(fixture, {attacker, victim}), before);
+            EXPECT_EQ(service.getNonPlayerIntegerValue(victim, 8), health);
+            EXPECT_EQ(service.getNonPlayerIntegerValue(victim, 10), 20);
+            EXPECT_EQ(plan->victimHitValues(), query);
+            ASSERT_TRUE(plan->commit());
+            EXPECT_FALSE(plan->victimHitValues());
+            EXPECT_EQ(query->mHealth, service.getNonPlayerIntegerValue(victim, 8));
+            EXPECT_EQ(query->mFatigue, service.getNonPlayerIntegerValue(victim, 10));
+            const auto missId = world.beginOblivionPhysicalAction(attacker);
+            auto miss = prepareContact(fixture, missId, attacker, {}, {-7, 0, 0});
+            ASSERT_TRUE(miss); EXPECT_FALSE(miss->victimHitValues());
+        }
+    }
+
     TEST(OblivionWorldTest, PreparedPhysicalContactRejectsChangedAuthorityGeometryAndProjectionOwners)
     {
         for (int change = 0; change < 8; ++change)
@@ -21117,6 +21155,7 @@ namespace
             else service.cancelActorActions(a.getCellRef().getFormKey());
             const auto before = contactSnapshot(fixture, {a, b});
             EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+            EXPECT_FALSE(prepared->victimHitValues());
             EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
         }
     }
@@ -21151,6 +21190,7 @@ namespace
             ASSERT_TRUE(retained); ASSERT_TRUE(retained->isValid());
             if (clear) world.clear(); else fixture.reset();
             EXPECT_FALSE(retained->isValid()); EXPECT_FALSE(retained->commit());
+            EXPECT_FALSE(retained->victimHitValues());
             retained.reset();
         }
     }
