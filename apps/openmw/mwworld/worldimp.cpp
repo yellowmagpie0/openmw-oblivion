@@ -3745,6 +3745,9 @@ namespace MWWorld
         Scene* mScene;
         bool mGodMode;
         unsigned mRandomDraws = 0;
+        std::uint64_t mId = 0;
+        Ptr mAttacker, mVictim;
+        bool mCommitted = false, mCanContinue = false, mSuppressBlockHit = false;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
@@ -3781,6 +3784,20 @@ namespace MWWorld
             && (!world.mRetainedSimulation || world.mRetainedSimulation->mDetached);
     }
 
+    std::unique_ptr<World::PreparedOblivionPhysicalContact>
+    World::PreparedOblivionPhysicalContact::prepareContinuation(
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
+    {
+        if (!mData || !mData->mCommitted || !mData->mCanContinue || mData->mIdentity.expired()) return nullptr;
+        auto& world = *mData->mWorld;
+        if (world.mOblivionClearGeneration != mData->mGeneration
+            || world.mOblivionCombat.get() != mData->mCombat || world.mPlayer.get() != mData->mPlayer
+            || world.mPhysics.get() != mData->mPhysics || world.mWorldScene.get() != mData->mScene)
+            return nullptr;
+        return world.prepareOblivionPhysicalContactImpl(mData->mId, mData->mAttacker, mData->mVictim,
+            deltas, blockHit, attackerRecoil, this);
+    }
+
     bool World::PreparedOblivionPhysicalContact::commit()
     {
         if (!isValid()) return false;
@@ -3789,6 +3806,7 @@ namespace MWWorld
             if (!data.mContact->commit()) std::terminate();
             for (auto& notification : data.mNotifications)
                 if (!notification->commit()) std::terminate();
+            data.mCommitted = true;
         };
         if (mData->mDrops)
             return !mData->mDrops->commit({this,
@@ -3840,8 +3858,17 @@ namespace MWWorld
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
     {
+        return prepareOblivionPhysicalContactImpl(id, attacker, victim, deltas, blockHit, attackerRecoil, nullptr);
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactImpl(
+        std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
+        PreparedOblivionPhysicalContact* previous)
+    {
         validateOblivionContactDisarms(deltas);
-        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas, blockHit, attackerRecoil);
+        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas,
+            blockHit, attackerRecoil, previous);
         if (!contact) return nullptr;
         // Defensive mastery can select a disarm while resources are prepared.
         // Its resolved request must reach the same drop factory as an explicit
@@ -3909,7 +3936,8 @@ namespace MWWorld
 
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactResources(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
-        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
+        PreparedOblivionPhysicalContact* previous)
     {
         if (!mOblivionCombat || attacker.isEmpty())
             return nullptr;
@@ -3917,7 +3945,7 @@ namespace MWWorld
         if (!player && attacker.getType() != ESM::REC_NPC_4 && attacker.getType() != ESM::REC_CREA4)
             return nullptr;
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
-        if (!mOblivionCombat->isActionPending(id, key))
+        if (!previous && !mOblivionCombat->isActionPending(id, key))
             return nullptr;
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
@@ -4022,8 +4050,14 @@ namespace MWWorld
             || (!victim.isEmpty() && !prepareHeldCancellation(victim,
                 preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
         if (!prepareHeldEquipment()) return nullptr;
-        auto contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(), essential,
-            recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+        const auto prepare = [&] {
+            const auto base = resolveOblivionPlayerDynamicBaseSettings(mStore);
+            return previous ? previous->mData->mContact->prepareContinuation(preparedDeltas, mPlayer.get(), base,
+                                  getGodModeState())
+                            : mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
+                                  essential, recovery, base, getGodModeState());
+        };
+        auto contact = prepare();
         if (!contact) return nullptr;
         const bool defensiveQuery = blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive();
         bool counterSelected = deltas.mVictimCounterRequested;
@@ -4036,10 +4070,11 @@ namespace MWWorld
         }
         const bool stagger = preparedDeltas.mVictimReaction
             && preparedDeltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger;
-        if (blockHit && !counterSelected && !stagger && contact->victimRemainsAlive()
-            && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+        const bool suppressBlockHit = (previous && previous->mData->mSuppressBlockHit)
+            || std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
                 return change.mOwner == victim && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
-            }))
+            });
+        if (blockHit && !counterSelected && !stagger && contact->victimRemainsAlive() && !suppressBlockHit)
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
         }
@@ -4054,12 +4089,16 @@ namespace MWWorld
         if (!prepareHeldEquipment()) return nullptr;
         if (defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
-            contact = mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
-                essential, recovery, resolveOblivionPlayerDynamicBaseSettings(mStore), getGodModeState());
+            contact = prepare();
             if (!contact) return nullptr;
         }
         auto data = std::make_unique<PreparedOblivionPhysicalContact::Data>();
         data->mWorld = this;
+        data->mId = id;
+        data->mAttacker = attacker;
+        data->mVictim = victim;
+        data->mCanContinue = !previous && !blockHit && !attackerRecoil;
+        data->mSuppressBlockHit = suppressBlockHit;
         data->mIdentity = mOblivionRestoreIdentity;
         data->mGeneration = mOblivionClearGeneration;
         data->mCombat = mOblivionCombat.get();

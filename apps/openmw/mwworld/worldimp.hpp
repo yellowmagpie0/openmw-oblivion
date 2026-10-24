@@ -471,6 +471,12 @@ namespace MWWorld
             // Revalidate the selected World simulation after external admission.
             bool isValid() const noexcept;
             unsigned randomDraws() const noexcept;
+            // A synchronous callback may change gear, AVs, process state or
+            // the active view after damage. Continue using those live inputs,
+            // with one shared publication right and no resource replay.
+            std::unique_ptr<PreparedOblivionPhysicalContact> prepareContinuation(
+                const MWMechanics::OblivionPhysicalContactDeltas& deltas,
+                bool blockHit = false, bool attackerRecoil = false);
             // Scene admission may throw before any contact resources publish.
             bool commit();
         };
@@ -1076,10 +1082,14 @@ namespace MWWorld
         bool prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         bool prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,
             ESM4::MeleeReactionKind kind, bool attacking, MWMechanics::OblivionPhysicalContactDeltas& deltas);
+        std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactImpl(
+            std::uint64_t id, const Ptr& attacker, const Ptr& victim,
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit,
+            bool attackerRecoil, PreparedOblivionPhysicalContact* previous);
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
-            bool attackerRecoil = false);
+            bool attackerRecoil = false, PreparedOblivionPhysicalContact* previous = nullptr);
     };
 }
 

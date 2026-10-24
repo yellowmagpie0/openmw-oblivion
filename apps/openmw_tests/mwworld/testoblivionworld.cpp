@@ -21159,6 +21159,252 @@ namespace
         EXPECT_TRUE(service.isActionConsumed(action));
     }
 
+    TEST(OblivionWorldTest, ContactContinuationRequeriesAfterCallbacksWithoutRepeatingDamage)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        const auto id = world.beginOblivionPhysicalAction(a);
+        auto hit = prepareContact(fixture, id, a, b, {-7, -3, -1, -2}); ASSERT_TRUE(hit);
+        EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+        ASSERT_TRUE(hit->commit());
+        // A synchronous speech result can change current process/AV state.
+        service.setProcessKnockedState(b.getCellRef().getFormKey(), 3);
+        const auto before = contactSnapshot(fixture, {a, b});
+        auto cancelled = hit->prepareContinuation({}, nullptr, settings); ASSERT_TRUE(cancelled);
+        cancelled.reset();
+        auto first = hit->prepareContinuation({}, nullptr, settings);
+        auto competing = hit->prepareContinuation({}, nullptr, settings);
+        ASSERT_TRUE(first); ASSERT_TRUE(competing);
+        ASSERT_TRUE(first->victimHitValues());
+        EXPECT_EQ(first->victimHitValues()->mHealth, service.getNonPlayerIntegerValue(b, 8));
+        ASSERT_TRUE(first->commit());
+        EXPECT_FALSE(first->commit()); EXPECT_FALSE(competing->isValid()); EXPECT_FALSE(competing->commit());
+        EXPECT_FALSE(first->prepareContinuation({}, nullptr, settings));
+        EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+        EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_FALSE(prepareContact(fixture, id, a, b, {-7, -3, -1, -2}));
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationRejectsResourceReplayAndStalePreparations)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        auto hit = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, b, {-7, -3, -1});
+        ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+        for (int member = 0; member < 6; ++member)
+        {
+            MWMechanics::OblivionPhysicalContactDeltas invalid;
+            switch (member)
+            {
+                case 0: invalid.mAttackerFatigue = -1; break;
+                case 1: invalid.mVictimHealth = -1; break;
+                case 2: invalid.mVictimFatigue = -1; break;
+                case 3: invalid.mVictimBlockFatigue = -1; break;
+                case 4: invalid.mOrdinaryHitArguments.emplace(); break;
+                case 5: invalid.mKnockback.emplace(); break;
+            }
+            EXPECT_THROW(hit->prepareContinuation(invalid, nullptr, settings), std::invalid_argument);
+        }
+        MWMechanics::OblivionPhysicalContactDeltas tail;
+        tail.mRandomTransition = service.prepareCombatRandom(1);
+        auto stale = hit->prepareContinuation(tail, nullptr, settings); ASSERT_TRUE(stale);
+        service.setProcessKnockedState(b.getCellRef().getFormKey(), 3);
+        EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit());
+        // The rejected plan did not spend the continuation or its RNG draw.
+        auto next = hit->prepareContinuation(tail, nullptr, settings); ASSERT_TRUE(next);
+        ASSERT_TRUE(next->commit());
+        EXPECT_EQ(service.combatRandomState(), tail.mRandomTransition->mNextState);
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationDoesNotDuplicateTerminalDeathOrContinueAMiss)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        auto hit = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, b, {-7, -1000, 0});
+        ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+        const auto before = contactSnapshot(fixture, {a, b});
+        auto tail = hit->prepareContinuation({}, nullptr, settings); ASSERT_TRUE(tail);
+        ASSERT_TRUE(tail->commit());
+        EXPECT_EQ(contactSnapshot(fixture, {a, b}), before);
+        auto other = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, {}, {-1, 0, 0});
+        ASSERT_TRUE(other); ASSERT_TRUE(other->commit());
+        EXPECT_FALSE(other->prepareContinuation({}, nullptr, settings));
+        service.clear();
+        EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationExpiresAtFrameAndRestoreBoundaries)
+    {
+        for (bool restore : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            auto& service = *world.getOblivionCombatService();
+            const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+            auto hit = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, b, {-1, -1, 0});
+            ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+            auto tail = hit->prepareContinuation({}, nullptr, settings); ASSERT_TRUE(tail);
+            if (restore)
+            {
+                auto saved = captureNativeActorState(fixture, a);
+                saved.mReferences.push_back(captureNativeActorState(fixture, b).mReferences.front());
+                service.restore(saved, world.getStore());
+            }
+            else
+            {
+                // Retaining a copy must not keep the live frame lease alive.
+                const auto retained = service;
+                service.advanceFrameClock(0);
+                EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+                EXPECT_FALSE(tail->isValid()); EXPECT_FALSE(tail->commit());
+            }
+            EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+            EXPECT_FALSE(tail->isValid()); EXPECT_FALSE(tail->commit());
+        }
+    }
+
+    TEST(OblivionWorldTest, WorldContactContinuationPublishesAReactionWithoutReopeningTheHit)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = b.getCellRef().getFormKey();
+        service.setProcessAction(key, 6);
+        const auto id = world.beginOblivionPhysicalAction(a);
+        auto hit = world.prepareOblivionPhysicalContact(id, a, b, {-7, -3, -1}); ASSERT_TRUE(hit);
+        EXPECT_FALSE(hit->prepareContinuation({}));
+        ASSERT_TRUE(hit->commit());
+        const auto health = service.getNonPlayerValue(b, 8), fatigue = service.getNonPlayerValue(b, 10);
+        MWMechanics::OblivionPhysicalContactDeltas request;
+        request.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+            ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"};
+        request.mRandomTransition = service.prepareCombatRandom(1);
+        auto first = hit->prepareContinuation(request), second = hit->prepareContinuation(request);
+        ASSERT_TRUE(first); ASSERT_TRUE(second); EXPECT_EQ(first->randomDraws(), 1u);
+        ASSERT_TRUE(first->commit());
+        EXPECT_FALSE(first->commit()); EXPECT_FALSE(second->commit());
+        EXPECT_FALSE(first->prepareContinuation({})); EXPECT_FALSE(hit->prepareContinuation({}));
+        const auto* melee = service.findMeleeState(key); ASSERT_TRUE(melee); ASSERT_TRUE(melee->mReaction);
+        EXPECT_EQ(melee->mReaction->mContactId, id);
+        EXPECT_EQ(melee->mReaction->mKind, ESM4::MeleeReactionKind::BlockHit);
+        EXPECT_EQ(service.getNonPlayerValue(b, 8), health); EXPECT_EQ(service.getNonPlayerValue(b, 10), fatigue);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_EQ(service.combatRandomState(), request.mRandomTransition->mNextState);
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationPreservesSynchronousSpeechResultWrites)
+    {
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto sub = [&](std::uint32_t tag, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+        };
+        const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(std::uint32_t{})
+                + bytes(id) + bytes(std::uint32_t{}) + data;
+        };
+        const auto quest = record(ESM4::REC_QUST, 0x900,
+            sub(ESM::fourCC("EDID"), std::string("VoiceQuest\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string("\x01\x32", 2)));
+        const auto topic = record(ESM4::REC_DIAL, 0x901,
+            sub(ESM::fourCC("EDID"), std::string("VoiceTopic\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(1, '\x02')));
+        const auto info = record(ESM4::REC_INFO, 0x902,
+            sub(ESM::fourCC("DATA"), std::string{'\x02', '\0', '\0'})
+            + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{0x900}))
+            + sub(ESM::fourCC("SCTX"), "ModAV Health -2\n"));
+        const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
+            + bytes(std::uint32_t{0x901}) + bytes(std::uint32_t{7}) + bytes(std::uint32_t{}) + info;
+        NativeWorldFixture fixture(false, false, false, {}, {}, quest + topic + group, 4);
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0xa00), b = addNativeNpc(fixture, 0xa01);
+        world.getWorldModel().registerPtr(b);
+        ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+        auto& service = *world.getOblivionCombatService();
+        const auto health = service.getNonPlayerValue(b, 8);
+        auto hit = world.prepareOblivionPhysicalContact(world.beginOblivionPhysicalAction(a), a, b, {-7, -3, -1});
+        ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+        auto stale = hit->prepareContinuation({}); ASSERT_TRUE(stale);
+        // Exercise the production synchronous INFO result VM between phases.
+        // This is scripted Say, not an automatic hit-speech admission test.
+        auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+        ObScript::RuntimeContext context; context.mSelf = b.getCellRef().getFormKey();
+        const std::vector<ObScript::Value> arguments{
+            ObScript::ReferenceValue{ESM::FormKey::content("headless.esm", 0x901), {}}};
+        EXPECT_EQ(ObScript::asNumber(scripts->call("Say", std::nullopt, arguments, context, {})), 0);
+        ASSERT_EQ(service.getNonPlayerValue(b, 8), health - 5);
+        EXPECT_FALSE(stale->commit());
+        auto tail = hit->prepareContinuation({}); ASSERT_TRUE(tail); ASSERT_TRUE(tail->commit());
+        EXPECT_EQ(service.getNonPlayerValue(b, 8), health - 5);
+        EXPECT_TRUE(scripts->hasSpokenDialogueInfo(ESM::FormKey::content("headless.esm", 0x902)));
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationRejectsAlreadySelectedConsequences)
+    {
+        for (unsigned mode = 0; mode < 4; ++mode)
+        {
+            SCOPED_TRACE(mode);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            auto& service = *world.getOblivionCombatService();
+            const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+            service.setProcessAction(b.getCellRef().getFormKey(), 6);
+            b.getClass().getCreatureStats(b).setDrawState(MWMechanics::DrawState::Weapon);
+            MWMechanics::OblivionPhysicalContactDeltas request;
+            std::uint64_t id;
+            if (mode == 3)
+            {
+                const auto key = a.getCellRef().getFormKey();
+                a.getClass().getCreatureStats(a).setDrawState(MWMechanics::DrawState::Weapon);
+                id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+                ASSERT_TRUE(service.bindMeleePlayback(id, key));
+                const std::array<float, 3> keys{0, .5f, 1};
+                for (float dt : {0.f, .25f, .25f, .25f})
+                    ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, dt, 1, 0, 1, keys));
+                ASSERT_TRUE(service.isMeleeContactPending(id, key));
+            }
+            else id = world.beginOblivionPhysicalAction(a);
+            if (mode == 0)
+                request.mVictimReaction = ESM4::RuntimeMeleeReaction{id,
+                    ESM4::MeleeReactionKind::BlockHit, "handtohandblockhit"};
+            else if (mode == 1) request.mVictimCounterRequested = true;
+            if (mode == 2)
+            {
+                // Even missing animation leaves a completed blocked dispatch,
+                // rather than granting a second consequence-selection phase.
+                auto hit = world.prepareOblivionPhysicalContact(id, a, b, request, true);
+                ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+                EXPECT_FALSE(hit->prepareContinuation({}));
+            }
+            else
+            {
+                auto hit = prepareContact(fixture, id, a, b, request); ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+                EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
+            }
+            EXPECT_TRUE(service.isActionConsumed(id));
+        }
+    }
+
     TEST(OblivionWorldTest, PreparedHitQueriesUsePostDamageIntegersWithoutPublishing)
     {
         for (int health : {100, 16777217})

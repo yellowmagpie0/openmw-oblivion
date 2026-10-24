@@ -12481,3 +12481,31 @@ This is a production writer/reference-resolution checkpoint. Automatic
 common-hit callbacks, speech, counters and their save/expiry lifecycle,
 remaining disposition contexts and actor-reset policy, Player audio and the
 full S4 normal-input/restart matrix remain open.
+
+
+### Same-frame contact continuation checkpoint (2026-10-23)
+
+An accepted native resource prefix can now prepare one World/service
+continuation after synchronous callbacks. Alternative preparations share one
+publication right. The continuation re-reads live participant state, stages
+reactions/RNG/disarms through the existing World validation and drop path, and
+cannot replay damage, wear, knockback, or attack-action consumption. Frame
+advancement (including zero duration), restore, clear, and destroyed owners
+invalidate its authority; retained service copies cannot extend a frame lease.
+Already selected final consequences and Counter phase 1 cannot continue.
+Terminal death does not generate a second event. Runtime schema remains 66.
+
+Seven new engine tests include a compiled scripted `Say` INFO result between
+original damage and continuation: Health debits of 3 and 2 remain a total of 5 after
+continuation, and a pre-result plan rejects. Another test publishes a
+BlockHit state using the consumed original cause. Full normal and ASan/UBSan engine
+inventories each pass **1,895/1,895**, with no skips; leak detection is disabled.
+The tested C++ patch, source fingerprint and artifact hashes are pinned in
+[M15-CONTACT-CONTINUATION-VERIFICATION.json](M15-CONTACT-CONTINUATION-VERIFICATION.json).
+No fresh component/Python run is claimed for these app-only changes.
+
+The new capability is **not yet called by normal melee**. It is a prerequisite
+for damage -> automatic speech/results -> fresh knocked/facing -> reaction/block
+ordering. These tests do not establish automatic hit-speech admission, rendered
+normal-input combat, sound playback, or fresh-process gameplay acceptance.
+M15S4 remains incomplete; all open producer and gameplay/restart gates remain.

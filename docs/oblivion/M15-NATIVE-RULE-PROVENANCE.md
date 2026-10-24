@@ -18138,3 +18138,46 @@ This is a production writer/reference-resolution checkpoint. Automatic
 common-hit callbacks, speech, counters and their save/expiry lifecycle,
 remaining disposition contexts and actor-reset policy, Player audio and the
 full S4 normal-input/restart matrix remain open.
+
+
+### Automatic voice continuation prerequisites (2026-10-23)
+
+The original 1.2.0416 image hash remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The 2,160-case `native-automatic-hit-response-oracle-04` executes the complete
+NPC/shared Player voice helper 616530, actual type/topic getters, response
+iteration and 6B7C30/531470 callback. Declared INFO allocation/selection, playback,
+AddTopics, event-data/VM, modification and teardown boundaries remain. With one
+or two supplied responses, only the first is played before temporary response
+destruction. Playback precedes the response callback even for duration 0.
+An empty first response skips callback/history. Flag 8 skips the response
+callback; flag 16 suppresses only the HasSaid mark. The VM boundary mutates a
+supplied knocked byte; no real VM or audio executes in this oracle.
+
+Actual float-stored distance compares admit 1,000 and reject 1,001 when the supplied
+global count 5 exceeds compiled INI threshold 4, unless the listener is
+the Player. These are compiled INI values, not GMSTs or evidence of installed
+configuration/live target-count production. Original builtin table group 2,
+index 1 resolves the `Hit` topic form DD.
+
+`native-creature-voice-order-oracle-01` executes original 519880 with actual
+446CB0/67B1E0 list operations, then 519AD0 filename selection: 6,912 insertion
+corpora and 41,472 selector observations. Native insertion sorts **ascending
+chance, stably on ties**. Each non-null sound consumes a separate raw CRT draw,
+including chance 0; null sounds consume none. Selection stops at the first
+raw%100<chance success. The declared boundaries supply 8-byte allocations and
+raw draws. Raw chance 255 cases describe a byte rule beyond the fork's current
+CSDC parser 0..100 domain. Record-loader execution/audio are excluded.
+`native-creature-voice-selection-oracle-02` separately executes 3,888 inherited,
+own, missing-base and unowned-terminal selector cases. The first inheritance
+harness's duplicated null-root layout and the two automatic-response harness
+setup failures remain retained and excluded from accepted evidence.
+
+These probes establish ordering prerequisites; no C++ voice-parity comparison
+or automatic melee runtime result is claimed. The World/service continuation
+capability is independently exercised through compiled scripted `Say` results
+and lifetime/one-shot transaction tests. Normal melee still needs to call it.
+The exact source/patch, full 1,895-case normal and sanitizer engine inventories,
+editable case manifest, declared boundaries and artifact hashes are recorded in
+[M15-CONTACT-CONTINUATION-VERIFICATION.json](M15-CONTACT-CONTINUATION-VERIFICATION.json).
+M15S4 remains incomplete.

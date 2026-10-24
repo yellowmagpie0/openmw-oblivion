@@ -721,6 +721,7 @@ namespace MWMechanics
     {
         if (!std::isfinite(duration) || duration < 0.f)
             throw std::invalid_argument("native frame clock requires finite nonnegative elapsed time");
+        mContactFrameIdentity.mValue.reset();
         mActorManagerTime = ESM4::advanceActorManagerTime(mActorManagerTime, duration);
     }
 
@@ -2765,6 +2766,11 @@ namespace MWMechanics
             std::unique_ptr<MWWorld::InventoryStore::PreparedUnequip> mPreparation;
         };
         std::vector<Unequip> mUnequips;
+        // All continuations prepared from this contact compete for one right.
+        std::shared_ptr<bool> mContinuation = std::make_shared<bool>(false);
+        std::weak_ptr<const char> mFrameIdentity;
+        bool mIsContinuation = false;
+        bool mCanContinue = false;
         bool mCommitted = false;
     };
 
@@ -2825,6 +2831,26 @@ namespace MWMechanics
             : nonPlayerFloat(*values, value, mImpl->mOwner->findActorBase(values->mBase));
     }
 
+    std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
+    OblivionCombatService::PreparedPhysicalContact::prepareContinuation(
+        const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
+    {
+        if (!mImpl || !mImpl->mCommitted || !mImpl->mCanContinue || *mImpl->mContinuation
+            || mImpl->mIdentity.expired() || mImpl->mFrameIdentity.expired()
+            || mImpl->mAttacker.mIdentity.expired()
+            || !mImpl->mVictim || mImpl->mVictim->mIdentity.expired()) return nullptr;
+        // This is a capability carried by the committed contact, not a general
+        // permission to publish more effects for an arbitrary consumed ID.
+        if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
+            || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
+            || deltas.mKnockback || deltas.mOrdinaryHitArguments)
+            throw std::invalid_argument("native contact continuation cannot repeat damage or wear");
+        return mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
+            mImpl->mAttacker.mActor, mImpl->mVictim->mActor, deltas, player, false, {},
+            playerBase, playerGodMode, mImpl->mContinuation);
+    }
+
     void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
     {
         if (!mImpl || !mImpl->mCommitted || mImpl->mIdentity.expired()) return;
@@ -2839,6 +2865,18 @@ namespace MWMechanics
         bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
         const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
     {
+        return preparePhysicalContactImpl(id, attacker, victim, deltas, player, victimEssential,
+            recovery, playerBase, playerGodMode, {});
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
+    OblivionCombatService::preparePhysicalContactImpl(std::uint64_t id,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+        bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
+        const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode,
+        std::shared_ptr<bool> continuation)
+    {
         const auto actorKey = [&](const MWWorld::Ptr& ptr) {
             if (ptr.isEmpty())
                 throw std::invalid_argument("native physical contact has no attacker");
@@ -2846,7 +2884,7 @@ namespace MWMechanics
                 ? ESM::FormKey::dynamic("player", 1) : ptr.getCellRef().getFormKey();
         };
         const auto attackerKey = actorKey(attacker);
-        if (!isActionPending(id, attackerKey))
+        if (continuation ? (*continuation || !isActionConsumed(id)) : !isActionPending(id, attackerKey))
             return nullptr;
         // A draw ID belongs to the release transaction, never a melee contact
         // or an in-flight impact. Reject before resource/RNG preparation.
@@ -2867,7 +2905,7 @@ namespace MWMechanics
                 validateNonPlayerIdentity(ptr, *values);
             return values;
         };
-        if (const auto* melee = findMeleeState(attackerKey); melee && melee->mAiIntent && melee->mStrike
+        if (const auto* melee = findMeleeState(attackerKey); !continuation && melee && melee->mAiIntent && melee->mStrike
             && melee->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
             && melee->mStrike->mActionId == id && !victim.isEmpty()
             && actorKey(victim) != melee->mAiIntent->mTarget)
@@ -2947,7 +2985,7 @@ namespace MWMechanics
                 throw std::invalid_argument("native physical contact cannot target its own attacker");
             receiving = *validateActor(victim, victimKey);
             receivingLife = *findActorLife(victimKey);
-            if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead)
+            if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead && !continuation)
                 return nullptr;
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, victim, 8, deltas.mVictimHealth);
@@ -2958,7 +2996,7 @@ namespace MWMechanics
                 && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
                 receivingLife = prepareHealthReaction(*receiving, victimEssential, recovery, playerGodMode, attackerKey);
             receiving->validate();
-            transition = prepareLifeTransition(*receivingLife);
+            if (!continuation) transition = prepareLifeTransition(*receivingLife);
         }
         spendFatigue(attacking, attacker, deltas.mAttackerFatigue);
         std::optional<decltype(mActorKnockback)> knockback;
@@ -3661,8 +3699,18 @@ namespace MWMechanics
         data->mOwner = this;
         data->mIdentity = mPreparedReleaseIdentity.mValue;
         data->mId = id;
+        if (!mContactFrameIdentity.mValue) mContactFrameIdentity.mValue = std::make_shared<const char>();
+        data->mFrameIdentity = mContactFrameIdentity.mValue;
+        data->mIsContinuation = bool(continuation);
+        if (continuation) data->mContinuation = std::move(continuation);
         data->mAttacker.capture(*this, attacker, attackerKey);
         if (receiving) data->mVictim.emplace().capture(*this, victim, victimKey);
+        // A resource prefix may continue once. Already selected consequences
+        // and Counter's separate phase1 path must not grant another tail.
+        data->mCanContinue = !data->mIsContinuation && receiving && !deltas.mAttackerReaction
+            && !deltas.mVictimReaction && !deltas.mVictimCounterRequested && !deltas.mVictimCounter
+            && deltas.mDisarms.empty() && (!data->mAttacker.mMelee || !data->mAttacker.mMelee->mStrike
+                || data->mAttacker.mMelee->mStrike->mKind != ESM4::MeleeStrikeKind::Counter);
         for (const auto& [action, owner] : mActionOwners)
             if (owner == attackerKey || (receiving && owner == victimKey))
                 data->mOwnedActions.emplace_back(action, owner);
@@ -3699,7 +3747,9 @@ namespace MWMechanics
         const auto* data = contact.mImpl.get();
         if (!data || data->mCommitted || data->mIdentity.expired() || data->mOwner != this
             || data->mIdentity.lock() != mPreparedReleaseIdentity.mValue
-            || !isActionPending(data->mId, data->mAttacker.mValues.mActor)
+            || (data->mIsContinuation ? (*data->mContinuation || data->mFrameIdentity.expired()
+                    || !isActionConsumed(data->mId))
+                : !isActionPending(data->mId, data->mAttacker.mValues.mActor))
             || !data->mAttacker.valid(*this) || (data->mVictim && !data->mVictim->valid(*this)))
             return false;
         const auto& attackerKey = data->mAttacker.mValues.mActor;
@@ -3792,7 +3842,8 @@ namespace MWMechanics
         }
         while (!data.mReactionClocks.empty())
             mAnimationClocks.insert(data.mReactionClocks.extract(data.mReactionClocks.begin()));
-        consumeContactAction(data.mId, attackerKey);
+        if (data.mIsContinuation) *data.mContinuation = true;
+        else consumeContactAction(data.mId, attackerKey);
         if (data.mTransition)
         {
             mPendingDeathEvents.swap(data.mTransition->mEvents);

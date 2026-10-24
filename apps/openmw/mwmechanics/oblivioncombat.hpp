@@ -431,6 +431,7 @@ namespace MWMechanics
         std::deque<ESM4::RuntimeActorDeathEvent> mPendingDeathEvents;
         std::map<ESM::FormKey, std::uint16_t> mDeathCounts;
         std::map<ESM::FormKey, float> mActorBreath;
+        PreparedReleaseIdentity mContactFrameIdentity;
         float mActorManagerTime = 0;
         std::map<ESM::FormKey, float> mActorUpdateTimes;
         std::map<ESM::FormKey, std::set<ESM::FormKey>> mCombatOpponents;
@@ -735,6 +736,14 @@ namespace MWMechanics
             // for dialogue conditions. Other AVs and disabled raw-form queries
             // remain unchanged. Stale/committed/missing participants return none.
             std::optional<float> resourceActorValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+            // Continue this accepted contact after synchronous script callbacks.
+            // Requeries the live participants; never reapplies resource damage,
+            // wear or knockback, and never reopens the consumed attack action.
+            // Alternative preparations share one publication right. Restoring
+            // the service or destroying a participant invalidates that right.
+            std::unique_ptr<PreparedPhysicalContact> prepareContinuation(
+                const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+                const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode = false);
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;
@@ -744,6 +753,14 @@ namespace MWMechanics
             const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
             bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
             const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode = false);
+    private:
+        std::unique_ptr<PreparedPhysicalContact> preparePhysicalContactImpl(std::uint64_t id,
+            const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+            const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
+            bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
+            const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode,
+            std::shared_ptr<bool> continuation);
+    public:
         // Revalidate after fallible external admission. No allocation/callback
         // in validation or publication; stale participants leave all unchanged.
         bool validatePhysicalContact(const PreparedPhysicalContact& contact) const noexcept;

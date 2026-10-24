@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "scope": "Same-frame physical-contact continuation capability and independent automatic-voice ordering prerequisites",
+  "full_M15S4_acceptance": false,
+  "normal_melee_caller_integrated": false,
+  "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "runtime_schema": 66,
+  "capability_cases": [
+    "Preparation before accepted parent commit or after a miss returns no continuation.",
+    "Alternative plans share one publication right; discarding or rejecting a stale plan does not spend it.",
+    "Already selected reactions, blocked dispatch, disarm and Counter phase 1 do not grant another consequence phase.",
+    "Resource debits, wear, knockback and ordinary-hit input cannot replay in a continuation.",
+    "Requery current actor values/process state after synchronous callbacks; stale plans reject without publication.",
+    "A compiled scripted Say INFO result ModAV Health -2 between original Health -3 and continuation retains total Health -5.",
+    "World continuation publishes a BlockHit with the consumed original cause and stages its own RNG transition.",
+    "Terminal death continuation does not add a second death event or repeat resource damage.",
+    "Frame advancement, even zero duration, expires continuation rights despite retained service copies; restore/clear invalidate prior service rights."
+  ],
+  "native_automatic_voice": {
+    "cases": 2160,
+    "entry": "00616530",
+    "first_response_only": true,
+    "selection_boundary": "0052F790 supplies declared none/empty/one-or-two-response object; no INFO-selection or RNG comparison in this corpus",
+    "playback_boundary": "005F7310 validates nine raw arguments and returns float0 or1; no audio executes",
+    "result_boundary": "Actual6B7C30/531470, declared event-data/VM/mark boundaries; VM stub mutates knocked3, not actual ObScript execution",
+    "order": [
+      "first-response playback attempt",
+      "response result callback unless flag8",
+      "global HasSaid mark unless flag 16",
+      "temporary response destruction"
+    ],
+    "distance": {
+      "compiled_ini_count_threshold": 4,
+      "compiled_ini_distance": 1000,
+      "active_counts": [
+        4,
+        5
+      ],
+      "distances": [
+        999,
+        1000,
+        1001
+      ],
+      "player_listener_bypasses_distance": true,
+      "equality_admitted": true
+    },
+    "builtin_hit_topic": {
+      "group": 2,
+      "index": 1,
+      "form_id": "0000dd"
+    },
+    "excludes": [
+      "prior non-null speech handle",
+      "actual audio",
+      "INFO-selection RNG",
+      "live native combat target count and installed INI settings"
+    ]
+  },
+  "native_creature_voice": {
+    "insertion_cases": 6912,
+    "selection_observations": 41472,
+    "inherited_selector_cases": 3888,
+    "order": "Stable ascending chance after original519880 insertion; per-candidate raw%100<chance; first success wins.",
+    "null_sound_consumes_draw": false,
+    "zero_chance_nonnull_sound_consumes_draw": true,
+    "boundaries": [
+      "8-byte allocation",
+      "supplied raw CRT draw"
+    ],
+    "raw_chance_255": "Raw-byte rule corpus only; fork parser remains0..100.",
+    "excludes": [
+      "CREA record loader execution",
+      "audio playback",
+      "C++ implementation comparison"
+    ]
+  },
+  "remaining": [
+    "Wire normal melee to damage, automatic speech/results, fresh knocked/facing and reaction/block phases.",
+    "Implement the common notification/friend-hit producer and lifecycle/query/save authority.",
+    "Complete all normal-input, audio, mastery, view/device/FPS and windup/block/recovery fresh-restart gates."
+  ]
+}

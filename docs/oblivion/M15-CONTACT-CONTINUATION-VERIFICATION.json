@@ -1,0 +1,524 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Prepared World/service contact continuations across synchronous callbacks; independent automatic-voice prerequisites",
+  "full_M15S4_acceptance": false,
+  "common_hit_integration": false,
+  "normal_input_runtime_acceptance": false,
+  "runtime_schema": 66,
+  "tested_source": {
+    "head": "a941bbb968ec2d63cd2d5ed7d7dbc8b10fb42e67",
+    "source_fingerprint": "8d0279405f5c97cd16f3b06ba301998015f3602ebd2b311db106864e5d2c93c9"
+  },
+  "tested_source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "6f64029b4e478e6c358ae69679deb6cc99324c41c0292396f33c13985169f488",
+      "bytes": 363226
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "8d997054235a00b865b63b6ab2c55fc400069e5b9a510ef8b24970be401f4674",
+      "bytes": 67203
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "1a72799d10ce69ec7570e21994db103f3c521e926841456c091d52211a1e3330",
+      "bytes": 461080
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "bf91e764e64c2804dcde3cdc837ad8b420433c1f6855292fced28513a8bf3c76",
+      "bytes": 54748
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "589c6a5b80eb6bc3f7c7ab2289e9dd55bc38be9123d098512194980f23463386",
+      "bytes": 2045292
+    }
+  ],
+  "tested_cpp_patch": {
+    "path": "build/oblivion-compat/m15/S4/native-contact-continuation-receipt-01/tested-cpp.patch",
+    "sha256": "d0a3bd611a93c9aec5a9e7ebc4aace34a00033f53795e6304c04ffc54cbfed10",
+    "bytes": 37061
+  },
+  "editable_recipe": {
+    "path": "scripts/data/oblivion_compat/m15_contact_continuation_oracle_cases.json",
+    "sha256": "941aab433431ec73a75958e1e389ca56f0e4a2f0c2bea11e93293a97b4da002c",
+    "bytes": 3663
+  },
+  "normal_engine": {
+    "executed": 1895,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "*",
+    "binary_sha256": "50ac92caf99fe2fa390a9bc4eabb85998a9526e159a65ce2df2b464fee50560f",
+    "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+    "xml_sha256": "67ff2469182e11f1b934642e0085399d4079c9b7f21e08a73ea3c74454ad15ec",
+    "inventory_sha256": "376a9f8d70903157a3bc1e2147239d4d12adbef0c6df4b8ff6a5e349810901a0",
+    "configuration": {
+      "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS": "",
+      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+    }
+  },
+  "sanitized_engine": {
+    "executed": 1895,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "*",
+    "binary_sha256": "8965e2ba1de80aab2ce2e1e9862c954750eab1cd2ae809907058dce505493559",
+    "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+    "xml_sha256": "2f207339c2c9459300f2385134e612db99c7944dcc6747dc29dd73bcea65a197",
+    "inventory_sha256": "376a9f8d70903157a3bc1e2147239d4d12adbef0c6df4b8ff6a5e349810901a0",
+    "configuration": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+      "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+      "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+      "OPENMW_USE_SYSTEM_BULLET": "OFF"
+    }
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "fresh_component_or_python_run": false,
+  "independent_probes": [
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04",
+      "cases": 2160,
+      "selection_observations": null,
+      "corpus_sha256": "be3ab9d21d825f7f5f89e1ad713ac5b04029cb6dcfc704efc3bed166a285de41",
+      "scope": {
+        "scope": "Complete original automatic NPC/Player voice helper616530 with actual type predicate5E3270, built-in topic getter52ED50, response iteration6B7BA0/6B7C20 and response callback6B7C30/531470. Prior speech handle is null; one or two supplied responses prove that only the first is played before temporary response teardown.",
+        "boundaries": {
+          "52F790": "INFO selection/allocation boundary returns supplied response object or null, validates actor/listener/topic/null arguments; no selection RNG claim",
+          "actor virtual170/174": "supplied form and world positions",
+          "5F7310": "playback boundary validates nine arguments; supplies float duration0 or1; no real audio",
+          "5308D0": "AddTopics boundary",
+          "41E920/4FBE00": "event-data and VM boundaries, validate receiver/arguments and mutate supplied knocked byte; no actual result VM",
+          "INFO virtual40": "records modification mask after actual HasSaid write",
+          "6B81D0/401F20": "response teardown/free boundaries"
+        },
+        "case_axes": {
+          "selection": [
+            "none",
+            "empty",
+            "response"
+          ],
+          "flags": [
+            0,
+            4,
+            8,
+            16,
+            20
+          ],
+          "duration": [
+            0,
+            1
+          ],
+          "target": [
+            "player",
+            "npc",
+            "none"
+          ],
+          "active_count": [
+            4,
+            5
+          ],
+          "distance": [
+            999,
+            1000,
+            1001
+          ],
+          "precision": [
+            639,
+            895
+          ],
+          "response_count": [
+            1,
+            2
+          ]
+        },
+        "expected_cases": 2160,
+        "full_M15S4_acceptance": false
+      }
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01",
+      "cases": 6912,
+      "selection_observations": 41472,
+      "corpus_sha256": "7ed98966514b7203bd12c7b5a15b7091cea41d7205233f1e4cb277b17f1bcbda",
+      "scope": {
+        "scope": "Original ascending/stable chance insertion519880 including actual446CB0 and67B1E0 list operations, then full filename selection519AD0. Native519960 loader calls519880 after CSDC; record loading itself is excluded.",
+        "boundaries": {
+          "401F00": "fresh bounded8-byte zeroed allocator boundary, record all allocations",
+          "47DF80": "supplied raw CRT draw0/49/99, validate argument zero and caller519B0B"
+        },
+        "chance_values": [
+          0,
+          1,
+          50,
+          99,
+          100,
+          255
+        ],
+        "source_kinds": [
+          [
+            7,
+            7,
+            7
+          ],
+          [
+            8,
+            8,
+            8
+          ],
+          [
+            10,
+            10,
+            10
+          ],
+          [
+            7,
+            8,
+            7
+          ]
+        ],
+        "null_sound_masks": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "selection_kinds": [
+          7,
+          8
+        ],
+        "raw_draws": [
+          0,
+          49,
+          99
+        ],
+        "expected_cases": 6912,
+        "domain": "Chance255 is a raw byte rule input, beyond the current fork CSDC parser domain0..100; no content support claim.",
+        "full_M15S4_acceptance": false
+      }
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02",
+      "cases": 3888,
+      "selection_observations": null,
+      "corpus_sha256": "8cffd9e5773009b9f6831f62d8f1f0a8d2e9f68ad66da608e8a0f0035518bed7",
+      "scope": {
+        "scope": "Original Creature sound inheritance51CE70 and complete ordered sound filename selector519AD0; sound kind7 Hit,8 Death and unsupported10",
+        "boundaries": {
+          "47DF80": "supplied raw CRT draws; assert cdecl argument zero and originating call site519B0B"
+        },
+        "patterns": [
+          [],
+          [
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              0,
+              "valid"
+            ]
+          ],
+          [
+            [
+              1,
+              "valid"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              99,
+              "valid"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              255,
+              "valid"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              100,
+              "null"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              100,
+              "empty"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ],
+          [
+            [
+              0,
+              "valid"
+            ],
+            [
+              1,
+              "valid"
+            ],
+            [
+              100,
+              "valid"
+            ]
+          ]
+        ],
+        "layouts": [
+          "own",
+          "inherited-two-level",
+          "missing-base",
+          "unowned-terminal"
+        ],
+        "draw_values": [
+          0,
+          1,
+          98,
+          99,
+          100,
+          32767
+        ],
+        "expected_cases": 3888,
+        "excludes": [
+          "record loading/union assignment",
+          "sound playback",
+          "automatic hit-speech caller616530",
+          "native loops on cyclic malformed inheritance"
+        ]
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/verification.json",
+      "sha256": "53b218e1d037c9bfbdc82e5c0620ef3023339300776249d1a1760e4974eb46cc",
+      "bytes": 1899
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/preregistration.json",
+      "sha256": "0c57cb95ca30020e86e3c881254a4126d18f6f7f75f792e2a9d9fee5580552b8",
+      "bytes": 1529
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/probe.py",
+      "sha256": "2791ef20ab6d63e4b5faea1d41261f0f5a7c97ac9e3704dc9d0260cb073908c4",
+      "bytes": 6892
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/corpus.json",
+      "sha256": "be3ab9d21d825f7f5f89e1ad713ac5b04029cb6dcfc704efc3bed166a285de41",
+      "bytes": 473201
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01/verification.json",
+      "sha256": "10d0fd8c76c209aae2409c95adb40ab1a34fa6e06fa8adc3cf7e2a8bcefa0f39",
+      "bytes": 1454
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01/preregistration.json",
+      "sha256": "72a792e04c2bbb4434a53523e5052f632220aef675c4a54ad8d28ed66ee7ef67",
+      "bytes": 1039
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01/probe.py",
+      "sha256": "92871b02c39cd3d78c858b97ac665617885a13896b1c7a42f401b8b230522931",
+      "bytes": 4743
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-order-oracle-01/corpus.json",
+      "sha256": "7ed98966514b7203bd12c7b5a15b7091cea41d7205233f1e4cb277b17f1bcbda",
+      "bytes": 3384709
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02/verification.json",
+      "sha256": "93b32950b74d3ea3b366c79e50c39d4988322f6bf0506128890eac1dc670c28b",
+      "bytes": 1927
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02/preregistration.json",
+      "sha256": "e316871e7484cb7f2fe2de21f2b2f70d80d684ab6530429d2f0a4dd74740384a",
+      "bytes": 1453
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02/probe.py",
+      "sha256": "9cec6ddab1f004d5875a1e228d4b659aafac3ed159d207609439e9e4247ec5e3",
+      "bytes": 4347
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-02/corpus.json",
+      "sha256": "8cffd9e5773009b9f6831f62d8f1f0a8d2e9f68ad66da608e8a0f0035518bed7",
+      "bytes": 439385
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-04/builtin-topics-and-ini.json",
+      "sha256": "4e5deec13a65b3252c863dbf9cc68fc15e1100dd2ec31245f970e5e61e802fc8",
+      "bytes": 1937
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-receipt-01/verify.py",
+      "sha256": "e01ff0b620f75feceea29ffa1e7d8022f393741cd7595e08e79fb89292b0b4f9",
+      "bytes": 1117
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-04/verification.json",
+      "sha256": "1276f51e0886a74aefff48236439ab0514b279e97e7451f02536005e19114bd9",
+      "bytes": 2145
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-04/engine-inventory.txt",
+      "sha256": "376a9f8d70903157a3bc1e2147239d4d12adbef0c6df4b8ff6a5e349810901a0",
+      "bytes": 134056
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-04/engine.xml",
+      "sha256": "67ff2469182e11f1b934642e0085399d4079c9b7f21e08a73ea3c74454ad15ec",
+      "bytes": 624048
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-04/engine.log",
+      "sha256": "d525ef9d140ebc6f73f4c97d42cb44812981eb2752b5d2d75698c6a80d6a6d88",
+      "bytes": 2277647
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-04/engine-build.log",
+      "sha256": "6baea4ff835a3b2246ecaf4d5b4ea51bfd01131bf5581174de811c13dc55c135",
+      "bytes": 30925
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-sanitized-02/verification.json",
+      "sha256": "5da734f8cf9945946b2cd1a9ef34d127021e870ac8a46b0f7612e8cad52bdae4",
+      "bytes": 2235
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-sanitized-02/engine-inventory.txt",
+      "sha256": "376a9f8d70903157a3bc1e2147239d4d12adbef0c6df4b8ff6a5e349810901a0",
+      "bytes": 134056
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-sanitized-02/engine.xml",
+      "sha256": "2f207339c2c9459300f2385134e612db99c7944dcc6747dc29dd73bcea65a197",
+      "bytes": 625647
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-sanitized-02/engine.log",
+      "sha256": "16642554b9045f2744c93dd3b86f9950df82c82e0b8da30c95cf2e13e54686ce",
+      "bytes": 2278190
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-sanitized-02/engine-build.log",
+      "sha256": "12d9e412ac02ab86761796abcbe87caa3b63327d714f8fcbef9407477332b757",
+      "bytes": 29491
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-01/verification.json",
+      "sha256": "c61646770b0a50f859ccb1fcc8a5694cf3ba5bd9d739ed9adc4ee7eba6cfff2e",
+      "bytes": 1390
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-01/engine.log",
+      "sha256": "ebde8a6e9046910a3f2ca88d61cb05328fee1efc052af3b2b567400de8053d49",
+      "bytes": 20070
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-02/verification.json",
+      "sha256": "73f9aa05239bcb58d7fe77fd8a9f7d7e2915b977a564438a9dcd6f95e171091d",
+      "bytes": 1434
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-02/engine.log",
+      "sha256": "f80fa3dc13da0950bc08627d795a3005f8e908314f92e8607861ec4be9f6ff16",
+      "bytes": 21991
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-01/setup-failure.json",
+      "sha256": "f7d305e2b3909980cdc495e27237a024ef54209adc40cfeca6e53fcbd8b1f25d",
+      "bytes": 205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-02/setup-failure.json",
+      "sha256": "acaa12f8b0927b7fab67e5e4dd5d2f0ab55ae72040d0398f2a36e26759a633b8",
+      "bytes": 258
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-01/followup-invalidation.json",
+      "sha256": "fd1fd03ed254735d9c6d803866c812e91be4aac887afb65c477d753906789b0a",
+      "bytes": 243
+    }
+  ],
+  "retained_failures": [
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-01",
+      "reason": "Focused13-case run: one new test incorrectly called prepareCombatRandom(0); fixed test assertion."
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-contact-continuation-engine-02",
+      "reason": "Focused15-case run: restore fixture omitted victim reference; fixed fixture."
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-01",
+      "reason": "Harness misidentified no-argument BSString length getter404FD0 and popped playback arguments."
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-automatic-hit-response-oracle-02",
+      "reason": "Harness expected response payload+8/+C in swapped playback positions."
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-creature-voice-selection-oracle-01",
+      "reason": "Unowned-terminal fixture duplicated missing-base instead of traversing terminal; corrected02."
+    }
+  ]
+}
