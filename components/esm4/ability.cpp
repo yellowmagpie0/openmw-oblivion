@@ -12,6 +12,23 @@
 
 namespace ESM4
 {
+    float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance)
+    {
+        if (!std::isfinite(generalResistance) || !std::isfinite(effectResistance))
+            throw std::invalid_argument("nonfinite native effect resistance");
+        if (generalResistance >= 100.f || effectResistance >= 100.f)
+            return 0.f;
+        const float general = static_cast<float>(double(generalResistance) / 100.);
+        const float specific = static_cast<float>(double(effectResistance) / 100.);
+        const float remaining = static_cast<float>(1. - double(general));
+        const float product = static_cast<float>(double(remaining) * specific);
+        const float combined = static_cast<float>(double(general) + product);
+        const float result = static_cast<float>(1. - double(combined));
+        if (!std::isfinite(result))
+            throw std::invalid_argument("native effect resistance overflow");
+        return result;
+    }
+
     std::optional<LoadedEffectSetting> compiledPassiveValueModifierDefinition(std::uint32_t code)
     {
         // Reviewed initializer arguments; editable facts/provenance are in

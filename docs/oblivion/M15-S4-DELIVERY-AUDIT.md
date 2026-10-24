@@ -12925,3 +12925,42 @@ sinks; it does not establish the corresponding rendered/audio behavior.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-PARALYSIS-EFFECT-NATIVE-VERIFICATION.json) and
 [editable probes](../../scripts/data/oblivion_compat/m15_paralysis_effect_native_cases.json).
+
+## Native paralysis cast admission and resistance
+
+The complete original post-damage paralysis block now executes through cast,
+NPC target admission, resistance, specialized effect construction, clone/copy
+and owned-list insertion. The native startup registration maps PARA to its
+ParalysisEffect constructor; an empty registry instead creates a generic value
+modifier and is not an equivalent fixture. The receiving NPC casts on itself.
+The caller restores its previous selected MagicItem after casting clears it.
+The temporary cast effect is freed even on acceptance; the target owns a
+distinct clone. Self range bypasses non-self absorb/reflect dispatch, while
+general AV64 and PARA-specific AV66 resistance still affect admission/duration.
+
+All 756 instruction profiles pass, with 348 accepted and 408 resisted. They
+vary both resistances, queried integer stats, prior selected spell and three
+x87 controls. NoMagnitude keeps the active magnitude at one and scales the
+ten-second base duration. At single precision, Resist Magic 50 combined with
+Resist Paralysis 99.99999237060547 cancels to a zero multiplier and rejects the
+effect; the same inputs remain positive under the higher precision controls.
+The failed naive below-100 admission expectation is retained.
+
+The shared component rule now reproduces the original single-precision scalar
+arithmetic, including intermediate rounding and weakness multipliers above one.
+Another 3,432 direct original 548AD0 profiles supply 1,144 independent PC24
+output cases replayed bit-for-bit by the C++ test. Full checks pass 3,068 normal
+component tests and 919 sanitized ESM4 tests, with no failures/skips; sanitizer
+leak checks are disabled. Typed nonfinite inputs and unrepresentable output are
+explicitly rejected. Engine gameplay does not yet consume this new helper.
+
+RTTI resolution, constructor-map operations, scalar AV reads, equipped-source
+absence, existing empty target-list access/post-insert notification and heap/
+form/MGEF operations remain explicit boundaries. Cast vtable/argument/setup,
+target-clear setter and native arithmetic expectation failures are retained.
+No new engine build, effect save/restart, physical paralysis or normal-input
+acceptance is claimed. Production effect authority, scheduler phase order,
+forward mastery integration and the remaining S4 gates remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-PARALYSIS-CAST-VERIFICATION.json) and
+[editable cast probes](../../scripts/data/oblivion_compat/m15_paralysis_cast_native_cases.json).

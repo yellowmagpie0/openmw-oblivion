@@ -29,6 +29,13 @@ namespace ESM4
     LoadedEffectSetting mergeLoadedEffectSetting(
         LoadedEffectSetting previous, const EffectSettingData& authored);
 
+    // Original548AD0 scalar result under the game's single-precision x87
+    // control. Caller owns hostility/class/range admission and selects the
+    // general and effect-specific resistance AVs. Weakness can exceed one;
+    // either resistance >=100 returns zero. Preserve the original intermediate
+    // rounding, including cancellation to zero below100. No RNG is consumed.
+    float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance);
+
     // Native ASCII comparison key, not a display label. Only the first thirty
     // name bytes are read; ignored quantities use the original 1000 sentinel.
     std::string passiveEffectComparisonKey(std::uint32_t flags, std::uint32_t school,

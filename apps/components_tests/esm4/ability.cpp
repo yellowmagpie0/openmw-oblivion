@@ -171,3 +171,40 @@ TEST(ESM4AbilityInputs, PassiveComparisonKeysRejectUnreadableAsciiOrNonfiniteQue
     EXPECT_EQ(ESM4::passiveEffectComparisonKey(0, 2, prefix + "\xff", 1, 0),
         "a" + std::string(30, 'a') + "1.00.0");
 }
+
+TEST(ESM4AbilityInputs, ResistanceMatchesIndependentOriginalSinglePrecisionInstructions)
+{
+    struct Case { std::uint32_t general, specific, result; };
+    static constexpr std::array<Case, 1144> cases{{
+#include "effectresistance_expected.inc"
+    }};
+    for (std::size_t i = 0; i < cases.size(); ++i)
+    {
+        SCOPED_TRACE(i);
+        const auto& row = cases[i];
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::nativeEffectResistanceMultiplier(
+            std::bit_cast<float>(row.general), std::bit_cast<float>(row.specific))), row.result);
+    }
+}
+
+TEST(ESM4AbilityInputs, ResistanceRetainsNativeCancellationAndWeaknessInsteadOfClamping)
+{
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(50.f, 99.99999237060547f), 0.f);
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(50.f, 50.f), .25f);
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(-50.f, 0.f), 1.5f);
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(-50.f, -50.f), 2.25f);
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(100.f, -50.f), 0.f);
+    EXPECT_EQ(ESM4::nativeEffectResistanceMultiplier(-50.f, 150.f), 0.f);
+}
+
+TEST(ESM4AbilityInputs, ResistanceRejectsNonfiniteInputsAndUnrepresentableResults)
+{
+    for (float value : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::nativeEffectResistanceMultiplier(value, 0.f), std::invalid_argument);
+        EXPECT_THROW(ESM4::nativeEffectResistanceMultiplier(0.f, value), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::nativeEffectResistanceMultiplier(
+        -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()), std::invalid_argument);
+}

@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "2157ed2218bfc503cd8850126fb645ea38b84e1c",
+    "source_fingerprint": "a64802f0241fb302198f12e7a2160f37348a1564ee49febf3a035eeffba1e9a6"
+  },
+  "scope": "Complete original post-damage self-cast and NPC admission for fallback mastery paralysis, with exact native resistance. Component arithmetic only is newly implemented; gameplay integration remains open.",
+  "checks": {
+    "normal": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "components-tests",
+            "-j",
+            "3"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 50.568
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.065
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 14.257
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 3068,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "476b8942cbcb43bbb4230f9fab11f96d8d9c728a2b60e7858d1f3ff78c92d400",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "e9a8c4ab1aa47ef67e1e4421af1b4b2a8927996bfe4a3401e874404c5d400809",
+          "inventory_sha256": "c7d4b9c54c24518a7e53c18ce1a5eb6834a1973c24deaf8ffee74fd3c7f91e04",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "2157ed2218bfc503cd8850126fb645ea38b84e1c",
+        "source_fingerprint": "a64802f0241fb302198f12e7a2160f37348a1564ee49febf3a035eeffba1e9a6"
+      },
+      "source_after": {
+        "head": "2157ed2218bfc503cd8850126fb645ea38b84e1c",
+        "source_fingerprint": "a64802f0241fb302198f12e7a2160f37348a1564ee49febf3a035eeffba1e9a6"
+      }
+    },
+    "sanitized": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "components-tests",
+            "-j",
+            "2"
+          ],
+          "log": "sanitize-build.log",
+          "returncode": 0,
+          "seconds": 121.619
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "sanitize-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.266
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_filter=ESM4*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/sanitize.xml"
+          ],
+          "log": "sanitize.log",
+          "returncode": 0,
+          "seconds": 33.067
+        }
+      ],
+      "results": {
+        "sanitize": {
+          "executed": 919,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "6d4eaa9cbfdddf6ff2baa403c93f222efd3acba23c8deaae7182641f21b344b3",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "285c9150a9e39726da193a7b1c818c6a8e7def92921adc6466a764d7d23a710a",
+          "inventory_sha256": "b7c5ebab4a766a8e8197eed5953250258a4e134b6325f92e352af1546ab0dcc5",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "2157ed2218bfc503cd8850126fb645ea38b84e1c",
+        "source_fingerprint": "a64802f0241fb302198f12e7a2160f37348a1564ee49febf3a035eeffba1e9a6"
+      },
+      "source_after": {
+        "head": "2157ed2218bfc503cd8850126fb645ea38b84e1c",
+        "source_fingerprint": "a64802f0241fb302198f12e7a2160f37348a1564ee49febf3a035eeffba1e9a6"
+      }
+    }
+  },
+  "native_reports": {
+    "native-paralysis-cast-admission-oracle-02": {
+      "passed": true,
+      "cases": 756,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "5bdd2e3537974c7b1b71ed0aeb773237b6ed95a417a28dff972c7125fa92c0ed",
+      "scope": "Actual600355..6003A4 post-damage paralysis block, full69AF30 cast, registered original PARA constructor, full NPC5EE3A0/6A2CF0/6A27F0 admission, actual5E5240/548AD0 resistance, clone/copy, actual68E170 scaling and owned-list insertion. NPC receiver is its own caster; previous selection restored even at full resistance. No original RNG calls admitted. Typed RTTI, constructor-map insertion/lookup, equipped-source absence, scalar AV readers, existing empty target-list getter/post-insert callback and allocator/form/MGEF boundaries explicit. No effect tick, actor modifier storage, general target/caster pairs, default spell override or gameplay acceptance."
+    },
+    "native-effect-resistance-oracle-01": {
+      "passed": true,
+      "cases": 3432,
+      "single_precision_cases": 1144,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "85c2f5128f3c7d79f0935159903634bc89c1fdcb9fbc59592d2ac39308ac5270",
+      "actual": "Complete original548AD0 through RET and external FSTP float result capture",
+      "boundaries": [],
+      "scope": "Finite binary32 resistance inputs, 144 boundary/sign/threshold combinations plus1000 fixed-seed profiles, three x87 controls. First3 integer arguments supplied0/INT_MAX/INT_MIN are not read by this instruction body. Result corpus supplies expected single-precision component cases; no effect admission or gameplay acceptance."
+    }
+  },
+  "matrix": {
+    "cases": 756,
+    "accepted": 348,
+    "resisted": 408,
+    "resist_magic": [
+      -50,
+      0,
+      25,
+      50,
+      99,
+      100,
+      150
+    ],
+    "resist_paralysis": [
+      -50,
+      0,
+      50,
+      99.99999237060547,
+      100,
+      150
+    ],
+    "other_integer_values": [
+      0,
+      50,
+      100
+    ],
+    "prior_selection": [
+      0,
+      "supplied nonnull prior process MagicItem"
+    ],
+    "controlwords": [
+      127,
+      639,
+      895
+    ],
+    "single_precision_boundary": {
+      "resist_magic": 50,
+      "resist_paralysis": 99.99999237060547,
+      "multiplier": 0,
+      "admitted": false
+    },
+    "higher_precision_boundary": {
+      "controlwords": [
+        639,
+        895
+      ],
+      "same_inputs": true,
+      "multiplier": 2.9802322387695312e-08,
+      "admitted": true
+    }
+  },
+  "compiled_rule": {
+    "name": "ESM4::nativeEffectResistanceMultiplier",
+    "original_output_replay_cases": 1144,
+    "fixture_corpus_sha256": "85c2f5128f3c7d79f0935159903634bc89c1fdcb9fbc59592d2ac39308ac5270",
+    "production_gameplay_consumer": false
+  },
+  "retained_failures": [
+    "cast01 wrong secondary target vtable; corrected using original RTTI offset68",
+    "cast02 target admission has4 arguments, not5",
+    "cast03 broad text replacement accidentally changed RTTI arity; corrected",
+    "cast04 missing process target-clear getter/setter, and missing native specialized-constructor registration; execute actual9FED20 before lookup",
+    "admission01 missing MGEF resistance AV66 input; supplied audited value",
+    "admission02/03 missing ActiveEffect->ValueModifier RTTI boundary on actual clone/copy",
+    "matrix01 naive both-resistances-below100 admission expectation contradicted by original single-precision cancellation; retain and model actual instruction ordering with independent rational binary rounding"
+  ],
+  "remaining": [
+    "Production cast/effect authority and integration of forward mastery contacts",
+    "Actual typed actor temporary modifier storage and once-only owned cleanup",
+    "Effect save/restart and native scheduler phase order",
+    "Visible physical paralysis and recovery, directional and remaining S4 acceptance gates"
+  ],
+  "verification_layers": {
+    "component_rule": true,
+    "complete_original_cast_and_admission": true,
+    "original_scalar_and_clone": true,
+    "new_engine_build": false,
+    "new_gameplay_or_restart": false
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/ability.cpp",
+      "sha256": "ce1ae228e68080f564e6003d809f21e8a811b3b6dcc8600bd5128a1b097de927"
+    },
+    {
+      "path": "components/esm4/ability.hpp",
+      "sha256": "66f9765a03ad7e52fe81aca9446f1519e71f7b5eae0a2f6088f8b5bdd7f6043b"
+    },
+    {
+      "path": "apps/components_tests/esm4/ability.cpp",
+      "sha256": "3d1470960dd23a3ca72b75885267c703f25d91d19172dec75b665119d6fe7f33"
+    },
+    {
+      "path": "apps/components_tests/esm4/effectresistance_expected.inc",
+      "sha256": "d0909e28bcdc66ecfb61dc5099aae33c1e04f6cfc64ab11f9fcc29437f8ea39a"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_paralysis_cast_native_cases.json",
+      "sha256": "69403c821ee3457406fe7892f1232c811c3d5e6bc3b2f04aa5e9782dd0dee46d"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_paralysis_effect_native_cases.json",
+      "sha256": "0dc053867add0208422bc714321be1821e310e08c1609ae9d1b5ed584dcda0e1"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-admission-oracle-01/failure.json",
+      "sha256": "6a72d06a8a941b239b4f90026f61d541a345a63ba219923ffeb2aec94c1e6c5e",
+      "bytes": 2485
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-admission-oracle-02/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-admission-oracle-02/corpus.json",
+      "sha256": "5bdd2e3537974c7b1b71ed0aeb773237b6ed95a417a28dff972c7125fa92c0ed",
+      "bytes": 723937
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-admission-oracle-02/probe.py",
+      "sha256": "4ee7b83dc263cd3d4ed8c982254d6d6ab264a8fd9bd59a33fd564b099c213254",
+      "bytes": 7126
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-admission-oracle-02/verification.json",
+      "sha256": "493a6ed84450ed9fdcb107dfcedaae06f62232f2cd3a9d78983ba374b7fab534",
+      "bytes": 897
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-oracle-01/bootstrap.py",
+      "sha256": "be8ed0cd540862ceac67727848d2bdbc8a63fed86d04208d471cad6199ad7bab",
+      "bytes": 1737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-oracle-01/corpus.json",
+      "sha256": "85c2f5128f3c7d79f0935159903634bc89c1fdcb9fbc59592d2ac39308ac5270",
+      "bytes": 500352
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-oracle-01/probe.py",
+      "sha256": "2f20f03b637419828908c4a667d7b512fa0a0a59d5a4b5d97c3ec562079afd59",
+      "bytes": 2379
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-oracle-01/verification.json",
+      "sha256": "996112cac572e34fba60b62b5969a04bbd6d7cdc422890c58e6d5b9a944c0f0f",
+      "bytes": 709
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/components-build.log",
+      "sha256": "1f0eebcce077a69fb29923a0957f8d763e6384bc3462168524358f8608a56650",
+      "bytes": 1110
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/components-inventory.txt",
+      "sha256": "c7d4b9c54c24518a7e53c18ce1a5eb6834a1973c24deaf8ffee74fd3c7f91e04",
+      "bytes": 195286
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/components.log",
+      "sha256": "56374c85214df28941f95d3ddf4e17496f727dc178b443bf0ce53ab80fed94a6",
+      "bytes": 610607
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/components.xml",
+      "sha256": "e9a8c4ab1aa47ef67e1e4421af1b4b2a8927996bfe4a3401e874404c5d400809",
+      "bytes": 2356199
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-normal-01/verification.json",
+      "sha256": "aa836f0996df7997464399d42a5981d84990fda1acbfc6f31d3206dcdefe1d3e",
+      "bytes": 2136
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/sanitize-build.log",
+      "sha256": "55823e3c84e850e9bd4d9863c1968dfa1eaf54a3ea9d143c34d5983504b09337",
+      "bytes": 1522
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/sanitize-inventory.txt",
+      "sha256": "b7c5ebab4a766a8e8197eed5953250258a4e134b6325f92e352af1546ab0dcc5",
+      "bytes": 195286
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/sanitize.log",
+      "sha256": "dcdf9f2e481aa295dfdb9718b6f0920efcf2854d26a70cb27a138d03acb2ba5c",
+      "bytes": 170787
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/sanitize.xml",
+      "sha256": "285c9150a9e39726da193a7b1c818c6a8e7def92921adc6466a764d7d23a710a",
+      "bytes": 1631909
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-effect-resistance-sanitized-01/verification.json",
+      "sha256": "4e2794fefddd097a3a6f2e01d1a0bedab492f6a03c5f2e1b455d3825a1582efb",
+      "bytes": 2223
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-01/failure.json",
+      "sha256": "fb2d01d94c846e3d80e4948d6e16fd902fb3f3ac49c8a4bac8d6d081ab619f54",
+      "bytes": 1388
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-02/failure.json",
+      "sha256": "a8239a8be4fe96e79ff4c1c2b552163a09cd49414d6fa49d7bc6a7f0666b3a4c",
+      "bytes": 1393
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-03/failure.json",
+      "sha256": "33809b0ea60e122cf5a5e9aeb0b305b241f5c26c822784b03ec2ffecd006d0cd",
+      "bytes": 1322
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-04/failure.json",
+      "sha256": "83281b62c35562bce3ad57d634fe146684d85d4eadd9be3aa9ed9bb5061d0128",
+      "bytes": 1865
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-05/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-05/corpus.json",
+      "sha256": "b5bb0994202ccef1f7cdaaf301dc953dd67493b26c3403cd83a0f859da8d1455",
+      "bytes": 2890
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-oracle-05/probe.py",
+      "sha256": "dcf66ac8d2e5dfec5da09b138d80ebe748d136283116b3a969bc8ed2de2f9371",
+      "bytes": 3122
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-01/failure.json",
+      "sha256": "421c03d0700546aa2969872af228e1e283658ece87dcc17dfe2b6e3bef0b4e7f",
+      "bytes": 1625
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-02/failure.json",
+      "sha256": "88c19b5489f2a9a4361d6ab8e55563cbf3929b543ea6353446f6ba357d0e7490",
+      "bytes": 1816
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-03/failure.json",
+      "sha256": "eea5c111d5ecd847422e634458a4e56e7254ac665bf4e1d3cdbdfb7e45d0752e",
+      "bytes": 2186
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-04/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-04/corpus.json",
+      "sha256": "c089de8b03aafe388740267f391665bc9273fd1b13fc3be630e4d3f4b181d115",
+      "bytes": 4741
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-admission-oracle-04/probe.py",
+      "sha256": "364ac885ff0c01317b5b06a3424c5cc25fecff31e36241d22d8fc79ef6c8d12f",
+      "bytes": 4115
+    }
+  ]
+}
