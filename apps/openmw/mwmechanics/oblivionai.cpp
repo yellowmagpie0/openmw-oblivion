@@ -1566,12 +1566,39 @@ namespace MWMechanics
         const std::optional<ESM::FormId> id = resolver.toFormId(key);
         if (!id)
             return {};
+        const auto findPlacedReference = [&](MWWorld::CellStore& cell) {
+            MWWorld::Ptr result;
+            // CellStore::getPtr(RefId) searches base objects. Here the command
+            // names a placed reference, whose RefNum must match exactly.
+            cell.forEach([&](const MWWorld::Ptr& ptr) {
+                if (ptr.getCellRef().getRefNum() != *id) return true;
+                result = ptr;
+                return false;
+            });
+            return result;
+        };
+        // ESM4RefsStore resolves persistent exterior references from their
+        // authored dummy group into the actual runtime cell. Metadata retains
+        // the authored group for provenance; force-load the resolved parent.
+        ESM::RefId resolvedParent;
+        if (const auto* reference = mWorld.mStore.get<ESM4::ActorCharacter>().search(key))
+            resolvedParent = reference->mParent;
+        else if (const auto* creature = mWorld.mStore.get<ESM4::ActorCreature>().search(key))
+            resolvedParent = creature->mParent;
+        else if (const auto* object = mWorld.mStore.get<ESM4::Reference>().search(key))
+            resolvedParent = object->mParent;
+        if (!resolvedParent.empty())
+        {
+            auto& cell = mWorld.mWorldModel.getCell(resolvedParent);
+            if (const MWWorld::Ptr result = findPlacedReference(cell); !result.isEmpty())
+                return result;
+        }
         const ESM::FormRecordMetadata* metadata = mWorld.mStore.getFormKeyIndex().resolve(key);
         if (metadata != nullptr && metadata->mParent)
             if (const std::optional<ESM::FormId> parent = resolver.toFormId(*metadata->mParent))
             {
                 MWWorld::CellStore& cell = mWorld.mWorldModel.getCell(ESM::RefId(*parent));
-                return cell.getPtr(ESM::RefId(*id));
+                return findPlacedReference(cell);
             }
         return {};
     }

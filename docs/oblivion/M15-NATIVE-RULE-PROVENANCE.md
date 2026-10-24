@@ -18081,3 +18081,60 @@ protocols and [native probe recipe](../../scripts/data/oblivion_compat/m15_dispo
 This closes a bounded disposition-read/storage dependency. ModDisposition,
 automatic common-hit callbacks/speech/counters and their producer/expiry/save
 lifecycle, Player audio and the full S4 normal-input/restart matrix remain open.
+
+
+### Live ModDisposition and cold actor reference resolution (intermediate)
+
+ModDisposition now writes the typed schema66 actor/target modifier map. Its
+integer request passes through the native float store. A missing entry is
+created without a derived clamp, including an explicit zero; later writes
+adjust against the direct current disposition. The returned value follows the
+script frame cache, so it can retain an earlier value after mutation. Prepared
+storage/query/cache publication leaves the modifier unchanged on preparation
+failure. Explicit valid script actor references use shared Low construction
+when native values do not yet exist; invalid actor arguments return zero
+without constructing the source. World primitives retain an explicit readiness
+boundary. Remaining owned/process Creature and leveled contexts stay open.
+
+The rendered original-content course exposed a real offscreen failure in
+MS45Script. JivHirielRef belongs to Tamriel's persistent dummy group 023777 but
+ESM4RefsStore resolves its runtime parent to HackdirtExterior 00f3c8. The force-load
+resolver used authored metadata and then searched a base-object ID where the
+script named a placed reference. It now uses the resolved parent and exact
+RefNum. The corrected compiled vanilla call stores a Jiv-to-Player modifier of
+20 in Low process. The script's enabled local becomes 1 and fresh reload does not repeat
+the write. The initial course had rendered/saved successfully while reporting
+102 script diagnostics; it is retained as a semantic failure.
+
+Full normal engine checks pass 1,888 cases. The full 3,042 component inventory
+passed before only app resolver/tests changed; its exact component patch is
+unchanged. ASan/UBSan pass 1,888 engine and 893 ESM4 component cases with no skips
+or failures; leak detection is off. Two new component tests and four new World
+tests cover the rule, cache, typed writes, compiled binding, cold construction
+and resolved-cell/reference identity. Python implementation is unchanged; its
+prior 401-test baseline is not represented as a fresh run here.
+
+The original command, actual RTTI, updater and direct/cached getter paths pass
+18,144 cases across both CPU conversion branches and two x87 precision words.
+Actual component rules plus explicit driver cache-return composition match
+6,048 valid cases (12,096 modifier/return observations). Three production-rule
+mutations and one cache-return driver mutation are rejected. The World target
+uses SSE conversion consistently with its native actor-value command target;
+the component also models non-SSE final integer wrapping. Existing unsupported
+intermediate score-conversion domains remain explicit.
+
+Five rendered normal processes pass independent semantic verification: genuine
+Player writes, protected-input fresh-process continuation, a zero-entry write
+and its fresh continuation, and an old-deferred-writer negative control. The
+Player sequence stores -30; continuation begins with that actual history.
+A real zero entry survives saving, then a request of 100 stores 50, whereas a
+missing entry would store 100. The compiled NPC-to-Player +20 pair survives both courses.
+The Player's other 71 actor values, other native fields and combat RNG remain
+unchanged. Captures show the prison/HUD; sound is disabled.
+
+See [M15-MOD-DISPOSITION-VERIFICATION.json](M15-MOD-DISPOSITION-VERIFICATION.json)
+and the editable [native recipe](../../scripts/data/oblivion_compat/m15_mod_disposition_oracle_cases.json).
+This is a production writer/reference-resolution checkpoint. Automatic
+common-hit callbacks, speech, counters and their save/expiry lifecycle,
+remaining disposition contexts and actor-reset policy, Player audio and the
+full S4 normal-input/restart matrix remain open.

@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include <components/esm4/referenceflags.hpp>
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
@@ -2402,6 +2404,12 @@ namespace MWWorld
     std::optional<std::int32_t> World::getOblivionDisposition(
         const ESM::FormKey& actor, const ESM::FormKey& target) const
     {
+        return getOblivionDispositionWithModifier(actor, target, std::nullopt);
+    }
+
+    std::optional<std::int32_t> World::getOblivionDispositionWithModifier(
+        const ESM::FormKey& actor, const ESM::FormKey& target, std::optional<std::int32_t> modifierOverride) const
+    {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat)
             return std::nullopt;
         const auto source = ESM4::runtimeReferenceKey(actor);
@@ -2473,7 +2481,7 @@ namespace MWWorld
         {
             const auto current = mOblivionCombat->crimeBounty(destination);
             if (!current) return std::nullopt;
-            bounty = ESM4::convertActorBaseFloat(*current, ESM4::ActorValueConversionMode::NonSse);
+            bounty = ESM4::convertActorBaseFloat(*current, ESM4::ActorValueConversionMode::Sse);
         }
         const auto targetPtr = resident(destination);
         std::optional<ESM4::ActorDrawState> drawn;
@@ -2561,9 +2569,49 @@ namespace MWWorld
                 settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
         const ESM4::DispositionInput input{integerValue(source, 6), integerValue(destination, 6), integerValue(source, 36),
             reputation ? reputation->mFame : 0, reputation ? reputation->mInfamy : 0, bounty,
-            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, modifier,
+            raceReaction, factionReaction, rank, *drawn == ESM4::ActorDrawState::Weapon, false, modifierOverride.value_or(modifier),
             sourceCreature != nullptr};
-        return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings)), 0, 100);
+        return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings),
+            ESM4::ActorValueConversionMode::Sse), 0, 100);
+    }
+
+    std::optional<std::int32_t> World::modifyOblivionDisposition(
+        const ESM::FormKey& actor, const ESM::FormKey& target, std::int32_t delta)
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat) return std::nullopt;
+        const auto source = ESM4::runtimeReferenceKey(actor);
+        const auto destination = ESM4::runtimeReferenceKey(target);
+        for (const auto& key : {source, destination})
+        {
+            const auto base = getOblivionReferenceBaseKey(key);
+            if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return 0;
+            if (!mOblivionCombat->findActorValues(key)) return std::nullopt;
+        }
+        std::optional<std::int32_t> prior;
+        if (mOblivionRuntimeState)
+            if (const auto found = mOblivionRuntimeState->mDispositionModifiers.find({source, destination});
+                found != mOblivionRuntimeState->mDispositionModifiers.end()) prior = found->second;
+        // Missing entry creation does not clamp against the derived score.
+        // Existing entries use the direct query, never the script frame cache.
+        const auto current = prior ? getOblivionDisposition(source, destination) : std::optional<std::int32_t>(0);
+        if (!current) return std::nullopt;
+        const auto modifier = ESM4::modifyDispositionModifier(prior, *current, delta,
+            ESM4::ActorValueConversionMode::Sse);
+        const auto cached = mOblivionCombat->cachedScriptDisposition(source, destination);
+        const auto next = cached ? cached : getOblivionDispositionWithModifier(source, destination, modifier);
+        if (!next) return std::nullopt;
+        const auto result = *next;
+        // RuntimeState's wire format bounds every collection at one million.
+        if (!prior && mOblivionRuntimeState && mOblivionRuntimeState->mDispositionModifiers.size() >= 1'000'000)
+            throw std::length_error("native disposition modifier map exceeds the runtime collection limit");
+        auto prepared = std::make_unique<ESM4::RuntimeState>(
+            mOblivionRuntimeState ? *mOblivionRuntimeState : captureOblivionRuntimeState());
+        prepared->mDispositionModifiers.insert_or_assign({source, destination}, modifier);
+        // Allocate the new cache pair before the no-throw authority swap.
+        // A failed preparation cannot publish only part of the command.
+        if (!cached) mOblivionCombat->cacheScriptDisposition(source, destination, result);
+        mOblivionRuntimeState.swap(prepared);
+        return result;
     }
 
     std::optional<std::int32_t> World::getOblivionScriptDisposition(

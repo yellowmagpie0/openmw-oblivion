@@ -1,0 +1,1002 @@
+{
+  "version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "command": "0x503a50",
+    "updater": "0x5e2070",
+    "actor_rtti_cast": "0x9832e6",
+    "direct_disposition": "0x5ea800",
+    "score": "0x546260",
+    "cached_query": "0x4f4e20",
+    "frame_reset": "0x4f5db0",
+    "integer_conversion": "0x9828c0",
+    "argument_extraction_boundary": "0x4fae80",
+    "mark_modified_boundary": "0x46abf0",
+    "mark_modified_mask": "0x8000",
+    "integer_to_float_store": [
+      "0x503ac0",
+      "0x503ac7"
+    ],
+    "actor_modifier_head_offset": "0xa4"
+  },
+  "matrix": {
+    "cpu_branch_baabe0": [
+      0,
+      1
+    ],
+    "x87_words": [
+      639,
+      895
+    ],
+    "personalities": [
+      0,
+      20,
+      50,
+      100
+    ],
+    "prior_modifier": [
+      null,
+      -200,
+      -7,
+      0,
+      7,
+      200,
+      -2147483648,
+      2147483647,
+      16777217
+    ],
+    "integer_deltas": [
+      -2147483648,
+      -16777217,
+      -101,
+      -100,
+      -99,
+      -51,
+      -50,
+      -49,
+      -7,
+      -1,
+      0,
+      1,
+      7,
+      49,
+      50,
+      51,
+      99,
+      100,
+      101,
+      16777217,
+      2147483647
+    ],
+    "same_pair_cached": [
+      false,
+      true
+    ],
+    "argument_modes": [
+      "valid",
+      "parse-failure",
+      "null-target"
+    ],
+    "native_cases": 18144,
+    "cpp_valid_cases": 6048
+  },
+  "context": {
+    "actor": "Synthetic Player-self; raw winning NPC7 race907/faction1dbcd rank0/self reaction30",
+    "settings": "Prior audited runtime oracle winning personality multipliers1.5/.5; original defaults for absent GMSTs",
+    "values": "Current AV6 personality prescribed; AV36 responsibility0, raw Fame/Infamy/Bounty0, no owner/process",
+    "boundaries": [
+      "decoded argument extraction",
+      "current integer AV6/36",
+      "allocator/locks",
+      "recorded MarkModified8000"
+    ]
+  },
+  "rules": [
+    "Missing entry allocates signed integer modifier after command FILD/FLOATSTORE, without derived clamp; zero creates an entry.",
+    "Existing entry adjusts requested delta using direct current disposition0..100, selected CPU truncation and original explicit float stores.",
+    "Final stored old integer plus float delta has no additional float store.",
+    "Returned numeric value uses script frame cache and can retain a preceding value after mutation.",
+    "Failed extraction/null target preserves supplied output37 and returns AL0 in original callback; fork compiler/host guards are a separate layer."
+  ],
+  "runtime_protocol": [
+    {
+      "cpu": 0,
+      "word": 639,
+      "phase": "first",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 0,
+      "word": 639,
+      "phase": "continuation",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 0,
+      "word": 895,
+      "phase": "first",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 0,
+      "word": 895,
+      "phase": "continuation",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 1,
+      "word": 639,
+      "phase": "first",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 1,
+      "word": 639,
+      "phase": "continuation",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 1,
+      "word": 895,
+      "phase": "first",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": -7,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 43.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    },
+    {
+      "cpu": 1,
+      "word": 895,
+      "phase": "continuation",
+      "answers": [
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": -7,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": -37,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 4,
+          "command": "mod",
+          "delta": 100,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 4,
+          "command": "get",
+          "delta": null,
+          "result": 13.0,
+          "modifier": 50,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 5,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": 50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 6,
+          "command": "mod",
+          "delta": -200,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 7,
+          "command": "get",
+          "delta": null,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 8,
+          "command": "mod",
+          "delta": 0,
+          "result": 0.0,
+          "modifier": -50,
+          "scorer_calls": 2
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -50,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "mod",
+          "delta": 100,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        },
+        {
+          "frame": 10,
+          "command": "get",
+          "delta": null,
+          "result": 80.0,
+          "modifier": -30,
+          "scorer_calls": 0
+        },
+        {
+          "frame": 11,
+          "command": "get",
+          "delta": null,
+          "result": 100.0,
+          "modifier": -30,
+          "scorer_calls": 1
+        }
+      ]
+    }
+  ],
+  "cold_reference_audit": {
+    "passed": true,
+    "records": [
+      {
+        "plugin": "Oblivion.esm",
+        "tag": "NPC_",
+        "form_id": 164042,
+        "editor_id": "JivHiriel",
+        "base": null
+      },
+      {
+        "plugin": "Oblivion.esm",
+        "tag": "ACHR",
+        "form_id": 164058,
+        "editor_id": "JivHirielRef",
+        "base": 164042
+      }
+    ],
+    "sources": [
+      {
+        "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70"
+      },
+      {
+        "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Knights.esp",
+        "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+      }
+    ],
+    "scope": "Independent raw EDID/NAME identity for vanilla MS45Script explicit ModDisposition target jivhirielref. Not a numeric disposition audit.",
+    "script": {
+      "key": "content:oblivion.esm:028155",
+      "payload_sha256": "38af58d2910c599d50ec7577a85443df0833b8eae44944e0ddf7e0f62be518b1",
+      "source_sha256": "b18f481f9edc4a2ec61fd7043e884e4922e6b0f3e35daf176d0a8b5e961cfc32",
+      "locals": [
+        "startDay",
+        "innkeeperLied",
+        "traderLied",
+        "foundDiary",
+        "foundHorse",
+        "enabled",
+        "untied",
+        "unlockCell",
+        "thankedPC",
+        "warnedPC",
+        "followPC",
+        "attackPC",
+        "spawnTimer",
+        "spawnMarker"
+      ],
+      "enabled_local_index": 5,
+      "moddisposition_line": "jivhirielref.moddisposition player 20\t\t; jiv hiriel is friendlier than the rest of Hackdirt"
+    },
+    "exterior_group": {
+      "authored_parent": "content:oblivion.esm:023777",
+      "worldspace": "content:oblivion.esm:00003c",
+      "position": [
+        -67361.1015625,
+        62621.4296875,
+        9804.091796875
+      ],
+      "grid": [
+        -17,
+        15
+      ],
+      "resolved_cell": "content:oblivion.esm:00f3c8",
+      "cell_editor_id": "HackdirtExterior",
+      "method": "Raw ACHR DATA and containing GRUP1/6/8 identities; Tamriel CELL XCLC matching floor(position/4096). Existing ESM4RefsStore.preprocessReferences rewrites mParent from that persistent dummy to this cell while preserving authored mParentKey/metadata."
+    }
+  },
+  "limits": [
+    "No original-game live process",
+    "Only valid command rows compared with actual component rules plus explicit driver cache-return composition",
+    "Owned/process Creature, leveled contexts and reset/expiry/common-hit lifecycle remain separate",
+    "World uses SSE conversion target; component exposes and verifies both CPU branches"
+  ]
+}

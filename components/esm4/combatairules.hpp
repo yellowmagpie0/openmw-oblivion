@@ -1,7 +1,10 @@
 #ifndef OPENMW_ESM4_COMBATAIRULES_H
 #define OPENMW_ESM4_COMBATAIRULES_H
 
+#include "actorvalues.hpp"
+
 #include <cstdint>
+#include <optional>
 
 namespace ESM4
 {
@@ -28,8 +31,14 @@ namespace ESM4
     };
     // Original 546260 numeric score, before the actor wrapper's [0,100] clamp.
     // Caller resolves ownership/leveled bases, factions, process flags and
-    // per-target modifiers. Integer conversions outside int32 are unsupported.
-    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings);
+    // per-target modifiers. Intermediate terms outside int32 remain unsupported;
+    // the final conversion retains the selected native CPU overflow behavior.
+    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings,
+        ActorValueConversionMode mode = ActorValueConversionMode::NonSse);
+    // Original 503A50 integer-to-float request and 5E2070 modifier update.
+    // An absent entry is distinct from an existing zero entry.
+    std::int32_t modifyDispositionModifier(std::optional<std::int32_t> prior,
+        std::int32_t currentDisposition, std::int32_t delta, ActorValueConversionMode mode);
     void validateDispositionSettings(const DispositionSettings& settings);
 
     struct FightScoreSettings

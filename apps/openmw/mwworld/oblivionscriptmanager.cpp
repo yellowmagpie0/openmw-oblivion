@@ -1393,6 +1393,24 @@ namespace MWWorld
             return context.mSelf;
         };
         const auto objectPtr = [&]() { return ptrFor(objectKey()); };
+        const auto isDispositionActor = [&](const ESM::FormKey& key) {
+            const auto base = mWorld.getOblivionReferenceBaseKey(key);
+            return base && (mStore.search<ESM4::Npc>(*base) || mStore.search<ESM4::Creature>(*base));
+        };
+        const auto ensureDispositionActor = [&](const ESM::FormKey& requested) {
+            const auto key = ESM4::runtimeReferenceKey(requested);
+            const auto* combat = mWorld.getOblivionCombatService();
+            if (!combat || combat->findActorValues(key)) return;
+            // An explicit script reference may name a cold actor. Resolve its
+            // object and run the shared native constructor before reading or
+            // changing current values; this does not activate its scene/process.
+            const Ptr ptr = ptrFor(key);
+            if (ptr.isEmpty()) return;
+            if (key == ESM::FormKey::dynamic("player", 1))
+                mWorld.initializeOblivionPlayerActor();
+            else
+                mWorld.initializeOblivionNonPlayerActor(ptr, ESM4::ActorValueProcess::Low);
+        };
         const auto oblivionAi = [&]() { return mWorld.getOblivionAiService(); };
         const auto playAnimation = [&](const Ptr& ptr, const std::string& group, int mode, bool scripted = true) {
             bool played = false;
@@ -1944,10 +1962,30 @@ namespace MWWorld
             return std::int64_t(0);
         }
 
+        if (name == "moddisposition")
+        {
+            if (arguments.size() < 2) return std::int64_t(0);
+            const auto other = keyFromValue(argument(0));
+            if (!other) return std::int64_t(0);
+            const auto delta = ObScript::asInteger(argument(1));
+            if (delta < std::numeric_limits<std::int32_t>::min() || delta > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "ModDisposition requires an int32 delta", name);
+            if (!isDispositionActor(objectKey()) || !isDispositionActor(*other)) return std::int64_t(0);
+            ensureDispositionActor(objectKey());
+            ensureDispositionActor(*other);
+            const auto value = mWorld.modifyOblivionDisposition(objectKey(), *other, static_cast<std::int32_t>(delta));
+            if (!value)
+                throw ObScript::RuntimeError("OBSV117", "Native disposition inputs are not ready", name);
+            return std::int64_t(*value);
+        }
+
         if (name == "getdisposition")
         {
             const auto other = keyFromValue(argument(0));
             if (!other) return std::int64_t(0);
+            if (!isDispositionActor(objectKey()) || !isDispositionActor(*other)) return std::int64_t(0);
+            ensureDispositionActor(objectKey());
+            ensureDispositionActor(*other);
             const auto value = mWorld.getOblivionScriptDisposition(objectKey(), *other);
             if (!value)
                 throw ObScript::RuntimeError("OBSV117", "Native disposition inputs are not ready", name);
@@ -2702,7 +2740,7 @@ namespace MWWorld
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
             "addtopic", "showmap",
-            "cast", "addspell", "removespell", "moddisposition", "setessential",
+            "cast", "addspell", "removespell", "setessential",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "setunconscious" };
         if (deferred.contains(name))

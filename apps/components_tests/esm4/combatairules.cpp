@@ -130,7 +130,9 @@ TEST(ESM4CombatAIRules, DispositionInvalidSettingsAndUnsupportedConversionsFailE
     input.mModifier = std::numeric_limits<std::int32_t>::max();
     EXPECT_EQ(ESM4::dispositionScore(input, settings), input.mModifier);
     input.mActorPersonality = 50;
-    EXPECT_THROW(ESM4::dispositionScore(input, settings), std::overflow_error);
+    EXPECT_EQ(ESM4::dispositionScore(input, settings), -2147483624);
+    EXPECT_EQ(ESM4::dispositionScore(input, settings, ESM4::ActorValueConversionMode::Sse),
+        std::numeric_limits<std::int32_t>::min());
 }
 
 TEST(ESM4CombatAIRules, AggressionGateUpperCapAndNegativeScores)
@@ -300,4 +302,29 @@ TEST(ESM4CombatAIRules, YieldDurationFixedSeedDistribution)
     }
     for (std::size_t i = 0; i < counts.size(); ++i)
         EXPECT_NEAR(counts[i], (i < 8 ? 3277. : 3276.) / 32768 * 100000, 600);
+}
+
+TEST(ESM4CombatAIRules, DispositionModifierPreservesMissingAndZeroEntryDifference)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    EXPECT_EQ(ESM4::modifyDispositionModifier(std::nullopt, 50, 200, Mode::Sse), 200);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(0, 50, 200, Mode::Sse), 50);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(0, 50, -200, Mode::Sse), -50);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(200, 100, -7, Mode::Sse), 193);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(-200, 0, 7, Mode::Sse), -193);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(std::nullopt, 50, 0, Mode::Sse), 0);
+}
+
+TEST(ESM4CombatAIRules, DispositionModifierRetainsCommandFloatStoreAndCpuConversions)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    const auto maximum = std::numeric_limits<std::int32_t>::max();
+    EXPECT_EQ(ESM4::modifyDispositionModifier(std::nullopt, 50, maximum, Mode::Sse),
+        std::numeric_limits<std::int32_t>::min());
+    EXPECT_EQ(ESM4::modifyDispositionModifier(0, 50, maximum, Mode::Sse), 128);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(0, 50, maximum, Mode::NonSse), 0);
+    EXPECT_EQ(ESM4::modifyDispositionModifier(16777217, 50, 1, Mode::Sse), 16777218);
+    EXPECT_THROW(ESM4::modifyDispositionModifier(0, -1, 0, Mode::Sse), std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifier(0, 101, 0, Mode::Sse), std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifier(0, 50, 0, static_cast<Mode>(9)), std::invalid_argument);
 }

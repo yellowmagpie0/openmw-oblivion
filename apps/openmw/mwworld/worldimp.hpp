@@ -323,6 +323,9 @@ namespace MWWorld
 
         float feetToGameUnits(float feet);
 
+        std::optional<std::int32_t> getOblivionDispositionWithModifier(const ESM::FormKey& actor,
+            const ESM::FormKey& target, std::optional<std::int32_t> modifier) const;
+
         void captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const;
         void captureOblivionLooseWeaponState(ESM4::RuntimeState& state) const;
         void validateOblivionLooseWeaponState(const ESM4::RuntimeState& state) const;
@@ -439,6 +442,8 @@ namespace MWWorld
             const ESM::FormKey& actor, const ESM::FormKey& target) const;
         std::optional<std::int32_t> getOblivionScriptDisposition(
             const ESM::FormKey& actor, const ESM::FormKey& target);
+        std::optional<std::int32_t> modifyOblivionDisposition(
+            const ESM::FormKey& actor, const ESM::FormKey& target, std::int32_t delta);
         bool setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value);
         std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
         // Borrow the current actor renderer with an already resolved native

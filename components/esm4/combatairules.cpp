@@ -8,6 +8,43 @@
 
 namespace ESM4
 {
+    namespace
+    {
+        std::int32_t dispositionInteger(double value, ActorValueConversionMode mode)
+        {
+            if (!std::isfinite(value)
+                || (mode != ActorValueConversionMode::NonSse && mode != ActorValueConversionMode::Sse))
+                throw std::invalid_argument("invalid native disposition conversion");
+            if (mode == ActorValueConversionMode::Sse)
+                return value < -0x1p31 || value >= 0x1p31
+                    ? std::numeric_limits<std::int32_t>::min() : static_cast<std::int32_t>(value);
+            if (value < -0x1p63 || value >= 0x1p63) return 0;
+            return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::uint64_t>(
+                static_cast<std::int64_t>(value))));
+        }
+    }
+
+    std::int32_t modifyDispositionModifier(std::optional<std::int32_t> prior,
+        std::int32_t currentDisposition, std::int32_t delta, ActorValueConversionMode mode)
+    {
+        if (currentDisposition < 0 || currentDisposition > 100)
+            throw std::invalid_argument("invalid current native disposition");
+        float change = static_cast<float>(delta); // 503AC0 FILD, 503AC7 FLOATSTORE.
+        if (!prior) return dispositionInteger(change, mode);
+        const double requested = double(currentDisposition) + change;
+        if (requested < 0)
+            change = static_cast<float>(double(change) - requested);
+        else if (requested > 100)
+        {
+            const auto excessInteger = std::bit_cast<std::int32_t>(
+                static_cast<std::uint32_t>(dispositionInteger(requested, mode)) - 100u);
+            const float excess = static_cast<float>(excessInteger);
+            change = excess < change ? static_cast<float>(double(change) - excess) : 0.f;
+        }
+        // FILD old integer + FLOAT delta, without a further FLOATSTORE.
+        return dispositionInteger(double(*prior) + change, mode);
+    }
+
     void validateDispositionSettings(const DispositionSettings& settings)
     {
         for (float value : {settings.mActorPersonalityBase, settings.mActorPersonalityMultiplier,
@@ -20,7 +57,8 @@ namespace ESM4
                 throw std::invalid_argument("nonfinite native disposition setting");
     }
 
-    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings)
+    std::int32_t dispositionScore(const DispositionInput& input, const DispositionSettings& settings,
+        ActorValueConversionMode mode)
     {
         validateDispositionSettings(settings);
         const auto integer = [](double value) {
@@ -72,7 +110,8 @@ namespace ESM4
         bounty = capped(bounty, settings.mBountyMaximum);
         const auto base = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(personality)
             + static_cast<std::uint32_t>(fame));
-        return integer((((((double(base) + infamy) + bounty) + race) + faction) + weapon) + disease + input.mModifier);
+        return dispositionInteger((((((double(base) + infamy) + bounty) + race) + faction) + weapon)
+            + disease + input.mModifier, mode);
     }
 
     void validateYieldSettings(const YieldSettings& settings)
