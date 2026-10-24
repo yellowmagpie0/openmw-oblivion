@@ -12539,3 +12539,24 @@ expiry/persistence, NPC speech and the remaining S4 gameplay matrix stay open.
 No full M15S4 completion is claimed. See
 [M15-NPC-PLAYER-COMMON-HIT-VERIFICATION.json](M15-NPC-PLAYER-COMMON-HIT-VERIFICATION.json)
 and the editable [course recipe](../../scripts/data/oblivion_compat/m15_npc_player_common_hit_course.json).
+
+
+### Friendly-hit notification order and process inputs (native prerequisite)
+
+A composed original-instruction probe passes 7,680 cases from contact5FFEB5
+through its final virtual3A8 notification. Primary Hit response observes the old
+friend-hit count; reactions precede notification5FE380. Its actual counter update
+can then request secondary speech with the new, possibly wrapped count. The
+noncombat commanded-source branch uses >=3, while controller-backed admission
+uses >3 or >5 for the supplied ally case. Voice/VM, reaction playback, primitive
+inputs and the detection/aggression continuation remain explicit boundaries.
+
+Another 33 cases execute the actual process13C accessors, bounded CommandEffect
+writer/clear paths and full controller getter. The controller getter admits only
+current package0C. Process13C has identified CommandEffect writers; treating it
+as a melee or AI target would be an unsupported substitution. These contracts
+change the pending production adapter design. No C++ implementation, new engine
+test or gameplay acceptance is claimed. Friend-hit authority/query, notification
+production, expiry/save integration and full M15S4 delivery remain open. See
+[M15-FRIENDLY-HIT-ORDER-VERIFICATION.json](M15-FRIENDLY-HIT-ORDER-VERIFICATION.json)
+and the editable [probe recipe](../../scripts/data/oblivion_compat/m15_friendly_hit_notification_order_cases.json).

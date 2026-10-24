@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "implementation_changed": false,
+  "source_head": "a9842b4732e6b4c8f8dd7057aeffee932a17f3ba",
+  "full_M15S4_acceptance": false,
+  "order_probe": {
+    "passed": true,
+    "cases": 7680,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "c55d3054839d81eaa91dbb5189977372e07561f0d4f64552b5dd8416fd885266",
+    "scope": "Original contact5FFEB5..6005C0 with actual final virtual3A8 dispatch to5FE380 and actual friendly increment/threshold/secondary speech branch; original extra owner/list/getter and fight score execute. AV/resource/speech616530 results, Counter/master/reaction playback, actor-controller/ground queries, process effect8, relationship/controller/predicate and detection-aggression tail are declared boundaries. Primary speech observes old counter; notification follows reaction sinks and secondary speech observes new/wrapped counter. NPC victim, Player attacker, actual package0C controller getter and process13C getter, supplied command-caster field, current Speed0; no actual audio/rendering/VM or full aggression gameplay acceptance.",
+    "full_M15S4_acceptance": false
+  },
+  "process_field_probe": {
+    "passed": true,
+    "cases": 33,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "40347067ab2236ba6577a7f624a6770f266dbdd92df502dd6404e57c31371156",
+    "scope": "Actual High-process13C getter/setter, bounded native CommandEffect setter/clear instruction slices and full actor controller getter5E6190, no function stubs. Native RTTI identifies CommandEffect and vtable links6926B0/692770; inspected wrappers call the supplied slices. This is field provenance, not full Command effect application/removal, caster conversion or native hit-input production. Controller getter admits only current package kind0C, not0D.",
+    "full_M15S4_acceptance": false
+  },
+  "retained_failures": [
+    "Attempt01 unsigned fixture writer rejected negative reviewed GMST before any cases.",
+    "Attempt02 omitted the attacker High process for a general-hit ground query.",
+    "Attempt03 omitted controller+3C speaker binding; corrected04 passed640 cases;05 expands actual package/process getter coverage."
+  ],
+  "scope": "Independent producer ordering and input contracts for the unfinished native friendly-hit integration. No implementation/runtime completion claim.",
+  "not_accepted": [
+    "Persist actor-owned ordered friend-hit storage and expose native command plus loaded/unloaded condition288 without a separate script-only state.",
+    "Derive current package and Command-effect ownership from their actual authorities; do not substitute an AI target or an undirected engagement without matching the native admission.",
+    "Apply notification after primary response/reactions; permit its secondary response with updated storage and current actor context.",
+    "Wire native actor-update expiry with global frame delta, lifecycle and save admission, and complete the remaining hostility/disposition branch.",
+    "Re-enable the normal Player-to-NPC phased caller only after its stock Hit INFOs and the composed producer pass normal-input and fresh-process acceptance."
+  ],
+  "artifacts": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_friendly_hit_notification_order_cases.json",
+      "sha256": "55d3b6026cb2e01e46dd9f7d440abc65deb4526f242fd0c34255e500487e89f4",
+      "bytes": 4435
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-05/probe.py",
+      "sha256": "88566fce2f706a32fa7a06eb012c87a34d4f8fbb6c0602818ee706e4efc2e157",
+      "bytes": 9907
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-05/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-05/corpus.json",
+      "sha256": "c55d3054839d81eaa91dbb5189977372e07561f0d4f64552b5dd8416fd885266",
+      "bytes": 3259521
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-05/verification.json",
+      "sha256": "bee7cd97336877b8cbb67cce399f3a40f5b09cf9846f3db43a3ab3608286fe71",
+      "bytes": 1008
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friendly-hit-process-fields-oracle-01/probe.py",
+      "sha256": "6fc9d56c9f99c3dfde86b97ec4059c55736fa8bb01b27db03f3871a36926e920",
+      "bytes": 4140
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friendly-hit-process-fields-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friendly-hit-process-fields-oracle-01/corpus.json",
+      "sha256": "40347067ab2236ba6577a7f624a6770f266dbdd92df502dd6404e57c31371156",
+      "bytes": 3483
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friendly-hit-process-fields-oracle-01/verification.json",
+      "sha256": "3153b318e9a57b7e9d3aa2e9be461f15d1f4f7832b52e0c94f29ab9aa152d204",
+      "bytes": 724
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/contact.asm",
+      "sha256": "9d50893561f25de07150b6221e2e334c1c7e022dea2a1da3672e1bffcb911b75",
+      "bytes": 109730
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/notification.asm",
+      "sha256": "c1960c93a15184c35f08635dc97334995ba5817483dd10cc574087126c2f287c",
+      "bytes": 36427
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/process_3d0.asm",
+      "sha256": "8ebf66545b582045b80bebf37abde10af029a66ee112f7ca954f4fbd9072834a",
+      "bytes": 1590
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/controller.asm",
+      "sha256": "97c9a208eda58f8d9929db82620bb2c27848e5df888d8567e7f9daf29b395061",
+      "bytes": 1628
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/find-target-writers.py",
+      "sha256": "f51063cfc676e5a158b139cb2935dbaec0145f1f95f2ee6b33437142f047470d",
+      "bytes": 917
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/process13c-setter-call-sites.asm",
+      "sha256": "86e0f854a48f990d6a015f9d180a43cd56d8e380df51336ad846a839f235a322",
+      "bytes": 22393
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-01/failure-setup.json",
+      "sha256": "7ba2418c549af320eb55ea52a1f0c0700cf22e3de2832580b3699ad7ad2cdad5",
+      "bytes": 159
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-02/failure.json",
+      "sha256": "60a59fd820a87ff4ba5140407b285f893a5841055b87331f9412442fd3423533",
+      "bytes": 826
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-03/failure.json",
+      "sha256": "26b19ace34549a5cfe33319dcf20203d673da90d44444d633d933a70747a35ad",
+      "bytes": 1037
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-oracle-04/verification.json",
+      "sha256": "4733d378e61d53f84e28aaea9d2af1cfb6fee4f64082e91bf67c91c808fcc02d",
+      "bytes": 939
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-common-notification-order-inspection-01/command-effect-wrappers.asm",
+      "sha256": "d3d1d8cec8ecf48fc35a02a188393ab18c7cccf737ea699564d938bda3e2da69",
+      "bytes": 6838
+    }
+  ]
+}

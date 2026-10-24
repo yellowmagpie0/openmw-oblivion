@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "purpose": "Independent producer ordering and input contracts for the unfinished native friendly-hit integration. No implementation/runtime completion claim.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "contact_slice": [
+      "0x5ffeb5",
+      "0x6005c0"
+    ],
+    "final_notification_virtual_offset": "0x3a8",
+    "final_notification_call": "0x6005be",
+    "notification": "0x5fe380",
+    "primary_response_virtual_offset": "0x308",
+    "secondary_response_call": "0x5fe77e",
+    "automatic_response_boundary": "0x616530",
+    "friend_increment": "0x420e00",
+    "friend_query": "0x420ed0",
+    "controller_getter": "0x5e6190",
+    "process_field_getter": "0x629480",
+    "process_field_setter": "0x629470",
+    "command_effect_apply_slice": [
+      "0x692476",
+      "0x692484"
+    ],
+    "command_effect_clear_slice": [
+      "0x692665",
+      "0x69267f"
+    ]
+  },
+  "order_matrix": {
+    "cases": 7680,
+    "health": [
+      0,
+      1
+    ],
+    "absorbed_fraction": [
+      0,
+      0.5
+    ],
+    "supplied_counter_selection": [
+      false,
+      true
+    ],
+    "damage_percentile_raw": [
+      0,
+      99
+    ],
+    "speech_chance_raw": [
+      0,
+      32767
+    ],
+    "prior_count": [
+      0,
+      2,
+      3,
+      5,
+      65535
+    ],
+    "ignore_flag": [
+      false,
+      true
+    ],
+    "ally": [
+      false,
+      true
+    ],
+    "current_combat_package": [
+      false,
+      true
+    ],
+    "process_13c": [
+      "null",
+      "Player",
+      "other"
+    ],
+    "current_disposition": [
+      14,
+      15
+    ],
+    "aggression": -1,
+    "current_speed": 0,
+    "x87_word": 639,
+    "conversion_cpu_branch": "native non-SSE"
+  },
+  "expected_contract": [
+    "Primary response boundary observes the prior friend-hit count. It runs before Stagger/block consequences and final notification.",
+    "Final contact virtual3A8 calls notification5FE380 only after the reaction/blocked-dispatch tail.",
+    "Notification may increment the actor-owned count modulo65536, retain it or enter the supplied aggression continuation. A secondary response boundary observes the resulting count.",
+    "The noncombat process13C==attacker branch uses post-increment count>=3. The controller branch uses count>3, or>5 when its supplied ally query succeeds.",
+    "Controller-backed ignored-hit routing can request secondary speech without incrementing. Preserve the native disposition15 branch rather than rewriting it as one generic boolean.",
+    "Actual controller getter5E6190 returns the current process package only when its type is0C;0D is not admitted by this getter.",
+    "Process13C is read by629480 and written by629470. Identified CommandEffect paths set and clear it. A melee/AI target is not an established producer for this field."
+  ],
+  "boundaries": [
+    "Resource application and AV/disposition/relationship/predicate inputs are supplied. Original fight score and extra storage/list/query execute.",
+    "Voice/result execution616530 is an observation boundary. No real INFO VM, audio or rendering.",
+    "Counter selection, Master/reaction playback, actor-controller ground queries and process effect8 are supplied.",
+    "Detection/aggression tail5FE5C4 is an explicit cleanup/return boundary; full aggression/alarm/controller response mechanics are not proved.",
+    "CommandEffect test executes bounded setter/clear slices plus actual process getters and full controller getter, not full Command spell application/removal."
+  ],
+  "required_implementation": [
+    "Persist actor-owned ordered friend-hit storage and expose native command plus loaded/unloaded condition288 without a separate script-only state.",
+    "Derive current package and Command-effect ownership from their actual authorities; do not substitute an AI target or an undirected engagement without matching the native admission.",
+    "Apply notification after primary response/reactions; permit its secondary response with updated storage and current actor context.",
+    "Wire native actor-update expiry with global frame delta, lifecycle and save admission, and complete the remaining hostility/disposition branch.",
+    "Re-enable the normal Player-to-NPC phased caller only after its stock Hit INFOs and the composed producer pass normal-input and fresh-process acceptance."
+  ],
+  "full_M15S4_acceptance": false
+}
