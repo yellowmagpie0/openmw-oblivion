@@ -6,43 +6,73 @@
 #include <limits>
 #include <stdexcept>
 
+#include <boost/multiprecision/cpp_bin_float.hpp>
+
 namespace ESM4
 {
     namespace
     {
-        std::int32_t dispositionInteger(double value, ActorValueConversionMode mode)
+        template <class Float>
+        std::int32_t dispositionInteger(Float value, ActorValueConversionMode mode)
         {
-            if (!std::isfinite(value)
+            using std::isfinite;
+            if (!isfinite(value)
                 || (mode != ActorValueConversionMode::NonSse && mode != ActorValueConversionMode::Sse))
                 throw std::invalid_argument("invalid native disposition conversion");
             if (mode == ActorValueConversionMode::Sse)
-                return value < -0x1p31 || value >= 0x1p31
-                    ? std::numeric_limits<std::int32_t>::min() : static_cast<std::int32_t>(value);
+            {
+                // 9828D2 stores a double before CVTTSD2SI. PC64 arithmetic
+                // may reach an int32 boundary only through this extra rounding.
+                const double stored = static_cast<double>(value);
+                return stored < -0x1p31 || stored >= 0x1p31
+                    ? std::numeric_limits<std::int32_t>::min() : static_cast<std::int32_t>(stored);
+            }
             if (value < -0x1p63 || value >= 0x1p63) return 0;
             return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(static_cast<std::uint64_t>(
                 static_cast<std::int64_t>(value))));
         }
+        template <class Float>
+        std::int32_t dispositionFloatChange(std::optional<std::int32_t> prior,
+            std::int32_t currentDisposition, float change, ActorValueConversionMode mode)
+        {
+            if (!prior) return dispositionInteger(change, mode);
+            const Float requested = Float(currentDisposition) + Float(change);
+            if (requested < 0)
+                change = static_cast<float>(Float(change) - requested);
+            else if (requested > 100)
+            {
+                const auto excessInteger = std::bit_cast<std::int32_t>(
+                    static_cast<std::uint32_t>(dispositionInteger(requested, mode)) - 100u);
+                const float excess = static_cast<float>(excessInteger);
+                change = excess < change ? static_cast<float>(Float(change) - Float(excess)) : 0.f;
+            }
+            // FILD old integer + FLOAT delta, without a further FLOATSTORE.
+            return dispositionInteger<Float>(Float(*prior) + Float(change), mode);
+        }
+    }
+
+    std::int32_t modifyDispositionModifierFloat(std::optional<std::int32_t> prior,
+        std::int32_t currentDisposition, float delta, ActorValueConversionMode mode,
+        DispositionArithmeticPrecision precision)
+    {
+        if (currentDisposition < 0 || currentDisposition > 100 || !std::isfinite(delta))
+            throw std::invalid_argument("invalid native disposition request");
+        if (precision == DispositionArithmeticPrecision::Double)
+            return dispositionFloatChange<double>(prior, currentDisposition, delta, mode);
+        if (precision == DispositionArithmeticPrecision::Extended)
+        {
+            using Extended = boost::multiprecision::number<boost::multiprecision::cpp_bin_float<64,
+                boost::multiprecision::digit_base_2>, boost::multiprecision::et_off>;
+            return dispositionFloatChange<Extended>(prior, currentDisposition, delta, mode);
+        }
+        throw std::invalid_argument("invalid native disposition arithmetic precision");
     }
 
     std::int32_t modifyDispositionModifier(std::optional<std::int32_t> prior,
         std::int32_t currentDisposition, std::int32_t delta, ActorValueConversionMode mode)
     {
-        if (currentDisposition < 0 || currentDisposition > 100)
-            throw std::invalid_argument("invalid current native disposition");
-        float change = static_cast<float>(delta); // 503AC0 FILD, 503AC7 FLOATSTORE.
-        if (!prior) return dispositionInteger(change, mode);
-        const double requested = double(currentDisposition) + change;
-        if (requested < 0)
-            change = static_cast<float>(double(change) - requested);
-        else if (requested > 100)
-        {
-            const auto excessInteger = std::bit_cast<std::int32_t>(
-                static_cast<std::uint32_t>(dispositionInteger(requested, mode)) - 100u);
-            const float excess = static_cast<float>(excessInteger);
-            change = excess < change ? static_cast<float>(double(change) - excess) : 0.f;
-        }
-        // FILD old integer + FLOAT delta, without a further FLOATSTORE.
-        return dispositionInteger(double(*prior) + change, mode);
+        // Original command 503AC0 FILD, 503AC7 FLOATSTORE before 5E2070.
+        return modifyDispositionModifierFloat(prior, currentDisposition, static_cast<float>(delta), mode);
     }
 
     void validateDispositionSettings(const DispositionSettings& settings)

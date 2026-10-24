@@ -1,0 +1,376 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "runtime_schema": 67,
+  "source_base": "a6f81d59e1b4a206e92744b7d3643fe13b32fee5",
+  "tested_source_fingerprint": "9bce87e0577a4ed86a29cfaea10bb6df4e95e75d731fa15ece3d9e2ff5b36f18",
+  "scope": "Native float-input disposition update and World adapter prerequisite for unfinished hit notifications.",
+  "full_M15S4_acceptance": false,
+  "automatic_hit_notification_called": false,
+  "native_oracles": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-sse-oracle-01",
+      "passed": true,
+      "cases": 640,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "bee37578f7f1e62b639c8ff1886fd12bc8cb365ae9115f7270959ac8ecf8f59a",
+      "scope": "Additional SSE conversion branch only: full native5E2070 float-input modifier updater and real actor virtual224 direct current disposition, actual546260 numeric scorer/9828C0 conversion/list insertion; finite fractional and extreme binary32 changes, absent vs existing zero entries, both x87 words. Winning Player-self content/default context inherited and audited; AV6/36, allocator/lock and MarkModified boundaries. Existing832-case non-SSE corpus retained rather than rerun. No mechanical hit producer, script cache adapter or runtime acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-nonsse-oracle-01",
+      "passed": true,
+      "cases": 640,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "27962f2cfd64204d509900259cc2db6130e889ff8dfb0da860bcc8ff682e1c75",
+      "scope": "Bounded non-SSE float-input domain with recorded actual pre-update disposition: full native5E2070 float-input modifier updater and real actor virtual224 direct current disposition, actual546260 numeric scorer/9828C0 conversion/list insertion; finite fractional and extreme binary32 changes, absent vs existing zero entries, both x87 words. Winning Player-self content/default context inherited and audited; AV6/36, allocator/lock and MarkModified boundaries. Existing832-case non-SSE corpus retained; these additional pre-update query results supply direct scalar inputs for an independent C++ comparator. No mechanical hit producer, script cache adapter or runtime acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01",
+      "passed": true,
+      "cases": 1120,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "0de2cc8140de82374cb44ea9bcb76474dc431195820e69ef5a96ba08734c4e6d",
+      "scope": "Additional wide-float and subnormal domain across both CPU conversion branches: full native5E2070 float-input modifier updater and real actor virtual224 direct current disposition, actual546260 numeric scorer/9828C0 conversion/list insertion; finite fractional and extreme binary32 changes, absent vs existing zero entries, both x87 words. Winning Player-self content/default context inherited and audited; AV6/36, allocator/lock and MarkModified boundaries. Earlier832 non-SSE and640 SSE bounded corpora retained rather than rerun; this adds wide finite/subnormal input observation and records both x87 words without asserting they agree. No mechanical hit producer, script cache adapter or runtime acceptance."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01",
+      "passed": true,
+      "cases": 8000,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "52b39fc69de1f5855c0f741843812ca07497b197d39f8774ea91b0bfcce6a35c",
+      "scope": "Deterministic seed0x4d15f10a generated finite binary32 requests, full int32 prior modifiers and Personality0..100 across both CPU branches: full native5E2070 float-input modifier updater and real actor virtual224 direct current disposition, actual546260 numeric scorer/9828C0 conversion/list insertion; finite fractional and extreme binary32 changes, absent vs existing zero entries, both x87 words. Winning Player-self content/default context inherited and audited; AV6/36, allocator/lock and MarkModified boundaries. 2000 generated requests each execute both x87 words and both CPU branches; recorded direct current query supplies independent scalar inputs. Earlier fixed corpora retained. No mechanical hit producer, script cache adapter or runtime acceptance."
+    }
+  ],
+  "cpp_comparison": {
+    "passed": true,
+    "returncode": 0,
+    "stdout": "{\"cases\":10400,\"failed\":0}\n",
+    "stderr": "",
+    "implementation_sha256": "2540f8a48f75eb4c949e0ea46e3ac7aa8edf4d50b1b7f47d7b90f6f1d2903920",
+    "header_sha256": "e4084c1626e3e0fd62e1c402c059bd90a7d7a0c0940761eef61e50ae7748cea4",
+    "driver_sha256": "898ff185578512c4ecd18b10ecdba749e6260279882512b93c01f2e0244ac8d7",
+    "cases_sha256": "668044634d6ef6ba6aec509fcf5fdef8d3219fa405ca19248747523c9a62de15",
+    "binary_sha256": "516962869259aa8594de1938da93a51c8adabd846cbd6ebd17cf8f73a4ae7ccb"
+  },
+  "checks": {
+    "normal": {
+      "components": {
+        "executed": 3049,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "61014af9c1424b0a8a52df664a9ebfbb642979359aa9e69f01310c26148e405b",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "fc4bb66ec8d786ae4ba0ad6518f34147fcab1225974461793cfd385549dcf1f6",
+        "inventory_sha256": "736991b26a2281b3fe6703a77186a9fb28fc7d6ba1c2bfc1b2e66ee5d19a1c74",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1903,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "af98533b0ff59c71526c1a65f7ad0c517ca2677a51d684b31c0f13e24de4c79e",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "fcb69a50c8cd39b48d336c29ece85cb31f2ff93ae18355b6163a1cf8dc7f2609",
+        "inventory_sha256": "8a684b57f8d94da168c1a633c717e10ad0ae9c40d12b37ff9c1c32b3733d8169",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "sanitize": {
+        "executed": 900,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "46882b3c6a9e22be03bca60ad3e604ff52d0c6370eea88a584b1be71b3c31cfa",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "c7fbb5573b724c73890144d37f945b42bb8976a6f37fc0a2ff5ae1c6791c5b42",
+        "inventory_sha256": "68f7b8da060e07a557f1b743b4ad9ecbb51b6e46b03a8d919812255626e4014c",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1903,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "a893a82111b1fa54d4f5cc0fd785e754c208ca32c6dafe5a8a2bcdb28ae0a08d",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "de175aaeef5b37c15b9b9a24f4c96abf25243b9fe322d9290012b071f9f04f24",
+        "inventory_sha256": "8a684b57f8d94da168c1a633c717e10ad0ae9c40d12b37ff9c1c32b3733d8169",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "python": "Not rerun; no Python or save schema change.",
+  "runtime": "Headless native World test only: fractional writes, existing/absent script cache, shared integer-command storage, malformed-request atomicity and canonical restoration. No new normal-input/fresh-process gameplay acceptance.",
+  "retained_failure": "Initial2400-case C++ comparison differed on four observations because Extended->SSE omitted the original binary64 store before CVTTSD2SI; corrected10400-case comparison passes.",
+  "source_files": [
+    {
+      "path": "apps/components_tests/esm4/combatairules.cpp",
+      "sha256": "889a899854c24e4ecbdc5540528c573645deb0ddf495766c399781a64225cb28",
+      "bytes": 18108
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "c145a2eadabfe8d2335a883b3f6239097873ba26c795ce5cbde46b3e18fc5898",
+      "bytes": 473459
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "94e03f053f9a81f69282c7aeacaf09702222b7bde3953ef926a29376683a24b9",
+      "bytes": 55760
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "d6460b57607bbe7822fffc72de156a6872a9454d98450e90dddd36820f5dce3d",
+      "bytes": 2066653
+    },
+    {
+      "path": "components/esm4/combatairules.cpp",
+      "sha256": "2540f8a48f75eb4c949e0ea46e3ac7aa8edf4d50b1b7f47d7b90f6f1d2903920",
+      "bytes": 12891
+    },
+    {
+      "path": "components/esm4/combatairules.hpp",
+      "sha256": "e4084c1626e3e0fd62e1c402c059bd90a7d7a0c0940761eef61e50ae7748cea4",
+      "bytes": 4950
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-sse-oracle-01/probe.py",
+      "sha256": "90de2e42c50d03fe81949e876ae685147ad7f3deeb4ec63d83fbe8e037f05f9c",
+      "bytes": 3125
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-sse-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-sse-oracle-01/corpus.json",
+      "sha256": "bee37578f7f1e62b639c8ff1886fd12bc8cb365ae9115f7270959ac8ecf8f59a",
+      "bytes": 80679
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-sse-oracle-01/verification.json",
+      "sha256": "7e35b9d1d157021f37b3498e2fa9f2c2ae4f4100ac72d255e2b82dc0951a8bd4",
+      "bytes": 788
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-nonsse-oracle-01/probe.py",
+      "sha256": "79d9edb54dda96f0cbc87a08fd1382f5358a428fe455632b508e8b138442ce56",
+      "bytes": 3256
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-nonsse-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-nonsse-oracle-01/corpus.json",
+      "sha256": "27962f2cfd64204d509900259cc2db6130e889ff8dfb0da860bcc8ff682e1c75",
+      "bytes": 82565
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-nonsse-oracle-01/verification.json",
+      "sha256": "bc1a68e3b9b56e7511cf951a25702fb5f1023e206d6b373b6ad18e0820f3418a",
+      "bytes": 916
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01/probe.py",
+      "sha256": "0d18b78018cb99b26993d688e215065beaf88686c9eee9d27e337c1edc47aba5",
+      "bytes": 3556
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01/corpus.json",
+      "sha256": "0de2cc8140de82374cb44ea9bcb76474dc431195820e69ef5a96ba08734c4e6d",
+      "bytes": 140237
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01/verification.json",
+      "sha256": "8c4eb2b2c666521cdc76e63c055dc1c978af576d04b6c6aedfe110321c87653c",
+      "bytes": 951
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01/probe.py",
+      "sha256": "59d0a7eda2d5c177804c87f84e1ab8750e29c3613e04bc705f878871fe1c5245",
+      "bytes": 3742
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01/corpus.json",
+      "sha256": "52b39fc69de1f5855c0f741843812ca07497b197d39f8774ea91b0bfcce6a35c",
+      "bytes": 1044057
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01/verification.json",
+      "sha256": "87b18adc3d09f3251a402edb3c23e54e1b5e8d3c36149d314f538494d428bc32",
+      "bytes": 1003
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-generated-oracle-01/requests.json",
+      "sha256": "e22ef6e14634e203481551c023f9cb0b6b911eea8be8f2a93cb5082e6c363445",
+      "bytes": 169863
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-wide-oracle-01/precision-analysis.json",
+      "sha256": "c0f19c8b3a3a2f15731c5b48928138c61daeef8cc9ff620ff7b32521e1000598",
+      "bytes": 2351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-03/compare.cpp",
+      "sha256": "898ff185578512c4ecd18b10ecdba749e6260279882512b93c01f2e0244ac8d7",
+      "bytes": 1008
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-03/compare",
+      "sha256": "516962869259aa8594de1938da93a51c8adabd846cbd6ebd17cf8f73a4ae7ccb",
+      "bytes": 73368
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-03/cases.tsv",
+      "sha256": "668044634d6ef6ba6aec509fcf5fdef8d3219fa405ca19248747523c9a62de15",
+      "bytes": 412178
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-03/comparison.json",
+      "sha256": "fca70fe74830d5048e739ff8fb0b14eee24b21f45af3f19f5c7e168bb3285af2",
+      "bytes": 546
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-01/comparison.json",
+      "sha256": "790cc89b3fe4e67c2a64b526a9aacdacceb7af8c53c2f1116b479607827b7fc6",
+      "bytes": 327
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-float-comparison-01/conversion.asm",
+      "sha256": "c8207e1db08c9da58d7b956915eeba1f3e4f7a18ea86d082ee30a7e25cad01d5",
+      "bytes": 2318
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01/probe.py",
+      "sha256": "78a944f84f6005eef787d7d05c70ae573c135f7f51aadb42a500b04d7df7a9f6",
+      "bytes": 3652
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-wrapper-oracle-03/probe.py",
+      "sha256": "84bd49f3d5f46d0a4e8dc9499fbd6a4241af2ae1c165cefdbc21dc1716f1c996",
+      "bytes": 5870
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/probe.py",
+      "sha256": "93c2f1029168662b07ba16f2eb92289c1d0f392f818cce92e83957b36573bb19",
+      "bytes": 4419
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-runtime-oracle-01/verification.json",
+      "sha256": "0b7966d1b647aec90496fe4d39b7c2fb5ca0386afc17d67c1eba1c65399ac631",
+      "bytes": 10897
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-disposition-oracle-02/settings.json",
+      "sha256": "813f1745a84aad316aea590f297be0dc3348077ddb9bc433b1ec88224140c88c",
+      "bytes": 2306
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-normal-01/verification.json",
+      "sha256": "2672a6fe3725d708771dcb9453b7a2956e81b2cb80cb8fe5b609cdff0e7467a0",
+      "bytes": 3845
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-normal-01/engine-inventory.txt",
+      "sha256": "8a684b57f8d94da168c1a633c717e10ad0ae9c40d12b37ff9c1c32b3733d8169",
+      "bytes": 134573
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-normal-01/engine.xml",
+      "sha256": "fcb69a50c8cd39b48d336c29ece85cb31f2ff93ae18355b6163a1cf8dc7f2609",
+      "bytes": 626499
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-sanitized-01/verification.json",
+      "sha256": "fd185a11290cef2f3bd329ebd65b9366b8533cd232e54ee2a6b0c35a9778921c",
+      "bytes": 4022
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-sanitized-01/engine-inventory.txt",
+      "sha256": "8a684b57f8d94da168c1a633c717e10ad0ae9c40d12b37ff9c1c32b3733d8169",
+      "bytes": 134573
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-sanitized-01/engine.xml",
+      "sha256": "de175aaeef5b37c15b9b9a24f4c96abf25243b9fe322d9290012b071f9f04f24",
+      "bytes": 628150
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-normal-01/components-inventory.txt",
+      "sha256": "736991b26a2281b3fe6703a77186a9fb28fc7d6ba1c2bfc1b2e66ee5d19a1c74",
+      "bytes": 194095
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-normal-01/components.xml",
+      "sha256": "fc4bb66ec8d786ae4ba0ad6518f34147fcab1225974461793cfd385549dcf1f6",
+      "bytes": 2350293
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-sanitized-01/sanitize-inventory.txt",
+      "sha256": "68f7b8da060e07a557f1b743b4ad9ecbb51b6e46b03a8d919812255626e4014c",
+      "bytes": 194095
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-float-disposition-sanitized-01/sanitize.xml",
+      "sha256": "c7fbb5573b724c73890144d37f945b42bb8976a6f37fc0a2ff5ae1c6791c5b42",
+      "bytes": 1626014
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_float_disposition_cases.json",
+      "sha256": "f38fd5226cca7b439d864cc79700b797d0c3f5fe300df9788f0c465c7ffa5c39",
+      "bytes": 7372
+    }
+  ],
+  "not_accepted": [
+    "Automatic hit notification and secondary speech",
+    "Current combat package and Command-effect source projection",
+    "Counter producer/expiry/lifecycle acceptance",
+    "Remaining full S4 normal-input, mastery, interruption and restart matrix"
+  ]
+}

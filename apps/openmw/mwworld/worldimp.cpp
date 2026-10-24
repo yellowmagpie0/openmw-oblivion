@@ -2600,7 +2600,20 @@ namespace MWWorld
     std::optional<std::int32_t> World::modifyOblivionDisposition(
         const ESM::FormKey& actor, const ESM::FormKey& target, std::int32_t delta)
     {
+        return modifyOblivionDispositionImpl(actor, target, static_cast<float>(delta), true);
+    }
+
+    std::optional<std::int32_t> World::modifyOblivionDispositionModifier(
+        const ESM::FormKey& actor, const ESM::FormKey& target, float delta)
+    {
+        return modifyOblivionDispositionImpl(actor, target, delta, false);
+    }
+
+    std::optional<std::int32_t> World::modifyOblivionDispositionImpl(
+        const ESM::FormKey& actor, const ESM::FormKey& target, float delta, bool scriptResult)
+    {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat) return std::nullopt;
+        if (!std::isfinite(delta)) throw std::invalid_argument("nonfinite native disposition delta");
         const auto source = ESM4::runtimeReferenceKey(actor);
         const auto destination = ESM4::runtimeReferenceKey(target);
         for (const auto& key : {source, destination})
@@ -2617,9 +2630,9 @@ namespace MWWorld
         // Existing entries use the direct query, never the script frame cache.
         const auto current = prior ? getOblivionDisposition(source, destination) : std::optional<std::int32_t>(0);
         if (!current) return std::nullopt;
-        const auto modifier = ESM4::modifyDispositionModifier(prior, *current, delta,
+        const auto modifier = ESM4::modifyDispositionModifierFloat(prior, *current, delta,
             ESM4::ActorValueConversionMode::Sse);
-        const auto cached = mOblivionCombat->cachedScriptDisposition(source, destination);
+        const auto cached = scriptResult ? mOblivionCombat->cachedScriptDisposition(source, destination) : std::nullopt;
         const auto next = cached ? cached : getOblivionDispositionWithModifier(source, destination, modifier);
         if (!next) return std::nullopt;
         const auto result = *next;
@@ -2631,7 +2644,7 @@ namespace MWWorld
         prepared->mDispositionModifiers.insert_or_assign({source, destination}, modifier);
         // Allocate the new cache pair before the no-throw authority swap.
         // A failed preparation cannot publish only part of the command.
-        if (!cached) mOblivionCombat->cacheScriptDisposition(source, destination, result);
+        if (scriptResult && !cached) mOblivionCombat->cacheScriptDisposition(source, destination, result);
         mOblivionRuntimeState.swap(prepared);
         return result;
     }

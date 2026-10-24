@@ -325,6 +325,8 @@ namespace MWWorld
 
         std::optional<std::int32_t> getOblivionDispositionWithModifier(const ESM::FormKey& actor,
             const ESM::FormKey& target, std::optional<std::int32_t> modifier) const;
+        std::optional<std::int32_t> modifyOblivionDispositionImpl(const ESM::FormKey& actor,
+            const ESM::FormKey& target, float delta, bool scriptResult);
 
         void captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const;
         void captureOblivionLooseWeaponState(ESM4::RuntimeState& state) const;
@@ -446,6 +448,10 @@ namespace MWWorld
             const ESM::FormKey& actor, const ESM::FormKey& target);
         std::optional<std::int32_t> modifyOblivionDisposition(
             const ESM::FormKey& actor, const ESM::FormKey& target, std::int32_t delta);
+        // Native mechanical requests accept a float and leave every script
+        // frame-cache pair untouched. The result is the fresh direct score.
+        std::optional<std::int32_t> modifyOblivionDispositionModifier(
+            const ESM::FormKey& actor, const ESM::FormKey& target, float delta);
         bool setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value);
         std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
         // Borrow the current actor renderer with an already resolved native

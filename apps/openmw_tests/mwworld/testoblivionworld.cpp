@@ -34672,3 +34672,51 @@ TEST(OblivionWorldTest, FriendHitQueriesDoNotAllocateOwnersOrMaterializeColdActo
     EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(cold.mFormKey));
     EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
 }
+
+TEST(OblivionWorldTest, NativeFloatDispositionWritesShareSavedModifiersWithoutChangingScriptFrameCache)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    const auto actor = fixture.mActor.getCellRef().getFormKey();
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    scripts->call("SetAV", ObScript::ReferenceValue{actor, {}},
+        {std::string("Personality"), std::int64_t(50)}, {}, {});
+    const auto cached = [&] { return world.getOblivionCombatService()->cachedScriptDisposition(actor, actor); };
+    ASSERT_FALSE(cached());
+    EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, .75f), 50);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mDispositionModifiers.at({actor, actor}), 0);
+    EXPECT_FALSE(cached()); // Native creation must not allocate a script result pair.
+    EXPECT_EQ(world.getOblivionScriptDisposition(actor, actor), 50);
+    EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, -10.75f), 40);
+    EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, .75f), 41);
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 41);
+    EXPECT_EQ(world.getOblivionScriptDisposition(actor, actor), 50);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mDispositionModifiers.at({actor, actor}), -9);
+    // Integer ModDisposition keeps its original request conversion and cached
+    // result semantics while writing the same native modifier entry.
+    EXPECT_EQ(ObScript::asInteger(scripts->call("ModDisposition", ObScript::ReferenceValue{actor, {}},
+        {ObScript::ReferenceValue{actor, {}}, std::int64_t(1)}, {}, {})), 50);
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 42);
+    EXPECT_EQ(cached(), 50);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    for (const auto invalid : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(world.modifyOblivionDispositionModifier(actor, actor, invalid), std::invalid_argument);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+        EXPECT_EQ(cached(), 50);
+    }
+    world.getOblivionCombatService()->beginScriptActorFrame();
+    ASSERT_FALSE(cached());
+    EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, -1.25f), 41);
+    EXPECT_FALSE(cached());
+    const auto state = world.captureOblivionRuntimeState();
+    EXPECT_EQ(state.mDispositionModifiers.at({actor, actor}), -9);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(cached());
+    EXPECT_EQ(world.getOblivionDisposition(actor, actor), 41);
+    EXPECT_EQ(world.getOblivionScriptDisposition(actor, actor), 41);
+    EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, .75f), 42);
+    EXPECT_EQ(world.getOblivionScriptDisposition(actor, actor), 41);
+}

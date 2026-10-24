@@ -15,7 +15,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; advanced unarmed zero-absorption defense now joins that route. Lower Hand to Hand general-hit reactions and complete Player/Creature/spare policies remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
-| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. | Hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
+| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. Native float disposition requests share saved modifiers and bypass the script frame cache. | Hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
@@ -12591,3 +12591,30 @@ consequences and the normal Player-to-NPC phased caller remain open. Seeded
 query preservation does not close the remaining M15S4 gameplay/restart matrix.
 See [M15-FRIEND-HIT-QUERY-VERIFICATION.json](M15-FRIEND-HIT-QUERY-VERIFICATION.json)
 and the editable [input recipe](../../scripts/data/oblivion_compat/m15_friend_hit_query_input.json).
+
+
+### Native float disposition requests (notification prerequisite)
+
+The common modifier rule now accepts the original binary32 request directly.
+It preserves missing versus existing-zero entries, fractional clamping and
+conversion overflow. Explicit PC53/PC64 arithmetic is portable; the SSE path
+includes the original double store before integer conversion. All **10,400** fixed
+and generated original-instruction observations match C++, including large
+finite values that distinguish precision modes. The initial four-observation
+conversion discrepancy is retained.
+
+World exposes the mechanical float writer through the same saved modifier
+authority as integer ModDisposition. It preserves the current script cache pair
+and does not create one when absent. Integer commands keep their original
+float-store and cached-result semantics. The profile continues to select 53-bit
+arithmetic and SSE conversion; the pure helper additionally verifies PC64 and
+non-SSE variants. Full normal checks pass **3,049** component and **1,903** engine tests;
+ASan/UBSan passes **900** ESM4 component and **1,903** engine tests, leak detection disabled.
+The new World test verifies fractional changes, cache behavior, invalid-request
+atomicity and canonical restoration. Schema 67 is unchanged; Python was not rerun.
+
+This API is not yet called by automatic hit notification. It does not establish
+normal-input attack, secondary speech, counter expiry/current-package admission
+or fresh-process gameplay acceptance. Full M15S4 remains incomplete. See
+[M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json](M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_native_float_disposition_cases.json).

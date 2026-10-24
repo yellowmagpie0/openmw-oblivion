@@ -39,6 +39,14 @@ namespace ESM4
     // An absent entry is distinct from an existing zero entry.
     std::int32_t modifyDispositionModifier(std::optional<std::int32_t> prior,
         std::int32_t currentDisposition, std::int32_t delta, ActorValueConversionMode mode);
+    enum class DispositionArithmeticPrecision : std::uint8_t { Double, Extended };
+    // Original 5E2070 accepts a binary32 delta directly. The command's integer
+    // request conversion and per-frame result cache are separate. Select x87
+    // PC53/PC64 arithmetic independently of 9828C0's CPU conversion branch;
+    // very large finite deltas can distinguish both precision modes.
+    std::int32_t modifyDispositionModifierFloat(std::optional<std::int32_t> prior,
+        std::int32_t currentDisposition, float delta, ActorValueConversionMode mode,
+        DispositionArithmeticPrecision precision = DispositionArithmeticPrecision::Double);
     void validateDispositionSettings(const DispositionSettings& settings);
 
     struct FightScoreSettings

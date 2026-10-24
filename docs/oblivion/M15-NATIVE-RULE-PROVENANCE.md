@@ -18263,3 +18263,30 @@ consequences and the normal Player-to-NPC phased caller remain open. Seeded
 query preservation does not close the remaining M15S4 gameplay/restart matrix.
 See [M15-FRIEND-HIT-QUERY-VERIFICATION.json](M15-FRIEND-HIT-QUERY-VERIFICATION.json)
 and the editable [input recipe](../../scripts/data/oblivion_compat/m15_friend_hit_query_input.json).
+
+
+### Native float disposition requests (notification prerequisite)
+
+The common modifier rule now accepts the original binary32 request directly.
+It preserves missing versus existing-zero entries, fractional clamping and
+conversion overflow. Explicit PC53/PC64 arithmetic is portable; the SSE path
+includes the original double store before integer conversion. All **10,400** fixed
+and generated original-instruction observations match C++, including large
+finite values that distinguish precision modes. The initial four-observation
+conversion discrepancy is retained.
+
+World exposes the mechanical float writer through the same saved modifier
+authority as integer ModDisposition. It preserves the current script cache pair
+and does not create one when absent. Integer commands keep their original
+float-store and cached-result semantics. The profile continues to select 53-bit
+arithmetic and SSE conversion; the pure helper additionally verifies PC64 and
+non-SSE variants. Full normal checks pass **3,049** component and **1,903** engine tests;
+ASan/UBSan passes **900** ESM4 component and **1,903** engine tests, leak detection disabled.
+The new World test verifies fractional changes, cache behavior, invalid-request
+atomicity and canonical restoration. Schema 67 is unchanged; Python was not rerun.
+
+This API is not yet called by automatic hit notification. It does not establish
+normal-input attack, secondary speech, counter expiry/current-package admission
+or fresh-process gameplay acceptance. Full M15S4 remains incomplete. See
+[M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json](M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_native_float_disposition_cases.json).

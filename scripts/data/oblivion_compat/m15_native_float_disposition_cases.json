@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "purpose": "Native float-input disposition update and World adapter prerequisite for unfinished hit notifications.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "float_updater": "0x5e2070",
+    "numeric_conversion": "0x9828c0",
+    "sse_double_store": "0x9828d2",
+    "sse_convert": "0x9828d5",
+    "command_int_load": "0x503ac0",
+    "command_float_store": "0x503ac7"
+  },
+  "arithmetic_modes": {
+    "Double": "x87 word0x027f,53 significand bits",
+    "Extended": "x87 word0x037f,64 significand bits"
+  },
+  "runtime_selection": "Established profile Double arithmetic with SSE integer conversion. Pure helper also supports Extended and the non-SSE branch.",
+  "fixed_cases": 2400,
+  "generated": {
+    "seed": "0x4d15f10a",
+    "requests": 2000,
+    "observations": 8000,
+    "prior": "full int32 or absent",
+    "personality": [
+      0,
+      100
+    ],
+    "delta": "finite raw binary32 bits",
+    "cross": [
+      "both CPU branches",
+      "both x87 precision words"
+    ]
+  },
+  "expected_contract": [
+    "A missing modifier entry converts the original float request directly; an existing zero entry first clamps against direct current disposition.",
+    "Existing entries retain fractional input through native clamping and the final integer conversion.",
+    "PC53 and PC64 can differ on large finite deltas. SSE conversion first rounds its x87 input to binary64.",
+    "Mechanical World writes use the same saved modifier map and leave the single script frame-cache pair untouched; integer ModDisposition retains its original request conversion/cache semantics."
+  ],
+  "boundaries": [
+    "Full original updater/scorer/conversion/list paths execute; AV6/36 and allocator/lock/MarkModified callbacks are supplied.",
+    "Player-self race/faction/default context inherited from the independently audited original-runtime disposition probe.",
+    "Headless World integration and canonical state restoration are tested; automatic attack notification, normal-input gameplay and fresh-process hit acceptance remain open."
+  ],
+  "examples": [
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": null,
+      "current_disposition": 0,
+      "delta_bits": "0xc2c98000",
+      "expected_modifier": -100
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": -7,
+      "current_disposition": 23,
+      "delta_bits": "0x3f400000",
+      "expected_modifier": -6
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": 7,
+      "current_disposition": 37,
+      "delta_bits": "0xbf400000",
+      "expected_modifier": 6
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": null,
+      "current_disposition": 0,
+      "delta_bits": "0xc2c98000",
+      "expected_modifier": -100
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": -7,
+      "current_disposition": 23,
+      "delta_bits": "0x3f400000",
+      "expected_modifier": -6
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": 7,
+      "current_disposition": 37,
+      "delta_bits": "0xbf400000",
+      "expected_modifier": 6
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": null,
+      "current_disposition": 0,
+      "delta_bits": "0xc2c98000",
+      "expected_modifier": -100
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": -7,
+      "current_disposition": 23,
+      "delta_bits": "0x3f400000",
+      "expected_modifier": -6
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": 7,
+      "current_disposition": 37,
+      "delta_bits": "0xbf400000",
+      "expected_modifier": 6
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": null,
+      "current_disposition": 0,
+      "delta_bits": "0xc2c98000",
+      "expected_modifier": -100
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": -7,
+      "current_disposition": 23,
+      "delta_bits": "0x3f400000",
+      "expected_modifier": -6
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": 7,
+      "current_disposition": 37,
+      "delta_bits": "0xbf400000",
+      "expected_modifier": 6
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": 0,
+      "current_disposition": 30,
+      "delta_bits": "0xdb800000",
+      "expected_modifier": -32
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": 16777217,
+      "current_disposition": 100,
+      "delta_bits": "0x5a800000",
+      "expected_modifier": 16777216
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": -2147483648,
+      "current_disposition": 0,
+      "delta_bits": "0x33800000",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x27f",
+      "prior": 2147483647,
+      "current_disposition": 0,
+      "delta_bits": "0x3f7fffff",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": 0,
+      "current_disposition": 30,
+      "delta_bits": "0xdb800000",
+      "expected_modifier": -30
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": 16777217,
+      "current_disposition": 100,
+      "delta_bits": "0x5a800000",
+      "expected_modifier": 16777217
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": -2147483648,
+      "current_disposition": 0,
+      "delta_bits": "0x33800000",
+      "expected_modifier": -2147483647
+    },
+    {
+      "cpu": "non-sse",
+      "x87_word": "0x37f",
+      "prior": 2147483647,
+      "current_disposition": 0,
+      "delta_bits": "0x3f7fffff",
+      "expected_modifier": 2147483647
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": 0,
+      "current_disposition": 30,
+      "delta_bits": "0xdb800000",
+      "expected_modifier": -32
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": 16777217,
+      "current_disposition": 100,
+      "delta_bits": "0x5a800000",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": -2147483648,
+      "current_disposition": 0,
+      "delta_bits": "0x33800000",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x27f",
+      "prior": 2147483647,
+      "current_disposition": 0,
+      "delta_bits": "0x3f7fffff",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": 0,
+      "current_disposition": 30,
+      "delta_bits": "0xdb800000",
+      "expected_modifier": -30
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": 16777217,
+      "current_disposition": 100,
+      "delta_bits": "0x5a800000",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": -2147483648,
+      "current_disposition": 0,
+      "delta_bits": "0x33800000",
+      "expected_modifier": -2147483648
+    },
+    {
+      "cpu": "sse",
+      "x87_word": "0x37f",
+      "prior": 2147483647,
+      "current_disposition": 0,
+      "delta_bits": "0x3f7fffff",
+      "expected_modifier": -2147483648
+    }
+  ],
+  "full_M15S4_acceptance": false
+}

@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <random>
 #include <array>
+#include <bit>
 
 namespace
 {
@@ -327,4 +328,58 @@ TEST(ESM4CombatAIRules, DispositionModifierRetainsCommandFloatStoreAndCpuConvers
     EXPECT_THROW(ESM4::modifyDispositionModifier(0, -1, 0, Mode::Sse), std::invalid_argument);
     EXPECT_THROW(ESM4::modifyDispositionModifier(0, 101, 0, Mode::Sse), std::invalid_argument);
     EXPECT_THROW(ESM4::modifyDispositionModifier(0, 50, 0, static_cast<Mode>(9)), std::invalid_argument);
+}
+
+TEST(ESM4CombatAIRules, FloatDispositionModifierPreservesFractionsClampsAndEntryPresence)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    using Precision = ESM4::DispositionArithmeticPrecision;
+    for (const auto mode : {Mode::NonSse, Mode::Sse})
+        for (const auto precision : {Precision::Double, Precision::Extended})
+        {
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(std::nullopt, 0, -100.75f, mode, precision), -100);
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(0, 30, -100.75f, mode, precision), -30);
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(7, 37, -.75f, mode, precision), 6);
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(-7, 23, .75f, mode, precision), -6);
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(-200, 0, -10.75f, mode, precision), -200);
+            EXPECT_EQ(ESM4::modifyDispositionModifierFloat(200, 100, 100.75f, mode, precision), 200);
+        }
+}
+
+TEST(ESM4CombatAIRules, FloatDispositionModifierKeepsNativePrecisionAndSseDoubleStoreBoundaries)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    using Precision = ESM4::DispositionArithmeticPrecision;
+    const auto minimum = std::numeric_limits<std::int32_t>::min();
+    const auto maximum = std::numeric_limits<std::int32_t>::max();
+    for (const auto mode : {Mode::NonSse, Mode::Sse})
+    {
+        const auto delta = std::bit_cast<float>(0xdb800000u);
+        EXPECT_EQ(ESM4::modifyDispositionModifierFloat(0, 30, delta, mode, Precision::Double), -32);
+        EXPECT_EQ(ESM4::modifyDispositionModifierFloat(0, 30, delta, mode, Precision::Extended), -30);
+    }
+    const auto positive = std::bit_cast<float>(0x5a800000u);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(16777217, 100, positive, Mode::NonSse, Precision::Double), 16777216);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(16777217, 100, positive, Mode::NonSse, Precision::Extended), 16777217);
+    const auto almostOne = std::bit_cast<float>(0x3f7fffffu);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(maximum, 0, almostOne, Mode::NonSse, Precision::Extended), maximum);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(maximum, 0, almostOne, Mode::Sse, Precision::Extended), minimum);
+    const auto tiny = std::bit_cast<float>(0x33800000u);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(minimum, 0, tiny, Mode::NonSse, Precision::Extended), minimum + 1);
+    EXPECT_EQ(ESM4::modifyDispositionModifierFloat(minimum, 0, tiny, Mode::Sse, Precision::Extended), minimum);
+}
+
+TEST(ESM4CombatAIRules, FloatDispositionModifierRejectsInvalidRequestsAndArithmeticModes)
+{
+    using Mode = ESM4::ActorValueConversionMode;
+    using Precision = ESM4::DispositionArithmeticPrecision;
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, -1, .75f, Mode::Sse), std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, 101, .75f, Mode::Sse), std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, 30, std::numeric_limits<float>::infinity(), Mode::Sse),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, 30, std::numeric_limits<float>::quiet_NaN(), Mode::Sse),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, 30, .75f, static_cast<Mode>(9)), std::invalid_argument);
+    EXPECT_THROW(ESM4::modifyDispositionModifierFloat(0, 30, .75f, Mode::Sse, static_cast<Precision>(9)),
+        std::invalid_argument);
 }
