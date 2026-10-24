@@ -275,3 +275,98 @@ TEST(ESM4AbilityInputs, ParalysisLifecycleRejectsMalformedStateAndNonfiniteFrame
         EXPECT_THROW(ESM4::updateCombatParalysis({10, invalid}, 1), std::invalid_argument);
     }
 }
+
+TEST(ESM4AbilityInputs, DefaultParalysisAdmissionReplaysPopulatedOriginalCasts)
+{
+    struct State { std::uint32_t duration, elapsed; unsigned flags; };
+    struct Row
+    {
+        std::uint32_t general, specific;
+        std::array<State, 3> prior;
+        bool admitted;
+        std::uint32_t duration;
+        int replaced, insertion;
+        unsigned replacementFlags;
+        bool remove;
+    };
+    static constexpr std::array<Row, 72> rows{{
+#include "paralysisadmission_expected.inc"
+    }};
+    for (std::size_t i = 0; i < rows.size(); ++i)
+    {
+        SCOPED_TRACE(i);
+        const auto& row = rows[i];
+        std::array<ESM4::CombatParalysisState, 3> prior;
+        for (std::size_t n = 0; n < prior.size(); ++n)
+        {
+            const auto& state = row.prior[n];
+            prior[n] = {std::bit_cast<float>(state.duration), std::bit_cast<float>(state.elapsed),
+                bool(state.flags & 1), bool(state.flags & 2), bool(state.flags & 4)};
+        }
+        const auto unchanged = prior;
+        const auto result = ESM4::resolveDefaultCombatParalysisAdmission(prior,
+            std::bit_cast<float>(row.general), std::bit_cast<float>(row.specific));
+        EXPECT_EQ(prior, unchanged);
+        ASSERT_EQ(result.has_value(), row.admitted);
+        if (!result) continue;
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mIncoming.mDuration), row.duration);
+        EXPECT_EQ(result->mIncoming.mElapsed, 0.f);
+        EXPECT_FALSE(result->mIncoming.mApplied);
+        EXPECT_FALSE(result->mIncoming.mTerminated);
+        EXPECT_FALSE(result->mIncoming.mRemoved);
+        EXPECT_EQ(result->mInsertion, static_cast<std::size_t>(row.insertion));
+        const auto expected = row.replaced < 0 ? std::optional<std::size_t>{}
+            : std::optional<std::size_t>{static_cast<std::size_t>(row.replaced)};
+        ASSERT_EQ(result->mReplaced, expected);
+        if (!expected) continue;
+        const auto& replacement = result->mReplacement;
+        EXPECT_FALSE(replacement.mApply);
+        EXPECT_EQ(replacement.mRemove, row.remove);
+        EXPECT_EQ(replacement.mState.mDuration, prior[*expected].mDuration);
+        EXPECT_EQ(replacement.mState.mElapsed, prior[*expected].mElapsed);
+        EXPECT_EQ(replacement.mState.mApplied, bool(row.replacementFlags & 1));
+        EXPECT_EQ(replacement.mState.mTerminated, bool(row.replacementFlags & 2));
+        EXPECT_EQ(replacement.mState.mRemoved, bool(row.replacementFlags & 4));
+    }
+}
+
+TEST(ESM4AbilityInputs, DefaultParalysisAdmissionRejectsMalformedInputsWithoutTouchingPriorState)
+{
+    const std::array<ESM4::CombatParalysisState, 1> prior{{{10, 1, true}}};
+    const auto unchanged = prior;
+    for (const float invalid : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    {
+        EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(prior, invalid, 0), std::invalid_argument);
+        EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(prior, 0, invalid), std::invalid_argument);
+        EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(prior, 0, 0, invalid), std::invalid_argument);
+    }
+    EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(prior, 0, 0, -1), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(prior, -3.e38f, -2000), std::invalid_argument);
+    const std::array<ESM4::CombatParalysisState, 1> malformed{{{10, 10, true}}};
+    EXPECT_THROW(ESM4::resolveDefaultCombatParalysisAdmission(malformed, 0, 0), std::invalid_argument);
+    EXPECT_EQ(prior, unchanged);
+}
+
+TEST(ESM4AbilityInputs, DefaultParalysisKeepsZeroCasterPowerDistinctFromFullResistance)
+{
+    // Original Player self-cast dispatch08, PC24; target resistance is bypassed.
+    static constexpr std::array<std::pair<std::uint32_t, std::uint32_t>, 5> cases{{
+        {0x00000000u, 0x00000000u},
+        {0x3f000000u, 0x40a00000u},
+        {0x3f733333u, 0x41180000u},
+        {0x3f800000u, 0x41200000u},
+        {0x3fc00000u, 0x41700000u},
+    }};
+    for (const auto& [power, duration] : cases)
+    {
+        const auto result = ESM4::resolveDefaultCombatParalysisAdmission({}, 0, 0, std::bit_cast<float>(power));
+        ASSERT_TRUE(result);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result->mIncoming.mDuration), duration);
+        EXPECT_FALSE(result->mReplaced);
+        EXPECT_EQ(result->mInsertion, 0u);
+        EXPECT_FALSE(result->mIncoming.mApplied);
+    }
+    EXPECT_FALSE(ESM4::resolveDefaultCombatParalysisAdmission({}, 100, 0, 1));
+    EXPECT_FALSE(ESM4::resolveDefaultCombatParalysisAdmission({}, 0, 100, 1));
+}

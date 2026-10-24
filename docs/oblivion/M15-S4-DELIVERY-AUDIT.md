@@ -13079,3 +13079,116 @@ remaining S4 device/FPS/interruption/restart matrix remain open.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-MELEE-PARALYSIS-LIVE-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_live_cases.json).
+
+## Compiled melee paralysis target admission and first-match replacement
+
+A committed physical contact's single-use continuation can now prepare the
+compiled default self-PARA target admission. It reads current receiving actor
+values and publishes the new owned state, matching cancellation and scalar
+removal together. Preparing a plan changes no authority; stale participant
+values reject commit. Competing prepared tails cannot replay it, even when
+resistance or process eligibility rejects admission. The accepted contact cause
+is retained in schema 70 ownership. No new RNG draw belongs to casting/admission.
+
+NPC/Creature Low processes cannot select the temporary spell. Active casters
+use receiving Float AV64/66 resistance. Player self-Spell admission bypasses
+those target resistances and uses caller-resolved casting power; Player god
+mode rejects the cast. Power scales duration before target resistance. Zero
+Player power admits a pending zero-duration effect; full NPC resistance instead
+rejects before replacement. A post-damage dead or essential-unconscious target rejects before replacing
+old ownership: original ValueModifier applicability 6A81F0 calls actor198(false),
+which rejects raw states 1/2/6. First application still belongs to the positive
+owner frame. Player casting power is an explicit caller contract; this chunk
+does not supply the World equipment/caster adapter or enable forward contacts.
+
+The first nonterminated matching default effect is cancelled immediately.
+Applied cancellation removes Damage AV48+0 then Maximum AV48-1; a pending
+cancellation changes no modifier. Its node stays linked until an owner update.
+Insertion considers all nodes, including terminated ones, and uses native
+case-folded decimal comparison keys. Equal keys insert before existing equals;
+"10.0" precedes "5.0". This is ordered native list behavior, not numeric duration
+sorting or append-only history. The narrow saved list has the same implicit
+compiled spell/prototype/self caster; arbitrary default-spell override identity
+and general effect types remain unadmitted. A bounded original initializer and
+Form ID setter inspection confirms the constructed fallback is reassigned
+FormID 000137. Native-save interoperability is not established by this audit.
+
+Independent probes execute 216 populated same-prototype casts across valid
+lifecycle states, durations, resistance pairs and three x87 controls. Original
+first-match removal, owner update with delta zero, sorted insertion and the complete native CRT
+formatter execute. Another 864 mixed-prototype profiles retain broader matching
+boundary evidence; the C++ expected table uses 72 valid PC24 profiles from the
+216-case run. The dispatch matrix executes 2,700 original NPC/Creature/Player
+casts with absent/Low/MiddleLow/MiddleHigh/High processes, saved selection,
+resistance, god mode, power 0/.5/.95/1/1.5 and three x87 controls. Player selection
+uses its own caster+18C field; NPC/Creature use process+144. Actual temporary
+selection/clear/restoration and cloned ownership execute with declared RTTI,
+scalar/form getters, registry, allocator, equipment absence and target sinks.
+
+A further 4,860 dispatch profiles vary nine raw life states and the full
+process/resistance/god/selection/x87 axes. Another 864 populated casts verify
+life rejection preserves all prior flags, order and scalar balance. The initial
+life extension falsified the missing production gate; the service matrix now
+adds real lethal and essential-unconscious prefixes for 162 profiles.
+
+The independent installed-record audit pins Oblivion.esm and confirms winning
+fMagicFatigueDrainBase=1 and Mult=0. The absent armor settings use original
+constructor defaults .05/.3. Earlier uninitialized Player caster settings
+produced zero duration in the probe; final dispatch uses the proper constructors
+and declared loaded overrides. Power variation uses explicit fatigue-base
+fixture overrides with equipped armor absent. These are caller/admission
+profiles, not equipped-armor or normal-input acceptance.
+
+The earlier live Player expiry course's duration 5 and ResistMagic Script 50 were
+declared injected history. That course proves owner-clock expiry and restart,
+not a Player self-cast resistance derivation; native Player self-casts bypass
+that resistance. The new service test explicitly checks Player resistance 100,
+zero power, god mode, native Low rejection, first-only cancellation, sparse NPC
+versus present Player zeros, stale preparation, once-only tails, resource/RNG
+preservation, binary restore and the first owner update without modifier replay.
+
+The complete normal component selection passes 3,077 tests; the sanitized
+ESM4 selection passes 928. Final normal06 and sanitized04 each pass all 1,919
+engine tests, with exact inventories and no failures/skips. Leak checks are
+disabled; ASan and UBSan halt on errors. The final tested source fingerprint is
+`2aae544ff48c3b7a70e565e9fec3fa628bee91a709543b9424b7e0abbf14076f`
+against parent `c7ee826a7cfef66e67ef9dbe2eedd095a61682f5`.
+
+Retained builds caught trace macro/API mistakes and the new NPC fixture's
+negative fixed level. After those corrections, both complete engine selections
+passed before the life extension. The expanded 162-profile normal05 test then
+failed against the missing life gate; final normal06/sanitized04 add that gate
+without changing those assertions. An exact fingerprint reconstruction proves
+only the engine service and its test changed after the component selections;
+unchanged component and Python suites were not repeated.
+
+The original 60 FPS-cap courses each pass two processes and three saves,
+including exact initial/saved binary/live payloads, active-input rejection,
+expiry, one ordinary post-expiry hit and fresh-process ownership without replay.
+Their stronger cross-build comparison exposed a sampling race: the fresh final
+saves occurred at frames 35 and 34. The extra normal regeneration frame changed
+Fatigue while Health, paralysis and combat RNG still agreed. The complete
+comparison failure is retained.
+
+Additional courses retain the same saves, actions and per-course assertions,
+with a configured 1 FPS cap and 1 ms readiness polling. These controls give F5
+a following-frame delivery slot; they do not inject contacts or game state.
+The comparison also requires identical native manager and completed actor clocks
+and every native actor value, including zero signs. The matched normal frame-34
+live payload already equals the retained sanitized frame-34 payload exactly.
+This is a sampling control for the owner regression, not full S4 FPS acceptance.
+
+Both additional courses pass, each with two fresh process identities and three
+saves. All three corresponding complete live JSON payloads are byte-identical
+across normal and instrumented builds, including every actor value and the
+native clocks. The original and additional courses preserve all binary/live,
+remaining-lifetime, once-only modifier and ordinary-hit assertions. All twelve
+captures were inspected. These are declared injected owner-lifecycle courses;
+normal-input target admission and physical paralysis are still open.
+
+World default-spell/profile and Player equipment/caster-power resolution,
+mastery contact production, physical paralysis/recovery, effect presentation
+and the remaining full S4 input/device/FPS/interruption/restart gates remain
+open. **Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-PARALYSIS-ADMISSION-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_admission_cases.json).

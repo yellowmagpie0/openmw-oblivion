@@ -1,8 +1,10 @@
 #ifndef OPENMW_ESM4_ABILITY_H
 #define OPENMW_ESM4_ABILITY_H
 
+#include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -60,6 +62,27 @@ namespace ESM4
     };
     CombatParalysisUpdate updateCombatParalysis(CombatParalysisState state, float duration);
     CombatParalysisUpdate cancelCombatParalysis(CombatParalysisState state, bool immediate);
+
+    struct DefaultCombatParalysisAdmission
+    {
+        CombatParalysisState mIncoming;
+        std::optional<std::size_t> mReplaced;
+        CombatParalysisUpdate mReplacement;
+        std::size_t mInsertion = 0;
+    };
+    // Compiled default self-PARA: ten-second EFIT, Recover/NoMagnitude, AV48.
+    // Every prior entry belongs to that same spell/prototype and self caster.
+    // Resistance rejection precedes replacement. Cancel only the first live
+    // match, retain its node, then insert before the first equal/greater native
+    // comparison key (including terminated nodes). No modifier is applied to
+    // the incoming effect until its positive owner update. Caster power scales
+    // its duration before target resistance; zero power can admit duration0.
+    // Player self-casts bypass target resistance (caller supplies zero here).
+    // General spell
+    // identities and authored default-spell overrides require another adapter.
+    std::optional<DefaultCombatParalysisAdmission> resolveDefaultCombatParalysisAdmission(
+        std::span<const CombatParalysisState> prior, float generalResistance, float paralysisResistance,
+        float casterPower = 1.f);
 
     // Native ASCII comparison key, not a display label. Only the first thirty
     // name bytes are read; ignored quantities use the original 1000 sentinel.

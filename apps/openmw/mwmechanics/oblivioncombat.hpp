@@ -373,6 +373,12 @@ namespace MWMechanics
         std::optional<OblivionHeldBlockEquipmentSources> mAttackerHeldEquipment{};
         std::optional<OblivionHeldBlockEquipmentSources> mVictimHeldEquipment{};
         std::optional<OblivionOrdinaryHitArguments> mOrdinaryHitArguments{};
+        // Post-damage compiled default self-PARA request. Caller resolves the
+        // spell/profile and current Player caster power; NPC/Creature power is
+        // one. Service reads NPC/Creature AV64/AV66; Player's self range bypasses
+        // target resistance. Only the committed contact's once-only continuation
+        // may request it. General spell overrides are separate.
+        std::optional<float> mVictimDefaultParalysisPower{};
     };
 
     struct OblivionPassiveEffectIdentity

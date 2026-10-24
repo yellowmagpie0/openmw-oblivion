@@ -7773,3 +7773,204 @@ TEST(OblivionActorStatsRandomTest, ImmediateDialogueDrawsShareTheSavedCombatCurs
     EXPECT_EQ(service.drawNativeRandom(), 18467);
     EXPECT_EQ(service.drawNativeRandom(), 6334);
 }
+
+TEST_F(OblivionActorStatsTest, compiledParalysisContinuationOwnsReplacementResistanceAndRestart)
+{
+    autoNpc(); sharedStats();
+    mNpc.mFormKey = mActorKey;
+    mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+    mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+    mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+    ESM::NPC facade{}; facade.blank(); facade.mId = ESM::RefId::stringRefId("Player");
+    const auto* playerRecord = mStore.insertStatic(facade);
+    const auto creatureBase = ESM::FormKey::content("actors.esm", 0x801);
+    ESM4::Creature creature{}; creature.mId = {0x801, 3}; creature.mFormKey = creatureBase;
+    creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 2;
+    mStore.getWritable<ESM4::Creature>().insertStatic(creature, creatureBase);
+    MWBase::Environment environment; environment.setESMStore(mStore);
+    ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+    MWClass::Npc::registerSelf(); MWClass::ESM4Npc::registerSelf(); MWClass::ESM4Creature::registerSelf();
+    MWWorld::Player player(playerRecord); const auto playerPtr = player.getPlayer();
+    ESM::NpcState initial{}; initial.blank(); playerPtr.getClass().readAdditionalState(playerPtr, initial);
+    std::array<ESM4::ActorCharacter, 2> refs;
+    for (unsigned i = 0; i < refs.size(); ++i)
+    {
+        refs[i].mId = {0x900 + i, 3}; refs[i].mFormKey = ESM::FormKey::content("actors.esm", 0x900 + i);
+        refs[i].mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(refs[i], refs[i].mFormKey);
+    }
+    MWWorld::LiveCellRef<ESM4::Npc> attackerLive(refs[0], mStore.search<ESM4::Npc>(mActorKey));
+    MWWorld::LiveCellRef<ESM4::Npc> npcLive(refs[1], mStore.search<ESM4::Npc>(mActorKey));
+    ESM4::ActorCreature creatureRef{}; creatureRef.mId = {0x902, 3}; creatureRef.mBaseKey = creatureBase;
+    creatureRef.mFormKey = ESM::FormKey::content("actors.esm", 0x902);
+    mStore.getWritable<ESM4::ActorCreature>().insertStatic(creatureRef, creatureRef.mFormKey);
+    MWWorld::LiveCellRef<ESM4::Creature> creatureLive(creatureRef, mStore.search<ESM4::Creature>(creatureBase));
+    const MWWorld::Ptr attacker(&attackerLive), npc(&npcLive), creaturePtr(&creatureLive);
+    const auto playerKey = ESM::FormKey::dynamic("player", 1);
+    const ESM4::PlayerDynamicBaseSettings playerBase{2, 1.5f, 5};
+    for (const auto& victim : {npc, creaturePtr, playerPtr})
+    for (const auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+    for (const bool godMode : {false, true})
+    for (const float resistance : {0.f, 50.f, 100.f})
+    for (const auto& [casterPower, playerDuration] : {std::pair{0.f, 0.f}, {.5f, 5.f}, {.95f, 9.5f}, {1.f, 10.f}, {1.5f, 15.f}})
+    for (const unsigned consequence : {0u, 1u, 2u})
+    {
+        const bool isPlayer = victim == playerPtr;
+        if ((isPlayer && process == ESM4::ActorValueProcess::Low) || (!isPlayer && casterPower != 1.f)) continue;
+        const auto victimKey = isPlayer ? playerKey : victim.getCellRef().getFormKey();
+        SCOPED_TRACE(victimKey.serialize());
+        SCOPED_TRACE(resistance);
+        SCOPED_TRACE(godMode);
+        SCOPED_TRACE(casterPower);
+        SCOPED_TRACE(consequence);
+        MWMechanics::OblivionCombatService service;
+        ESM4::RuntimeActorValues pv; pv.mActor = playerKey; pv.mBase = ESM::FormKey::dynamic("player-base", 1);
+        pv.mOwner = ESM4::ActorValueOwner::Player; pv.mPlayerFormValues = {{0, 0, 0, 0}};
+        pv.mProcess = ESM4::ActorValueProcess::Active; pv.mProcessAction = -1; pv.mProcessKnockedState = 0;
+        for (unsigned av = 0; av < 8; ++av) pv.mValues[av].mBase = 40;
+        service.publishPlayerValues(player, pv, playerBase);
+        service.publishPlayerLife(player, {pv.mActor, pv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        ESM4::RuntimeActorValues av; av.mActor = refs[0].mFormKey; av.mBase = mActorKey;
+        av.mProcess = ESM4::ActorValueProcess::Active; av.mProcessAction = -1; av.mProcessKnockedState = 0;
+        av.mValues[8].mBase = 100; av.mValues[10].mBase = 100;
+        service.publishNonPlayerValues(attacker, av);
+        service.publishNonPlayerLife(attacker, {av.mActor, av.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        if (!isPlayer)
+        {
+            auto vv = av; vv.mActor = victimKey; vv.mBase = victim == npc ? mActorKey : creatureBase;
+            vv.mProcess = process;
+            if (process == ESM4::ActorValueProcess::Low) { vv.mProcessAction.reset(); vv.mProcessKnockedState.reset(); }
+            service.publishNonPlayerValues(victim, vv);
+            service.publishNonPlayerLife(victim, {vv.mActor, vv.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        }
+        for (unsigned cause = 1; cause <= 3; ++cause)
+        {
+            ASSERT_EQ(service.allocateAction(), cause); ASSERT_TRUE(service.consumeAction(cause));
+        }
+        auto values = *service.findActorValues(victimKey);
+        values.mValues[48] = {0, {1.f, .5f, -.25f}};
+        values.mValues[64].mModifiers[1] = resistance;
+        values.mValues[66].mModifiers[1] = 0.f;
+        values.mMeleeParalysis = {{1, {10, 10, true, true, true}},
+            {2, {10, 1, true, false, false}}, {3, {10, 0, false, false, false}}};
+        const auto publish = [&](const ESM4::RuntimeActorValues& state) {
+            if (isPlayer) service.publishPlayerValues(player, state, playerBase);
+            else service.publishNonPlayerValues(victim, state);
+        };
+        publish(values);
+        const auto id = service.allocateAction(av.mActor); ASSERT_EQ(id, 4u);
+        MWMechanics::OblivionPhysicalContactDeltas request;
+        request.mVictimDefaultParalysisPower = casterPower;
+        EXPECT_THROW(service.preparePhysicalContact(id, attacker, victim, request, &player,
+            false, {4, .5f}, playerBase, godMode), std::invalid_argument);
+        EXPECT_TRUE(service.isActionPending(id, av.mActor));
+        auto prefix = service.preparePhysicalContact(id, attacker, victim,
+            {-7, consequence == 0 ? -2.f : -200.f, -3}, &player,
+            consequence == 2, {4, .5f}, playerBase, godMode);
+        ASSERT_TRUE(prefix); ASSERT_TRUE(prefix->commit());
+        const bool incapacitated = consequence != 0 && !(isPlayer && godMode);
+        ASSERT_EQ(service.findActorLife(victimKey)->mPhase, !incapacitated ? ESM4::ActorLifePhase::Alive
+            : consequence == 2 ? ESM4::ActorLifePhase::EssentialUnconscious : ESM4::ActorLifePhase::Dead);
+        const auto postDamage = *service.findActorValues(victimKey);
+        const auto attackerAfter = *service.findActorValues(av.mActor);
+        const auto rng = service.combatRandomState();
+        for (float invalid : {-1.f, std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity()})
+        {
+            auto malformed = request; malformed.mVictimDefaultParalysisPower = invalid;
+            EXPECT_THROW(prefix->prepareContinuation(malformed, &player, playerBase, godMode), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(victimKey), postDamage);
+        }
+        if (!isPlayer)
+        {
+            auto malformed = request; malformed.mVictimDefaultParalysisPower = .5f;
+            EXPECT_THROW(prefix->prepareContinuation(malformed, &player, playerBase, godMode), std::invalid_argument);
+            EXPECT_EQ(*service.findActorValues(victimKey), postDamage);
+        }
+        auto stale = prefix->prepareContinuation(request, &player, playerBase, godMode);
+        ASSERT_TRUE(stale);
+        EXPECT_EQ(*service.findActorValues(victimKey), postDamage); // Preparation publishes nothing.
+        auto changed = postDamage; changed.mValues[64].mModifiers[1] = resistance + 1.f; publish(changed);
+        EXPECT_FALSE(stale->commit());
+        publish(postDamage);
+        auto tail = prefix->prepareContinuation(request, &player, playerBase, godMode);
+        auto competing = prefix->prepareContinuation(request, &player, playerBase, godMode);
+        ASSERT_TRUE(tail); ASSERT_TRUE(competing); ASSERT_TRUE(tail->commit());
+        EXPECT_FALSE(competing->commit());
+        EXPECT_FALSE(prefix->prepareContinuation(request, &player, playerBase, godMode));
+        EXPECT_EQ(service.combatRandomState(), rng);
+        EXPECT_EQ(*service.findActorValues(av.mActor), attackerAfter);
+        values = *service.findActorValues(victimKey);
+        EXPECT_EQ(values.mValues[8], postDamage.mValues[8]);
+        EXPECT_EQ(values.mValues[10], postDamage.mValues[10]);
+        const bool admitted = !incapacitated
+            && (isPlayer ? !godMode : process == ESM4::ActorValueProcess::Active && resistance < 100);
+        if (admitted)
+        {
+            ASSERT_EQ(values.mMeleeParalysis.size(), 4u);
+            auto expected = postDamage.mMeleeParalysis;
+            expected[1].mState = {10, 1, true, true, true};
+            const bool incomingFirst = isPlayer ? casterPower == 0 || casterPower == 1 : resistance == 0;
+            const std::size_t insertion = incomingFirst ? 0 : expected.size();
+            expected.insert(expected.begin() + insertion,
+                {id, {isPlayer ? playerDuration : resistance == 50 ? 5.f : 10.f}});
+            EXPECT_EQ(values.mMeleeParalysis, expected);
+            EXPECT_EQ(values.mValues[48].mModifiers[0], isPlayer ? std::optional<float>(0.f) : std::nullopt);
+        }
+        else
+        {
+            EXPECT_EQ(values.mMeleeParalysis, postDamage.mMeleeParalysis);
+            EXPECT_EQ(values.mValues[48], postDamage.mValues[48]);
+        }
+        EXPECT_EQ(values.mValues[48].mModifiers[1], .5f);
+        EXPECT_EQ(values.mValues[48].mModifiers[2], -.25f);
+        ESM4::RuntimeState saved; saved.mPlayer.mReference = playerKey;
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        for (const auto& ptr : isPlayer ? std::vector<MWWorld::Ptr>{attacker} : std::vector<MWWorld::Ptr>{attacker, victim})
+        {
+            const auto* state = service.findActorValues(ptr.getCellRef().getFormKey());
+            ESM4::RuntimeReferenceState ref; ref.mKey = state->mActor; ref.mBase = state->mBase;
+            ref.mCell = saved.mPlayer.mCell; saved.mReferences.push_back(ref);
+        }
+        service.capture(saved); const auto bytes = saved.serializeBinary();
+        MWMechanics::OblivionCombatService restored, candidate;
+        candidate.restore(ESM4::RuntimeState::deserializeBinary(bytes));
+        const auto residents = isPlayer ? std::vector<MWWorld::Ptr>{attacker} : std::vector<MWWorld::Ptr>{attacker, victim};
+        restored.installRestoredActorState(std::move(candidate), residents, &player);
+        restored.capture(saved); EXPECT_EQ(saved.serializeBinary(), bytes);
+        EXPECT_EQ(*restored.findActorValues(victimKey), values);
+        auto settings = MWWorld::resolveOblivionFrameSettings(mStore);
+        settings.mMagicka = {0, 0}; settings.mFatigue.mRegeneration = {0, 0};
+        settings.mFatigue.mPlayerBase = playerBase;
+        restored.advanceFrameClock(.125f);
+        unsigned preparations = 0;
+        const auto prepare = [&] { ++preparations; };
+        if (isPlayer) restored.updatePlayerFrameResourcesFromClock(player, {0, false, false}, false, settings, prepare);
+        else restored.updateNonPlayerFrameResourcesFromClock(victim, {0, false, false}, false, settings, prepare);
+        EXPECT_EQ(preparations, admitted ? 2u : 1u);
+        const auto& updated = *restored.findActorValues(victimKey);
+        const bool instant = admitted && isPlayer && casterPower == 0;
+        const std::optional<float> expectedMaximum = process == ESM4::ActorValueProcess::Low ? std::optional<float>{1.f}
+            : incapacitated ? (isPlayer ? std::optional<float>{0.f} : std::nullopt)
+            : std::optional<float>{instant ? 1.f : 2.f};
+        EXPECT_EQ(updated.mValues[48].mModifiers[0], expectedMaximum);
+        const bool incomingFirst = admitted && (isPlayer ? casterPower == 1 : resistance == 0);
+        const std::vector<std::uint64_t> expectedCauses = incapacitated ? std::vector<std::uint64_t>{}
+            : !admitted ? std::vector<std::uint64_t>{2, 3}
+            : instant ? std::vector<std::uint64_t>{3}
+            : incomingFirst ? std::vector<std::uint64_t>{id, 3} : std::vector<std::uint64_t>{3, id};
+        std::vector<std::uint64_t> actualCauses;
+        for (const auto& effect : updated.mMeleeParalysis) actualCauses.push_back(effect.mCauseAction);
+        EXPECT_EQ(actualCauses, expectedCauses);
+        for (const auto& effect : updated.mMeleeParalysis)
+        {
+            EXPECT_TRUE(effect.mState.mApplied); EXPECT_FALSE(effect.mState.mTerminated);
+        }
+        const auto afterFrame = updated;
+        if (isPlayer) restored.updatePlayerFrameResourcesFromClock(player, {0, false, false}, false, settings, prepare);
+        else restored.updateNonPlayerFrameResourcesFromClock(victim, {0, false, false}, false, settings, prepare);
+        EXPECT_EQ(*restored.findActorValues(victimKey), afterFrame);
+        EXPECT_EQ(preparations, admitted ? 2u : 1u);
+    }
+}

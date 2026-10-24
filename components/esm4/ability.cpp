@@ -187,6 +187,43 @@ namespace ESM4
         return result;
     }
 
+    std::optional<DefaultCombatParalysisAdmission> resolveDefaultCombatParalysisAdmission(
+        std::span<const CombatParalysisState> prior, float generalResistance, float paralysisResistance,
+        float casterPower)
+    {
+        if (!std::isfinite(casterPower) || casterPower < 0.f)
+            throw std::invalid_argument("invalid native default paralysis caster power");
+        for (const auto& state : prior)
+            state.validate();
+        const float factor = nativeEffectResistanceMultiplier(generalResistance, paralysisResistance);
+        if (factor <= 0.f)
+            return std::nullopt;
+        const float initialDuration = static_cast<float>(10. * double(casterPower));
+        const float duration = static_cast<float>(double(initialDuration) * factor);
+        if (!std::isfinite(duration))
+            throw std::invalid_argument("native default paralysis duration overflow");
+        DefaultCombatParalysisAdmission result;
+        result.mIncoming.mDuration = duration;
+        result.mIncoming.validate();
+        result.mInsertion = prior.size();
+        // Same MGEF/name/school and NoMagnitude sentinel give a common prefix.
+        // Keep the verified decimal/string comparison, rather than sorting
+        // numerically by duration. The incoming key wins equality in416650.
+        const auto key = passiveEffectComparisonKey(0x100, 3, {}, 1.f, duration);
+        for (std::size_t i = 0; i < prior.size(); ++i)
+        {
+            if (!result.mReplaced && !prior[i].mTerminated)
+            {
+                result.mReplaced = i;
+                result.mReplacement = cancelCombatParalysis(prior[i], true);
+            }
+            if (result.mInsertion == prior.size()
+                && key <= passiveEffectComparisonKey(0x100, 3, {}, 1.f, prior[i].mDuration))
+                result.mInsertion = i;
+        }
+        return result;
+    }
+
     ValueModifierEffectInputs resolveValueModifierEffectInputs(const SpellEffect& effect, LoadedEffectSetting setting)
     {
         return {setting.mFlags & 0x01000000 ? setting.mData : effect.mActorValue,

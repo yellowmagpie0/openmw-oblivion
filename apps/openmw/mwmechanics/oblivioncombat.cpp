@@ -114,6 +114,19 @@ namespace MWMechanics
                 found->second = time;
         }
 
+        void changeMeleeParalysisModifier(ESM4::RuntimeActorValues& values,
+            ESM4::ActorValueModifier category, float delta)
+        {
+            // LowProcess's Maximum writer is a no-op. Damage zero still
+            // uses ordinary sparse storage, rather than allocating zero.
+            if (values.mOwner == ESM4::ActorValueOwner::NonPlayer
+                && values.mProcess == ESM4::ActorValueProcess::Low
+                && category == ESM4::ActorValueModifier::Maximum)
+                return;
+            values.mValues[48] = ESM4::changeActorValueModifier(
+                values.mValues[48], values.mOwner, 48, category, delta);
+        }
+
         float statModifierDelta(const ESM4::RuntimeActorValues& values, std::uint8_t value,
             ESM4::ActorValueModifier modifier, float requested)
         {
@@ -2887,6 +2900,8 @@ namespace MWMechanics
                 ? ESM::FormKey::dynamic("player", 1) : ptr.getCellRef().getFormKey();
         };
         const auto attackerKey = actorKey(attacker);
+        if (deltas.mVictimDefaultParalysisPower && !continuation)
+            throw std::invalid_argument("native default paralysis requires a committed contact continuation");
         if (continuation ? (*continuation || !isActionConsumed(id)) : !isActionPending(id, attackerKey))
             return nullptr;
         // A draw ID belongs to the release transaction, never a melee contact
@@ -2940,6 +2955,9 @@ namespace MWMechanics
                  deltas.mVictimFatigue, deltas.mVictimBlockFatigue})
             if (!std::isfinite(delta))
                 throw std::invalid_argument("native physical contact requires finite resource deltas");
+        if (deltas.mVictimDefaultParalysisPower
+            && (!std::isfinite(*deltas.mVictimDefaultParalysisPower) || *deltas.mVictimDefaultParalysisPower < 0.f))
+            throw std::invalid_argument("invalid native default paralysis caster power");
         if (deltas.mRandomTransition)
         {
             const auto& request = *deltas.mRandomTransition;
@@ -2998,6 +3016,48 @@ namespace MWMechanics
             if (deltas.mVictimHealth < 0
                 && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
                 receivingLife = prepareHealthReaction(*receiving, victimEssential, recovery, playerGodMode, attackerKey);
+            if (deltas.mVictimDefaultParalysisPower && receiving->mOwner != ESM4::ActorValueOwner::Player
+                && *deltas.mVictimDefaultParalysisPower != 1.f)
+                throw std::invalid_argument("native nonplayer default paralysis caster power must be one");
+            if (deltas.mVictimDefaultParalysisPower
+                && receivingLife->mPhase == ESM4::ActorLifePhase::Alive
+                && (receiving->mOwner == ESM4::ActorValueOwner::Player
+                    || receiving->mProcess == ESM4::ActorValueProcess::Active)
+                && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player))
+            {
+                // ValueModifier6A81F0 rejects native states1/2/6 before matching.
+                // NPC/Creature Low casters cannot select the temporary spell.
+                // Player's native selected item is independent of its process.
+                std::vector<ESM4::CombatParalysisState> prior;
+                prior.reserve(receiving->mMeleeParalysis.size());
+                for (const auto& effect : receiving->mMeleeParalysis)
+                {
+                    if (effect.mCauseAction == id)
+                        throw std::invalid_argument("duplicate native melee paralysis contact cause");
+                    prior.push_back(effect.mState);
+                }
+                const auto resistance = [&](std::uint8_t av) {
+                    // Original Player self-Spell admission6A2899 bypasses the
+                    // target resistance query; NPC self-casts do not.
+                    return receiving->mOwner == ESM4::ActorValueOwner::Player ? 0.f
+                        : nonPlayerFloat(*receiving, av, findActorBase(receiving->mBase));
+                };
+                if (const auto admission = ESM4::resolveDefaultCombatParalysisAdmission(
+                        prior, resistance(64), resistance(66), *deltas.mVictimDefaultParalysisPower))
+                {
+                    if (admission->mReplaced)
+                    {
+                        receiving->mMeleeParalysis[*admission->mReplaced].mState = admission->mReplacement.mState;
+                        if (admission->mReplacement.mRemove)
+                        {
+                            changeMeleeParalysisModifier(*receiving, ESM4::ActorValueModifier::Damage, 0.f);
+                            changeMeleeParalysisModifier(*receiving, ESM4::ActorValueModifier::Maximum, -1.f);
+                        }
+                    }
+                    receiving->mMeleeParalysis.insert(
+                        receiving->mMeleeParalysis.begin() + admission->mInsertion, {id, admission->mIncoming});
+                }
+            }
             receiving->validate();
             if (!continuation) transition = prepareLifeTransition(*receivingLife);
         }
@@ -5108,15 +5168,6 @@ namespace MWMechanics
                 throw std::invalid_argument("nonfinite native paralysis frame");
             if (!processEffects) return 0;
             unsigned applications = 0;
-            const auto modifier = [&](ESM4::ActorValueModifier category, float delta) {
-                // LowProcess's Maximum writer is a no-op. Damage zero still
-                // uses ordinary sparse storage, rather than allocating zero.
-                if (values.mOwner == ESM4::ActorValueOwner::NonPlayer
-                    && values.mProcess == ESM4::ActorValueProcess::Low
-                    && category == ESM4::ActorValueModifier::Maximum) return;
-                values.mValues[48] = ESM4::changeActorValueModifier(
-                    values.mValues[48], values.mOwner, 48, category, delta);
-            };
             for (auto& effect : values.mMeleeParalysis)
             {
                 auto update = ESM4::updateCombatParalysis(effect.mState, elapsed);
@@ -5131,12 +5182,12 @@ namespace MWMechanics
                 if (update.mApply)
                 {
                     ++applications;
-                    modifier(ESM4::ActorValueModifier::Maximum, 1.f);
+                    changeMeleeParalysisModifier(values, ESM4::ActorValueModifier::Maximum, 1.f);
                 }
                 if (update.mRemove)
                 {
-                    modifier(ESM4::ActorValueModifier::Damage, 0.f);
-                    modifier(ESM4::ActorValueModifier::Maximum, -1.f);
+                    changeMeleeParalysisModifier(values, ESM4::ActorValueModifier::Damage, 0.f);
+                    changeMeleeParalysisModifier(values, ESM4::ActorValueModifier::Maximum, -1.f);
                 }
                 effect.mState = update.mState;
             }
