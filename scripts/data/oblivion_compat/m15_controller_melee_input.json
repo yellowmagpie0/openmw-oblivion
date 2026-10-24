@@ -1,0 +1,64 @@
+{
+  "scope": "Normal-input Space activation invokes authored StartCombat; held Player block receives one production NPC contact. Actual F5 during recovery, natural uninterrupted recovery, fresh-process recovery without replay. Initial imported schema61 upgraded by codec; no initial controller, no contact/outcome injection.",
+  "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/staged-input.omwsave",
+  "source_sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+  "source_schema": 61,
+  "runtime_schema": 69,
+  "input_sha256": "f653d0b710edbf14ed695543eb771ecbd44abfa3e02cbc040cd3d5ab1b4f99e0",
+  "expected_contacts_per_epoch": [
+    1,
+    0
+  ],
+  "expected_constructor_draws": 1,
+  "expected_rng_before_contact": 5741206,
+  "expected_contact_draws": 4,
+  "expected_rng_after_contact": 4277529146,
+  "expected_initial_controller": {},
+  "expected_mid_controller": {
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "priority": 200,
+        "marker": 1,
+        "value_0c": 0.0,
+        "value_10": 0.0
+      }
+    ]
+  },
+  "expected_final_controller": {},
+  "previous_ordinary_hit_phase_evidence": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/semantic-verification.json",
+  "expected": "One constructor draw (raw87), then damage raw5105 and speech raw27056: no damage-knockdown flag and no speech request. No INFO selection draw. Actual block handler uses raw2938/32501 (Counter38 miss, Master disarm1 success), including actual controller notification with zero draws. Five total draws ->4277529146. One drop with condition55.70000076293945, NPC HTH Recoil7 and Player BlockHit6. Fresh mid-recovery load performs no replay/new constructor. Exact recovered actor values/bases/life/actions/graph/controller/RNG, inventories and dropped identity must match uninterrupted recovery; clocks/float Z/loose trajectory are outside this comparison.",
+  "full_M15S4_acceptance": false,
+  "expected_prefix_draws": 2,
+  "expected_speech_requested": false,
+  "expected_counter_percentile": 38,
+  "expected_master_disarm_percentile": 1,
+  "native_expectation_evidence": [
+    "native-controller-melee-crt-oracle-01",
+    "native-controller-melee-prefix-oracle-02",
+    "native-controller-melee-block-oracle-01"
+  ],
+  "prior_pilot": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-01",
+  "retained_expected_budget_failure": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-01/budget-failure-01.json",
+  "continuation_view_adjustment": {
+    "mouse_delta": [
+      0,
+      80
+    ],
+    "timing": "after focus before block key",
+    "reason": "Mid-save Player stands on dropped sword, z-77 rather than floor-109. Downward normal mouse aim restores the normal activation ray. Diagnostic activation-review-01 stopped after recovery without another contact."
+  },
+  "comparison_excludes": [
+    "world scheduling and native clocks",
+    "Player/NPC reference position including intended pitch change",
+    "loose weapon trajectory/root local"
+  ],
+  "prior_activation_failure": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-02/second",
+  "normal_course": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-03",
+  "sanitized_course": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-sanitized-01",
+  "verification_refinements": {
+    "first_import": "Supplied native authority is preserved; legacy generic fields and missing defaults normalize. Whole-state fresh recovery load is exact.",
+    "inactive_first_person_block": "Compare inactive group/retirement/pose; exclude sequence sample times and idle clock. No active first-person held block may remain.",
+    "library_identity": "Executable pinned per epoch; monitor did not capture mapped libraries."
+  }
+}

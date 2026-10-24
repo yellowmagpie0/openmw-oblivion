@@ -6,6 +6,51 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 normal melee after script package creation — 2026-10-24
+
+Four real processes, two per build, verify a production NPC attack against held
+Player block after normal Space activation invokes the fixture's StartCombat.
+The input has no controller. The real constructor creates its directed target
+and consumes one RNG draw; one animation/contact produces the blocked hit,
+Master disarm and NPC Recoil. F5 records active NPC Recoil7 and Player BlockHit6
+in body and first person. A fresh process loads that actual save and recovers
+without another contact, constructor or random draw. Space invokes StopCombat
+after recovery. The stationary policy uses the newly created controller.
+
+Player Health receives exactly 1.009374976158142 damage; Player block Fatigue
+cost is zero. The single dropped iron shortsword retains condition
+55.70000076293945 and its reference/dropper identity. Recovered native values,
+life, actions, script state, controllers, inventories and RNG match uninterrupted
+continuation. All eight F5 binary/live snapshots agree, and both fresh recovery
+loads restore complete logical state exactly. Initial import of the older
+schema61 fixture normalizes generic projections and missing defaults; whole
+first-import equality is not claimed. Clocks, actor positions, loose trajectory
+and inactive first-person block sample times are outside the endpoint comparison.
+The retained block entry is inactive, has no rendered layer, and keeps the same
+group, retirement and pose identity. All four captures were inspected: Valen
+Dreth, visible Player hands and HUD. Executables and sanitizer environments are
+recorded; these four epochs did not capture mapped library identities.
+
+Independent original-instruction probes pass 12 CRT, 24 common-hit prefix and
+20 blocked-tail cases. The constructor consumes raw87; damage/speech use
+raw5105/27056, so no speech request or INFO-selection draw occurs. Counter uses
+raw2938 (38, miss), then Master disarm uses raw32501 (1, success). The actual
+controller notification executes without RNG. Contact therefore consumes four
+draws, five including construction: seed15 -> 4277529146. The initial mistaken
+five-contact-draw expectation, wrong prefix-template inputs, missed post-load
+activation and verifier failures remain retained. Continuation uses normal
+downward mouse aim because the mid-save Player stands on the dropped sword.
+Sound logs show successful PHYDamageFlesh/WPNHitBladeFlesh requests; isolated
+stock PCM matching is not claimed for this course.
+
+No production source changed after the producer checkpoint; its full normal,
+ASan/UBSan and Python results remain the source-linked regression evidence.
+These normal and sanitizer courses establish this attack/block/disarm/recovery
+cross. **Full M15S4 remains incomplete**, including the remaining input/view/FPS,
+mastery/effect and interruption matrix. See [the receipt](M15-CONTROLLER-MELEE-VERIFICATION.json),
+[editable input](../../scripts/data/oblivion_compat/m15_controller_melee_input.json)
+and [state verifier](../../scripts/verify_m15_controller_melee_runtime.py).
+
 ## S4 script combat package producers and hidden Player state — 2026-10-24
 
 Script StartCombat now produces the profile's persistent base-package target
@@ -52,8 +97,8 @@ lists and both accepted/rejected cast availability, with empty effect lists and
 resource models. General nonempty effect/resource/inventory paths remain open.
 
 Full S4 remains incomplete. StartCombat CHML/INVI and casting cancellation,
-normal-hit notification, death/upper-package/mounted/group cleanup, normal-input
-attack/block and in-flight restart with the new producer, and the remaining
+normal-hit notification, death/upper-package/mounted/group cleanup, the remaining normal-input
+attack/block and in-flight restart matrix, and the remaining
 input/view/FPS/mastery/effect matrix still require implementation or acceptance.
 See [the verification receipt](M15-CONTROLLER-PRODUCER-VERIFICATION.json) and
 [editable input recipe](../../scripts/data/oblivion_compat/m15_controller_producer_input.json).
