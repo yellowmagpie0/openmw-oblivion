@@ -2577,14 +2577,24 @@ namespace MWWorld
             ESM4::ActorValueConversionMode::Sse), 0, 100);
     }
 
-    std::optional<bool> World::hasOblivionCombatController(const ESM::FormKey& actor) const
+    std::optional<bool> World::hasOblivionBaseCombatPackage(const ESM::FormKey& actor) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
         const auto key = ESM4::runtimeReferenceKey(actor);
-        if (key == ESM::FormKey::dynamic("player", 1)) return false; // Native Player +330 always returns null.
-        const auto base = getOblivionReferenceBaseKey(key);
-        if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return false;
+        if (key != ESM::FormKey::dynamic("player", 1))
+        {
+            const auto base = getOblivionReferenceBaseKey(key);
+            if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return false;
+        }
         return mOblivionRuntimeState && mOblivionRuntimeState->mCombatControllers.contains(key);
+    }
+
+    std::optional<bool> World::hasOblivionCombatController(const ESM::FormKey& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        if (ESM4::runtimeReferenceKey(actor) == ESM::FormKey::dynamic("player", 1))
+            return false; // Native Player +330 always returns null, including with a hidden base package.
+        return hasOblivionBaseCombatPackage(actor);
     }
 
     std::optional<bool> World::isOblivionCombatTarget(const ESM::FormKey& actor, const ESM::FormKey& target) const
@@ -2597,6 +2607,140 @@ namespace MWWorld
         if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return false;
         const auto& entries = mOblivionRuntimeState->mCombatControllers.at(owner);
         return std::ranges::any_of(entries, [&](const auto& entry) { return entry.mTarget == other; });
+    }
+
+    std::optional<ESM::FormKey> World::getOblivionCombatTarget(const ESM::FormKey& actor) const
+    {
+        if (!hasOblivionCombatController(actor).value_or(false)) return std::nullopt;
+        const auto& entries = mOblivionRuntimeState->mCombatControllers.at(ESM4::runtimeReferenceKey(actor));
+        return entries.empty() ? ESM::FormKey{} : entries.front().mTarget;
+    }
+
+    bool World::executeOblivionStartCombat(const Ptr& actor, const Ptr& opponent)
+    {
+        if (!mOblivionCombat) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto keyOf = [&](const Ptr& ptr) {
+            if (ptr.isEmpty() || (ptr != getPlayerPtr()
+                    && ptr.getType() != ESM::REC_NPC_4 && ptr.getType() != ESM::REC_CREA4))
+                throw std::invalid_argument("native StartCombat requires resident actor references");
+            const auto key = ptr == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                : ESM4::runtimeReferenceKey(ptr.getCellRef().getFormKey());
+            const auto* values = mOblivionCombat->findActorValues(key);
+            const auto* life = mOblivionCombat->findActorLife(key);
+            if (!values || !life || values->mBase != life->mBase)
+                throw std::invalid_argument("native StartCombat requires initialized actor processes");
+            return key;
+        };
+        const auto owner = keyOf(actor), target = keyOf(opponent);
+        // The native command checks +198(false) on both actors before invoking
+        // the process. Valid self/dead/essential-unconscious requests are no-ops.
+        if (owner == target || mOblivionCombat->findActorLife(owner)->mPhase != ESM4::ActorLifePhase::Alive
+            || mOblivionCombat->findActorLife(target)->mPhase != ESM4::ActorLifePhase::Alive)
+            return true;
+        const bool player = actor == getPlayerPtr();
+        const bool current = hasOblivionCombatController(owner).value_or(false);
+        ESM4::CombatControllerTargets targets(current
+                ? mOblivionRuntimeState->mCombatControllers.at(owner) : std::vector<ESM4::CombatControllerTarget>{});
+        const auto priority = targets.nextScriptPriority();
+        const bool existing = targets.contains(target);
+        bool admitted = true;
+        if (!existing)
+        {
+            if (actor.getType() == ESM::REC_CREA4 && mOblivionAi)
+                if (const auto* ai = mOblivionAi->state(actor); ai && !ai->mRider.isNull())
+                    admitted = false; // Creature+388 reads its actual rider pointer.
+            const auto speed = player ? mOblivionCombat->getPlayerIntegerValue(4)
+                                      : mOblivionCombat->getNonPlayerIntegerValue(actor, 4);
+            if (admitted && speed == 0)
+            {
+                const auto settings = [&] {
+                    std::vector<const ESM4::GameSetting*> records;
+                    std::set<ESM::FormId> seen;
+                    for (const auto& setting : mStore.get<ESM4::GameSetting>())
+                        if (seen.insert(setting.mId).second)
+                            records.push_back(mStore.get<ESM4::GameSetting>().search(setting.mId));
+                    return ESM4::buildMeleeReachSettings(records);
+                }();
+                // +26C is the unscaled natural reach. Weapon reach, body bounds
+                // and placed/racial scale do not participate in this gate.
+                float reach = ESM4::unarmedMeleeReach(1.f, settings);
+                if (actor.getType() == ESM::REC_CREA4)
+                {
+                    const auto& creature = *actor.get<ESM4::Creature>()->mBase;
+                    if (!creature.mAttackReach)
+                        throw std::invalid_argument("native rooted Creature lacks RNAM reach");
+                    reach = ESM4::creatureMeleeReach(*creature.mAttackReach, creature.mData.creatureType, 1.f, settings);
+                }
+                float distance = std::numeric_limits<float>::max();
+                if (actor.isInCell() && opponent.isInCell() && opponent.getRefData().isEnabled()
+                    && !opponent.getRefData().isDeletedByContentFile() && opponent.getCellRef().getCount() != 0)
+                {
+                    const auto* from = actor.getCell()->getCell();
+                    const auto* to = opponent.getCell()->getCell();
+                    const bool sameSpace = from == to || (from->isExterior() && to->isExterior()
+                        && !from->getWorldSpace().empty() && from->getWorldSpace() == to->getWorldSpace());
+                    if (sameSpace)
+                    {
+                        const auto& sourcePosition = actor.getRefData().getPosition();
+                        const auto& targetPosition = opponent.getRefData().getPosition();
+                        distance = ESM4::combatControllerDistance(
+                            {sourcePosition.pos[0], sourcePosition.pos[1], sourcePosition.pos[2]},
+                            {targetPosition.pos[0], targetPosition.pos[1], targetPosition.pos[2]});
+                    }
+                }
+                // Computed +infinity is a native distance overflow, rather
+                // than a malformed externally supplied geometry value.
+                admitted = std::isfinite(distance)
+                    && ESM4::admitsCombatControllerTarget(owner, target, {}, 0, reach, distance);
+            }
+        }
+        // Player +330/+334 never expose or reuse the hidden process package.
+        // Generic package queries still observe it, so persist each replacement.
+        if (!admitted && !current) return true;
+        if (admitted && !existing)
+        {
+            if (targets.entries().size() >= 1'000'000)
+                throw std::length_error("native combat-controller target limit exceeded");
+            targets.add({target, 200, 1, 0, 0});
+        }
+        // A new forced entry is marked 1, so the native default-priority branch
+        // skips its single-target rewrite. Existing fronts supply the override.
+        if (priority) targets.applyScriptPriority(target, *priority);
+        auto initial = mOblivionRuntimeState ? nullptr
+            : std::make_unique<ESM4::RuntimeState>(captureOblivionRuntimeState());
+        auto controllers = mOblivionRuntimeState ? mOblivionRuntimeState->mCombatControllers : initial->mCombatControllers;
+        if (!controllers.contains(owner) && controllers.size() >= 1'000'000)
+            throw std::length_error("native combat-controller owner limit exceeded");
+        controllers.insert_or_assign(owner,
+            std::vector<ESM4::CombatControllerTarget>(targets.entries().begin(), targets.entries().end()));
+        // Finish all allocations before publishing. Keep the combat service's
+        // address and any active contact-continuation leases intact.
+        if (!player && !existing) mOblivionCombat->engage(owner, target);
+        if (player || (!current && actor.getType() == ESM::REC_NPC_4)) mOblivionCombat->drawNativeRandom();
+        if (initial) mOblivionRuntimeState.swap(initial);
+        mOblivionRuntimeState->mCombatControllers.swap(controllers);
+        return true;
+    }
+
+    bool World::executeOblivionStopCombat(const Ptr& actor)
+    {
+        if (!mOblivionCombat) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : actor.isEmpty() ? ESM::FormKey{} : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
+        if (!hasOblivionCombatController(key).value_or(false)) return true;
+        const auto* life = mOblivionCombat->findActorLife(key);
+        if (!life) throw std::invalid_argument("native StopCombat requires initialized life authority");
+        auto controllers = mOblivionRuntimeState->mCombatControllers;
+        if (life->mPhase == ESM4::ActorLifePhase::Alive) controllers.erase(key);
+        else controllers.at(key).clear(); // Direct native stop retains a nonliving actor's empty baseC.
+        mOblivionCombat->stopCombat(key);
+        mOblivionCombat->cancelActorActions(key);
+        mOblivionRuntimeState->mCombatControllers.swap(controllers);
+        return true;
     }
 
     std::optional<std::uint16_t> World::getOblivionFriendHit(
@@ -4705,7 +4849,18 @@ namespace MWWorld
             return false;
         const auto key = actor == mPlayer->getPlayer()
             ? ESM::FormKey::dynamic("player", 1) : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
-        return mOblivionCombat->isInCombat(key);
+        return isOblivionInCombat(key);
+    }
+
+    std::optional<bool> World::isOblivionInCombat(const ESM::FormKey& actor) const
+    {
+        if (!mOblivionCombat) return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        // Player's script query uses its incoming combat list. Nonplayer
+        // current baseC ownership is directed and does not follow symmetric
+        // engagement membership. Native raw0D still needs its own projection.
+        if (key == ESM::FormKey::dynamic("player", 1)) return mOblivionCombat->isInCombat(key);
+        return hasOblivionCombatController(key).value_or(false);
     }
 
     std::optional<bool> World::isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const

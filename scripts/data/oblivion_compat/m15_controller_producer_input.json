@@ -1,0 +1,437 @@
+{
+  "scope": "Actual Script StartCombat controller production, public queries, F5 and two fresh process continuations. Actors restrained through script before StartCombat; no physical contacts or combat acceptance claimed. Source retains historical Player process action6; ordinary idle frames must clear it to-1 without changing other native actor-value fields.",
+  "source": "build/oblivion-compat/m15/S4/native-combat-controller-authority-runtime-02/staged-input.omwsave",
+  "source_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+  "input_sha256": "0eabc046d92843934b7dc8c19abd25ef2d499353a5564f538b4248a853699361",
+  "runtime_schema": 69,
+  "changed_initial_fields": [
+    "schema_version",
+    "combat_controllers",
+    "friend_hit_counters"
+  ],
+  "constructor_rng_states": [
+    5741206,
+    334604033,
+    3920686528
+  ],
+  "expected_first_priorities": [
+    240,
+    200
+  ],
+  "expected_first_owners": [
+    "content:oblivion.esm:01fc43",
+    "dynamic:player:0000000000000001"
+  ],
+  "expected_second_third_owners": [
+    "dynamic:player:0000000000000001"
+  ],
+  "commands": {
+    "first": [
+      [
+        0.1,
+        "content:oblivion.esm:01fc43",
+        "SetRestrained 1"
+      ],
+      [
+        0.2,
+        "content:oblivion.esm:032a15",
+        "SetRestrained 1"
+      ],
+      [
+        0.3,
+        "content:oblivion.esm:01fc43",
+        "StartCombat content:oblivion.esm:000014"
+      ],
+      [
+        0.4,
+        "content:oblivion.esm:01fc43",
+        "StartCombat content:oblivion.esm:000014"
+      ],
+      [
+        0.5,
+        "content:oblivion.esm:01fc43",
+        "StartCombat content:oblivion.esm:032a15"
+      ],
+      [
+        0.6,
+        "content:oblivion.esm:01fc43",
+        "StartCombat content:oblivion.esm:032a15"
+      ],
+      [
+        0.7,
+        "player",
+        "StartCombat content:oblivion.esm:032a15"
+      ],
+      [
+        0.8,
+        "player",
+        "StartCombat content:oblivion.esm:032a15"
+      ],
+      [
+        0.9,
+        "content:oblivion.esm:01fc43",
+        "GetCurrentAIPackage"
+      ],
+      [
+        1.0,
+        "content:oblivion.esm:01fc43",
+        "GetCurrentAIProcedure"
+      ],
+      [
+        1.1,
+        "player",
+        "GetCurrentAIPackage"
+      ],
+      [
+        1.2,
+        "player",
+        "GetCurrentAIProcedure"
+      ],
+      [
+        1.3,
+        "content:oblivion.esm:01fc43",
+        "GetIsCurrentPackage content:oblivion.esm:097cd3"
+      ],
+      [
+        1.4,
+        "content:oblivion.esm:01fc43",
+        "IsInCombat"
+      ],
+      [
+        1.5,
+        "content:oblivion.esm:032a15",
+        "IsInCombat"
+      ],
+      [
+        1.6,
+        "player",
+        "IsInCombat"
+      ]
+    ],
+    "second": [
+      [
+        0.1,
+        "content:oblivion.esm:01fc43",
+        "GetCurrentAIPackage"
+      ],
+      [
+        0.2,
+        "content:oblivion.esm:01fc43",
+        "GetCurrentAIProcedure"
+      ],
+      [
+        0.3,
+        "player",
+        "GetCurrentAIPackage"
+      ],
+      [
+        0.4,
+        "player",
+        "GetCurrentAIProcedure"
+      ],
+      [
+        0.5,
+        "content:oblivion.esm:01fc43",
+        "IsInCombat"
+      ],
+      [
+        0.6,
+        "content:oblivion.esm:032a15",
+        "IsInCombat"
+      ],
+      [
+        0.7,
+        "player",
+        "IsInCombat"
+      ],
+      [
+        0.8,
+        "content:oblivion.esm:01fc43",
+        "StopCombat"
+      ],
+      [
+        0.9,
+        "content:oblivion.esm:01fc43",
+        "IsInCombat"
+      ],
+      [
+        1.0,
+        "player",
+        "IsInCombat"
+      ],
+      [
+        1.1,
+        "player",
+        "GetCurrentAIPackage"
+      ],
+      [
+        1.8,
+        "content:oblivion.esm:01fc43",
+        "GetFriendHit content:oblivion.esm:000014"
+      ]
+    ],
+    "third": [
+      [
+        0.1,
+        "player",
+        "IsInCombat"
+      ],
+      [
+        0.2,
+        "player",
+        "GetCurrentAIPackage"
+      ],
+      [
+        0.3,
+        "player",
+        "GetCurrentAIProcedure"
+      ],
+      [
+        0.4,
+        "player",
+        "StopCombat"
+      ],
+      [
+        0.5,
+        "player",
+        "GetCurrentAIPackage"
+      ],
+      [
+        0.6,
+        "content:oblivion.esm:01fc43",
+        "IsInCombat"
+      ]
+    ]
+  },
+  "full_M15S4_acceptance": false,
+  "allowed_player_process_action_idle_transition": [
+    6,
+    -1
+  ],
+  "all_other_actor_value_fields_and_bits_must_survive": true,
+  "schema_version": 1,
+  "overlay": {
+    "schema_version": 69,
+    "combat_controllers": {},
+    "friend_hit_counters": {}
+  },
+  "source_must_have_empty_engagements": true,
+  "sanitized_preregistration": {
+    "scope": "ASan/UBSan rendered runtime repetition. Actual Script StartCombat controller production, public queries, F5 and two fresh process continuations. Actors restrained through script before StartCombat; no physical contacts or combat acceptance claimed. Source retains historical Player process action6; ordinary idle frames must clear it to-1 without changing other native actor-value fields.",
+    "source": "build/oblivion-compat/m15/S4/native-combat-controller-authority-runtime-02/staged-input.omwsave",
+    "source_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+    "input_sha256": "0eabc046d92843934b7dc8c19abd25ef2d499353a5564f538b4248a853699361",
+    "runtime_schema": 69,
+    "changed_initial_fields": [
+      "schema_version",
+      "combat_controllers",
+      "friend_hit_counters"
+    ],
+    "constructor_rng_states": [
+      5741206,
+      334604033,
+      3920686528
+    ],
+    "expected_first_priorities": [
+      240,
+      200
+    ],
+    "expected_first_owners": [
+      "content:oblivion.esm:01fc43",
+      "dynamic:player:0000000000000001"
+    ],
+    "expected_second_third_owners": [
+      "dynamic:player:0000000000000001"
+    ],
+    "commands": {
+      "first": [
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "SetRestrained 1"
+        ],
+        [
+          0.2,
+          "content:oblivion.esm:032a15",
+          "SetRestrained 1"
+        ],
+        [
+          0.3,
+          "content:oblivion.esm:01fc43",
+          "StartCombat content:oblivion.esm:000014"
+        ],
+        [
+          0.4,
+          "content:oblivion.esm:01fc43",
+          "StartCombat content:oblivion.esm:000014"
+        ],
+        [
+          0.5,
+          "content:oblivion.esm:01fc43",
+          "StartCombat content:oblivion.esm:032a15"
+        ],
+        [
+          0.6,
+          "content:oblivion.esm:01fc43",
+          "StartCombat content:oblivion.esm:032a15"
+        ],
+        [
+          0.7,
+          "player",
+          "StartCombat content:oblivion.esm:032a15"
+        ],
+        [
+          0.8,
+          "player",
+          "StartCombat content:oblivion.esm:032a15"
+        ],
+        [
+          0.9,
+          "content:oblivion.esm:01fc43",
+          "GetCurrentAIPackage"
+        ],
+        [
+          1.0,
+          "content:oblivion.esm:01fc43",
+          "GetCurrentAIProcedure"
+        ],
+        [
+          1.1,
+          "player",
+          "GetCurrentAIPackage"
+        ],
+        [
+          1.2,
+          "player",
+          "GetCurrentAIProcedure"
+        ],
+        [
+          1.3,
+          "content:oblivion.esm:01fc43",
+          "GetIsCurrentPackage content:oblivion.esm:097cd3"
+        ],
+        [
+          1.4,
+          "content:oblivion.esm:01fc43",
+          "IsInCombat"
+        ],
+        [
+          1.5,
+          "content:oblivion.esm:032a15",
+          "IsInCombat"
+        ],
+        [
+          1.6,
+          "player",
+          "IsInCombat"
+        ]
+      ],
+      "second": [
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "GetCurrentAIPackage"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "GetCurrentAIProcedure"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIPackage"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIProcedure"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:032a15",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "player",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "StopCombat"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "player",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIPackage"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "GetFriendHit content:oblivion.esm:000014"
+        ]
+      ],
+      "third": [
+        [
+          0.1,
+          "player",
+          "IsInCombat"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIPackage"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIProcedure"
+        ],
+        [
+          0.1,
+          "player",
+          "StopCombat"
+        ],
+        [
+          0.1,
+          "player",
+          "GetCurrentAIPackage"
+        ],
+        [
+          0.1,
+          "content:oblivion.esm:01fc43",
+          "IsInCombat"
+        ]
+      ]
+    },
+    "full_M15S4_acceptance": false,
+    "allowed_player_process_action_idle_transition": [
+      6,
+      -1
+    ],
+    "all_other_actor_value_fields_and_bits_must_survive": true,
+    "instrumentation": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+      "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+    },
+    "continuation_scheduling": "Before launching second/third: batch ordered VM queries and StopCombat at simulation .1, preserving file order via existing stable_sort. These phases test restored state and command order, with no elapsed combat interval requirement. First phase timing unchanged."
+  }
+}

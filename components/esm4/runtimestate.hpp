@@ -52,7 +52,7 @@ namespace ESM4
     // v67 retains actor-owned ordered friend-hit lists, including allocated
     // empty owners, zero/wrapped counts and exact finite timer values.
     // v68 retains current base combat-controller presence and directed targets.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 68;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 69;
 
     struct RuntimeContentIdentity
     {
@@ -721,6 +721,8 @@ namespace ESM4
         // v68: current base package0C target projection, distinct from the
         // symmetric engagement graph and generic AI package intent. Presence
         // includes a controller whose target list has become empty.
+        // v69 also permits Player's hidden process base package. Player +330
+        // still returns null; generic process package queries can observe it.
         std::map<ESM::FormKey, std::vector<CombatControllerTarget>> mCombatControllers;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.

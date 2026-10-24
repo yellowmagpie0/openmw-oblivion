@@ -227,7 +227,8 @@ namespace MWMechanics
         // This branch owns C++ AI controls. Lua disableAI is handled by the
         // caller before invoking it; Lua-controlled input is not cleared here.
         stats.setAttackingOrSpell(false);
-        const bool engaged = combat->isInCombat(key);
+        const auto currentTarget = nativeWorld->getOblivionCombatTarget(key);
+        const bool engaged = currentTarget.has_value();
         const auto* values = combat->findActorValues(key);
         const auto* life = combat->findActorLife(key);
         if (!enabled || !engaged || !values || !life || life->mPhase != ESM4::ActorLifePhase::Alive
@@ -237,15 +238,16 @@ namespace MWMechanics
             combat->clearMeleeAiIntent(key);
             return engaged;
         }
-        if (const auto* package = ai->state(actor); package && (package->mActionReserved
-                || package->mBoundary == ESM4::PhaseBoundary::WaitingForM16Action))
-        {
-            combat->clearMeleeAiIntent(key);
-            return false; // Retain the existing package's reserved action authority.
-        }
+        // The current base combat package supersedes the authored coordinator's
+        // queued action. Its frozen package intent is not the process override.
         if (const auto* melee = combat->findMeleeState(key); melee && melee->mStrike
             && melee->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)
             return true; // The defensive controller owns its untargeted Attack-key acquisition.
+        if (currentTarget->isNull())
+        {
+            combat->clearMeleeAiIntent(key);
+            return true; // An allocated-empty controller has no attack target.
+        }
         const auto policy = MWWorld::resolveOblivionCombatPolicy(world.getStore(), values->mBase,
             MWWorld::buildOblivionCombatDefaults(world.getStore()));
         const auto& style = policy.mStandard;
@@ -262,15 +264,9 @@ namespace MWMechanics
             combat->clearMeleeAiIntent(key);
             throw std::runtime_error("native stationary melee requires the explicit S4 deterministic CSTY profile");
         }
-        const auto opponents = combat->combatOpponents(key);
-        if (opponents.size() != 1)
-        {
-            combat->clearMeleeAiIntent(key);
-            throw std::runtime_error("native stationary melee requires one explicit combat opponent");
-        }
-        const auto target = opponents.front() == ESM::FormKey::dynamic("player", 1)
-            ? world.getPlayerPtr() : ai->resolveReference(opponents.front());
-        const auto* targetLife = combat->findActorLife(opponents.front());
+        const auto target = *currentTarget == ESM::FormKey::dynamic("player", 1)
+            ? world.getPlayerPtr() : ai->resolveReference(*currentTarget);
+        const auto* targetLife = combat->findActorLife(*currentTarget);
         if (target.isEmpty() || !target.isInCell() || !target.getRefData().isEnabled()
             || !targetLife || targetLife->mPhase != ESM4::ActorLifePhase::Alive)
         {
@@ -283,7 +279,7 @@ namespace MWMechanics
             combat->clearMeleeAiIntent(key);
             return true; // Lost collision residence cannot turn into a substituted hit or cost.
         }
-        combat->setMeleeAiIntent(key, {opponents.front(), policy.mStyle}, world.getStore());
+        combat->setMeleeAiIntent(key, {*currentTarget, policy.mStyle}, world.getStore());
         auto& movement = actor.getClass().getMovementSettings(actor);
         std::fill(std::begin(movement.mPosition), std::end(movement.mPosition), 0.f);
         std::fill(std::begin(movement.mRotation), std::end(movement.mRotation), 0.f);

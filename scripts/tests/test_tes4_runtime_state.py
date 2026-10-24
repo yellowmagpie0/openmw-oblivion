@@ -224,6 +224,29 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state["schema_version"] = 67
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    def test_hidden_player_combat_package69_preserves_wire_and_legacy_rejection(self):
+        state = self.combat_controller_state(); state["schema_version"] = 69
+        player, target = state["player"]["reference"], state["references"][0]["key"]
+        state["combat_controllers"] = {player: [{"target": target, "priority": 200,
+            "marker": 1, "value_0c": -0., "value_10": 1.25}]}
+        raw = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(raw)
+        self.assertEqual(loaded["combat_controllers"], state["combat_controllers"])
+        self.assertEqual(state_io.encode_payload(loaded), raw)
+        self.assertEqual(struct.pack("<f", loaded["combat_controllers"][player][0]["value_0c"]), b"\x00\x00\x00\x80")
+        old = bytearray(raw); struct.pack_into("<I", old, len(state_io.MAGIC), 68)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(old)
+        state["schema_version"] = 68
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["combat_controllers"] = {}
+        migrated = state_io.decode_payload(state_io.encode_payload(state)); migrated["schema_version"] = 69
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(migrated))["combat_controllers"], {})
+        state["schema_version"] = 69; state["combat_controllers"] = {player: []}
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["combat_controllers"], {player: []})
+        state["combat_controllers"][player] = [{"target": player, "priority": 200,
+            "marker": 1, "value_0c": 0., "value_10": 0.}]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def test_friend_hits67_preserves_empty_owner_duplicates_and_exact_timer_bits(self):
         state = make_state(); state["schema_version"] = 67; state["ai_rng_state"] = 1
         actor = state["player"]["reference"]

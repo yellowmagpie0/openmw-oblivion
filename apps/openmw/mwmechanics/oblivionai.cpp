@@ -1372,14 +1372,18 @@ namespace MWMechanics
                 || function == "GetSleeping" || function == "GetSitting")
             {
                 const ESM4::RuntimeActorAiState* ai = subjectState();
+                const bool controller = mWorld.hasOblivionBaseCombatPackage(subjectKey).value_or(false);
                 if (function == "GetCurrentAIPackage")
+                {
+                    if (controller) return value(5.0); // Native public mapping for transient base package0C.
                     return value(ai == nullptr || ai->mPackageType == ESM4::AIPackageType::Unknown
                             ? -1.0
                             : static_cast<double>(static_cast<std::uint8_t>(ai->mPackageType)));
+                }
                 if (function == "GetCurrentAIProcedure")
-                    return value(ai == nullptr ? 0.0 : static_cast<double>(ai->mProcedure));
+                    return value(controller ? 13.0 : ai == nullptr ? 0.0 : static_cast<double>(ai->mProcedure));
                 if (function == "GetIsCurrentPackage")
-                    return value(ai != nullptr && !parameterKey.isNull() && ai->mPackage == parameterKey ? 1.0 : 0.0);
+                    return value(!controller && ai != nullptr && !parameterKey.isNull() && ai->mPackage == parameterKey ? 1.0 : 0.0);
                 if (function == "GetRestrained")
                     return value(ai != nullptr && ai->mRestrained ? 1.0 : 0.0);
                 const bool sleeping = ai != nullptr && ai->mPackageType == ESM4::AIPackageType::Sleep
@@ -1441,8 +1445,7 @@ namespace MWMechanics
             }
             if (function == "IsInCombat")
             {
-                const auto* combat = mWorld.getOblivionCombatService();
-                return value(combat && combat->isInCombat(ESM4::runtimeReferenceKey(subjectKey)) ? 1.0 : 0.0);
+                return value(mWorld.isOblivionInCombat(subjectKey).value_or(false) ? 1.0 : 0.0);
             }
             if (function == "GetPCInFaction")
             {
@@ -1980,13 +1983,16 @@ namespace MWMechanics
             if (function == "GetArmorRating")
                 return value(subjectPtr.getClass().getArmorRating(subjectPtr, false));
             if (function == "GetCurrentAIPackage")
-                return value(currentAi.mPackageType == ESM4::AIPackageType::Unknown
+                return value(mWorld.hasOblivionBaseCombatPackage(actorKey(subjectPtr)).value_or(false) ? 5.0
+                        : currentAi.mPackageType == ESM4::AIPackageType::Unknown
                         ? -1.0
                         : static_cast<double>(static_cast<std::uint8_t>(currentAi.mPackageType)));
             if (function == "GetCurrentAIProcedure")
-                return value(static_cast<double>(currentAi.mProcedure));
+                return value(mWorld.hasOblivionBaseCombatPackage(actorKey(subjectPtr)).value_or(false)
+                        ? 13.0 : static_cast<double>(currentAi.mProcedure));
             if (function == "GetIsCurrentPackage")
-                return value(!parameterKey.isNull() && currentAi.mPackage == parameterKey ? 1.0 : 0.0);
+                return value(!mWorld.hasOblivionBaseCombatPackage(actorKey(subjectPtr)).value_or(false)
+                    && !parameterKey.isNull() && currentAi.mPackage == parameterKey ? 1.0 : 0.0);
             if (function == "GetDetectionLevel")
             {
                 const MWWorld::Ptr comparison = comparisonPtr();
@@ -2051,8 +2057,7 @@ namespace MWMechanics
                 return value(nativeStats().getMovementFlag(CreatureStats::Flag_Run) ? 1.0 : 0.0);
             if (function == "IsInCombat")
             {
-                const auto* combat = mWorld.getOblivionCombatService();
-                return value(combat && combat->isInCombat(actorKey(subjectPtr)) ? 1.0 : 0.0);
+                return value(mWorld.isOblivionInCombat(actorKey(subjectPtr)).value_or(false) ? 1.0 : 0.0);
             }
             if (function == "IsRaining")
                 return value((mWorld.getCurrentWeather().mNativeClassification & ESM4::Weather::Classification_Rainy)
@@ -6312,6 +6317,7 @@ namespace MWMechanics
 
     std::optional<ESM::FormKey> OblivionAiService::currentPackage(const MWWorld::ConstPtr& actor) const
     {
+        if (mWorld.hasOblivionBaseCombatPackage(actorKey(actor)).value_or(false)) return std::nullopt;
         const ESM4::RuntimeActorAiState* current = state(actor);
         if (current == nullptr || current->mPackage.isNull())
             return std::nullopt;
@@ -6326,6 +6332,7 @@ namespace MWMechanics
 
     bool OblivionAiService::isCurrentPackage(const MWWorld::ConstPtr& actor, const ESM::FormKey& packageKey) const
     {
+        if (mWorld.hasOblivionBaseCombatPackage(actorKey(actor)).value_or(false)) return false;
         const ESM4::RuntimeActorAiState* current = state(actor);
         return current != nullptr && current->mPackage == packageKey;
     }

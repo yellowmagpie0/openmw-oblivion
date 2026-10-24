@@ -2214,6 +2214,7 @@ namespace MWWorld
 
         if (name == "getcurrentaipackage")
         {
+            if (mWorld.hasOblivionBaseCombatPackage(objectKey()).value_or(false)) return std::int64_t(5);
             const Ptr actor = objectPtr();
             if (oblivionAi() != nullptr && !actor.isEmpty() && oblivionAi()->handles(actor))
                 if (const ESM4::RuntimeActorAiState* state = oblivionAi()->state(actor))
@@ -2230,6 +2231,7 @@ namespace MWWorld
         }
         if (name == "getcurrentaiprocedure")
         {
+            if (mWorld.hasOblivionBaseCombatPackage(objectKey()).value_or(false)) return std::int64_t(13);
             const Ptr actor = objectPtr();
             if (oblivionAi() != nullptr && !actor.isEmpty() && oblivionAi()->handles(actor))
                 return std::int64_t(static_cast<std::uint16_t>(oblivionAi()->currentProcedure(actor)));
@@ -2284,15 +2286,14 @@ namespace MWWorld
                     if (!targetKey)
                         throw std::invalid_argument("StartCombat requires an actor reference");
                     const auto opponent = requireActor(*targetKey);
-                    combat->engage(actor, opponent);
+                    mWorld.executeOblivionStartCombat(ptrFor(actor), ptrFor(opponent));
                 }
-                else if (actor != ESM::FormKey::dynamic("player", 1) && combat->isInCombat(actor))
+                else
                 {
                     // The native command uses actor +334(true), whose Player
                     // implementation is false. It does not use IsInCombat's
                     // special Player-list query and is a no-op out of combat.
-                    combat->stopCombat(actor);
-                    combat->cancelActorActions(actor);
+                    mWorld.executeOblivionStopCombat(ptrFor(actor));
                 }
                 trace(name + " actor=" + actor.serialize());
                 return std::int64_t(0);
@@ -2304,8 +2305,7 @@ namespace MWWorld
         }
         if (name == "isincombat")
         {
-            const auto* combat = mWorld.getOblivionCombatService();
-            return std::int64_t(combat && combat->isInCombat(ESM4::runtimeReferenceKey(objectKey())));
+            return std::int64_t(mWorld.isOblivionInCombat(objectKey()).value_or(false));
         }
         if (name == "isspelltarget" || name == "ispcamurderer")
             return std::int64_t(0);

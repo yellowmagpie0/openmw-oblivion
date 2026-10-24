@@ -22,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict, plugin: Path) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68) or not isinstance(recipe['actor'], str)
+            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69) or not isinstance(recipe['actor'], str)
             or not recipe['actor'].startswith('content:')
             or type(recipe['actor_draw_state']) is not int or recipe['actor_draw_state'] != 1
             or type(recipe['process_action']) is not int or recipe['process_action'] != -1

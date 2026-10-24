@@ -394,7 +394,10 @@ namespace MWWorld
         bool updateOblivionFrameResources(const Ptr& actor, float duration, bool running) override;
         bool spendOblivionJumpFatigue(const Ptr& actor) override;
         std::optional<bool> isOblivionInCombat(const Ptr& actor) const override;
+        std::optional<bool> isOblivionInCombat(const ESM::FormKey& actor) const;
         std::optional<bool> isOblivionInCombatWith(const Ptr& actor, const Ptr& opponent) const override;
+        bool executeOblivionStartCombat(const Ptr& actor, const Ptr& opponent);
+        bool executeOblivionStopCombat(const Ptr& actor);
 
         // Bounded native interaction surface for the M5 prison slice.
         void interactWithOblivionReference(const Ptr& ptr, OblivionInteractionKind kind, const Ptr& actor = {});
@@ -437,8 +440,11 @@ namespace MWWorld
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const;
+        // Generic process package selector includes Player's hidden base package.
+        std::optional<bool> hasOblivionBaseCombatPackage(const ESM::FormKey& actor) const;
         std::optional<bool> hasOblivionCombatController(const ESM::FormKey& actor) const;
         std::optional<bool> isOblivionCombatTarget(const ESM::FormKey& actor, const ESM::FormKey& target) const;
+        std::optional<ESM::FormKey> getOblivionCombatTarget(const ESM::FormKey& actor) const;
         std::optional<std::uint16_t> getOblivionFriendHit(
             const ESM::FormKey& actor, const ESM::FormKey& target) const;
         std::optional<ESM::FormKey> getOblivionReferenceBaseKey(const ESM::FormKey& reference) const;

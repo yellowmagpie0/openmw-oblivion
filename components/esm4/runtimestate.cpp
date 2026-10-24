@@ -1696,7 +1696,8 @@ namespace ESM4
         for (const auto& [owner, entries] : mCombatControllers)
         {
             if (!nativeActors.contains(owner) || runtimeReferenceKey(owner) != owner
-                || owner == mPlayer.mReference || ESM::FormKey::deserialize(owner.serialize()) != owner)
+                || (mVersion < 69 && owner == mPlayer.mReference)
+                || ESM::FormKey::deserialize(owner.serialize()) != owner)
                 throw std::runtime_error("Invalid or dangling combat-controller owner identity");
             checkSize(entries.size(), "combat-controller target list");
             for (const auto& entry : entries)

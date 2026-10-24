@@ -23,7 +23,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
-            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68)
+            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69)
             or recipe['actor'] != actor or type(recipe['process_action']) is not int or recipe['process_action'] != 8
             or type(recipe['shared_player_draw_state']) is not int or recipe['shared_player_draw_state'] != 1
             or type(recipe['camera_first_person']) is not bool

@@ -5455,6 +5455,7 @@ TEST(ESM4RuntimeState, CombatControllers68HaveExplicitWireAndPreserveEmptyOwners
 TEST(ESM4RuntimeState, CombatControllers68RejectNoncanonicalDanglingSelfDuplicateAndUnorderedState)
 {
     auto state = combatControllerState();
+    state.mVersion = 68;
     const auto owner = state.mReferences[0].mKey, other = state.mReferences[1].mKey;
     state.mCombatControllers[owner] = {{state.mPlayer.mReference, 200}, {other, -1}};
     ASSERT_NO_THROW(state.validate());
@@ -5479,4 +5480,33 @@ TEST(ESM4RuntimeState, CombatControllers68RejectNoncanonicalDanglingSelfDuplicat
     }
     auto bad = state; bad.mCombatControllers.at(owner)[1].mPriority = 201;
     EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, HiddenPlayerCombatPackage69PreservesTargetsAndRejectsOlderSchemaOwnership)
+{
+    auto state = combatControllerState();
+    state.mVersion = 69;
+    const auto player = state.mPlayer.mReference, target = state.mReferences.front().mKey;
+    state.mCombatControllers[player] = {{target, 200, 1, -0.f, 1.25f}};
+    const auto bytes = state.serializeBinary();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(loaded.mCombatControllers, state.mCombatControllers);
+    EXPECT_EQ(loaded.serializeBinary(), bytes);
+    EXPECT_EQ(std::bit_cast<unsigned>(loaded.mCombatControllers.at(player)[0].mValue0C), 0x80000000u);
+    auto oldWire = bytes;
+    oldWire[std::string_view("OMW4STATE").size()] = 68;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(oldWire), std::runtime_error);
+    state.mVersion = 68;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mCombatControllers.erase(player);
+    const auto old = state.serializeBinary();
+    auto migrated = ESM4::RuntimeState::deserializeBinary(old);
+    migrated.mVersion = 69;
+    EXPECT_TRUE(migrated.mCombatControllers.empty());
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(migrated.serializeBinary()).mCombatControllers.empty());
+    state.mVersion = 69;
+    state.mCombatControllers[player] = {{player, 200}};
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mCombatControllers[player] = {};
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mCombatControllers.contains(player));
 }

@@ -1302,11 +1302,14 @@ namespace MWMechanics
         const auto* life = findActorLife(actor);
         const auto* targetValues = findActorValues(intent.mTarget);
         const auto* targetLife = findActorLife(intent.mTarget);
-        if (!values || !life || values->mOwner != ESM4::ActorValueOwner::NonPlayer
+        if (actor == intent.mTarget || !values || !life || values->mOwner != ESM4::ActorValueOwner::NonPlayer
             || values->mBase != life->mBase || life->mPhase != ESM4::ActorLifePhase::Alive
             || !targetValues || !targetLife || targetValues->mBase != targetLife->mBase
-            || targetLife->mPhase != ESM4::ActorLifePhase::Alive || !isInCombatWith(actor, intent.mTarget))
-            throw std::invalid_argument("native melee AI requires Alive nonplayer and engaged target authority");
+            || targetLife->mPhase != ESM4::ActorLifePhase::Alive)
+            throw std::invalid_argument("native melee AI requires distinct Alive nonplayer and target authority");
+        // World selects this target from the current directed controller.
+        // Symmetric service engagement is separate bookkeeping; in particular
+        // stopping another actor does not prove this controller lost its target.
         nonPlayerContentIsCreature(*values, store); // Validate the actual winning actor kind.
         if (MWWorld::resolveOblivionCombatPolicy(store, values->mBase,
                 MWWorld::buildOblivionCombatDefaults(store)).mStyle != intent.mStyle)

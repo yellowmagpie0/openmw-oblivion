@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 68
+CURRENT_VERSION = 69
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1116,7 +1116,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         raise RuntimeStateError("Combat controllers require runtime schema68")
     for owner, entries in controllers.items():
         native_key(owner)
-        if owner not in native_keys or owner in (player["reference"], "content:oblivion.esm:000014"):
+        if (owner not in native_keys or owner == "content:oblivion.esm:000014"
+                or (version < 69 and owner == player["reference"])):
             raise RuntimeStateError("Invalid or dangling combat-controller owner identity")
         seen_targets = set()
         previous_priority = None

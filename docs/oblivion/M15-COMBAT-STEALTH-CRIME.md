@@ -6,6 +6,58 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 script combat package producers and hidden Player state — 2026-10-24
+
+Script StartCombat now produces the profile's persistent base-package target
+projection, applies the native script priority rewrite, and consumes the direct
+constructor draw for NPC/Player creation. Repeated NPC targets reuse the
+controller; repeated Player starts replace a hidden package and consume another
+draw. The target list drives the bounded stationary opponent policy separately
+from symmetric engagement bookkeeping. Living StopCombat removes the owner's
+projection; the direct nonliving branch retains an empty projection. These
+changes do not constitute a complete native package implementation.
+
+Independent original executable probes establish that the generic initial
+combat-package queries return package **5** and procedure **13**. Player's +330
+controller getter remains null while its generic process-package query sees a
+hidden package. Schema **69** preserves that hidden Player owner in the existing
+target-map wire layout. Schema 68 still rejects Player ownership; migration
+creates no inferred controller. VM and loaded/unloaded condition adapters use
+the package projection for these bounded queries.
+
+All checks share source fingerprint
+`25accea191704d13c0b1400d6361849fb2167c9198a809fb779585613982dcda`:
+3,064 normal components, 1,907 normal engine tests, 915 ASan/UBSan ESM4 component
+tests, 1,907 instrumented engine tests and 406 Python tests pass with exact
+inventories and no skips. Leak detection is disabled. Failed self-target and
+schema-fixture attempts remain in their evidence directories.
+
+Six rendered processes, three in each build, create packages through the real
+script command path, F5, exit, reload in a fresh process and resave. Both courses
+start without controller records. They verify priorities 240/200, initial public
+queries 5/13, one NPC constructor draw plus two Player replacement draws
+(seed 15 -> 3920686528), directed targets, NPC stop and hidden Player persistence.
+Complete initial states and saved binary/live states agree, including float
+bits. Native values, actor bases/life/actions/counters and previously saved
+inventories survive, apart from the declared idle Player action 6 -> -1 clear.
+Ordinary world AI materializes additional references; exact reference-set
+preservation is not claimed. All six captures were reviewed: idle Valen Dreth,
+visible Player fists and HUD. Actors were restrained through script before
+StartCombat, so these are command/persistence courses.
+
+Native query probes cover 16 successful NPC/Creature query sets and 8 Player
+sets (72 evaluator calls), within 96 NPC/Creature admission cases plus 8 Player
+cases. An additional 480 constructor probes cover nonempty actor/race SpellItem
+lists and both accepted/rejected cast availability, with empty effect lists and
+resource models. General nonempty effect/resource/inventory paths remain open.
+
+Full S4 remains incomplete. StartCombat CHML/INVI and casting cancellation,
+normal-hit notification, death/upper-package/mounted/group cleanup, normal-input
+attack/block and in-flight restart with the new producer, and the remaining
+input/view/FPS/mastery/effect matrix still require implementation or acceptance.
+See [the verification receipt](M15-CONTROLLER-PRODUCER-VERIFICATION.json) and
+[editable input recipe](../../scripts/data/oblivion_compat/m15_controller_producer_input.json).
+
 ## S4 controller priority and rooted distance rules — 2026-10-24
 
 The component target list now implements the script StartCombat wrapper's
