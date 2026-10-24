@@ -1675,6 +1675,21 @@ namespace ESM4
                 if (!nativeActors.contains(actor) || runtimeReferenceKey(actor) != actor
                     || ESM::FormKey::deserialize(actor.serialize()) != actor)
                     throw std::runtime_error("Invalid or dangling disposition actor identity");
+        checkSize(mFriendHitCounters.size(), "friend-hit owner map");
+        if (mVersion < 67 && !mFriendHitCounters.empty())
+            throw std::runtime_error("Friend-hit counters require runtime schema67");
+        for (const auto& [owner, entries] : mFriendHitCounters)
+        {
+            if (!nativeActors.contains(owner) || runtimeReferenceKey(owner) != owner
+                || ESM::FormKey::deserialize(owner.serialize()) != owner)
+                throw std::runtime_error("Invalid or dangling friend-hit owner identity");
+            checkSize(entries.size(), "friend-hit entry list");
+            for (const auto& entry : entries)
+                if (!nativeActors.contains(entry.mTarget) || runtimeReferenceKey(entry.mTarget) != entry.mTarget
+                    || ESM::FormKey::deserialize(entry.mTarget.serialize()) != entry.mTarget
+                    || !std::isfinite(entry.mElapsed))
+                    throw std::runtime_error("Invalid friend-hit target or timer");
+        }
         checkSize(mNativeActorUpdateTimes.size(), "native actor update time map");
         if (mVersion < 16 && (mNativeActorManagerTime != 0.f || !mNativeActorUpdateTimes.empty()))
             throw std::runtime_error("TES4 native actor clocks require runtime-state version 16");
@@ -3203,6 +3218,21 @@ namespace ESM4
                 writer.integer<std::int32_t>(value);
             }
         }
+        if (mVersion >= 67)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mFriendHitCounters.size()));
+            for (const auto& [owner, entries] : mFriendHitCounters)
+            {
+                writeKey(writer, owner);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(entries.size()));
+                for (const auto& entry : entries)
+                {
+                    writeKey(writer, entry.mTarget);
+                    writer.integer<std::uint16_t>(entry.mCount);
+                    writer.floating(entry.mElapsed);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4334,6 +4364,32 @@ namespace ESM4
                     throw std::runtime_error("Noncanonical disposition modifier map");
                 result.mDispositionModifiers.emplace(pair, reader.integer<std::int32_t>());
                 previous = pair;
+            }
+        }
+        if (result.mVersion >= 67)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                const auto owner = ESM::FormKey::deserialize(text);
+                if (owner.isNull() || owner.serialize() != text || (previous && !(*previous < owner)))
+                    throw std::runtime_error("Noncanonical friend-hit owner map");
+                const auto size = reader.count();
+                std::vector<FriendHitEntry> entries;
+                entries.reserve(size);
+                for (std::uint32_t j = 0; j < size; ++j)
+                {
+                    const auto targetText = reader.string();
+                    const auto target = ESM::FormKey::deserialize(targetText);
+                    if (target.isNull() || target.serialize() != targetText)
+                        throw std::runtime_error("Noncanonical friend-hit target identity");
+                    const auto hits = reader.integer<std::uint16_t>();
+                    entries.push_back({target, hits, reader.float32()});
+                }
+                result.mFriendHitCounters.emplace(owner, std::move(entries));
+                previous = owner;
             }
         }
         if (!reader.eof())
@@ -5577,6 +5633,30 @@ namespace ESM4
                     << escapeJson(pair.second.serialize()) << "\",\"value\":" << value << '}';
             }
             stream << ']';
+        }
+        if (mVersion >= 67)
+        {
+            stream << ",\"friend_hit_counters\":{";
+            bool firstOwner = true;
+            for (const auto& [owner, entries] : mFriendHitCounters)
+            {
+                if (!firstOwner) stream << ',';
+                firstOwner = false;
+                stream << '\"' << escapeJson(owner.serialize()) << "\":[";
+                bool firstEntry = true;
+                for (const auto& entry : entries)
+                {
+                    if (!firstEntry) stream << ',';
+                    firstEntry = false;
+                    stream << "{\"target\":\"" << escapeJson(entry.mTarget.serialize())
+                        << "\",\"count\":" << entry.mCount << ",\"elapsed\":";
+                    if (entry.mElapsed == 0 && std::signbit(entry.mElapsed)) stream << "-0.0";
+                    else stream << std::setprecision(17) << entry.mElapsed;
+                    stream << '}';
+                }
+                stream << ']';
+            }
+            stream << '}';
         }
         stream << "}";
         return stream.str();

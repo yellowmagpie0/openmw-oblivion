@@ -14,6 +14,8 @@ namespace ESM4
         ESM::FormKey mTarget;
         std::uint16_t mCount = 0;
         float mElapsed = 0;
+
+        friend bool operator==(const FriendHitEntry&, const FriendHitEntry&) = default;
     };
 
     // One actor's native extra 0x4E. List order and allocated-empty presence

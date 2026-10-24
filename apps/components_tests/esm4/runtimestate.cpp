@@ -1741,7 +1741,8 @@ namespace
                 + (version >= 30 ? 4 : 0) + (version >= 31 ? 4 : 0)
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
-                + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0);
+                + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
+                + (version >= 67 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5327,4 +5328,60 @@ TEST(ESM4RuntimeState, Disposition66RetainsSignedZeroEntriesAndRejectsLegacyOrDa
     const auto old = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
     EXPECT_TRUE(old.mDispositionModifiers.empty());
     EXPECT_EQ(old.canonicalJson().find("disposition_modifiers"), std::string::npos);
+}
+
+TEST(ESM4RuntimeState, FriendHits67PreservesOrderedDuplicatesAllocatedEmptyOwnersAndTimerBits)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues = {actor};
+    state.mFriendHitCounters[actor.mActor] = {{actor.mActor, 0, -0.f},
+        {actor.mActor, 65535, 1.25f}, {actor.mActor, 1, -2.5f}};
+    const auto bytes = state.serializeBinary();
+    auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mFriendHitCounters, state.mFriendHitCounters);
+    EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(restored.mFriendHitCounters.at(actor.mActor)[0].mElapsed), 0x80000000u);
+    auto truncated = bytes; truncated.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    state.mFriendHitCounters.at(actor.mActor).clear();
+    restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    ASSERT_EQ(restored.mFriendHitCounters.size(), 1u);
+    EXPECT_TRUE(restored.mFriendHitCounters.at(actor.mActor).empty());
+    state.mVersion = 66;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mFriendHitCounters.clear();
+    restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(restored.mFriendHitCounters.empty());
+    EXPECT_EQ(restored.canonicalJson().find("friend_hit_counters"), std::string::npos);
+}
+
+TEST(ESM4RuntimeState, FriendHits67RejectsDanglingOwnersTargetsAliasesAndNonfiniteTimers)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm", 7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues = {actor};
+    state.mFriendHitCounters[actor.mActor] = {{actor.mActor, 65535, 1}};
+    for (const auto time : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto bad = state;
+        bad.mFriendHitCounters.at(actor.mActor)[0].mElapsed = time;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    for (const auto key : {ESM::FormKey{}, ESM::FormKey::content("oblivion.esm", 0x14),
+             ESM::FormKey::content("oblivion.esm", 0xdead)})
+    {
+        auto bad = state;
+        bad.mFriendHitCounters[key] = {};
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        bad = state;
+        bad.mFriendHitCounters.at(actor.mActor)[0].mTarget = key;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
 }

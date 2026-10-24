@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 66
+CURRENT_VERSION = 67
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1090,6 +1090,25 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if pair in modifier_pairs or type(value) is not int or not -(1 << 31) <= value < 1 << 31:
             raise RuntimeStateError("Invalid or duplicate disposition modifier")
         modifier_pairs.add(pair)
+    friend_hits = state.get("friend_hit_counters", {})
+    if not isinstance(friend_hits, dict) or len(friend_hits) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid friend-hit owner map")
+    if version < 67 and friend_hits:
+        raise RuntimeStateError("Friend-hit counters require runtime schema67")
+    for owner, entries in friend_hits.items():
+        native_key(owner)
+        if owner not in native_keys or owner == "content:oblivion.esm:000014":
+            raise RuntimeStateError("Invalid or dangling friend-hit owner identity")
+        for entry in check_collection(entries, "friend-hit entry list"):
+            if not isinstance(entry, dict) or set(entry) != {"target", "count", "elapsed"}:
+                raise RuntimeStateError("Invalid friend-hit entry")
+            target = entry["target"]
+            native_key(target)
+            if target not in native_keys or target == "content:oblivion.esm:000014":
+                raise RuntimeStateError("Invalid or dangling friend-hit target identity")
+            if type(entry["count"]) is not int or not 0 <= entry["count"] <= 65535:
+                raise RuntimeStateError("Invalid friend-hit count")
+            native_float(entry["elapsed"])
     value_bases = {actor["actor"]: actor["base"] for actor in native_actors}
     legacy_refs = {reference["key"]: reference for reference in references}
     life_keys: set[str] = set()
@@ -2746,6 +2765,18 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             modifiers.append({"actor": actor, "target": target, "value": reader.unpack("<i")})
             previous = order
         result["disposition_modifiers"] = modifiers
+    if version >= 67:
+        counters = {}
+        previous = None
+        for _ in range(reader.count()):
+            owner = reader.string()
+            order = tuple(owner.split(":"))
+            if previous is not None and previous >= order:
+                raise RuntimeStateError("Noncanonical friend-hit owner map")
+            counters[owner] = [{"target": reader.string(), "count": reader.unpack("<H"),
+                                "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
+            previous = order
+        result["friend_hit_counters"] = counters
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3393,6 +3424,16 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(entry["actor"])
             writer.string(entry["target"])
             writer.pack("<i", entry["value"])
+    if version >= 67:
+        counters = sorted(state.get("friend_hit_counters", {}).items(), key=lambda item: tuple(item[0].split(":")))
+        writer.pack("<I", len(counters))
+        for owner, entries in counters:
+            writer.string(owner)
+            writer.pack("<I", len(entries))
+            for entry in entries:
+                writer.string(entry["target"])
+                writer.pack("<H", entry["count"])
+                writer.pack("<f", entry["elapsed"])
     return writer.finish()
 
 
@@ -3679,6 +3720,12 @@ def _upgrade_disposition_modifiers(state: dict[str, Any]) -> None:
     state.setdefault("disposition_modifiers", [])
 
 
+def _upgrade_friend_hit_counters(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 67 and state.get("friend_hit_counters"):
+        raise RuntimeStateError("Legacy runtime schema cannot contain friend-hit counters")
+    state.setdefault("friend_hit_counters", {})
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
@@ -3704,6 +3751,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_spoken_dialogue_history(state)
     _upgrade_friendly_hit_flags(state)
     _upgrade_disposition_modifiers(state)
+    _upgrade_friend_hit_counters(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3789,6 +3837,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_spoken_dialogue_history(result)
     _upgrade_friendly_hit_flags(result)
     _upgrade_disposition_modifiers(result)
+    _upgrade_friend_hit_counters(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

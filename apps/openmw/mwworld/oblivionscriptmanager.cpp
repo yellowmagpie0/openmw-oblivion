@@ -2013,6 +2013,12 @@ namespace MWWorld
             return std::int64_t(*value);
         }
 
+        if (name == "getfriendhit")
+        {
+            const auto other = keyFromValue(argument(0));
+            return std::int64_t(other ? mWorld.getOblivionFriendHit(objectKey(), *other).value_or(0) : 0);
+        }
+
         if (name == "getdisposition")
         {
             const auto other = keyFromValue(argument(0));

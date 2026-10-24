@@ -1,0 +1,43 @@
+{
+  "scope": "Seeded authoritative counter storage, actual VM queries and exact logical save/restart preservation; no hit producer or expiry acceptance.",
+  "source": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshots/save-3.omwsave",
+  "source_sha256": "3794eaa9062ecbb13df4aaa93817e70d53cb251d8121de729a799ef223efbc9e",
+  "input_sha256": "9b4547781272190fa3f3f5013eafb492f1a80634906ac829bd874972c1782534",
+  "declared_counters": {
+    "dynamic:player:0000000000000001": [],
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 65535,
+        "elapsed": -0.0
+      },
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 2,
+        "elapsed": 1.25
+      }
+    ],
+    "content:oblivion.esm:032a15": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 3,
+        "elapsed": -2.5
+      }
+    ]
+  },
+  "expected_queries": [
+    "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=65535",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetFriendHit result=0",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=GetFriendHit result=3"
+  ],
+  "expected_contacts": 0,
+  "full_M15S4_acceptance": false,
+  "setup_helper": "scripts.tes4_runtime_state:load_save/write_save",
+  "schema_upgrade": 67,
+  "declared_queries_are_read_only": true,
+  "continuation": "Copy the unique real first-process save into a fresh private slot; never re-inject counters.",
+  "manifests": [
+    "oblivion_m15_friend_hit_query.json",
+    "oblivion_m15_friend_hit_query_continuation.json"
+  ]
+}

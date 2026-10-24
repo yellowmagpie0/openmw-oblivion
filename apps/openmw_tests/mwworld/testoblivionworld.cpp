@@ -34565,3 +34565,110 @@ TEST(OblivionWorldTest, DispositionScriptReferenceUsesTheResolvedCellParentBefor
     ASSERT_TRUE(world.getOblivionCombatService()->findActorValues(actor));
     EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor)->mProcess, ESM4::ActorValueProcess::Low);
 }
+
+TEST(OblivionWorldTest, FriendHitQueriesShareOrderedNativeStorageAcrossVmConditionsAndRestore)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto other = addNativeNpc(fixture, 0xa60, 100, 0xa70);
+    other = other.getCell()->moveTo(other, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(other);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(other, ESM4::ActorValueProcess::Active));
+    const auto actor = fixture.mActor.getCellRef().getFormKey(), target = other.getCellRef().getFormKey();
+    auto state = world.captureOblivionRuntimeState();
+    state.mFriendHitCounters[actor] = {{actor, 0, -0.f}, {actor, 99, 2}, {target, 65535, 1.25f}};
+    state.mFriendHitCounters[target] = {{actor, 7, 0}};
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.getOblivionFriendHit(actor, actor), 0); // First match, including zero.
+    EXPECT_EQ(world.getOblivionFriendHit(actor, target), 65535);
+    EXPECT_EQ(world.getOblivionFriendHit(target, actor), 7);
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    EXPECT_EQ(ObScript::asInteger(scripts->call("GetFriendHit", ObScript::ReferenceValue{actor, {}},
+        {ObScript::ReferenceValue{target, {}}}, {}, {})), 65535);
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 288;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    condition.mParameter1.mIsFormId = true; // Native null argument binds the opposite context.
+    condition.mComparisonValue = 65535;
+    auto& ai = *world.getOblivionAiService();
+    EXPECT_EQ(ai.evaluateDialogueConditions(fixture.mActor, other, std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    condition.mRunOnTarget = true;
+    condition.mComparisonValue = 7;
+    EXPECT_EQ(ai.evaluateDialogueConditions(fixture.mActor, other, std::span(&condition, 1)),
+        ESM4::ConditionResult::True);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, state.mFriendHitCounters);
+    auto archive = world.retainSimulation();
+    ASSERT_TRUE(archive.detach());
+    ASSERT_TRUE(archive.restore());
+    EXPECT_EQ(world.getOblivionFriendHit(actor, target), 65535);
+    EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, state.mFriendHitCounters);
+
+    // Exercise the separate unloaded adapter against the same saved authority.
+    // Both an explicit actor and the native null/opposite-context argument must
+    // select the same ordered counter without registering either reference.
+    ESM4::AIPackage package{};
+    package.mId = {0xa80, 0};
+    package.mFormKey = ESM::FormKey::content("headless.esm", 0xa80);
+    package.mPackageType = ESM4::AIPackageType::Wander;
+    auto definition = *world.getStore().search<ESM4::Npc>(*world.getOblivionReferenceBaseKey(actor));
+    definition.mAIPackageKeys = {package.mFormKey};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(definition, definition.mFormKey);
+    auto unloaded = world.captureOblivionRuntimeState();
+    unloaded.mActorAi.clear();
+    for (const auto& key : {actor, target})
+    {
+        ESM4::RuntimeActorAiState aiState;
+        aiState.mActor = key;
+        aiState.mBase = *world.getOblivionReferenceBaseKey(key);
+        aiState.mCell = aiState.mLastValidCell = ESM::FormKey::content("headless.esm", 1);
+        aiState.mTarget = key == actor ? target : actor;
+        aiState.mTargetBase = *world.getOblivionReferenceBaseKey(aiState.mTarget);
+        aiState.mTier = ESM4::ProcessTier::Low;
+        unloaded.mActorAi.push_back(aiState);
+    }
+    world.getWorldModel().deregisterLiveCellRef(*fixture.mActor.mRef);
+    world.getWorldModel().deregisterLiveCellRef(*other.mRef);
+    for (const bool runOnTarget : {false, true})
+        for (const bool explicitArgument : {false, true})
+        {
+            condition.mRunOnTarget = runOnTarget;
+            condition.mParameter1.mReferenceKey = explicitArgument ? (runOnTarget ? actor : target) : ESM::FormKey{};
+            condition.mComparisonValue = runOnTarget ? 7 : 65535;
+            package.mCanonicalConditions = {condition};
+            world.getStore().getWritable<ESM4::AIPackage>().insertStatic(package, package.mFormKey);
+            ASSERT_NO_THROW(ai.restore(unloaded));
+            ai.updateUnloaded(.5f);
+            ASSERT_TRUE(ai.state(actor));
+            EXPECT_EQ(ai.state(actor)->mConditionResult, ESM4::ConditionResult::True);
+            EXPECT_TRUE(world.getWorldModel().getPtr(ESM::FormId{actor.localId(), 0}).isEmpty());
+            EXPECT_TRUE(world.getWorldModel().getPtr(ESM::FormId{target.localId(), 0}).isEmpty());
+            EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, state.mFriendHitCounters);
+        }
+}
+
+TEST(OblivionWorldTest, FriendHitQueriesDoNotAllocateOwnersOrMaterializeColdActorProcesses)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    const auto actor = fixture.mActor.getCellRef().getFormKey();
+    ESM4::ActorCharacter cold{};
+    cold.mId = {0xa50, 0}; cold.mFormKey = ESM::FormKey::content("headless.esm", 0xa50);
+    cold.mBaseObj = fixture.mActor.get<ESM4::Npc>()->mBase->mId;
+    cold.mBaseKey = fixture.mActor.get<ESM4::Npc>()->mBase->mFormKey;
+    cold.mParent = world.getPlayerPtr().getCell()->getCell()->getId();
+    cold.mParentKey = ESM::FormKey::content("headless.esm", 1);
+    world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(cold, cold.mFormKey);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    EXPECT_EQ(world.getOblivionFriendHit(cold.mFormKey, actor), 0);
+    EXPECT_EQ(ObScript::asInteger(scripts->call("GetFriendHit", ObScript::ReferenceValue{cold.mFormKey, {}},
+        {ObScript::ReferenceValue{actor, {}}}, {}, {})), 0);
+    EXPECT_EQ(world.getOblivionFriendHit(ESM::FormKey::content("headless.esm", 0x940), actor), 0);
+    EXPECT_EQ(world.getOblivionFriendHit(actor, {}), 0);
+    EXPECT_TRUE(world.getWorldModel().getPtr(cold.mId).isEmpty());
+    EXPECT_FALSE(world.getOblivionCombatService()->findActorValues(cold.mFormKey));
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+}

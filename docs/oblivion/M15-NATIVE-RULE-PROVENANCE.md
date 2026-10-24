@@ -18232,3 +18232,34 @@ test or gameplay acceptance is claimed. Friend-hit authority/query, notification
 production, expiry/save integration and full M15S4 delivery remain open. See
 [M15-FRIENDLY-HIT-ORDER-VERIFICATION.json](M15-FRIENDLY-HIT-ORDER-VERIFICATION.json)
 and the editable [probe recipe](../../scripts/data/oblivion_compat/m15_friendly_hit_notification_order_cases.json).
+
+
+### Friend-hit authority, queries and canonical checkpoint preservation
+
+Runtime schema 67 now owns each actor's ordered friend-hit counter list (native extra 0x4E). Owner
+presence preserves allocated-empty state; duplicates, first-match zero counts,
+uint16 counts and finite binary32 timers retain their order and bits. The World
+query, GetFriendHit VM command and both loaded/unloaded condition288 adapters
+read that single authority, including explicit and null/opposite-context
+arguments. Queries do not allocate extras or load cold actors. The C++ and
+Python codecs reject dangling/noncanonical identities and nonfinite timers.
+
+The final full normal and ASan/UBSan engine inventories each pass **1,902** tests.
+Unchanged component binaries retain **3,046** normal and **897** ESM4 sanitizer passes;
+all **403** Python tests passed before the later C++ corrections. Leak detection
+is disabled. A seeded idle runtime course on the final executable queries
+65535/0/3, saves, quits and repeats in a fresh process without re-injection.
+Both actual saves match their live snapshots, both complete initial restorations
+are exact, and duplicate order, allocated-empty presence and negative-zero bits
+survive. A separate actual schema66 load/resave preserves empty counter state
+as67; it ran before the app-only condition binding correction. All captures
+were inspected. The failed fixture/query attempts are retained in the receipt.
+This is the fork's canonical checkpoint contract, not an import of the original
+game's binary extra-data save format.
+
+This checkpoint does not produce hit counts or advance their expiry. Automatic
+notification/secondary speech, current-package admission, hostility/disposition
+consequences and the normal Player-to-NPC phased caller remain open. Seeded
+query preservation does not close the remaining M15S4 gameplay/restart matrix.
+See [M15-FRIEND-HIT-QUERY-VERIFICATION.json](M15-FRIEND-HIT-QUERY-VERIFICATION.json)
+and the editable [input recipe](../../scripts/data/oblivion_compat/m15_friend_hit_query_input.json).

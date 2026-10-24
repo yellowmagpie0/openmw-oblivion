@@ -1858,6 +1858,7 @@ namespace MWWorld
         {
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
+            state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
         }
         state.mNextDynamicSerial = mNextOblivionDynamicSerial;
         for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
@@ -2573,6 +2574,27 @@ namespace MWWorld
             sourceCreature != nullptr};
         return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings),
             ESM4::ActorValueConversionMode::Sse), 0, 100);
+    }
+
+    std::optional<std::uint16_t> World::getOblivionFriendHit(
+        const ESM::FormKey& actor, const ESM::FormKey& target) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        const auto owner = ESM4::runtimeReferenceKey(actor);
+        const auto other = ESM4::runtimeReferenceKey(target);
+        for (const auto& key : {owner, other})
+        {
+            const auto base = getOblivionReferenceBaseKey(key);
+            if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return 0;
+        }
+        // The native getter does not allocate an absent extra or materialize
+        // a process. It returns the first matching uint16 entry, even zero.
+        if (mOblivionRuntimeState)
+            if (const auto found = mOblivionRuntimeState->mFriendHitCounters.find(owner);
+                found != mOblivionRuntimeState->mFriendHitCounters.end())
+                for (const auto& entry : found->second)
+                    if (entry.mTarget == other) return entry.mCount;
+        return 0;
     }
 
     std::optional<std::int32_t> World::modifyOblivionDisposition(

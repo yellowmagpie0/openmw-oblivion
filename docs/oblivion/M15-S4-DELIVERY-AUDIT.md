@@ -15,7 +15,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; advanced unarmed zero-absorption defense now joins that route. Lower Hand to Hand general-hit reactions and complete Player/Creature/spare policies remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
-| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. | Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
+| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. | Hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
@@ -12560,3 +12560,34 @@ test or gameplay acceptance is claimed. Friend-hit authority/query, notification
 production, expiry/save integration and full M15S4 delivery remain open. See
 [M15-FRIENDLY-HIT-ORDER-VERIFICATION.json](M15-FRIENDLY-HIT-ORDER-VERIFICATION.json)
 and the editable [probe recipe](../../scripts/data/oblivion_compat/m15_friendly_hit_notification_order_cases.json).
+
+
+### Friend-hit authority, queries and canonical checkpoint preservation
+
+Runtime schema 67 now owns each actor's ordered friend-hit counter list (native extra 0x4E). Owner
+presence preserves allocated-empty state; duplicates, first-match zero counts,
+uint16 counts and finite binary32 timers retain their order and bits. The World
+query, GetFriendHit VM command and both loaded/unloaded condition288 adapters
+read that single authority, including explicit and null/opposite-context
+arguments. Queries do not allocate extras or load cold actors. The C++ and
+Python codecs reject dangling/noncanonical identities and nonfinite timers.
+
+The final full normal and ASan/UBSan engine inventories each pass **1,902** tests.
+Unchanged component binaries retain **3,046** normal and **897** ESM4 sanitizer passes;
+all **403** Python tests passed before the later C++ corrections. Leak detection
+is disabled. A seeded idle runtime course on the final executable queries
+65535/0/3, saves, quits and repeats in a fresh process without re-injection.
+Both actual saves match their live snapshots, both complete initial restorations
+are exact, and duplicate order, allocated-empty presence and negative-zero bits
+survive. A separate actual schema66 load/resave preserves empty counter state
+as67; it ran before the app-only condition binding correction. All captures
+were inspected. The failed fixture/query attempts are retained in the receipt.
+This is the fork's canonical checkpoint contract, not an import of the original
+game's binary extra-data save format.
+
+This checkpoint does not produce hit counts or advance their expiry. Automatic
+notification/secondary speech, current-package admission, hostility/disposition
+consequences and the normal Player-to-NPC phased caller remain open. Seeded
+query preservation does not close the remaining M15S4 gameplay/restart matrix.
+See [M15-FRIEND-HIT-QUERY-VERIFICATION.json](M15-FRIEND-HIT-QUERY-VERIFICATION.json)
+and the editable [input recipe](../../scripts/data/oblivion_compat/m15_friend_hit_query_input.json).

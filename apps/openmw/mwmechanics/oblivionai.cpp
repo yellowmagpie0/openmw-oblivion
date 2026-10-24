@@ -1190,6 +1190,11 @@ namespace MWMechanics
                 return value(comparison && !subjectLocation->mCell.isNull()
                     && subjectLocation->mCell == comparison->mCell ? 1.0 : 0.0);
             }
+            if (function == "GetFriendHit")
+            {
+                const auto hits = mWorld.getOblivionFriendHit(subjectKey, comparisonKey);
+                return hits ? value(*hits) : ESM4::ConditionValue::missing();
+            }
             if (function == "GetDisposition")
             {
                 const auto disposition = mWorld.getOblivionScriptDisposition(subjectKey, parameterKey);
@@ -1907,6 +1912,13 @@ namespace MWMechanics
             {
                 const auto ignored = mWorld.getOblivionIgnoreFriendlyHits(actorKey(subjectPtr));
                 return ignored ? value(*ignored ? 1.0 : 0.0) : ESM4::ConditionValue::missing();
+            }
+            if (function == "GetFriendHit")
+            {
+                const auto comparison = parameterKey.isNull()
+                    ? actorKey(subject == ESM4::ConditionSubject::Target ? actor : target) : parameterKey;
+                const auto hits = mWorld.getOblivionFriendHit(actorKey(subjectPtr), comparison);
+                return hits ? value(*hits) : ESM4::ConditionValue::missing();
             }
             if (function == "GetIsInSameCell")
                 return value(sameCell() ? 1.0 : 0.0);

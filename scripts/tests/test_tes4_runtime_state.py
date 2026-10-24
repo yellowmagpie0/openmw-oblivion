@@ -152,6 +152,43 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    def test_friend_hits67_preserves_empty_owner_duplicates_and_exact_timer_bits(self):
+        state = make_state(); state["schema_version"] = 67; state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor, "base": "content:oblivion.esm:000007",
+            "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)]}]
+        entries = [{"target": actor, "count": 0, "elapsed": -0.0},
+                   {"target": actor, "count": 65535, "elapsed": 1.25},
+                   {"target": actor, "count": 1, "elapsed": -2.5}]
+        state["friend_hit_counters"] = {actor: entries}
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(loaded["friend_hit_counters"], state["friend_hit_counters"])
+        self.assertEqual(struct.pack("<f", loaded["friend_hit_counters"][actor][0]["elapsed"]), b"\x00\x00\x00\x80")
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(payload[:-1])
+        state["friend_hit_counters"][actor] = []
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["friend_hit_counters"], {actor: []})
+        state["schema_version"] = 66
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["friend_hit_counters"] = {}
+        self.assertNotIn("friend_hit_counters", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_friend_hits67_rejects_invalid_owners_counts_targets_and_timers(self):
+        state = make_state(); state["schema_version"] = 67; state["ai_rng_state"] = 1
+        actor = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": actor, "base": "content:oblivion.esm:000007",
+            "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)]}]
+        for field, values in {"count": (True, -1, 65536), "elapsed": (float('nan'), float('inf'), 1e100),
+                              "target": ('null', 'content:oblivion.esm:000014', 'content:oblivion.esm:00dead')}.items():
+            for value in values:
+                entry = {"target": actor, "count": 1, "elapsed": 0.0}; entry[field] = value
+                state["friend_hit_counters"] = {actor: [entry]}
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["friend_hit_counters"] = {'content:oblivion.esm:00dead': []}
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
     def test_disposition_v66_preserves_signed_entries_and_rejects_old_or_dangling_state(self):
         state = make_state()
         state["schema_version"] = 66

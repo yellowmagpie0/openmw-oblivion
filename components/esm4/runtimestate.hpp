@@ -25,6 +25,7 @@
 #include "projectilerules.hpp"
 #include "physicalblendsettings.hpp"
 #include "droprelations.hpp"
+#include "friendhit.hpp"
 #include "physicalvelocitycontroller.hpp"
 #include "physicalsceneworld.hpp"
 
@@ -47,7 +48,9 @@ namespace ESM4
     // v62 retains backend living-actor movement across a fresh scene load.
     // v63 preserves the mechanics actor's initial position-adjustment flag.
     // v64 retains global INFO spoken history (native change flag 0x10000000).
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 66;
+    // v67 retains actor-owned ordered friend-hit lists, including allocated
+    // empty owners, zero/wrapped counts and exact finite timer values.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 67;
 
     struct RuntimeContentIdentity
     {
@@ -710,6 +713,9 @@ namespace ESM4
         // entries survive; absence is an absent native list entry. Older fork
         // schemas never implemented ModDisposition and have no stored history.
         std::map<std::pair<ESM::FormKey, ESM::FormKey>, std::int32_t> mDispositionModifiers;
+        // Presence is the allocated native extra0x4E; an empty vector is not
+        // equivalent to an absent owner. Entry order and duplicates survive.
+        std::map<ESM::FormKey, std::vector<FriendHitEntry>> mFriendHitCounters;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.
         // Zero is a valid CRT seed. Older saves initialize this stream at one.
