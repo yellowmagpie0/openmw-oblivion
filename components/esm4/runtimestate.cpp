@@ -1690,6 +1690,23 @@ namespace ESM4
                     || !std::isfinite(entry.mElapsed))
                     throw std::runtime_error("Invalid friend-hit target or timer");
         }
+        checkSize(mCombatControllers.size(), "combat-controller owner map");
+        if (mVersion < 68 && !mCombatControllers.empty())
+            throw std::runtime_error("Combat controllers require runtime schema68");
+        for (const auto& [owner, entries] : mCombatControllers)
+        {
+            if (!nativeActors.contains(owner) || runtimeReferenceKey(owner) != owner
+                || owner == mPlayer.mReference || ESM::FormKey::deserialize(owner.serialize()) != owner)
+                throw std::runtime_error("Invalid or dangling combat-controller owner identity");
+            checkSize(entries.size(), "combat-controller target list");
+            for (const auto& entry : entries)
+                if (!nativeActors.contains(entry.mTarget) || entry.mTarget == owner
+                    || runtimeReferenceKey(entry.mTarget) != entry.mTarget
+                    || ESM::FormKey::deserialize(entry.mTarget.serialize()) != entry.mTarget)
+                    throw std::runtime_error("Invalid combat-controller target identity");
+            try { (void)CombatControllerTargets(entries); }
+            catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+        }
         checkSize(mNativeActorUpdateTimes.size(), "native actor update time map");
         if (mVersion < 16 && (mNativeActorManagerTime != 0.f || !mNativeActorUpdateTimes.empty()))
             throw std::runtime_error("TES4 native actor clocks require runtime-state version 16");
@@ -3233,6 +3250,23 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 68)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mCombatControllers.size()));
+            for (const auto& [owner, entries] : mCombatControllers)
+            {
+                writeKey(writer, owner);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(entries.size()));
+                for (const auto& entry : entries)
+                {
+                    writeKey(writer, entry.mTarget);
+                    writer.integer<std::int32_t>(entry.mPriority);
+                    writer.integer<std::uint8_t>(entry.mMarker);
+                    writer.floating(entry.mValue0C);
+                    writer.floating(entry.mValue10);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -4389,6 +4423,34 @@ namespace ESM4
                     entries.push_back({target, hits, reader.float32()});
                 }
                 result.mFriendHitCounters.emplace(owner, std::move(entries));
+                previous = owner;
+            }
+        }
+        if (result.mVersion >= 68)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                const auto owner = ESM::FormKey::deserialize(text);
+                if (owner.isNull() || owner.serialize() != text || (previous && !(*previous < owner)))
+                    throw std::runtime_error("Noncanonical combat-controller owner map");
+                const auto size = reader.count();
+                std::vector<CombatControllerTarget> entries;
+                entries.reserve(size);
+                for (std::uint32_t j = 0; j < size; ++j)
+                {
+                    const auto targetText = reader.string();
+                    const auto target = ESM::FormKey::deserialize(targetText);
+                    if (target.isNull() || target.serialize() != targetText)
+                        throw std::runtime_error("Noncanonical combat-controller target identity");
+                    const auto priority = reader.integer<std::int32_t>();
+                    const auto marker = reader.integer<std::uint8_t>();
+                    const auto value0C = reader.float32();
+                    entries.push_back({target, priority, marker, value0C, reader.float32()});
+                }
+                result.mCombatControllers.emplace(owner, std::move(entries));
                 previous = owner;
             }
         }
@@ -5652,6 +5714,34 @@ namespace ESM4
                         << "\",\"count\":" << entry.mCount << ",\"elapsed\":";
                     if (entry.mElapsed == 0 && std::signbit(entry.mElapsed)) stream << "-0.0";
                     else stream << std::setprecision(17) << entry.mElapsed;
+                    stream << '}';
+                }
+                stream << ']';
+            }
+            stream << '}';
+        }
+        if (mVersion >= 68)
+        {
+            stream << ",\"combat_controllers\":{";
+            bool firstOwner = true;
+            for (const auto& [owner, entries] : mCombatControllers)
+            {
+                if (!firstOwner) stream << ',';
+                firstOwner = false;
+                stream << '\"' << escapeJson(owner.serialize()) << "\":[";
+                bool firstEntry = true;
+                for (const auto& entry : entries)
+                {
+                    if (!firstEntry) stream << ',';
+                    firstEntry = false;
+                    stream << "{\"target\":\"" << escapeJson(entry.mTarget.serialize())
+                        << "\",\"priority\":" << entry.mPriority << ",\"marker\":" << unsigned(entry.mMarker)
+                        << ",\"value_0c\":";
+                    if (entry.mValue0C == 0 && std::signbit(entry.mValue0C)) stream << "-0.0";
+                    else stream << std::setprecision(17) << entry.mValue0C;
+                    stream << ",\"value_10\":";
+                    if (entry.mValue10 == 0 && std::signbit(entry.mValue10)) stream << "-0.0";
+                    else stream << std::setprecision(17) << entry.mValue10;
                     stream << '}';
                 }
                 stream << ']';

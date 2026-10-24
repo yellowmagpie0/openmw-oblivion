@@ -1,0 +1,62 @@
+{
+  "scope": "Seeded current-controller presence and directed-target storage plus existing friend-hit VM queries, with exact logical save/restart preservation. No controller factory, automatic notification or expiry acceptance.",
+  "source": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshots/save-3.omwsave",
+  "source_sha256": "3794eaa9062ecbb13df4aaa93817e70d53cb251d8121de729a799ef223efbc9e",
+  "input_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+  "declared_counters": {
+    "dynamic:player:0000000000000001": [],
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 65535,
+        "elapsed": -0.0
+      },
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 2,
+        "elapsed": 1.25
+      }
+    ],
+    "content:oblivion.esm:032a15": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 3,
+        "elapsed": -2.5
+      }
+    ]
+  },
+  "declared_controllers": {
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "priority": 200,
+        "marker": 255,
+        "value_0c": -0.0,
+        "value_10": 1.25
+      },
+      {
+        "target": "content:oblivion.esm:032a15",
+        "priority": 200,
+        "marker": 1,
+        "value_0c": -2.5,
+        "value_10": -0.0
+      }
+    ],
+    "content:oblivion.esm:032a15": []
+  },
+  "expected_queries": [
+    "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=65535",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetFriendHit result=0",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=GetFriendHit result=3"
+  ],
+  "expected_contacts": 0,
+  "full_M15S4_acceptance": false,
+  "setup_helper": "scripts.tes4_runtime_state:load_save/write_save",
+  "schema_upgrade": 68,
+  "declared_queries_are_read_only": true,
+  "continuation": "Copy the unique real first-process save into a fresh private slot; never re-inject either map.",
+  "manifests": [
+    "oblivion_m15_combat_controller_authority.json",
+    "oblivion_m15_combat_controller_authority_continuation.json"
+  ]
+}

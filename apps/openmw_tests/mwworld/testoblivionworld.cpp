@@ -34720,3 +34720,57 @@ TEST(OblivionWorldTest, NativeFloatDispositionWritesShareSavedModifiersWithoutCh
     EXPECT_EQ(world.modifyOblivionDispositionModifier(actor, actor, .75f), 42);
     EXPECT_EQ(world.getOblivionScriptDisposition(actor, actor), 41);
 }
+
+TEST(OblivionWorldTest, DirectedCombatControllersPreserveEmptyPresenceAndRemainSeparateFromEngagement)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Npc nativePlayer{};
+    nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+    nativePlayer.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(nativePlayer, nativePlayer.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto other = addNativeNpc(fixture, 0xab0, 100, 0xac0);
+    other = other.getCell()->moveTo(other, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(other);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(other, ESM4::ActorValueProcess::Active));
+    const auto actor = fixture.mActor.getCellRef().getFormKey(), target = other.getCellRef().getFormKey();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    ASSERT_TRUE(world.getOblivionCombatService()->engage(actor, target));
+    EXPECT_FALSE(world.hasOblivionCombatController(actor).value());
+    EXPECT_FALSE(world.hasOblivionCombatController(target).value());
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatControllers[actor] = {{player, 200, 1, -0.f, 1.25f}};
+    state.mCombatControllers[target] = {};
+    state.mFriendHitCounters[actor] = {{player, 3, -0.f}};
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_TRUE(world.hasOblivionCombatController(actor).value());
+    EXPECT_TRUE(world.hasOblivionCombatController(target).value()); // Empty is still a current controller.
+    EXPECT_FALSE(world.hasOblivionCombatController(player).value());
+    EXPECT_FALSE(world.hasOblivionCombatController(ESM::FormKey::content("oblivion.esm", 0x14)).value());
+    EXPECT_FALSE(world.hasOblivionCombatController({}).value());
+    EXPECT_TRUE(world.isOblivionCombatTarget(actor, player).value());
+    EXPECT_TRUE(world.isOblivionCombatTarget(actor, ESM::FormKey::content("oblivion.esm", 0x14)).value());
+    EXPECT_FALSE(world.isOblivionCombatTarget(actor, target).value()); // Engagement is symmetric; targets are directed.
+    EXPECT_FALSE(world.isOblivionCombatTarget(target, actor).value());
+    EXPECT_FALSE(world.isOblivionCombatTarget(player, actor).value());
+    EXPECT_FALSE(world.isOblivionCombatTarget(actor, {}).value());
+    auto captured = world.captureOblivionRuntimeState();
+    EXPECT_EQ(captured.mCombatControllers, state.mCombatControllers);
+    EXPECT_EQ(captured.mFriendHitCounters, state.mFriendHitCounters);
+    EXPECT_EQ(std::bit_cast<unsigned>(captured.mCombatControllers.at(actor)[0].mValue0C), 0x80000000u);
+    auto archive = world.retainSimulation();
+    ASSERT_TRUE(archive.detach()); ASSERT_TRUE(archive.restore());
+    EXPECT_TRUE(world.isOblivionCombatTarget(actor, player).value());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mCombatControllers, state.mCombatControllers);
+    // Reading an older checkpoint must not create controllers from its engagement graph.
+    captured.mCombatControllers.clear(); captured.mVersion = 67;
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(captured.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_TRUE(world.getOblivionCombatService()->isInCombatWith(actor, target));
+    EXPECT_FALSE(world.hasOblivionCombatController(actor).value());
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mCombatControllers.empty());
+}

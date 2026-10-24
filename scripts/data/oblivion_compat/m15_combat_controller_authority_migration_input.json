@@ -1,0 +1,12 @@
+{
+  "scope": "Untouched actual schema67 input loads, queries and normally resaves as68 with no inferred controller map. Full initial state exact apart from schema/empty-map upgrade; binary/live exact. No producer or expiry acceptance.",
+  "source": "build/oblivion-compat/m15/S4/native-friend-hit-query-runtime-03/staged-input.omwsave",
+  "source_sha256": "9b4547781272190fa3f3f5013eafb492f1a80634906ac829bd874972c1782534",
+  "input_sha256": "9b4547781272190fa3f3f5013eafb492f1a80634906ac829bd874972c1782534",
+  "source_schema": 67,
+  "target_schema": 68,
+  "expected_contacts": 0,
+  "full_M15S4_acceptance": false,
+  "setup_helper": "Copy the pristine schema67 save without rewriting its contents.",
+  "manifest": "oblivion_m15_combat_controller_authority_migration.json"
+}

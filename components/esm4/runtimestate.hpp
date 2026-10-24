@@ -26,6 +26,7 @@
 #include "physicalblendsettings.hpp"
 #include "droprelations.hpp"
 #include "friendhit.hpp"
+#include "combatcontroller.hpp"
 #include "physicalvelocitycontroller.hpp"
 #include "physicalsceneworld.hpp"
 
@@ -50,7 +51,8 @@ namespace ESM4
     // v64 retains global INFO spoken history (native change flag 0x10000000).
     // v67 retains actor-owned ordered friend-hit lists, including allocated
     // empty owners, zero/wrapped counts and exact finite timer values.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 67;
+    // v68 retains current base combat-controller presence and directed targets.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 68;
 
     struct RuntimeContentIdentity
     {
@@ -716,6 +718,10 @@ namespace ESM4
         // Presence is the allocated native extra0x4E; an empty vector is not
         // equivalent to an absent owner. Entry order and duplicates survive.
         std::map<ESM::FormKey, std::vector<FriendHitEntry>> mFriendHitCounters;
+        // v68: current base package0C target projection, distinct from the
+        // symmetric engagement graph and generic AI package intent. Presence
+        // includes a controller whose target list has become empty.
+        std::map<ESM::FormKey, std::vector<CombatControllerTarget>> mCombatControllers;
         std::uint64_t mAiRngState = 1;
         // v27: profile-owned combat stream, independent of AI/world scheduling.
         // Zero is a valid CRT seed. Older saves initialize this stream at one.

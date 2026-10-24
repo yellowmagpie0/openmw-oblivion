@@ -152,6 +152,78 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    @staticmethod
+    def combat_controller_state():
+        state = make_state(); state["schema_version"] = 68; state["ai_rng_state"] = 1
+        player = state["player"]["reference"]
+        state["native_actor_values"] = [{"actor": player, "base": "content:oblivion.esm:000007",
+            "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)]}]
+        for key in ("content:oblivion.esm:000901", "content:oblivion.esm:000902"):
+            base = "content:oblivion.esm:000800"
+            state["references"].append({"key": key, "base": base, "cell": state["player"]["cell"],
+                "enabled": True, "deleted": False, "position": [0.] * 6, "inventory": [],
+                "custom_state": {}, "owner": None, "lock_level": 0})
+            state["native_actor_values"].append({"actor": key, "base": base, "owner": 1, "process": 1,
+                "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None})
+        return state
+
+    def test_combat_controllers68_literal_wire_and_legacy_rewrite(self):
+        state = self.combat_controller_state(); state["schema_version"] = 67
+        legacy = state_io.encode_payload(state)
+        owner, other = [r["key"] for r in state["references"]]
+        player = state["player"]["reference"]
+        state["schema_version"] = 68
+        state["combat_controllers"] = {owner: [
+            {"target": player, "priority": (1 << 31) - 1, "marker": 255, "value_0c": -0.0, "value_10": 1.25},
+            {"target": other, "priority": -(1 << 31), "marker": 0, "value_0c": -2.5, "value_10": -0.0}], other: []}
+        def key(value):
+            raw = value.encode(); return struct.pack("<I", len(raw)) + raw
+        suffix = (struct.pack("<I", 2) + key(owner) + struct.pack("<I", 2)
+            + key(player) + struct.pack("<iBII", (1 << 31) - 1, 255, 0x80000000, 0x3fa00000)
+            + key(other) + struct.pack("<iBII", -(1 << 31), 0, 0xc0200000, 0x80000000)
+            + key(other) + struct.pack("<I", 0))
+        prefix = bytearray(legacy); struct.pack_into("<I", prefix, len(state_io.MAGIC), 68)
+        expected = bytes(prefix) + suffix
+        self.assertEqual(state_io.encode_payload(state), expected)
+        loaded = state_io.decode_payload(expected)
+        self.assertEqual(loaded["combat_controllers"], state["combat_controllers"])
+        self.assertEqual(state_io.encode_payload(loaded), expected)
+        self.assertEqual(struct.pack("<f", loaded["combat_controllers"][owner][0]["value_0c"]), b"\x00\x00\x00\x80")
+        for size in range(len(legacy), len(expected)):
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(expected[:size])
+        self.assertNotIn("combat_controllers", state_io.decode_payload(legacy))
+        body = struct.pack("<4sII", b"VERS", 4, 67) + struct.pack("<4sI", b"DATA", len(legacy)) + legacy
+        record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)/"old.omwsave"; target = Path(directory)/"new.omwsave"
+            source.write_bytes(record)
+            state_io.write_save(source, target, state_io.decode_payload(legacy))
+            self.assertEqual(state_io.load_save(target)["combat_controllers"], {})
+
+    def test_combat_controllers68_reject_invalid_owners_targets_payloads_and_order(self):
+        state = self.combat_controller_state()
+        owner, other = [r["key"] for r in state["references"]]
+        player = state["player"]["reference"]
+        entry = {"target": player, "priority": 200, "marker": 1, "value_0c": 0., "value_10": 0.}
+        state["combat_controllers"] = {owner: [entry]}
+        state_io.encode_payload(state)
+        for key in ("null", player, "content:oblivion.esm:000014", "content:oblivion.esm:00dead"):
+            bad = copy.deepcopy(state); bad["combat_controllers"][key] = []
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        for field, values in {"target": ("null", owner, "content:oblivion.esm:000014", "content:oblivion.esm:00dead"),
+                "priority": (True, 1 << 31, -(1 << 31) - 1), "marker": (True, -1, 256),
+                "value_0c": (float('nan'), float('inf'), 1e100),
+                "value_10": (float('nan'), float('inf'), 1e100)}.items():
+            for value in values:
+                bad = copy.deepcopy(state); bad["combat_controllers"][owner][0][field] = value
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad = copy.deepcopy(state); bad["combat_controllers"][owner].append(copy.deepcopy(entry))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        bad["combat_controllers"][owner][1].update(target=other, priority=201)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+        state["schema_version"] = 67
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     def test_friend_hits67_preserves_empty_owner_duplicates_and_exact_timer_bits(self):
         state = make_state(); state["schema_version"] = 67; state["ai_rng_state"] = 1
         actor = state["player"]["reference"]

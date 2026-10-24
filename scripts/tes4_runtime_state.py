@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 67
+CURRENT_VERSION = 68
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1109,6 +1109,36 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if type(entry["count"]) is not int or not 0 <= entry["count"] <= 65535:
                 raise RuntimeStateError("Invalid friend-hit count")
             native_float(entry["elapsed"])
+    controllers = state.get("combat_controllers", {})
+    if not isinstance(controllers, dict) or len(controllers) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid combat-controller owner map")
+    if version < 68 and controllers:
+        raise RuntimeStateError("Combat controllers require runtime schema68")
+    for owner, entries in controllers.items():
+        native_key(owner)
+        if owner not in native_keys or owner in (player["reference"], "content:oblivion.esm:000014"):
+            raise RuntimeStateError("Invalid or dangling combat-controller owner identity")
+        seen_targets = set()
+        previous_priority = None
+        for entry in check_collection(entries, "combat-controller target list"):
+            if not isinstance(entry, dict) or set(entry) != {"target", "priority", "marker", "value_0c", "value_10"}:
+                raise RuntimeStateError("Invalid combat-controller target")
+            target = entry["target"]
+            native_key(target)
+            if (target not in native_keys or target in (owner, "content:oblivion.esm:000014")
+                    or target in seen_targets):
+                raise RuntimeStateError("Invalid or duplicate combat-controller target identity")
+            priority, marker = entry["priority"], entry["marker"]
+            if type(priority) is not int or not -(1 << 31) <= priority < 1 << 31:
+                raise RuntimeStateError("Invalid combat-controller priority")
+            if previous_priority is not None and previous_priority < priority:
+                raise RuntimeStateError("Invalid combat-controller target order")
+            if type(marker) is not int or not 0 <= marker <= 255:
+                raise RuntimeStateError("Invalid combat-controller marker")
+            native_float(entry["value_0c"])
+            native_float(entry["value_10"])
+            previous_priority = priority
+            seen_targets.add(target)
     value_bases = {actor["actor"]: actor["base"] for actor in native_actors}
     legacy_refs = {reference["key"]: reference for reference in references}
     life_keys: set[str] = set()
@@ -2777,6 +2807,19 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                 "elapsed": reader.unpack("<f")} for _ in range(reader.count())]
             previous = order
         result["friend_hit_counters"] = counters
+    if version >= 68:
+        controllers = {}
+        previous = None
+        for _ in range(reader.count()):
+            owner = reader.string()
+            order = tuple(owner.split(":"))
+            if previous is not None and previous >= order:
+                raise RuntimeStateError("Noncanonical combat-controller owner map")
+            controllers[owner] = [{"target": reader.string(), "priority": reader.unpack("<i"),
+                "marker": reader.unpack("<B"), "value_0c": reader.unpack("<f"),
+                "value_10": reader.unpack("<f")} for _ in range(reader.count())]
+            previous = order
+        result["combat_controllers"] = controllers
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -3434,6 +3477,18 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.string(entry["target"])
                 writer.pack("<H", entry["count"])
                 writer.pack("<f", entry["elapsed"])
+    if version >= 68:
+        controllers = sorted(state.get("combat_controllers", {}).items(), key=lambda item: tuple(item[0].split(":")))
+        writer.pack("<I", len(controllers))
+        for owner, entries in controllers:
+            writer.string(owner)
+            writer.pack("<I", len(entries))
+            for entry in entries:
+                writer.string(entry["target"])
+                writer.pack("<i", entry["priority"])
+                writer.pack("<B", entry["marker"])
+                writer.pack("<f", entry["value_0c"])
+                writer.pack("<f", entry["value_10"])
     return writer.finish()
 
 
@@ -3726,6 +3781,12 @@ def _upgrade_friend_hit_counters(state: dict[str, Any]) -> None:
     state.setdefault("friend_hit_counters", {})
 
 
+def _upgrade_combat_controllers(state: dict[str, Any]) -> None:
+    if state.get("schema_version", 1) < 68 and state.get("combat_controllers"):
+        raise RuntimeStateError("Legacy runtime schema cannot contain combat controllers")
+    state.setdefault("combat_controllers", {})
+
+
 def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     data = source.read_bytes()
     start, end, _, _ = _find_runtime_record(data)
@@ -3752,6 +3813,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_friendly_hit_flags(state)
     _upgrade_disposition_modifiers(state)
     _upgrade_friend_hit_counters(state)
+    _upgrade_combat_controllers(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3838,6 +3900,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_friendly_hit_flags(result)
     _upgrade_disposition_modifiers(result)
     _upgrade_friend_hit_counters(result)
+    _upgrade_combat_controllers(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

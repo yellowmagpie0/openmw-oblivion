@@ -21,7 +21,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67)):
+            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68)):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)
@@ -54,6 +54,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected.setdefault('ignore_friendly_hits', {})
     expected.setdefault('disposition_modifiers', [])
     expected.setdefault('friend_hit_counters', {})
+    expected.setdefault('combat_controllers', {})
     for reference in expected['references']:
         reference.setdefault('dropper', None)
         reference.setdefault('dropped_items', None)
@@ -83,7 +84,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                                    'inventory.extra_scale': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],
-                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}})
+                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}})
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 

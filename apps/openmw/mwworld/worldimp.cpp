@@ -1859,6 +1859,7 @@ namespace MWWorld
             state.mIgnoreFriendlyHits = mOblivionRuntimeState->mIgnoreFriendlyHits;
             state.mDispositionModifiers = mOblivionRuntimeState->mDispositionModifiers;
             state.mFriendHitCounters = mOblivionRuntimeState->mFriendHitCounters;
+            state.mCombatControllers = mOblivionRuntimeState->mCombatControllers;
         }
         state.mNextDynamicSerial = mNextOblivionDynamicSerial;
         for (const auto& [plugin, fingerprint] : mOblivionContentIdentities)
@@ -2574,6 +2575,28 @@ namespace MWWorld
             sourceCreature != nullptr};
         return std::clamp(ESM4::dispositionScore(input, ESM4::buildDispositionSettings(settings),
             ESM4::ActorValueConversionMode::Sse), 0, 100);
+    }
+
+    std::optional<bool> World::hasOblivionCombatController(const ESM::FormKey& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        if (key == ESM::FormKey::dynamic("player", 1)) return false; // Native Player +330 always returns null.
+        const auto base = getOblivionReferenceBaseKey(key);
+        if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return false;
+        return mOblivionRuntimeState && mOblivionRuntimeState->mCombatControllers.contains(key);
+    }
+
+    std::optional<bool> World::isOblivionCombatTarget(const ESM::FormKey& actor, const ESM::FormKey& target) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
+        const auto owner = ESM4::runtimeReferenceKey(actor);
+        const auto other = ESM4::runtimeReferenceKey(target);
+        if (!hasOblivionCombatController(owner).value_or(false)) return false;
+        const auto base = getOblivionReferenceBaseKey(other);
+        if (!base || (!mStore.search<ESM4::Npc>(*base) && !mStore.search<ESM4::Creature>(*base))) return false;
+        const auto& entries = mOblivionRuntimeState->mCombatControllers.at(owner);
+        return std::ranges::any_of(entries, [&](const auto& entry) { return entry.mTarget == other; });
     }
 
     std::optional<std::uint16_t> World::getOblivionFriendHit(

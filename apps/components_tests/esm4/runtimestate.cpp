@@ -1742,7 +1742,7 @@ namespace
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
-                + (version >= 67 ? 4 : 0);
+                + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5384,4 +5384,99 @@ TEST(ESM4RuntimeState, FriendHits67RejectsDanglingOwnersTargetsAliasesAndNonfini
         bad.mFriendHitCounters.at(actor.mActor)[0].mTarget = key;
         EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
     }
+}
+
+namespace
+{
+    ESM4::RuntimeState combatControllerState()
+    {
+        auto state = makeState();
+        auto second = state.mReferences.front();
+        second.mKey = ESM::FormKey::content("oblivion.esm", 0x101);
+        state.mReferences.push_back(second);
+        for (const auto& reference : state.mReferences)
+        {
+            ESM4::RuntimeActorValues actor;
+            actor.mActor = reference.mKey;
+            actor.mBase = reference.mBase;
+            actor.mOwner = ESM4::ActorValueOwner::NonPlayer;
+            state.mNativeActorValues.push_back(actor);
+        }
+        ESM4::RuntimeActorValues player;
+        player.mActor = state.mPlayer.mReference;
+        player.mBase = ESM::FormKey::content("oblivion.esm", 7);
+        player.mOwner = ESM4::ActorValueOwner::Player;
+        state.mNativeActorValues.push_back(player);
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, CombatControllers68HaveExplicitWireAndPreserveEmptyOwnersPriorityAndFloatBits)
+{
+    auto state = combatControllerState();
+    const auto owner = state.mReferences[0].mKey, other = state.mReferences[1].mKey;
+    state.mVersion = 67;
+    const auto legacy = state.serializeBinary();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(legacy).mCombatControllers.empty());
+    EXPECT_EQ(state.canonicalJson().find("combat_controllers"), std::string::npos);
+    state.mVersion = 68;
+    state.mCombatControllers[owner] = {{state.mPlayer.mReference, 2147483647, 255, -0.f, 1.25f},
+        {other, std::numeric_limits<std::int32_t>::min(), 0, -2.5f, -0.f}};
+    state.mCombatControllers[other] = {};
+    auto expected = legacy;
+    expected[std::string_view("OMW4STATE").size()] = 68;
+    const auto integer = [&](std::uint32_t value, unsigned size) {
+        for (unsigned i = 0; i < size; ++i) expected.push_back(static_cast<std::uint8_t>(value >> (8 * i)));
+    };
+    const auto key = [&](const ESM::FormKey& value) {
+        const auto text = value.serialize(); integer(text.size(), 4);
+        expected.insert(expected.end(), text.begin(), text.end());
+    };
+    integer(2, 4); key(owner); integer(2, 4);
+    key(state.mPlayer.mReference); integer(0x7fffffffu, 4); integer(255, 1);
+    integer(0x80000000u, 4); integer(0x3fa00000u, 4);
+    key(other); integer(0x80000000u, 4); integer(0, 1); integer(0xc0200000u, 4); integer(0x80000000u, 4);
+    key(other); integer(0, 4);
+    EXPECT_EQ(state.serializeBinary(), expected);
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(expected);
+    EXPECT_EQ(loaded.mCombatControllers, state.mCombatControllers);
+    EXPECT_EQ(loaded.serializeBinary(), expected);
+    EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+    EXPECT_TRUE(loaded.mCombatControllers.at(other).empty());
+    EXPECT_EQ(std::bit_cast<unsigned>(loaded.mCombatControllers.at(owner)[0].mValue0C), 0x80000000u);
+    EXPECT_EQ(std::bit_cast<unsigned>(loaded.mCombatControllers.at(owner)[1].mValue10), 0x80000000u);
+    EXPECT_NE(loaded.canonicalJson().find("\"value_0c\":-0.0"), std::string::npos);
+    for (std::size_t size = legacy.size(); size < expected.size(); ++size)
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary({expected.begin(), expected.begin() + size}), std::runtime_error);
+    state.mVersion = 67;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, CombatControllers68RejectNoncanonicalDanglingSelfDuplicateAndUnorderedState)
+{
+    auto state = combatControllerState();
+    const auto owner = state.mReferences[0].mKey, other = state.mReferences[1].mKey;
+    state.mCombatControllers[owner] = {{state.mPlayer.mReference, 200}, {other, -1}};
+    ASSERT_NO_THROW(state.validate());
+    for (const auto& badKey : {ESM::FormKey{}, state.mPlayer.mReference,
+             ESM::FormKey::content("oblivion.esm", 0x14), ESM::FormKey::content("oblivion.esm", 0xdead)})
+    {
+        auto bad = state; bad.mCombatControllers[badKey] = {};
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    for (const auto& badKey : {ESM::FormKey{}, owner, ESM::FormKey::content("oblivion.esm", 0x14),
+             ESM::FormKey::content("oblivion.esm", 0xdead), other})
+    {
+        auto bad = state; bad.mCombatControllers.at(owner)[0].mTarget = badKey;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    for (float value : {std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        auto bad = state; bad.mCombatControllers.at(owner)[0].mValue0C = value;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+        bad = state; bad.mCombatControllers.at(owner)[0].mValue10 = value;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    auto bad = state; bad.mCombatControllers.at(owner)[1].mPriority = 201;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
 }

@@ -18332,3 +18332,47 @@ Player-to-NPC phased caller remain open, alongside the complete S4 input,
 effect and restart matrix. See
 [M15-COMBAT-CONTROLLER-VERIFICATION.json](M15-COMBAT-CONTROLLER-VERIFICATION.json)
 and the editable [native cases](../../scripts/data/oblivion_compat/m15_combat_controller_cases.json).
+
+
+### Current-controller checkpoint authority (schema 68)
+
+World now retains the current base-controller target projection separately from
+symmetric combat engagement and generic package intent. Read-only presence and
+directed-target queries share this saved authority. An empty controller remains
+present; Player's native null-controller behavior and canonical Player target
+aliases are preserved. C++/Python codecs retain signed priorities, raw marker
+bytes and finite float bits, and reject dangling/noncanonical identities, self
+or duplicate targets and invalid ordering. Schemas 1–67 do not invent controllers
+from engagement history. This is the fork's canonical logical checkpoint, not
+serialization or import of the original engine's full controller object.
+
+Full normal verification passes **3,057** component and **1,904** engine tests.
+ASan/UBSan passes **908** ESM4 component and **1,904** engine tests; leak detection
+is disabled. These C++ runs share source fingerprint
+`45cfbcf71dccaa8fdc64fc52f12b4f2ce9bf9d5a543c2065451db2bac0ec8893`.
+All **405** Python tests passed before the later C++ test-only corrections;
+Python sources and recipes were unchanged afterward. The failed World test is
+retained: its seeded Player target lacked initialized native Player values,
+and validation correctly rejected the fixture. Two C++ and two Python codec tests cover
+literal wire bytes and malformed state; the new World test covers directed
+queries, empty presence, archive restoration and legacy engagement without
+inferred controllers. Another **512** original-instruction observations and C++
+comparisons verify all 256 marker bytes under both x87 precision modes.
+
+A declared schema68 storage course runs two fresh processes with actual F5
+saves. Both complete initial restorations are exact, both binary saves match
+their live snapshots, and ordered targets, empty presence, markers and signed
+zero survive without reinjection in the second process. Input reinspection
+confirms that the pristine schema66 source changes only by the declared schema
+and two seeded maps. A separate untouched schema67 input loads and normally
+resaves as68 with an empty controller map. All captures were inspected; the
+final runtime evidence also identifies the loaded MyGUI library. These are
+structural, semantic, World-admission and rendered checkpoint-preservation
+checks, with no new hit contacts.
+
+Controller creation/cleanup, constructor RNG integration, notification and
+secondary speech, hostility consequences and counter expiry remain unwired.
+The normal Player-to-NPC phased caller and the complete S4 gameplay/restart
+matrix remain open. See
+[M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json](M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json)
+and the editable [input recipe](../../scripts/data/oblivion_compat/m15_combat_controller_authority_input.json).
