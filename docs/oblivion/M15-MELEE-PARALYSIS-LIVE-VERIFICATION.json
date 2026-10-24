@@ -1,0 +1,1676 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "tested_source": {
+    "head": "4b36d50f36c0ad6cc3b090bb8490353b2c5d68d5",
+    "source_fingerprint": "21fcb5d75e7d8e8b67902b4922b0eb754796a758fe23e3e61bac95a311b0b7b1"
+  },
+  "scope": "Production owner-clock scalar paralysis application/expiry/restart and shared native GetVampire query. Injected effect admission; physical paralysis remains open.",
+  "contracts": {
+    "owner_phase": "Actor-owned PARA updates use the same native per-actor clock as resources. Positive first application and expiry change AV48 once. Missing resident presentation suppresses effects without replaying detached time. Lifecycle/scalars/resources/completed timestamp publish after validation; failed preparation leaves ownership and timestamp unchanged.",
+    "life_gate": "Original actor198(false) is true for native1/2/6. Dead and essential-unconscious states cancel PARA on a positive update, including first application/removal together. Zero delta does not newly cancel by life state. Resources are skipped after the effect phase for both dead and essential actors.",
+    "preparation": "Original5EF930 clears voice channel0, preserving channel1, and requests BSFaceGenAnimationData virtual78(.75,0,1,1,1,0). Face receiver is NOT body animation. World stops speech before AV48 publication; FaceGen transition and native Player speech bytes are not implemented. Native prep does not establish physical paralysis or body animation interruption.",
+    "vampire": "Original command502650 and condition4F4830 call5E04C0: actor integer AV69 strictly greater than zero. Native world authority supplies scripts and dialogue, including disabled actors and Player alias; legacy flags only remain for unowned script fallback.",
+    "runtime": "Injected pending duration5 PARA and ResistMagic Script50. Production owner applies/ticks/expires. Active normal attack input consumes no action/RNG; F5 captures active effect; a fresh PID loads that exact midpoint without modifier replay. Each branch expires and accepts one ordinary input hand-to-hand hit id3 with native5.2 f32 damage. No proc admission or physical paralysis acceptance."
+  },
+  "content_inputs": {
+    "scope": "Loaded base content and stationary fixture plugin, pinned during instrumented course; declarations and semantic readback remain the existing fixture recipe.",
+    "files": [
+      {
+        "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "bytes": 277504985,
+        "mtime_ns": 1785689190247357882,
+        "inode": 2071818
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-master-recovery-fixture-02/fixture/M15StationaryOpponent.esp",
+        "sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+        "bytes": 1760,
+        "mtime_ns": 1792703538281193898,
+        "inode": 6109383
+      }
+    ]
+  },
+  "cross_build_runtime_agreement": {
+    "passed": true,
+    "scope": "Additional observed exact complete live JSON agreement at all three corresponding saved states; each course separately passed its preregistered contracts.",
+    "states": [
+      {
+        "phase": "first",
+        "normal_sequence": "3",
+        "sanitized_sequence": "3",
+        "live_sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80"
+      },
+      {
+        "phase": "first",
+        "normal_sequence": "6",
+        "sanitized_sequence": "6",
+        "live_sha256": "459f462b6a255432cec28d20aecee928467da695d1e47547eeb1b74343745f60"
+      },
+      {
+        "phase": "second",
+        "normal_sequence": "5",
+        "sanitized_sequence": "5",
+        "live_sha256": "e7d997b1ccedc4406ce38f1c203bf7748695e35801569470de1a33730600c193"
+      }
+    ]
+  },
+  "checks": {
+    "normal": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 100.249
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.265
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 38.575
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1918,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "bf8e355ab04a1021479791eb4fdbe561c5b41673de3eaac17165530865363720",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "022b97a770852d784fb0ba2a56adfb3db2a1d8e8836b9add15aec506b6d3584f",
+          "inventory_sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4b36d50f36c0ad6cc3b090bb8490353b2c5d68d5",
+        "source_fingerprint": "21fcb5d75e7d8e8b67902b4922b0eb754796a758fe23e3e61bac95a311b0b7b1"
+      },
+      "source_after": {
+        "head": "4b36d50f36c0ad6cc3b090bb8490353b2c5d68d5",
+        "source_fingerprint": "21fcb5d75e7d8e8b67902b4922b0eb754796a758fe23e3e61bac95a311b0b7b1"
+      }
+    },
+    "sanitized": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "2"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 164.925
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.516
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 225.529
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 1918,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "9fb9559fdc3b98609687df4926c3d1b1bf9bfdfeb7f76ebcb73483e980d5ae97",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "105ab3190f5dbf87beb7b818258bd7024f102d9c55694d3b167d0bc46e161bed",
+          "inventory_sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "4b36d50f36c0ad6cc3b090bb8490353b2c5d68d5",
+        "source_fingerprint": "21fcb5d75e7d8e8b67902b4922b0eb754796a758fe23e3e61bac95a311b0b7b1"
+      },
+      "source_after": {
+        "head": "4b36d50f36c0ad6cc3b090bb8490353b2c5d68d5",
+        "source_fingerprint": "21fcb5d75e7d8e8b67902b4922b0eb754796a758fe23e3e61bac95a311b0b7b1"
+      }
+    }
+  },
+  "native_reports": {
+    "native-paralysis-preparation-oracle-02": {
+      "passed": true,
+      "cases": 480,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "71c06664ba698b1d9bbbea3908f9438bc9151516530bd96ddfe59263302da047",
+      "scope": "ActualPARA6A3730 -> FULL5EF930 through original process vtables, High629710/6334D0 sound cleanup and629750 flag setter, actual65DA10 Player flag/time reset, MH/High64B350 cached facial-data getter and4D66B0 node data dispatch. Face reset receiver identified via BSFaceGenAnimationData NiRTTI getter54BEB0, vtableA6424C, virtual78=549100. Facial reset (.75,0,1,1,1,0) is a boundary, not full facial interpolation. Actor virtual154/138 and face-node9C are typed boundaries; ActorAnimData virtual164 is forbidden. Sound playing/stop/release/destructor are boundaries; actual wrapper and channel removal execute. Prior factory/MGEF/AV setters/feedback boundaries retained. No body attack-animation reset, owned effect ticking, actual audio or gameplay acceptance."
+    },
+    "native-paralysis-death-oracle-01": {
+      "passed": true,
+      "cases": 72,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "79f29f60d3d6380d98a085a5dd1a621be67757edb37aa385e9e19fea427d07e7",
+      "scope": "Complete68E670 and6A3770 PARA update using actual actor198=5E33B0, actual68EA10 immediate cancellation and specialized modifier removal. Native actor states1/2/6 cancel after a positive update, including first apply/removal together; zero delta does not newly cancel by life state. Duration0 and10, prior applied/unapplied, three x87 controls. Constructor/query/AV setter/presentation/ancillary/target getters and actor preparation remain prior typed boundaries; target0C returns true. No actual actor modifier storage, collection deletion, physical reaction or gameplay acceptance."
+    },
+    "native-vampire-query-oracle-01": {
+      "passed": true,
+      "cases": 420,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "f51670f28b1a58518243db1b86ebf8d90de648b3123d7eed90a27a425dc0432d",
+      "scope": "Actual command502650, evaluator4F4830 and actor5E04C0 execute. Actor predicate uses actual977C50; nonactor predicate and integer AV69 getter are explicit boundaries. Null/nonactor/NPC/Creature/Player signed integer results, both result initializers, three x87 controls. AL success, cdecl stack and callee-saved registers checked. This proves signed integer >0 dispatch, not underlying AV composition or vampire producers. Console output disabled.",
+      "registry": {
+        "address": "0xB0CF00",
+        "name": "GetVampire",
+        "opcode": "0x1028",
+        "execute": "0x502650",
+        "evaluate": "0x4F4830"
+      }
+    }
+  },
+  "runtime": {
+    "native-melee-paralysis-live-runtime-normal-02": {
+      "passed": true,
+      "scope": "Declared injected pending default self-PARA state, Player Maximum48=0 and Script64=50 (resolved duration5). Real owner frame must apply, tick and expire; normal u input must attack once after expiry. No normal-input proc admission, physical paralysis or FaceGen fade acceptance.",
+      "processes": [
+        {
+          "pid": 1981753,
+          "start_ticks": 60932248,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "8d9aba9d165ff0a41aa184d9d56154c3b8a291c40c91a254b4de9c1ca492b7b5"
+        },
+        {
+          "pid": 1984875,
+          "start_ticks": 60939652,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "8d9aba9d165ff0a41aa184d9d56154c3b8a291c40c91a254b4de9c1ca492b7b5"
+        }
+      ],
+      "saves": [
+        {
+          "phase": "first",
+          "sequence": "3",
+          "sha256": "f9bd63ce6caa598c1d74400d4f49a0bede736a32ecbe3d3bfd3503fa093b8ad3",
+          "live_sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+          "tick": 5,
+          "active": true
+        },
+        {
+          "phase": "first",
+          "sequence": "6",
+          "sha256": "2732a9dde6e0450c14e5040821951e80a2a4c7783cd3f4197458dfa88a34e97f",
+          "live_sha256": "459f462b6a255432cec28d20aecee928467da695d1e47547eeb1b74343745f60",
+          "tick": 40,
+          "active": false
+        },
+        {
+          "phase": "second",
+          "sequence": "5",
+          "sha256": "0d9e1a1401bf8469467519fae4ec88a89bbe262e0c3301414e342618cea5ed53",
+          "live_sha256": "e7d997b1ccedc4406ce38f1c203bf7748695e35801569470de1a33730600c193",
+          "tick": 35,
+          "active": false
+        }
+      ],
+      "full_binary_live_exact": true,
+      "initial_loaded_binary_live_exact": true,
+      "active_attack_input_rejected": true,
+      "fresh_restart_from_active_midpoint": true,
+      "no_modifier_replay": true,
+      "normal_post_expiry_hit_once_per_process": true,
+      "final_health_paralysis_and_combat_rng_agree": true,
+      "source_sha256": "231f1d3fdd35540d7a4b67fd59a435ebcf77e6675aad02a4902386cfdf42fa28",
+      "staged_input_sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "full_M15S4_acceptance": false
+    },
+    "native-melee-paralysis-live-runtime-sanitized-02": {
+      "passed": true,
+      "scope": "Declared injected pending default self-PARA state, Player Maximum48=0 and Script64=50 (resolved duration5). Real owner frame must apply, tick and expire; normal u input must attack once after expiry. No normal-input proc admission, physical paralysis or FaceGen fade acceptance.",
+      "processes": [
+        {
+          "pid": 1988799,
+          "start_ticks": 60958132,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "b04f04791b85ddcaa7b9ccb6f5a4512b09affa58a721ba707c7a1d2ad858fb7d"
+        },
+        {
+          "pid": 1989100,
+          "start_ticks": 60995628,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "b04f04791b85ddcaa7b9ccb6f5a4512b09affa58a721ba707c7a1d2ad858fb7d"
+        }
+      ],
+      "saves": [
+        {
+          "phase": "first",
+          "sequence": "3",
+          "sha256": "c802bce995724700402f40f37b5f10d49414d589fed5ea68e8c452a3abb27578",
+          "live_sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+          "tick": 5,
+          "active": true
+        },
+        {
+          "phase": "first",
+          "sequence": "6",
+          "sha256": "22adbf5e9be7828149a1643e10b5505fd666f63ff3ff2a6aad0e54b85bf6ed7c",
+          "live_sha256": "459f462b6a255432cec28d20aecee928467da695d1e47547eeb1b74343745f60",
+          "tick": 40,
+          "active": false
+        },
+        {
+          "phase": "second",
+          "sequence": "5",
+          "sha256": "1ec5f61484558ddd05adb57bb8d26b217bad8276553c3e32d0f32a41b8593554",
+          "live_sha256": "e7d997b1ccedc4406ce38f1c203bf7748695e35801569470de1a33730600c193",
+          "tick": 35,
+          "active": false
+        }
+      ],
+      "full_binary_live_exact": true,
+      "initial_loaded_binary_live_exact": true,
+      "active_attack_input_rejected": true,
+      "fresh_restart_from_active_midpoint": true,
+      "no_modifier_replay": true,
+      "normal_post_expiry_hit_once_per_process": true,
+      "final_health_paralysis_and_combat_rng_agree": true,
+      "source_sha256": "231f1d3fdd35540d7a4b67fd59a435ebcf77e6675aad02a4902386cfdf42fa28",
+      "staged_input_sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "full_M15S4_acceptance": false
+    }
+  },
+  "visual_review": {
+    "passed": true,
+    "reviewed": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/during-owned-paralysis.png",
+        "sha256": "e6178ff1710539eb6f2ee5177e2d742206563d2c9140767302212086c6693be9",
+        "observation": "Rendered Imperial Prison dungeon, named Valen Dreth, first-person unarmed view and HUD. Post-expiry target Health bar visible. Does not prove physical paralysis or facial fade."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/after-expiry-hit.png",
+        "sha256": "687a8caad8dbef9ce97c5500b5fca002e0f98a38f79bad6e99c7f4459b70c6b4",
+        "observation": "Rendered Imperial Prison dungeon, named Valen Dreth, first-person unarmed view and HUD. Post-expiry target Health bar visible. Does not prove physical paralysis or facial fade."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/after-expiry-hit.png",
+        "sha256": "21b60f35851931f92b934772b51aa4f30f44dd9b0daef79ba18f08ec349651b2",
+        "observation": "Rendered Imperial Prison dungeon, named Valen Dreth, first-person unarmed view and HUD. Post-expiry target Health bar visible. Does not prove physical paralysis or facial fade."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/during-owned-paralysis.png",
+        "sha256": "c014cfaa8ebe700022363091ab9c5ae3169e3170b2ac43ffaf163bd6135170f4",
+        "observation": "Instrumented engine framebuffer: rendered dungeon, Valen Dreth, first-person hands and HUD. Post-expiry target Health bar visible. No physical paralysis or facial-transition acceptance claim."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/after-expiry-hit.png",
+        "sha256": "374eccc77a5b24dabfad9872bb936fe85459d3f5da8ee812ebdaffd0d72a9d48",
+        "observation": "Instrumented engine framebuffer: rendered dungeon, Valen Dreth, first-person hands and HUD. Post-expiry target Health bar visible. No physical paralysis or facial-transition acceptance claim."
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/after-expiry-hit.png",
+        "sha256": "5d7f3c68558cca2209bd6cef0b49c24c176dcdc4ea68f1562c6e7c2e075692df",
+        "observation": "Fresh instrumented process: rendered dungeon, named Valen Dreth, first-person hands, HUD and nonlethal target Health bar after expiry/hit. No physical paralysis or facial-transition acceptance claim."
+      }
+    ]
+  },
+  "preparation_reproduction": {
+    "passed": true,
+    "scope": "Preparation reproduction only; no game was launched in reproduction directories. Staged binary exact and both parsed manifests exact with run-id normalization.",
+    "sources": {
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/staged-input.omwsave": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/manifest.json": "300f52d1ac0447231b1d14b75923f5f9cdbf3b752cace8af729bc27874c693b7",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/continuation.json": "e2741a6bef42b533c5add534546b40ed35a8b50bb6cbb93a3f58f28bcede3bb0",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/staged-input.omwsave": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/manifest.json": "eafdeca6b1b392001be2368fe6790444769514111f230b3a591612d3429cdd71",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/continuation.json": "7eb63710ca9dce9d499c9c8999aa552a57249c78fafba237890a5fe0bdf2f8b3",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/staged-input.omwsave": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/manifest.json": "3d1fb96f0a1dd2b9ee7f75cfa317b2612341c4ea51351a0023cd7b22c2a2c4e0",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/continuation.json": "756bf047fe993729a9c6361123a0d30846e66941a88d3c16b1760b07bb0dbaaa",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/staged-input.omwsave": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/manifest.json": "025615f9f37e3ed6a5e89cab62d40617494d46c36a5808281e1730758fc1b0bb",
+      "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/continuation.json": "04a6094438caa75d83c4b725e6578257b0f734dbc84e12f95587aa3462e40a12"
+    },
+    "launcher_and_monitor_exact": true
+  },
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "65f13d08d5ceba137063e38832facd4fb4e918bbdde8a6243e7c3ccde37781f9"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "0b36eca798952b3a436f43d9ff9fe5a27174e7452a190abd64a641ddc2240208"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "281ead21150360a90790c3e23dab4372ead6dcb5c5f0901a2ab59a0a9a34584e"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "b3bdf6f787c18281421270f281e6e4ed7ed60828a3a12c7686091d08e0b0e9dd"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "4518fee3571131736211969d9cabe3a9feaf15254da4f986645233ee03a2c4a3"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "0c97745416634a4a6c47873c992e856eef1d952c049e61f7f7bb478a004d7c4f"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionactorstats.cpp",
+      "sha256": "06925dfe692094520b6ee13f44db39c266b75e59bd82ddb7bce9e75ff28792d3"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "017ad6b27b4342e9800110e31a281f40b9ad387704d62597fab6b093014809b0"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_melee_paralysis_live_cases.json",
+      "sha256": "77c8439227fdd8b633a7a347a58e8481357fdaefec1ce206f909a678d74fbb1b"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_melee_paralysis_state_cases.json",
+      "sha256": "c4917d5afdaaa7410e04d01bb008efc3f41d4d3b1a3eb16f9e9c15b8c80fdd20"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-preparation-oracle-01/failure.json",
+      "sha256": "2bac9087c78bebfd1fc77db3449d7a0f9b578d2ed82c08e3f986d13327aa5686",
+      "bytes": 1663
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-preparation-oracle-02/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-preparation-oracle-02/corpus.json",
+      "sha256": "71c06664ba698b1d9bbbea3908f9438bc9151516530bd96ddfe59263302da047",
+      "bytes": 159937
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-preparation-oracle-02/probe.py",
+      "sha256": "ba814bb2559b89f5f7f853e2669813bc7e8ce8a4cf1fea92acca734ad9712887",
+      "bytes": 5199
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-preparation-oracle-02/verification.json",
+      "sha256": "ef9a09961675b5e8b908cde04d74f7b20caa94c5bd996715aa5ad3d76a200164",
+      "bytes": 998
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-death-oracle-01/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-death-oracle-01/corpus.json",
+      "sha256": "79f29f60d3d6380d98a085a5dd1a621be67757edb37aa385e9e19fea427d07e7",
+      "bytes": 20212
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-death-oracle-01/probe.py",
+      "sha256": "d0cb33fb1134d45a3033e290d10dc657c75d3c750b5aba871c9866e630fdffe6",
+      "bytes": 3293
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-death-oracle-01/verification.json",
+      "sha256": "923fe2169596b067824792b30295291026b74edbc456718e731cfc4c0faf18ae",
+      "bytes": 820
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-vampire-query-oracle-01/corpus.json",
+      "sha256": "f51670f28b1a58518243db1b86ebf8d90de648b3123d7eed90a27a425dc0432d",
+      "bytes": 49519
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-vampire-query-oracle-01/probe.py",
+      "sha256": "c41b662e8a34732a10054638e8f6695cc1383666a6b8c058b4f16c310a682988",
+      "bytes": 3674
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-vampire-query-oracle-01/registry-verification.json",
+      "sha256": "6f07a71429d88902e8ae434e62900b13d802f76f2b738e01023c01e1a2580ab1",
+      "bytes": 228
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-vampire-query-oracle-01/verification.json",
+      "sha256": "4fec78702123ffe2c8c28c2276cf4aa89cc7d039d44a600e85f60b4b87629d28",
+      "bytes": 837
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-01/engine-build.log",
+      "sha256": "548b944c2e95f0a06c9b569eb3552090c42ab3eb49e0c0bf942abee9d120ce51",
+      "bytes": 2345
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-01/verification.json",
+      "sha256": "5ef17d4b4cb1488e8468b1f2d808242dd205102c973436d984265075ff3c5999",
+      "bytes": 629
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-02/engine-build.log",
+      "sha256": "fc94fe6c2bd3b34600980268d82de3cf2707f004d99392b12f41d3f153c5f859",
+      "bytes": 35278
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-02/engine-inventory.txt",
+      "sha256": "10011fc01a4c473c59b771b3812dc037e3fb4869e9a2f0df482c88094c117a5c",
+      "bytes": 135510
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-02/engine.log",
+      "sha256": "690394e7f69f6abd603e8e8f38ff64ef8f2a97251e12a2424618027ae93adbe0",
+      "bytes": 2567
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-02/engine.xml",
+      "sha256": "615cc82aad54662475b34d2e3cba7441d4b9235514a5e3f23151b43ae9df724e",
+      "bytes": 2080
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-02/verification.json",
+      "sha256": "5195dbbc896734b8dbee41dbcd0a24bc24f2e71f46be13a78ceaf22295328b21",
+      "bytes": 2221
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-03/engine-build.log",
+      "sha256": "9ecf1be80eb5491372973645fec1ad158ed911909010a92d9b49e1a29baa7773",
+      "bytes": 3745
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-03/engine-inventory.txt",
+      "sha256": "10011fc01a4c473c59b771b3812dc037e3fb4869e9a2f0df482c88094c117a5c",
+      "bytes": 135510
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-03/engine.log",
+      "sha256": "7a6645aa73ee44f6f9be17fb3ac7e1aab24863e9630c004be6736ac7716ecc14",
+      "bytes": 2362179
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-03/engine.xml",
+      "sha256": "505c9c6af9e422dc213cdc1727303faf73c34033ddd861ab0a8377ef5259a128",
+      "bytes": 630787
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-03/verification.json",
+      "sha256": "0738df3e2c187b5ef44723bef1078eb4dab1cee2d4b52608e071f7c7c3fd3efd",
+      "bytes": 2145
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-04/engine-build.log",
+      "sha256": "e9675e6ff46e8b978a079119d7e9c13336a9ed064ec6fda264e00bd52c552d52",
+      "bytes": 33811
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-04/verification.json",
+      "sha256": "1aa3ce47d3e607005934a33bcbd81d3aab9450994ba857cc20a8a4e8b950990e",
+      "bytes": 630
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-05/engine-build.log",
+      "sha256": "64e63fb88812deb45439f9e953c111b4b311fe35bda255acdc00f2a8572c657c",
+      "bytes": 30571
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-05/engine-inventory.txt",
+      "sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+      "bytes": 135569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-05/engine.log",
+      "sha256": "55cb4069b58b882dab66ff13c2ebaba7ac4f623fb795f0069cf092fcbdace85d",
+      "bytes": 2408881
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-05/engine.xml",
+      "sha256": "1b63539026c81c81bea3f0250918ce06e2829e6f31c13b39617aad3553441eab",
+      "bytes": 730854
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-05/verification.json",
+      "sha256": "87a1b43475cb0ded23f0f06008bce86f98aa4f4c26ca31e3bb09eb9820885107",
+      "bytes": 1273
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/engine-build.log",
+      "sha256": "5cf6a55da7075c5cd510cfd50a6e6040da94efd542cc0db8f4ce0325ee0ff709",
+      "bytes": 1758
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/engine-inventory.txt",
+      "sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+      "bytes": 135569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/engine.log",
+      "sha256": "f1942c1dc28b75911c727fcf2a634f1874711f29d674b965d7521281cb1cfb88",
+      "bytes": 2363027
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/engine.xml",
+      "sha256": "022b97a770852d784fb0ba2a56adfb3db2a1d8e8836b9add15aec506b6d3584f",
+      "bytes": 631301
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-normal-06/verification.json",
+      "sha256": "0bf41780f7844cb2cb0539eeb81028276d718473f21e382d8ba3e43e052b6079",
+      "bytes": 2145
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-01/engine-build.log",
+      "sha256": "c84a73834565829505e0354df6db7c5f19c5b975081fb2e7fb9d9d61928d1f01",
+      "bytes": 32420
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-01/engine-inventory.txt",
+      "sha256": "10011fc01a4c473c59b771b3812dc037e3fb4869e9a2f0df482c88094c117a5c",
+      "bytes": 135510
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-01/engine.log",
+      "sha256": "d6a56cb8cd6cebc02e7d21d23c9194595f38fc3a72c6e0da09ff38124d1b3e43",
+      "bytes": 2362734
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-01/engine.xml",
+      "sha256": "b964fdde9e87d26ffafe3a5fea898b49985fa1774d41733816bfa076fd3fa94c",
+      "bytes": 632539
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-01/verification.json",
+      "sha256": "7797a756aa1ba03744d01a38df1fa2304a4d4aee001c5570530cf18fe0e5a32a",
+      "bytes": 2235
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-02/engine-build.log",
+      "sha256": "0c882187ff96819ef071f55237fb85787f362d63fd1a4aecfa0a84f6d5723696",
+      "bytes": 2444
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-02/interruption.json",
+      "sha256": "e6bcffd7cf7dd6bc3850b637c47580933daed5b776eb06004e74368a5b1c8fb7",
+      "bytes": 287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-03/engine-build.log",
+      "sha256": "2b793fecf8350bfc8be58bb6925581255a5c1838379e9b9760973bc415529de8",
+      "bytes": 30440
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-03/engine-inventory.txt",
+      "sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+      "bytes": 135569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-03/engine.log",
+      "sha256": "d86ad529e15a41105f38414d344f293530c348891610411a571253a5939dd6a7",
+      "bytes": 2409468
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-03/engine.xml",
+      "sha256": "73489c05b97a3ecd081b6636f4cb2bf5f189747b92def51e9ab4d5f49d4072ce",
+      "bytes": 732562
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-03/interruption.json",
+      "sha256": "e8dceede512848b80514c1e0212529b468b8f74dfd2da0edd6a0f17463fe94bd",
+      "bytes": 364
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/engine-build.log",
+      "sha256": "fb81985f7ba65dfbfacdbf509c47a41d017d9f3d5ff644c6e15a6630157b1b04",
+      "bytes": 1758
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/engine-inventory.txt",
+      "sha256": "de5bf77e0167292912f430409ab096b463433b92862b52c146b68e68f603bfdb",
+      "bytes": 135569
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/engine.log",
+      "sha256": "c5eadf78c0fd531f46c707bc71f040c0cabef2d4a011f5ec5fea11018220dc06",
+      "bytes": 2363602
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/engine.xml",
+      "sha256": "105ab3190f5dbf87beb7b818258bd7024f102d9c55694d3b167d0bc46e161bed",
+      "bytes": 632923
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-sanitized-04/verification.json",
+      "sha256": "b10d49150ce9612b1e46bba9dd8d01683a7744d5f2c94eb7a0cff7b9d2b1fd6e",
+      "bytes": 2235
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/continuation.json",
+      "sha256": "88132536e5e30084cbf029221851100e600e9e83533905c2909e9189be8fd24b",
+      "bytes": 21285
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/actual-engine-environment.json",
+      "sha256": "2722e43df2139ce28057d66fd1aa31e6690dd1cd5c03422791edc386703145da",
+      "bytes": 326
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/config/MyGUI.log",
+      "sha256": "801b49f3faa4c12557f3816ee732874c6980a62fd09962b76c68930bf0911f9a",
+      "bytes": 44621
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/config/console_history.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/config/input_v3.xml",
+      "sha256": "3022dcfb714db91afdc7020629c660fef098f42f1b3734c968b718ad191ac1fe",
+      "bytes": 15068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/config/openmw.log",
+      "sha256": "1b73f1abfa2be310a47a71cc9490ec704c594105179ef148e57bcd6d19d9bd6d",
+      "bytes": 1235706
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/during-owned-paralysis.png",
+      "sha256": "6aa898294d0b104c928b8869d11e58963f0d690cdc44cfa35b3eb276598f5657",
+      "bytes": 1135419
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/events.jsonl",
+      "sha256": "8eafee13190d88e4307450261f2dc9982db8d7aa0367994ddbaa856361ad06ae",
+      "bytes": 1868
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/harness.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/input-pristine.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/interruption.json",
+      "sha256": "0df81eef13a41a7ea69fb47550fb00a2b8d4833250b75b5c3712e886a7fe6e01",
+      "bytes": 1003
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/launcher.json",
+      "sha256": "463a71f99069608c581a92c8ec9f97af9e141bcdaf48a617ba9f040714587e52",
+      "bytes": 978
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/live-1-2.json",
+      "sha256": "4f45185bef7c2dd9d68dc7e835a76cb3d67c86369c034e92fd2978ab51dbf36f",
+      "bytes": 28840112
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/live-1-3.json",
+      "sha256": "7e2db5abb109bc0f08c145ee6c2a1827a022507dfb7acf8bc4e426ea825d21a2",
+      "bytes": 28945103
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/loaded-libraries.json",
+      "sha256": "cd05a15ecdfe38ba323e288a43b8d4c2d3b4b696bfda77ad6fd2a0aefbbe51e6",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/monitor.log",
+      "sha256": "43c0db554941af6421e2b4ab499021a1e46c3d194f53441b620e686af09007ee",
+      "bytes": 788
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/openal.log",
+      "sha256": "cf344714971cfbc91009b9103923b592104721e6f3e4b21aadab3f51ea52ea47",
+      "bytes": 2963
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/process-epoch.json",
+      "sha256": "b1370544c4c03374ab2730748a8d7aac2c6a102d994bdc8577892bb59d1e1b97",
+      "bytes": 698
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/process.log",
+      "sha256": "1b73f1abfa2be310a47a71cc9490ec704c594105179ef148e57bcd6d19d9bd6d",
+      "bytes": 1235706
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/script-report.json",
+      "sha256": "71fc2a3ce3bb9d79e5070403061c61a55e9a0482938f35c1a2adeffa01140ea1",
+      "bytes": 32152125
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/sdl-input-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/sdl-input-provenance.json",
+      "sha256": "288844eaba6c5a30f7c67ea2beda3303e0269b389075f138b47bc8402e331283",
+      "bytes": 1254
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/sdl-input.txt",
+      "sha256": "f8dde9ceee42379662419920b390942b8001dcd0b6c9500a815b7a5c8df2c9be",
+      "bytes": 69
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/snapshot-index.json",
+      "sha256": "7fd287dbbdae93db8a94dc4696ec278d93bb0f6f0b5c6243a1e66e8c9ed0dd32",
+      "bytes": 1102
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/snapshots/save-3.omwsave",
+      "sha256": "d54ba1d45f875ca438ea9882dc2d314d31f5184d2606ce9b551c6dc0cf2b7073",
+      "bytes": 12165505
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/test-data/events.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "d54ba1d45f875ca438ea9882dc2d314d31f5184d2606ce9b551c6dc0cf2b7073",
+      "bytes": 12165505
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/first/userdata/screenshots/screenshot000.png",
+      "sha256": "6aa898294d0b104c928b8869d11e58963f0d690cdc44cfa35b3eb276598f5657",
+      "bytes": 1135419
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/launcher.py",
+      "sha256": "0b5a31762b9b20400e7eac10875020cd43b1c658247e7e2ea54467cc58e66d3d",
+      "bytes": 1929
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/manifest.json",
+      "sha256": "0bdc0f88b42c7f8e1f04e25fad31e616249f42960a3a8b7e8796e2596fcff49c",
+      "bytes": 21629
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/recipe.json",
+      "sha256": "d1af0020bbc4bbdfc714ab52224ad6d07478dba6a18a2e884db2b485a50ddeba",
+      "bytes": 1409
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-01/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/continuation.json",
+      "sha256": "c043fc68eff8086387b72cd8feae5ac1646ce0ddf2ba7eb7e7a2210198389904",
+      "bytes": 21456
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/launcher.py",
+      "sha256": "44e39d1d06e01bdb58ced3492c6d6992be43c98e9391110cbbfd4db7cb3f207c",
+      "bytes": 1945
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/manifest.json",
+      "sha256": "c6c716a3cc9f9301020b8b74941989c861a97a8d29f16c1603bbe89a3147a479",
+      "bytes": 21800
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/recipe.json",
+      "sha256": "d1af0020bbc4bbdfc714ab52224ad6d07478dba6a18a2e884db2b485a50ddeba",
+      "bytes": 1409
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-01/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/continuation.json",
+      "sha256": "e2741a6bef42b533c5add534546b40ed35a8b50bb6cbb93a3f58f28bcede3bb0",
+      "bytes": 21400
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/actual-engine-environment.json",
+      "sha256": "ff4f7b7f4bbf804fdb0d393473fbfdc607994d059a51e8b42051c1a4dbcde2c7",
+      "bytes": 326
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/after-expiry-hit.png",
+      "sha256": "687a8caad8dbef9ce97c5500b5fca002e0f98a38f79bad6e99c7f4459b70c6b4",
+      "bytes": 1147012
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/config/MyGUI.log",
+      "sha256": "29dd8f2762d5fd617fe3c5efcdedff2c4b6bcc82fd9aa699e801cf06292767f9",
+      "bytes": 44561
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/config/console_history.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/config/input_v3.xml",
+      "sha256": "3022dcfb714db91afdc7020629c660fef098f42f1b3734c968b718ad191ac1fe",
+      "bytes": 15068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/config/openmw.log",
+      "sha256": "307897b29d90af907a4e46f220def47d57b7cba8b955923a7c027e0eb24f3ea8",
+      "bytes": 674593
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/during-owned-paralysis.png",
+      "sha256": "e6178ff1710539eb6f2ee5177e2d742206563d2c9140767302212086c6693be9",
+      "bytes": 1138521
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/events.jsonl",
+      "sha256": "14ecfd8f4b424ec62a9103b65ba92ca22acc2c79b5d3f2124d73af858a2a7f02",
+      "bytes": 3163
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/harness.log",
+      "sha256": "0d1519acf88389f41697cd77d66c699a9f6775ea6c17233b56bb1f881465ae93",
+      "bytes": 7169
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/input-pristine.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/launcher.json",
+      "sha256": "bd553a4cd999864bb83c75205588b67679c235597e7dcf2d82821a5eca242bbc",
+      "bytes": 976
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/live-1-2.json",
+      "sha256": "4f45185bef7c2dd9d68dc7e835a76cb3d67c86369c034e92fd2978ab51dbf36f",
+      "bytes": 28840112
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/live-1-3.json",
+      "sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+      "bytes": 28948386
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/live-1-6.json",
+      "sha256": "459f462b6a255432cec28d20aecee928467da695d1e47547eeb1b74343745f60",
+      "bytes": 29932120
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/loaded-libraries.json",
+      "sha256": "38c69dd97d6f5ea28a1e944e9d5f7f1b25f9c436cd11c0bb8573447d29c21d71",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/monitor.log",
+      "sha256": "d8b28edb0520bb1c6608b9e6ff5f729283dfdb6f0cc143c22a8edc89f7582665",
+      "bytes": 795
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/openal.log",
+      "sha256": "642b36e88ea8951dab2987e7e8840f458720c91c2ecde751cfc99856744fd6e3",
+      "bytes": 2963
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/process-epoch.json",
+      "sha256": "544a6b55e8d53a2b9d10537b259501a4fefa771c24cb87d05cf4752dedc8d6ee",
+      "bytes": 698
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/process.log",
+      "sha256": "307897b29d90af907a4e46f220def47d57b7cba8b955923a7c027e0eb24f3ea8",
+      "bytes": 674593
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/scenario.json",
+      "sha256": "0d1519acf88389f41697cd77d66c699a9f6775ea6c17233b56bb1f881465ae93",
+      "bytes": 7169
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/script-report.json",
+      "sha256": "8edd050dade138fb871b351eeeb43482c0f2374acc683df22b51229d304fe174",
+      "bytes": 30064461
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/sdl-input-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/sdl-input-provenance.json",
+      "sha256": "68757a0b1779cb880e051851524d2f579fcf8855ae3a3ae7481f923b458cbdc6",
+      "bytes": 1254
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/sdl-input.txt",
+      "sha256": "f9ab28a55eadb1b80f246d95a877baaa670a3f76f16e9dd787ff63ba686f3a23",
+      "bytes": 128
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/snapshot-index.json",
+      "sha256": "16e1ff07d4d62f462ab6f23a56652842b21588b48eec7a79e7d1cfe03f2cb049",
+      "bytes": 2202
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/snapshots/save-3.omwsave",
+      "sha256": "f9bd63ce6caa598c1d74400d4f49a0bede736a32ecbe3d3bfd3503fa093b8ad3",
+      "bytes": 12164090
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/snapshots/save-6.omwsave",
+      "sha256": "2732a9dde6e0450c14e5040821951e80a2a4c7783cd3f4197458dfa88a34e97f",
+      "bytes": 12581273
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/test-data/events.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "2732a9dde6e0450c14e5040821951e80a2a4c7783cd3f4197458dfa88a34e97f",
+      "bytes": 12581273
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/userdata/screenshots/screenshot000.png",
+      "sha256": "e6178ff1710539eb6f2ee5177e2d742206563d2c9140767302212086c6693be9",
+      "bytes": 1138521
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/first/userdata/screenshots/screenshot001.png",
+      "sha256": "687a8caad8dbef9ce97c5500b5fca002e0f98a38f79bad6e99c7f4459b70c6b4",
+      "bytes": 1147012
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/launcher.py",
+      "sha256": "b7112166ebec6c3d5a910af101e4333f88e96332fd1051b7a809170473f156f6",
+      "bytes": 1929
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/manifest.json",
+      "sha256": "300f52d1ac0447231b1d14b75923f5f9cdbf3b752cace8af729bc27874c693b7",
+      "bytes": 21744
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/recipe.json",
+      "sha256": "cda53d9ff45a0baf2256948a94d2e4ee8317319911561f8830d18a521bbdb0fb",
+      "bytes": 1451
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/actual-engine-environment.json",
+      "sha256": "99d5597b5cd901a984b2ce5aa6f2e01ea10a730749f8f3111ffef7fca55745ce",
+      "bytes": 327
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/after-expiry-hit.png",
+      "sha256": "21b60f35851931f92b934772b51aa4f30f44dd9b0daef79ba18f08ec349651b2",
+      "bytes": 1153915
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/config/MyGUI.log",
+      "sha256": "d35d49d363e509682ac3c4d91cae45ae0966d97c6ab068f08628e9d1dbd46c76",
+      "bytes": 44561
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/config/console_history.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/config/input_v3.xml",
+      "sha256": "3022dcfb714db91afdc7020629c660fef098f42f1b3734c968b718ad191ac1fe",
+      "bytes": 15068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/config/openmw.log",
+      "sha256": "406a73b88a1a75983c695ad0c7f02e063d157e0d6a6227e228cb01e96177ec45",
+      "bytes": 662161
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/events.jsonl",
+      "sha256": "72cacf6a1275b48795853555fd63f404927a33716da6712398289f160c09d87d",
+      "bytes": 2495
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/harness.log",
+      "sha256": "876c89ff14963837f049c11745c08d4d611bfd146e988a0d5bde9734f7fc80bb",
+      "bytes": 5991
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/input-pristine.omwsave",
+      "sha256": "f9bd63ce6caa598c1d74400d4f49a0bede736a32ecbe3d3bfd3503fa093b8ad3",
+      "bytes": 12164090
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/launcher.json",
+      "sha256": "c8c1a8a9ea3adb60d899e9a3c207efbd34baa8406e9cb74f1e90ce6db3172eda",
+      "bytes": 981
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/live-2-2.json",
+      "sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+      "bytes": 28948386
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/live-2-5.json",
+      "sha256": "e7d997b1ccedc4406ce38f1c203bf7748695e35801569470de1a33730600c193",
+      "bytes": 29932107
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/loaded-libraries.json",
+      "sha256": "380b8d213f34987b0851e82a4d40e0bdc16dfcffb9cc7e67e073c070f9c3863e",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/monitor.log",
+      "sha256": "3707bf193ec8a4ae2279a29f06088dab80efa42f19dcd0bad8b03976f96c1f36",
+      "bytes": 790
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/openal.log",
+      "sha256": "375d4ef56477adb3da6b62ff51ee8750440a2e4d14ce26dd66f82b1c639fde3d",
+      "bytes": 2966
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/process-epoch.json",
+      "sha256": "1112d1be072d215f15230a12f0c1edeece0efe5d48d37bde6eac4e4f3691cfce",
+      "bytes": 700
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/process.log",
+      "sha256": "406a73b88a1a75983c695ad0c7f02e063d157e0d6a6227e228cb01e96177ec45",
+      "bytes": 662161
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/scenario.json",
+      "sha256": "876c89ff14963837f049c11745c08d4d611bfd146e988a0d5bde9734f7fc80bb",
+      "bytes": 5991
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/script-report.json",
+      "sha256": "1e6f7b54a394bcb553b060d42e2bc9156a42036aea393ac64927912c5d7c2a42",
+      "bytes": 30059882
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/sdl-input-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/sdl-input-provenance.json",
+      "sha256": "3a0058bd99f2efce96eaf47e44421ca0657281ea6c32c1b40dc4e5e2be2ab137",
+      "bytes": 1257
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/sdl-input.txt",
+      "sha256": "f796c6d08259b2827123bf192696993ebe3af3afead7f157cd8af4bfdbb8ada5",
+      "bytes": 88
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/snapshot-index.json",
+      "sha256": "740ca9450911d6ee78abf8ac30bda55678ad40d05d48ee4962abe61f5aa96541",
+      "bytes": 1105
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/snapshots/save-5.omwsave",
+      "sha256": "0d9e1a1401bf8469467519fae4ec88a89bbe262e0c3301414e342618cea5ed53",
+      "bytes": 12581764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/test-data/events.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "0d9e1a1401bf8469467519fae4ec88a89bbe262e0c3301414e342618cea5ed53",
+      "bytes": 12581764
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/second/userdata/screenshots/screenshot000.png",
+      "sha256": "21b60f35851931f92b934772b51aa4f30f44dd9b0daef79ba18f08ec349651b2",
+      "bytes": 1153915
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-02/verification.json",
+      "sha256": "f0d5169d44ba89febeff3fe19aeeb129e625d71da8f806835be38886ab54ae60",
+      "bytes": 3204
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/continuation.json",
+      "sha256": "756bf047fe993729a9c6361123a0d30846e66941a88d3c16b1760b07bb0dbaaa",
+      "bytes": 21571
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/actual-engine-environment.json",
+      "sha256": "660c9f57eb178e3ab5b3734f86afe0750c1d001f9647676d30deea1567337d00",
+      "bytes": 465
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/after-expiry-hit.png",
+      "sha256": "374eccc77a5b24dabfad9872bb936fe85459d3f5da8ee812ebdaffd0d72a9d48",
+      "bytes": 1143584
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/config/MyGUI.log",
+      "sha256": "708148bd6663e7bd77e5fbfd8eab676cc1597b8a11f9c9bcf52ded8220b17a44",
+      "bytes": 47129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/config/console_history.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/config/input_v3.xml",
+      "sha256": "3022dcfb714db91afdc7020629c660fef098f42f1b3734c968b718ad191ac1fe",
+      "bytes": 15068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/config/openmw.log",
+      "sha256": "811a50923720d5d133e65ff19501427594aef5b9d5a3c73b97074c7cd9c96b2b",
+      "bytes": 675068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/during-owned-paralysis.png",
+      "sha256": "c014cfaa8ebe700022363091ab9c5ae3169e3170b2ac43ffaf163bd6135170f4",
+      "bytes": 1134188
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/events.jsonl",
+      "sha256": "278e1a82c66e04000c161e763736e24ccb59ba49c3e60abf73c4833b4da849ac",
+      "bytes": 3193
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/harness.log",
+      "sha256": "c14ef7e727a4c703c3cc43176fdd640a2a5309a1d55d1834ae35a24533a0d1f8",
+      "bytes": 7269
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/input-pristine.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/launcher.json",
+      "sha256": "042e64a30a83c741bc3c7fadc30921dd9cf51ee91f515ce7e5354a14077cd81f",
+      "bytes": 995
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/live-1-2.json",
+      "sha256": "4f45185bef7c2dd9d68dc7e835a76cb3d67c86369c034e92fd2978ab51dbf36f",
+      "bytes": 28840112
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/live-1-3.json",
+      "sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+      "bytes": 28948386
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/live-1-6.json",
+      "sha256": "459f462b6a255432cec28d20aecee928467da695d1e47547eeb1b74343745f60",
+      "bytes": 29932120
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/loaded-libraries.json",
+      "sha256": "83e46f88bdf7457de4902ec72ae1f9bc207cfc1fbb4d087e0bfa3bc2d6140a55",
+      "bytes": 369
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/monitor.log",
+      "sha256": "d7777a5fc6130fee7115274eca8e8d68b2ca89f528be95542bc348c01f02c441",
+      "bytes": 814
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/openal.log",
+      "sha256": "58c1adcade0198d7305726f79bbf93372e89617ca964481937be978ce94d261f",
+      "bytes": 3014
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/process-epoch.json",
+      "sha256": "f5c4913a0c13af6833598509b7db99f59f2ebf6cd7ad0205c644c0395f32fe9f",
+      "bytes": 717
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/process.log",
+      "sha256": "811a50923720d5d133e65ff19501427594aef5b9d5a3c73b97074c7cd9c96b2b",
+      "bytes": 675068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/scenario.json",
+      "sha256": "c14ef7e727a4c703c3cc43176fdd640a2a5309a1d55d1834ae35a24533a0d1f8",
+      "bytes": 7269
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/script-report.json",
+      "sha256": "8edd050dade138fb871b351eeeb43482c0f2374acc683df22b51229d304fe174",
+      "bytes": 30064461
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/sdl-input-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/sdl-input-provenance.json",
+      "sha256": "3df0449e3adc49b480a10ac996f5313b577f36b8b68922d1c9e82e747d0ec643",
+      "bytes": 1287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/sdl-input.txt",
+      "sha256": "f9ab28a55eadb1b80f246d95a877baaa670a3f76f16e9dd787ff63ba686f3a23",
+      "bytes": 128
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/snapshot-index.json",
+      "sha256": "1709018d22d292283e0828f9587a7f15d375179bcd38be07496b1cef4272c236",
+      "bytes": 2220
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/snapshots/save-3.omwsave",
+      "sha256": "c802bce995724700402f40f37b5f10d49414d589fed5ea68e8c452a3abb27578",
+      "bytes": 12164955
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/snapshots/save-6.omwsave",
+      "sha256": "22adbf5e9be7828149a1643e10b5505fd666f63ff3ff2a6aad0e54b85bf6ed7c",
+      "bytes": 12580525
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/test-data/events.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "22adbf5e9be7828149a1643e10b5505fd666f63ff3ff2a6aad0e54b85bf6ed7c",
+      "bytes": 12580525
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/userdata/screenshots/screenshot000.png",
+      "sha256": "c014cfaa8ebe700022363091ab9c5ae3169e3170b2ac43ffaf163bd6135170f4",
+      "bytes": 1134188
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/first/userdata/screenshots/screenshot001.png",
+      "sha256": "374eccc77a5b24dabfad9872bb936fe85459d3f5da8ee812ebdaffd0d72a9d48",
+      "bytes": 1143584
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/launcher.py",
+      "sha256": "01d602f90aee54be592a880f2cc3761a65827b88aadab9da87ed235391f51d55",
+      "bytes": 1945
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/manifest.json",
+      "sha256": "3d1fb96f0a1dd2b9ee7f75cfa317b2612341c4ea51351a0023cd7b22c2a2c4e0",
+      "bytes": 21915
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/recipe.json",
+      "sha256": "cda53d9ff45a0baf2256948a94d2e4ee8317319911561f8830d18a521bbdb0fb",
+      "bytes": 1451
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/actual-engine-environment.json",
+      "sha256": "3ac5df2b2786109a1b63b90a7514d6017e72222098cba938073da052b2a9af29",
+      "bytes": 466
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/after-expiry-hit.png",
+      "sha256": "5d7f3c68558cca2209bd6cef0b49c24c176dcdc4ea68f1562c6e7c2e075692df",
+      "bytes": 1139360
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/config/MyGUI.log",
+      "sha256": "5fa2b2b5e2de03804e9c1f1a055f75395df3046160954332a1bd2e338e53945b",
+      "bytes": 47129
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/config/console_history.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/config/input_v3.xml",
+      "sha256": "3022dcfb714db91afdc7020629c660fef098f42f1b3734c968b718ad191ac1fe",
+      "bytes": 15068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/config/openmw.log",
+      "sha256": "e0922d2929e8be05a489142ebd6aa3b457994fd12e2cb251e29b6d33c1cb3ca8",
+      "bytes": 662471
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/events.jsonl",
+      "sha256": "fbce2e77a3e5018138b54af719fc2adba3168e124b0c16efde7ff86c237f8da7",
+      "bytes": 2519
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/harness.log",
+      "sha256": "96b3ee6f3c325d382edc8819a39c664107bfc629664f2f473e6d56a11af3ffba",
+      "bytes": 6081
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/input-pristine.omwsave",
+      "sha256": "c802bce995724700402f40f37b5f10d49414d589fed5ea68e8c452a3abb27578",
+      "bytes": 12164955
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/launcher.json",
+      "sha256": "1f427b0847c927a50e1b5b6d00af17d61d377c9bfe99b834db9fbd10566a85d8",
+      "bytes": 1000
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/live-2-2.json",
+      "sha256": "f29cdf28a0ad313be0b29f31d04eb0845b02a65e9e892c63cad25781eb11fd80",
+      "bytes": 28948386
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/live-2-5.json",
+      "sha256": "e7d997b1ccedc4406ce38f1c203bf7748695e35801569470de1a33730600c193",
+      "bytes": 29932107
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/loaded-libraries.json",
+      "sha256": "9b32a20f0abe3ec2bbe6312256c5c9bcaf042b0dc58bc4514177fd99bec4c7c4",
+      "bytes": 369
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/monitor.log",
+      "sha256": "a1b727c4869419ac3785ff2a0371dca928b1cf87f5ed6582bba65d6e418fec54",
+      "bytes": 809
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/openal.log",
+      "sha256": "2c5a9f475b397bc865177600ce38b7a44358f2685b961383fc8e81cb119e5b7f",
+      "bytes": 3017
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/process-epoch.json",
+      "sha256": "7e44b7c4b3d7ed5bd541b2c108fcf7200739f27ba5eefa12853c42d073ee4da2",
+      "bytes": 719
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/process.log",
+      "sha256": "e0922d2929e8be05a489142ebd6aa3b457994fd12e2cb251e29b6d33c1cb3ca8",
+      "bytes": 662471
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/scenario.json",
+      "sha256": "96b3ee6f3c325d382edc8819a39c664107bfc629664f2f473e6d56a11af3ffba",
+      "bytes": 6081
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/script-report.json",
+      "sha256": "1e6f7b54a394bcb553b060d42e2bc9156a42036aea393ac64927912c5d7c2a42",
+      "bytes": 30059882
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/sdl-input-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/sdl-input-provenance.json",
+      "sha256": "ca799d0c0f9ef4e0108b6898b284e8df429c6225bf0ab8c408c5a29a14529dea",
+      "bytes": 1290
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/sdl-input.txt",
+      "sha256": "f796c6d08259b2827123bf192696993ebe3af3afead7f157cd8af4bfdbb8ada5",
+      "bytes": 88
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/snapshot-index.json",
+      "sha256": "5a534d870fef50d1a99f466bf4b1e66948fe89605545a9e349f8f8dcdb5a7b4a",
+      "bytes": 1114
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/snapshots/save-5.omwsave",
+      "sha256": "1ec5f61484558ddd05adb57bb8d26b217bad8276553c3e32d0f32a41b8593554",
+      "bytes": 12579150
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/test-data/events.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "1ec5f61484558ddd05adb57bb8d26b217bad8276553c3e32d0f32a41b8593554",
+      "bytes": 12579150
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/second/userdata/screenshots/screenshot000.png",
+      "sha256": "5d7f3c68558cca2209bd6cef0b49c24c176dcdc4ea68f1562c6e7c2e075692df",
+      "bytes": 1139360
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-02/verification.json",
+      "sha256": "1f16ddefd1e5cd137f42284ecfc69c8b15d4f42f515b9199205660cc3cf80701",
+      "bytes": 3242
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/continuation.json",
+      "sha256": "7eb63710ca9dce9d499c9c8999aa552a57249c78fafba237890a5fe0bdf2f8b3",
+      "bytes": 21413
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/launcher.py",
+      "sha256": "b7112166ebec6c3d5a910af101e4333f88e96332fd1051b7a809170473f156f6",
+      "bytes": 1929
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/manifest.json",
+      "sha256": "eafdeca6b1b392001be2368fe6790444769514111f230b3a591612d3429cdd71",
+      "bytes": 21757
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/recipe.json",
+      "sha256": "5a7f4debebc9ce5d66d595dfa9550b11cb34e242f7a0e4b39b08e5cc71668bab",
+      "bytes": 1336
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-normal-reproduction-01/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/continuation.json",
+      "sha256": "04a6094438caa75d83c4b725e6578257b0f734dbc84e12f95587aa3462e40a12",
+      "bytes": 21584
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/launcher.py",
+      "sha256": "01d602f90aee54be592a880f2cc3761a65827b88aadab9da87ed235391f51d55",
+      "bytes": 1945
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/manifest.json",
+      "sha256": "025615f9f37e3ed6a5e89cab62d40617494d46c36a5808281e1730758fc1b0bb",
+      "bytes": 21928
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/recipe.json",
+      "sha256": "5a7f4debebc9ce5d66d595dfa9550b11cb34e242f7a0e4b39b08e5cc71668bab",
+      "bytes": 1336
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-live-runtime-sanitized-reproduction-01/staged-input.omwsave",
+      "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+      "bytes": 12125298
+    }
+  ],
+  "retained_attempts": [
+    "Normal01 build failed on incorrect auto* use with NotNullPtr sound manager; corrected normal02 focused six frame transaction tests passed. Normal03 and sanitizer01 full1917 engine tests passed before shared GetVampire integration.",
+    "Preparation oracle01 boundary tried to observe allocator arguments after an inherited hook returned; corrected02 uses inherited allocator event capture.",
+    "Runtime normal01 observed live PARA application/expiry but post-expiry normal Hit speech failed on unsupported GetVampire. Engine quit normally through SDL; scenario waiter was interrupted after confirming exited game. Seed and normal hit requirement preserved in corrected02. Sanitized runtime01 was prepared only.",
+    "Normal04 compiled production but new test diagnostic used nonexistent FormKey::toString. Sanitizer02 was stopped after that failure. Corrected diagnostic and macro braces precede normal05/sanitizer03. Normal05 passed1917/1918: world/script vampire assertions passed, live dialogue adapter was still unsupported because only unloaded resolver had been wired. Sanitizer03 was stopped after its complete build/inventory and test start to apply the known adapter fix. Keep failing tests; final normal06/sanitizer04 add the live adapter without changing tests."
+  ],
+  "verification_layers": {
+    "original_instructions": true,
+    "world_transaction_tests": true,
+    "normal_and_sanitized_complete_engine": true,
+    "structural_binary_live": true,
+    "semantic_reinspection": true,
+    "fresh_process_scalar_expiry": true,
+    "normal_input_rejection_and_post_expiry_hit": true,
+    "normal_input_proc_admission": false,
+    "physical_paralysis": false,
+    "facegen_transition": false
+  },
+  "remaining": [
+    "Production admission and first matching old-effect replacement, default-spell overrides and narrow general spell dispatch.",
+    "Forward mastery normal-input contact production, physical paralysis/recovery and FaceGen transition.",
+    "Native Player active-effect menu notifications, speech-state byte producers, and remaining full S4 directional/input/device/FPS/interruption/restart and renderer/audio acceptance gates."
+  ]
+}

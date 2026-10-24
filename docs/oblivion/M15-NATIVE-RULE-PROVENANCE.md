@@ -18420,3 +18420,64 @@ hit notifications, opaque Player suppression production and the complete S4
 gameplay matrix remain open. **Full M15S4 remains incomplete.** See
 [M15-FRIEND-HIT-EXPIRY-VERIFICATION.json](M15-FRIEND-HIT-EXPIRY-VERIFICATION.json)
 and the editable [native cases](../../scripts/data/oblivion_compat/m15_friend_hit_expiry_cases.json).
+
+## Production melee paralysis owner updates and shared vampire query
+
+Player, NPC and Creature actor-clock updates now consume saved PARA ownership.
+They apply Maximum AV48+1 once, advance the timer on positive owner deltas,
+remove through Damage AV48+0 then Maximum AV48-1, and unlink terminated entries.
+The lifecycle, resources and completed actor timestamp publish together after
+preparation succeeds. Failed resource preparation can retry without replaying
+the effect delta. Missing resident presentation suppresses effect updates while
+the actor timestamp still advances, so detached time is not replayed later.
+Zero-duration application/removal and deferred cleanup at zero delta retain the
+native behavior. Essential-unconscious actors, like dead actors, cancel on a
+positive PARA update and skip resource regeneration after the effect phase.
+
+Three new real actor transaction tests exercise NPC, Creature and Player
+application, retry atomicity, attachment gaps, exact expiry, cancellation,
+life gates, sparse NPC versus present Player modifier storage and restore.
+The shared GetVampire query now uses signed integer AV69 >0 for scripts and
+dialogue, including disabled actors and the canonical Player alias. It takes
+precedence over legacy vampire flags. Integration checks vary signed/fractional
+values, process tier and dialogue run-on target. This fixes the real Hit speech
+condition failure encountered by the initial expiry course; that failed run is
+preserved, including its normally shut-down engine and interrupted waiter.
+
+Original-executable probes pass 480 preparation cases, 72 death/essential cases
+and 420 shared vampire command/evaluator cases. Preparation 5EF930 clears voice
+channel0 and calls BSFaceGenAnimationData virtual78 with (.75,0,1,1,1,0).
+The receiver is facial animation data; the earlier boundary label suggesting
+body-animation interruption was misleading. Actual voice-handle paths and face
+lookup execute with declared sound/allocator/face-transition boundaries. The
+production callback stops speech; the facial transition and native Player
+speech bytes remain unimplemented. No body-animation cancellation follows from
+this preparation itself. Physical paralysis/recovery remains a separate gate.
+
+Complete unfiltered checks pass 1,918 engine tests in each build, with exact
+inventories and no failures/skips. ASan/UBSan leak detection is disabled.
+Component and Python sources are unchanged, so their previously passing suites
+were not repeated. The retained normal05 failure exposed the missing live
+adapter; final normal06/sanitizer04 use the same assertions with that adapter.
+
+Normal and instrumented engine courses each pass two fresh processes and three
+saves. The declared Player fixture starts with pending duration 5 PARA and
+ResistMagic Script 50. Production frames apply once, tick and expire. Ordinary
+SDL attack input during paralysis leaves the action ledger and combat RNG
+unchanged. After expiry, one ordinary hand-to-hand hit id 3 commits native 5.2
+Health and 3.6 Fatigue damage. A fresh process loads the first active midpoint
+save, preserves its single Maximum contribution and remaining lifetime, and
+repeats the same expiry/hit result without replay. Uninterrupted/restarted final
+Health, AV48 and combat RNG agree in both builds. All initial loads and six
+saved binary/live contracts match exactly; the complete live JSON also matches
+between builds at all three corresponding saves. All six captures were inspected.
+They show the dungeon, named Valen Dreth, hands and HUD; effect admission and
+physical paralysis remain outside this seeded scalar course.
+
+Native Player active-effect menu notifications remain an integration gap.
+Proc admission, matching old-effect replacement, general default-spell overrides,
+forward mastery contact production, actual physical paralysis/recovery and the
+remaining S4 device/FPS/interruption/restart matrix remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-PARALYSIS-LIVE-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_live_cases.json).

@@ -35273,3 +35273,80 @@ TEST(OblivionWorldTest, MeleeParalysis70CaptureApplyPreservesOwnershipWithoutRep
         EXPECT_THROW(world.getOblivionCombatService()->capture(legacy), std::invalid_argument);
     }
 }
+
+TEST(OblivionWorldTest, VampireScriptsAndDialogueUseSignedNativeIntegerAuthority)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    auto& world = fixture.mWorld;
+    auto npc = addNativeNpc(fixture, 0x900);
+    auto creature = addEquipmentCreature(fixture);
+    for (auto* actor : {&npc, &creature})
+    {
+        *actor = actor->getCell()->moveTo(*actor, world.getPlayerPtr().getCell());
+        world.getWorldModel().registerPtr(*actor);
+        ASSERT_TRUE(world.activateOblivionActor(*actor));
+    }
+    auto& combat = *world.getOblivionCombatService();
+    auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+    auto& ai = *world.getOblivionAiService();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    ESM4::PackageCondition condition{};
+    condition.mFunction = 40;
+    condition.mOperator = ESM4::ConditionOperator::Equal;
+    for (const auto& actor : {npc, creature, world.getPlayerPtr()})
+    {
+        const auto key = actor == world.getPlayerPtr() ? player : actor.getCellRef().getFormKey();
+        SCOPED_TRACE(key.mNamespace);
+        for (const auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+        {
+            if (key != player)
+            {
+                ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, process, true));
+            }
+            for (const float amount : {-2.f, -.25f, 0.f, .75f, 1.f, 1.25f, 100.f})
+            {
+                SCOPED_TRACE(amount);
+                auto values = *combat.findActorValues(key);
+                values.mValues[69] = {};
+                values.mValues[69].mBase = 0;
+                values.mValues[69].mModifiers[1] = amount;
+                if (key == player)
+                    combat.publishPlayerValues(world.getPlayer(), values,
+                        MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+                else
+                    combat.publishNonPlayerValues(actor, values);
+                const bool expected = amount >= 1.f;
+                EXPECT_EQ(world.getOblivionVampire(key), expected);
+                EXPECT_EQ(ObScript::asInteger(scripts->call("GetVampire",
+                    ObScript::ReferenceValue{key, {}}, {}, {}, {})), expected);
+                condition.mComparisonValue = expected;
+                condition.mRunOnTarget = false;
+                EXPECT_EQ(ai.evaluateDialogueConditions(actor, npc, std::span(&condition, 1)),
+                    ESM4::ConditionResult::True);
+                condition.mRunOnTarget = true;
+                EXPECT_EQ(ai.evaluateDialogueConditions(npc, actor, std::span(&condition, 1)),
+                    ESM4::ConditionResult::True);
+                actor.getRefData().disable();
+                EXPECT_EQ(world.getOblivionVampire(key), expected);
+                EXPECT_EQ(world.getOblivionScriptActorValue(key, 69, false), 0);
+                actor.getRefData().enable();
+            }
+        }
+    }
+    // The static Player reference and runtime Player share the same authority.
+    EXPECT_EQ(world.getOblivionVampire(ESM::FormKey::content("Oblivion.esm", 0x14)), true);
+    auto state = world.captureOblivionRuntimeState();
+    state.mPlayer.mActorValues["vampire"] = 1;
+    for (auto& values : state.mNativeActorValues)
+        values.mValues[69].mModifiers[1] = 0;
+    for (auto& reference : state.mReferences)
+        reference.mCustomState["obscript.vampire"] = true;
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    for (const auto& key : {player, npc.getCellRef().getFormKey(), creature.getCellRef().getFormKey()})
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetVampire",
+            ObScript::ReferenceValue{key, {}}, {}, {}, {})), 0);
+    EXPECT_FALSE(world.getOblivionVampire(ESM::FormKey::content("headless.esm", 0xdead)));
+}

@@ -961,12 +961,15 @@ namespace MWMechanics
             bool hasActiveMagicItem, const OblivionFrameSettings& settings);
         void updatePlayerFrameResources(MWWorld::Player& player, const OblivionFatigueUpdate& input,
             bool hasActiveMagicItem, const OblivionFrameSettings& settings);
-        // Resource values and the last completed update time commit together.
-        // Dead actors advance only their timestamp, preventing replay on revival.
+        // Resources, owned PARA state and the completed timestamp publish together.
+        // Effects run before life/resource gates; missing presentation suppresses
+        // their owner update. First application requires the World preparation sink.
         void updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor, const OblivionActorMovement& movement,
-            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings,
+            const std::function<void()>& prepareParalysis = {}, bool processEffects = true);
         void updatePlayerFrameResourcesFromClock(MWWorld::Player& player, const OblivionActorMovement& movement,
-            bool hasActiveMagicItem, const OblivionFrameSettings& settings);
+            bool hasActiveMagicItem, const OblivionFrameSettings& settings,
+            const std::function<void()>& prepareParalysis = {}, bool processEffects = true);
         void spendPlayerJumpFatigue(MWWorld::Player& player, std::int32_t encumbrance, bool canSpend,
             const OblivionFatigueSettings& settings);
         float getPlayerValue(std::uint8_t value) const;

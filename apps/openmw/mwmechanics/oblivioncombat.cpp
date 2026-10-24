@@ -5096,23 +5096,114 @@ namespace MWMechanics
             publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
     }
 
-    void OblivionCombatService::updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor,
-        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+    namespace
     {
-        const auto key = nonPlayerValues(actor).mActor;
-        updateWithActorClock(mActorUpdateTimes, key, mActorManagerTime, [&](float elapsed) {
-            updateNonPlayerFrameResources(actor, {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
-                hasActiveMagicItem, settings);
+        // Original actor2E4 runs before life/resource handling. This prepares
+        // only the verified recoverable NoMagnitude PARA scalar ownership;
+        // the World supplies external preparation before its publication.
+        unsigned prepareMeleeParalysis(ESM4::RuntimeActorValues& values, float elapsed,
+            bool deadOrEssential, bool processEffects)
+        {
+            if (!std::isfinite(elapsed))
+                throw std::invalid_argument("nonfinite native paralysis frame");
+            if (!processEffects) return 0;
+            unsigned applications = 0;
+            const auto modifier = [&](ESM4::ActorValueModifier category, float delta) {
+                // LowProcess's Maximum writer is a no-op. Damage zero still
+                // uses ordinary sparse storage, rather than allocating zero.
+                if (values.mOwner == ESM4::ActorValueOwner::NonPlayer
+                    && values.mProcess == ESM4::ActorValueProcess::Low
+                    && category == ESM4::ActorValueModifier::Maximum) return;
+                values.mValues[48] = ESM4::changeActorValueModifier(
+                    values.mValues[48], values.mOwner, 48, category, delta);
+            };
+            for (auto& effect : values.mMeleeParalysis)
+            {
+                auto update = ESM4::updateCombatParalysis(effect.mState, elapsed);
+                // PARA update6A3770 queries actor198(false): native states1/2
+                // and essential state6 cancel immediately on a positive frame.
+                if (elapsed > 0 && !update.mState.mTerminated && deadOrEssential)
+                {
+                    const auto cancel = ESM4::cancelCombatParalysis(update.mState, true);
+                    update.mState = cancel.mState;
+                    update.mRemove = update.mRemove || cancel.mRemove;
+                }
+                if (update.mApply)
+                {
+                    ++applications;
+                    modifier(ESM4::ActorValueModifier::Maximum, 1.f);
+                }
+                if (update.mRemove)
+                {
+                    modifier(ESM4::ActorValueModifier::Damage, 0.f);
+                    modifier(ESM4::ActorValueModifier::Maximum, -1.f);
+                }
+                effect.mState = update.mState;
+            }
+            // 6A2280 unlinks terminated entries after their owner update,
+            // including pre-application cancellation with no removal call.
+            std::erase_if(values.mMeleeParalysis,
+                [](const auto& effect) { return effect.mState.mTerminated; });
+            return applications;
+        }
+    }
+
+    void OblivionCombatService::updateNonPlayerFrameResourcesFromClock(const MWWorld::Ptr& actor,
+        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings,
+        const std::function<void()>& prepareParalysis, bool processEffects)
+    {
+        const auto before = nonPlayerValues(actor);
+        const auto key = before.mActor;
+        const auto* life = findActorLife(key);
+        const bool deadOrEssential = life ? life->mPhase != ESM4::ActorLifePhase::Alive
+            : actor.getClass().getCreatureStats(actor).isDead();
+        const float managerTime = mActorManagerTime;
+        updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
+            auto candidate = before;
+            const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
+            if (!deadOrEssential)
+                updateFrameResources(candidate,
+                    {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
+                    hasActiveMagicItem, settings, findActorBase(candidate.mBase));
+            if (applications && !prepareParalysis)
+                throw std::invalid_argument("native paralysis application requires World preparation");
+            for (unsigned i = 0; i < applications; ++i) prepareParalysis();
+            const auto* current = findActorValues(key);
+            if (!current || *current != before || mActorManagerTime != managerTime)
+                throw std::runtime_error("native paralysis frame changed during preparation");
+            if (candidate != before) publishNonPlayerValues(actor, std::move(candidate));
         });
     }
 
     void OblivionCombatService::updatePlayerFrameResourcesFromClock(MWWorld::Player& player,
-        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings)
+        const OblivionActorMovement& movement, bool hasActiveMagicItem, const OblivionFrameSettings& settings,
+        const std::function<void()>& prepareParalysis, bool processEffects)
     {
-        const auto key = playerValues().mActor;
-        updateWithActorClock(mActorUpdateTimes, key, mActorManagerTime, [&](float elapsed) {
-            updatePlayerFrameResources(player, {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
-                hasActiveMagicItem, settings);
+        const auto before = playerValues();
+        const auto key = before.mActor;
+        const auto ptr = player.getPlayer();
+        const auto* life = findActorLife(key);
+        const bool deadOrEssential = life ? life->mPhase != ESM4::ActorLifePhase::Alive
+            : ptr.getClass().getCreatureStats(ptr).isDead();
+        const float managerTime = mActorManagerTime;
+        updateWithActorClock(mActorUpdateTimes, key, managerTime, [&](float elapsed) {
+            auto candidate = before;
+            const auto applications = prepareMeleeParalysis(candidate, elapsed, deadOrEssential, processEffects);
+            if (!deadOrEssential)
+            {
+                preparePlayerValues(candidate, settings.mFatigue.mPlayerBase);
+                updateFrameResources(candidate,
+                    {elapsed, movement.mEncumbrance, movement.mRunning, movement.mCanSpend},
+                    hasActiveMagicItem, settings);
+            }
+            if (applications && !prepareParalysis)
+                throw std::invalid_argument("native paralysis application requires World preparation");
+            for (unsigned i = 0; i < applications; ++i) prepareParalysis();
+            const auto* current = findActorValues(key);
+            if (!current || *current != before || mActorManagerTime != managerTime)
+                throw std::runtime_error("native paralysis frame changed during preparation");
+            if (candidate != before)
+                publishPlayerValues(player, std::move(candidate), settings.mFatigue.mPlayerBase);
         });
     }
 

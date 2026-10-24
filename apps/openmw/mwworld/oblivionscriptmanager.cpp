@@ -2369,6 +2369,16 @@ namespace MWWorld
         }
         if (name == "getvampire")
         {
+            try
+            {
+                if (const auto native = mWorld.getOblivionVampire(objectKey()))
+                    return std::int64_t(*native);
+            }
+            catch (const std::invalid_argument& error)
+            {
+                throw ObScript::RuntimeError("OBSV115", error.what(), name);
+            }
+            // Retain legacy storage only when no native actor authority exists.
             if (objectKey() == ESM::FormKey::dynamic("player", 1))
             {
                 if (!mWorld.mOblivionRuntimeState)

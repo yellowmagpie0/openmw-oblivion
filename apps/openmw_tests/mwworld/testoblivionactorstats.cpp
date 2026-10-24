@@ -5423,6 +5423,235 @@ namespace
         EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), .3f);
     }
 
+    void verifyParalysisFrameTransactions(const MWWorld::Ptr& ptr,
+        ESM4::RuntimeActorValues values, MWWorld::Player* player = nullptr)
+    {
+        using Phase = ESM4::ActorLifePhase;
+        MWMechanics::OblivionCombatService service;
+        auto settings = MWWorld::resolveOblivionFrameSettings(*MWBase::Environment::get().getESMStore());
+        settings.mMagicka = {0, 0};
+        settings.mFatigue.mRegeneration = {0, 0};
+        settings.mFatigue.mPlayerBase = {};
+        values.mValues[48] = {0, {2.f, .25f, -1.f}};
+        values.mMeleeParalysis = {{1, {1, 0, false, false, false}}};
+        ASSERT_EQ(service.allocateAction(), 1u); ASSERT_TRUE(service.consumeAction(1));
+        const auto life = [&](Phase phase) {
+            if (player) service.publishPlayerLife(*player, {values.mActor, values.mBase, phase, 0, {}});
+            else service.publishNonPlayerLife(ptr, {values.mActor, values.mBase, phase, 0, {}});
+        };
+        const auto publish = [&] {
+            if (player) service.publishPlayerValues(*player, values, {});
+            else service.publishNonPlayerValues(ptr, values);
+        };
+        publish(); life(Phase::Alive);
+        const auto current = [&]() -> const ESM4::RuntimeActorValues& {
+            return *service.findActorValues(values.mActor);
+        };
+        unsigned preparations = 0;
+        const auto preparation = [&] {
+            ++preparations;
+            EXPECT_EQ(current().mValues[48].mModifiers[0], 2.f);
+            ASSERT_FALSE(current().mMeleeParalysis.empty());
+            EXPECT_FALSE(current().mMeleeParalysis.front().mState.mApplied);
+        };
+        const auto frame = [&](bool ready, bool supplyPreparation,
+                               const MWMechanics::OblivionFrameSettings& config) {
+            const std::function<void()> callback = supplyPreparation ? preparation : std::function<void()>{};
+            if (player) service.updatePlayerFrameResourcesFromClock(
+                *player, {0, false, false}, false, config, callback, ready);
+            else service.updateNonPlayerFrameResourcesFromClock(
+                ptr, {0, false, false}, false, config, callback, ready);
+        };
+        ESM4::RuntimeState identity;
+        identity.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        identity.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        identity.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        identity.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        if (!player)
+        {
+            ESM4::RuntimeReferenceState ref;
+            ref.mKey = values.mActor; ref.mBase = values.mBase; ref.mCell = identity.mPlayer.mCell;
+            identity.mReferences.push_back(ref);
+        }
+        const auto capture = [&] { auto state = identity; service.capture(state); return state; };
+        service.advanceFrameClock(.125f);
+        const auto before = capture();
+        EXPECT_THROW(frame(true, false, settings), std::invalid_argument);
+        EXPECT_EQ(capture().mNativeActorValues, before.mNativeActorValues);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes, before.mNativeActorUpdateTimes);
+        frame(true, true, settings);
+        EXPECT_EQ(preparations, 1u);
+        EXPECT_EQ(current().mValues[48].mModifiers[0], 3.f);
+        EXPECT_EQ(current().mMeleeParalysis.front().mState.mElapsed, .125f);
+        const auto first = capture();
+        frame(true, true, settings);
+        EXPECT_EQ(capture().mNativeActorValues, first.mNativeActorValues);
+        service.restore(ESM4::RuntimeState::deserializeBinary(first.serializeBinary()));
+        frame(true, true, settings);
+        EXPECT_EQ(preparations, 1u);
+        service.advanceFrameClock(.375f); frame(false, true, settings);
+        EXPECT_EQ(current().mMeleeParalysis.front().mState.mElapsed, .125f);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes.at(values.mActor), .5f);
+        service.advanceFrameClock(.125f); frame(true, true, settings);
+        EXPECT_EQ(current().mMeleeParalysis.front().mState.mElapsed, .25f);
+        const auto beforeFailure = capture();
+        service.advanceFrameClock(.5f);
+        auto invalid = settings; invalid.mMagicka.mBase = std::numeric_limits<float>::quiet_NaN();
+        EXPECT_THROW(frame(true, true, invalid), std::invalid_argument);
+        EXPECT_EQ(capture().mNativeActorValues, beforeFailure.mNativeActorValues);
+        EXPECT_EQ(capture().mNativeActorUpdateTimes, beforeFailure.mNativeActorUpdateTimes);
+        frame(true, true, settings);
+        EXPECT_EQ(current().mMeleeParalysis.front().mState.mElapsed, .75f);
+        service.advanceFrameClock(.25f); frame(true, true, settings);
+        EXPECT_TRUE(current().mMeleeParalysis.empty());
+        EXPECT_EQ(current().mValues[48], values.mValues[48]);
+        EXPECT_EQ(preparations, 1u);
+        const auto install = [&](ESM4::CombatParalysisState state, float maximum) {
+            const auto cause = service.allocateAction(); ASSERT_TRUE(service.consumeAction(cause));
+            values = current(); values.mValues[48].mModifiers[0] = maximum;
+            values.mMeleeParalysis = {{cause, state}}; publish();
+        };
+        install({0, 0, false, false, false}, 2);
+        service.advanceFrameClock(.125f); frame(true, true, settings);
+        EXPECT_TRUE(current().mMeleeParalysis.empty());
+        EXPECT_EQ(current().mValues[48].mModifiers[0], 2.f);
+        EXPECT_EQ(preparations, 2u);
+        install({10, 2, true, true, false}, 3);
+        frame(true, false, settings); // dt0 still performs deferred removal.
+        EXPECT_TRUE(current().mMeleeParalysis.empty());
+        EXPECT_EQ(current().mValues[48].mModifiers[0], 2.f);
+        install({10, 0, false, true, false}, 2);
+        frame(true, false, settings);
+        EXPECT_TRUE(current().mMeleeParalysis.empty());
+        EXPECT_EQ(preparations, 2u);
+        settings.mFatigue.mRegeneration = {2, 0};
+        for (const auto phase : {Phase::Dead, Phase::EssentialUnconscious})
+        {
+            life(Phase::Alive); install({10, 0, false, false, false}, 2);
+            values = current(); values.mValues[10].mModifiers[2] = -10.f; publish(); life(phase);
+            frame(true, true, settings); // No positive delta: no first application.
+            EXPECT_FALSE(current().mMeleeParalysis.front().mState.mApplied);
+            service.advanceFrameClock(.125f); frame(true, true, settings);
+            EXPECT_TRUE(current().mMeleeParalysis.empty());
+            EXPECT_EQ(current().mValues[48].mModifiers[0], 2.f);
+            EXPECT_EQ(current().mValues[10].mModifiers[2], -10.f);
+        }
+        settings.mFatigue.mRegeneration = {0, 0};
+        EXPECT_EQ(preparations, 4u);
+        life(Phase::Alive); install({.125f, 0, true, false, false}, 1);
+        values = current(); values.mValues[48].mModifiers[2].reset(); publish();
+        service.advanceFrameClock(.125f); frame(true, false, settings);
+        EXPECT_TRUE(current().mMeleeParalysis.empty());
+        if (player)
+        {
+            EXPECT_EQ(current().mValues[48].mModifiers[0], 0.f);
+            EXPECT_EQ(current().mValues[48].mModifiers[2], 0.f);
+        }
+        else
+        {
+            EXPECT_FALSE(current().mValues[48].mModifiers[0]);
+            EXPECT_FALSE(current().mValues[48].mModifiers[2]);
+        }
+        EXPECT_EQ(current().mValues[48].mModifiers[1], .25f);
+        const auto final = capture();
+        service.restore(ESM4::RuntimeState::deserializeBinary(final.serializeBinary()));
+        frame(true, false, settings);
+        EXPECT_EQ(capture().mNativeActorValues, final.mNativeActorValues);
+    }
+
+    TEST_F(OblivionActorStatsTest, nativeParalysisOwnerFrameTransactions)
+    {
+        autoNpc();
+        mNpc.mFormKey = mActorKey;
+        sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf();
+        ESM4::ActorCharacter reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        verifyParalysisFrameTransactions(ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, creatureParalysisOwnerFrameTransactions)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 4;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        MWWorld::Ptr ptr(&live);
+        model.registerPtr(ptr);
+        ESM4::RuntimeActorValues values;
+        values.mActor = reference.mFormKey;
+        values.mBase = mActorKey;
+        values.mValues[0] = {40, {7, 13, -3}};
+        values.mValues[14] = {30, {5, 17, -2}};
+        values.mValues[8].mBase = 100;
+        values.mValues[9].mBase = 30;
+        values.mValues[10].mBase = 40;
+        verifyParalysisFrameTransactions(ptr, values);
+    }
+
+    TEST_F(OblivionActorStatsTest, playerParalysisOwnerFrameTransactions)
+    {
+        sharedStats();
+        ESM::NPC base{};
+        base.blank();
+        base.mId = ESM::RefId::stringRefId("Player");
+        const auto* record = mStore.insertStatic(base);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::Npc::registerSelf();
+        MWWorld::Player player(record);
+        const auto ptr = player.getPlayer();
+        ESM::NpcState initialState{};
+        initialState.blank();
+        ptr.getClass().readAdditionalState(ptr, initialState);
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mPlayerFormValues = {{100, 30, 40, 0}};
+        verifyParalysisFrameTransactions(ptr, values, &player);
+    }
+
     TEST_F(OblivionActorStatsTest, nativeMagickaFrameTransactions)
     {
         autoNpc();

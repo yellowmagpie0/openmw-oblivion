@@ -2323,6 +2323,21 @@ namespace MWWorld
         return true;
     }
 
+    std::optional<bool> World::getOblivionVampire(const ESM::FormKey& actor) const
+    {
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        if (!mOblivionCombat)
+            return std::nullopt;
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!values)
+            return std::nullopt;
+        // Native 4F4830 -> 5E04C0 uses the signed integer AV69 getter even
+        // for disabled actors. Its strictly-positive test differs from PARA.
+        return values->mOwner == ESM4::ActorValueOwner::Player
+            ? mOblivionCombat->getPlayerIntegerValue(69) > 0
+            : mOblivionCombat->getNonPlayerIntegerValue(key, 69, mStore) > 0;
+    }
+
     std::optional<double> World::getOblivionScriptActorValue(const ESM::FormKey& actor,
         std::uint8_t value, bool base)
     {
@@ -4929,10 +4944,21 @@ namespace MWWorld
         // Native spell/enchantment execution is an explicit M16 boundary below.
         // No native active casting item exists yet. M16 must wire its actual
         // item lifetime here; selected spell and animation flags are not that state.
+        // The supported resident profile has the native constructed flag78=1.
+        // Target6A2280 also requires a process, actor3D and attached cell3D.
+        const bool processEffects = actor.isInCell() && actor.getRefData().getBaseNode()
+            && mWorldScene && mWorldScene->isCellActive(*actor.getCell());
+        const auto prepareParalysis = [&] {
+            // 5EF930 clears voice channel0, not the body-animation controller.
+            // FaceGen reset(.75,0,1,1,1,0) remains a renderer integration gap.
+            MWBase::Environment::get().getSoundManager()->stopSay(actor);
+        };
         if (player)
-            mOblivionCombat->updatePlayerFrameResourcesFromClock(*mPlayer, movement, false, settings);
+            mOblivionCombat->updatePlayerFrameResourcesFromClock(
+                *mPlayer, movement, false, settings, prepareParalysis, processEffects);
         else
-            mOblivionCombat->updateNonPlayerFrameResourcesFromClock(actor, movement, false, settings);
+            mOblivionCombat->updateNonPlayerFrameResourcesFromClock(
+                actor, movement, false, settings, prepareParalysis, processEffects);
         if (friendHits)
             mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
         return true;

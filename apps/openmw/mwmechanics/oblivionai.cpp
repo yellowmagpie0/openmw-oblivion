@@ -1220,6 +1220,19 @@ namespace MWMechanics
                         || subjectLocation->mType == ESM::REC_NPC_4 || subjectLocation->mType == ESM::REC_CREA4
                     ? 1.0
                     : 0.0);
+            if (function == "GetVampire")
+            {
+                try
+                {
+                    if (const auto native = mWorld.getOblivionVampire(subjectKey))
+                        return value(*native ? 1.0 : 0.0);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    return ESM4::ConditionValue::unsupported();
+                }
+                return npc || creature ? ESM4::ConditionValue::missing() : value(0.0);
+            }
             if (function == "GetLevel" || function == "GetActorValue")
             {
                 if (function == "GetActorValue")
@@ -2075,6 +2088,21 @@ namespace MWMechanics
                 return value(!currentAi.mMount.isNull() ? 1.0 : 0.0);
             if (function == "IsActor")
                 return value(subjectPtr.getClass().isActor() ? 1.0 : 0.0);
+            if (function == "GetVampire")
+            {
+                if (!subjectPtr.getClass().isActor())
+                    return value(0.0);
+                try
+                {
+                    if (const auto native = mWorld.getOblivionVampire(actorKey(subjectPtr)))
+                        return value(*native ? 1.0 : 0.0);
+                }
+                catch (const std::invalid_argument&)
+                {
+                    return ESM4::ConditionValue::unsupported();
+                }
+                return ESM4::ConditionValue::missing();
+            }
             if (function == "IsEssential")
                 return value(subjectPtr.getClass().isEssential(subjectPtr) ? 1.0 : 0.0);
             if (function == "GetPCInFaction")

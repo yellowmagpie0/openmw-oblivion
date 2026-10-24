@@ -438,6 +438,7 @@ namespace MWWorld
         // nullopt only while this actor has not entered native AV authority.
         // Reads resident or saved references without loading a cell.
         std::optional<double> getOblivionScriptActorValue(const ESM::FormKey& actor, std::uint8_t value, bool base);
+        std::optional<bool> getOblivionVampire(const ESM::FormKey& actor) const;
         std::optional<double> getOblivionScriptKnockedState(const ESM::FormKey& actor) const;
         std::optional<bool> getOblivionIgnoreFriendlyHits(const ESM::FormKey& reference) const;
         // Generic process package selector includes Player's hidden base package.
