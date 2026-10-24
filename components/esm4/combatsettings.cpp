@@ -281,6 +281,18 @@ namespace ESM4
         return result;
     }
 
+    CombatSpellPowerSettings buildCombatSpellPowerSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        // Original 9EE290/9EE2C0/9EEBF0/9EEC20 constructors. Installed
+        // Oblivion.esm overrides the fatigue pair to1/0; absence uses0/.25.
+        const CombatSpellPowerSettings result{inputs.number("fMagicFatigueDrainBase", 0.f),
+            inputs.number("fMagicFatigueDrainMult", .25f), inputs.number("fMagicArmorPenaltyMin", .05f),
+            inputs.number("fMagicArmorPenaltyMax", .3f), inputs.number("iSkillJourneymanMin", std::int32_t{50})};
+        validateCombatSpellPowerSettings(result);
+        return result;
+    }
+
     CombatMasterySettings buildCombatMasterySettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

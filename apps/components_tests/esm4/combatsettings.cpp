@@ -499,3 +499,62 @@ TEST(ESM4CombatSettings, FriendHitTimerPreservesFiniteOverridesAndRejectsMalform
     const std::array<const ESM4::GameSetting*, 2> ambiguous{&value, &duplicate};
     EXPECT_THROW(ESM4::buildFriendHitTimer(ambiguous), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, CombatSpellPowerSeparatesCompiledDefaultsFromWinningFloatRecords)
+{
+    const auto compiled = ESM4::buildCombatSpellPowerSettings({});
+    EXPECT_EQ(compiled.mFatigueBase, 0.f);
+    EXPECT_EQ(compiled.mFatigueMultiplier, .25f);
+    EXPECT_EQ(compiled.mArmorPenaltyMinimum, .05f);
+    EXPECT_EQ(compiled.mArmorPenaltyMaximum, .3f);
+    EXPECT_EQ(compiled.mJourneymanMinimum, 50);
+    std::array<ESM4::GameSetting, 5> records{};
+    const std::array names{"FMAGICFATIGUEDRAINBASE", "fMagicFatigueDrainMult", "fMagicArmorPenaltyMin",
+        "fMagicArmorPenaltyMax", "iSkillJourneymanMin"};
+    std::array<const ESM4::GameSetting*, 5> settings;
+    for (unsigned i = 0; i < records.size(); ++i)
+    {
+        records[i].mEditorId = names[i];
+        settings[i] = &records[i];
+    }
+    records[0].mData = 1.f; records[1].mData = 0.f;
+    records[2].mData = -.1f; records[3].mData = .4f; records[4].mData = std::int32_t{-10};
+    const auto loaded = ESM4::buildCombatSpellPowerSettings(settings);
+    EXPECT_EQ(loaded.mFatigueBase, 1.f);
+    EXPECT_EQ(loaded.mFatigueMultiplier, 0.f);
+    EXPECT_EQ(loaded.mArmorPenaltyMinimum, -.1f);
+    EXPECT_EQ(loaded.mArmorPenaltyMaximum, .4f);
+    EXPECT_EQ(loaded.mJourneymanMinimum, -10); // Raw threshold query; no unrelated rank ordering.
+    EXPECT_EQ(compiled.mFatigueBase, 0.f);
+}
+
+TEST(ESM4CombatSettings, CombatSpellPowerRejectsAmbiguousMistypedAndNonfiniteWinningInputs)
+{
+    ESM4::GameSetting setting{};
+    std::array<const ESM4::GameSetting*, 1> settings{&setting};
+    for (const auto* name : {"fMagicFatigueDrainBase", "fMagicFatigueDrainMult",
+             "fMagicArmorPenaltyMin", "fMagicArmorPenaltyMax"})
+    {
+        SCOPED_TRACE(name);
+        setting.mEditorId = name; setting.mData = std::int32_t{1};
+        EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(settings), std::invalid_argument);
+        for (const auto value : {std::numeric_limits<float>::quiet_NaN(),
+                 std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+        {
+            setting.mData = value;
+            EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(settings), std::invalid_argument);
+        }
+    }
+    setting.mEditorId = "iSkillJourneymanMin"; setting.mData = 50.f;
+    EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(settings), std::invalid_argument);
+    setting.mEditorId = "fMagicFatigueDrainBase"; setting.mData = 1.f;
+    auto duplicate = setting; duplicate.mEditorId = "FMAGICFATIGUEDRAINBASE";
+    const std::array<const ESM4::GameSetting*, 2> ambiguous{&setting, &duplicate};
+    EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(ambiguous), std::invalid_argument);
+    const std::array<const ESM4::GameSetting*, 1> missing{nullptr};
+    EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(missing), std::invalid_argument);
+    setting.mEditorId.clear();
+    EXPECT_THROW(ESM4::buildCombatSpellPowerSettings(settings), std::invalid_argument);
+    setting.mEditorId = "unrelatedSetting"; setting.mData = std::string("ignored");
+    EXPECT_EQ(ESM4::buildCombatSpellPowerSettings(settings).mFatigueBase, 0.f);
+}

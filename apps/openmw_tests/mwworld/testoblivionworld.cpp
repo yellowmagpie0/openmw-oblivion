@@ -89,6 +89,7 @@
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/misc/osguservalues.hpp>
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
+#include "apps/openmw/mwmechanics/oblivionmagiccaster.hpp"
 #include "apps/openmw/mwmechanics/oblivionranged.hpp"
 #include <components/esm4/loadammo.hpp>
 #include <components/esm4/loadbsgn.hpp>
@@ -35349,4 +35350,122 @@ TEST(OblivionWorldTest, VampireScriptsAndDialogueUseSignedNativeIntegerAuthority
         EXPECT_EQ(ObScript::asInteger(scripts->call("GetVampire",
             ObScript::ReferenceValue{key, {}}, {}, {}, {})), 0);
     EXPECT_FALSE(world.getOblivionVampire(ESM::FormKey::content("headless.esm", 0xdead)));
+}
+
+TEST(OblivionWorldTest, CombatSpellPowerReadsCurrentPlayerStatsAndActuallyWornArmorWithoutMutation)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    MWClass::Npc::registerSelf(); MWClass::Armor::registerSelf();
+    world.setupPlayer();
+    const auto player = world.getPlayerPtr();
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(world, player), std::invalid_argument);
+    ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+    native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    native.mBaseConfig.tes4.levelOrOffset = 1; native.mData.health = 100;
+    native.mData.attribs = {40,40,40,40,40,40,40,40};
+    store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto& service = *world.getOblivionCombatService();
+    const auto key = ESM::FormKey::dynamic("player", 1);
+    ASSERT_EQ(service.getPlayerBaseValue(10), 160);
+    ASSERT_TRUE(world.requestOblivionResourceCurrent(player, 10, 80));
+    for (auto [value, amount] : {std::pair{std::uint8_t{27},0}, {std::uint8_t{18},100}, {std::uint8_t{7},50}})
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, value, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, amount));
+    const auto query = [&](std::uint32_t expected) {
+        const auto before = *service.findActorValues(key);
+        const auto rng = service.combatRandomState();
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(MWMechanics::oblivionCombatSpellPower(world, player)), expected);
+        EXPECT_EQ(*service.findActorValues(key), before);
+        EXPECT_EQ(service.combatRandomState(), rng);
+    };
+    query(0x3e000000u); // Original caster oracle06: compiled0/.25, current80/base160, naked.
+    const auto setting = [&](std::uint32_t id, const char* name, float value) {
+        ESM4::GameSetting record{}; record.mId = {id,0}; record.mEditorId = name; record.mData = value;
+        store.getWritable<ESM4::GameSetting>().insertStatic(record, ESM::FormKey::content("headless.esm",id));
+    };
+    setting(0x970,"fMagicFatigueDrainBase",1); setting(0x971,"fMagicFatigueDrainMult",0);
+    query(0x3f800000u); // Winning vanilla pair ignores the depleted Fatigue ratio.
+    const auto armor = [&](std::uint32_t id, std::uint32_t mask, bool heavy, int type) {
+        ESM4::Armor record{}; record.mId = {id,0}; record.mArmorFlags = mask;
+        record.mGeneralFlags = ESM4::Armor::TYPE_TES4 | (heavy ? ESM4::Armor::TES4_HeavyArmor : 0);
+        record.mData.health = 100; record.mData.armor = 9999;
+        store.getWritable<ESM4::Armor>().insertStatic(record, ESM::FormKey::content("headless.esm",id));
+        ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(record.mId);
+        projected.mData.mType = type; projected.mData.mHealth = 100; projected.mData.mArmor = 60000;
+        store.insertStatic(projected);
+    };
+    const auto bodySlots = ESM4::Armor::TES4_UpperBody | ESM4::Armor::TES4_LowerBody;
+    armor(0x980,bodySlots,false,ESM::Armor::Cuirass);
+    armor(0x981,ESM4::Armor::TES4_Feet,true,ESM::Armor::Boots);
+    armor(0x982,ESM4::Armor::TES4_Shield,true,ESM::Armor::Shield);
+    ESM4::RuntimeInventoryItem body,boots,shield;
+    body.mBase = ESM::FormKey::content("headless.esm",0x980); body.mCount = 1;
+    body.mCondition = 0; body.mEquippedSlots = bodySlots; // Broken body armor remains worn.
+    boots.mBase = ESM::FormKey::content("headless.esm",0x981); boots.mCount = 1;
+    boots.mCondition = 100; boots.mEquippedSlots = ESM4::Armor::TES4_Feet;
+    shield.mBase = ESM::FormKey::content("headless.esm",0x982); shield.mCount = 1;
+    shield.mCondition = 100; shield.mEquippedSlots = ESM4::Armor::TES4_Shield;
+    const auto install = [&](std::vector<ESM4::RuntimeInventoryItem> items) {
+        const auto plan = MWWorld::OblivionProfileServices::prepareActorInventory(
+            store,ESM::FormKeyResolver({"headless.esm"}),items);
+        auto staged = MWWorld::OblivionProfileServices::stageActorInventory(plan);
+        player.getClass().getInventoryStore(player).swapPreparedContents(*staged);
+    };
+    install({body}); query(0x3f599999u); // Light coverage40, skill0; item rating/condition do not scale it.
+    install({body,boots}); query(0x3f599999u); // Heavy skill100 bypasses its weighted term.
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(player,18,ESM4::ActorValueCommand::Set,
+        ESM4::ActorValueCommandSource::Script,0));
+    query(0x3f533333u); // Original caster oracle06: light40/heavy10, both skills0.
+    ASSERT_TRUE(world.executeOblivionActorValueCommand(player,7,ESM4::ActorValueCommand::Set,
+        ESM4::ActorValueCommandSource::Script,100));
+    query(0x3f533333u); // This caster path does not apply Luck-adjusted physical skillValue.
+    install({body,boots,shield}); query(0x3f400000u); // Heavy shield adds30 while actually worn.
+    const auto active = *service.findActorValues(key);
+    auto low = active; low.mProcess = ESM4::ActorValueProcess::Low;
+    low.mProcessAction.reset(); low.mProcessKnockedState.reset();
+    const auto baseSettings = ESM4::buildPlayerDynamicBaseSettings({});
+    service.publishPlayerValues(world.getPlayer(),low,baseSettings);
+    query(0x3f533333u); // Low process exposes no shield entry; body/boots still count.
+    service.publishPlayerValues(world.getPlayer(),active,baseSettings);
+    install({}); query(0x3f800000u);
+    setting(0x972,"fMagicArmorPenaltyMin",std::numeric_limits<float>::quiet_NaN());
+    ASSERT_TRUE(world.toggleGodMode()); query(0x3f800000u);
+    ASSERT_FALSE(world.toggleGodMode());
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(world,player),std::invalid_argument);
+}
+
+TEST(OblivionWorldTest, CombatSpellPowerKeepsNpcCreatureAndProfileBoundariesIndependentOfPlayerSettings)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld; auto& store = world.getStore();
+    const auto npc = addNativeNpc(fixture,0x801);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc,ESM4::ActorValueProcess::Low));
+    ESM4::GameSetting invalid{}; invalid.mId = {0x970,0}; invalid.mEditorId = "fMagicFatigueDrainBase";
+    invalid.mData = std::numeric_limits<float>::quiet_NaN();
+    store.getWritable<ESM4::GameSetting>().insertStatic(invalid,ESM::FormKey::content("headless.esm",0x970));
+    EXPECT_EQ(MWMechanics::oblivionCombatSpellPower(world,npc),1.f);
+    MWClass::ESM4Creature::registerSelf();
+    ESM4::Creature creature{}; creature.mId = {0x820,0};
+    creature.mFormKey = ESM::FormKey::content("headless.esm",0x820);
+    creature.mAttackReach = 64; creature.mBaseConfig.tes4.levelOrOffset = 1; creature.mData.health = 99;
+    store.getWritable<ESM4::Creature>().insertStatic(creature,creature.mFormKey);
+    ESM4::ActorCreature reference{}; reference.mId = {0x920,0};
+    reference.mFormKey = ESM::FormKey::content("headless.esm",0x920); reference.mBaseKey = creature.mFormKey;
+    store.getWritable<ESM4::ActorCreature>().insertStatic(reference,reference.mFormKey);
+    MWWorld::LiveCellRef<ESM4::Creature> live(reference,store.search<ESM4::Creature>(creature.mFormKey));
+    auto& cell = world.getWorldModel().getDraftCell(); const MWWorld::Ptr actor(cell.insert(&live),&cell);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor,ESM4::ActorValueProcess::Active));
+    EXPECT_EQ(MWMechanics::oblivionCombatSpellPower(world,actor),1.f);
+    reference.mId = {0x801,0};
+    reference.mFormKey = npc.getCellRef().getFormKey();
+    MWWorld::LiveCellRef<ESM4::Creature> mismatched(reference,store.search<ESM4::Creature>(creature.mFormKey));
+    const MWWorld::Ptr wrongIdentity(cell.insert(&mismatched),&cell);
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(world,wrongIdentity),std::invalid_argument);
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(world,{}),std::invalid_argument);
+    const auto unowned = addNativeNpc(fixture,0x802);
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(world,unowned),std::invalid_argument);
+    MWWorld::World legacy(nullptr,-1,"",{},ESM::GameProfile::Morrowind);
+    EXPECT_THROW(MWMechanics::oblivionCombatSpellPower(legacy,actor),std::invalid_argument);
 }

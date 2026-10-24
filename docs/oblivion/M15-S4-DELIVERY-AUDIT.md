@@ -13192,3 +13192,52 @@ and the remaining full S4 input/device/FPS/interruption/restart gates remain
 open. **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-MELEE-PARALYSIS-ADMISSION-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_admission_cases.json).
+
+
+## Player combat-spell casting power and worn-armor World query
+
+Implemented the narrow original Player MagicCaster virtual+2C(false,0) rule,
+a winning-GMST builder and `oblivionCombatSpellPower` World adapter. NPC and
+Creature power is one; Player god mode returns one before settings or armor
+reads. The adapter validates actor-value ownership and reference/base identity,
+then reads integer current/base Fatigue and integer Light/Heavy Armor skills.
+Seven weighted native armor slots use actually equipped projected armor; the
+shield requires an Active process and the carried-left item. Broken armor still
+counts. Rating, condition, held-block intent and Luck do not scale this path.
+
+Original executable SHA-256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`
+executes Player `0x0065DAF0` and arithmetic `0x00548B30`/`0x00548DC0` with declared getter,
+base-Fatigue, coverage and Journeyman-threshold boundaries. Eight retained oracle
+reports cover ordinary and signed/extreme inputs under three x87 controls. The
+production PC24 selection has **4,808 comparisons: 4,588 finite bit-exact results
+and 220 nonfinite native outputs rejected**. Compact checked-in expectations
+retain all input axes and original order. A new exact-product search found a
+one-bit discrepancy after the earlier full suites had passed: skill -1040187317
+and light coverage 7. Full original Player caster execution confirms it. Exact
+uint64 product rounding fixes the double-rounding edge; 76 new light/heavy,
+positive/negative product cases cover it. These are synthetic typed-integer
+boundaries. The integer-ratio midpoint also uses a base outside `0x005F1910`'s
+ordinary float-store/floor image. Neither establishes a reachable vanilla
+gameplay discrepancy.
+
+Compiled fatigue defaults are 0/0.25; the independently audited winning base-master
+records are 1/0. Armor penalty defaults remain 0.05/0.3. Finite signed settings and
+finite negative power are preserved. This query rejects malformed/nonfinite
+inputs/results; default-PARA admission separately requires nonnegative power.
+
+At tested parent `97b11161844f058e218752aa9a2b9f2d256a59c1` and dirty source fingerprint
+`2c626f7f1c6db5308f724d56a5bb15bfd6502748821167dbbef166a320f9099b`, the final normal run passes
+**3,083 full component tests and 1,921 full engine tests**;
+the instrumented run passes **934 ESM4 component tests and
+1,921 full engine tests**. Inventories match XML with no failures or skips.
+ASan/UBSan halt on errors; leak checks are disabled. Two World cases cover
+current resources, winning settings, equipment/process changes, god mode,
+identity rejection and value/RNG preservation. No new gameplay producer calls
+this adapter, so these checks do not establish normal-input casting acceptance.
+
+World default-spell/profile resolution, mastery contact production, physical
+paralysis/recovery, presentation and the remaining S4 runtime gates remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-CASTER-POWER-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_caster_power_cases.json).

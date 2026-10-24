@@ -1,0 +1,982 @@
+{
+  "schema_version": 1,
+  "id": "m15_melee_caster_power",
+  "scope": "Player self-Spell MagicCaster virtual+2C(false,0); NPC/Creature and god-mode Player caller returns one.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "execution": {
+    "entry": "0x65DAF0",
+    "arithmetic": [
+      "0x548B30",
+      "0x548DC0"
+    ],
+    "control_words": [
+      127,
+      639,
+      895
+    ],
+    "production_control_word": 127,
+    "typed_boundaries": [
+      "current integer actor values10/18/27; Luck7 read but unused by armor arithmetic",
+      "integer base Fatigue returned at5F1910",
+      "separately capped light/heavy coverage at5E5C80",
+      "Journeyman threshold queried with rank2 at56A360"
+    ],
+    "fatigue_override": 0,
+    "ignore_fatigue": false
+  },
+  "grids": [
+    {
+      "oracle": "02",
+      "pc24_cases": 1764,
+      "axes": {
+        "current_and_base_fatigue": [
+          [
+            0,
+            0
+          ],
+          [
+            50,
+            100
+          ],
+          [
+            -1,
+            100
+          ],
+          [
+            100,
+            100
+          ],
+          [
+            -2147483648,
+            1
+          ],
+          [
+            2147483647,
+            1
+          ]
+        ],
+        "light_and_heavy_coverage": [
+          [
+            0,
+            0
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            0,
+            5
+          ],
+          [
+            50,
+            50
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            0,
+            100
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "light_and_heavy_skill": [
+          [
+            0,
+            0
+          ],
+          [
+            49,
+            49
+          ],
+          [
+            50,
+            50
+          ],
+          [
+            100,
+            100
+          ],
+          [
+            0,
+            49
+          ],
+          [
+            49,
+            0
+          ],
+          [
+            49,
+            50
+          ],
+          [
+            50,
+            49
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            0,
+            100
+          ],
+          [
+            -100,
+            125
+          ],
+          [
+            -2147483648,
+            0
+          ],
+          [
+            0,
+            -2147483648
+          ],
+          [
+            2147483647,
+            0
+          ]
+        ],
+        "setting_bits_base_mult_min_max": [
+          [
+            "3f800000",
+            "00000000",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "00000000",
+            "3e800000",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "3f800000",
+            "3f000000",
+            "3d4ccccd",
+            "3e99999a"
+          ]
+        ],
+        "journeyman_threshold": [
+          50
+        ]
+      },
+      "expected_corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-02/corpus.json",
+        "sha256": "abebabdd190dcbb1fce68a4f389e9a3eb5eef76c75686e8ab1c30d1bb32455c1",
+        "bytes": 4092481
+      }
+    },
+    {
+      "oracle": "04",
+      "pc24_cases": 2800,
+      "axes": {
+        "current_and_base_fatigue": [
+          [
+            1,
+            3
+          ],
+          [
+            50,
+            100
+          ],
+          [
+            -1,
+            100
+          ],
+          [
+            100,
+            100
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2147483647,
+            1
+          ],
+          [
+            2125114407,
+            2125114027
+          ],
+          [
+            -2125114407,
+            -2125114027
+          ]
+        ],
+        "light_and_heavy_coverage": [
+          [
+            0,
+            0
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            50,
+            50
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "light_and_heavy_skill": [
+          [
+            0,
+            0
+          ],
+          [
+            49,
+            0
+          ],
+          [
+            50,
+            49
+          ],
+          [
+            -100,
+            125
+          ],
+          [
+            -2147483648,
+            2147483647
+          ]
+        ],
+        "setting_bits_base_mult_min_max": [
+          [
+            "00000000",
+            "3f800000",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "ff7fffff",
+            "7f7fffff",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "7f7fffff",
+            "ff7fffff",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "006ce3ee",
+            "006ce3ee",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "006ce3ee",
+            "806ce3ee",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "00000001",
+            "00000001",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "00000000",
+            "00000001",
+            "3d4ccccd",
+            "3e99999a"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "ff7fffff",
+            "7f7fffff"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "7f7fffff",
+            "ff7fffff"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "bf800000",
+            "3f000000"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "006ce3ee",
+            "806ce3ee"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "00000001",
+            "00000001"
+          ],
+          [
+            "3f800000",
+            "00000000",
+            "00000000",
+            "7f7fffff"
+          ]
+        ],
+        "journeyman_threshold": [
+          50
+        ]
+      },
+      "expected_corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-04/corpus.json",
+        "sha256": "1eb7506a64b3fb6cd84f49c80fb5ed42cc1120927fb19c91bba1d3ae3bfd0169",
+        "bytes": 3963073
+      }
+    },
+    {
+      "oracle": "05",
+      "pc24_cases": 168,
+      "axes": {
+        "current_and_base_fatigue": [
+          [
+            100,
+            100
+          ]
+        ],
+        "light_and_heavy_coverage": [
+          [
+            0,
+            0
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            50,
+            50
+          ],
+          [
+            100,
+            100
+          ]
+        ],
+        "light_and_heavy_skill": [
+          [
+            0,
+            100
+          ],
+          [
+            100,
+            0
+          ],
+          [
+            50,
+            49
+          ],
+          [
+            49,
+            50
+          ],
+          [
+            -101,
+            101
+          ],
+          [
+            -2147483648,
+            2147483647
+          ]
+        ],
+        "setting_bits_base_mult_min_max": [
+          [
+            "3f800000",
+            "00000000",
+            "3d4ccccd",
+            "3e99999a"
+          ]
+        ],
+        "journeyman_threshold": [
+          -10,
+          0,
+          25,
+          50,
+          100,
+          125,
+          2147483647
+        ]
+      },
+      "expected_corpus": {
+        "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-05/corpus.json",
+        "sha256": "3d088d6fb1f8a7d4bdfd357db2884a3cdd11890fd34c312084f48d9b4651f807",
+        "bytes": 203911
+      }
+    }
+  ],
+  "world_cases": [
+    "Missing authority and foreign profile reject. NPC/Creature constant branch ignores malformed Player settings; mismatched reference/base authority rejects.",
+    "Compiled fatigue0/.25 versus winning1/0; current Fatigue80/base160.",
+    "Light upper+lower coverage40, broken body armor, Heavy feet10 and worn shield30; skills0/100 then0/0. Item rating and condition do not scale power.",
+    "Luck50 then100 preserves caster output. Low process excludes worn shield. God mode returns one before malformed settings.",
+    "Queries preserve native actor values and combat RNG."
+  ],
+  "constraints": [
+    "Synthetic ratio midpoint2125114407/2125114027 exercises the full typed int32 boundary. Its base is outside normal5F1910 float-store/floor output; this is not an observed reachable vanilla gameplay bug.",
+    "Finite signed settings and finite negative arithmetic outputs are preserved; nonfinite settings/results and invalid coverage reject. Current default-PARA admission independently requires nonnegative power.",
+    "General casting flags/controllers, explicit Fatigue overrides, default-spell profile resolution, normal-input mastery production and physical paralysis/recovery remain outside this chunk."
+  ],
+  "integer_product_midpoints": {
+    "profiles": [
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          7,
+          0
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          0,
+          7
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          14,
+          0
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          0,
+          14
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          21,
+          0
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          0,
+          21
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          23,
+          0
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          0,
+          23
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          28,
+          0
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          0,
+          28
+        ]
+      },
+      {
+        "skill": -830472147,
+        "light_and_heavy_coverage": [
+          35,
+          0
+        ]
+      },
+      {
+        "skill": -830472147,
+        "light_and_heavy_coverage": [
+          0,
+          35
+        ]
+      },
+      {
+        "skill": -657107585,
+        "light_and_heavy_coverage": [
+          41,
+          0
+        ]
+      },
+      {
+        "skill": -657107585,
+        "light_and_heavy_coverage": [
+          0,
+          41
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          42,
+          0
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          0,
+          42
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          46,
+          0
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          0,
+          46
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          56,
+          0
+        ]
+      },
+      {
+        "skill": -1040187317,
+        "light_and_heavy_coverage": [
+          0,
+          56
+        ]
+      },
+      {
+        "skill": -817889205,
+        "light_and_heavy_coverage": [
+          69,
+          0
+        ]
+      },
+      {
+        "skill": -817889205,
+        "light_and_heavy_coverage": [
+          0,
+          69
+        ]
+      },
+      {
+        "skill": -830472147,
+        "light_and_heavy_coverage": [
+          70,
+          0
+        ]
+      },
+      {
+        "skill": -830472147,
+        "light_and_heavy_coverage": [
+          0,
+          70
+        ]
+      },
+      {
+        "skill": -864492605,
+        "light_and_heavy_coverage": [
+          79,
+          0
+        ]
+      },
+      {
+        "skill": -864492605,
+        "light_and_heavy_coverage": [
+          0,
+          79
+        ]
+      },
+      {
+        "skill": -657107585,
+        "light_and_heavy_coverage": [
+          82,
+          0
+        ]
+      },
+      {
+        "skill": -657107585,
+        "light_and_heavy_coverage": [
+          0,
+          82
+        ]
+      },
+      {
+        "skill": -1043183277,
+        "light_and_heavy_coverage": [
+          83,
+          0
+        ]
+      },
+      {
+        "skill": -1043183277,
+        "light_and_heavy_coverage": [
+          0,
+          83
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          84,
+          0
+        ]
+      },
+      {
+        "skill": -1014258915,
+        "light_and_heavy_coverage": [
+          0,
+          84
+        ]
+      },
+      {
+        "skill": -1070310073,
+        "light_and_heavy_coverage": [
+          91,
+          0
+        ]
+      },
+      {
+        "skill": -1070310073,
+        "light_and_heavy_coverage": [
+          0,
+          91
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          92,
+          0
+        ]
+      },
+      {
+        "skill": -865224943,
+        "light_and_heavy_coverage": [
+          0,
+          92
+        ]
+      },
+      {
+        "skill": -935329747,
+        "light_and_heavy_coverage": [
+          95,
+          0
+        ]
+      },
+      {
+        "skill": -935329747,
+        "light_and_heavy_coverage": [
+          0,
+          95
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          7,
+          0
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          0,
+          7
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          14,
+          0
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          0,
+          14
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          21,
+          0
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          0,
+          21
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          23,
+          0
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          0,
+          23
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          28,
+          0
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          0,
+          28
+        ]
+      },
+      {
+        "skill": -1317011401,
+        "light_and_heavy_coverage": [
+          35,
+          0
+        ]
+      },
+      {
+        "skill": -1317011401,
+        "light_and_heavy_coverage": [
+          0,
+          35
+        ]
+      },
+      {
+        "skill": -1490375963,
+        "light_and_heavy_coverage": [
+          41,
+          0
+        ]
+      },
+      {
+        "skill": -1490375963,
+        "light_and_heavy_coverage": [
+          0,
+          41
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          42,
+          0
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          0,
+          42
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          46,
+          0
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          0,
+          46
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          56,
+          0
+        ]
+      },
+      {
+        "skill": -1107296231,
+        "light_and_heavy_coverage": [
+          0,
+          56
+        ]
+      },
+      {
+        "skill": -1329594343,
+        "light_and_heavy_coverage": [
+          69,
+          0
+        ]
+      },
+      {
+        "skill": -1329594343,
+        "light_and_heavy_coverage": [
+          0,
+          69
+        ]
+      },
+      {
+        "skill": -1317011401,
+        "light_and_heavy_coverage": [
+          70,
+          0
+        ]
+      },
+      {
+        "skill": -1317011401,
+        "light_and_heavy_coverage": [
+          0,
+          70
+        ]
+      },
+      {
+        "skill": -1282990943,
+        "light_and_heavy_coverage": [
+          79,
+          0
+        ]
+      },
+      {
+        "skill": -1282990943,
+        "light_and_heavy_coverage": [
+          0,
+          79
+        ]
+      },
+      {
+        "skill": -1490375963,
+        "light_and_heavy_coverage": [
+          82,
+          0
+        ]
+      },
+      {
+        "skill": -1490375963,
+        "light_and_heavy_coverage": [
+          0,
+          82
+        ]
+      },
+      {
+        "skill": -1104300271,
+        "light_and_heavy_coverage": [
+          83,
+          0
+        ]
+      },
+      {
+        "skill": -1104300271,
+        "light_and_heavy_coverage": [
+          0,
+          83
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          84,
+          0
+        ]
+      },
+      {
+        "skill": -1133224633,
+        "light_and_heavy_coverage": [
+          0,
+          84
+        ]
+      },
+      {
+        "skill": -1077173475,
+        "light_and_heavy_coverage": [
+          91,
+          0
+        ]
+      },
+      {
+        "skill": -1077173475,
+        "light_and_heavy_coverage": [
+          0,
+          91
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          92,
+          0
+        ]
+      },
+      {
+        "skill": -1282258605,
+        "light_and_heavy_coverage": [
+          0,
+          92
+        ]
+      },
+      {
+        "skill": -1212153801,
+        "light_and_heavy_coverage": [
+          95,
+          0
+        ]
+      },
+      {
+        "skill": -1212153801,
+        "light_and_heavy_coverage": [
+          0,
+          95
+        ]
+      }
+    ],
+    "scope": "Synthetic full typed-int32 getter boundaries, including extreme negative armor skills; not observed vanilla gameplay."
+  }
+}

@@ -117,6 +117,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/combatcontroller.cpp
     esm4/combatsettings.cpp
     esm4/ability.cpp
+    esm4/magiccaster.cpp
     esm4/combatstylepolicy.cpp
     esm4/testloadnpc.cpp
     esm4/testloadgmst.cpp

@@ -1,0 +1,745 @@
+{
+  "schema_version": 1,
+  "id": "m15_melee_caster_power",
+  "status": "Implemented and verified pure rule, settings builder and headless World query; full M15S4 remains open.",
+  "tested_source": {
+    "head": "97b11161844f058e218752aa9a2b9f2d256a59c1",
+    "source_fingerprint": "2c626f7f1c6db5308f724d56a5bb15bfd6502748821167dbbef166a320f9099b"
+  },
+  "source_files": [
+    {
+      "path": "apps/components_tests/CMakeLists.txt",
+      "sha256": "cea058aa1625d7aa202949af2c976d40d3e2fd6362b2e0f5f3e3fee05c639723",
+      "bytes": 5657
+    },
+    {
+      "path": "apps/components_tests/esm4/combatsettings.cpp",
+      "sha256": "83757ca0e87a0138335a7d9c342a28e08542b091de0505847e7b5d95f204a23c",
+      "bytes": 27677
+    },
+    {
+      "path": "apps/components_tests/esm4/magiccaster.cpp",
+      "sha256": "0b71c4140ba1faac339f760b9a27cc66a8750fe81f7a76c30c7a4837037c8c7c",
+      "bytes": 4826
+    },
+    {
+      "path": "apps/components_tests/esm4/magiccaster_expected.inc",
+      "sha256": "5d8b91a222dd41836a7936e159a287e76dd41726d4eba2efe1c969f84ac1b48f",
+      "bytes": 69257
+    },
+    {
+      "path": "apps/openmw/CMakeLists.txt",
+      "sha256": "9bf0b7c71160a38b78a55e00e7207e7bbde52d929a92c8f0482843e1579ec2ad",
+      "bytes": 11595
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmagiccaster.cpp",
+      "sha256": "f66bb637dff7cbab83332dd159f26a324d441805d3806b7c432519cd3c6cfe18",
+      "bytes": 4298
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionmagiccaster.hpp",
+      "sha256": "7fc0ab0e3dce424ca5130db88de11bf81dada0c225e199339d88b7dbe63f0333",
+      "bytes": 603
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "067bc32575db73fe2c944bcee3579baf967e5d84942536747a68bb8fef1851d3",
+      "bytes": 2113036
+    },
+    {
+      "path": "components/CMakeLists.txt",
+      "sha256": "f1abf6001f3594953f47a8d7cc90e3af08e622eb1702d175e7cf8ef2e7a2a6bf",
+      "bytes": 21904
+    },
+    {
+      "path": "components/esm4/combatsettings.cpp",
+      "sha256": "2bc68220740b612f858e2c6d687f9208e3a52656cd2177a5615244e0beb06989",
+      "bytes": 36845
+    },
+    {
+      "path": "components/esm4/combatsettings.hpp",
+      "sha256": "4039afe57fd2bebc88dd933014840bfb6e44ad5a09f9203f33d7ff1d942bc041",
+      "bytes": 5932
+    },
+    {
+      "path": "components/esm4/magiccaster.cpp",
+      "sha256": "fd5f2fa27f670e1af24e8193273b7cedf21c64719c1b43bc6ca42051340ee705",
+      "bytes": 6329
+    },
+    {
+      "path": "components/esm4/magiccaster.hpp",
+      "sha256": "6720b78684328cdbdf5dcb3963c6a285c3994ace59260526746e896995be120a",
+      "bytes": 1217
+    }
+  ],
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_melee_caster_power_cases.json",
+    "sha256": "76c31f62ec0dbd6bec2d26d46a84299e39d0a9b5aa253097242e06d49c8076cd",
+    "bytes": 18693
+  },
+  "native_oracles": [
+    {
+      "name": "native-melee-caster-power-oracle-01",
+      "role": "initial subset",
+      "report": {
+        "passed": true,
+        "cases": 2016,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "cbbf529a4e4d85d3dba771dadc1ff5ea9888cb4381769ade369b1815dce37737",
+        "scope": "Complete original Player caster65DAF0 and548B30/548DC0 arithmetic with current integer stats, base Fatigue, armor coverage sums and Journeyman threshold as declared typed boundaries. Actual compiled armor GMST constructors execute. Fatigue override argument0 selects live integer Fatigue. Both ignore-fatigue branches and three x87 controls execute. Original constructor defaults for armor penalty; fatigue settings explicitly varied. Exact expected formula/comparison, equipment slot aggregation, World adapter and normal-input casting remain unimplemented."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-01/verification.json",
+          "sha256": "a4d6c0b26a8f45f23794fb080dfeaf2d83e1048deab8ec379613c2b00e1ed460",
+          "bytes": 798
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-01/probe.py",
+          "sha256": "f1c3a32c245d7fc3046a01d15ea2653a91d9a0d1ea7e54211cbe0a463f3d9553",
+          "bytes": 4129
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-01/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-01/corpus.json",
+          "sha256": "cbbf529a4e4d85d3dba771dadc1ff5ea9888cb4381769ade369b1815dce37737",
+          "bytes": 772369
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-02",
+      "role": "expectation source",
+      "report": {
+        "passed": true,
+        "cases": 10584,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "abebabdd190dcbb1fce68a4f389e9a3eb5eef76c75686e8ab1c30d1bb32455c1",
+        "scope": "Complete original Player caster65DAF0 and548B30/548DC0 arithmetic with current integer stats, base Fatigue, armor coverage sums and Journeyman threshold as declared typed boundaries. Actual compiled armor GMST constructors execute. Fatigue override argument0 selects live integer Fatigue. Both ignore-fatigue branches and three x87 controls execute. Original constructor defaults for armor penalty; fatigue settings explicitly varied. Exact expected formula/comparison, equipment slot aggregation, World adapter and normal-input casting remain unimplemented."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-02/verification.json",
+          "sha256": "b1b0399a7ed7d92bb2906eac2ff5875eac26c7873317b76304dd55eef2a7801b",
+          "bytes": 799
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-02/probe.py",
+          "sha256": "4ae6e8b6c7229b9af9861ea42c0912b5349fd70d678c58567a416595b0b417ee",
+          "bytes": 4345
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-02/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-02/corpus.json",
+          "sha256": "abebabdd190dcbb1fce68a4f389e9a3eb5eef76c75686e8ab1c30d1bb32455c1",
+          "bytes": 4092481
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-03",
+      "role": "superseded: report scope text incorrectly says both ignore branches; corpus exercises false only; oracle04 supersedes it",
+      "report": {
+        "passed": true,
+        "cases": 5850,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "0f251b7e95df5471f1ab5e6208b1318da4578b1bc9fb17e4887a74574a808187",
+        "scope": "Custom signed, subnormal and maximum finite fatigue/armor settings; results include nonfinite native outputs, which production must reject. Complete original Player caster65DAF0 and548B30/548DC0 arithmetic with current integer stats, base Fatigue, armor coverage sums and Journeyman threshold as declared typed boundaries. Actual compiled armor GMST constructors execute. Fatigue override argument0 selects live integer Fatigue. Both ignore-fatigue branches and three x87 controls execute. Original constructor defaults for armor penalty; fatigue settings explicitly varied. Exact expected formula/comparison, equipment slot aggregation, World adapter and normal-input casting remain unimplemented."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-03/verification.json",
+          "sha256": "cfd1ca8a153722aae041d640920aa3ceca4a75c699f8d80413d3d0f8a22262dd",
+          "bytes": 938
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-03/probe.py",
+          "sha256": "1563866937b127626f345f293f823ef1d71b9e4589543ae49f290cb526ba8931",
+          "bytes": 4739
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-03/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-03/corpus.json",
+          "sha256": "0f251b7e95df5471f1ab5e6208b1318da4578b1bc9fb17e4887a74574a808187",
+          "bytes": 2730430
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-04",
+      "role": "expectation source",
+      "report": {
+        "passed": true,
+        "cases": 8400,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "1eb7506a64b3fb6cd84f49c80fb5ed42cc1120927fb19c91bba1d3ae3bfd0169",
+        "scope": "Custom signed, subnormal and maximum finite fatigue/armor settings; results include nonfinite native outputs, which production must reject. Complete original Player caster65DAF0 and548B30/548DC0 arithmetic with current integer stats, base Fatigue, armor coverage sums and Journeyman threshold as declared typed boundaries. Actual compiled armor GMST constructors execute. Fatigue override argument0 selects live integer Fatigue. The self-cast ignore-fatigue=false branch and three x87 controls execute. Compiled armor constructors execute before explicit signed/subnormal/extreme overrides. Exact integer-ratio midpoint counterexamples are included. Exact expected formula/comparison, equipment slot aggregation, World adapter and normal-input casting remain unimplemented."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-04/verification.json",
+          "sha256": "f051f30bc41392c11d052becb239768b617ba113726081f7a4855a02e3d7e462",
+          "bytes": 1013
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-04/probe.py",
+          "sha256": "ca0d2566d66a53478cef793f2dccda3353270d4e8a4340a93eb836f736b63e78",
+          "bytes": 4879
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-04/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-04/corpus.json",
+          "sha256": "1eb7506a64b3fb6cd84f49c80fb5ed42cc1120927fb19c91bba1d3ae3bfd0169",
+          "bytes": 3963073
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-05",
+      "role": "expectation source",
+      "report": {
+        "passed": true,
+        "cases": 504,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "3d088d6fb1f8a7d4bdfd357db2884a3cdd11890fd34c312084f48d9b4651f807",
+        "scope": "Complete Player caster65DAF0 with native548DC0 under seven declared Journeyman threshold returns, including negative,0,25,50,100,125,INT_MAX. Distinct light/heavy skill pairs include negative/extreme integers and skills above100; four coverage pairs and three x87 controls. Current/base Fatigue100 bypass fatigue scaling. Threshold query56A360, integer stats, base Fatigue and armor coverage remain explicit typed boundaries; no equipment/World/gameplay acceptance."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-05/verification.json",
+          "sha256": "2f0d96947df24443f9793ea20618fed0d8a2e828217b64f81984ba93934ccf4e",
+          "bytes": 704
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-05/probe.py",
+          "sha256": "87b8b8a3a63c999b346139808eb9e7d7f111b677d08d15d0ccf5f7ee0ced9a17",
+          "bytes": 4205
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-05/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-05/corpus.json",
+          "sha256": "3d088d6fb1f8a7d4bdfd357db2884a3cdd11890fd34c312084f48d9b4651f807",
+          "bytes": 203911
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-06",
+      "role": "World fixture arithmetic",
+      "report": {
+        "passed": true,
+        "cases": 192,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "ea723ce1a75012377c9695477b2f28d45e38efc7e7dc4b7782c70ba47f7ff5d0",
+        "scope": "Original Player caster65DAF0 for World adapter fixture values: base Fatigue160, current160/80, light/heavy armor coverage0/0,40/0,40/10,40/40, four distinct skill pairs, loaded1/0 versus compiled0/.25 fatigue settings, three x87 controls. Native arithmetic and armor penalty constructors execute; current/base integer getters, coverage and threshold are explicit boundaries. Coverage40/10/40 models default upper+lower body40 plus heavy feet10 and optional heavy shield30. No production World mapping or gameplay is established by this oracle."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-06/verification.json",
+          "sha256": "fb23a421ef2b4f63d97bb01d86220daaab7ae34f1645152e841c711782af4879",
+          "bytes": 782
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-06/probe.py",
+          "sha256": "474150cbce3a093f0eb311ced22d1057292a6e7bfac7f709578aae51ab89c0c8",
+          "bytes": 4142
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-06/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-06/corpus.json",
+          "sha256": "ea723ce1a75012377c9695477b2f28d45e38efc7e7dc4b7782c70ba47f7ff5d0",
+          "bytes": 73297
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-07",
+      "role": "expectation source",
+      "report": {
+        "passed": true,
+        "cases": 114,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "dc58d4d7e33aa9b815b37e8730fa59365b0c9fc6478d8bf94d41303bec9b7df7",
+        "scope": "Original full Player caster and548DC0: nineteen exact integer-product midpoint candidates in each light/heavy column, three x87 controls; current/base Fatigue100 and winning1/0, compiled armor penalty defaults. Typed integer AV/base Fatigue/coverage/threshold boundaries retained. Candidates test whether a double intermediate loses the last bit of a 54-bit integer-times-fraction product before native PC24 rounding. No World or gameplay acceptance."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-07/verification.json",
+          "sha256": "4516d3fea18c7fe82cf8a1465c22287ac813b50e630952fb7bd4ed473beb7bc3",
+          "bytes": 689
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-07/probe.py",
+          "sha256": "42bdd9cd39f6cf55dd56ddaf897cfe6fe427299b170a8602466904f4d68537ba",
+          "bytes": 4259
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-07/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-07/corpus.json",
+          "sha256": "dc58d4d7e33aa9b815b37e8730fa59365b0c9fc6478d8bf94d41303bec9b7df7",
+          "bytes": 45187
+        }
+      ]
+    },
+    {
+      "name": "native-melee-caster-power-oracle-08",
+      "role": "expectation source",
+      "report": {
+        "passed": true,
+        "cases": 114,
+        "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "a5385131c186dd34f141ae5421da4c0a3949411f83014da4b146dbc9e66b51bb",
+        "scope": "Original full Player caster and548DC0: nineteen mirrored wrapped-negative integer-product midpoint candidates in each light/heavy column, three x87 controls; current/base Fatigue100 and winning1/0, compiled armor penalty defaults. Typed integer AV/base Fatigue/coverage/threshold boundaries retained. Candidates test whether a double intermediate loses the last bit of a 54-bit integer-times-fraction product before native PC24 rounding. No World or gameplay acceptance."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-08/verification.json",
+          "sha256": "bdd9b141a630e945479aecfb9a56c46af3ab289026ad623980afb783e15db854",
+          "bytes": 709
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-08/probe.py",
+          "sha256": "e8b133b04b63867ca2fbc13a079a8c787d08bf02a41684bd301e7eb9997b6c08",
+          "bytes": 4309
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-08/bootstrap.py",
+          "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+          "bytes": 1738
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-oracle-08/corpus.json",
+          "sha256": "a5385131c186dd34f141ae5421da4c0a3949411f83014da4b146dbc9e66b51bb",
+          "bytes": 45247
+        }
+      ]
+    }
+  ],
+  "editable_probe_sources": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/probe-player.py",
+      "sha256": "4ae6e8b6c7229b9af9861ea42c0912b5349fd70d678c58567a416595b0b417ee",
+      "bytes": 4345
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/probe-settings.py",
+      "sha256": "ca0d2566d66a53478cef793f2dccda3353270d4e8a4340a93eb836f736b63e78",
+      "bytes": 4879
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/probe-threshold.py",
+      "sha256": "87b8b8a3a63c999b346139808eb9e7d7f111b677d08d15d0ccf5f7ee0ced9a17",
+      "bytes": 4205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/baseline-double.json",
+      "sha256": "7084e2406b290607b2404c18e43154b2f042b2953dcd1418090a607b58a5595d",
+      "bytes": 368
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/baseline-double.cpp",
+      "sha256": "ae3a975583836160ebec40f2ccf39ffbb0642bc36be1968bc303ee9d8f4d919f",
+      "bytes": 4718
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-01/compare-player.py",
+      "sha256": "b826e0dc6c7f33131e500aa7999907db9f3a6825cd7d7012f1feab47dcd58052",
+      "bytes": 2287
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/compact-expectations.py",
+      "sha256": "d69152335c2e39f2d468168056ca5cb4d9a5c09d81c645c2de723a24117997cc",
+      "bytes": 1907
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/generate-power-cases.py",
+      "sha256": "a18058cc0dfe224d0c9eb8c64847628179432a78c17950d95e95d8952bf836fe",
+      "bytes": 1081
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/probe-world-values.py",
+      "sha256": "474150cbce3a093f0eb311ced22d1057292a6e7bfac7f709578aae51ab89c0c8",
+      "bytes": 4142
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/prototype-comparison.json",
+      "sha256": "79fc05cf0b5e53cb4990c089d527a7707f4cc3916fe1c33c18d490dcc8f70644",
+      "bytes": 7146
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/publish-evidence.py",
+      "sha256": "bced68595ccbd7ca607c337a20c890b7c3d435b746d93e62fca9644a8ce558a1",
+      "bytes": 12882
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/search-integer-product.py",
+      "sha256": "0c786c008e0bb0da91fd74856e239fcd1ec533d360a37083b74fc81a0a5d317a",
+      "bytes": 935
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/integer-product-candidates.json",
+      "sha256": "a07adec40f00fa7434d225756dc653a0c1f6f448b22f33ad602616ddff8e150a",
+      "bytes": 3916
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/probe-product-midpoints.py",
+      "sha256": "42bdd9cd39f6cf55dd56ddaf897cfe6fe427299b170a8602466904f4d68537ba",
+      "bytes": 4259
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/probe-negative-product-midpoints.py",
+      "sha256": "e8b133b04b63867ca2fbc13a079a8c787d08bf02a41684bd301e7eb9997b6c08",
+      "bytes": 4309
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/product-test-cases.py",
+      "sha256": "10ec3e0afb32cced7973ae788ffcc8c7cf1404f0d22fe57ec1aeca73e7cc35cb",
+      "bytes": 1030
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/prepare-product-fix.py",
+      "sha256": "73783184d988308cad9a25c248d46392c66b64803bd482b2dd09966fe109f33c",
+      "bytes": 2554
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/production-before-product-fix.cpp",
+      "sha256": "195885f3e7dbff07dbed2ffab0024bea987ec7a56e7184f44d0eba45a50d5304",
+      "bytes": 4854
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/production-product-midpoint-before.json",
+      "sha256": "d0f6038608369608dedb1f04630a95071337fdaea98ad6fae14bfa98e3de7d8d",
+      "bytes": 177
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/compare-production-products.cpp",
+      "sha256": "cd96d115f8c373a4c5789d54af01c4d9c4e7ae58333166ca6626026b0ed3bbaf",
+      "bytes": 1389
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/product-midpoint-expected.tsv",
+      "sha256": "608ed8b3fcaba1e5b05a76c4a7216903c09aeb11f09e796b763714d40d42f9c2",
+      "bytes": 2904
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/production-product-fix.cpp",
+      "sha256": "989a39c594abdb406ba7241007ed2f98ff56f12f5c5a646427c2e0ca7eb8f399",
+      "bytes": 6344
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/compare-product-fix.cpp",
+      "sha256": "1ba080be22181ef133d1ab63be1a174ae02756ffdcc301e2bc01e2507975acc5",
+      "bytes": 1391
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/product-fix-expected.tsv",
+      "sha256": "8282ba8be326bf077eb89a56253f05cb607543c57e5c487e7c8f4dccc673e966",
+      "bytes": 351424
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/product-fix-comparison.json",
+      "sha256": "5fe197c3d29dd4e12bc34a355b381ce0b406c0c0e400eb331c25aedd1d407c15",
+      "bytes": 1068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-admission-work-01/probe-dispatch.py",
+      "sha256": "5c1ecd5ba0959ef2861fca5d3b7a37913008207acf6356824ffb0800a488e505",
+      "bytes": 5917
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cast-work-01/probe-matrix.py",
+      "sha256": "4ee7b83dc263cd3d4ed8c982254d6d6ab264a8fd9bd59a33fd564b099c213254",
+      "bytes": 7126
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-modifier.py",
+      "sha256": "c6b5f6e92fa31fb889e8572d92cbf24d67312195dcd8a372a69e9a4d19f3eee8",
+      "bytes": 4681
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-active.py",
+      "sha256": "b49ee1d69a9b288a325af81e6dcde70d482100f2f098ceb1a88365778c3968bf",
+      "bytes": 5981
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    }
+  ],
+  "comparison": {
+    "pc24_cases": 4808,
+    "finite_bit_exact": 4588,
+    "integer_product_midpoint_cases": 76,
+    "nonfinite_outputs_rejected": 220,
+    "compact_input_axes_match_original_order": true,
+    "compact_expectations": {
+      "path": "apps/components_tests/esm4/magiccaster_expected.inc",
+      "sha256": "5d8b91a222dd41836a7936e159a287e76dd41726d4eba2efe1c969f84ac1b48f",
+      "bytes": 69257
+    },
+    "midpoint_scope": "Synthetic ratio midpoint2125114407/2125114027 exercises the full typed int32 boundary. Its base is outside normal5F1910 float-store/floor output; this is not an observed reachable vanilla gameplay bug."
+  },
+  "checks": [
+    {
+      "name": "normal-03",
+      "source": {
+        "head": "97b11161844f058e218752aa9a2b9f2d256a59c1",
+        "source_fingerprint": "2c626f7f1c6db5308f724d56a5bb15bfd6502748821167dbbef166a320f9099b"
+      },
+      "results": {
+        "components": {
+          "executed": 3083,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3080d8e3cedce0577215fc50582ba48336104613927f5122fa2a44187d800706",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fb1d694f76a0d25729e51a84aadc7b81b6a82472db116a285249d4453fb0282d",
+          "inventory_sha256": "ef682ae7b6e71f59d7a388dba499eb6504a5a493088784d48aeb165aca0f7b12",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1921,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "f3664fabbee93b087c2d7711b6da0996cebf0b583914e89f745f33e6fd2b06b3",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3729d840cca4e55b2bec2b300697bc274efc96a446ba6b8513b96ee40a028e39",
+          "inventory_sha256": "d34282dee0a5bc3cfc03ba74ad2b8dbdec4d11bce2be1ae00a48153934d5b346",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/components-build.log",
+          "sha256": "b00d507e6794aa6d785171b1f3f8766b89e9a9f731da1afd86d98fdbadb79d96",
+          "bytes": 755
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/components-inventory.txt",
+          "sha256": "ef682ae7b6e71f59d7a388dba499eb6504a5a493088784d48aeb165aca0f7b12",
+          "bytes": 196254
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/components.log",
+          "sha256": "cb19abed73c9567b58677fa74b8a5c8eb0522a59817d287069d0e591322b7538",
+          "bytes": 613603
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/components.xml",
+          "sha256": "fb1d694f76a0d25729e51a84aadc7b81b6a82472db116a285249d4453fb0282d",
+          "bytes": 2360840
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/engine-build.log",
+          "sha256": "630e4b93598e959b1dec7f2c47377d9073643f31b582a70dae37ad9c656b30c8",
+          "bytes": 1658
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/engine-inventory.txt",
+          "sha256": "d34282dee0a5bc3cfc03ba74ad2b8dbdec4d11bce2be1ae00a48153934d5b346",
+          "bytes": 135795
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/engine.log",
+          "sha256": "4fe487e576d62ae892c9362c544ea2557260381d9e05f61bb385f21efc95aa9d",
+          "bytes": 2364693
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/engine.xml",
+          "sha256": "3729d840cca4e55b2bec2b300697bc274efc96a446ba6b8513b96ee40a028e39",
+          "bytes": 632148
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-03/verification.json",
+          "sha256": "6e7a322db4e2e9d30ef7edd09f0dc9cc7171b795e4b9dacf0abbda72a7222aa8",
+          "bytes": 3861
+        }
+      ]
+    },
+    {
+      "name": "sanitized-02",
+      "source": {
+        "head": "97b11161844f058e218752aa9a2b9f2d256a59c1",
+        "source_fingerprint": "2c626f7f1c6db5308f724d56a5bb15bfd6502748821167dbbef166a320f9099b"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 934,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "56e3084f6f44b2695c5fd5a7656665ef5856e15a7aee875a3a8e21b2e6f18c9d",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "d5738d78e6033c209d5a12c04b133d2f65bda0bb6d39cb770fff097d8c4973f1",
+          "inventory_sha256": "3d6466394bbf7d2551e80c9e79218db9a2c0bc79cd5cfe524368a987c5af00b8",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1921,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "23b1ee1ee380d0103033c9ecc435fc168d0fbfcabb7ed6516d6650bf958579c9",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6ef93e656cc6c79b3ab08a7ed1bc35c7473c72a89da50c5bff7cca87783d78fa",
+          "inventory_sha256": "d34282dee0a5bc3cfc03ba74ad2b8dbdec4d11bce2be1ae00a48153934d5b346",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/engine-build.log",
+          "sha256": "65454ea60409fdfa2eefc2ec4a6623605412bad1c456d7db16ad51a0b666f10a",
+          "bytes": 1658
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/engine-inventory.txt",
+          "sha256": "d34282dee0a5bc3cfc03ba74ad2b8dbdec4d11bce2be1ae00a48153934d5b346",
+          "bytes": 135795
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/engine.log",
+          "sha256": "a9cf0cd4ed64d2668fad87dca66bfa58c653e756f6d7d22642a6e7ba0b2947ca",
+          "bytes": 2365240
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/engine.xml",
+          "sha256": "6ef93e656cc6c79b3ab08a7ed1bc35c7473c72a89da50c5bff7cca87783d78fa",
+          "bytes": 633840
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/sanitize-build.log",
+          "sha256": "cbc5a7d797efbc0d18794cadf3cd688103abfccfbadaf02561095cfd64a123d9",
+          "bytes": 755
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/sanitize-inventory.txt",
+          "sha256": "3d6466394bbf7d2551e80c9e79218db9a2c0bc79cd5cfe524368a987c5af00b8",
+          "bytes": 196254
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/sanitize.log",
+          "sha256": "a00c1f4820086c899360e7772365c0478618861ac75f890bb60b40caca0d1294",
+          "bytes": 173790
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/sanitize.xml",
+          "sha256": "d5738d78e6033c209d5a12c04b133d2f65bda0bb6d39cb770fff097d8c4973f1",
+          "bytes": 1636574
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-02/verification.json",
+          "sha256": "ad65916643e9bc0865a99658626d6b58b19e50587b74e9861b66729b3801e4eb",
+          "bytes": 4037
+        }
+      ]
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "layers": {
+    "structural": "Sources registered in components, components-tests and openmw CMake targets.",
+    "compiler_and_world": "Full normal component/engine and sanitized ESM4 component/full engine inventories verified. Two real World fixture tests query current authority and actual projected worn inventory.",
+    "semantic": "Expected arithmetic comes from original executable instruction paths with declared getter/coverage/threshold boundaries. Winning base-master fatigue1/0 was independently audited in the prior admission receipt; compiled defaults remain0/.25.",
+    "runtime": "No new normal-input or fresh-process runtime course for this query: no gameplay producer calls it yet. Prior owner-lifecycle courses are historical regression evidence, not acceptance of this adapter."
+  },
+  "open": [
+    "World default-spell/profile resolution and production mastery continuation caller.",
+    "Physical paralysis/recovery, effect presentation and remaining full S4 input/device/FPS/interruption/restart gates."
+  ],
+  "prior_admission_receipt": {
+    "path": "docs/oblivion/M15-MELEE-PARALYSIS-ADMISSION-VERIFICATION.json",
+    "sha256": "dc1f248ca85fef0224e6f35979f007569788a9a8f47263379d0ac49bb5ba54ed",
+    "bytes": 177531
+  },
+  "retained_prior_checks": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-01/verification.json",
+      "sha256": "1375d71602e0db30d49778be75feac30d2992de0e13867f5eb03626fd02acca1",
+      "bytes": 4167
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-normal-02/verification.json",
+      "sha256": "1353bd89ddde61bd177c94df1fd757fe001ca13cb5dbcb7192cf3108008e806a",
+      "bytes": 3861
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-checks-sanitized-01/verification.json",
+      "sha256": "663991aa5446915a74fab608a9133a3457a77a727df520eeaa54cb9d018aee9d",
+      "bytes": 4038
+    }
+  ],
+  "precision_correction": {
+    "prior_full_suites_passed_but_missed_boundary": true,
+    "native_counterexample": {
+      "path": "build/oblivion-compat/m15/S4/native-melee-caster-power-work-02/production-product-midpoint-before.json",
+      "sha256": "d0f6038608369608dedb1f04630a95071337fdaea98ad6fae14bfa98e3de7d8d",
+      "bytes": 177
+    },
+    "fix": "Exact uint64 integer-times-binary32 product rounded to 24 bits before its explicit float store; avoids a54-bit product rounding through double.",
+    "scope": "Extreme typed integer skill boundaries, not an observed reachable vanilla gameplay bug."
+  }
+}
