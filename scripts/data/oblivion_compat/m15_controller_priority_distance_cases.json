@@ -1,0 +1,718 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Editable bounded native observations. Empty target list uses supplied native default -37 in the oracle; component nextScriptPriority returns no override. Addresses are probe provenance, not portable identifiers. No gameplay acceptance.",
+  "script_priority": [
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 0,
+        "pattern": "ties"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 1,
+        "pattern": "ties"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 255,
+        "pattern": "ties"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 0,
+        "pattern": "extreme"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 1,
+        "pattern": "extreme"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [],
+        "selected": 0,
+        "marker": 255,
+        "pattern": "extreme"
+      },
+      "captured_priority": -37,
+      "before": [],
+      "after": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 0,
+        "marker": 0,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 220,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 0,
+        "marker": 1,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 0,
+        "marker": 255,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 255,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 255,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 1,
+        "marker": 0,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 1,
+        "marker": 1,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200
+        ],
+        "selected": 1,
+        "marker": 255,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 0,
+        "marker": 0,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": -2147483629,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 0,
+        "marker": 1,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 0,
+        "marker": 255,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 255,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 255,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 1,
+        "marker": 0,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 1,
+        "marker": 1,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          2147483647
+        ],
+        "selected": 1,
+        "marker": 255,
+        "pattern": "extreme"
+      },
+      "captured_priority": -2147483629,
+      "before": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ],
+      "after": [
+        {
+          "target": 0,
+          "priority": 2147483647,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "priorities": [
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "selected": 4,
+        "marker": 1,
+        "pattern": "ties"
+      },
+      "captured_priority": 220,
+      "before": [
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 1,
+          "priority": 200,
+          "marker": 37,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 2,
+          "priority": 200,
+          "marker": 74,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 3,
+          "priority": 200,
+          "marker": 111,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 4,
+          "priority": 200,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 5,
+          "priority": 200,
+          "marker": 185,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 6,
+          "priority": 200,
+          "marker": 222,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 7,
+          "priority": 200,
+          "marker": 3,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 8,
+          "priority": 200,
+          "marker": 40,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 9,
+          "priority": 200,
+          "marker": 77,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        }
+      ],
+      "after": [
+        {
+          "target": 4,
+          "priority": 220,
+          "marker": 1,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 1,
+          "priority": 200,
+          "marker": 37,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 2,
+          "priority": 200,
+          "marker": 74,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 3,
+          "priority": 200,
+          "marker": 111,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 0,
+          "priority": 200,
+          "marker": 0,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 5,
+          "priority": 200,
+          "marker": 185,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 6,
+          "priority": 200,
+          "marker": 222,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 7,
+          "priority": 200,
+          "marker": 3,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        },
+        {
+          "target": 8,
+          "priority": 200,
+          "marker": 40,
+          "value0c_bits": 2147483648,
+          "value10_bits": 3223322624
+        },
+        {
+          "target": 9,
+          "priority": 200,
+          "marker": 77,
+          "value0c_bits": 1067450368,
+          "value10_bits": 2147483648
+        }
+      ]
+    }
+  ],
+  "coordinate_distance": [
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          0,
+          0,
+          0
+        ]
+      },
+      "distance_bits": 0
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          1077936128,
+          1082130432,
+          1094713344
+        ]
+      },
+      "distance_bits": 1095761920
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          1602224127,
+          1501560832,
+          0
+        ]
+      },
+      "distance_bits": 1602224127
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          1602224128,
+          0,
+          0
+        ]
+      },
+      "distance_bits": 2139095040
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          1065353216,
+          964689920,
+          855638016
+        ]
+      },
+      "distance_bits": 1065353216
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          0,
+          0,
+          0
+        ],
+        "target_bits": [
+          226492416,
+          226492416,
+          226492416
+        ]
+      },
+      "distance_bits": 0
+    },
+    {
+      "input": {
+        "word": 639,
+        "source_bits": [
+          2139095039,
+          0,
+          0
+        ],
+        "target_bits": [
+          4286578687,
+          0,
+          0
+        ]
+      },
+      "distance_bits": 2139095040
+    }
+  ]
+}

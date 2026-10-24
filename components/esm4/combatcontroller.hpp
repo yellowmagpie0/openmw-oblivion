@@ -3,12 +3,19 @@
 
 #include <components/esm/formkey.hpp>
 
+#include <array>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 
 namespace ESM4
 {
+    // 4D7E30 coordinate distance with PC53 intermediates and native float
+    // stores. Reference/cell eligibility belongs to the caller. Finite inputs
+    // can produce +infinity when the native squared-distance store overflows.
+    float combatControllerDistance(const std::array<float, 3>& source, const std::array<float, 3>& target);
+
     struct CombatControllerTarget
     {
         ESM::FormKey mTarget;
@@ -42,6 +49,13 @@ namespace ESM4
         // priorities precede old ones. Raw marker and finite float bits survive.
         bool add(const CombatControllerTarget& entry);
         bool remove(const ESM::FormKey& target);
+
+        // Script StartCombat captures this before calling the process. Empty
+        // controllers use the native default instead of a front-target override.
+        std::optional<std::int32_t> nextScriptPriority() const;
+        // The script wrapper performs this after the process call, even when
+        // the target already existed. Retain native marker and Shell-sort rules.
+        bool applyScriptPriority(const ESM::FormKey& target, std::int32_t priority);
 
     private:
         std::vector<CombatControllerTarget> mEntries;

@@ -1,7 +1,9 @@
 #include "combatcontroller.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
+#include <limits>
 #include <set>
 #include <stdexcept>
 #include <utility>
@@ -15,6 +17,30 @@ namespace ESM4
             if (entry.mTarget.isNull() || !std::isfinite(entry.mValue0C) || !std::isfinite(entry.mValue10))
                 throw std::invalid_argument("invalid native combat-controller target");
         }
+    }
+
+    float combatControllerDistance(const std::array<float, 3>& source, const std::array<float, 3>& target)
+    {
+        std::array<float, 3> delta;
+        for (std::size_t i = 0; i < delta.size(); ++i)
+            if (!std::isfinite(source[i]) || !std::isfinite(target[i]))
+                throw std::invalid_argument("nonfinite native combat-controller position");
+        for (std::size_t i = 0; i < delta.size(); ++i)
+        {
+            const double difference = double(target[i]) - source[i];
+            if (std::abs(difference) > std::numeric_limits<float>::max())
+                return std::numeric_limits<float>::infinity();
+            delta[i] = static_cast<float>(difference);
+        }
+        const double squared = double(delta[0]) * delta[0] + double(delta[1]) * delta[1]
+            + double(delta[2]) * delta[2];
+        // Native FSTP rounds values just above FLT_MAX back to FLT_MAX until
+        // the midpoint to 2^128. Comparing only against FLT_MAX loses that case.
+        if (squared >= 0x1.ffffffp127)
+            return std::numeric_limits<float>::infinity();
+        const float stored = squared > std::numeric_limits<float>::max()
+            ? std::numeric_limits<float>::max() : static_cast<float>(squared);
+        return static_cast<float>(std::sqrt(double(stored)));
     }
 
     bool admitsCombatControllerTarget(const ESM::FormKey& owner, const ESM::FormKey& target,
@@ -74,6 +100,55 @@ namespace ESM4
         if (found == mEntries.end())
             return false;
         mEntries.erase(found);
+        return true;
+    }
+
+    std::optional<std::int32_t> CombatControllerTargets::nextScriptPriority() const
+    {
+        if (mEntries.empty())
+            return std::nullopt;
+        // 5147BE adds 20 with native int32 wrapping, including at INT_MAX.
+        return std::bit_cast<std::int32_t>(std::bit_cast<std::uint32_t>(mEntries.front().mPriority) + 20u);
+    }
+
+    bool CombatControllerTargets::applyScriptPriority(const ESM::FormKey& target, std::int32_t priority)
+    {
+        const auto found = std::ranges::find(mEntries, target, &CombatControllerTarget::mTarget);
+        if (found == mEntries.end())
+            return false;
+        if (mEntries.size() == 1)
+        {
+            // 51484E..51486F: any nonzero marker skips the single-target
+            // rewrite. Zero becomes 1 even if the priority itself is unchanged.
+            if (found->mMarker != 0)
+                return false;
+            found->mPriority = priority;
+            found->mMarker = 1;
+            return true;
+        }
+        if (found->mPriority == priority)
+            return false;
+        auto next = mEntries;
+        next[static_cast<std::size_t>(found - mEntries.begin())].mPriority = priority;
+        // 5B27A0/506F00 sorts a pointer array using gaps 1,4,13,... and a
+        // strictly negative signed comparison. Larger gaps can change equal
+        // priorities' relative order; stable_sort would produce different state.
+        std::size_t gap = 1;
+        while (gap <= (next.size() - 1) / 9)
+            gap = gap * 3 + 1;
+        for (; gap != 0; gap /= 3)
+            for (std::size_t i = gap; i < next.size(); ++i)
+            {
+                auto entry = std::move(next[i]);
+                std::size_t position = i;
+                while (position >= gap && entry.mPriority > next[position - gap].mPriority)
+                {
+                    next[position] = std::move(next[position - gap]);
+                    position -= gap;
+                }
+                next[position] = std::move(entry);
+            }
+        mEntries.swap(next);
         return true;
     }
 }

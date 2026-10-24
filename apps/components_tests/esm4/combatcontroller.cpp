@@ -105,3 +105,88 @@ TEST(ESM4CombatController, OrderedSnapshotValidationRejectsUnsupportedState)
     EXPECT_EQ(targets.entries().size(), entries.size());
     EXPECT_FALSE(targets.add({}));
 }
+
+TEST(ESM4CombatController, ScriptPriorityCapturesThePriorFirstTargetWithInt32Wrapping)
+{
+    EXPECT_FALSE(ESM4::CombatControllerTargets{}.nextScriptPriority());
+    for (const auto& [prior, expected] : std::array<std::pair<std::int32_t, std::int32_t>, 5>{
+             {{200, 220}, {-20, 0}, {0, 20},
+                 {std::numeric_limits<std::int32_t>::max(), std::numeric_limits<std::int32_t>::min() + 19},
+                 {std::numeric_limits<std::int32_t>::min(), std::numeric_limits<std::int32_t>::min() + 20}}})
+    {
+        const ESM4::CombatControllerTargets targets({{player, prior, 0}});
+        EXPECT_EQ(targets.nextScriptPriority(), expected);
+    }
+}
+
+TEST(ESM4CombatController, ScriptPriorityHonorsSingleTargetMarkerAndPreservesPayloadBits)
+{
+    for (const std::uint8_t marker : {0, 1, 255})
+    {
+        ESM4::CombatControllerTargets targets({{player, 200, marker, -0.f, -2.5f}});
+        EXPECT_FALSE(targets.applyScriptPriority(other, 220));
+        EXPECT_EQ(targets.applyScriptPriority(player, 220), marker == 0);
+        EXPECT_EQ(targets.entries()[0].mPriority, marker == 0 ? 220 : 200);
+        EXPECT_EQ(targets.entries()[0].mMarker, marker == 0 ? 1 : marker);
+        EXPECT_EQ(std::bit_cast<unsigned>(targets.entries()[0].mValue0C), 0x80000000u);
+        EXPECT_EQ(std::bit_cast<unsigned>(targets.entries()[0].mValue10), 0xc0200000u);
+        EXPECT_FALSE(targets.applyScriptPriority(player, 220));
+    }
+    ESM4::CombatControllerTargets markerOnly({{player, 200, 0}});
+    EXPECT_TRUE(markerOnly.applyScriptPriority(player, 200));
+    EXPECT_EQ(markerOnly.entries()[0].mMarker, 1);
+}
+
+TEST(ESM4CombatController, ScriptPriorityUsesNativeShellSortForEqualPriorityTargets)
+{
+    std::vector<ESM4::CombatControllerTarget> entries;
+    for (unsigned i = 0; i < 10; ++i)
+        entries.push_back({ESM::FormKey::dynamic("script-sort", i + 1), 200, static_cast<std::uint8_t>(i), -0.f, 1.25f});
+    ESM4::CombatControllerTargets targets(entries);
+    EXPECT_TRUE(targets.applyScriptPriority(entries[4].mTarget, *targets.nextScriptPriority()));
+    // Original506F00 gap4 moves target4 past0 without moving targets1..3.
+    constexpr std::array<unsigned, 10> order{4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
+    for (unsigned i = 0; i < order.size(); ++i)
+    {
+        const auto& actual = targets.entries()[i];
+        EXPECT_EQ(actual.mTarget, entries[order[i]].mTarget);
+        EXPECT_EQ(actual.mPriority, i == 0 ? 220 : 200);
+        EXPECT_EQ(actual.mMarker, entries[order[i]].mMarker);
+        EXPECT_EQ(std::bit_cast<unsigned>(actual.mValue0C), 0x80000000u);
+        EXPECT_EQ(std::bit_cast<unsigned>(actual.mValue10), 0x3fa00000u);
+    }
+    EXPECT_FALSE(targets.applyScriptPriority(entries[4].mTarget, 220));
+    ESM4::CombatControllerTargets wrapped({{player, std::numeric_limits<std::int32_t>::max(), 255},
+        {other, std::numeric_limits<std::int32_t>::min() + 19, 0}});
+    EXPECT_FALSE(wrapped.applyScriptPriority(other, *wrapped.nextScriptPriority()));
+    EXPECT_EQ(wrapped.first(), player);
+}
+
+TEST(ESM4CombatController, CoordinateDistanceRetainsNativeFloatStores)
+{
+    const std::array<float, 3> origin{};
+    EXPECT_EQ(ESM4::combatControllerDistance(origin, {3, 4, 12}), 13.f);
+    EXPECT_EQ(std::bit_cast<unsigned>(ESM4::combatControllerDistance(origin, origin)), 0u);
+    // Original 4D7E30 rounds the squared sum to binary32 before sqrt.
+    // This sum exceeds FLT_MAX but rounds back to FLT_MAX, below overflow.
+    const auto nearLimit = ESM4::combatControllerDistance(origin,
+        {std::bit_cast<float>(0x5f7fffffu), 0x1p52f, 0});
+    EXPECT_EQ(std::bit_cast<unsigned>(nearLimit), 0x5f7fffffu);
+    EXPECT_EQ(ESM4::combatControllerDistance(origin, {0x1p64f, 0, 0}),
+        std::numeric_limits<float>::infinity());
+    EXPECT_EQ(ESM4::combatControllerDistance(origin, {0x1p-100f, 0x1p-100f, 0x1p-100f}), 0.f);
+    const float max = std::numeric_limits<float>::max();
+    EXPECT_EQ(ESM4::combatControllerDistance({max, 0, 0}, {-max, 0, 0}),
+        std::numeric_limits<float>::infinity());
+}
+
+TEST(ESM4CombatController, CoordinateDistanceValidatesAllCoordinatesBeforeOverflow)
+{
+    const float max = std::numeric_limits<float>::max();
+    for (const float invalid : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::combatControllerDistance({max, 0, 0}, {-max, 0, invalid}), std::invalid_argument);
+        EXPECT_THROW(ESM4::combatControllerDistance({max, invalid, 0}, {-max, 0, 0}), std::invalid_argument);
+    }
+}

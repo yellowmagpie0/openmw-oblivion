@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "scope": "Component Script StartCombat priority rewrite and rooted coordinate distance; engine integration changes in tested worktree were not built, tested or included in this chunk.",
+  "source_base": "703dbc6ca7c2928673c5bb356a185705ad1af34e",
+  "tested_source": {
+    "head": "703dbc6ca7c2928673c5bb356a185705ad1af34e",
+    "source_fingerprint": "674c4d3e7bcde3a90e32c1ac3bc50b198bbde9b778371a218b51827e39f7db4a"
+  },
+  "source_files": {
+    "components/esm4/combatcontroller.cpp": "b0cd8c073bc188de73bf4c925478cdf94e3fce05d3aea1f90edf1818bb615108",
+    "components/esm4/combatcontroller.hpp": "d00fa0f608bfd97db6a60b0d487bcfc5f215db8a5359770f041cfe4bce724a9c",
+    "apps/components_tests/esm4/combatcontroller.cpp": "c309d871cd1e6db3adfb5ebada1f11f0609655dbef439a6654b64e10bf92dd09",
+    "scripts/data/oblivion_compat/m15_controller_priority_distance_cases.json": "3a512972452a80d9e41cd98e11aea731e7e5150dc2b8bb1ac70b76c8d8148c1a"
+  },
+  "checks": {
+    "components": {
+      "executed": 3063,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "e3429b4f2bfc6118d90efaff3be499a491b1dcc2e01f6be79207dada62b7a874",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "1394987d6279821c07848aa3144898ee7ee2469aad9fffc58012ce4342147376",
+      "inventory_sha256": "acf4825fca3170f784142e39fd0460cae3963400400f60b4a3bb47d53115c571",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitize": {
+      "executed": 914,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4*",
+      "binary_sha256": "88155bba0fceacdaabc14c2ccfb0a24ef3e902705604fbb1a311efe0092b19b0",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "ea9c216d13f70d466ce2cf884a23c2c210e0b0383778e137b9a98172fda1e1c3",
+      "inventory_sha256": "8f9c69b3864fbb040b61e720f1bdd74c68f4a741dec25e6c290493a0dc116cfc",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_priority": {
+    "cases": 2408,
+    "corpus_sha256": "895caff97b2b4acaf6e90208ac11267e1bb1eabf35953df98ec21e6c54f00725",
+    "scope": "Actual Script slices51478F..5147C4 and514828..5148B7 with native list/setter/Shell sort. Synthetic current package and target lists; primitive alloc/free boundaries. Constructor between slices and full script parsing not executed."
+  },
+  "native_distance": {
+    "cases": 4014,
+    "corpus_sha256": "69efe8786b8e3137e92e2df8d9ace79b272bd712d37cd66e8e673545042a4000",
+    "scope": "Full4D7E30 and actual CRT982C30 sqrt, no game-function stubs. Finite binary32 coordinates, seeded random cases, both x87 words. PC53 selected by fork; no cross-cell/reference eligibility or reach virtual dispatch."
+  },
+  "limitations": [
+    "Engine producers, interruption and query adapters remain untested integration work.",
+    "No new runtime or fresh-process acceptance in this component checkpoint.",
+    "Sanitizer leak detection disabled; existing unrelated build warnings retained."
+  ],
+  "artifacts": {
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-comparison-01/cases.tsv": "3bf926fc98522817852e90c16ebf14bd545338c01dbcc41129489ffb617262df",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-comparison-01/compare.cpp": "55d3eb710f89f91fa7b2e1b9fdd6bd4b421e72e0c47641dd1eca10e04ca245d0",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-comparison-01/run.py": "f3596210ab11c1f4fd3001d249fc19a14afbb2ecc8abeebc4485089c628ea222",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-comparison-01/verification.json": "8863de444b981354fb2817a9ecfb371517f32efb9eb734b724bf53d69b032dcf",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-oracle-01/corpus.json": "69efe8786b8e3137e92e2df8d9ace79b272bd712d37cd66e8e673545042a4000",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-oracle-01/probe.py": "176ff664c3d5d10ee120559be9be6af115997c35964075e59a85096f8a068746",
+    "build/oblivion-compat/m15/S4/native-combat-rooted-distance-oracle-01/verification.json": "c304b0f2ade3de704eee41dbc43a78212c3085525b64fefe5dc807819c8b4a48",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/components-build.log": "3323e60b4871c758cf0dfc360f6e7f39ac601a35167beaf3a2e752932c9903df",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/components-inventory.txt": "acf4825fca3170f784142e39fd0460cae3963400400f60b4a3bb47d53115c571",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/components.log": "6b079dd47cb88fe7b82dfd55dcd726ff3a647a1de0c0345cb6c209883b5d3779",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/components.xml": "1394987d6279821c07848aa3144898ee7ee2469aad9fffc58012ce4342147376",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/sanitize-build.log": "1ba4ca84ae28a64934f91ae2d7da515a5b112789c8c96d4aca7e6107646d4daf",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/sanitize-inventory.txt": "8f9c69b3864fbb040b61e720f1bdd74c68f4a741dec25e6c290493a0dc116cfc",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/sanitize.log": "eae33ce699dcd00ec74bb2d35800b71094d8e885720e50716663e625b5117ace",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/sanitize.xml": "ea9c216d13f70d466ce2cf884a23c2c210e0b0383778e137b9a98172fda1e1c3",
+    "build/oblivion-compat/m15/S4/native-controller-priority-distance-checks-01/verification.json": "0cab1f41607d8fd7c96af2a8a5e183230e264c9a98671f7c2e3d7771df027294",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-comparison-02/cases.tsv": "1701fb19e5493d9a4fb822b49b9b5e114b613672d56513b1b66b96b17ff6a1e1",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-comparison-02/compare.cpp": "4a360406b00596ca2fbd2312b29939547b88c83aafbda22c394d53932ea77471",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-comparison-02/run.py": "6d940250c27f5f668e29ee7ac556e6de74e19c97206398ffc5809eb51ed3fe48",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-comparison-02/verification.json": "6c2b836aaabe43fad82952e3bf0548bb0afeeef423e1421437564e77db058598",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-oracle-02/corpus.json": "895caff97b2b4acaf6e90208ac11267e1bb1eabf35953df98ec21e6c54f00725",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-oracle-02/probe.py": "347959a92039c3df60c1e33fa01e390d706189f0e20ea846fec16dfbc8fbf7bb",
+    "build/oblivion-compat/m15/S4/native-script-combat-priority-oracle-02/verification.json": "6f31587857616abd6ac5d6e101d24d94bb80468736c9347a452e28ed7392d323",
+    "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/probe.py": "93c2f1029168662b07ba16f2eb92289c1d0f392f818cce92e83957b36573bb19",
+    "build/oblivion-compat/m15/S4/native-condition-actor-binding-inspection-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+  }
+}

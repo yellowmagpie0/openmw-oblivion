@@ -6,6 +6,31 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 controller priority and rooted distance rules — 2026-10-24
+
+The component target list now implements the script StartCombat wrapper's
+signed wrapping priority increment, single-target marker guard and native
+Shell sort. A stable sort changes equal-priority ordering and is incorrect.
+The coordinate-distance helper preserves the original binary32 delta and
+squared-sum stores before sqrt, including finite rounding immediately below
+overflow and underflow to zero. Reference/cell eligibility remains a caller
+responsibility.
+
+Independent execution of the hash-identified original executable supplies
+2,408 priority cases and 4,014 coordinate-distance cases. Production C++ matches
+all cases, including payload float bits. Full normal component checks pass
+3,063 tests; ASan/UBSan ESM4 selection passes 914, with exact inventories and
+no failures or skips. Leak detection is disabled. The tested dirty-source
+fingerprint is `674c4d3e7bcde3a90e32c1ac3bc50b198bbde9b778371a218b51827e39f7db4a`.
+
+This is a component checkpoint. World/controller creation, public queries,
+normal-input combat and fresh-process gameplay acceptance are not established
+by these tests. The engine integration work present in the test worktree was
+not compiled in this checkpoint and is excluded from this commit.
+See [the verification receipt](M15-CONTROLLER-PRIORITY-DISTANCE-VERIFICATION.json)
+and [editable native examples](../../scripts/data/oblivion_compat/m15_controller_priority_distance_cases.json).
+Full S4 remains open.
+
 ## S4 native first-person eye pivot and torso visibility — 2026-10-17
 
 The native player renderer now rotates the complete first-person model around
