@@ -58,6 +58,16 @@ namespace ESM4
         };
     }
 
+    float buildFriendHitTimer(std::span<const GameSetting* const> settings)
+    {
+        // Original 1.2.0416 initializer 9E6D4F / B368A0. Negative finite
+        // overrides are meaningful: the removal comparison is strictly >.
+        const float value = Inputs(settings).number("fFriendHitTimer", 10.f);
+        if (!std::isfinite(value))
+            throw std::invalid_argument("invalid native friend-hit timer setting");
+        return value;
+    }
+
     float buildCombatHitConeAngle(std::span<const GameSetting* const> settings)
     {
         const float value = Inputs(settings).number("fCombatHitConeAngle", 20.f);

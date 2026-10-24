@@ -4634,12 +4634,34 @@ namespace MWWorld
             mOblivionCombat->advanceFrameClock(duration);
     }
 
-    bool World::updateOblivionFrameResources(const Ptr& actor, float, bool running)
+    bool World::updateOblivionFrameResources(const Ptr& actor, float duration, bool running)
     {
         if (!mOblivionCombat)
             return false;
         const auto settings = resolveOblivionFrameSettings(mStore);
         const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1)
+                                : ESM4::runtimeReferenceKey(actor.getCellRef().getFormKey());
+        std::optional<std::vector<ESM4::FriendHitEntry>> friendHits;
+        const auto* life = mOblivionCombat->findActorLife(key);
+        // 5FAB5C..5FABB7 admits the living actor's current BASE controller,
+        // including an allocated-empty controller. Engagement membership and
+        // upper package intent do not satisfy that getter. Player +330 is null.
+        // The original Player +6E5/+590 suppression state has no producer in
+        // this profile; its constructed-zero branch is the supported state.
+        if (!player && life && life->mPhase == ESM4::ActorLifePhase::Alive
+            && mOblivionRuntimeState && mOblivionRuntimeState->mCombatControllers.contains(key))
+        {
+            const auto found = mOblivionRuntimeState->mFriendHitCounters.find(key);
+            if (found != mOblivionRuntimeState->mFriendHitCounters.end() && !found->second.empty())
+            {
+                ESM4::FriendHitCounters counters(true, found->second);
+                // 420E90/42AFF0 reads GLOBAL B33E9C, not the per-actor
+                // clock used below. Prepare before publishing either update.
+                counters.advance(duration, resolveOblivionFriendHitTimer(mStore));
+                friendHits.emplace(counters.entries().begin(), counters.entries().end());
+            }
+        }
         // Original Character/Player virtual +278 returns true. The Creature
         // constructor initializes its separate expenditure flag to false.
         const bool canSpend = MWMechanics::OblivionCombatService::canSpendFatigue(actor)
@@ -4653,6 +4675,8 @@ namespace MWWorld
             mOblivionCombat->updatePlayerFrameResourcesFromClock(*mPlayer, movement, false, settings);
         else
             mOblivionCombat->updateNonPlayerFrameResourcesFromClock(actor, movement, false, settings);
+        if (friendHits)
+            mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
         return true;
     }
 

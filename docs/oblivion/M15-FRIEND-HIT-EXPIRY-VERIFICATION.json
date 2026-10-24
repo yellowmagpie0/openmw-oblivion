@@ -1,0 +1,929 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "runtime_schema": 68,
+  "scope": "Actual actor-frame friend-hit expiry using current base-controller ownership and native global-frame timing.",
+  "full_M15S4_acceptance": false,
+  "source_base": "d5cc0c33063841c272a5f3ee4a0d9479252e5906",
+  "tested_source_fingerprint": "cb93a832562dbee8b0b3bc0abdd5dcffddbd5a52e74e179d4c691b7650fc51b2",
+  "native_admission": {
+    "passed": true,
+    "cases": 864,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "c881c312dee08b65f4a73cc7b021f9ac1874df93dcb73fab35d5c8e90450abf9",
+    "scope": "Original common actor update slice5FAB5C..5FABB7 / dead exit5FAE7F. Actual actor+198 dead predicate (raw1/2/6), NPC/Creature current base+330 getter5E6190, Player null+330, actual Player65D550 suppression predicate, actual owned-extra420E90 and42AFF0 expiry/remove. Actual420E00 constructs owned extra/counter before slice. Native controller+33C update is a boundary with actor-clock delta .125; actual expiry reads distinct GLOBAL B33E9C .5, threshold1, seeded elapsed.75 and removes counter. Alloc/free/TLS locks are primitive boundaries. Synthetic base/upper packages only supply raw type bytes; no controller update/creation, native frame scheduler or gameplay acceptance. Player suppression fields tested as opaque byte+6E5 and signed count+590, no semantic names assigned.",
+    "full_M15S4_acceptance": false
+  },
+  "native_initializer": {
+    "passed": true,
+    "cases": 2,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "5cce13f33ace4e1b4c8e492584c8bd22660b9ab9214653d1082d11c5710030a3",
+    "scope": "Original initializer9E6D40 pushes float loaded fromA31C80 and nameA577F8, calls actual41BAE0; execute through41BB15 after actual float/name stores toB368A0/B368A4, before global setting registration. No game function stubs. This verifies compiled default/name/storage, not winning content or runtime update scheduling."
+  },
+  "winning_settings": {
+    "passed": true,
+    "scope": "Exact configured runtime load order only; all GMST records independently decoded from both plugins. Compiled fallback verified separately, not inferred from absent record.",
+    "inputs": [
+      {
+        "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "bytes": 277504985
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-master-recovery-fixture-02/fixture/M15StationaryOpponent.esp",
+        "sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+        "bytes": 1760
+      }
+    ],
+    "matches": []
+  },
+  "checks": {
+    "normal": {
+      "components": {
+        "executed": 3058,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "be88e98c4f65383cf259ef4d3675d86a24b4b9486867073ccabf813a2b840937",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "ff31cbd913b6eb0fe887abc9ec87a24263db9a1b44cbf8f37fcb1d33ff354634",
+        "inventory_sha256": "0f707951e45ba893da0c24e78c9b83792c513986ab6e138568598c7579d762c7",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1906,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "daf04c0ec8bc0311c8c449c14ba4a16ad306a082d0cae5e85af271c986499c8d",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "aaff50cf3353e87fe3c1ececd99d8b0cac96dce6241148c92c7fa0ec7a886a66",
+        "inventory_sha256": "84458acdbb6ebecb642702ae2f0bc33496adf346b79390c4eaf8a550f948134b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "sanitize": {
+        "executed": 909,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "703ccd0c0b4b5a0ea55f4fc4920eb312c48dde0d903c563e9a761292b5f6d9f1",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "3b9a827074bf91616e4c5827d25c0cad6b279aa863fc07a4ff81fe8dcfdff4d3",
+        "inventory_sha256": "0b9e49270301f493b47c6c970b42c88fbbe7d651321ce0e68f773d93900ef493",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1906,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "65f5243fbd1965c29ac8b1c3e5901f6ea2ec4e41dab70059ae23442af2815852",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "59887d321c5f3ac52425d7cd67b6710d791737ad6d2e9bba4470566717eb1446",
+        "inventory_sha256": "84458acdbb6ebecb642702ae2f0bc33496adf346b79390c4eaf8a550f948134b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "python": "Not rerun: no Python or wire/schema change. Prior405-test checkpoint retained in controller-authority receipt.",
+  "runtime": {
+    "passed": true,
+    "scope": "Seeded current-controller ownership and counters followed by actual frame expiry, real F5 save, fresh-process continuation to expiry and a third fresh process reading zero. No contacts and no injected state after initial staging. Controller creation remains outside this course.",
+    "runtime_schema": 68,
+    "observed": {
+      "first": {
+        "counters": {
+          "content:oblivion.esm:014a30": [
+            [
+              "dynamic:player:0000000000000001",
+              11,
+              "0000a041"
+            ]
+          ],
+          "content:oblivion.esm:01fc43": [
+            [
+              "dynamic:player:0000000000000001",
+              65535,
+              "e8fb293f"
+            ],
+            [
+              "dynamic:player:0000000000000001",
+              2,
+              "e8fb293f"
+            ]
+          ],
+          "content:oblivion.esm:032a15": [],
+          "dynamic:player:0000000000000001": [
+            [
+              "content:oblivion.esm:01fc43",
+              7,
+              "0000a041"
+            ]
+          ]
+        },
+        "manager_time": 17.840007781982422
+      },
+      "second": {
+        "counters": {
+          "content:oblivion.esm:014a30": [
+            [
+              "dynamic:player:0000000000000001",
+              11,
+              "0000a041"
+            ]
+          ],
+          "content:oblivion.esm:01fc43": [],
+          "content:oblivion.esm:032a15": [],
+          "dynamic:player:0000000000000001": [
+            [
+              "content:oblivion.esm:01fc43",
+              7,
+              "0000a041"
+            ]
+          ]
+        },
+        "manager_time": 29.95803451538086
+      },
+      "third": {
+        "counters": {
+          "content:oblivion.esm:014a30": [
+            [
+              "dynamic:player:0000000000000001",
+              11,
+              "0000a041"
+            ]
+          ],
+          "content:oblivion.esm:01fc43": [],
+          "content:oblivion.esm:032a15": [],
+          "dynamic:player:0000000000000001": [
+            [
+              "content:oblivion.esm:01fc43",
+              7,
+              "0000a041"
+            ]
+          ]
+        },
+        "manager_time": 30.62203598022461
+      }
+    },
+    "epochs": {
+      "first": {
+        "pid": 1836149,
+        "start_ticks": 56519932,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "acb10fca0c2c4ff3e4f0ce7c36a04a1b353da4ccdd3e1f56af27a5b15024d962"
+      },
+      "second": {
+        "pid": 1836226,
+        "start_ticks": 56525969,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "acb10fca0c2c4ff3e4f0ce7c36a04a1b353da4ccdd3e1f56af27a5b15024d962"
+      },
+      "third": {
+        "pid": 1840313,
+        "start_ticks": 56538003,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "acb10fca0c2c4ff3e4f0ce7c36a04a1b353da4ccdd3e1f56af27a5b15024d962"
+      }
+    },
+    "binary": {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+      "sha256": "acb10fca0c2c4ff3e4f0ce7c36a04a1b353da4ccdd3e1f56af27a5b15024d962",
+      "bytes": 1403896360
+    },
+    "loaded_libraries": {
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": {
+        "sha256": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54",
+        "bytes": 45864960,
+        "device": "00:23",
+        "inode": 5424824,
+        "mtime_ns": 1792014227165889260
+      }
+    },
+    "snapshots": 3,
+    "exact_initial_restore": true,
+    "exact_binary_live": true,
+    "full_M15S4_acceptance": false,
+    "not_accepted": [
+      "Actual controller creation/stop and full controller update",
+      "Automatic contact notification producer",
+      "Opaque original Player +6E5/+590 suppression-state producer",
+      "Remaining S4 gameplay matrix"
+    ],
+    "artifacts": [
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/live-1-2.json",
+        "sha256": "75d671d5edebfc32612f377ee40c3c80cfe090463ce1b5f9ad844352eb6d8781",
+        "bytes": 27139383
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/snapshots/save-3.omwsave",
+        "sha256": "3ef09c4e510473af714449f6fd5fc2308d71d80a56a0bd4826e5228c308e230b",
+        "bytes": 11495737
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/live-1-3.json",
+        "sha256": "52a4d4875250f352f7f3012b9ddfe6161926f2e6db4275641ab1d6a568765815",
+        "bytes": 27365261
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/scenario.json",
+        "sha256": "ac44d5532910c796389e1dad02565928a1b28e3fe315d4c79f266e81ddaf4262",
+        "bytes": 5774
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/events.jsonl",
+        "sha256": "65b14e8440585e54728ad1b534dcc6e7c1e979f792cf6948d89467c3696636a4",
+        "bytes": 1591
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/input-pristine.omwsave",
+        "sha256": "e17f774b6fa22d25e79960e28d6110338cccffd3d4909c38c682913fc1ef8ab4",
+        "bytes": 11385339
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/friend-hit-expiry.png",
+        "sha256": "a4e5660850ded1b312b46586dc5e68227df64e2d60773f404f95c756b5b09a07",
+        "bytes": 1130720
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/process-epoch.json",
+        "sha256": "3bbbf7d6eb0f615c5cc93e876142e5084665d62d69795a353c2752e20b47df5d",
+        "bytes": 678
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/loaded-libraries.json",
+        "sha256": "0978a8695135287dd199558c64c640db3c0c1b151f5d45f765fa56e9b4a3b96d",
+        "bytes": 353
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/live-2-2.json",
+        "sha256": "52a4d4875250f352f7f3012b9ddfe6161926f2e6db4275641ab1d6a568765815",
+        "bytes": 27365261
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/snapshots/save-3.omwsave",
+        "sha256": "225d35771c1f1aa0ea8e190ec4963d2db0867f7e8ca07262456f18e0b4e791a2",
+        "bytes": 12421547
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/live-2-3.json",
+        "sha256": "bfd29773e69f8c967cda9025796e0493c53b61c6973aaadee5a5dc9f1e8d1922",
+        "bytes": 29569827
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/scenario.json",
+        "sha256": "8f776152b6a64215cb8e7277f7b1984049ec15a48bec177935c5bd8520f7343b",
+        "bytes": 6170
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/events.jsonl",
+        "sha256": "2d44dd5689d12d0c2351f314d165c1d5246c619a778453072f2e2e7a633bccc9",
+        "bytes": 1594
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/input-pristine.omwsave",
+        "sha256": "3ef09c4e510473af714449f6fd5fc2308d71d80a56a0bd4826e5228c308e230b",
+        "bytes": 11495737
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/friend-hit-expiry.png",
+        "sha256": "65da2bf90d49bc58d1ac37be636c05b2d183abddda2b71c20828c9d4330f6db6",
+        "bytes": 1132302
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/process-epoch.json",
+        "sha256": "4a30c810cf4933090022ab1feedc89ad27c576410941f83d592ab833be634f8b",
+        "bytes": 680
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/loaded-libraries.json",
+        "sha256": "e4434390c5c28db64de9e0fb03067eef325cff9ad0aa65410bacb5fda5d6e053",
+        "bytes": 353
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/live-3-2.json",
+        "sha256": "bfd29773e69f8c967cda9025796e0493c53b61c6973aaadee5a5dc9f1e8d1922",
+        "bytes": 29569827
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/snapshots/save-3.omwsave",
+        "sha256": "4bcec9d01e4a45c03aec6e76e9534d1e66478ab79747d52cfa8261bd831d6015",
+        "bytes": 12422415
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/live-3-3.json",
+        "sha256": "b4e0281ebab0e146fbd82b47e334aba33f4b56e30db7d437aa6955d0bd49fdda",
+        "bytes": 29566461
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/scenario.json",
+        "sha256": "d2c6cfebe111849ef5524caeffebbc41de87b079c5a924097cff5dec87da99d3",
+        "bytes": 5773
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/events.jsonl",
+        "sha256": "74287f2ae403bed53e49cf18d2a860978f4104114670788eb9438b005806b925",
+        "bytes": 1591
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/input-pristine.omwsave",
+        "sha256": "225d35771c1f1aa0ea8e190ec4963d2db0867f7e8ca07262456f18e0b4e791a2",
+        "bytes": 12421547
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/friend-hit-expiry.png",
+        "sha256": "cfc0e9d8c9fe450e404f499343fa3359e161be32abf532cea725895ca581d6fc",
+        "bytes": 1114593
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/process-epoch.json",
+        "sha256": "d8d4aa22722c076c2506b4d71651827cddd6d37d87c9ac50660b6badee7b8655",
+        "bytes": 678
+      },
+      {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/loaded-libraries.json",
+        "sha256": "e553654d06cd783a00cbd70fab63164f636bfe3f182b05f2d8b06f8c803254cc",
+        "bytes": 353
+      }
+    ]
+  },
+  "staging": {
+    "passed": true,
+    "source_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+    "staged_sha256": "e17f774b6fa22d25e79960e28d6110338cccffd3d4909c38c682913fc1ef8ab4",
+    "changed_fields": [
+      "friend_hit_counters"
+    ],
+    "all_other_fields_and_float_bits_preserved": true,
+    "scope": "Whole native logical state staging check, distinct from runtime load/save acceptance."
+  },
+  "runtime_rendering": "All three final captures inspected: idle Valen Dreth, Player fists and HUD rendered. Numerical expiry/storage evidence; no attack, block, audio or reaction acceptance.",
+  "retained_failures": [
+    "Initial probe syntax error before execution; source retained.",
+    "Runtime01 incorrectly expected Active032a15 to retain elapsed20 despite empty current controller. Actual expiry correctly returned0. Own course stopped after impossible expectation; failed scenario retained. Runtime02 preregistered explicit empty-controller expiry plus active no-controller and Player controls, and used simulation-time scheduling."
+  ],
+  "not_accepted": [
+    "Actual controller creation/stop producer and complete controller update",
+    "Automatic contact notification producer and normal Player-to-NPC phased caller",
+    "Original opaque Player +6E5/+590 suppression-state producer",
+    "Remaining full S4 input, mastery, effects, interruption and restart gameplay matrix"
+  ],
+  "source_files": [
+    {
+      "path": "apps/components_tests/esm4/combatsettings.cpp",
+      "sha256": "b24d9dd3218980fa5f7b92071f1c43c13831489574ed5be7baa4a79a9321fa9d",
+      "bytes": 22751
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionactorstats.cpp",
+      "sha256": "41120cc7076e6dbe8bbfc3d2989537ef8ccc80aed3bcff3aee71b6a8037aecb0",
+      "bytes": 32331
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionactorstats.hpp",
+      "sha256": "804a58e7fa5c31a6963f72328f6fdc84b4e4c6c4923803d086adf424407b12b8",
+      "bytes": 6037
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "988dfbfd5f3875f9f05bc33e6f828e7c704b3032bdd4d05a5b2c22edcf9aa303",
+      "bytes": 476530
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "64e386efba01ae8dcced56deaf77a688256abbc8db69bd943932525583b9e4c7",
+      "bytes": 2077447
+    },
+    {
+      "path": "components/esm4/combatsettings.cpp",
+      "sha256": "9b9fabf475105bd9fe0446348d879d4281917449226b81f091da2db97bbd6eb3",
+      "bytes": 36073
+    },
+    {
+      "path": "components/esm4/combatsettings.hpp",
+      "sha256": "d289b21bce1aa7582505e6193eec9af12da2dec8e2f315412a242e9ac8834edf",
+      "bytes": 5799
+    },
+    {
+      "path": "components/esm4/friendhit.cpp",
+      "sha256": "1ce23ea626f8903ef487f8abf6aa7cc9cba8f063704344e395bec851be2e2b0a",
+      "bytes": 2541
+    },
+    {
+      "path": "components/esm4/friendhit.hpp",
+      "sha256": "c39819d87fca03e2db36093440933c3d874355ddb8dd3586f5f1a6acb42e70d9",
+      "bytes": 1454
+    },
+    {
+      "path": "apps/openmw/mwmechanics/actors.cpp",
+      "sha256": "c3a6e507f9aa6f654e654cc30deebd53ccc2d385eee93d05d98344b015a55c8a",
+      "bytes": 120681
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "2692d0e5472975b3c261a534a9fdd7f13b635c1740afae20edb9ae89572bb080",
+      "bytes": 306167
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "44530c4f7e3c0c43b585d2d283a3f497c6358f143539ec9bacb37e5bed3c3342",
+      "bytes": 37892
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "8d03881811185733fef888437537b53dd20d5de832a31049b8a470fd7e40db17",
+      "bytes": 222517
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_friend_hit_expiry_cases.json",
+      "sha256": "302cf9ce2fb7183d1d547e8cfb878ea17c6897ac9230e7acbe21e72e88ac54c8",
+      "bytes": 3281
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_friend_hit_expiry_input.json",
+      "sha256": "419d6e21228b8d125745e2e96f9ddbf3932704f7e2f8a6cb23c9983e8f1c464d",
+      "bytes": 5474
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_friend_hit_expiry_initial.json",
+      "sha256": "7cd2f2fbf6feaeefcdb9e490d808d8e79cf0ad00950636a3cc27175aeae417e4",
+      "bytes": 22071
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_friend_hit_expiry_continuation.json",
+      "sha256": "c04ad4fda80c2c0c1f2ce2b367a5763ad389c0ec26db25b47f057778277df747",
+      "bytes": 22411
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_friend_hit_expiry_empty.json",
+      "sha256": "7d6d4801563323a48a3cbde45086a248fae787c8220f3d365958c19fa558a2d4",
+      "bytes": 22063
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-initializer-oracle-01/probe.py",
+      "sha256": "e8a7294e9af29ca687a0264907150e1b95ca6b6e8520620cfd91e390ecb2a90a",
+      "bytes": 1509
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-initializer-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-initializer-oracle-01/verification.json",
+      "sha256": "cbb4254cca6470499890a68c70c733b44d3db46d9ac6a323b618b7ddd459b084",
+      "bytes": 555
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-initializer-oracle-01/corpus.json",
+      "sha256": "5cce13f33ace4e1b4c8e492584c8bd22660b9ab9214653d1082d11c5710030a3",
+      "bytes": 205
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-admission-oracle-01/probe.py",
+      "sha256": "e12e238c3e55fdeb4991d30ac81b027f57a46cab5bff2c5f0368d3de56284a06",
+      "bytes": 4288
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-admission-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-admission-oracle-01/verification.json",
+      "sha256": "48439ed450b94ba673f3fbbe08d657a1fec81c93ac0c578223adb95189bc81c2",
+      "bytes": 1051
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-admission-oracle-01/corpus.json",
+      "sha256": "c881c312dee08b65f4a73cc7b021f9ac1874df93dcb73fab35d5c8e90450abf9",
+      "bytes": 182521
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-settings-01/audit.py",
+      "sha256": "55abb9ed40d5b892f2e7421cda5a737de1bd75a00901378a791fb32590de0546",
+      "bytes": 1544
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-settings-01/verification.json",
+      "sha256": "d0ca9c778a9b434ffbb099808553a11ee327b6f156f06dfc0da7adaf45233e91",
+      "bytes": 733
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/verify-staging.py",
+      "sha256": "19a5bbcd0616d3cd67665de6edda573837d7fb62a21f8b15071af58b45a01dec",
+      "bytes": 1422
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/staging-verification.json",
+      "sha256": "229c8b735a8342187bfc087195e7a09f1309acdb070249288666b750b6a409e6",
+      "bytes": 401
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/prepare.py",
+      "sha256": "d58048e84d3fe303b539e64f92af308f803f81eaeb9eb8945390b9236ef0b337",
+      "bytes": 4672
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/launcher.py",
+      "sha256": "7ad2e4a92743cb7e0ab2f452571d699532fd44167f12910350da0e0acad6a210",
+      "bytes": 2038
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/monitor.py",
+      "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+      "bytes": 3118
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/verify.py",
+      "sha256": "cafbd6c2876321792b9516a49a502d9dfa08e84e2d8ab32404b141331af1633d",
+      "bytes": 5298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/preregistration.json",
+      "sha256": "eb2d143d867f3c0a666f24b973ce71e2c7381f16dfffe133b8da0633aad64e0f",
+      "bytes": 3747
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/semantic-verification.json",
+      "sha256": "2c86d9d90bf24be3c764962841b263234b7ade0f6dc4c92dc8c3e70588c5d679",
+      "bytes": 12574
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/binary-pin.json",
+      "sha256": "0dc494774b4d514d25d44ca96c8071d97ce3b68f44c40d951bf331b502d47581",
+      "bytes": 177
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/staged-input.omwsave",
+      "sha256": "e17f774b6fa22d25e79960e28d6110338cccffd3d4909c38c682913fc1ef8ab4",
+      "bytes": 11385339
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first.json",
+      "sha256": "7cd2f2fbf6feaeefcdb9e490d808d8e79cf0ad00950636a3cc27175aeae417e4",
+      "bytes": 22071
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second.json",
+      "sha256": "c04ad4fda80c2c0c1f2ce2b367a5763ad389c0ec26db25b47f057778277df747",
+      "bytes": 22411
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third.json",
+      "sha256": "7d6d4801563323a48a3cbde45086a248fae787c8220f3d365958c19fa558a2d4",
+      "bytes": 22063
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/prepare.py",
+      "sha256": "115039cb972903de4922c3ee60c29c05f6d3579305e783632d67204ea0bb1a91",
+      "bytes": 3767
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/preregistration.json",
+      "sha256": "66af54343498c11dc368dda2deb36b372ccbbbc296ab074d51f9f47476db4b70",
+      "bytes": 2948
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/first/fixture-expectation-failure.json",
+      "sha256": "d5164a1cb3797c3af7e2d4b257a1070b8c0916bb53fab88e74cb0b45a3ae3bc4",
+      "bytes": 396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/first/scenario.json",
+      "sha256": "0ab2bdae370b909bf00a16d9ecae8bb2b36bcd1d7af1f89fc2239694c4bf04f6",
+      "bytes": 4156
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/first/launcher.json",
+      "sha256": "12d5d778bce49c212c9e47d3d2d1d4e4dbab4e885430df6c0f299f1ea6b8f3e9",
+      "bytes": 955
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-01/first/process.log",
+      "sha256": "6004fe0d3a555559ce3e8be52c7075b2ec87ec546d8e54dd10a0aa7c2ad754c9",
+      "bytes": 931427
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-work-01/probe-admission-syntax-failure.py",
+      "sha256": "4a8c05ac5abb74e922c63a64be1112cbe425567361f5316caa242963a5d9ae13",
+      "bytes": 4286
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-settings-inspection-01/settings.json",
+      "sha256": "611c29147449d81b17f23fa0b67cead61d91c5dc26ba114ce9e9ba6768c5fc63",
+      "bytes": 969
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry.py",
+      "sha256": "20aaf724a2e9b47b22d362ff02b272b4512ae23e71124cbf2561273ca4d1d445",
+      "bytes": 3542
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry-verification.json",
+      "sha256": "4a5ece9b45dfc2bb9c9085e49adfea6f23ff650f4679fac7cd24994c66306ba2",
+      "bytes": 607
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-storage-oracle-01/expiry-corpus.json",
+      "sha256": "3c4ddd944f15da68093f8649b41310ef5e976c3e5832d57968a9ecb8e535de5b",
+      "bytes": 3055
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-owner-oracle-01/probe.py",
+      "sha256": "93c2f1029168662b07ba16f2eb92289c1d0f392f818cce92e83957b36573bb19",
+      "bytes": 4419
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/verification.json",
+      "sha256": "0f76473b67f17ca230696a7dc45a3da6dcb08c6f1e1767e92f356ea00fef9907",
+      "bytes": 3846
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/components-inventory.txt",
+      "sha256": "0f707951e45ba893da0c24e78c9b83792c513986ab6e138568598c7579d762c7",
+      "bytes": 194664
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/components.xml",
+      "sha256": "ff31cbd913b6eb0fe887abc9ec87a24263db9a1b44cbf8f37fcb1d33ff354634",
+      "bytes": 2353144
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/components-build.log",
+      "sha256": "3090a2fe9c5f4270c0dd88b4b4d107a5b4721645d534a7c85c29ea75bb8021ff",
+      "bytes": 1583
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/components.log",
+      "sha256": "2b46f44286b8045d1eea1088ab60cccc6419b0be9fedd9e8e92907b38a264112",
+      "bytes": 608676
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/engine-inventory.txt",
+      "sha256": "84458acdbb6ebecb642702ae2f0bc33496adf346b79390c4eaf8a550f948134b",
+      "bytes": 134814
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/engine.xml",
+      "sha256": "aaff50cf3353e87fe3c1ececd99d8b0cac96dce6241148c92c7fa0ec7a886a66",
+      "bytes": 627434
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/engine-build.log",
+      "sha256": "4b81573cdbbcfacdbbcc9593654345595b85d42d6ef2c8c711ff388e4412b67d",
+      "bytes": 34145
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-normal-01/engine.log",
+      "sha256": "fc638d2cc0fae88330610bfba023c14428a1aa9f2fb40b5de07bc6dfb2586f58",
+      "bytes": 2320846
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/verification.json",
+      "sha256": "2d47553c6eb8d54f470851914b2149c4b238f3ada30c2c49f43117088dc72278",
+      "bytes": 4023
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/sanitize-inventory.txt",
+      "sha256": "0b9e49270301f493b47c6c970b42c88fbbe7d651321ce0e68f773d93900ef493",
+      "bytes": 194664
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/sanitize.xml",
+      "sha256": "3b9a827074bf91616e4c5827d25c0cad6b279aa863fc07a4ff81fe8dcfdff4d3",
+      "bytes": 1628874
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/sanitize-build.log",
+      "sha256": "47b4e0bb20113756e61dee85685054a336710183d0295b80dcb86ec748da0800",
+      "bytes": 1583
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/sanitize.log",
+      "sha256": "81b2614060c7dc68cbc27c291ed7ddaf263692673275dca976c0209d304a38e0",
+      "bytes": 168862
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/engine-inventory.txt",
+      "sha256": "84458acdbb6ebecb642702ae2f0bc33496adf346b79390c4eaf8a550f948134b",
+      "bytes": 134814
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/engine.xml",
+      "sha256": "59887d321c5f3ac52425d7cd67b6710d791737ad6d2e9bba4470566717eb1446",
+      "bytes": 629155
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/engine-build.log",
+      "sha256": "fd9d97b1eadfdbe6d2d357b099654b6fa568cac4f964742c099015f917577bc3",
+      "bytes": 31537
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-sanitized-01/engine.log",
+      "sha256": "69c3c8e618f615b25e579c94c029cfe2e5560a0367f29c64605363a872aa4324",
+      "bytes": 2321412
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/live-1-2.json",
+      "sha256": "75d671d5edebfc32612f377ee40c3c80cfe090463ce1b5f9ad844352eb6d8781",
+      "bytes": 27139383
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/snapshots/save-3.omwsave",
+      "sha256": "3ef09c4e510473af714449f6fd5fc2308d71d80a56a0bd4826e5228c308e230b",
+      "bytes": 11495737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/live-1-3.json",
+      "sha256": "52a4d4875250f352f7f3012b9ddfe6161926f2e6db4275641ab1d6a568765815",
+      "bytes": 27365261
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/scenario.json",
+      "sha256": "ac44d5532910c796389e1dad02565928a1b28e3fe315d4c79f266e81ddaf4262",
+      "bytes": 5774
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/events.jsonl",
+      "sha256": "65b14e8440585e54728ad1b534dcc6e7c1e979f792cf6948d89467c3696636a4",
+      "bytes": 1591
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/input-pristine.omwsave",
+      "sha256": "e17f774b6fa22d25e79960e28d6110338cccffd3d4909c38c682913fc1ef8ab4",
+      "bytes": 11385339
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/friend-hit-expiry.png",
+      "sha256": "a4e5660850ded1b312b46586dc5e68227df64e2d60773f404f95c756b5b09a07",
+      "bytes": 1130720
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/process-epoch.json",
+      "sha256": "3bbbf7d6eb0f615c5cc93e876142e5084665d62d69795a353c2752e20b47df5d",
+      "bytes": 678
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/first/loaded-libraries.json",
+      "sha256": "0978a8695135287dd199558c64c640db3c0c1b151f5d45f765fa56e9b4a3b96d",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/live-2-2.json",
+      "sha256": "52a4d4875250f352f7f3012b9ddfe6161926f2e6db4275641ab1d6a568765815",
+      "bytes": 27365261
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/snapshots/save-3.omwsave",
+      "sha256": "225d35771c1f1aa0ea8e190ec4963d2db0867f7e8ca07262456f18e0b4e791a2",
+      "bytes": 12421547
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/live-2-3.json",
+      "sha256": "bfd29773e69f8c967cda9025796e0493c53b61c6973aaadee5a5dc9f1e8d1922",
+      "bytes": 29569827
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/scenario.json",
+      "sha256": "8f776152b6a64215cb8e7277f7b1984049ec15a48bec177935c5bd8520f7343b",
+      "bytes": 6170
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/events.jsonl",
+      "sha256": "2d44dd5689d12d0c2351f314d165c1d5246c619a778453072f2e2e7a633bccc9",
+      "bytes": 1594
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/input-pristine.omwsave",
+      "sha256": "3ef09c4e510473af714449f6fd5fc2308d71d80a56a0bd4826e5228c308e230b",
+      "bytes": 11495737
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/friend-hit-expiry.png",
+      "sha256": "65da2bf90d49bc58d1ac37be636c05b2d183abddda2b71c20828c9d4330f6db6",
+      "bytes": 1132302
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/process-epoch.json",
+      "sha256": "4a30c810cf4933090022ab1feedc89ad27c576410941f83d592ab833be634f8b",
+      "bytes": 680
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/second/loaded-libraries.json",
+      "sha256": "e4434390c5c28db64de9e0fb03067eef325cff9ad0aa65410bacb5fda5d6e053",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/live-3-2.json",
+      "sha256": "bfd29773e69f8c967cda9025796e0493c53b61c6973aaadee5a5dc9f1e8d1922",
+      "bytes": 29569827
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/snapshots/save-3.omwsave",
+      "sha256": "4bcec9d01e4a45c03aec6e76e9534d1e66478ab79747d52cfa8261bd831d6015",
+      "bytes": 12422415
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/live-3-3.json",
+      "sha256": "b4e0281ebab0e146fbd82b47e334aba33f4b56e30db7d437aa6955d0bd49fdda",
+      "bytes": 29566461
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/scenario.json",
+      "sha256": "d2c6cfebe111849ef5524caeffebbc41de87b079c5a924097cff5dec87da99d3",
+      "bytes": 5773
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/events.jsonl",
+      "sha256": "74287f2ae403bed53e49cf18d2a860978f4104114670788eb9438b005806b925",
+      "bytes": 1591
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/input-pristine.omwsave",
+      "sha256": "225d35771c1f1aa0ea8e190ec4963d2db0867f7e8ca07262456f18e0b4e791a2",
+      "bytes": 12421547
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/friend-hit-expiry.png",
+      "sha256": "cfc0e9d8c9fe450e404f499343fa3359e161be32abf532cea725895ca581d6fc",
+      "bytes": 1114593
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/process-epoch.json",
+      "sha256": "d8d4aa22722c076c2506b4d71651827cddd6d37d87c9ac50660b6badee7b8655",
+      "bytes": 678
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-runtime-02/third/loaded-libraries.json",
+      "sha256": "e553654d06cd783a00cbd70fab63164f636bfe3f182b05f2d8b06f8c803254cc",
+      "bytes": 353
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-friend-hit-expiry-receipt-01/tested-cpp.patch",
+      "sha256": "1ab98a65cecf299e39aeed99bdf7685f7835bddf3275aa6920d125422ee77e69",
+      "bytes": 15455
+    }
+  ]
+}

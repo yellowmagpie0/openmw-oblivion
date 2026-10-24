@@ -18376,3 +18376,47 @@ The normal Player-to-NPC phased caller and the complete S4 gameplay/restart
 matrix remain open. See
 [M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json](M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json)
 and the editable [input recipe](../../scripts/data/oblivion_compat/m15_combat_controller_authority_input.json).
+
+
+### Production friend-hit expiry from actor frames
+
+Living NPC/Creature actor updates now advance their saved friend-hit counters
+when they own a current base combat controller, including an empty controller.
+They use the actual frame duration rather than the separate actor-clock delta,
+and resolve typed winning TES4 `fFriendHitTimer` overrides with the independently
+verified absent-setting default10. Strict comparison, ordered duplicate removal
+and allocated-empty extra presence retain the established native storage rule.
+Preparation rejects malformed inputs before either counters or frame resources
+are published. Player and nonliving actors skip expiry; engagement alone does
+not admit it. Original Player +6E5/+590 suppression is independently exercised
+as opaque storage, but its state/producer remains unmodeled; the integration
+covers the native unsuppressed branch. Schema68 is unchanged.
+
+The new original-instruction admission matrix passes **864 cases**, with actual
+current-controller/dead/Player predicates and owned-extra expiry. Controller
+update+33C is an explicit boundary. Full normal checks pass **3,058 components**
+and **1,906 engine tests**; ASan/UBSan passes **909 ESM4 components** and
+**1,906 engine tests**, with leak detection disabled. New World checks include
+NPC and Creature ownership, empty versus absent controllers, engagement-only
+exclusion, Player/dead/essential exclusions, distinct clocks, exact threshold,
+promoted duplicate head across restoration and invalid-input atomicity. Python
+was not rerun because neither Python nor the wire format changed.
+
+The real engine course passes **three fresh processes and three F5 saves**.
+Initially seeded NPC duplicate counters age to exactly0.6640000343322754; a
+fresh process loads that real save, observes expiry through GetFriendHit, and
+saves allocated-empty counters. A third process reads0 and resaves the empty
+state. Player count7/elapsed20 and active no-controller NPC count11/elapsed20
+persist exactly. A second active NPC with an empty controller expires its
+elapsed20 counter, proving that empty controller presence admits updates. Full
+logical state matches at each initial restore; binary/live save state matches
+exactly. Controller targets remain unchanged. All three captures were inspected,
+and the actual mapped MyGUI library was pinned. The first attempt's mistaken
+expectation that the active empty-controller NPC would keep its counter is
+retained; the corrected course was preregistered in a fresh directory.
+
+This is production expiry of seeded state. Controller creation/stop, automatic
+hit notifications, opaque Player suppression production and the complete S4
+gameplay matrix remain open. **Full M15S4 remains incomplete.** See
+[M15-FRIEND-HIT-EXPIRY-VERIFICATION.json](M15-FRIEND-HIT-EXPIRY-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_friend_hit_expiry_cases.json).

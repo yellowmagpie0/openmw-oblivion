@@ -15,7 +15,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; advanced unarmed zero-absorption defense now joins that route. Lower Hand to Hand general-hit reactions and complete Player/Creature/spare policies remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
-| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. Native float disposition requests share saved modifiers and bypass the script frame cache. Directed combat-controller target admission/storage has independently verified component rules; schema68 retains current-controller presence/targets and exposes shared World queries. | Current base-controller production, hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
+| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. Native float disposition requests share saved modifiers and bypass the script frame cache. Directed combat-controller target admission/storage has independently verified component rules; schema68 retains current-controller presence/targets and exposes shared World queries. Actor-frame friend-hit expiry uses this authority and the winning native timer setting. | Current base-controller production and hit notification producers remain unwired. Actual actor-frame counter expiry now passes a three-process course from seeded current-controller state; original opaque Player suppression production remains open. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
@@ -43,6 +43,15 @@ contact -> one native delta -> visible/audible reaction. Also retain the plan's
 sanitized synthetic melee course requirement.
 
 ## Current regression evidence
+
+The current expiry checkpoint passes all **3,058 component** and **1,906 engine**
+tests; ASan/UBSan passes **909 ESM4 component** and **1,906 engine** tests. Tested
+source fingerprint: `cb93a832562dbee8b0b3bc0abdd5dcffddbd5a52e74e179d4c691b7650fc51b2`.
+The three-process expiry course verifies production aging and persistence of
+seeded counters; it does not close normal-input combat acceptance. See
+[M15-FRIEND-HIT-EXPIRY-VERIFICATION.json](M15-FRIEND-HIT-EXPIRY-VERIFICATION.json).
+
+The filtered run below is historical.
 
 `build/oblivion-compat/m15/S4/current-melee-engine-01/verification.json` rebuilds
 `openmw`, `openmw-tests` and `esmtool`, then passes all **49 selected engine cases**
@@ -12704,3 +12713,47 @@ The normal Player-to-NPC phased caller and the complete S4 gameplay/restart
 matrix remain open. See
 [M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json](M15-COMBAT-CONTROLLER-AUTHORITY-VERIFICATION.json)
 and the editable [input recipe](../../scripts/data/oblivion_compat/m15_combat_controller_authority_input.json).
+
+
+### Production friend-hit expiry from actor frames
+
+Living NPC/Creature actor updates now advance their saved friend-hit counters
+when they own a current base combat controller, including an empty controller.
+They use the actual frame duration rather than the separate actor-clock delta,
+and resolve typed winning TES4 `fFriendHitTimer` overrides with the independently
+verified absent-setting default10. Strict comparison, ordered duplicate removal
+and allocated-empty extra presence retain the established native storage rule.
+Preparation rejects malformed inputs before either counters or frame resources
+are published. Player and nonliving actors skip expiry; engagement alone does
+not admit it. Original Player +6E5/+590 suppression is independently exercised
+as opaque storage, but its state/producer remains unmodeled; the integration
+covers the native unsuppressed branch. Schema68 is unchanged.
+
+The new original-instruction admission matrix passes **864 cases**, with actual
+current-controller/dead/Player predicates and owned-extra expiry. Controller
+update+33C is an explicit boundary. Full normal checks pass **3,058 components**
+and **1,906 engine tests**; ASan/UBSan passes **909 ESM4 components** and
+**1,906 engine tests**, with leak detection disabled. New World checks include
+NPC and Creature ownership, empty versus absent controllers, engagement-only
+exclusion, Player/dead/essential exclusions, distinct clocks, exact threshold,
+promoted duplicate head across restoration and invalid-input atomicity. Python
+was not rerun because neither Python nor the wire format changed.
+
+The real engine course passes **three fresh processes and three F5 saves**.
+Initially seeded NPC duplicate counters age to exactly0.6640000343322754; a
+fresh process loads that real save, observes expiry through GetFriendHit, and
+saves allocated-empty counters. A third process reads0 and resaves the empty
+state. Player count7/elapsed20 and active no-controller NPC count11/elapsed20
+persist exactly. A second active NPC with an empty controller expires its
+elapsed20 counter, proving that empty controller presence admits updates. Full
+logical state matches at each initial restore; binary/live save state matches
+exactly. Controller targets remain unchanged. All three captures were inspected,
+and the actual mapped MyGUI library was pinned. The first attempt's mistaken
+expectation that the active empty-controller NPC would keep its counter is
+retained; the corrected course was preregistered in a fresh directory.
+
+This is production expiry of seeded state. Controller creation/stop, automatic
+hit notifications, opaque Player suppression production and the complete S4
+gameplay matrix remain open. **Full M15S4 remains incomplete.** See
+[M15-FRIEND-HIT-EXPIRY-VERIFICATION.json](M15-FRIEND-HIT-EXPIRY-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_friend_hit_expiry_cases.json).

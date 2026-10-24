@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-combat-controller-authority-runtime-02/staged-input.omwsave",
+  "source_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+  "runtime_schema": 68,
+  "friend_hit_counters": {
+    "content:oblivion.esm:014a30": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 11,
+        "elapsed": 20.0
+      }
+    ],
+    "dynamic:player:0000000000000001": [
+      {
+        "target": "content:oblivion.esm:01fc43",
+        "count": 7,
+        "elapsed": 20.0
+      }
+    ],
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 65535,
+        "elapsed": 0.0
+      },
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 2,
+        "elapsed": 0.0
+      }
+    ],
+    "content:oblivion.esm:032a15": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "count": 3,
+        "elapsed": 20.0
+      }
+    ]
+  },
+  "combat_controllers": {
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "priority": 200,
+        "marker": 255,
+        "value_0c": -0.0,
+        "value_10": 1.25
+      },
+      {
+        "target": "content:oblivion.esm:032a15",
+        "priority": 200,
+        "marker": 1,
+        "value_0c": -2.5,
+        "value_10": -0.0
+      }
+    ],
+    "content:oblivion.esm:032a15": []
+  },
+  "preregistration": {
+    "scope": "Seeded current-controller ownership and counters followed by actual frame expiry, real F5 save, fresh-process continuation to expiry and a third fresh process reading zero. No contacts and no injected state after initial staging. Controller creation remains outside this course.",
+    "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-combat-controller-authority-runtime-02/staged-input.omwsave",
+    "source_sha256": "898bbc9c3ec6a1a95056852d318fa9fbc9735fa36d3258e2f09000b93a24673a",
+    "input_sha256": "e17f774b6fa22d25e79960e28d6110338cccffd3d4909c38c682913fc1ef8ab4",
+    "declared_counters": {
+      "content:oblivion.esm:014a30": [
+        {
+          "target": "dynamic:player:0000000000000001",
+          "count": 11,
+          "elapsed": 20.0
+        }
+      ],
+      "dynamic:player:0000000000000001": [
+        {
+          "target": "content:oblivion.esm:01fc43",
+          "count": 7,
+          "elapsed": 20.0
+        }
+      ],
+      "content:oblivion.esm:01fc43": [
+        {
+          "target": "dynamic:player:0000000000000001",
+          "count": 65535,
+          "elapsed": 0.0
+        },
+        {
+          "target": "dynamic:player:0000000000000001",
+          "count": 2,
+          "elapsed": 0.0
+        }
+      ],
+      "content:oblivion.esm:032a15": [
+        {
+          "target": "dynamic:player:0000000000000001",
+          "count": 3,
+          "elapsed": 20.0
+        }
+      ]
+    },
+    "declared_controllers": {
+      "content:oblivion.esm:01fc43": [
+        {
+          "target": "dynamic:player:0000000000000001",
+          "priority": 200,
+          "marker": 255,
+          "value_0c": -0.0,
+          "value_10": 1.25
+        },
+        {
+          "target": "content:oblivion.esm:032a15",
+          "priority": 200,
+          "marker": 1,
+          "value_0c": -2.5,
+          "value_10": -0.0
+        }
+      ],
+      "content:oblivion.esm:032a15": []
+    },
+    "expected_queries": {
+      "first": [
+        "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=65535",
+        "acceptance-command actor=dynamic:player:0000000000000001 name=GetFriendHit result=7",
+        "acceptance-command actor=content:oblivion.esm:032a15 name=GetFriendHit result=0",
+        "acceptance-command actor=content:oblivion.esm:014a30 name=GetFriendHit result=11"
+      ],
+      "second": [
+        "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=65535",
+        "acceptance-command actor=dynamic:player:0000000000000001 name=GetFriendHit result=7",
+        "acceptance-command actor=content:oblivion.esm:032a15 name=GetFriendHit result=0",
+        "acceptance-command actor=content:oblivion.esm:014a30 name=GetFriendHit result=11",
+        "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=0"
+      ],
+      "third": [
+        "acceptance-command actor=content:oblivion.esm:01fc43 name=GetFriendHit result=0",
+        "acceptance-command actor=dynamic:player:0000000000000001 name=GetFriendHit result=7",
+        "acceptance-command actor=content:oblivion.esm:032a15 name=GetFriendHit result=0",
+        "acceptance-command actor=content:oblivion.esm:014a30 name=GetFriendHit result=11"
+      ]
+    },
+    "expected_contacts": 0,
+    "first_elapsed_bounds": [
+      0.0,
+      2.0
+    ],
+    "first_manager_delta_tolerance": 0.5,
+    "second_expected_npc_counters": [],
+    "third_expected_npc_counters": [],
+    "player_and_no_controller_counters_preserved": true,
+    "active_empty_controller_expires": true,
+    "second_late_query_at_simulation_seconds": 12,
+    "superseded_attempt": "runtime-01 incorrectly expected032a15 counter to survive despite Active process and empty controller; second-stage timing revised before this fresh course",
+    "first_save_count": 1,
+    "second_save_count": 1,
+    "third_save_count": 1,
+    "full_M15S4_acceptance": false
+  }
+}

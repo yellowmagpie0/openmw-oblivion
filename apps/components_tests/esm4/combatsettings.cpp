@@ -434,3 +434,33 @@ TEST(ESM4CombatSettings, DropExtraOwnerThresholdUsesNativeAbsentInitializerAndSt
     value.mEditorId = "fOtherNativeSetting";
     EXPECT_EQ(ESM4::buildDropExtraOwnerThreshold(settings), 45.f);
 }
+
+TEST(ESM4CombatSettings, FriendHitTimerPreservesFiniteOverridesAndRejectsMalformedWinningRecords)
+{
+    EXPECT_EQ(ESM4::buildFriendHitTimer({}), 10.f);
+    ESM4::GameSetting value{};
+    value.mEditorId = "FFRIENDHITTIMER";
+    const std::array<const ESM4::GameSetting*, 1> settings{&value};
+    for (const float threshold : {-10.f, -0.f, 0.f, 1.25f, 10.f,
+             std::numeric_limits<float>::denorm_min(), std::numeric_limits<float>::max()})
+    {
+        value.mData = threshold;
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(ESM4::buildFriendHitTimer(settings)),
+            std::bit_cast<std::uint32_t>(threshold));
+    }
+    for (const float invalid : {std::numeric_limits<float>::quiet_NaN(),
+             std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()})
+    {
+        value.mData = invalid;
+        EXPECT_THROW(ESM4::buildFriendHitTimer(settings), std::invalid_argument);
+    }
+    value.mData = std::int32_t{10};
+    EXPECT_THROW(ESM4::buildFriendHitTimer(settings), std::invalid_argument);
+    value.mData = std::string("10");
+    EXPECT_THROW(ESM4::buildFriendHitTimer(settings), std::invalid_argument);
+    value.mData = 10.f;
+    auto duplicate = value;
+    duplicate.mEditorId = "fFriendHitTimer";
+    const std::array<const ESM4::GameSetting*, 2> ambiguous{&value, &duplicate};
+    EXPECT_THROW(ESM4::buildFriendHitTimer(ambiguous), std::invalid_argument);
+}

@@ -54,6 +54,7 @@ namespace MWWorld
     ESM4::PlayerDynamicBaseSettings resolveOblivionPlayerDynamicBaseSettings(const ESMStore& store);
     ESM4::FatigueRegenerationSettings resolveOblivionFatigueRegenerationSettings(const ESMStore& store);
     MWMechanics::OblivionFrameSettings resolveOblivionFrameSettings(const ESMStore& store);
+    float resolveOblivionFriendHitTimer(const ESMStore& store);
     MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store);
     ESM4::SwimBreathSettings resolveOblivionSwimBreathSettings(const ESMStore& store);
     ESM4::EssentialRecoverySettings resolveOblivionEssentialRecoverySettings(const ESMStore& store);

@@ -34774,3 +34774,107 @@ TEST(OblivionWorldTest, DirectedCombatControllersPreserveEmptyPresenceAndRemainS
     EXPECT_FALSE(world.hasOblivionCombatController(actor).value());
     EXPECT_TRUE(world.captureOblivionRuntimeState().mCombatControllers.empty());
 }
+
+TEST(OblivionWorldTest, FriendHitExpiryUsesFrameDeltaCurrentControllerAndNativeOrderedRemovalAcrossRestore)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    ESM4::Npc nativePlayer{};
+    nativePlayer.mId = {7, 1}; nativePlayer.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    nativePlayer.mIsTES4 = true; nativePlayer.mData.health = 100;
+    nativePlayer.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(nativePlayer, nativePlayer.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    auto other = addNativeNpc(fixture, 0xad0, 100, 0xae0);
+    other = other.getCell()->moveTo(other, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(other);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(other, ESM4::ActorValueProcess::Active));
+    const auto actor = fixture.mActor.getCellRef().getFormKey(), target = other.getCellRef().getFormKey();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    ASSERT_TRUE(world.getOblivionCombatService()->engage(actor, target));
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatControllers[actor] = {}; // Presence, including empty, admits expiry.
+    state.mFriendHitCounters[actor] = {{target, 1, 9.5f}, {target, 2, 9.5f}, {target, 3, 9.5f}};
+    state.mFriendHitCounters[target] = {{actor, 7, 20}}; // Engagement alone does not.
+    state.mFriendHitCounters[player] = {{actor, 8, 20}};
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    world.advanceOblivionActorClock(.03125f); // Deliberately differs from global frame delta.
+    ASSERT_TRUE(world.updateOblivionFrameResources(fixture.mActor, .5f, false));
+    auto captured = world.captureOblivionRuntimeState();
+    ASSERT_EQ(captured.mFriendHitCounters.at(actor).size(), 3u);
+    for (const auto& entry : captured.mFriendHitCounters.at(actor)) EXPECT_EQ(entry.mElapsed, 10.f);
+    ASSERT_TRUE(world.updateOblivionFrameResources(other, 100.f, false));
+    ASSERT_TRUE(world.updateOblivionFrameResources(world.getPlayerPtr(), 100.f, false));
+    captured = world.captureOblivionRuntimeState();
+    EXPECT_EQ(captured.mFriendHitCounters.at(target), state.mFriendHitCounters.at(target));
+    EXPECT_EQ(captured.mFriendHitCounters.at(player), state.mFriendHitCounters.at(player));
+    ASSERT_TRUE(world.updateOblivionFrameResources(fixture.mActor, .125f, false));
+    captured = world.captureOblivionRuntimeState();
+    const std::vector<ESM4::FriendHitEntry> promoted{{target, 2, 10.125f}};
+    EXPECT_EQ(captured.mFriendHitCounters.at(actor), promoted); // Promoted head waits for next call.
+    EXPECT_EQ(world.getOblivionFriendHit(actor, target), 2);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(captured.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters.at(actor), promoted);
+    ASSERT_TRUE(world.updateOblivionFrameResources(fixture.mActor, 0.f, false));
+    captured = world.captureOblivionRuntimeState();
+    EXPECT_TRUE(captured.mFriendHitCounters.contains(actor)); // Allocated-empty extra persists.
+    EXPECT_TRUE(captured.mFriendHitCounters.at(actor).empty());
+    EXPECT_EQ(world.getOblivionFriendHit(actor, target), 0);
+    captured.mFriendHitCounters.erase(actor);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(captured.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    ASSERT_TRUE(world.updateOblivionFrameResources(fixture.mActor, 1.f, false));
+    EXPECT_FALSE(world.captureOblivionRuntimeState().mFriendHitCounters.contains(actor));
+}
+
+TEST(OblivionWorldTest, FriendHitExpiryForCreatureSkipsNonlivingStateAndValidatesBeforePublishing)
+{
+    PopulatedMigrationFixture fixture;
+    auto& world = fixture.mWorld;
+    auto creature = addEquipmentCreature(fixture);
+    creature = creature.getCell()->moveTo(creature, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(creature);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(creature, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(fixture.mActor, ESM4::ActorValueProcess::Active));
+    const auto actor = creature.getCellRef().getFormKey(), target = fixture.mActor.getCellRef().getFormKey();
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatControllers[actor] = {{target, 200, 1, 0, 0}};
+    state.mFriendHitCounters[actor] = {{target, 65535, .75f}};
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    ESM4::GameSetting timer{}; timer.mId = {0xaf0, 0}; timer.mEditorId = "fFriendHitTimer"; timer.mData = 1.f;
+    const auto timerKey = ESM::FormKey::content("headless.esm", 0xaf0);
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(timer, timerKey);
+    auto& service = *world.getOblivionCombatService();
+    auto life = *service.findActorLife(actor);
+    for (const auto phase : {ESM4::ActorLifePhase::Dead, ESM4::ActorLifePhase::EssentialUnconscious})
+    {
+        life.mPhase = phase;
+        service.publishNonPlayerLife(creature, life);
+        ASSERT_TRUE(world.updateOblivionFrameResources(creature, 100.f, false));
+        EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, state.mFriendHitCounters);
+    }
+    life.mPhase = ESM4::ActorLifePhase::Alive;
+    service.publishNonPlayerLife(creature, life);
+    for (const float invalid : {-1.f, std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+    {
+        const auto before = world.captureOblivionRuntimeState().serializeBinary();
+        EXPECT_THROW(world.updateOblivionFrameResources(creature, invalid, false), std::invalid_argument);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    }
+    timer.mData = std::int32_t{1};
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(timer, timerKey);
+    const auto before = world.captureOblivionRuntimeState().serializeBinary();
+    EXPECT_THROW(world.updateOblivionFrameResources(creature, .5f, false), std::invalid_argument);
+    EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before);
+    timer.mData = 1.f;
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(timer, timerKey);
+    ASSERT_TRUE(world.updateOblivionFrameResources(creature, .25f, false));
+    EXPECT_EQ(world.getOblivionFriendHit(actor, target), 65535); // Equality survives winning override1.
+    ASSERT_TRUE(world.updateOblivionFrameResources(creature, .125f, false));
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mFriendHitCounters.at(actor).empty());
+}

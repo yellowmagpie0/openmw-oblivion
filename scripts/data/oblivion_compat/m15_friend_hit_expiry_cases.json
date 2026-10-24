@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "purpose": "Actual actor-frame friend-hit expiry using current base-controller ownership and native global-frame timing.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entrypoints": {
+    "admission_slice": [
+      "0x5fab5c",
+      "0x5fabb7"
+    ],
+    "dead_exit": "0x5fae7f",
+    "nonplayer_current_controller": "0x5e6190",
+    "player_current_controller_null": "0x6f7070",
+    "dead_predicate": "0x5e33b0",
+    "owned_extra_wrapper": "0x420e90",
+    "expiry": "0x42aff0",
+    "global_frame_delta": "0xb33e9c",
+    "compiled_timer_setting": "0xb368a0"
+  },
+  "admission_matrix": {
+    "x87_words": [
+      639,
+      895
+    ],
+    "actors": [
+      "NPC",
+      "Creature",
+      "Player"
+    ],
+    "raw_life_states": [
+      0,
+      1,
+      2,
+      6
+    ],
+    "base_package": [
+      "absent",
+      "raw0C",
+      "raw01"
+    ],
+    "upper_package": [
+      "absent",
+      "raw0C"
+    ],
+    "opaque_player_byte_6e5": [
+      0,
+      1
+    ],
+    "opaque_player_signed_count_590": [
+      -1,
+      0,
+      1
+    ],
+    "cases": 864
+  },
+  "expected_contract": [
+    "Raw life1/2/6 rejects expiry; Player current-controller getter is always null.",
+    "Only current base package raw0C admits expiry, including empty target lists; engagement and upper package do not substitute.",
+    "Opaque Player byte+6E5 nonzero AND signed count+590 >0 suppresses native updates. This producer/state is not yet modeled by the fork; runtime integration covers the unsuppressed branch.",
+    "Actual expiry uses GLOBAL frame .5 instead of actor-clock .125. Seed elapsed.75 / threshold1 expires.",
+    "Timer default10 is independently verified in the original initializer; configured Oblivion.esm plus stationary fixture contain no override. Typed finite winning overrides replace it, including negative finite values.",
+    "Advance every timer with a float store, expire strictly > threshold, restart traversal at head.next after removal, and retain allocated-empty extras.",
+    "Prepare counter changes before resource publication; malformed inputs do not publish either update."
+  ],
+  "boundaries": [
+    "Original common actor update slice5FAB5C..5FABB7 / dead exit5FAE7F. Actual actor+198 dead predicate (raw1/2/6), NPC/Creature current base+330 getter5E6190, Player null+330, actual Player65D550 suppression predicate, actual owned-extra420E90 and42AFF0 expiry/remove. Actual420E00 constructs owned extra/counter before slice. Native controller+33C update is a boundary with actor-clock delta .125; actual expiry reads distinct GLOBAL B33E9C .5, threshold1, seeded elapsed.75 and removes counter. Alloc/free/TLS locks are primitive boundaries. Synthetic base/upper packages only supply raw type bytes; no controller update/creation, native frame scheduler or gameplay acceptance. Player suppression fields tested as opaque byte+6E5 and signed count+590, no semantic names assigned.",
+    "Native controller update+33C is supplied; this is not a complete original controller simulation.",
+    "Real runtime input seeds controller/counter state only once. Subsequent processes load the preceding real save without reinjection. No contacts occur."
+  ],
+  "full_M15S4_acceptance": false
+}

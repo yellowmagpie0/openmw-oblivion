@@ -147,6 +147,11 @@ namespace MWWorld
             ESM4::buildMagickaRegenerationSettings(settings)};
     }
 
+    float resolveOblivionFriendHitTimer(const ESMStore& store)
+    {
+        return ESM4::buildFriendHitTimer(winningRecords<ESM4::GameSetting>(store));
+    }
+
     MWMechanics::OblivionFatigueSettings resolveOblivionFatigueSettings(const ESMStore& store)
     {
         const auto settings = winningRecords<ESM4::GameSetting>(store);
