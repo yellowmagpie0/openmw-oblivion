@@ -1,0 +1,779 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Editable bounded examples drawn only from original-instruction observations. Component target storage/admission is implemented; package creation/cleanup and notification observations describe future integration requirements, not production acceptance.",
+  "actor_reference_labels": [
+    "owner",
+    "Player",
+    "other",
+    "same-base-other"
+  ],
+  "target_admission": [
+    {
+      "input": {
+        "word": 639,
+        "speed": 0,
+        "distance": 0.0,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "null",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 0.0,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "owner",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 0.0,
+        "reach": 76.80000305175781,
+        "commander": "owner",
+        "target": "Player",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 0,
+        "distance": 96.0,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "Player",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": [
+        {
+          "target": "Player",
+          "priority": 200,
+          "marker": 1,
+          "float0c_bits": 2147483648,
+          "float10_bits": 1067450368
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 0,
+        "distance": 96.00000762939453,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "Player",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": []
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": -1,
+        "distance": 96.00000762939453,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "Player",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": [
+        {
+          "target": "Player",
+          "priority": 200,
+          "marker": 1,
+          "float0c_bits": 2147483648,
+          "float10_bits": 1067450368
+        }
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 96.00000762939453,
+        "reach": 76.80000305175781,
+        "commander": "other",
+        "target": "Player",
+        "priority": 200,
+        "marker": 1,
+        "installed": 0
+      },
+      "expected_entries": [
+        {
+          "target": "Player",
+          "priority": 200,
+          "marker": 1,
+          "float0c_bits": 2147483648,
+          "float10_bits": 1067450368
+        }
+      ]
+    }
+  ],
+  "target_priority_sequences": [
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 100.0,
+        "reach": 76.8,
+        "installed": 0,
+        "priorities": [
+          200,
+          200,
+          200
+        ]
+      },
+      "steps": [
+        [
+          {
+            "target": "Player",
+            "priority": 200,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "other",
+            "priority": 200,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": 200,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "same-base-other",
+            "priority": 200,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "other",
+            "priority": 200,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": 200,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ]
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 100.0,
+        "reach": 76.8,
+        "installed": 0,
+        "priorities": [
+          -2147483648,
+          0,
+          2147483647
+        ]
+      },
+      "steps": [
+        [
+          {
+            "target": "Player",
+            "priority": -2147483648,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "other",
+            "priority": 0,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": -2147483648,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "same-base-other",
+            "priority": 2147483647,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "other",
+            "priority": 0,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": -2147483648,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ]
+      ]
+    },
+    {
+      "input": {
+        "word": 639,
+        "speed": 40,
+        "distance": 100.0,
+        "reach": 76.8,
+        "installed": 0,
+        "priorities": [
+          2147483647,
+          2147483647,
+          -2147483648
+        ]
+      },
+      "steps": [
+        [
+          {
+            "target": "Player",
+            "priority": 2147483647,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "other",
+            "priority": 2147483647,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": 2147483647,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ],
+        [
+          {
+            "target": "other",
+            "priority": 2147483647,
+            "marker": 1,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "Player",
+            "priority": 2147483647,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          },
+          {
+            "target": "same-base-other",
+            "priority": -2147483648,
+            "marker": 0,
+            "float0c_bits": 2147483648,
+            "float10_bits": 1067450368
+          }
+        ]
+      ]
+    }
+  ],
+  "notification_enemy_examples": [
+    {
+      "input": {
+        "enemy": true,
+        "trailing": 4,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 0,
+        "ignored": false,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 4,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          0
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          0
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          0
+        ],
+        [
+          "counter-remove",
+          0
+        ],
+        [
+          "controller-notify-boundary"
+        ]
+      ]
+    },
+    {
+      "input": {
+        "enemy": true,
+        "trailing": null,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 3,
+        "ignored": false,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 0,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          3
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          3
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          3
+        ],
+        [
+          "counter-remove",
+          3
+        ],
+        [
+          "controller-notify-boundary"
+        ]
+      ]
+    },
+    {
+      "input": {
+        "enemy": true,
+        "trailing": 4,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 65535,
+        "ignored": false,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 4,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          65535
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          65535
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          65535
+        ],
+        [
+          "counter-remove",
+          65535
+        ],
+        [
+          "controller-notify-boundary"
+        ]
+      ]
+    },
+    {
+      "input": {
+        "enemy": false,
+        "trailing": 4,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 65535,
+        "ignored": false,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 0,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          65535
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          65535
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          65535
+        ],
+        [
+          "counter-increment",
+          65535
+        ],
+        [
+          "speech-entry",
+          "notification",
+          0
+        ],
+        [
+          "voice-result-boundary",
+          "notification",
+          0
+        ]
+      ]
+    },
+    {
+      "input": {
+        "enemy": true,
+        "trailing": 4,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 3,
+        "ignored": true,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 3,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          3
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          3
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          3
+        ],
+        [
+          "speech-entry",
+          "notification",
+          3
+        ],
+        [
+          "voice-result-boundary",
+          "notification",
+          3
+        ]
+      ]
+    },
+    {
+      "input": {
+        "enemy": false,
+        "trailing": null,
+        "precision": 639,
+        "health": 1,
+        "blocked": false,
+        "counter_selected": false,
+        "damage_draw": 0,
+        "speech_draw": 0,
+        "before": 3,
+        "ignored": true,
+        "ally": false,
+        "combat": true,
+        "commander": "null",
+        "disposition": 15
+      },
+      "final_counter": 3,
+      "events": [
+        [
+          "damage-boundary"
+        ],
+        [
+          "draw",
+          "0x547663",
+          0
+        ],
+        [
+          "speech-entry",
+          "contact",
+          3
+        ],
+        [
+          "voice-result-boundary",
+          "contact",
+          3
+        ],
+        [
+          "stagger-boundary"
+        ],
+        [
+          "notification-entry",
+          3
+        ],
+        [
+          "speech-entry",
+          "notification",
+          3
+        ],
+        [
+          "voice-result-boundary",
+          "notification",
+          3
+        ]
+      ]
+    }
+  ],
+  "stop_lifecycle_examples": [
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": false,
+        "stop_target": "0x0",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": false,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    },
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": true,
+        "stop_target": "0x0",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": true,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    },
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": false,
+        "stop_target": "0x2002000",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": false,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    },
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": true,
+        "stop_target": "0x2002000",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": true,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    },
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": false,
+        "stop_target": "0x200a000",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": true,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    },
+    {
+      "input": {
+        "before": 65535,
+        "dead_after": true,
+        "stop_target": "0x200a000",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0,
+        "stopping": true
+      },
+      "expected_base_controller_retained": true,
+      "expected_friend_count": 65535,
+      "expected_destructor_called": false
+    }
+  ],
+  "constructor_empty_magic_inputs": {
+    "npc_draws": 1,
+    "creature_draws": 0,
+    "scope": "Full61BB60/61B190 with empty actor spell list, supplied null race, empty process magic-item list and empty inventory. Full spell availability and production constructor RNG remain open."
+  },
+  "unsupported_component_inputs": [
+    "null owner",
+    "nonfinite or negative distance when Speed is zero",
+    "nonfinite natural reach when Speed is zero",
+    "new nonfinite target payload",
+    "unordered, duplicate or null-target snapshots"
+  ],
+  "full_M15S4_acceptance": false
+}

@@ -278,6 +278,7 @@ add_component_dir (esm4
     crimecontracts
     combatairules
     friendhit
+    combatcontroller
     loaddial
     loaddobj
     loaddoor

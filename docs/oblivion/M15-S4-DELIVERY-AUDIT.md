@@ -15,7 +15,7 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 | 3. Block, mitigation, wear, fatigue and reactions | `beginBlocking`/`endBlocking` own posture; ordinary contacts prepare values, conditions, RNG and timed knockback. | Basic equipped block prepares shield/weapon mitigation, separate Fatigue cost and sequential condition wear. Attacking Player/quest unequips and ordinary NPC world drops now publish with contact resources. Attacker/block spending now uses the native positive-current cap; direct hostile Fatigue damage stays separate. Drawn defensive weapon wear-to-zero now atomically withdraws posture and unequips retained weapons or publishes an owned NPC drop. Expert Counter and bounded Master Counter-first/immediate NPC disarm now have World integration; advanced unarmed zero-absorption defense now joins that route. Lower Hand to Hand general-hit reactions and complete Player/Creature/spare policies remain open. Initially broken shields and drawn weapons now follow the native positive-wear/mastery consequences; zero-wear mastery controls retain equipment. Later selected-shield wear-to-zero now prepares retention/drop through the shared transaction; its normal-input reachability remains open. Ordinary blocking-shield breaks now atomically unequip retained shields or publish an owned NPC shield drop with posture withdrawal. Body armor reaching zero remains equipped; selected-shield further wear now uses the attacker posture/base-Block gate. Complete proc/breakage/reaction publication and renderer/physics recovery once per window. |
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
-| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. Native float disposition requests share saved modifiers and bypass the script frame cache. | Hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
+| 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values, process action and engagement. S3 accepts authority/persistence infrastructure. GetFriendHit now shares saved actor-owned counters across VM and loaded/unloaded conditions. Native float disposition requests share saved modifiers and bypass the script frame cache. Directed combat-controller target admission/storage now has independently verified component rules. | Current base-controller production/persistence, hit notification producers and counter expiry remain unwired. Audit every melee-related command/query against the completed contact, mastery and reaction paths. S3 authority acceptance does not prove those later semantics. |
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Revalidate alongside completed Player blocking and recovery. It must continue through controller/contact, without injected damage or outcomes. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
@@ -12618,3 +12618,45 @@ normal-input attack, secondary speech, counter expiry/current-package admission
 or fresh-process gameplay acceptance. Full M15S4 remains incomplete. See
 [M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json](M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json)
 and the editable [native cases](../../scripts/data/oblivion_compat/m15_native_float_disposition_cases.json).
+
+
+### Directed combat-controller targets and lifecycle contracts
+
+The target-list component now implements original 616190 admission, directed
+reference identity, descending signed priority with new equal-priority entries
+first, duplicate no-ops and removal. Raw marker bytes and finite float bits,
+including negative zero, survive snapshots. Only zero integer Speed reads the
+rooted range gate: distance <= reach + binary32(reach * .25), without a final
+float store on the sum. CommandEffect caster identity remains separate from AI
+and melee targets. All **8,184** native target observations match C++, including
+signed priority extremes. Full normal component checks pass **3,055** tests;
+ASan/UBSan passes **906** ESM4 tests, with leak detection disabled. Both tested
+source fingerprints are `60325ecf59485eeea0d50daf6563953ded2baa41c90461dd4703d251d79e7957`.
+Engine/Python sources and schema67 are unchanged; those suites were not rerun.
+
+New original-instruction probes establish integration contracts separately:
+**96** constructor cases, **24** forced-start admission/install cases, **12**
+target-stop cases and **36** full actor-stop/counter cases. These execute actual
+controller construction, target insertion and base-package publication. With
+empty supplied magic inputs, NPC construction consumes one RNG draw; Creature
+construction consumes none. Full spell/inventory availability remains outside
+this experiment. Living StopCombat clears the base controller when its last
+target is removed; the tested dead branch retains that emptied controller.
+Stopping preserves the existing friend-hit extra and counts0/1/65535. Primitive,
+animation, manager-list, Player-list, callback and policy boundaries are recorded
+explicitly in each probe; this is not complete native AI or gameplay acceptance.
+
+Another **2,304** composed contact/notification cases execute actual directed
+membership. An ordinary existing-enemy hit removes only the first matching
+friend-hit entry and skips secondary warning speech. The ignore-friendly-hits
+branch can bypass this route. Primary speech still observes the old count;
+warning speech observes the resulting count. Undirected engagement and the
+fork's runtime Pursue ordinal cannot substitute for an installed native package0C.
+The failed range interpretation and harness setup attempts are retained.
+
+These component rules are not yet a production current-controller authority.
+Runtime creation/persistence, notification consequences, expiry and the normal
+Player-to-NPC phased caller remain open, alongside the complete S4 input,
+effect and restart matrix. See
+[M15-COMBAT-CONTROLLER-VERIFICATION.json](M15-COMBAT-CONTROLLER-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_combat_controller_cases.json).

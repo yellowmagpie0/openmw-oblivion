@@ -114,6 +114,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/crimecontracts.cpp
     esm4/combatairules.cpp
     esm4/friendhit.cpp
+    esm4/combatcontroller.cpp
     esm4/combatsettings.cpp
     esm4/ability.cpp
     esm4/combatstylepolicy.cpp

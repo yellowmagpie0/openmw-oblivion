@@ -18290,3 +18290,45 @@ normal-input attack, secondary speech, counter expiry/current-package admission
 or fresh-process gameplay acceptance. Full M15S4 remains incomplete. See
 [M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json](M15-NATIVE-FLOAT-DISPOSITION-VERIFICATION.json)
 and the editable [native cases](../../scripts/data/oblivion_compat/m15_native_float_disposition_cases.json).
+
+
+### Directed combat-controller targets and lifecycle contracts
+
+The target-list component now implements original 616190 admission, directed
+reference identity, descending signed priority with new equal-priority entries
+first, duplicate no-ops and removal. Raw marker bytes and finite float bits,
+including negative zero, survive snapshots. Only zero integer Speed reads the
+rooted range gate: distance <= reach + binary32(reach * .25), without a final
+float store on the sum. CommandEffect caster identity remains separate from AI
+and melee targets. All **8,184** native target observations match C++, including
+signed priority extremes. Full normal component checks pass **3,055** tests;
+ASan/UBSan passes **906** ESM4 tests, with leak detection disabled. Both tested
+source fingerprints are `60325ecf59485eeea0d50daf6563953ded2baa41c90461dd4703d251d79e7957`.
+Engine/Python sources and schema67 are unchanged; those suites were not rerun.
+
+New original-instruction probes establish integration contracts separately:
+**96** constructor cases, **24** forced-start admission/install cases, **12**
+target-stop cases and **36** full actor-stop/counter cases. These execute actual
+controller construction, target insertion and base-package publication. With
+empty supplied magic inputs, NPC construction consumes one RNG draw; Creature
+construction consumes none. Full spell/inventory availability remains outside
+this experiment. Living StopCombat clears the base controller when its last
+target is removed; the tested dead branch retains that emptied controller.
+Stopping preserves the existing friend-hit extra and counts0/1/65535. Primitive,
+animation, manager-list, Player-list, callback and policy boundaries are recorded
+explicitly in each probe; this is not complete native AI or gameplay acceptance.
+
+Another **2,304** composed contact/notification cases execute actual directed
+membership. An ordinary existing-enemy hit removes only the first matching
+friend-hit entry and skips secondary warning speech. The ignore-friendly-hits
+branch can bypass this route. Primary speech still observes the old count;
+warning speech observes the resulting count. Undirected engagement and the
+fork's runtime Pursue ordinal cannot substitute for an installed native package0C.
+The failed range interpretation and harness setup attempts are retained.
+
+These component rules are not yet a production current-controller authority.
+Runtime creation/persistence, notification consequences, expiry and the normal
+Player-to-NPC phased caller remain open, alongside the complete S4 input,
+effect and restart matrix. See
+[M15-COMBAT-CONTROLLER-VERIFICATION.json](M15-COMBAT-CONTROLLER-VERIFICATION.json)
+and the editable [native cases](../../scripts/data/oblivion_compat/m15_combat_controller_cases.json).

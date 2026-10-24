@@ -1,0 +1,868 @@
+{
+  "schema_version": 1,
+  "checkpoint": "Native directed combat-controller target rules and integration contracts",
+  "tested_parent_commit": "e6ecfbabf7f5ef65dfcda2df309fad5a2f73ae9a",
+  "tested_source": {
+    "head": "e6ecfbabf7f5ef65dfcda2df309fad5a2f73ae9a",
+    "source_fingerprint": "60325ecf59485eeea0d50daf6563953ded2baa41c90461dd4703d251d79e7957"
+  },
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "component_results": {
+    "normal": {
+      "executed": 3055,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "afde028aecce654b1b2be6d7d126282901cd9f50bb61cb658cda59a9abdc2045",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "afe39e3bcb473ef6fc968172bc2b10191bce1cfa0fda889d72635e2ff1002463",
+      "inventory_sha256": "ed5ecf8db4be7590af05f59f597bdc36f02e1d873b655814e6f6ed0602f29446",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitized": {
+      "executed": 906,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4*",
+      "binary_sha256": "d06640520b0c4251a013204b5a4b47d75223fdf5132b0b8bfd79eaec34298148",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "b58e3367f890445bd250070a2d5a780190e6a9dd366b46c0aff89100eb8f05a4",
+      "inventory_sha256": "e45faa63aecd1c632226617b45fc5425d2d7bd663e3d5f92ef51aebdc2a17b34",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "native_comparison": {
+    "cases": 8184,
+    "passed": true
+  },
+  "native_probes": {
+    "native-combat-target-storage-oracle-02": {
+      "passed": true,
+      "cases": 5184,
+      "sequences": 108,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "a7bfe69b69aa6c7145e514b441fab19e3042cf296487d4a8c05944d574b95d7c",
+      "scope": "Full original616190 target admission/insertion with actual613670 membership,6135F0 front getter,416650 sorted insertion,614190 signed-priority comparator, target process13C getter and owner5E6190 controller getter; original6136B0 counter runs with supplied null music device. Owner AV4 and natural reach/reference-distance values, package target-data synchronization5697F0/569EC0 and post-insertion controller refresh624030 are declared boundaries. Synthetic initialized controller fields follow independently inspected constructor assignments; full construction/package installation, target removal, S7 decision updates, hit notifications and gameplay are not acceptance.",
+      "full_M15S4_acceptance": false
+    },
+    "native-combat-target-priority-extremes-oracle-01": {
+      "passed": true,
+      "cases": 0,
+      "sequences": 392,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "d61c59833123460c74899459cf31ebfad33c91cb2a3d857cc9187ae3206cd5bf",
+      "scope": "Full original616190 target admission/insertion with actual613670 membership,6135F0 front getter,416650 sorted insertion,614190 signed-priority comparator, target process13C getter and owner5E6190 controller getter; original6136B0 counter runs with supplied null music device. Owner AV4 and natural reach/reference-distance values, package target-data synchronization5697F0/569EC0 and post-insertion controller refresh624030 are declared boundaries. Synthetic initialized controller fields follow independently inspected constructor assignments; full construction/package installation, target removal, S7 decision updates, hit notifications and gameplay are not acceptance.",
+      "full_M15S4_acceptance": false
+    },
+    "native-common-notification-enemy-target-oracle-01": {
+      "passed": true,
+      "cases": 2304,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "6652648c6172c68d74921a1ede0f02e25c138d7b928d859f676c9ebdfe8d55a0",
+      "scope": "Original contact5FFEB5..6005C0 with actual final virtual3A8 dispatch to5FE380 and actual friendly increment/threshold/secondary speech branch; original extra owner/list/getter and fight score execute. AV/resource/speech616530 results, Counter/master/reaction playback, actor-controller/ground queries, process effect8, relationship/controller/predicate and detection-aggression tail are declared boundaries. Primary speech observes old counter; notification follows reaction sinks and secondary speech observes new/wrapped counter. NPC victim, Player attacker, actual package0C controller getter and process13C getter, supplied command-caster field, current Speed0; no actual audio/rendering/VM or full aggression gameplay acceptance.",
+      "full_M15S4_acceptance": false,
+      "extension": "Execute actual613670 directed controller target membership. Explicit initial zero/3/65535 counters, optional duplicate count4, actual first-only removal, enemy/ignored branch ordering and bothx87 words. Supersedes only membership boundary of order05; all other boundaries unchanged. Constructor/package installation and lifecycle remain outside scope."
+    },
+    "native-combat-controller-constructor-oracle-02": {
+      "passed": true,
+      "cases": 96,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "d2857af95f9c6bcc242c40eb40d11d4016aa569cc7e5e950928487f14fcfd05e",
+      "scope": "Full original61BB60 constructor, actual base package constructors/type setters,612EA0 range metadata,61B190 spell-availability initialization with empty actor spells/race/inventory and actual616190 target insertion. Allocator/free/single-thread locks, natural reach547540, raw RNG47DF80 result, null race5E32F0, empty process454 magic items and empty inventory4D8950 are explicit boundaries. Actual actor NPC predicate4D7F80 and base lookup5E02E0 run. No full spell/inventory enumeration, base package installation or gameplay acceptance.",
+      "full_M15S4_acceptance": false
+    },
+    "native-combat-start-install-oracle-05": {
+      "passed": true,
+      "cases": 24,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "1ed76211713542aa024ae9815c8df9f132cdd7b24a0c4d419b1497f0ea0efb65",
+      "scope": "Full original6010B0 Actor32C forced StartCombat(target,1,1,0,200,1), actual61BB60 constructor, actual base package constructors/type setters,612EA0 range metadata,61B190 spell-availability initialization with empty actor spells/race/inventory and actual616190 target insertion. Allocator/free/single-thread locks, natural reach547540, raw RNG47DF80 result, null race5E32F0, empty process454 magic items and empty inventory4D8950 are explicit boundaries. Actual actor NPC predicate4D7F80 and base lookup5E02E0 run. Actual5F1590 publishes controller to process+8; actual5EAE70 clear path on empty base/upper package; extra bookkeeping4FBF90, process194 sync, actor30C pre-clear callback and actor mounted380, package installed callback5E8DE0 and actor refresh5E7BE0 are additional explicit boundaries. Pose18C=0, dead query198=false supplied. No full spell/inventory enumeration, upper-priority package replacement, S7 decisions or gameplay acceptance.",
+      "full_M15S4_acceptance": false
+    },
+    "native-combat-stop-targets-oracle-02": {
+      "passed": true,
+      "cases": 12,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "09b8d34e4807eb347338367fa999c21cfc773fdb9991e359a67e41009bbc3a16",
+      "scope": "Full original61DB00 per-target/all-target stop and6162D0 removal with freshly constructed original61BB60 constructor, actual base package constructors/type setters,612EA0 range metadata,61B190 spell-availability initialization with empty actor spells/race/inventory and actual616190 target insertion. Allocator/free/single-thread locks, natural reach547540, raw RNG47DF80 result, null race5E32F0, empty process454 magic items and empty inventory4D8950 are explicit boundaries. Actual actor NPC predicate4D7F80 and base lookup5E02E0 run. Additional actor callback5EFF30 is a boundary and5E5670 predicate=false supplied. Native target-list removal and Player-target counter decrement execute. No full ActorStopCombat5F6330 dispatch, base-package removal, spell/inventory enumeration or gameplay acceptance.",
+      "full_M15S4_acceptance": false
+    },
+    "native-combat-full-stop-counters-oracle-01": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "7b4fa91984127ad1ac593b092d4af41b5497d58093f2c1c16608ee1867045ce8",
+      "scope": "Full original5F6330 ActorStopCombat after actual6010B0 Actor32C forced StartCombat(target,1,1,0,200,1), actual61BB60 constructor, actual base package constructors/type setters,612EA0 range metadata,61B190 spell-availability initialization with empty actor spells/race/inventory and actual616190 target insertion. Allocator/free/single-thread locks, natural reach547540, raw RNG47DF80 result, null race5E32F0, empty process454 magic items and empty inventory4D8950 are explicit boundaries. Actual actor NPC predicate4D7F80 and base lookup5E02E0 run. Actual5F1590 publishes controller to process+8; extra bookkeeping4FBF90, actual5EAE70 clear path, process194 sync, actor30C pre-clear and actor flags44 callbacks, actor mounted380, package installed callback5E8DE0 and actor refresh5E7BE0 are additional explicit boundaries. Pose18C=0, dead query198=false on start and supplied false/true on stop; dead stop retains the emptied base controller. Actual stop61DB00, target removal6162D0, clear5EAE70 and package destructor execute; extra4E is allocated before stop and seeded with count0/1/65535 and its exact count/owner is re-queried afterward. Actor5E6C60=false and5E5670=false supplied; Player combat list65DEF0, weapon state5F4AE0, actor394, actor-manager4/C empty query, package disposal queue45A500 and process18 reevaluation are declared boundaries. No broader spell/inventory enumeration, upper-priority package replacement, S7 decisions or gameplay acceptance.",
+      "full_M15S4_acceptance": false
+    }
+  },
+  "retained_failures": {
+    "native-combat-target-storage-oracle-01": {
+      "passed": false,
+      "error": "({'word': 639, 'speed': 0, 'distance': 0.0, 'reach': 76.80000305175781, 'commander': 'null', 'target': 'Player', 'priority': -1, 'marker': 0, 'installed': 0}, [{'target': 'Player', 'priority': -1, 'marker': 0, 'float0c_bits': 2147483648, 'float10_bits': 1067450368}], [['package-target-sync', '0x5697f0', 'Player'], ['package-target-sync', '0x569ec0', 'Player']])",
+      "case": {
+        "word": 639,
+        "speed": 0,
+        "distance": 0.0,
+        "reach": 76.80000305175781,
+        "commander": "null",
+        "target": "Player",
+        "priority": -1,
+        "marker": 0,
+        "installed": 0
+      },
+      "entries": [
+        {
+          "target": "Player",
+          "priority": -1,
+          "marker": 0,
+          "float0c_bits": 2147483648,
+          "float10_bits": 1067450368
+        }
+      ],
+      "events": [
+        [
+          "package-target-sync",
+          "0x5697f0",
+          "Player"
+        ],
+        [
+          "package-target-sync",
+          "0x569ec0",
+          "Player"
+        ]
+      ],
+      "completed": 48,
+      "completed_sequences": 0,
+      "eip": "0x2000100",
+      "trace": [
+        "0x616291",
+        "0x616294",
+        "0x616295",
+        "0x5697f0",
+        "0x61629a",
+        "0x61629d",
+        "0x61629f",
+        "0x6162a1",
+        "0x6162a4",
+        "0x6162a5",
+        "0x569ec0",
+        "0x6162aa",
+        "0x6162ad",
+        "0x6162af",
+        "0x6162b5",
+        "0x5e6190",
+        "0x5e6193",
+        "0x5e6195",
+        "0x5e6197",
+        "0x5e619a",
+        "0x5e619c",
+        "0x5e61a4",
+        "0x5e61a6",
+        "0x6162b7",
+        "0x6162b9",
+        "0x6162c4",
+        "0x6162c5",
+        "0x6162c6",
+        "0x6162c7",
+        "0x6162ca"
+      ]
+    },
+    "native-combat-controller-constructor-oracle-01": {
+      "passed": false,
+      "error": "Unhandled CPU exception (UC_ERR_EXCEPTION)",
+      "case": {
+        "word": 639,
+        "kind": "npc",
+        "target": "0x0",
+        "priority": -1,
+        "marker": 0,
+        "draw": 0
+      },
+      "events": [
+        [
+          "natural-reach-boundary"
+        ],
+        [
+          "rng",
+          0
+        ],
+        [
+          "race-boundary"
+        ],
+        [
+          "process-magic-items-boundary"
+        ],
+        [
+          "inventory-count-boundary"
+        ]
+      ],
+      "completed": 0,
+      "trace": [
+        "0x61c08d",
+        "0x61c091",
+        "0x61c094",
+        "0x61c09a",
+        "0x61c09e",
+        "0x61c0a4",
+        "0x61c0aa",
+        "0x61c0b0",
+        "0x61c0b3",
+        "0x61c0b9",
+        "0x61c0bb",
+        "0x61c0c1",
+        "0x61c0c3",
+        "0x61c0c9",
+        "0x61c0cc",
+        "0x61c0d2",
+        "0x61c0d4",
+        "0x61c0da",
+        "0x61c0dc",
+        "0x61c0e2",
+        "0x61c0e5",
+        "0x61c0eb",
+        "0x61c0ed",
+        "0x61c0f3",
+        "0x61c0f9",
+        "0x61c100",
+        "0x61c106",
+        "0x61c10c",
+        "0x61c112",
+        "0x61c119",
+        "0x61c11d",
+        "0x61c124",
+        "0x61c125",
+        "0x61c126",
+        "0x61c127",
+        "0x61c128",
+        "0x61c129",
+        "0x61c12c",
+        "0x2010030",
+        "0x2010032"
+      ],
+      "eip": "0x2010034",
+      "eax": "0x2004000"
+    },
+    "native-combat-start-install-oracle-01": {
+      "passed": false,
+      "error": "",
+      "case": {
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0
+      },
+      "events": [
+        [
+          "extra-bookkeeping-boundary"
+        ],
+        [
+          "clear-transient-package-boundary"
+        ],
+        [
+          "constructor-entry",
+          "0x2010000"
+        ],
+        [
+          "natural-reach-boundary"
+        ],
+        [
+          "rng",
+          0
+        ],
+        [
+          "race-boundary"
+        ],
+        [
+          "process-magic-items-boundary"
+        ],
+        [
+          "inventory-count-boundary"
+        ],
+        [
+          "process-package-sync-boundary"
+        ],
+        [
+          "package-installed-callback-boundary"
+        ]
+      ],
+      "completed": 0,
+      "trace": [
+        "0x41e225",
+        "0x41e22b",
+        "0x41e232",
+        "0x41e236",
+        "0x41e23b",
+        "0x41e23d",
+        "0x41e23f",
+        "0x41e241",
+        "0x41e242",
+        "0x41e244",
+        "0x41e245",
+        "0x41e637",
+        "0x41e639",
+        "0x41e63f",
+        "0x41e641",
+        "0x5f1810",
+        "0x5f1812",
+        "0x5f1813",
+        "0x5f18eb",
+        "0x5f18ee",
+        "0x5f18f0",
+        "0x5f18f6",
+        "0x5f18f8",
+        "0x64af50",
+        "0x64af51",
+        "0x64af52",
+        "0x64af56",
+        "0x64af58",
+        "0x64af5a",
+        "0x64af5d",
+        "0x64af68",
+        "0x64af6c",
+        "0x64af6e",
+        "0x64af75",
+        "0x64af77",
+        "0x64af79",
+        "0x64af7f",
+        "0x64af80",
+        "0x64af82",
+        "0x629ee0"
+      ],
+      "eip": "0x629ee0",
+      "eax": "0xa71814"
+    },
+    "native-combat-start-install-oracle-03": {
+      "passed": false,
+      "error": "Unhandled CPU exception (UC_ERR_EXCEPTION)",
+      "case": {
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0
+      },
+      "events": [
+        [
+          "extra-bookkeeping-boundary"
+        ],
+        [
+          "actual-package-clear-entry"
+        ]
+      ],
+      "completed": 0,
+      "trace": [
+        "0x60128a",
+        "0x579540",
+        "0x60128f",
+        "0x601291",
+        "0x60129d",
+        "0x6012a0",
+        "0x6012a3",
+        "0x6012a5",
+        "0x601375",
+        "0x60137a",
+        "0x60148b",
+        "0x60148f",
+        "0x601491",
+        "0x5eae70",
+        "0x5eae71",
+        "0x5eae72",
+        "0x5eae73",
+        "0x5eae75",
+        "0x5eae77",
+        "0x5eae7a",
+        "0x5eae80",
+        "0x5eae82",
+        "0x5eae88",
+        "0x5eae89",
+        "0x6116d0",
+        "0x6116d3",
+        "0x6116d4",
+        "0x6116d6",
+        "0x6116da",
+        "0x6116de",
+        "0x6116e4",
+        "0x6116ea",
+        "0x45a500",
+        "0x45a505",
+        "0x45a506",
+        "0x45a507",
+        "0x45a50a",
+        "0x45a50c",
+        "0x700a84",
+        "0x700a86"
+      ],
+      "eip": "0x700a87",
+      "eax": "0x0"
+    },
+    "native-combat-stop-targets-oracle-01": {
+      "passed": false,
+      "error": "Invalid memory read (UC_ERR_READ_UNMAPPED)",
+      "case": {
+        "remove": "0x0",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0
+      },
+      "events": [],
+      "completed": 0,
+      "trace": [
+        "0x448d85",
+        "0x448d8b",
+        "0x448d91",
+        "0x448d93",
+        "0x448d96",
+        "0x448d97",
+        "0x448d9c",
+        "0x6a9060",
+        "0x6a9064",
+        "0x6a9066",
+        "0x6a9069",
+        "0x6a906b",
+        "0x448d9e",
+        "0x448da4",
+        "0x448da7",
+        "0x448da9",
+        "0x448dce",
+        "0x448dd4",
+        "0x448dda",
+        "0x448ddb",
+        "0x453450",
+        "0x453451",
+        "0x453455",
+        "0x453457",
+        "0x45345a",
+        "0x45345b",
+        "0x45345c",
+        "0x453464",
+        "0x55e000",
+        "0x55e001",
+        "0x55e005",
+        "0x55e006",
+        "0x55e008",
+        "0x55e00a",
+        "0x55e00d",
+        "0x55e00e",
+        "0x55e00f",
+        "0x9c338e",
+        "0x9c3392",
+        "0x9c3395"
+      ],
+      "eip": "0x9c3395",
+      "eax": "0xffffffed"
+    },
+    "native-combat-full-stop-oracle-01": {
+      "passed": false,
+      "error": "Invalid memory fetch (UC_ERR_FETCH_UNMAPPED)",
+      "case": {
+        "stop_target": "0x0",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0
+      },
+      "events": [
+        [
+          "extra-bookkeeping-boundary"
+        ],
+        [
+          "actual-package-clear-entry"
+        ],
+        [
+          "actor-30c-boundary"
+        ],
+        [
+          "process-package-sync-boundary"
+        ],
+        [
+          "constructor-entry",
+          "0x2010000"
+        ],
+        [
+          "natural-reach-boundary"
+        ],
+        [
+          "rng",
+          0
+        ],
+        [
+          "race-boundary"
+        ],
+        [
+          "process-magic-items-boundary"
+        ],
+        [
+          "inventory-count-boundary"
+        ],
+        [
+          "process-package-sync-boundary"
+        ],
+        [
+          "package-installed-callback-boundary"
+        ],
+        [
+          "actor-package-refresh-boundary"
+        ],
+        [
+          "Player-combat-list-boundary"
+        ],
+        [
+          "weapon-state-boundary"
+        ],
+        [
+          "actor394-boundary"
+        ],
+        [
+          "actor-manager-query4-empty-boundary"
+        ],
+        [
+          "actor-manager-queryC-empty-boundary"
+        ],
+        [
+          "actual-package-clear-entry"
+        ],
+        [
+          "actor-30c-boundary"
+        ]
+      ],
+      "completed": 0,
+      "trace": [
+        "0xecc",
+        "0xece",
+        "0xed0",
+        "0xed2",
+        "0xed4",
+        "0xed6",
+        "0xed8",
+        "0xeda",
+        "0xedc",
+        "0xede",
+        "0xee0",
+        "0xee2",
+        "0xee4",
+        "0xee6",
+        "0xee8",
+        "0xeea",
+        "0xeec",
+        "0xeee",
+        "0xef0",
+        "0xef2",
+        "0xef4",
+        "0xef6",
+        "0xef8",
+        "0xefa",
+        "0xefc",
+        "0xefe",
+        "0xf00",
+        "0xf02",
+        "0xf04",
+        "0xf06",
+        "0xf08",
+        "0xf0a",
+        "0xf0c",
+        "0xf0e",
+        "0xf10",
+        "0xf12",
+        "0xf14",
+        "0xf16",
+        "0xf18",
+        "0xf1a"
+      ],
+      "eip": "0xf1c",
+      "eax": "0x0"
+    },
+    "native-combat-full-stop-oracle-02": {
+      "passed": false,
+      "error": "('0x0', ['0x5eae82', '0x5eae88', '0x5eae89', '0x6116d0', '0x5eae8b', '0x5eae8e', '0x5eae90', '0x5eae93', '0x5eae99', '0x5eae9d', '0x629400', '0x629406', '0x5eae9f', '0x5eaea1', '0x5eaefc', '0x5eaeff', '0x5eaf01', '0x5eaf07', '0x5eaf08', '0x64af90', '0x64af91', '0x64af92', '0x64af96', '0x64af98', '0x64af9a', '0x64afaf', '0x64afb6', '0x64aff2', '0x64aff9', '0x64affb', '0x64b001', '0x64b003', '0x64b009', '0x64b013', '0x629890', '0x629897', '0x64b015', '0x64b016', '0x64b017', '0x5eaf0a', '0x5eaf0c', '0x5eaf12', '0x5eaf14', '0x567770', '0x567774', '0x567777', '0x567779', '0x56777c', '0x56777e', '0x567785', '0x56778c', '0x56778e', '0x5eaf19', '0x5eaf1b', '0x5eaf21', '0x5eaf23', '0x5eaf26', '0x5eaf27', '0x5eaf2c', '0x5eaf2e', '0x46ac10', '0x46ac14', '0x46ac15', '0x46ac16', '0x46ac1c', '0x4533d0', '0x4533d4', '0x4533d7', '0x4533da', '0x4533dd', '0x4533df', '0x4533e1', '0x4533e5', '0x452d60', '0x452d61', '0x452d66', '0x452d67', '0x452d69', '0x452d6c', '0x452d6f', '0x452d72', '0x452d7b', '0x452d7c', '0x452d80', '0x452d83', '0x452d84', '0x452d88', '0x452d89', '0x452d8a', '0x452d8c', '0x452d94', '0x55e000', '0x55e001', '0x55e005', '0x55e006', '0x55e008', '0x55e00a', '0x55e00d', '0x55e00e', '0x55e00f', '0x0'])",
+      "case": {
+        "stop_target": "0x0",
+        "word": 639,
+        "kind": "npc",
+        "target": "0x2002000",
+        "priority": 200,
+        "marker": 1,
+        "draw": 0
+      },
+      "events": [
+        [
+          "extra-bookkeeping-boundary"
+        ],
+        [
+          "actual-package-clear-entry"
+        ],
+        [
+          "actor-30c-boundary"
+        ],
+        [
+          "process-package-sync-boundary"
+        ],
+        [
+          "constructor-entry",
+          "0x2010000"
+        ],
+        [
+          "natural-reach-boundary"
+        ],
+        [
+          "rng",
+          0
+        ],
+        [
+          "race-boundary"
+        ],
+        [
+          "process-magic-items-boundary"
+        ],
+        [
+          "inventory-count-boundary"
+        ],
+        [
+          "process-package-sync-boundary"
+        ],
+        [
+          "package-installed-callback-boundary"
+        ],
+        [
+          "actor-package-refresh-boundary"
+        ],
+        [
+          "Player-combat-list-boundary"
+        ],
+        [
+          "weapon-state-boundary"
+        ],
+        [
+          "actor394-boundary"
+        ],
+        [
+          "actor-manager-query4-empty-boundary"
+        ],
+        [
+          "actor-manager-queryC-empty-boundary"
+        ],
+        [
+          "actual-package-clear-entry"
+        ],
+        [
+          "actor-30c-boundary"
+        ]
+      ],
+      "completed": 0,
+      "trace": [
+        "0x5eae82",
+        "0x5eae88",
+        "0x5eae89",
+        "0x6116d0",
+        "0x5eae8b",
+        "0x5eae8e",
+        "0x5eae90",
+        "0x5eae93",
+        "0x5eae99",
+        "0x5eae9d",
+        "0x629400",
+        "0x629406",
+        "0x5eae9f",
+        "0x5eaea1",
+        "0x5eaefc",
+        "0x5eaeff",
+        "0x5eaf01",
+        "0x5eaf07",
+        "0x5eaf08",
+        "0x64af90",
+        "0x64af91",
+        "0x64af92",
+        "0x64af96",
+        "0x64af98",
+        "0x64af9a",
+        "0x64afaf",
+        "0x64afb6",
+        "0x64aff2",
+        "0x64aff9",
+        "0x64affb",
+        "0x64b001",
+        "0x64b003",
+        "0x64b009",
+        "0x64b013",
+        "0x629890",
+        "0x629897",
+        "0x64b015",
+        "0x64b016",
+        "0x64b017",
+        "0x5eaf0a",
+        "0x5eaf0c",
+        "0x5eaf12",
+        "0x5eaf14",
+        "0x567770",
+        "0x567774",
+        "0x567777",
+        "0x567779",
+        "0x56777c",
+        "0x56777e",
+        "0x567785",
+        "0x56778c",
+        "0x56778e",
+        "0x5eaf19",
+        "0x5eaf1b",
+        "0x5eaf21",
+        "0x5eaf23",
+        "0x5eaf26",
+        "0x5eaf27",
+        "0x5eaf2c",
+        "0x5eaf2e",
+        "0x46ac10",
+        "0x46ac14",
+        "0x46ac15",
+        "0x46ac16",
+        "0x46ac1c",
+        "0x4533d0",
+        "0x4533d4",
+        "0x4533d7",
+        "0x4533da",
+        "0x4533dd",
+        "0x4533df",
+        "0x4533e1",
+        "0x4533e5",
+        "0x452d60",
+        "0x452d61",
+        "0x452d66",
+        "0x452d67",
+        "0x452d69",
+        "0x452d6c",
+        "0x452d6f",
+        "0x452d72",
+        "0x452d7b",
+        "0x452d7c",
+        "0x452d80",
+        "0x452d83",
+        "0x452d84",
+        "0x452d88",
+        "0x452d89",
+        "0x452d8a",
+        "0x452d8c",
+        "0x452d94",
+        "0x55e000",
+        "0x55e001",
+        "0x55e005",
+        "0x55e006",
+        "0x55e008",
+        "0x55e00a",
+        "0x55e00d",
+        "0x55e00e",
+        "0x55e00f",
+        "0x0"
+      ],
+      "eip": "0x0",
+      "eax": "0x0"
+    }
+  },
+  "scope": [
+    "Directed target admission/storage is implemented as a component and registered in both CMake targets.",
+    "Actual native factory/install, stop and enemy-notification observations constrain the next runtime producer.",
+    "No new World/controller producer, save schema, counter expiry, automatic notification or normal-input acceptance is claimed.",
+    "Engine and Python sources were unchanged and their suites were not rerun. Full M15S4 remains incomplete."
+  ],
+  "source_pins": {
+    "components/esm4/combatcontroller.hpp": "b7897cd118f9f2e10ec6d7511a096666132aa694836b5f125cb2d1c896269df1",
+    "components/esm4/combatcontroller.cpp": "5e36b9c021bb9693487e07c8d78b567deed1ccea275cc3ecb20fe15188890888",
+    "apps/components_tests/esm4/combatcontroller.cpp": "383f9a3056149b9b800b39464a765e81173b69052127b46e62dbd23becc0ed42",
+    "components/CMakeLists.txt": "f68713f710fc1e54b370b131c7ba9062788dfc56df403e22b3492040d39ee65c",
+    "apps/components_tests/CMakeLists.txt": "85cca02429339f633d8e970baf07631ac9073eea0aa5d7859d69c160ab28fdde",
+    "scripts/data/oblivion_compat/m15_combat_controller_cases.json": "d807a0d7e56cc53d807cde97df3ad7b665a986144e20a4d51fc71fd2e5a31744"
+  },
+  "artifact_pins": {
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-02/probe.py": "57330bb55577a912b152d96aeb4abe469bb8ac6618bb001032c849cc49f80add",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-02/verification.json": "275505e56d648551dc121c5fc9e140a6afe995ded65397d2469b66eab1458bb2",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-02/corpus.json": "a7bfe69b69aa6c7145e514b441fab19e3042cf296487d4a8c05944d574b95d7c",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-target-priority-extremes-oracle-01/probe.py": "4b7e0be9af1c1ce392c0674963e30b4d6b3d6ae1d60aa49f5bf400711137473b",
+    "build/oblivion-compat/m15/S4/native-combat-target-priority-extremes-oracle-01/verification.json": "fd46ed86002140ad05dc0304ce9030ae90228b8e5a0728aa4a587d23cfc70aa4",
+    "build/oblivion-compat/m15/S4/native-combat-target-priority-extremes-oracle-01/corpus.json": "d61c59833123460c74899459cf31ebfad33c91cb2a3d857cc9187ae3206cd5bf",
+    "build/oblivion-compat/m15/S4/native-combat-target-priority-extremes-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-common-notification-enemy-target-oracle-01/probe.py": "a7750d6484a3d0d52e44103c105f213d9690f85e2ad8c0616809415b8cbab0ac",
+    "build/oblivion-compat/m15/S4/native-common-notification-enemy-target-oracle-01/verification.json": "1d460ce332bcd45be2f9ed21d00ee38aeb374021a54248640d7352047e8d1109",
+    "build/oblivion-compat/m15/S4/native-common-notification-enemy-target-oracle-01/corpus.json": "6652648c6172c68d74921a1ede0f02e25c138d7b928d859f676c9ebdfe8d55a0",
+    "build/oblivion-compat/m15/S4/native-common-notification-enemy-target-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-02/probe.py": "d008938fa32119b99fe10fe92277543991719e4ff7824671325e802cc744be72",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-02/verification.json": "93356edd0a093364db414a05871af80d90cc10ca3d6cc705d34aa2e11feb5b4b",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-02/corpus.json": "d2857af95f9c6bcc242c40eb40d11d4016aa569cc7e5e950928487f14fcfd05e",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-05/probe.py": "c195f383449cf3723dfb8c42d3239fa8bc10a2fb3ccf68ae40fe070323160a4b",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-05/verification.json": "fc8b00eea8dec2edabfcdca9d898a06e8b417b1b6aaf70d4480052d057dd0023",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-05/corpus.json": "1ed76211713542aa024ae9815c8df9f132cdd7b24a0c4d419b1497f0ea0efb65",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-05/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-02/probe.py": "e9264e1d5ab3c9ee500cf1c3a0a3e8be768dcf753c9a57b0d519ed6501b0b3b3",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-02/verification.json": "8984dfe89a9cbc7da72f974bf7422de73be446f8c2271fb5ae0da9800b70e2cb",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-02/corpus.json": "09b8d34e4807eb347338367fa999c21cfc773fdb9991e359a67e41009bbc3a16",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-counters-oracle-01/probe.py": "dd02fd4d250a5fa75579ccf2fd221f71bb9cb14c77b0ea1abb69790bc63e9b2d",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-counters-oracle-01/verification.json": "295ea9ad7a4dbbb3cf869e91e6fc62880159abf9b5cf362781c5e66ca361e64d",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-counters-oracle-01/corpus.json": "7b4fa91984127ad1ac593b092d4af41b5497d58093f2c1c16608ee1867045ce8",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-counters-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-01/probe.py": "d83e7f8dabad8d96a40672ee98de08d5533e486cd2fcdd581a2f960a78c820a2",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-01/failure.json": "2d37ed53e473f3bd7e1433915c2289a821b6cbf6c22f761b2bbdf0c092462f85",
+    "build/oblivion-compat/m15/S4/native-combat-target-storage-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-01/probe.py": "5c53e98647344f4e0fe3f7acf313e28abf189bf91d1bbfbde9332cf7ce438aaa",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-01/failure.json": "02074c251e3d20f0d7d6926b182fca60448e261ef61236d2e49c5e8c442bd2d6",
+    "build/oblivion-compat/m15/S4/native-combat-controller-constructor-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-01/probe.py": "3f7a17c65c83442192caa50b4beabe6c33b47984ad43e44e275b4101b3aa85d9",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-01/failure.json": "f104e1aec8ed699dffc3485641b2705ee7374b945d54c071d50cefb4e48d7b0c",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-03/probe.py": "c5b1214b20f203a95945986fd53cbc4f047b06d36ab01140e467170970e7c407",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-03/failure.json": "700ecd4091d11a287f7c4fa56cb4d5d65050e341dd5d3d94463db386d8a2f62d",
+    "build/oblivion-compat/m15/S4/native-combat-start-install-oracle-03/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-01/probe.py": "89e12275214453d125650f2ba245173307a118e9fe0b84181a59d62c14037a16",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-01/failure.json": "8fd8e328f896b97f88c59bc73fb90f0e1636dde309390d8333257664d54b73c3",
+    "build/oblivion-compat/m15/S4/native-combat-stop-targets-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-01/probe.py": "0f71d5fb86648292fc2841a46dee80b7def3436694701fa8d97a838f6ccf3363",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-01/failure.json": "23d57e8a35321f3b944152b39db6a3fc0c387d521a353fe3e45dc1eb329135ca",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-02/probe.py": "337a6d7f0d61b80e872dbd91543988270f5fb545436c2e076352c3acf1ba43a1",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-02/failure.json": "5560787e903a300a6b9d5e58f8c4bfb488d72910d29613b2dfd2b29cfac743f4",
+    "build/oblivion-compat/m15/S4/native-combat-full-stop-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/run.py": "84c8abda9bdb083f4321e5df94307a48a80501ebfa9f80c28f8d12e72c4f5c54",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/compare.cpp": "4cd8afa0da9a3e1f665e4bafc6419ceff4b1d3695e71fb14fe847bf69354f1fc",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/compare": "fdc0972be5d61326e3e616a9f5ed2d5ec8cd2439185a4cf8d56d0d1885d7e66f",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/cases.tsv": "f56b33731e9a415bd3f959b0722b47ce224c56df01039607cc910c0f296b82e8",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/stdout.txt": "a9b62492e884f175b8b8816074e9f45729f6798003a2388ed0d3fc3676cadd34",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "build/oblivion-compat/m15/S4/native-combat-controller-comparison-01/verification.json": "fcdd6776d0beb6533b4024d9421da4f3f18085a374d5c4572f2c62af67de3420",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-normal-01/verification.json": "5735809a4d9bb92bfc2ae3d77e84e23015e6036f0cf61b141b0c4074d835def0",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-normal-01/components-inventory.txt": "ed5ecf8db4be7590af05f59f597bdc36f02e1d873b655814e6f6ed0602f29446",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-normal-01/components.xml": "afe39e3bcb473ef6fc968172bc2b10191bce1cfa0fda889d72635e2ff1002463",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-normal-01/components.log": "fddfd2d09b5965459cb6d6da5970f8651e76323cbcad7f97459b58a271b5fb25",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-normal-01/components-build.log": "0537e42ea6953a3ae27e9fa24a3f8862e72c0c73fb28c3e37d3eea5b5561337e",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-sanitized-01/verification.json": "866b319be84e13cd41e1fa9b86c0597f8f3a6409a28d99085895d94da6f4d080",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-sanitized-01/components-inventory.txt": "e45faa63aecd1c632226617b45fc5425d2d7bd663e3d5f92ef51aebdc2a17b34",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-sanitized-01/components.xml": "b58e3367f890445bd250070a2d5a780190e6a9dd366b46c0aff89100eb8f05a4",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-sanitized-01/components.log": "68042f18b7ca49e21bda41e5fe74cf7cf25e2a3c51f61cded31780517bd43c9b",
+    "build/oblivion-compat/m15/S4/native-combat-controller-rules-sanitized-01/components-build.log": "67c21f9d40eeec10efa505bc96bdeaadf1a61674ddea8a5177c9ba8b0f8386b3"
+  },
+  "full_M15S4_acceptance": false
+}
