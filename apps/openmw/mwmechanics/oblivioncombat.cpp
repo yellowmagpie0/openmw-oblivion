@@ -2844,8 +2844,8 @@ namespace MWMechanics
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
-            || deltas.mKnockback || deltas.mOrdinaryHitArguments)
-            throw std::invalid_argument("native contact continuation cannot repeat damage or wear");
+            || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments)
+            throw std::invalid_argument("native contact continuation cannot repeat damage, wear or knockback");
         return mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
             mImpl->mAttacker.mActor, mImpl->mVictim->mActor, deltas, player, false, {},
             playerBase, playerGodMode, mImpl->mContinuation);
@@ -2931,7 +2931,7 @@ namespace MWMechanics
                 || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty()
                 || deltas.mAttackerHeldEquipment || deltas.mVictimHeldEquipment)))
             throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
-        if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive)
+        if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive && !continuation)
             return nullptr;
         for (const float delta : {deltas.mAttackerFatigue, deltas.mVictimHealth,
                  deltas.mVictimFatigue, deltas.mVictimBlockFatigue})
@@ -3660,11 +3660,13 @@ namespace MWMechanics
         {
             const auto* before = findActorValues(victimKey);
             if (!receiving || before->mProcess != ESM4::ActorValueProcess::Active
-                || before->mProcessAction != 6 || findActorLife(victimKey)->mPhase != ESM4::ActorLifePhase::Alive)
+                || !before->mProcessAction || (continuation ? before->mProcessAction == 8 : before->mProcessAction != 6)
+                || findActorLife(victimKey)->mPhase != ESM4::ActorLifePhase::Alive)
                 throw std::invalid_argument("native defensive Counter requires an active blocking owner");
             if (deltas.mVictimCounter)
             {
-                if (receivingLife->mPhase != ESM4::ActorLifePhase::Alive || receiving->mProcessAction != 6)
+                if (receivingLife->mPhase != ESM4::ActorLifePhase::Alive
+                    || (continuation ? receiving->mProcessAction == 8 : receiving->mProcessAction != 6))
                     throw std::invalid_argument("native Counter cannot survive this contact's incapacitation/equipment change");
                 const auto& request = *deltas.mVictimCounter;
                 auto candidate = prepareMeleeStrikeState(victimKey, ESM4::MeleeStrikeKind::Counter,

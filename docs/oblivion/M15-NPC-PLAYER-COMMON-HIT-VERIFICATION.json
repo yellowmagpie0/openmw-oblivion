@@ -1,0 +1,597 @@
+{
+  "schema_version": 1,
+  "scope": "Normal NPC-to-Player resource-prefix, automatic Player Hit response and cached block consequence phases; intermediate S4 delivery.",
+  "full_M15S4_acceptance": false,
+  "source_parent": "6cfc82792377656d99262a7783fbbbd6eb390bb5",
+  "tested_source": {
+    "head": "6cfc82792377656d99262a7783fbbbd6eb390bb5",
+    "source_fingerprint": "8e3776afceab910859710e67c3f3c4b2a0dae7ad48bb47972729856d5bb4e8cd"
+  },
+  "tested_cpp_sha256": {
+    "apps/components_tests/esm4/physicalcombat.cpp": "fd96a6846bc9061b192fc92a73993a7dd70d9bec85f7cc7b8727fc29685e2133",
+    "apps/components_tests/esm4/testloadpack.cpp": "e1f415350e47e84de23da9940e70e4976446350f3dc7dc456ba07749e9f0f439",
+    "apps/openmw/mwmechanics/character.cpp": "a87c492f783878c107c246b19ea0de7ef90e7eb0dad09519c4a9fa655d645e03",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "a6087ff1a376abd8ab171c1236946244279329153a33399aa776bf5cda7e1d19",
+    "apps/openmw/mwmechanics/oblivioncombat.hpp": "73e0b8c11e56f20d13a38ee26180483ce75df91ce5d3c580ee5f9cf3abc799bd",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "b3716212f12ef06df34e0092c99af5f0b658501c58d0498c6d97b45c46fa0198",
+    "apps/openmw/mwmechanics/oblivionmelee.hpp": "668442e65ef56912c22d51b82d71c622150139b7cd6c039e755fe13a581bf332",
+    "apps/openmw/mwworld/oblivionscriptmanager.cpp": "698f3923bdadc4cd7bbaca20a3f5a29f951b992d951619ddacdd76b7f2025a71",
+    "apps/openmw/mwworld/oblivionscriptmanager.hpp": "91906ec54d9cc6832444ff92619350e617c76bf8c3b8a7450cd4119c889df0ce",
+    "apps/openmw/mwworld/worldimp.cpp": "6767609dc46b8bda1ea9186714d7fd116e84dd9b702e77ec0b04b398f4370b85",
+    "apps/openmw/mwworld/worldimp.hpp": "b9fcd25083073c92d02abcf33345c8589b258e4afd06b824d92361beb464fa56",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "2c6658cdfe9e93be823beb37b930d31af0fb8405024d04b75c0127f87d0006c3",
+    "components/esm4/dialoguevoices.hpp": "1a315b9ae114f8ba908972447e82b6aa47425b0508eb513dfd7f9a0c37543c4d",
+    "components/esm4/physicalcombat.cpp": "c19feec162632921c18c73ee27f7896f8967cfbe5e4d194ffdc23173cefd19f2",
+    "components/esm4/physicalcombat.hpp": "f1a961d9d240e3fc0416c6dad98ead92fd98c2cef4b2cab90abe00feb6858935"
+  },
+  "engine_checks": {
+    "normal": {
+      "executed": 1900,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "3f618049ec325a24861b492fa918d21ab239a1f75ec151439a7251570539e6cb",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "d104e14862a3f575762e2d57110391860d5d6e387b0a523c03cdc409e870eaec",
+      "inventory_sha256": "fda3406c97931f89d22460fc9aeaec7ed545418a7c897657b428287a9fcd1d82",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "ASan_UBSan": {
+      "executed": 1900,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "0ab95db103bf41c3075165a8d6b2cb9b5264713b8508b365211a98adf2559f2c",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "c4bccfab1042324a596a88c76e0381d60457867e8f991c040d1034a002074a24",
+      "inventory_sha256": "fda3406c97931f89d22460fc9aeaec7ed545418a7c897657b428287a9fcd1d82",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "reused_component_checks": {
+    "normal": {
+      "executed": 3044,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "67d4563adf9b84dba7dd9ff63f42b4cceefccd31466995c3fe4ba45fcae604d1",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "0e7a6f998e835612262bcb185ae3164a188ef40bdb146293eec6faca1d678c04",
+      "inventory_sha256": "d8414cc93ea1fb539d807ac48c18ee92a07eaf45ecbb0e6d941bac3fd09053a4",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "ASan_UBSan_ESM4": {
+      "executed": 895,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4*",
+      "binary_sha256": "3e60182d8a08eab7c237d1c348d19ca0c48403188ed4c0924fe4a67ba4bc8f99",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "9bc56f4d929558ce2e37c7c92c35525a5f50a5e5cd639a9a0f8bafe448067fd4",
+      "inventory_sha256": "4074f126f4bcef9fb34349aa5f8adfe12ae43201852cee4042f303e48d60b26f",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "qualification": "Completed modes from overall failed/stopped attempts. Only engine fixture/caller files changed afterward; component binaries remain identical. Overall attempt statuses remain failed."
+  },
+  "runtime": {
+    "passed": true,
+    "scope": "One normal contact; exact binary/live serialization and fresh restoration; logical actor recovery, complete target inventory and loose-item identity. World clock/AI scheduling, actor float Z and loose trajectory are not compared.",
+    "phase": {
+      "run_id": "native-player-common-hit-runtime-03",
+      "epoch": 1,
+      "pid": 1778103,
+      "sequence": 4,
+      "tick": 43,
+      "event": "ordinary-hit-phases",
+      "action": 2,
+      "actor": "content:oblivion.esm:01fc43",
+      "blocked_dispatch": true,
+      "counter_prepared": false,
+      "counter_selected": false,
+      "damage_flag": false,
+      "draws": 5,
+      "lower_recoil_draws": 0,
+      "lower_recoil_selected": false,
+      "prefix_draws": 2,
+      "rng_after": 4277529146,
+      "rng_before": 15,
+      "speech_requested": true,
+      "stagger_prepared": false,
+      "stagger_selected": false,
+      "victim": "dynamic:player:0000000000000001"
+    },
+    "compared_final_fields": [
+      "script_instances",
+      "physical_actions",
+      "native_actor_values",
+      "native_actor_bases",
+      "native_actor_life",
+      "next_death_event",
+      "pending_death_events",
+      "native_death_counts",
+      "native_actor_breath",
+      "native_combat_engagements",
+      "native_actor_manager_time",
+      "native_actor_update_times",
+      "physical_action_owners",
+      "native_melee_states",
+      "native_animation_clocks",
+      "combat_rng_state",
+      "native_actor_knockback",
+      "native_actor_ragdolls",
+      "native_physical_blend_time_cache",
+      "native_bow_states",
+      "native_crime",
+      "spoken_dialogue_infos",
+      "ignore_friendly_hits",
+      "disposition_modifiers"
+    ],
+    "first_snapshot_count": 3,
+    "second_snapshot_count": 1,
+    "physical_actions": {
+      "next": 4,
+      "pending": []
+    },
+    "drop_count": 1,
+    "epochs": {
+      "first": {
+        "pid": 1778103,
+        "start_ticks": 54807473,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "c4c59e8d98f6c6ec956cf3031e2a2a5027366c5726b7b7840303d9ef27a0cbcc"
+      },
+      "second": {
+        "pid": 1778399,
+        "start_ticks": 54823877,
+        "clock_ticks_per_second": 100,
+        "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+        "command": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+          "--replace=config",
+          "--config",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/config",
+          "--no-grab",
+          "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+        ],
+        "executable_sha256": "c4c59e8d98f6c6ec956cf3031e2a2a5027366c5726b7b7840303d9ef27a0cbcc"
+      }
+    },
+    "pins": {
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshots/save-3.omwsave": "3794eaa9062ecbb13df4aaa93817e70d53cb251d8121de729a799ef223efbc9e",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/live-1-3.json": "a63e99d28f424830ebd3d1e20e668bf74a10b2a3cb7c67f9daa781fc20513260",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshots/save-5.omwsave": "3bed486d9ceadb68f568711b1df6418781b9361bdcc105d81d921aa819fb1ff4",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/live-1-5.json": "a98677d7c85b7afaa3737984d7caa7a901b237f5d8361855b21621f25122fd2f",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshots/save-6.omwsave": "bb8c83cb6942b707d21f2eef72df0f624b81a49d361374662dc5cc9303432b39",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/live-1-6.json": "7c5f564c5b9d408d1f7922a50187cb09ac7ac0faaa2adde82a68a436e3813302",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/scenario.json": "ecc9e94086c71c3adb73566d0fec7d74efad6e267a19f586a6f7ca445308b0fe",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/events.jsonl": "2db5cc013dbd1593185770481a9d07626e5137c4ec96c38eed5383857d9f0db1",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/snapshots/save-3.omwsave": "793fff0a08246663e56391ab72e0a4b89263c35dd44b4089cf8977afb6bd75c4",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/live-2-3.json": "6941f83f16197e6cc202a0d5f915d572bf7f21da5078232ae7ef8b2f829ff1a3",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/scenario.json": "adb6eb36405f719b01752cd51032c27bc3d31cb28fa70f1347445953fb611119",
+      "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/events.jsonl": "c9fc1f2abfd2e7d30725c3497ede57c2e06fe44412740cc493e8ff9a1bbdb570"
+    },
+    "full_M15S4_acceptance": false
+  },
+  "audio": {
+    "passed": true,
+    "threshold_declared_in_script": 0.65,
+    "method": "Normalized sliding cross correlation at8kHz mono against independently extracted and decoded installed voice asset",
+    "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-review-01/voice2/generic_hit_00028aaf_1.mp3",
+    "source_sha256": "68a45850ad392d2e5025a795c17cb7ed489f9dec2e83f79ebaac0179849a9e54",
+    "source_archive": "Oblivion - Voices2.bsa",
+    "mixed_output": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/mixed-output.wav",
+    "mixed_output_sha256": "a567584711e33f2870885bd1da5a62f0a7dc835af7aa944526e2200d94b0f3c0",
+    "mixed_duration_seconds": 89.58,
+    "voice_duration_seconds": 0.548625,
+    "peak_time_seconds": 69.86,
+    "normalized_correlation": 0.7182421102172687,
+    "scope": "Actual Hit voice waveform in mixed rendered audio; not isolated proof of every simultaneous SFX or a timing guarantee."
+  },
+  "audio_negative_control": {
+    "passed": true,
+    "scope": "Negative control: a different installed Hit grunt must fail the same PCM matching threshold.",
+    "expected_match": false,
+    "observed_match": false,
+    "threshold": 0.65,
+    "normalized_correlation": 0.295453552315233,
+    "source_sha256": "199e105a5d0084ce0185cddab63ef3feb5d71f0918a74c3c2adffd9f82135273",
+    "mixed_output_sha256": "a567584711e33f2870885bd1da5a62f0a7dc835af7aa944526e2200d94b0f3c0"
+  },
+  "supplementary_native_oracle": {
+    "passed": true,
+    "cases": 1152,
+    "original_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "772edb5ae03e48ecb6996e0a351f7b94f5832138d4708aa0236784b15b858ece",
+    "scope": {
+      "scope": "Original ordinary-hit common caller plus actual NPC hit-speech prefix, process getters and forwarding; prove speech RNG and post-callback knocked queries before lower block recoil; extend to StandingPower group0x16 with same full original paths",
+      "entry": "005FFEB5",
+      "stop": "005FFF52",
+      "actual_speech_prefix": "005E7010",
+      "scene_complex": true,
+      "groups": [
+        20,
+        21,
+        22
+      ],
+      "damage_draw": [
+        0,
+        99
+      ],
+      "attacker_skill": [
+        49,
+        75
+      ],
+      "defender_block": [
+        49,
+        50
+      ],
+      "speech_draw": [
+        0,
+        32767
+      ],
+      "scene_draw": [
+        0,
+        7,
+        32767
+      ],
+      "recoil_draw": [
+        25,
+        26
+      ],
+      "voice_result_knocked": [
+        0,
+        3
+      ],
+      "control_words": [
+        639,
+        895
+      ],
+      "expected_cases": 1152,
+      "expected_order": "Damage and optional Expert/speech-probability draws precede the speech callback; actual SceneComplex gate draws before INFO/voice forwarding. Supplied voice-result mutation is observed by the actual knocked getter before Stagger/facing. Stagger selection/suppression and lower recoil follow; a zero resource activation does not undo suppression.",
+      "boundaries": [
+        "Resource delivery and AV/base/FatigueRatio/animation-data/facing queries retain the earlier original-caller oracle boundaries; cached skill query uses supplied abstract index12, not a proved weapon-skill producer.",
+        "47DF80 supplies declared raw values by recorded native return address and logs their actual order.",
+        "616530 is a terminal voice/result boundary: validates handle address, speaker, listener and flags; supplies raw knocked byte0 or3. No INFO selection, result VM or audio is executed.",
+        "Stagger5F4FD0 and attacker Recoil5F4F00 record requests and return zero; resource selection/playback is excluded."
+      ]
+    },
+    "full_M15S4_acceptance": false
+  },
+  "retained_failures": [
+    "normal01 same-line GoogleTest trace compilation",
+    "normal02/03 headless whole-world update fixture assumptions",
+    "normal04 missing NAM1 null terminator",
+    "sanitized01/02 intentionally stopped before source corrections",
+    "runtime01 80ms activation missed; manual diagnostic F12 caused later protocol receipt collision",
+    "stagger-runtime01 activation attempted during actual Player Stagger lock; extra legitimate contacts",
+    "player-stagger-runtime01 NPC Hit INFO051DC6 requires unavailable GetFriendHit288; no reaction tail. Production caller now excludes that context."
+  ],
+  "not_accepted": [
+    "NPC-victim GetFriendHit production authority, notification classification, expiry and persistence before enabling their automatic Hit INFOs.",
+    "Prior ScriptSay queue/automatic speech interruption composition; raw actor state3 producer; distant NPC performance-counter speech gate.",
+    "Remaining S4 mastery/effect/cancellation and normal-input view/device/FPS/windup/block/recovery restart matrix."
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/mixed-output.wav",
+      "sha256": "a567584711e33f2870885bd1da5a62f0a7dc835af7aa944526e2200d94b0f3c0",
+      "bytes": 34398788
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/voice2/generic_hit_00028aaf_1.mp3",
+      "sha256": "68a45850ad392d2e5025a795c17cb7ed489f9dec2e83f79ebaac0179849a9e54",
+      "bytes": 4389
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/voice-negative/generic_hit_00028ab0_1.mp3",
+      "sha256": "199e105a5d0084ce0185cddab63ef3feb5d71f0918a74c3c2adffd9f82135273",
+      "bytes": 3762
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-common-hit-speech-order-oracle-01/probe.py",
+      "sha256": "d133dae708902ec15801c6243ea8d3de870bb5c966668384ea821be0d37e0441",
+      "bytes": 8303
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-common-hit-speech-order-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-common-hit-speech-order-oracle-01/preregistration.json",
+      "sha256": "62c98632ae0fcf21ff1e751a351c10628a7aa07889b9903c7d153e982e4c233f",
+      "bytes": 1804
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-common-hit-speech-order-oracle-01/corpus.json",
+      "sha256": "772edb5ae03e48ecb6996e0a351f7b94f5832138d4708aa0236784b15b858ece",
+      "bytes": 736513
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-03/actual-test-environment.json",
+      "sha256": "8350f73853aa3b10c42ac448206bc5299dbe2e46140721a45fc38108be5f06d3",
+      "bytes": 576
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/verify_wrong_voice_control.py",
+      "sha256": "b0ad6a23ded5caf4a67262a21926ca2dcf244cd7feec2614318005ccd3ddf7e4",
+      "bytes": 1724
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/wrong-voice-pcm-control.json",
+      "sha256": "fc300fdecba5c4956bed14d89a8b725b35a9e51c21638177a2097ef676271228",
+      "bytes": 979
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/wrong-voice-negative-verification.json",
+      "sha256": "27248b8878c64884421dd9e47934fc2c1f3a43325b9ab82471d1b4d38fad9fa9",
+      "bytes": 430
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/verify_receipt.py",
+      "sha256": "30c6d3cd278587b90f328d441c373c08b8bbd523d1f921c212965c70ca83e5ca",
+      "bytes": 1055
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/middle-save-screenshot.jpg",
+      "sha256": "c7ba2ed8ad05eb425a1dbf77436a3c88ad67649a92021156a03eb1f5838c9fae",
+      "bytes": 109433
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/middle-save-screenshot-source.json",
+      "sha256": "0c4b65900145f32721c4ff4bc8a53b49fd7caa78a3d200a57c91531de7e7bad5",
+      "bytes": 458
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/tested-cpp.patch",
+      "sha256": "f70a5a8c02cfd0933d9e087cb6ec15993d76ec9ed9d83ea3329a5599b15a4556",
+      "bytes": 55535
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/cpp-source-pins.json",
+      "sha256": "eb21ef223e4513c25a5343c8c3b93d220c93a18c63822e2f923f99749e421d32",
+      "bytes": 1707
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/verify_runtime.py",
+      "sha256": "544f855554ac424feec1d483376053a5b4e7df48ede86983389919888ced2776",
+      "bytes": 5871
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/verify_final_voice_pcm.py",
+      "sha256": "c8a60bc365dc9879896fb3d13b5f99aaa09a7881cc7959eb08dcdc8a0e5b6085",
+      "bytes": 1681
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-review-01/final-voice-pcm-verification.json",
+      "sha256": "22b8bf460819e1db2a5efca0007d8930c074def82ca3e1cd956bca213fd8f119",
+      "bytes": 968
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/semantic-verification.json",
+      "sha256": "62e3e0e088f7bd96e66274b81906a62ab4fbb9e91d95579393e439f7916169bc",
+      "bytes": 5836
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/binary-pin.json",
+      "sha256": "25415f62aaa23f6488a0725dda3fa5006ebfdd7b96722120e5d116d09710de3e",
+      "bytes": 300
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/preregistration.json",
+      "sha256": "5bfea24304bb9817ad0a354500038d943f1e62d2d676e67f71c6de3039eadaf3",
+      "bytes": 1023
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/launcher.py",
+      "sha256": "c3613110895ac1616a1dcc1897fd1938fb2f54cc4e3865d3e35b1e490e6531c8",
+      "bytes": 2043
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/monitor.py",
+      "sha256": "f74896075b08360fa86513a118c3adb3065a936640330df04d97d754c44cb0df",
+      "bytes": 2396
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-05/verification.json",
+      "sha256": "c55c6ab0afef2acb2ff16496d479f21196b97bdea1f7f5272f67dafdaf611b15",
+      "bytes": 2140
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-05/engine.xml",
+      "sha256": "d104e14862a3f575762e2d57110391860d5d6e387b0a523c03cdc409e870eaec",
+      "bytes": 625470
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-05/engine-inventory.txt",
+      "sha256": "fda3406c97931f89d22460fc9aeaec7ed545418a7c897657b428287a9fcd1d82",
+      "bytes": 134351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-03/verification.json",
+      "sha256": "593eae2197c465518aaba4d11f4d6e187b7907e3a63c8eae2985cd214eacfb04",
+      "bytes": 2232
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-03/engine.xml",
+      "sha256": "c4bccfab1042324a596a88c76e0381d60457867e8f991c040d1034a002074a24",
+      "bytes": 627193
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-03/engine-inventory.txt",
+      "sha256": "fda3406c97931f89d22460fc9aeaec7ed545418a7c897657b428287a9fcd1d82",
+      "bytes": 134351
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-02/verification.json",
+      "sha256": "def3199b085619c4b62df20f750a71b288a2e01aea2ae410d9dd07a3140af8b3",
+      "bytes": 2974
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-02/components.xml",
+      "sha256": "0e7a6f998e835612262bcb185ae3164a188ef40bdb146293eec6faca1d678c04",
+      "bytes": 2348729
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-normal-02/components-inventory.txt",
+      "sha256": "d8414cc93ea1fb539d807ac48c18ee92a07eaf45ecbb0e6d941bac3fd09053a4",
+      "bytes": 193746
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-01/verification.json",
+      "sha256": "6b2ae46297be18478fbb383e47b4793b9c3f39a9f3b98c55deecc67852d37170",
+      "bytes": 2438
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-01/sanitize.xml",
+      "sha256": "9bc56f4d929558ce2e37c7c92c35525a5f50a5e5cd639a9a0f8bafe448067fd4",
+      "bytes": 1624527
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-sanitized-01/sanitize-inventory.txt",
+      "sha256": "4074f126f4bcef9fb34349aa5f8adfe12ae43201852cee4042f303e48d60b26f",
+      "bytes": 193746
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-standing-common-hit-speech-order-oracle-01/verification.json",
+      "sha256": "82e3e2be2a8884dd5be2b0dcea0ad95bf45a535fbd58ea560c209b91f7c6dbcd",
+      "bytes": 2172
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/scenario.json",
+      "sha256": "ecc9e94086c71c3adb73566d0fec7d74efad6e267a19f586a6f7ca445308b0fe",
+      "bytes": 8594
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/events.jsonl",
+      "sha256": "2db5cc013dbd1593185770481a9d07626e5137c4ec96c38eed5383857d9f0db1",
+      "bytes": 3417
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/process.log",
+      "sha256": "a5b6bf848772dc48ef4f6efa0b33cfcbce885497dc6c7247c79dd915983c80ea",
+      "bytes": 893906
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/process-epoch.json",
+      "sha256": "3bf9fbd391031a8b216fb93e82129e15e211ad7f5253aefcebed8d4459868010",
+      "bytes": 678
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/actual-engine-environment.json",
+      "sha256": "45539f87c081aa5e05bd3aa3318143ac0b83b825ef810c9e04268efc8f2b6c11",
+      "bytes": 306
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/snapshot-index.json",
+      "sha256": "f2fa445d9b5b921ed3375d14662b13262606a16206a3b8689abba9f946d70c5b",
+      "bytes": 3231
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/launcher.json",
+      "sha256": "b6dfb3b8b9a1e2ccea23131334ee003d169973ec5164b82fe696d3de5b23900f",
+      "bytes": 956
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/uninterrupted-after-recoil.png",
+      "sha256": "42ed86055ce7ecdf6d86ce4973e70d1b2a58ecc693ca3aad008659a212442aed",
+      "bytes": 1145003
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/scenario.json",
+      "sha256": "adb6eb36405f719b01752cd51032c27bc3d31cb28fa70f1347445953fb611119",
+      "bytes": 5477
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/events.jsonl",
+      "sha256": "c9fc1f2abfd2e7d30725c3497ede57c2e06fe44412740cc493e8ff9a1bbdb570",
+      "bytes": 1594
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/process.log",
+      "sha256": "3cdb90c726275125464e520d751b6e2f310af2f1a58c33a0925d33c18fb70913",
+      "bytes": 525121
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/process-epoch.json",
+      "sha256": "045569d59e9a79383f111b747065dd5cf24511362d25bef948344410925c6e7e",
+      "bytes": 680
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/actual-engine-environment.json",
+      "sha256": "eed7509bc3803a5ea231131be70b18b7ca8c6d9f34577618ebd4bc73370d426a",
+      "bytes": 307
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/snapshot-index.json",
+      "sha256": "57590f75f1abb9eb1e606bdf519979e468d821d436d94cb2d8bf9f809e917126",
+      "bytes": 1075
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/launcher.json",
+      "sha256": "eef3f6ec79430fe7f5305177ad9ff069508d0301d91aa13f4147afb7193a0da8",
+      "bytes": 961
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/second/resumed-after-recoil.png",
+      "sha256": "22ec8160f559a546fb0cc36dd07ca18d0be73ab813f8495852a02338581d82b4",
+      "bytes": 1144451
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_player_common_hit_course.json",
+      "sha256": "a26750ac011ce6505c9df2193957848f1a72786e080d658474bd921ffe7a0e18",
+      "bytes": 3302
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_player_common_hit.json",
+      "sha256": "b09cdc154e4d94282ffb2c6889fce8bab27f47ddbbc32159ec5b9fd8f4f9b2cc",
+      "bytes": 22998
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_npc_player_common_hit_continuation.json",
+      "sha256": "ceb073664dfd15f0a771bbe9cd3d03c24f514f094af058a143a4ed1753afe8ea",
+      "bytes": 21299
+    }
+  ]
+}

@@ -444,7 +444,7 @@ namespace MWWorld
     }
 
     OblivionScriptManager::NativeVoice OblivionScriptManager::findNativeVoice(
-        const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType) const
+        const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType, bool firstResponseOnly) const
     {
         const auto* definition = mStore.search<ESM4::DialogInfo>(info);
         const auto files = mNativeVoiceFiles.find(info);
@@ -457,22 +457,56 @@ namespace MWWorld
             npc = mStore.search<ESM4::Npc>(voiceType);
         if (npc == nullptr && !actor.isEmpty() && actor.getClass().getType() == ESM::REC_NPC_4)
             npc = actor.get<ESM4::Npc>()->mBase;
-        if (npc != nullptr)
+        const bool player = npc == nullptr && !actor.isEmpty() && actor == mWorld.getPlayerPtr();
+        if (npc != nullptr || player)
         {
-            const bool female = (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+            const auto* proxy = player ? actor.get<ESM::NPC>()->mBase : nullptr;
+            const bool female = proxy ? !proxy->isMale() : (npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female) != 0;
+            const auto* playerRace = proxy ? proxy->mRace.getIf<ESM::FormId>() : nullptr;
             const auto resolveRace = [&](ESM::FormId id) { return mStore.get<ESM4::Race>().search(ESM::RefId(id)); };
-            const ESM4::Race* voiceRace = ESM4::dialogueVoiceRace(resolveRace(npc->mRace), female, resolveRace);
+            const auto* raceForm = proxy ? (playerRace ? resolveRace(*playerRace) : nullptr) : resolveRace(npc->mRace);
+            const ESM4::Race* voiceRace = ESM4::dialogueVoiceRace(raceForm, female, resolveRace);
             if (voiceRace == nullptr)
                 throw std::runtime_error("Native dialogue voice race is unresolved or cyclic");
             race = lower(voiceRace->mFullName);
             sex = female ? "f" : "m";
         }
 
-        const auto selected = ESM4::dialogueVoiceFiles(*definition, files->second, race, sex);
+        const auto selected = ESM4::dialogueVoiceFiles(*definition, files->second, race, sex, firstResponseOnly);
         Log(Debug::Info) << "Native dialogue voices: info=" << info.serialize()
             << " files=" << files->second.size() << " responses=" << definition->mResponses.size()
             << " matched=" << selected.has_value();
         return NativeVoice{info, selected.value_or(std::vector<std::string>{})};
+    }
+
+    void OblivionScriptManager::dispatchAutomaticDialogueResponse(
+        const ESM::FormKey& topic, const Ptr& actor, const Ptr& target)
+    {
+        requireMutableRuntime();
+        if (actor.isEmpty() || !mStore.search<ESM4::Dialogue>(topic)) return;
+        MWBase::SoundManager* manager = MWBase::Environment::get().getSoundManager();
+        const auto actorKey = keyFor(actor);
+        const bool actorVoice = actor.getType() == ESM::REC_NPC_4 || actor.getType() == ESM::REC_CREA4;
+        // Actual6334D0 clears the current voice handle before INFO selection;
+        // it does not delete the independent ScriptSay response object.
+        manager->stopSay(actorVoice ? actor : Ptr{});
+        const auto selected = selectNativeDialogueInfo(topic, actor, target);
+        if (!selected) return;
+        const auto* definition = mStore.search<ESM4::DialogInfo>(*selected);
+        if (!definition || definition->mResponses.empty()) return;
+        const auto voice = findNativeVoice(*selected, actor, {}, true);
+        if (!voice.mFiles.empty())
+        {
+            const VFS::Path::Normalized path(voice.mFiles.front());
+            if (actorVoice) manager->say(actor, path);
+            else manager->say(path);
+        }
+        // Original6167B7 attempts playback, ignores its float return and then
+        // invokes6B7C30. No automatic response queue survives that helper.
+        dispatchDialogueResponseResult(*selected, actor);
+        trace("automatic-speech topic=" + topic.serialize() + " info=" + selected->serialize()
+            + " ref=" + actorKey.serialize() + " responses=1 voice="
+            + (voice.mFiles.empty() ? std::string("missing") : voice.mFiles.front()));
     }
 
     void OblivionScriptManager::loadScheduledEvents()

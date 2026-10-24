@@ -68,6 +68,10 @@ namespace MWWorld
         bool hasSpokenDialogueInfo(const ESM::FormKey& info) const;
         void markSpokenDialogueInfo(const ESM::FormKey& info);
         void dispatchDialogueResponseResult(const ESM::FormKey& info, const Ptr& actor);
+        // Automatic616530 barks: select live conditions, play only the first
+        // response, then run its response result even when audio is missing.
+        // The caller owns movement/scene/process eligibility and topic identity.
+        void dispatchAutomaticDialogueResponse(const ESM::FormKey& topic, const Ptr& actor, const Ptr& target);
         void dispatchDialogueResult(const ESM::FormKey& info, std::uint32_t ordinal, const Ptr& actor = {});
         void dispatchEffect(
             const ESM::FormKey& script, std::string_view event, const Ptr& target, const Ptr& caster = {});
@@ -190,7 +194,8 @@ namespace MWWorld
         void indexNativeVoices();
         std::optional<ESM::FormKey> selectNativeDialogueInfo(
             const ESM::FormKey& topic, const Ptr& actor, const Ptr& target) const;
-        NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType) const;
+        NativeVoice findNativeVoice(const ESM::FormKey& info, const Ptr& actor, const ESM::FormKey& voiceType,
+            bool firstResponseOnly = false) const;
         void loadScheduledEvents();
         void runScheduledEvents();
         void executeScheduledEvent(const ScheduledEvent& event);

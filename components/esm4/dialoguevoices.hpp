@@ -106,7 +106,7 @@ namespace ESM4
     // Resolve the entire selected INFO before playing or committing results.
     // Never substitute a different INFO, race, sex, or response number.
     inline std::optional<std::vector<std::string>> dialogueVoiceFiles(const DialogInfo& info,
-        std::span<const std::string> files, const std::string& race, const std::string& sex)
+        std::span<const std::string> files, const std::string& race, const std::string& sex, bool firstResponseOnly = false)
     {
         if (race.empty() || sex.empty() || info.mResponses.empty())
             return std::nullopt;
@@ -120,6 +120,7 @@ namespace ESM4
             if (path == files.end())
                 return std::nullopt;
             result.push_back(*path);
+            if (firstResponseOnly) break;
         }
         return result;
     }

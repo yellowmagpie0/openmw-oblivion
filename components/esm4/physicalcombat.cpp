@@ -1540,6 +1540,25 @@ namespace ESM4
         return {next, static_cast<std::uint16_t>((next >> 16) & 0x7fff)};
     }
 
+    std::uint32_t combatRandomDistance(std::uint32_t begin, std::uint32_t end) noexcept
+    {
+        // The native CRT multiplier is1 mod4 and its increment is odd. Each
+        // 2^bit-step affine map therefore flips bit while preserving all
+        // lower bits. Lift the unique distance one bit at a time.
+        std::uint32_t multiplier = 214013, increment = 2531011, distance = 0, mask = 1;
+        for (unsigned bit = 0; bit < 32; ++bit, mask <<= 1)
+        {
+            if ((begin ^ end) & mask)
+            {
+                begin = begin * multiplier + increment;
+                distance |= mask;
+            }
+            increment *= multiplier + 1;
+            multiplier *= multiplier;
+        }
+        return distance;
+    }
+
     NativeSequenceSelection selectNativeSequenceVariant(NativeSequenceCollection collection,
         std::uint32_t count, std::uint8_t requested, std::uint32_t randomState)
     {

@@ -58,9 +58,14 @@ namespace MWMechanics
         unsigned mRandomDraws = 0;
         std::optional<std::array<std::string_view, 3>> mHitSounds{};
         std::optional<std::array<float, 3>> mHitSoundPosition{};
+        bool mHitSoundsEmitted = false;
     };
-    // Acquire actual collision/LOS contact, prepare native damage, then publish
-    // one owned transaction. Unavailable and unsupported contexts do not spend.
+    // Shared M10 hit layers. The phased caller emits after preflight and
+    // before damage/speech; legacy callers emit after their contact commits.
+    void emitOblivionMeleeHitSounds(MWBase::World& world, std::uint64_t action,
+        const MWWorld::Ptr& attacker, const OblivionOrdinaryContactResult& contact);
+    // Acquire actual collision/LOS contact and publish a single accepted hit.
+    // Its synchronous consequences continue after that action is consumed.
     std::optional<OblivionOrdinaryContactResult> commitOblivionOrdinaryMeleeContact(
         MWBase::World& world, std::uint64_t actionId, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& selectedTarget, float reach, float weaponWeight,
@@ -88,7 +93,7 @@ namespace MWMechanics
     // Counter owner is then requested, but the caller still skips disarm/Recoil.
     std::optional<OblivionDefensiveBlockConsequences> prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
-        OblivionPhysicalContactDeltas& deltas);
+        OblivionPhysicalContactDeltas& deltas, bool cachedDispatch = false);
 
     // Adapter for this fork's existing -100..100 GUI slider. Config values
     // outside that UI range saturate; this is not native INI deserialization.

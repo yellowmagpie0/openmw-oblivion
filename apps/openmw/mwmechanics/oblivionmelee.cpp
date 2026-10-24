@@ -8,6 +8,10 @@
 #include "../mwworld/oblivionactorstats.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/environment.hpp"
+#include "../mwbase/soundmanager.hpp"
+#include "../mwsound/nativeaudioutils.hpp"
+#include <components/debug/debuglog.hpp>
 #include "../mwbase/world.hpp"
 #include "../mwphysics/actor.hpp"
 #include "../mwphysics/physicssystem.hpp"
@@ -400,7 +404,7 @@ namespace MWMechanics
 
     std::optional<OblivionDefensiveBlockConsequences> prepareOblivionDefensiveBlockConsequences(MWBase::World& world,
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
-        OblivionPhysicalContactDeltas& deltas)
+        OblivionPhysicalContactDeltas& deltas, bool cachedDispatch)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
@@ -408,7 +412,7 @@ namespace MWMechanics
         const auto player = world.getPlayerPtr();
         if (!service || attacker.isEmpty() || defender.isEmpty() || attacker == defender
             || (defender != player && defender.getType() != ESM::REC_NPC_4)
-            || !oblivionBlockingPosture(world, defender) || deltas.mVictimCounterRequested || deltas.mVictimCounter)
+            || (!cachedDispatch && !oblivionBlockingPosture(world, defender)) || deltas.mVictimCounterRequested || deltas.mVictimCounter)
             return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
@@ -443,8 +447,9 @@ namespace MWMechanics
         if (!proc.mConsumesDraw) return OblivionDefensiveBlockConsequences{};
         if (attacker != player && attacker.getType() != ESM::REC_NPC_4)
             return std::nullopt; // Creature Counter-target Stagger/Recoil is not admitted.
-        const bool stagger = deltas.mVictimReaction
-            && deltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger;
+        const bool stagger = (deltas.mVictimReaction
+            && deltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger)
+            || service->getProcessAction(key) == 8;
         if ((deltas.mVictimReaction && !stagger) || deltas.mAttackerReaction || !deltas.mDisarms.empty())
             return std::nullopt;
         if (proc.mTriggered && !stagger && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
@@ -507,6 +512,28 @@ namespace MWMechanics
         }
         deltas = std::move(candidate);
         return OblivionDefensiveBlockConsequences{proc.mTriggered};
+    }
+
+    void emitOblivionMeleeHitSounds(MWBase::World& world, std::uint64_t action,
+        const MWWorld::Ptr& attacker, const OblivionOrdinaryContactResult& contact)
+    {
+        if (!contact.mHitSounds) return;
+        const auto actor = attacker == world.getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : attacker.getCellRef().getFormKey();
+        for (const auto editorId : *contact.mHitSounds)
+        {
+            if (editorId.empty()) continue;
+            if (const auto* sound = MWSound::resolveNativeAnimationSound(world.getStore(), editorId))
+            {
+                const auto manager = MWBase::Environment::get().getSoundManager();
+                const bool played = contact.mHitSoundPosition
+                    ? manager->playSound3D(osg::Vec3f((*contact.mHitSoundPosition)[0], (*contact.mHitSoundPosition)[1],
+                          (*contact.mHitSoundPosition)[2]), sound->mId, 1.f, 1.f) != nullptr
+                    : manager->playSound3D(contact.mVictim, sound->mId, 1.f, 1.f) != nullptr;
+                Log(Debug::Verbose) << "M15 melee hit sound requested: actor=" << actor.serialize()
+                    << " id=" << action << " sound=" << editorId << " played=" << played;
+            }
+        }
     }
 
     std::optional<OblivionOrdinaryContactResult> commitOblivionMeleeContact(
@@ -694,9 +721,16 @@ namespace MWMechanics
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
+        const auto playerContact = world.getPlayerPtr();
+        // NPC Hit INFOs need the friendly-hit notification/query producer.
+        // Admit the verified Player speech context while that dependency is
+        // still unavailable; keep the existing contact path for other pairs.
+        const bool phased = !contact->isEmpty() && deltas.mOrdinaryHitArguments
+            && attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
+            && *contact == playerContact;
         // Original600528 blocked dispatch bypasses5FFF99's general-hit force,
         // including its advanced unarmed zero-absorption route.
-        if (!contact->isEmpty() && (contact->getType() == ESM::REC_NPC_4 || contact->getType() == ESM::REC_CREA4)
+        if (!phased && !contact->isEmpty() && (contact->getType() == ESM::REC_NPC_4 || contact->getType() == ESM::REC_CREA4)
             && result.mBlockAbsorbedFraction == 0 && !requestsAttackerRecoil
             && oblivionKnockedState(world, *contact) == 0
             && service->getNonPlayerIntegerValue(*contact, 4) > 0)
@@ -725,6 +759,16 @@ namespace MWMechanics
         // absorption. Preparation keeps this decision separate from damage.
         const bool attackerRecoil = blockHit && requestsAttackerRecoil
             && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4);
+        if (phased)
+        {
+            const auto draws = nativeWorld->commitOblivionPlayerNpcHit(actionId, attacker, *contact, deltas, [&] {
+                emitOblivionMeleeHitSounds(world, actionId, attacker, result);
+                result.mHitSoundsEmitted = true;
+            });
+            if (!draws) return std::nullopt;
+            result.mRandomDraws = *draws;
+            return result;
+        }
         auto prepared = nativeWorld->prepareOblivionPhysicalContact(
             actionId, attacker, *contact, deltas, blockHit, attackerRecoil);
         if (!prepared || !prepared->commit())

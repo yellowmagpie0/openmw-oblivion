@@ -485,6 +485,11 @@ namespace MWWorld
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
             bool attackerRecoil = false);
+        // Common hit phases for a Player/NPC pair, using the actual resource
+        // prefix, synchronous automatic speech and fresh reaction/block queries.
+        std::optional<unsigned> commitOblivionPlayerNpcHit(std::uint64_t id,
+            const Ptr& attacker, const Ptr& victim, const MWMechanics::OblivionPhysicalContactDeltas& deltas,
+            const std::function<void()>& beforeDamage = {});
         // Ordinary intact drawn NPC blocking. Missing native animation suppresses the
         // animation request; unsupported live bindings reject before contact.
         bool prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,

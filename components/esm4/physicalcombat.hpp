@@ -740,6 +740,10 @@ namespace ESM4
     // Original initialized CRT stream: explicit state in/out, no clock seed.
     // Percentile callers use mValue % 100, preserving the native modulo bias.
     CombatRandomDraw combatRandomDraw(std::uint32_t state) noexcept;
+    // Number of CRT transitions between two states, modulo the full 2^32
+    // period. Counts draws across synchronous callbacks without another RNG
+    // authority or a loop proportional to the number of draws.
+    std::uint32_t combatRandomDistance(std::uint32_t begin, std::uint32_t end) noexcept;
 
     enum class NativeSequenceCollection : std::uint8_t { Single, Multiple };
     struct NativeSequenceSelection

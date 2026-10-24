@@ -405,6 +405,20 @@ TEST(ESM4LoadInfo, ResolvesAllVoiceResponsesWithoutRaceSexOrNumberFallback)
     EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "m"));
 }
 
+TEST(ESM4LoadInfo, AutomaticVoiceResolvesOnlyTheFirstResponse)
+{
+    ESM4::DialogInfo info;
+    info.mResponses.resize(2);
+    info.mResponses[0].mData.responseNo = 1;
+    info.mResponses[1].mData.responseNo = 2;
+    const std::vector<std::string> files{"voice/imperial/m/line_1.mp3"};
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "m"));
+    const auto automatic = ESM4::dialogueVoiceFiles(info, files, "imperial", "m", true);
+    ASSERT_TRUE(automatic); EXPECT_EQ(*automatic, files);
+    info.mResponses[0].mData.responseNo = 3;
+    EXPECT_FALSE(ESM4::dialogueVoiceFiles(info, files, "imperial", "m", true));
+}
+
 TEST(ESM4LoadInfo, ResolvesSexSpecificVoiceRaceAndRejectsBrokenOrCyclicLinks)
 {
     ESM4::Race source{}, male{}, female{};

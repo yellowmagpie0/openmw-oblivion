@@ -3748,6 +3748,7 @@ namespace MWWorld
         std::uint64_t mId = 0;
         Ptr mAttacker, mVictim;
         bool mCommitted = false, mCanContinue = false, mSuppressBlockHit = false;
+        bool mCounterSelected = false, mCounterPrepared = false;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
@@ -3950,7 +3951,7 @@ namespace MWWorld
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
             return nullptr;
-        if (attackerRecoil && (!blockHit || (!player && attacker.getType() != ESM::REC_NPC_4)))
+        if (attackerRecoil && ((!blockHit && !previous) || (!player && attacker.getType() != ESM::REC_NPC_4)))
             return nullptr;
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential
@@ -4064,7 +4065,7 @@ namespace MWWorld
         if (defensiveQuery)
         {
             const auto outcome = MWMechanics::prepareOblivionDefensiveBlockConsequences(
-                *this, attacker, victim, preparedDeltas);
+                *this, attacker, victim, preparedDeltas, previous != nullptr);
             if (!outcome) return nullptr;
             counterSelected = outcome->mCounterSelected;
         }
@@ -4078,7 +4079,7 @@ namespace MWWorld
         {
             if (!prepareOblivionBlockHitReaction(id, victim, preparedDeltas)) return nullptr;
         }
-        if (attackerRecoil && !counterSelected && contact->victimRemainsAlive()
+        if (attackerRecoil && !counterSelected && (contact->victimRemainsAlive() || (previous && !blockHit))
             && !prepareOblivionContactReaction(id, attacker, ESM4::MeleeReactionKind::Recoil, true, preparedDeltas))
             return nullptr;
         if (preparedDeltas.mVictimCounterRequested && !preparedDeltas.mVictimCounter && contact->victimRemainsAlive()
@@ -4107,6 +4108,8 @@ namespace MWWorld
         data->mScene = mWorldScene.get();
         data->mGodMode = getGodModeState();
         data->mRandomDraws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws : 0;
+        data->mCounterSelected = counterSelected;
+        data->mCounterPrepared = preparedDeltas.mVictimCounter.has_value();
         data->mContact = std::move(contact);
         data->mResolvedDisarms = preparedDeltas.mDisarms;
         for (const auto& [owner, requested] : std::array<std::pair<Ptr, bool>, 2>{{
@@ -4155,6 +4158,155 @@ namespace MWWorld
                     [contact = data->mContact, item = condition.mItem] { contact->notifyEquipmentChange(item); }));
         data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());
         return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
+    }
+
+    std::optional<unsigned> World::commitOblivionPlayerNpcHit(std::uint64_t id,
+        const Ptr& attacker, const Ptr& victim, const MWMechanics::OblivionPhysicalContactDeltas& deltas, const std::function<void()>& beforeDamage)
+    {
+        auto* combat = mOblivionCombat.get();
+        const auto player = getPlayerPtr();
+        if (!combat || attacker.isEmpty() || victim.isEmpty() || !deltas.mOrdinaryHitArguments
+            || (attacker != player && victim != player)
+            || (attacker != player && attacker.getType() != ESM::REC_NPC_4)
+            || (victim != player && victim.getType() != ESM::REC_NPC_4)) return std::nullopt;
+        const auto attackerKey = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
+        if (!combat->isActionPending(id, attackerKey)) return std::nullopt;
+        const auto raw = *deltas.mOrdinaryHitArguments;
+        if (raw.mUsedSkill < 12 || raw.mUsedSkill > 32 || deltas.mKnockback
+            || deltas.mAttackerReaction || deltas.mVictimReaction || deltas.mVictimCounterRequested
+            || deltas.mVictimCounter || !deltas.mDisarms.empty())
+            throw std::invalid_argument("ordinary hit requires an unfinished resource prefix");
+        if (!std::isfinite(raw.mHealth) || raw.mHealth < 0
+            || !std::isfinite(raw.mFatigue) || raw.mFatigue < 0
+            || !std::isfinite(raw.mPreArmorDamage) || raw.mPreArmorDamage < 0
+            || !std::isfinite(raw.mBlockAbsorbedFraction)
+            || raw.mBlockAbsorbedFraction < 0 || raw.mBlockAbsorbedFraction > 1)
+            throw std::invalid_argument("ordinary hit arguments outside the native supported domain");
+        const auto preArmorDamage = ESM4::convertActorBaseFloat(
+            raw.mPreArmorDamage, ESM4::ActorValueConversionMode::Sse);
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& record : mStore.get<ESM4::GameSetting>())
+            if (seen.insert(record.mId).second) settings.push_back(mStore.get<ESM4::GameSetting>().search(record.mId));
+        const auto physical = ESM4::buildPhysicalCombatSettings(settings);
+        const auto knockdown = ESM4::buildKnockdownSettings(settings);
+        const auto speech = ESM4::buildOrdinaryHitSpeechSettings(settings);
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const auto procs = ESM4::buildMasteryProcSettings(settings);
+        const auto cone = ESM4::buildCombatHitConeAngle(settings);
+        const auto startRandom = combat->combatRandomState();
+        auto prefixContact = prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+        if (!prefixContact) return std::nullopt;
+        const auto attackerLease = attacker.getRefData().prepareRuntimeIdentity();
+        const auto victimLease = victim.getRefData().prepareRuntimeIdentity();
+        const auto worldLease = std::weak_ptr<const char>(mOblivionRestoreIdentity);
+        const auto generation = mOblivionClearGeneration;
+        if (!prefixContact->isValid()) return std::nullopt;
+        if (beforeDamage) beforeDamage();
+        if (!prefixContact->commit()) return std::nullopt;
+        const auto contextExists = [&] {
+            return !worldLease.expired() && !attackerLease.expired() && !victimLease.expired()
+                && mOblivionClearGeneration == generation && mOblivionCombat.get() == combat;
+        };
+        if (!contextExists()) return std::nullopt;
+        const auto key = [&](const Ptr& actor) {
+            return actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        };
+        const auto integer = [&](const Ptr& actor, std::uint8_t av) {
+            return actor == player ? combat->getPlayerIntegerValue(av) : combat->getNonPlayerIntegerValue(actor, av);
+        };
+        const auto base = [&](const Ptr& actor, std::uint8_t av) {
+            return actor == player ? combat->getPlayerBaseValue(av) : combat->getNonPlayerBaseValue(key(actor), av, mStore);
+        };
+        const auto* receiving = combat->findActorValues(key(victim));
+        const auto* life = combat->findActorLife(key(victim));
+        if (!receiving || !life) return std::nullopt;
+        const float fatigue = victim == player ? combat->getPlayerValue(10) : combat->getNonPlayerValue(victim, 10);
+        ESM4::OrdinaryHitReactionInput input{raw.mHealth, raw.mFatigue,
+            preArmorDamage,
+            integer(victim, 10), integer(victim, 3), integer(victim, 7), integer(victim, 8),
+            ESM4::combatFatigueRatio(fatigue, ESM4::combatBaseValue(receiving->mValues[10].mBase)),
+            base(attacker, raw.mUsedSkill), base(victim, 4), 0,
+            life->mPhase == ESM4::ActorLifePhase::Alive, false,
+            {0, 0, raw.mBlockAbsorbedFraction, raw.mBareHandBlock, raw.mActiveBlock, false, raw.mAttackerHasWeapon},
+            raw.mDamagePath};
+        std::array<std::uint16_t, 3> draws;
+        auto cursor = combat->combatRandomState();
+        for (auto& value : draws) { const auto draw = ESM4::combatRandomDraw(cursor); value = draw.mValue; cursor = draw.mNextState; }
+        const auto prefix = ESM4::ordinaryHitPrefix(input, draws, knockdown, physical, speech, mastery);
+        for (unsigned i = 0; i < prefix.mDraws; ++i) combat->drawNativeRandom();
+        if (prefix.mHitSpeech)
+        {
+            // Existing typed constructors expose Low/Active processes; the
+            // independent SetUnconscious actor-state producer remains separate.
+            const bool sneaking = receiving->mProcess == ESM4::ActorValueProcess::Active
+                && victim.getClass().getCreatureStats(victim).getStance(MWMechanics::CreatureStats::Stance_Sneak)
+                && !isSwimming(victim);
+            if (!sneaking && (victim == player || !combat->sceneIsComplex() || combat->drawNativeRandom() % 8 == 0))
+            {
+                // These pairs need no approximation of the native performance
+                // counter: a Player listener bypasses distance, and a Player
+                // speaker is at distance0 from that same Player.
+                if (auto* scripts = getOblivionScriptManager())
+                    scripts->dispatchAutomaticDialogueResponse(ESM::FormKey::content("oblivion.esm", 0xdd), victim, attacker);
+            }
+        }
+        if (!contextExists()) return std::nullopt;
+        MWMechanics::OblivionPhysicalContactDeltas tail;
+        bool staggerSelected = false;
+        if (prefix.mDamageFlag && combat->getProcessKnockedState(key(victim)) == 0)
+        {
+            const auto& from = attacker.getRefData().getPosition();
+            const auto& to = victim.getRefData().getPosition();
+            const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
+            const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
+            staggerSelected = ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy), cone).mInside;
+            if (staggerSelected && !prepareOblivionStaggerReaction(id, victim, tail))
+                throw std::runtime_error("ordinary hit Stagger cannot bind its current native resources");
+        }
+        // Query after speech/result callbacks and Stagger resource selection.
+        input.mBlock.mBaseBlock = base(victim, 15);
+        input.mBlock.mBaseHandToHand = base(victim, 17);
+        const auto lowerDraw = ESM4::combatRandomDraw(tail.mRandomTransition
+            ? tail.mRandomTransition->mNextState : combat->combatRandomState());
+        const std::array<std::uint16_t, 1> lowerDraws{lowerDraw.mValue};
+        const auto block = ESM4::ordinaryHitBlockTail(input.mBlock, lowerDraws, procs, mastery);
+        if (block.mDraws)
+            tail.mRandomTransition = combat->prepareCombatRandom(
+                (tail.mRandomTransition ? tail.mRandomTransition->mDraws : 0) + block.mDraws);
+        // The caller's local4F suppresses general force even if Stagger had no
+        // asset. Counter/BlockHit suppression instead uses actual action8.
+        if (!block.mBlockedDispatch && !staggerSelected && victim != player
+            && combat->getProcessKnockedState(key(victim)) == 0 && integer(victim, 4) > 0)
+        {
+            const auto* actorPhysics = mPhysics ? mPhysics->getActor(victim) : nullptr;
+            if (actorPhysics && actorPhysics->getCollisionMode())
+            {
+                const auto& from = attacker.getRefData().getPosition();
+                const auto& to = victim.getRefData().getPosition();
+                std::array<float, 3> delta;
+                for (std::size_t i = 0; i < delta.size(); ++i) delta[i] = static_cast<float>(double(to.pos[i]) - from.pos[i]);
+                tail.mKnockback = MWMechanics::OblivionKnockbackContact{delta, input.mPreArmorDamage,
+                    base(victim, 10), ESM4::buildKnockbackSettings(settings), physical};
+            }
+        }
+        auto continuation = prefixContact->prepareContinuation(tail, block.mBlockedDispatch,
+            block.mBlockedDispatch || block.mAttackerRecoil);
+        if (!continuation || !continuation->commit())
+            throw std::runtime_error("ordinary hit continuation rejected after accepted damage");
+        if (!contextExists()) return std::nullopt;
+        const unsigned consumed = ESM4::combatRandomDistance(startRandom, combat->combatRandomState());
+        if (mOblivionObservation)
+            mOblivionObservation->record("ordinary-hit-phases", {{"actor", key(attacker).serialize()},
+                {"victim", key(victim).serialize()}, {"action", id}, {"prefix_draws", prefix.mDraws},
+                {"damage_flag", prefix.mDamageFlag}, {"speech_requested", prefix.mHitSpeech},
+                {"stagger_selected", staggerSelected}, {"stagger_prepared", tail.mVictimReaction.has_value()},
+                {"blocked_dispatch", block.mBlockedDispatch}, {"lower_recoil_draws", block.mDraws},
+                {"lower_recoil_selected", block.mAttackerRecoil},
+                {"counter_selected", continuation->mData->mCounterSelected},
+                {"counter_prepared", continuation->mData->mCounterPrepared},
+                {"rng_before", startRandom}, {"rng_after", combat->combatRandomState()}, {"draws", consumed}});
+        return consumed;
     }
 
     bool World::commitOblivionPhysicalContact(std::uint64_t id, const Ptr& attacker, const Ptr& victim,

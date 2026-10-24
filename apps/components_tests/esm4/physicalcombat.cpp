@@ -2808,6 +2808,8 @@ TEST(ESM4PhysicalCombat, CombatRandomMatchesOriginalInitializedAndSeededStreams)
         const auto draw = ESM4::combatRandomDraw(row.state);
         EXPECT_EQ(draw.mNextState, row.next) << row.state;
         EXPECT_EQ(draw.mValue, row.value) << row.state;
+        EXPECT_EQ(ESM4::combatRandomDistance(row.state, row.next), 1u);
+        EXPECT_EQ(ESM4::combatRandomDistance(row.next, row.state), 0xffffffffu);
     }
 }
 
@@ -6322,4 +6324,20 @@ TEST(ESM4PhysicalCombat, CounterRetirementKeepsState3UntilItsInclusiveStop)
     const auto timing = frame.mTiming;
     frame = ESM4::advanceCounterMeleeFrame(frame, 1.f, 1, 0, 1, keys);
     EXPECT_EQ(frame.mTiming, timing); // Native state0 performs no further NI sampling.
+}
+
+TEST(ESM4PhysicalCombat, RandomDistanceCountsCallbacksAcrossTheWholeNativePeriod)
+{
+    // First seven states are frozen original47DF80 observations above. Long
+    // distances follow the independently composed affine map modulo2^32.
+    struct Row { std::uint32_t begin, end, distance; };
+    const Row rows[]{
+        {0u, 0u, 0u}, {0u, 2531011u, 1u}, {0u, 505908858u, 2u},
+        {0u, 3539360597u, 3u}, {0u, 159719620u, 4u},
+        {0u, 2727824503u, 5u}, {0u, 773150046u, 6u}, {0u, 548247209u, 7u},
+        {2531011u, 0u, 0xffffffffu}, {0u, 0x80000000u, 0x80000000u},
+        {1u, 0x80000001u, 0x80000000u}, {0xffffffffu, 0x7fffffffu, 0x80000000u}
+    };
+    for (const auto& row : rows)
+        EXPECT_EQ(ESM4::combatRandomDistance(row.begin, row.end), row.distance);
 }

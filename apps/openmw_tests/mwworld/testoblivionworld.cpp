@@ -21200,7 +21200,7 @@ namespace
         const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
         auto hit = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, b, {-7, -3, -1});
         ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
-        for (int member = 0; member < 6; ++member)
+        for (int member = 0; member < 5; ++member)
         {
             MWMechanics::OblivionPhysicalContactDeltas invalid;
             switch (member)
@@ -21210,7 +21210,6 @@ namespace
                 case 2: invalid.mVictimFatigue = -1; break;
                 case 3: invalid.mVictimBlockFatigue = -1; break;
                 case 4: invalid.mOrdinaryHitArguments.emplace(); break;
-                case 5: invalid.mKnockback.emplace(); break;
             }
             EXPECT_THROW(hit->prepareContinuation(invalid, nullptr, settings), std::invalid_argument);
         }
@@ -21401,6 +21400,151 @@ namespace
                 auto hit = prepareContact(fixture, id, a, b, request); ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
                 EXPECT_FALSE(hit->prepareContinuation({}, nullptr, settings));
             }
+            EXPECT_TRUE(service.isActionConsumed(id));
+        }
+    }
+
+    TEST(OblivionWorldTest, ContactContinuationCanApplyOnlyTheFirstGeneralHitForce)
+    {
+        for (bool firstForce : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto a = addNativeNpc(fixture, 0x900), b = addNativeNpc(fixture, 0x901);
+            ASSERT_TRUE(world.activateOblivionActor(a)); ASSERT_TRUE(world.activateOblivionActor(b));
+            auto& service = *world.getOblivionCombatService();
+            const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+            const MWMechanics::OblivionKnockbackContact force{{0, 100, 1}, 20, 155,
+                {1, -.008f, 50, 10, 512, 1}, {-20, .4f, 1, .5f, .5f, .2f, 1.5f, .5f, .5f, .75f, .5f}};
+            MWMechanics::OblivionPhysicalContactDeltas damage{-1, -1, 0};
+            if (firstForce) damage.mKnockback = force;
+            auto hit = prepareContact(fixture, world.beginOblivionPhysicalAction(a), a, b, damage);
+            ASSERT_TRUE(hit); ASSERT_TRUE(hit->commit());
+            MWMechanics::OblivionPhysicalContactDeltas tail; tail.mKnockback = force;
+            if (firstForce)
+                EXPECT_THROW(hit->prepareContinuation(tail, nullptr, settings), std::invalid_argument);
+            else
+            {
+                auto plan = hit->prepareContinuation(tail, nullptr, settings); ASSERT_TRUE(plan);
+                ASSERT_TRUE(plan->commit()); EXPECT_TRUE(service.actorKnockback(b.getCellRef().getFormKey()));
+                EXPECT_FALSE(hit->prepareContinuation(tail, nullptr, settings));
+            }
+        }
+    }
+
+    MWWorld::Ptr setupCommonHitPlayer(NativeWorldFixture& fixture)
+    {
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        ESM4::Npc native{};
+        const auto base = ESM::FormKey::content("Oblivion.esm", 7);
+        native.mId = {7, 1}; native.mFormKey = base; native.mIsTES4 = true;
+        native.mData.attribs = {50, 50, 30, 30, 40, 40, 50, 50}; native.mData.health = 45;
+        native.mBaseConfig.tes4.fatigue = 150;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, base);
+        if (!world.initializeOblivionPlayerActor()) throw std::runtime_error("fixture Player did not initialize");
+        return world.getPlayerPtr();
+    }
+
+    TEST(OblivionWorldTest, PlayerNpcCommonHitPublishesItsPrefixAndReactionTailOnce)
+    {
+        for (bool playerAttacks : {false, true})
+        {
+            SCOPED_TRACE(playerAttacks);
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto player = setupCommonHitPlayer(fixture), npc = addNativeNpc(fixture, 0x900);
+            ASSERT_TRUE(world.activateOblivionActor(npc));
+            auto& service = *world.getOblivionCombatService();
+            const auto attacker = playerAttacks ? player : npc, victim = playerAttacks ? npc : player;
+            const auto value = [&](std::uint8_t av) {
+                return victim == player ? service.getPlayerValue(av) : service.getNonPlayerValue(victim, av);
+            };
+            const float health = value(8), fatigue = value(10);
+            const auto defaults = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+            const std::array<MWWorld::Ptr, 1> npcs{npc};
+            if (playerAttacks) service.setPlayerBaseValue(world.getPlayer(), 17, 75, defaults);
+            else service.setNonPlayerBaseValue(npc, 17, 75, npcs);
+            MWMechanics::OblivionPhysicalContactDeltas hit{-7, -3, -1000};
+            hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 1000, 20, 0, 17, true, false, false, false};
+            const auto id = world.beginOblivionPhysicalAction(attacker);
+            const auto rng = service.combatRandomState();
+            unsigned soundRequests = 0;
+            const auto result = world.commitOblivionPlayerNpcHit(id, attacker, victim, hit, [&] {
+                ++soundRequests;
+                EXPECT_EQ(value(8), health); EXPECT_EQ(value(10), fatigue);
+                EXPECT_TRUE(service.isActionPending(id));
+            });
+            EXPECT_EQ(soundRequests, 1u);
+            ASSERT_TRUE(result);
+            // Original forced-Fatigue path skips the damage roll. Expert and
+            // positive victim base Speed consume exactly one draw, even when
+            // Stagger has no AnimData. The absent builtin topic adds none.
+            EXPECT_EQ(*result, 1u);
+            EXPECT_EQ(value(8), health - 3); EXPECT_EQ(value(10), fatigue - 1000);
+            EXPECT_TRUE(service.isActionConsumed(id));
+            EXPECT_EQ(*result, ESM4::combatRandomDistance(rng, service.combatRandomState()));
+            const auto after = service.combatRandomState();
+            EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit));
+            EXPECT_EQ(service.combatRandomState(), after); EXPECT_EQ(value(8), health - 3);
+        }
+    }
+
+    TEST(OblivionWorldTest, CommonHitRejectsInvalidArgumentsBeforeSoundOrDamage)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto player = setupCommonHitPlayer(fixture), npc = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        const auto id = world.beginOblivionPhysicalAction(player);
+        const auto before = contactSnapshot(fixture, {npc});
+        const auto playerFatigue = service.getPlayerValue(10);
+        for (unsigned invalid = 0; invalid < 4; ++invalid)
+        {
+            SCOPED_TRACE(invalid);
+            MWMechanics::OblivionPhysicalContactDeltas hit{-7, -3, -4};
+            hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{
+                3, 4, 20, 0, 17, true, false, false, false};
+            auto& raw = *hit.mOrdinaryHitArguments;
+            if (invalid == 0) raw.mHealth = -1;
+            if (invalid == 1) raw.mFatigue = std::numeric_limits<float>::quiet_NaN();
+            if (invalid == 2) raw.mPreArmorDamage = std::numeric_limits<float>::infinity();
+            if (invalid == 3) raw.mBlockAbsorbedFraction = 1.01f;
+            EXPECT_THROW(world.commitOblivionPlayerNpcHit(id, player, npc, hit,
+                [] { ADD_FAILURE() << "invalid hit emitted sound"; }), std::invalid_argument);
+            EXPECT_EQ(contactSnapshot(fixture, {npc}), before);
+            EXPECT_EQ(service.getPlayerValue(10), playerFatigue);
+            EXPECT_TRUE(service.isActionPending(id));
+        }
+    }
+
+    TEST(OblivionWorldTest, CommonHitLowerHandBlockRecoilRollSurvivesVictimDeath)
+    {
+        for (bool lethal : {false, true})
+        {
+            NativeWorldFixture fixture;
+            auto& world = fixture.mWorld;
+            const auto player = setupCommonHitPlayer(fixture), npc = addNativeNpc(fixture, 0x900);
+            ASSERT_TRUE(world.activateOblivionActor(npc));
+            auto& service = *world.getOblivionCombatService();
+            const std::array<MWWorld::Ptr, 1> npcs{npc};
+            service.setNonPlayerBaseValue(npc, 15, 50, npcs);
+            service.setNonPlayerBaseValue(npc, 17, 25, npcs);
+            auto state = captureNativeActorState(fixture, npc);
+            // Frozen original CRT: state2531011 -> raw7719, percentile19.
+            // Native iPerkHandToHandBlockRecoilChance defaults to25.
+            state.mCombatRngState = 2531011;
+            service.restore(state);
+            MWMechanics::OblivionPhysicalContactDeltas hit{0, lethal ? -1000.f : 0.f, 0};
+            hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{
+                lethal ? 1000.f : 0.f, 0, 20, 0, 14, lethal, true, true, true};
+            const auto id = world.beginOblivionPhysicalAction(player);
+            const auto result = world.commitOblivionPlayerNpcHit(id, player, npc, hit);
+            ASSERT_TRUE(result); EXPECT_EQ(*result, 1u);
+            EXPECT_EQ(service.combatRandomState(), 505908858u);
+            EXPECT_EQ(service.findActorLife(npc.getCellRef().getFormKey())->mPhase,
+                lethal ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive);
             EXPECT_TRUE(service.isActionConsumed(id));
         }
     }
@@ -33450,6 +33594,65 @@ TEST(OblivionWorldTest, SpokenDialogueHistoryRestoresAtomicallyAndSurvivesRuntim
     auto legacy = scripts->prepareRestore(saved);
     ASSERT_TRUE(legacy.commit());
     EXPECT_FALSE(scripts->hasSpokenDialogueInfo(a));
+}
+
+TEST(OblivionWorldTest, AutomaticResponseRunsOneResultAfterMissingAudioWithMultipleResponses)
+{
+    for (unsigned responses : {0u, 1u, 2u}) for (unsigned flags : {4u, 12u, 20u})
+    {
+        SCOPED_TRACE(responses);
+        SCOPED_TRACE(flags);
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto sub = [&](std::uint32_t tag, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+        };
+        const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(std::uint32_t{})
+                + bytes(id) + bytes(std::uint32_t{}) + data;
+        };
+        const auto quest = record(ESM4::REC_QUST, 0x900,
+            sub(ESM::fourCC("EDID"), std::string("VoiceQuest\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string("\x01\x32", 2)));
+        const auto topic = record(ESM4::REC_DIAL, 0x901,
+            sub(ESM::fourCC("EDID"), std::string("VoiceTopic\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(1, '\x02')));
+        ESM4::AIPackage::CTDA condition{};
+        condition.fnIndex = 77; condition.compValue = 101; condition.condition = 0x80;
+        std::string responseData;
+        for (unsigned i = 0; i < responses; ++i)
+        {
+            ESM4::TargetResponseData data{}; data.responseNo = i + 1;
+            responseData += sub(ESM::fourCC("TRDT"), bytes(data).substr(0, 16));
+            responseData += sub(ESM::fourCC("NAM1"), std::string("Test\0", 5));
+        }
+        const auto info = record(ESM4::REC_INFO, 0x902,
+            sub(ESM::fourCC("DATA"), std::string{'\x02', '\0', static_cast<char>(flags)})
+            + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{0x900}))
+            + sub(ESM::fourCC("CTDA"), bytes(condition)) + responseData
+            + sub(ESM::fourCC("SCTX"), "ModAV Health -2\n"));
+        const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + info.size()))
+            + bytes(std::uint32_t{0x901}) + bytes(std::uint32_t{7}) + bytes(std::uint32_t{}) + info;
+        NativeWorldFixture fixture(false, false, false, {}, {}, quest + topic + group, 4);
+        auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0xa00);
+        world.getWorldModel().registerPtr(actor); ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& combat = *world.getOblivionCombatService();
+        auto state = captureNativeActorState(fixture, actor); state.mCombatRngState = 0; combat.restore(state);
+        auto* scripts = world.getOblivionScriptManager(); ASSERT_TRUE(scripts);
+        const auto topicKey = ESM::FormKey::content("headless.esm", 0x901);
+        const auto infoKey = ESM::FormKey::content("headless.esm", 0x902);
+        const auto health = combat.getNonPlayerValue(actor, 8);
+        scripts->dispatchAutomaticDialogueResponse(topicKey, actor, actor);
+        const bool ran = responses && !(flags & 8), marked = ran && !(flags & 16);
+        EXPECT_EQ(combat.getNonPlayerValue(actor, 8), health - (ran ? 2 : 0));
+        EXPECT_EQ(scripts->hasSpokenDialogueInfo(infoKey), marked);
+        EXPECT_EQ(combat.combatRandomState(), 2531011u);
+        scripts->dispatchAutomaticDialogueResponse(topicKey, actor, actor);
+        EXPECT_EQ(combat.getNonPlayerValue(actor, 8), health - (ran ? (marked ? 2 : 4) : 0));
+        EXPECT_EQ(combat.combatRandomState(), marked ? 2531011u : 505908858u);
+    }
 }
 
 TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersSpokenInfoBeforeRandomConditions)

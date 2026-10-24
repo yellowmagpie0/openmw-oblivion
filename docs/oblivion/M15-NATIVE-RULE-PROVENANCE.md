@@ -18181,3 +18181,33 @@ The exact source/patch, full 1,895-case normal and sanitizer engine inventories,
 editable case manifest, declared boundaries and artifact hashes are recorded in
 [M15-CONTACT-CONTINUATION-VERIFICATION.json](M15-CONTACT-CONTINUATION-VERIFICATION.json).
 M15S4 remains incomplete.
+
+
+### NPC-to-Player common-hit phases (intermediate S4)
+
+Normal NPC melee hits on the Player now publish damage and wear once, run the
+automatic Player Hit response synchronously, then query current state for the
+reaction tail. The first automatic response attempts playback before its INFO
+result; ScriptSay retains its separate multi-response behavior. Hit sounds run
+before damage and are not replayed by CharacterController. Continuations may
+apply the first general hit force and preserve lower hand-block recoil after
+victim death. Native CRT state distance includes draws from real callbacks.
+
+The final full engine inventory passes 1,900 tests normally and under ASan/UBSan
+(leak detection disabled). Unchanged component binaries retain completed results
+of 3,044 normal and 895 ESM4 sanitizer tests from earlier attempts. A normal-input
+production NPC attack, real first/body BlockHit, attacker Recoil and Master
+disarm survive an actual in-flight save and fresh process without contact, RNG,
+damage or item replay. Every saved binary matches live serialization; initial
+restoration is exact. Final logical actor/inventory state matches uninterrupted
+recovery; world scheduling and loose-body trajectory are outside that comparison.
+The recorded mixed PCM also matches the independently extracted stock Hit voice.
+
+A rendered Player-attack course exposed the unwired GetFriendHit condition in
+stock NPC Hit INFO051DC6. Normal Player attacks therefore retain the previous
+contact path, as do NPC/NPC and creature pairs. The failed courses and fixture
+attempts are retained. Friendly notifications/counter authority, their query/
+expiry/persistence, NPC speech and the remaining S4 gameplay matrix stay open.
+No full M15S4 completion is claimed. See
+[M15-NPC-PLAYER-COMMON-HIT-VERIFICATION.json](M15-NPC-PLAYER-COMMON-HIT-VERIFICATION.json)
+and the editable [course recipe](../../scripts/data/oblivion_compat/m15_npc_player_common_hit_course.json).

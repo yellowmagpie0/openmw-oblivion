@@ -738,7 +738,7 @@ namespace MWMechanics
             std::optional<float> resourceActorValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
             // Continue this accepted contact after synchronous script callbacks.
             // Requeries the live participants; never reapplies resource damage,
-            // wear or knockback, and never reopens the consumed attack action.
+            // wear or an existing knockback, and never reopens the attack action.
             // Alternative preparations share one publication right. Restoring
             // the service or destroying a participant invalidates that right.
             std::unique_ptr<PreparedPhysicalContact> prepareContinuation(

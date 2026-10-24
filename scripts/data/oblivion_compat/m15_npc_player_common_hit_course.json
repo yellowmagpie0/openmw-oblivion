@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "scope": "Normal NPC-to-Player resource-prefix, automatic Player Hit response and cached block consequence phases; intermediate S4 delivery.",
+  "input": {
+    "source": "build/oblivion-compat/m15/S4/native-advanced-unarmed-recoil-fork-normal-02/staged-input.omwsave",
+    "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80",
+    "setup": "Copy to a fresh private userdata/saves/M15Review/Quicksave.omwsave; preserve pristine bytes. Native Player Block25/HandToHand100, combat RNG15, pending ledger empty. No contacts, damage or reaction outcomes injected."
+  },
+  "fixture": "build/oblivion-compat/m15/S4/native-master-recovery-fixture-02/fixture; production stationary attack policy, authored start/stop activation script",
+  "manifest": "oblivion_m15_npc_player_common_hit.json",
+  "continuation_manifest": "oblivion_m15_npc_player_common_hit_continuation.json",
+  "course": [
+    "Ready weapon stance, hold normal block, activate stationary NPC with Space held1.2 seconds.",
+    "One production NPC strike2 reaches Player. Actual hit SFX precede damage, live Player Hit INFO/first voice/result and fresh reaction tail.",
+    "Save after accepted contact during actual NPC Recoil and Player BlockHit; stop NPC after recovery, release block and save settled state.",
+    "In a fresh engine process load the preserved middle snapshot; reassert block before frame readiness as continuation manifest specifies. Recover with no attack input, stop combat and resave.",
+    "Independently compare saved binaries with live serialization, exact initial restoration, final native actor/inventory/RNG/contact/drop identities. World scheduling and loose-body trajectory need not match."
+  ],
+  "prefix_expectation": {
+    "rng_before": 15,
+    "prefix_draws": 2,
+    "damage_flag": false,
+    "speech_requested": true,
+    "blocked_dispatch": true,
+    "stagger_selected": false,
+    "counter_selected": false,
+    "total_draws": 5,
+    "rng_after": 4277529146,
+    "contacts_per_process": [
+      1,
+      0
+    ],
+    "drop_count": 1,
+    "drop_reason": "Master hand-to-hand block disarm after Counter miss; incoming weapon condition55.7 is retained on dropped instance."
+  },
+  "expectation_scope": "Prefix/control branches have separate original-instruction proofs. Full installed INFO selection, contact damage and resource identities are composed fork regression checks; not a new original-game normal-input differential.",
+  "audio": "OpenAL wave output; compare selected stock Hit voice PCM against independently extracted installed voice. No isolated proof of each simultaneous SFX.",
+  "supported_normal_caller": "NPC attacker and Player victim only. World API tests both supported synthetic directions; normal Player attacks, NPC/NPC and creatures retain preceding path.",
+  "open_dependencies": [
+    "NPC-victim GetFriendHit production authority, notification classification, expiry and persistence before enabling their automatic Hit INFOs.",
+    "Prior ScriptSay queue/automatic speech interruption composition; raw actor state3 producer; distant NPC performance-counter speech gate.",
+    "Remaining S4 mastery/effect/cancellation and normal-input view/device/FPS/windup/block/recovery restart matrix."
+  ],
+  "full_M15S4_acceptance": false
+}
