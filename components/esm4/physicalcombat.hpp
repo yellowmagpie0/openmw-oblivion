@@ -67,8 +67,13 @@ namespace ESM4
     {
         float mPowerAttackDelay;
         CombatMasterySettings mMastery;
+        float mPowerAttackSpeechChance = .5f;
     };
     void validateMeleeInputSettings(const MeleeInputSettings& settings);
+    // Player input65EEC6 consumes this word before attempting animation start.
+    // The caller separately owns successful-start, equipped-bow and sneaking
+    // gates, plus automatic dialogue selection/playback and its further RNG.
+    bool powerAttackSpeechRoll(unsigned rawDraw, float chance);
     // airborne is the caller-resolved native5EC180 predicate, not an inferred
     // collision or shared TES3 animation state.
     bool airborneMeleeStartAllowed(std::int32_t baseAcrobatics, bool airborne,

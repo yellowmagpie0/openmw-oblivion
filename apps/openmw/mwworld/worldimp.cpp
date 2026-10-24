@@ -3240,6 +3240,47 @@ namespace MWWorld
         return mOblivionCombat->consumeAction(id, key);
     }
 
+    bool World::rollOblivionPlayerPowerAttackSpeech()
+    {
+        if (!mOblivionCombat) return false;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        (void)mOblivionCombat->getPlayerIntegerValue(8);
+        const auto settings = resolveOblivionMeleeInputSettings(mStore);
+        const auto before = mOblivionCombat->combatRandomState();
+        const auto draw = mOblivionCombat->drawNativeRandom();
+        const bool selected = ESM4::powerAttackSpeechRoll(draw, settings.mPowerAttackSpeechChance);
+        Log(Debug::Verbose) << "M15 power input speech roll: raw=" << draw << " selected=" << selected
+                            << " rng_before=" << before << " rng_after=" << mOblivionCombat->combatRandomState();
+        return selected;
+    }
+
+    void World::dispatchOblivionPlayerPowerAttackSpeech(const Ptr& speaker)
+    {
+        if (!mOblivionCombat || speaker.isEmpty() || speaker != getPlayerPtr()) return;
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached)
+            throw std::logic_error("Outgoing World simulation is frozen before detachment");
+        (void)mOblivionCombat->getPlayerIntegerValue(8);
+        // Player6608A0 repeats the native sneaking predicate. Cached process
+        // F5 is the equipped-bow flag (658597..6585B1); recheck equipment after
+        // animation callbacks before entering automatic response selection.
+        if (speaker.getClass().getCreatureStats(speaker).getStance(MWMechanics::CreatureStats::Stance_Sneak)
+            && !isSwimming(speaker)) return;
+        auto& inventory = speaker.getClass().getInventoryStore(speaker);
+        if (const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight); right != inventory.end())
+        {
+            const auto id = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
+            const auto* form = id.getIf<ESM::FormId>();
+            const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
+            if (weapon && weapon->mData.type == 4) return;
+        }
+        // Default-topic type2/subtype10 is PowerAttack, formE6. The native
+        // Player path uses itself as listener and has no NPC scene-complexity
+        // roll. INFO selection, M10 playback and results share the existing owner.
+        if (auto* scripts = getOblivionScriptManager())
+            scripts->dispatchAutomaticDialogueResponse(ESM::FormKey::content("oblivion.esm", 0xe6), speaker, speaker);
+    }
+
     bool World::prepareOblivionBlockHitReaction(std::uint64_t id, const Ptr& victim,
         MWMechanics::OblivionPhysicalContactDeltas& deltas)
     {

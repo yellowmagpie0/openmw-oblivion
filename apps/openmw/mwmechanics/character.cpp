@@ -2671,6 +2671,10 @@ namespace MWMechanics
         const bool held = getAttackingOrSpell();
         const bool pressed = held && !input.mInputHeld;
         std::optional<ESM4::MeleeStrikeKind> selected;
+        bool powerSpeechSelected = false;
+        bool powerSpeechStarted = false;
+        MWWorld::Ptr powerSpeaker;
+        std::weak_ptr<const char> powerSpeakerIdentity;
         if (input.mQueued != ESM4::MeleeQueuedStrike::None && queueWindow)
             selected = input.mQueued == ESM4::MeleeQueuedStrike::Power ? ESM4::MeleeStrikeKind::StandingPower
                 : input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
@@ -2702,6 +2706,14 @@ namespace MWMechanics
             }
         }
         input.mInputHeld = held;
+        if (player && selected && *selected >= ESM4::MeleeStrikeKind::StandingPower)
+        {
+            powerSpeaker = mPtr;
+            powerSpeakerIdentity = mPtr.getRefData().prepareRuntimeIdentity();
+            // Original65EEC6 rolls before5F48D0 attempts the animation. A
+            // failed resource/airborne admission still consumes this word.
+            powerSpeechSelected = world->rollOblivionPlayerPowerAttackSpeech();
+        }
         if (selected)
         {
             const int acrobatics = player ? service->getPlayerBaseValue(26)
@@ -2864,6 +2876,7 @@ namespace MWMechanics
                         mAnimation->disable(group);
                         throw;
                     }
+                    powerSpeechStarted = powerSpeechSelected;
                     if (*selected == ESM4::MeleeStrikeKind::Left || *selected == ESM4::MeleeStrikeKind::Right)
                         input.mPreferLeft = *selected != ESM4::MeleeStrikeKind::Left;
                 }
@@ -2876,6 +2889,10 @@ namespace MWMechanics
             if (const auto* current = service->findMeleeState(actor); current && current->mStrike)
                 mUpperBodyState = UpperBodyState::AttackEnd;
         }
+        // Publish input before response results can change gameplay state.
+        // Replaced references suppress the successful-start continuation.
+        if (powerSpeechStarted && !powerSpeakerIdentity.expired())
+            world->dispatchOblivionPlayerPowerAttackSpeech(powerSpeaker);
         return false;
     }
 

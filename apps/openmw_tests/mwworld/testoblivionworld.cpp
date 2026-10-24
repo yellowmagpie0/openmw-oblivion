@@ -35049,3 +35049,50 @@ TEST(OblivionWorldTest, RootedRejectedScriptTargetRunsExistingEmptyControllerTai
     EXPECT_FALSE(world.isOblivionInCombat(player).value());
     EXPECT_EQ(combat.combatRandomState(), 334604033u);
 }
+
+TEST(OblivionWorldTest, PlayerPowerInputSpeechDrawPrecedesAdmissionAndRestoresWithoutReplay)
+{
+    NativeWorldFixture fixture;
+    const auto player = setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    auto& world = fixture.mWorld;
+    auto& combat = *world.getOblivionCombatService();
+    ESM4::GameSetting chance{};
+    chance.mId = {0x3336, 0};
+    chance.mEditorId = "FCOMBATSPEAKPOWERATTACKCHANCE";
+    chance.mData = 0.f;
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance);
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatRngState = 2196822588u; // Original CRT produces raw0/state15.
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    // No action or animation is admitted by this headless fixture. Selection
+    // still consumes its word; zero chance includes the native raw0 endpoint.
+    EXPECT_TRUE(world.rollOblivionPlayerPowerAttackSpeech());
+    EXPECT_EQ(combat.combatRandomState(), 15u);
+    const auto saved = world.captureOblivionRuntimeState();
+    EXPECT_FALSE(world.rollOblivionPlayerPowerAttackSpeech());
+    EXPECT_EQ(combat.combatRandomState(), 5741206u);
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_EQ(combat.combatRandomState(), 15u);
+    // Absent default E6 has no INFO selection or response continuation.
+    ASSERT_EQ(world.getStore().search<ESM4::Dialogue>(ESM::FormKey::content("oblivion.esm", 0xe6)), nullptr);
+    EXPECT_NO_THROW(world.dispatchOblivionPlayerPowerAttackSpeech(player));
+    EXPECT_NO_THROW(world.dispatchOblivionPlayerPowerAttackSpeech({}));
+    EXPECT_EQ(combat.combatRandomState(), 15u);
+    EXPECT_FALSE(world.rollOblivionPlayerPowerAttackSpeech());
+    EXPECT_EQ(combat.combatRandomState(), 5741206u);
+    chance.mData = 1.5f;
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance);
+    EXPECT_TRUE(world.rollOblivionPlayerPowerAttackSpeech());
+    EXPECT_EQ(combat.combatRandomState(), 334604033u);
+    chance.mData = std::int32_t{1};
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance);
+    EXPECT_THROW(world.rollOblivionPlayerPowerAttackSpeech(), std::invalid_argument);
+    EXPECT_EQ(combat.combatRandomState(), 334604033u);
+    chance.mData = std::numeric_limits<float>::quiet_NaN();
+    world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance);
+    EXPECT_THROW(world.rollOblivionPlayerPowerAttackSpeech(), std::invalid_argument);
+    EXPECT_EQ(combat.combatRandomState(), 334604033u);
+}

@@ -474,6 +474,10 @@ namespace MWWorld
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
         std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;
         bool cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor) override;
+        // Player power-input selection precedes animation admission, including
+        // failed starts. Playback is a separate successful-start continuation.
+        bool rollOblivionPlayerPowerAttackSpeech();
+        void dispatchOblivionPlayerPowerAttackSpeech(const Ptr& speaker);
         class PreparedOblivionPhysicalContact
         {
             struct Data;

@@ -1782,9 +1782,17 @@ namespace ESM4
     }
     void validateMeleeInputSettings(const MeleeInputSettings& settings)
     {
-        if (!std::isfinite(settings.mPowerAttackDelay))
-            throw std::invalid_argument("invalid native power attack delay");
+        if (!std::isfinite(settings.mPowerAttackDelay) || !std::isfinite(settings.mPowerAttackSpeechChance))
+            throw std::invalid_argument("invalid native power attack input setting");
         validateCombatMasterySettings(settings.mMastery);
+    }
+    bool powerAttackSpeechRoll(unsigned rawDraw, float chance)
+    {
+        if (rawDraw > 32767 || !std::isfinite(chance))
+            throw std::invalid_argument("invalid native power attack speech roll");
+        // Preserve equality at both endpoints. Native compares directly with
+        // the finite signed setting; it does not clamp it to a probability.
+        return double(rawDraw) / 32767.0 <= chance;
     }
     bool airborneMeleeStartAllowed(std::int32_t baseAcrobatics, bool airborne,
         const MeleeInputSettings& settings)

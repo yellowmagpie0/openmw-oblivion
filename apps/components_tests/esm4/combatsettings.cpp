@@ -367,6 +367,41 @@ TEST(ESM4CombatSettings, MeleeInputDelayRetainsSignedOverridesAndRejectsAmbiguou
     EXPECT_FLOAT_EQ(defaults.mPowerAttackDelay, .3f);
 }
 
+TEST(ESM4CombatSettings, PowerInputSpeechUsesInclusiveNativeWordAndUnclampedFiniteSetting)
+{
+    EXPECT_FLOAT_EQ(ESM4::buildMeleeInputSettings({}).mPowerAttackSpeechChance, .5f);
+    EXPECT_TRUE(ESM4::powerAttackSpeechRoll(0, 0.f));
+    EXPECT_FALSE(ESM4::powerAttackSpeechRoll(1, 0.f));
+    EXPECT_TRUE(ESM4::powerAttackSpeechRoll(16383, .5f));
+    EXPECT_FALSE(ESM4::powerAttackSpeechRoll(16384, .5f));
+    EXPECT_TRUE(ESM4::powerAttackSpeechRoll(32767, 1.f));
+    EXPECT_FALSE(ESM4::powerAttackSpeechRoll(0, -.5f));
+    EXPECT_TRUE(ESM4::powerAttackSpeechRoll(32767, 1.5f));
+    EXPECT_THROW(ESM4::powerAttackSpeechRoll(32768, 1.f), std::invalid_argument);
+    ESM4::GameSetting chance{};
+    chance.mEditorId = "FCOMBATSPEAKPOWERATTACKCHANCE";
+    const std::array<const ESM4::GameSetting*, 1> settings{&chance};
+    for (const float value : {-.5f, 0.f, .35f, .5f, 1.f, 1.5f})
+    {
+        chance.mData = value;
+        EXPECT_FLOAT_EQ(ESM4::buildMeleeInputSettings(settings).mPowerAttackSpeechChance, value);
+    }
+    for (const float value : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::powerAttackSpeechRoll(0, value), std::invalid_argument);
+        chance.mData = value;
+        EXPECT_THROW(ESM4::buildMeleeInputSettings(settings), std::invalid_argument);
+    }
+    chance.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildMeleeInputSettings(settings), std::invalid_argument);
+    chance.mData = .5f;
+    auto duplicate = chance;
+    duplicate.mEditorId = "fCombatSpeakPowerAttackChance";
+    const std::array<const ESM4::GameSetting*, 2> ambiguous{&chance, &duplicate};
+    EXPECT_THROW(ESM4::buildMeleeInputSettings(ambiguous), std::invalid_argument);
+}
+
 TEST(ESM4CombatSettings, NativeAirborneStartAndHeldPowerHaveDifferentMasteryGates)
 {
     const auto settings = ESM4::buildMeleeInputSettings({});

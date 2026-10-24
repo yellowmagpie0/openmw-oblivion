@@ -12793,3 +12793,38 @@ hit notifications, opaque Player suppression production and the complete S4
 gameplay matrix remain open. **Full M15S4 remains incomplete.** See
 [M15-FRIEND-HIT-EXPIRY-VERIFICATION.json](M15-FRIEND-HIT-EXPIRY-VERIFICATION.json)
 and the editable [native cases](../../scripts/data/oblivion_compat/m15_friend_hit_expiry_cases.json).
+
+
+## Player power-input speech selection and response
+
+Player power selection now consumes the native speech word before animation
+admission, including failed starts. A successful start dispatches the automatic
+PowerAttack E6 response with Player as both speaker and listener, subject to the
+native bow and sneaking gates. INFO selection, voice playback, response results
+and their additional words use the existing native owners. Restoring an active
+strike does not select or dispatch the speech again.
+
+Independent original-executable probes cover 13,824 selection cases, 1,536
+start/dispatch cases and six fixture CRT observations. The compiled rule agrees
+with all 4,608 power cases from the selection corpus. The compiled chance
+fallback is 0.5; the audited winning Oblivion.esm/Knights.esp course value is 1.0.
+The directional selector was observed independently; directional contacts and
+mastery effects are still not admitted by this implementation.
+
+Both normal and ASan/UBSan keyboard courses save a real power windup, quit,
+load that save in a distinct process and resume exactly one miss/35 Fatigue
+debit. All six binary/live snapshots and both complete initial recoveries match.
+The three native words select INFO0C4548; captured PCM matches its stock voice
+once before quitting and has no matching voice on resume. All four first-person
+captures were inspected. Normal tests pass 3,065 components and 1,910 engine
+cases; sanitizer checks pass 916 ESM4 components and 1,910 engine cases. Leak
+checks are disabled for the instrumented runs.
+
+The source fixture's quest026eac numeric diagnostic remains present and is
+reported separately; this is not clean campaign-script acceptance. The failed
+schema21 fixture promotion, incorrect installed/default chance assertion,
+strict diagnostic expectation and BSA path matcher attempt are retained.
+Directional/mastery consequences, hit notifications, remaining effects and the
+complete input/interruption/view/device/FPS matrix remain open. **Full M15S4 is
+incomplete.** See [the verification receipt](M15-POWER-INPUT-VERIFICATION.json)
+and [editable cases](../../scripts/data/oblivion_compat/m15_power_input_cases.json).

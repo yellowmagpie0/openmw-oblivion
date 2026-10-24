@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "scope": "Player power-input speech selection and successful-start response on the existing standing-power path. Directional contact/mastery remains closed.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "selection": {
+    "instruction_range": "65EC96..65EEEF",
+    "ordinary_groups": [
+      20,
+      21
+    ],
+    "standing_power_group": 22,
+    "movement_priority": {
+      "1": 23,
+      "2": 24,
+      "4": 25,
+      "8": 26
+    },
+    "native_sneaking": "movement0x400 && !movement0x800 suppresses directional conversion; still consumes power speech word",
+    "mastery_query": false,
+    "power_draws": 1,
+    "comparison": "raw / 32767.0 <= finite chance; no clamp",
+    "compiled_chance_default": 0.5,
+    "winning_course_chance": 1.0,
+    "production_directional_admission": false
+  },
+  "dispatch": {
+    "instruction_range": "65EC96..65EF38, Player6608A0, 616530 through616617",
+    "animation_start_boundary": "5F48D0 supplied success/failure",
+    "equipped_flag_producer": "65857A..6585B8: processF4 staff5, processF5 bow4",
+    "required": "successful start && selected roll && !bow && !native_sneaking",
+    "native_arguments": [
+      "voice-handle address",
+      "Player",
+      "Player",
+      10,
+      0
+    ],
+    "default_topic_lookup": "actual52ED50(2,10), original table row10 defaultFormIDE6",
+    "topic": "content:oblivion.esm:0000e6",
+    "later_boundary": "stop before INFO eligibility/selection/playback/result; loaded topic pointer supplied as form-loader boundary"
+  },
+  "native_cases": {
+    "selection": 13824,
+    "dispatch": 1536,
+    "fixture_crt": 6,
+    "compiled_rule_comparisons": 4608
+  },
+  "fixture": {
+    "source": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "efb04153396a44d836a384de3b93cdae647b34867a942776f47d1edc37b7b9fe",
+    "change": "Only standard schema63->69 promotion of an actual engine NewGame save with known process action. Preserve all inputs and include its actual Oblivion.esm/Knights.esp load order. No attack/contact/RNG outcome injection.",
+    "expectations": {
+      "first_input": "Configured u hold after normal f draw; ordinary then standing power.",
+      "first_saves": 2,
+      "first_windup_strike": {
+        "id": 2,
+        "kind": 2,
+        "contact_committed": false,
+        "power_phase": 0
+      },
+      "speech": "One Player speech-selection draw before power playback; one E6 automatic response after successful start. Stock winning chance1.",
+      "restart": "Fresh PID from actual second F5. Same RNG restored with no new power selection or speech; one resumed power miss/cost35 then idle.",
+      "audio": "OpenAL wave output with stock voice path; inspect output and images. Specific PCM identity is a separate check."
+    },
+    "retained_failure": "runtime01 schema21 fixture lacked known Active-process action and failed admission before input."
+  },
+  "sanitized_fixture": {
+    "source": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+    "source_sha256": "efb04153396a44d836a384de3b93cdae647b34867a942776f47d1edc37b7b9fe",
+    "change": "Only standard schema63->69 promotion of an actual engine NewGame save with known process action. Preserve all inputs and include its actual Oblivion.esm/Knights.esp load order. No attack/contact/RNG outcome injection.",
+    "expectations": {
+      "first_input": "Configured u hold after normal f draw; ordinary then standing power.",
+      "first_saves": 2,
+      "first_windup_strike": {
+        "id": 2,
+        "kind": 2,
+        "contact_committed": false,
+        "power_phase": 0
+      },
+      "speech": "One Player speech-selection draw before power playback; one E6 automatic response after successful start. Stock winning chance1.",
+      "restart": "Fresh PID from actual second F5. Same RNG restored with no new power selection or speech; one resumed power miss/cost35 then idle.",
+      "audio": "OpenAL wave output with stock voice path; inspect output and images. Specific PCM identity is a separate check."
+    },
+    "retained_failure": "runtime01 schema21 fixture lacked known Active-process action and failed admission before input.",
+    "background_diagnostic_allowance": {
+      "unit": "content:oblivion.esm:026eac@oblivion.esm/quest/unit=0",
+      "code": "OBSV003",
+      "message": "ObScript value is not numeric",
+      "event": "gamemode",
+      "source_report": "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/obscript-report.json",
+      "scope": "Known source-run campaign diagnostic; no other diagnostics accepted, no clean campaign claim."
+    }
+  },
+  "expected": {
+    "start": 415139642,
+    "power_draw": {
+      "raw": 26500,
+      "state": 3884216597
+    },
+    "random_condition": {
+      "raw": 19169,
+      "percent": 69,
+      "state": 3403800452
+    },
+    "info_selection": {
+      "raw": 15724,
+      "candidates": 10,
+      "reversed_index": 5,
+      "state": 1030492215,
+      "info": "content:oblivion.esm:0c4548"
+    }
+  },
+  "audio": {
+    "analysis_rate": 12000,
+    "minimum_normalized_stock_voice_correlation": 0.65,
+    "first_expected_voice_clusters": 1,
+    "restart_expected_voice_clusters": 0,
+    "cluster_gap_seconds": 0.5,
+    "scope": "Correlate actual OpenAL wave output with the stock MP3 named by E6 dispatch after independent archive extraction. Select no new voice/damage/callback outcome. One matching cluster before quit; no matching cluster on fresh resume. Not hardware listening or native reverb/pitch equivalence."
+  },
+  "reproduction": {
+    "normal": "python3 build/oblivion-compat/m15/S4/native-power-input-runtime-02/launcher.py first, then second (fresh output required)",
+    "sanitized": "same launcher in native-power-input-runtime-sanitized-01; separate instrumented binary",
+    "semantic": "python3 scripts/verify_m15_power_input_runtime.py COURSE",
+    "native_sources": [
+      "native-directional-selection-oracle-02/probe.py",
+      "native-power-input-dispatch-oracle-01/probe.py",
+      "native-power-input-fixture-crt-oracle-01/probe.py"
+    ],
+    "native_runtime": "build/oblivion-compat/m15/S2/oracle-emulator/venv/bin/python; each source verifies original executable SHA; new output directories required"
+  }
+}

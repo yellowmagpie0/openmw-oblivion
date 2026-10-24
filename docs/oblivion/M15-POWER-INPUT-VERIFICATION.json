@@ -1,0 +1,636 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "runtime_schema": 69,
+  "tested_source": {
+    "head": "6be4360614e422a3661214401c9a64578486dd5a",
+    "source_fingerprint": "63462c622af99648e8b5331df020ead894181e89447b11c8ab41af4bbeedc82d"
+  },
+  "scope": "Player power-input speech selection and successful-start response on the existing standing-power path. Directional contact/mastery remains closed.",
+  "checks": {
+    "normal": {
+      "components": {
+        "executed": 3065,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "060b6a945527e82f509bd855afe29fbf4b31ad67d3d206f198af622645ba64ae",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "25ebd104d03081465251b9155f9e43655cbee38cf91272a2ae7deb76c9096359",
+        "inventory_sha256": "63496f615faba1ed09793fa0d498236a2dd86670a84e5c995135630085e00eb1",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1910,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "e64c842634ecbe61676c4f23cf66cc94ce72504169087f5828aae25ee7b07576",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "76e379e5344a4a4d8d32cf0f776f599ae47e5e3ac18f0b00b03daf11aa47120b",
+        "inventory_sha256": "27543399e550801f2d4f8860a47fd207e73827db051d8d415af3a2827d1312dd",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "sanitized": {
+      "sanitize": {
+        "executed": 916,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "85f046efdaf3a211c4da025348ca040482fecb4c700bcd099bf8cd977fc93079",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "04486b36cb2993f9df600b588ff51df6ae4f58f3220f9bff4b1817177f3f2ca5",
+        "inventory_sha256": "eed0b06287bed33a0bf0bc5294129efb68b7a55ad1a31df0beae4cabf256c866",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "engine": {
+        "executed": 1910,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "d25df5f93af935d70884081fcc20c1cc6f2bd9e35b1181bd7ad4c997119588bd",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "15ad0e4093b5149412635b592223a6d199bf4907e87d9825a4b0a63f88c9ba6d",
+        "inventory_sha256": "27543399e550801f2d4f8860a47fd207e73827db051d8d415af3a2827d1312dd",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "game_binaries": {
+    "build/openmw": "29494cafaebc88303cc47c23aca999b31ad15bec50962b1d3f1b7ae25f948b9e",
+    "build/m15-sanitize/openmw": "a52f1059babc574d1f227dfdea48a196f7bd69791c20c8bd7793a2769611f4a9"
+  },
+  "native_oracles": {
+    "native-directional-selection-oracle-02": {
+      "passed": true,
+      "cases": 13824,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "f308fa24e3f2728bb7f7699da118ef20209c8c6ef94bf90e34e78e9e5ac4f6be",
+      "scope": "Original Player selection continuation65EC96..65EEEF after an already chosen ordinary20/21 or standing-power22 group. Actual5E0550/HighProcess movement-word getter, directional priority and power speech-roll instructions execute. Original47DF80/CRT RNG execute; only thread-data getter98C0F5 is a boundary. The full400/800 combination executes the native sneaking predicate400&&!800; IsSneaking condition4F8CF0 independently calls the same predicate. Finite signed/above-one chances and raw16383/16384 straddle the .5 threshold. All combinations of low movement bits, two x87 controls and representative seeds/chances. No mastery query occurs in this slice. Earlier input/eligibility and later animation admission, speech dispatch/INFO/resource RNG, movement producer, contact and gameplay are outside scope."
+    },
+    "native-power-input-dispatch-oracle-01": {
+      "passed": true,
+      "cases": 1536,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "7288839fa1a6b5a53d4ad8703eb03fd35eb614d7f4605e8bf647714ead4a3918",
+      "scope": "Standing Player power selection65EC96..65EF38 and actualPlayer6608A0/616530 prefix through actualdefault-topic lookup52ED50. Real65857A..6585B8 cached equipped-weapon producer establishesF4=staff5/F5=bow4. Earlier equip identity/free and later attachment are outside that producer slice. OriginalCRT draw executes; thread getter boundary. Animation start5F48D0 is supplied success/failure. TypedPlayer speaker and self target, subtype10 flags0, actualHigh voice handle getter, realSneak predicate400&&!800 and actualrow10 lookup run. Loaded-topic pointer is seeded as the form-loader boundary; original row10 defaultFormIDE6 is checked. Low scene complexity is supplied. Stop at616617 before INFO eligibility/selection/playback/result callbacks. Does not prove full animation admission, form loading, later speech/resource RNG or live gameplay."
+    },
+    "native-power-input-fixture-crt-oracle-01": {
+      "passed": true,
+      "cases": 6,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "65c9556facf0ee57d458497294c641c012d6a840c393ca30411ab1bb3b24fe1d",
+      "scope": "Full original47DF80, srand9859D0 and CRT rand9859DD, seed415139642 explicitly on first call then unseeded calls. Only CRT thread-data getter98C0F5 supplies a mapped thread block; no RNG arithmetic or return boundary. Both x87 words. No constructor/contact execution in this primitive probe."
+    }
+  },
+  "rule_comparison": {
+    "passed": true,
+    "cases": 4608,
+    "corpus_sha256": "f308fa24e3f2728bb7f7699da118ef20209c8c6ef94bf90e34e78e9e5ac4f6be",
+    "helper_binary_sha256": "92e4d6f6640603ffec9d6c710308bb4d223b778f9f0029857c6da8380a039b30",
+    "production_source_sha256": "23f544777eb7562744ee604e1ff2cdbb4d3b43a5fdce77d7d961c6b11560c334",
+    "scope": "Current compiled C++ powerAttackSpeechRoll compared with all4608 power-input cases from the independently executed original Player continuation. Expected booleans come from original instructions, not C++ output. Directional selection and INFO/playback are outside this comparison."
+  },
+  "content_audit": {
+    "passed": true,
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "masters": [],
+        "record_count": 1167016
+      },
+      {
+        "name": "Knights.esp",
+        "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+        "masters": [
+          "oblivion.esm"
+        ],
+        "record_count": 9562
+      }
+    ],
+    "topic": {
+      "key": "content:oblivion.esm:0000e6",
+      "type": "DIAL",
+      "sha256": "92483f8dc9a062da5e8c47bfce5e0b67e9ecf62e815eeb5872aeb7dcdace1019"
+    },
+    "editor_id": "PowerAttack",
+    "dialogue_type": 2,
+    "speech_chance": 1.0,
+    "setting_key": "content:oblivion.esm:088ffd",
+    "setting_record_sha256": "05c14487ac6273ebaa86be60939670cd408b6ffa5a72406799c70d70d802d968",
+    "scope": "Independent installed master DIAL E6/type2 binding, default power-speech GMST and INFO group7 children. Eligibility, voice resource matching and gameplay require separate runtime evidence."
+  },
+  "runtime": {
+    "native-power-input-runtime-02": {
+      "semantic": {
+        "passed": true,
+        "epochs": [
+          {
+            "pid": 1900423,
+            "start_ticks": 58616832,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "29494cafaebc88303cc47c23aca999b31ad15bec50962b1d3f1b7ae25f948b9e"
+          },
+          {
+            "pid": 1900552,
+            "start_ticks": 58625004,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "29494cafaebc88303cc47c23aca999b31ad15bec50962b1d3f1b7ae25f948b9e"
+          }
+        ],
+        "saves": [
+          {
+            "phase": "first",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/snapshots/save-102.omwsave",
+            "sha256": "039cce4971ea8caab39a6982b2a8a466e7c3834f6316170d64e299d7b417d092",
+            "live_sha256": "d8ce59be6c27feb26757b181c1f67e5c68e35caa71ebd0c0f1830f739a0170b6"
+          },
+          {
+            "phase": "first",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/snapshots/save-157.omwsave",
+            "sha256": "6bcc4864fa27575cf81fe167f2cf0484c352a85ea6cfc900f82fc9df120d9623",
+            "live_sha256": "6fd48712aff44bc57ad5e3a164ec0d76ccb7672282071bdc9073f120577bec6a"
+          },
+          {
+            "phase": "second",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/snapshots/save-66.omwsave",
+            "sha256": "393e5a04e19c0cb93269808d1e784575016f1d9e3ca77a60d66ffc9234cd94c5",
+            "live_sha256": "2a54cb5081999bab1755b17ec6872ca8ae9891a1f04b213f02c9690c1294a655"
+          }
+        ],
+        "whole_initial_recovery_exact": true,
+        "full_binary_live_exact": true,
+        "first_saved_strike": {
+          "id": 2,
+          "kind": 2,
+          "weapon_base": "null",
+          "animation_group": "handtohandattackpower",
+          "playback_speed": 1.0,
+          "animation_time": 0.1660003662109375,
+          "contact_committed": false,
+          "ordinary_phase": 0,
+          "sequence_timing": {
+            "easing": false,
+            "offset": -27.05803680419922,
+            "ease_start": 27.05803680419922,
+            "last_input": 0.1660003662109375,
+            "ease_end": 27.158037185668945,
+            "weighted_time": 0.1660003662109375,
+            "output_time": 0.1660003662109375
+          },
+          "power_phase": 0,
+          "pose_snapshot": null
+        },
+        "expected_rng": {
+          "start": 415139642,
+          "power_draw": {
+            "raw": 26500,
+            "state": 3884216597
+          },
+          "random_condition": {
+            "raw": 19169,
+            "percent": 69,
+            "state": 3403800452
+          },
+          "info_selection": {
+            "raw": 15724,
+            "candidates": 10,
+            "reversed_index": 5,
+            "state": 1030492215,
+            "info": "content:oblivion.esm:0c4548"
+          }
+        },
+        "background_quest_diagnostics": {
+          "first": 25,
+          "second": 12
+        },
+        "scope": "Known source-run quest026eac OBSV003 numeric diagnostics remain; this is isolated power-input acceptance, not clean campaign script execution. Actual configured keyboard ordinary-to-power input; windup F5 before contact; fresh-process exact restore, one resumed miss/cost35 and no power-roll/voice replay. Supplied native AV/base/life/controller/inventory preserved except Player Fatigue regeneration bounded[-35,0] and explicit action2->-1. All three saved binary/live states and whole fresh initial recovery exact. Clocks, general positions, ambient AI state and new cold-cell references are outside endpoint equivalence. No hit, directional mastery, device/FPS matrix, hardware listening or original live-game acceptance."
+      },
+      "audio": {
+        "passed": true,
+        "info": "content:oblivion.esm:0c4548",
+        "actor": "dynamic:player:0000000000000001",
+        "voice": "sound/voice/oblivion.esm/imperial/m/generic_powerattack_000c4548_1.mp3",
+        "stock_mp3_sha256": "6332a397c2e08f1489b0e9de3ee04537d65532ee404982413614d856467343cf",
+        "archive_sha256": "2614300372de611b6d5644e73e6f7fcd0638d0621583da855e4f337dd450eba4",
+        "bsatool_sha256": "85e37a09d7454dbd4d2c56be47a345f09ad56c38304bf4b72737892872dede44",
+        "specification_sha256": "dcd8d0f4f8f276fc6fc3782c1ee7118772e58c69ac1f7fa705b37647110d69f1",
+        "rows": [
+          {
+            "phase": "first",
+            "expected": 1,
+            "clusters": [
+              {
+                "start_seconds": 40.64,
+                "end_seconds": 40.64,
+                "maximum_correlation": 0.9954430200314796
+              }
+            ],
+            "maximum_correlation": 0.9954430200314796,
+            "passed": true
+          },
+          {
+            "phase": "second",
+            "expected": 0,
+            "clusters": [],
+            "maximum_correlation": 0.01762920981131253,
+            "passed": true
+          }
+        ],
+        "scope": "Correlate actual OpenAL wave output with the stock MP3 named by E6 dispatch after independent archive extraction. Select no new voice/damage/callback outcome. One matching cluster before quit; no matching cluster on fresh resume. Not hardware listening or native reverb/pitch equivalence."
+      },
+      "captures_inspected": true,
+      "environment": {
+        "first": {
+          "SDL_VIDEODRIVER": "offscreen",
+          "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/sdl-input.so",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "OPENMW_M15_RUN_ID": "native-power-input-runtime-02",
+          "OPENMW_M15_EPOCH": "1"
+        },
+        "second": {
+          "SDL_VIDEODRIVER": "offscreen",
+          "LD_PRELOAD": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/sdl-input.so",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "OPENMW_M15_RUN_ID": "native-power-input-runtime-02",
+          "OPENMW_M15_EPOCH": "2"
+        }
+      }
+    },
+    "native-power-input-runtime-sanitized-01": {
+      "semantic": {
+        "passed": true,
+        "epochs": [
+          {
+            "pid": 1905121,
+            "start_ticks": 58673671,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a52f1059babc574d1f227dfdea48a196f7bd69791c20c8bd7793a2769611f4a9"
+          },
+          {
+            "pid": 1905399,
+            "start_ticks": 58702985,
+            "clock_ticks_per_second": 100,
+            "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+            "command": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+              "--replace=config",
+              "--config",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/config",
+              "--no-grab",
+              "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+            ],
+            "executable_sha256": "a52f1059babc574d1f227dfdea48a196f7bd69791c20c8bd7793a2769611f4a9"
+          }
+        ],
+        "saves": [
+          {
+            "phase": "first",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/snapshots/save-39.omwsave",
+            "sha256": "4b019320f916c1dc1aa9111ff4ce0586772acf1e08230253ef3d3dcbfef568b5",
+            "live_sha256": "98d2e211d1678dac917cdc62b0fd3c914401b66c1125933abba54183c6cbb7d6"
+          },
+          {
+            "phase": "first",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/snapshots/save-85.omwsave",
+            "sha256": "9ec1d2fc3520677ff33cddcbd7195d5783b8ac5c91bd5dc3cf78567a6cbd16c7",
+            "live_sha256": "693362f74e6c6fdb258691d07a8b84c5887f457f822ad7bca3effde68983cc9a"
+          },
+          {
+            "phase": "second",
+            "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/snapshots/save-75.omwsave",
+            "sha256": "2468d632decaa1c3cdc759180877148f3db1dc0019dd85348a83647df918bf8d",
+            "live_sha256": "4991261535b4edab054264325a1ee529b526cbfcf1f9f96f1e429089c7edf6dc"
+          }
+        ],
+        "whole_initial_recovery_exact": true,
+        "full_binary_live_exact": true,
+        "first_saved_strike": {
+          "id": 2,
+          "kind": 2,
+          "weapon_base": "null",
+          "animation_group": "handtohandattackpower",
+          "playback_speed": 1.0,
+          "animation_time": 0.0,
+          "contact_committed": false,
+          "ordinary_phase": 0,
+          "sequence_timing": {
+            "easing": true,
+            "offset": -25.896034240722656,
+            "ease_start": 25.896034240722656,
+            "last_input": 0.0,
+            "ease_end": 25.996034622192383,
+            "weighted_time": 0.0,
+            "output_time": 0.0
+          },
+          "power_phase": 0,
+          "pose_snapshot": null
+        },
+        "expected_rng": {
+          "start": 415139642,
+          "power_draw": {
+            "raw": 26500,
+            "state": 3884216597
+          },
+          "random_condition": {
+            "raw": 19169,
+            "percent": 69,
+            "state": 3403800452
+          },
+          "info_selection": {
+            "raw": 15724,
+            "candidates": 10,
+            "reversed_index": 5,
+            "state": 1030492215,
+            "info": "content:oblivion.esm:0c4548"
+          }
+        },
+        "background_quest_diagnostics": {
+          "first": 15,
+          "second": 13
+        },
+        "scope": "Known source-run quest026eac OBSV003 numeric diagnostics remain; this is isolated power-input acceptance, not clean campaign script execution. Actual configured keyboard ordinary-to-power input; windup F5 before contact; fresh-process exact restore, one resumed miss/cost35 and no power-roll/voice replay. Supplied native AV/base/life/controller/inventory preserved except Player Fatigue regeneration bounded[-35,0] and explicit action2->-1. All three saved binary/live states and whole fresh initial recovery exact. Clocks, general positions, ambient AI state and new cold-cell references are outside endpoint equivalence. No hit, directional mastery, device/FPS matrix, hardware listening or original live-game acceptance."
+      },
+      "audio": {
+        "passed": true,
+        "info": "content:oblivion.esm:0c4548",
+        "actor": "dynamic:player:0000000000000001",
+        "voice": "sound/voice/oblivion.esm/imperial/m/generic_powerattack_000c4548_1.mp3",
+        "stock_mp3_sha256": "6332a397c2e08f1489b0e9de3ee04537d65532ee404982413614d856467343cf",
+        "archive_sha256": "2614300372de611b6d5644e73e6f7fcd0638d0621583da855e4f337dd450eba4",
+        "bsatool_sha256": "85e37a09d7454dbd4d2c56be47a345f09ad56c38304bf4b72737892872dede44",
+        "specification_sha256": "dcd8d0f4f8f276fc6fc3782c1ee7118772e58c69ac1f7fa705b37647110d69f1",
+        "rows": [
+          {
+            "phase": "first",
+            "expected": 1,
+            "clusters": [
+              {
+                "start_seconds": 220.36,
+                "end_seconds": 220.36,
+                "maximum_correlation": 0.7545070254948508
+              }
+            ],
+            "maximum_correlation": 0.7545070254948508,
+            "passed": true
+          },
+          {
+            "phase": "second",
+            "expected": 0,
+            "clusters": [],
+            "maximum_correlation": 0.06240631158149043,
+            "passed": true
+          }
+        ],
+        "scope": "Correlate actual OpenAL wave output with the stock MP3 named by E6 dispatch after independent archive extraction. Select no new voice/damage/callback outcome. One matching cluster before quit; no matching cluster on fresh resume. Not hardware listening or native reverb/pitch equivalence."
+      },
+      "captures_inspected": true,
+      "environment": {
+        "first": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "offscreen",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/sdl-input.so",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "OPENMW_M15_RUN_ID": "native-power-input-runtime-sanitized-01",
+          "OPENMW_M15_EPOCH": "1"
+        },
+        "second": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+          "SDL_VIDEODRIVER": "offscreen",
+          "LD_PRELOAD": "/usr/lib64/libasan.so.8:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/sdl-input.so",
+          "LIBGL_ALWAYS_SOFTWARE": "1",
+          "OPENMW_M15_RUN_ID": "native-power-input-runtime-sanitized-01",
+          "OPENMW_M15_EPOCH": "2"
+        }
+      }
+    }
+  },
+  "retained_failures": [
+    "content01 incorrectly assumed winning GMST equals compiled fallback; corrected independent audit03 uses actual load order",
+    "runtime01 codec-promoted schema21 lacked known Active-process action; rejected before attack; stopped isolated processes, not accepted gameplay",
+    "normal runtime02 initial semantic verifier required zero diagnostics; source-run report proves same quest026eac numeric diagnostic, exact signature retained and separately reported; no clean campaign claim",
+    "normal runtime02 first PCM matcher compared slash paths with BSA backslashes; stopped before matching; corrected path normalization retained"
+  ],
+  "remaining_S4": [
+    "Directional power input/contact and mastery/drop/timed effects",
+    "Friendly-hit notification and crime consequences",
+    "Nonempty self-spell selection/casting/effect lifecycle",
+    "Remaining death/mount/raw0D/cross-controller cleanup",
+    "Complete input/interruption/view/device/FPS/restart matrix"
+  ],
+  "source_files": {
+    "apps/components_tests/esm4/combatsettings.cpp": "f8fbee574cafe5b2428d19372b743c8d889bd0e756360634aded012cabd1e939",
+    "apps/openmw/mwmechanics/character.cpp": "530617b89d27b8560eec69ca7509460e6b724286770fe4015d60ebedcdc18cef",
+    "apps/openmw/mwworld/worldimp.cpp": "7fe868d8e2923c6ac67b445d87de9f2dc89f32f38e70b8732ee19d1bc61315df",
+    "apps/openmw/mwworld/worldimp.hpp": "2727a2733f842e361a1aae2e69a5d5818035a42ad12f51bcae79438606cacdbb",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "5e0d41c3627c12bf2930ed9760667d5a8eae6a4bdfb99378620d8e7ccc579b65",
+    "components/esm4/combatsettings.cpp": "fd8ed854aee8a9711b61483db66f053c0ff9b8dbc69c2f413628e6b7c0a3ca02",
+    "components/esm4/physicalcombat.cpp": "23f544777eb7562744ee604e1ff2cdbb4d3b43a5fdce77d7d961c6b11560c334",
+    "components/esm4/physicalcombat.hpp": "203f81dd08848f01e4eace02cd58b78e5506e3781b1e0186cdc93568aa251f26",
+    "scripts/verify_m15_power_input_runtime.py": "23754257efe97f82814c5b88dc489989636d3d4e0e161f1d2d90848e52fd280d",
+    "docs/oblivion/M15-S4-DELIVERY-AUDIT.md": "74189f60feaa907e9f2c7f7397e3c0c2f415650794aab78e31dd7b69814f7f67",
+    "scripts/data/oblivion_compat/oblivion_m15_power_input_windup.json": "723bf734eb62436dace18044aa4a4c965c67c115a6cf61cff734caccf4845e21",
+    "scripts/data/oblivion_compat/oblivion_m15_power_input_continuation.json": "66f7cd778617db12bee5002dce77ebeea0a85b2dbe4e4c3d56a86b5ad97dbd9b",
+    "scripts/data/oblivion_compat/oblivion_m15_power_input_sanitized_windup.json": "43a34e4183df082391f6c805afe7a2db19e7630bfad9c9e345f2b18e1b4bf7c2",
+    "scripts/data/oblivion_compat/oblivion_m15_power_input_sanitized_continuation.json": "9a1e83973a63d74bdce77c2f4bac48e141d8910632c65702af4b936ca00aa6d2",
+    "scripts/data/oblivion_compat/m15_power_input_cases.json": "24fe37e4a32f749ea64589587d68611449208091183a17deddd53f9774fb039e"
+  },
+  "artifacts": {
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/components-build.log": "4198915ba353b22d380d0a5afb37ee9295e1fe6e147a4ef68255694e04960637",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/components-inventory.txt": "63496f615faba1ed09793fa0d498236a2dd86670a84e5c995135630085e00eb1",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/components.log": "1c28f8aa2fec46127509c3dec9f283e61ebf1bcb959b35e3ccd354eafb16a464",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/components.xml": "25ebd104d03081465251b9155f9e43655cbee38cf91272a2ae7deb76c9096359",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/engine-build.log": "3e775cad80c76dd44f04995dbc22b2d7c168a49f57103adb9b3a949011ae5fc9",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/engine-inventory.txt": "27543399e550801f2d4f8860a47fd207e73827db051d8d415af3a2827d1312dd",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/engine.log": "210f88532629cd168d280f8591a8c3588771e2c20164dcf84559df51453cf809",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/engine.xml": "76e379e5344a4a4d8d32cf0f776f599ae47e5e3ac18f0b00b03daf11aa47120b",
+    "build/oblivion-compat/m15/S4/native-power-input-normal-01/verification.json": "a52f6b9aec5c4667413f35e9a07ea815e07fa497908db6857a2aac04479a6c83",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/sanitize-build.log": "4f3f3c7c70da5bb4e56c5421b440f5a64c1aa2163b83bc7aa7b37c05bed6ee69",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/sanitize-inventory.txt": "eed0b06287bed33a0bf0bc5294129efb68b7a55ad1a31df0beae4cabf256c866",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/sanitize.log": "394a8e1aef4c017fdc5196b5ca7b121dd793704ae649093b117fe1718e1e2650",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/sanitize.xml": "04486b36cb2993f9df600b588ff51df6ae4f58f3220f9bff4b1817177f3f2ca5",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/engine-build.log": "8253b61ca50bf39492484a8c4ff0832e40f9bf294d4920347f6dc572626abed9",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/engine-inventory.txt": "27543399e550801f2d4f8860a47fd207e73827db051d8d415af3a2827d1312dd",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/engine.log": "f9a0226aa09f1c5ae1c37892bc0aa3ab44307801a5352c03c82d1621424bc645",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/engine.xml": "15ad0e4093b5149412635b592223a6d199bf4907e87d9825a4b0a63f88c9ba6d",
+    "build/oblivion-compat/m15/S4/native-power-input-sanitized-01/verification.json": "6d7f2b8e32272992d06e14bfd8aac3796b3501a8e9947fe0f690f95fd71786a2",
+    "build/oblivion-compat/m15/S4/native-directional-selection-oracle-02/probe.py": "5855386e3706661b427011a75004d254a867d3b88e2adf208e84d393aa58a141",
+    "build/oblivion-compat/m15/S4/native-directional-selection-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-directional-selection-oracle-02/corpus.json": "f308fa24e3f2728bb7f7699da118ef20209c8c6ef94bf90e34e78e9e5ac4f6be",
+    "build/oblivion-compat/m15/S4/native-directional-selection-oracle-02/verification.json": "22ccc6afa3ca220284c72486d9bdff262b2d395e581160fb6eb60fd2553b9586",
+    "build/oblivion-compat/m15/S4/native-power-input-dispatch-oracle-01/probe.py": "07c3078a112413f27b1b900400d163133d0aedbf363d4694ec2b49456f549a96",
+    "build/oblivion-compat/m15/S4/native-power-input-dispatch-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-power-input-dispatch-oracle-01/corpus.json": "7288839fa1a6b5a53d4ad8703eb03fd35eb614d7f4605e8bf647714ead4a3918",
+    "build/oblivion-compat/m15/S4/native-power-input-dispatch-oracle-01/verification.json": "88b34297eee4d9555bc0c45d42506e6e0c95dc64be8a196509bdc950e46d9ac8",
+    "build/oblivion-compat/m15/S4/native-power-input-fixture-crt-oracle-01/probe.py": "6dc5f22f1e3153e2e2071c016f16556bd58c127394bb4743bf77e5c4c897757b",
+    "build/oblivion-compat/m15/S4/native-power-input-fixture-crt-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-power-input-fixture-crt-oracle-01/corpus.json": "65c9556facf0ee57d458497294c641c012d6a840c393ca30411ab1bb3b24fe1d",
+    "build/oblivion-compat/m15/S4/native-power-input-fixture-crt-oracle-01/verification.json": "0ed046606a117cd15c2e2c7fed94dc816a652b752b40a12311fa055f8988a035",
+    "build/oblivion-compat/m15/S4/native-power-input-content-01/audit.py": "fc6ebc2ddcbad813ce1296292409e2eaf71d6c42e5878cca76bcf6a4dc0fbbf4",
+    "build/oblivion-compat/m15/S4/native-power-input-content-01/verification.json": "19498bb4a82e107c1d99e3515897ac638e3ef4def5138a6907c44cc09423b511",
+    "build/oblivion-compat/m15/S4/native-power-input-content-02/audit.py": "476206c07bcee7ed166aa6a9c623fd9c62b0af654a63913e8264a885646b49c5",
+    "build/oblivion-compat/m15/S4/native-power-input-content-02/verification.json": "34570292212d48785b3d8212f3a67ae3419972b0e1b63cd3ab5ca876ce148881",
+    "build/oblivion-compat/m15/S4/native-power-input-content-03/audit.py": "3d712e29d42ede482fa4c194b2df726bcd653f81e7abca4eef25e736a7f74e1e",
+    "build/oblivion-compat/m15/S4/native-power-input-content-03/verification.json": "883d9b7a3af36095c3e7d0d839b67625e5644e9bf1d8c3ea37664d114e5f8e39",
+    "build/oblivion-compat/m15/S4/native-power-input-rule-comparison-01/compare.cpp": "9e6814cc747492ac72a9fb487877b4bb1c4de6087ad7ac932b9ecb900b7d2909",
+    "build/oblivion-compat/m15/S4/native-power-input-rule-comparison-01/compare.py": "d5fee48d6c00ce953d1ad8141c2c168a86f05579dc893223aa010a981b689cfe",
+    "build/oblivion-compat/m15/S4/native-power-input-rule-comparison-01/verification.json": "1c7412ac228bb2f0264bf101cb3f131593486233c1b430cce193b21581097042",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/recipe.json": "0702ea012c18448980d66e0945d87d09f54148909740a24a94395733012f330a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/staged-input.omwsave": "433d0bfdc3fb2f410051326dd4f4fbd03c67197ab4807b1ce93e4bfb134509e6",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/manifest.json": "723bf734eb62436dace18044aa4a4c965c67c115a6cf61cff734caccf4845e21",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/continuation.json": "66f7cd778617db12bee5002dce77ebeea0a85b2dbe4e4c3d56a86b5ad97dbd9b",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/audio-acceptance.json": "dcd8d0f4f8f276fc6fc3782c1ee7118772e58c69ac1f7fa705b37647110d69f1",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/launcher.py": "eb15477b6d62b6f63748d154450c5e2de199d4504efe49e696bf3e6915c8b552",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/monitor.py": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/verification.json": "b65a38f9b408e64404b5fbc92b6920e72332360337e968ff218b578ec1ba3c0a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/scenario.json": "f026c102b446360a80f8d4e10c61340ccb867f3a91a8d36f50be7abc009615b1",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/launcher.json": "37c1ee8fea0db5b0853b740b215e230e9f663449012b67b5fdbf89a104a1277c",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/script-report.json": "233d0bdc9b81e374dc2467d578bd63d6ca8dbdd97fd0136e3879e24851758e27",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/process-epoch.json": "3483b12ddc868b22a1c915faa5847ee3ee31285d3fdddcf403199cda5e4caad4",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/loaded-libraries.json": "1562a4740f86f8024391359c731a12ed7704045c2ba27793073868f57f62bb60",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/actual-engine-environment.json": "9be5764e0de42f713a6a85542cc639678f556ab2f5d04f3985c48f5f52da7c60",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/snapshot-index.json": "8dacc1abdfa11927e452ff898e124894e78dd9f0432fc2d49c296270a523e51a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/events.jsonl": "251b7ba58d0cf0983c5807ebb729fd98408be59bcbef2399b0efa464988ec0d3",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/process.log": "a765891df97396ef81d097e95e8830a683ce334ef75e4a140bdc870039c7d54a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/power-windup.png": "3721cde22380e81efc411b95c99fefe63cd574f992ff8be51297fa6ed371091b",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/audio.wav": "d3ab772851c7c8e98a7b09ce6b65dec8165e4c802ade1b21df5e6991b888fccb",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/snapshots/save-102.omwsave": "039cce4971ea8caab39a6982b2a8a466e7c3834f6316170d64e299d7b417d092",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/live-1-102.json": "d8ce59be6c27feb26757b181c1f67e5c68e35caa71ebd0c0f1830f739a0170b6",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/snapshots/save-157.omwsave": "6bcc4864fa27575cf81fe167f2cf0484c352a85ea6cfc900f82fc9df120d9623",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/live-1-157.json": "6fd48712aff44bc57ad5e3a164ec0d76ccb7672282071bdc9073f120577bec6a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/first/live-1-2.json": "ffdb113eabfd3063bc62eeace0fdb12c65a284a2373b99fd98c1dce34a8949e4",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/scenario.json": "9050f82835c1666518bdeae41c3904bee6a58af25d3f215042345fb16c107f71",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/launcher.json": "90ad99272c7d65784f1160c8070dd6f6432044e3471af1b8545d2447ff7e0afb",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/script-report.json": "53f55834501d6b7c99de54fc4bad38912b8dbd1d8504a8369d88b5ac446e68b4",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/process-epoch.json": "6c729435de09d5b42ab0623fd320453ce2df4f0d354673b26fb8849b308199dd",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/loaded-libraries.json": "a8a06a650673f9c3c7291eb34d7fee3753e34b71f7771d865b8bbce2e61403ad",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/actual-engine-environment.json": "0242effb15fe1c03dfee363d4377f7e3c10b9f8b9d55d9fe420eb16f55aec9e3",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/snapshot-index.json": "921d7ab54af3febd29d5e276cdf7d4ebf6de833283ebacc89f754d242912ba46",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/events.jsonl": "bd3bef502b2e41fde7681a3f95c3595429d23e36a9f6ad19c963bdb4f1274fea",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/process.log": "9568b241a85b7bd6ce6f2e421d78be238704dea02407d6b64c84fb6870daf2cd",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/power-recovered.png": "a64f47a306eb1da1c6952fb9e3317244c0ac485239906654bc1155ff3c05a4a1",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/audio.wav": "b2560c090b2b8f687a3044c5fda182c4b929cd2982bbc0b130191d1554ab0587",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/snapshots/save-66.omwsave": "393e5a04e19c0cb93269808d1e784575016f1d9e3ca77a60d66ffc9234cd94c5",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/live-2-66.json": "2a54cb5081999bab1755b17ec6872ca8ae9891a1f04b213f02c9690c1294a655",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/second/live-2-2.json": "6fd48712aff44bc57ad5e3a164ec0d76ccb7672282071bdc9073f120577bec6a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm-02/verification.json": "52d42f1e665dd29e385eafeee4e653914605bf723347fd16de0923fa673c1395",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm-02/stock.wav": "c769b5186f6638cc9712ba528a2f90e5a5fdffdcf681702e3126860211c28fbc",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm-02/first.wav": "890882a68b5dc0fc3fdebfb37433f0d227f53a7f937ad098e5e674bdd61320ae",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm-02/second.wav": "018d1fc9ae3069d4bd5c1245fa970f9d39329c432ae2d160d568d2ba992c1df2",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/recipe.json": "178131e7a6f869c82ee8fb6b7d61a13323284f652d1178ec7bd183a74e4e2f81",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/staged-input.omwsave": "433d0bfdc3fb2f410051326dd4f4fbd03c67197ab4807b1ce93e4bfb134509e6",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/manifest.json": "43a34e4183df082391f6c805afe7a2db19e7630bfad9c9e345f2b18e1b4bf7c2",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/continuation.json": "9a1e83973a63d74bdce77c2f4bac48e141d8910632c65702af4b936ca00aa6d2",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/audio-acceptance.json": "dcd8d0f4f8f276fc6fc3782c1ee7118772e58c69ac1f7fa705b37647110d69f1",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/launcher.py": "6c05a93d269f876400e73ca7300e78712ffa30a77ce4212318e9a1bbc993fee4",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/monitor.py": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/verification.json": "98022919d69d80b50835094728ad0f3b4b90f95adfcc145af325e3ca89a6e4b5",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/scenario.json": "8460119958d1d3dc653ec560ee80c5fcb5588615491aa7808c6b2369c684e63f",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/launcher.json": "fc23bbec0fc18c3dc66799bb520cf934da761cc4d2b046e297d3a72c23b0a814",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/script-report.json": "c0330043db8f315fe0b3b2a9d92ab89bb014d380e198a5428fb6272ed2827ce3",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/process-epoch.json": "a962a85cfad613e91630be5fe109dec25396b1897078b7bf8689b9b316ec1b33",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/loaded-libraries.json": "5b18aaf467b9640291ffd93ef264a129a888ac6c423c0f1970291cc120f4780d",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/actual-engine-environment.json": "a52c1bdb95d00ce24a89d19bb6d2faa4b3785775e310634c8ec4e213b558321c",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/snapshot-index.json": "f497babf1877b71a2753ea4e5fc37cb7f71aa25296f7ac9796d3c63a96608652",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/events.jsonl": "3c775fa909ec3440be279221680670d3022b9be2bc2a19cc2f0ab2a4f3db344a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/process.log": "0a35fdf036ad01998c56dba51872d8c0993bf04ecde6a7f4c439c158424d39ef",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/power-windup.png": "6ecb2f3cafb8e113af6206b360ffd712b08daffe614604feefb1888dceadeb58",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/audio.wav": "db3a57e9ef6d6a762c6567109367f06e3993eb1e45d2a5c20b515f6d915f7c64",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/snapshots/save-39.omwsave": "4b019320f916c1dc1aa9111ff4ce0586772acf1e08230253ef3d3dcbfef568b5",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/live-1-39.json": "98d2e211d1678dac917cdc62b0fd3c914401b66c1125933abba54183c6cbb7d6",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/snapshots/save-85.omwsave": "9ec1d2fc3520677ff33cddcbd7195d5783b8ac5c91bd5dc3cf78567a6cbd16c7",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/live-1-85.json": "693362f74e6c6fdb258691d07a8b84c5887f457f822ad7bca3effde68983cc9a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/first/live-1-2.json": "ffdb113eabfd3063bc62eeace0fdb12c65a284a2373b99fd98c1dce34a8949e4",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/scenario.json": "6ce0ede5ff6fe88b4c10f4dbcc4d1dc028c1dd18b9319c9a0e64f057b12565fe",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/launcher.json": "ca9367580c6d8f850ee02ad840aacab2f8f5791d959c2334dee6f9e6eee94e03",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/script-report.json": "56ed760b468417d6c32a339af3c80e58942540a29ced694e1877a8262ef841f8",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/process-epoch.json": "9f3c0ebc6d0f24aa9aa38b557b28987418fa649b4ea4b523cf5eb42763ef84f8",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/loaded-libraries.json": "f92781f17fb66e926cb71c2a23f2bbd9318b172a276b3e9ee31aa5f27035761a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/actual-engine-environment.json": "84570206b93066f43fc1dbf8ba8ef444203be41ee13c0a90285e63d14b42ee97",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/snapshot-index.json": "1fa8053d33c23e820c7ea7b665a13ec77bcd1aecdc43e890c1c4d850acfda0e0",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/events.jsonl": "cf95c2562d0b3ef3245721f45cdb331fe56491c190d54173a272fe562b3c418f",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/process.log": "284bea2eb9e07e7d2b7da6eed94242ad0dd74d09bd63edaebdcb4b79b595eaa7",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/power-recovered.png": "2a5b18b2b0076469cf54f748949d25373de54230b20b693f83f48f55b3fb8118",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/audio.wav": "dbbabedf946bc1f6bc843167ea9e0d10235f4537b741a36f5ac78b01fb335c50",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/snapshots/save-75.omwsave": "2468d632decaa1c3cdc759180877148f3db1dc0019dd85348a83647df918bf8d",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/live-2-75.json": "4991261535b4edab054264325a1ee529b526cbfcf1f9f96f1e429089c7edf6dc",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/second/live-2-2.json": "693362f74e6c6fdb258691d07a8b84c5887f457f822ad7bca3effde68983cc9a",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/voice-pcm-02/verification.json": "808b57d864ca00cd1a2f4d9511583a4a48ea84fb0c189fd42bc8275989e25f34",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/voice-pcm-02/stock.wav": "c769b5186f6638cc9712ba528a2f90e5a5fdffdcf681702e3126860211c28fbc",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/voice-pcm-02/first.wav": "5548e2a4109d938b6ac3511088df2209fd251ac357460d10928ba81822ed5843",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-sanitized-01/voice-pcm-02/second.wav": "4345e0e0eb235448c2ac3eca8327439a276451217b38d606328733e793008897",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/match-voice.py": "11545c0d26cb470e2165d890052d0c5154c7993f9775bb2c84810bdb8970cfce",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/compare.cpp": "9e6814cc747492ac72a9fb487877b4bb1c4de6087ad7ac932b9ecb900b7d2909",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/compare.py": "d5fee48d6c00ce953d1ad8141c2c168a86f05579dc893223aa010a981b689cfe",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/prepare-runtime.py": "d7eeed0bbace1c0be4707a009e20070ff5f474e0ae38b9d8b2b43db6595309da",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/audit.py": "476206c07bcee7ed166aa6a9c623fd9c62b0af654a63913e8264a885646b49c5",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/audit-load-order.py": "3d712e29d42ede482fa4c194b2df726bcd653f81e7abca4eef25e736a7f74e1e",
+    "build/oblivion-compat/m15/S4/native-power-input-work-01/probe-fixture-crt.py": "6dc5f22f1e3153e2e2071c016f16556bd58c127394bb4743bf77e5c4c897757b",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/verify-failed-01.py": "da2793ce767cc7ce62ab9dddb95561dbda5f07f0bf1bcdc5bbba36ffe8192343",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm/failed-matcher.py": "34b9cf6ab41d4307beca54efb3951ec4ca0ea270aa4db8d98b840309abef95c5",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-02/voice-pcm/failure.txt": "c251f7452bf21888aabd3eb081ffaaa2b69f4b2f23471c988002fd1c2dd39305",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-01/failure.json": "b1e0bc15deacd0726cbe0993daa722ea19261583ed59eed3f3ec0e3f04244df6",
+    "build/oblivion-compat/m15/S4/native-power-input-runtime-01/first/process.log": "1dfe21f74248007fbfbee8a771cfe5880c58ae3a39202be30e9bfd8f14f6511a",
+    "build/oblivion-compat/m15/S4/native-newgame-player-admission-audio-normal-02/obscript-report.json": "deae245b84a7eb14af7c3c98c91ef59f518211421c07e6ed874611f982dd0f56"
+  }
+}

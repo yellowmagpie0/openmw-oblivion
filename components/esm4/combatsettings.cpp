@@ -295,8 +295,9 @@ namespace ESM4
     }
     MeleeInputSettings buildMeleeInputSettings(std::span<const GameSetting* const> settings)
     {
-        const MeleeInputSettings result{Inputs(settings).number("fPowerAttackDelay", .3f),
-            buildCombatMasterySettings(settings)};
+        const Inputs inputs(settings);
+        const MeleeInputSettings result{inputs.number("fPowerAttackDelay", .3f),
+            buildCombatMasterySettings(settings), inputs.number("fCombatSpeakPowerAttackChance", .5f)};
         // Original input compares directly with this finite signed threshold;
         // a negative override requests power on the first held frame.
         validateMeleeInputSettings(result);
