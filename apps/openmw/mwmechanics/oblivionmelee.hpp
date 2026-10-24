@@ -7,7 +7,7 @@
 #include "../mwworld/ptr.hpp"
 #include "oblivioncombat.hpp"
 
-namespace ESM4 { struct GameSetting; }
+namespace ESM4 { struct GameSetting; struct CombatStyleStandard; }
 namespace MWBase { class World; }
 namespace MWPhysics { class Actor; }
 namespace MWRender { class Animation; }
@@ -43,6 +43,8 @@ namespace MWMechanics
     // allocating an action or publishing a contact.
     bool canReachOblivionMeleeTarget(MWBase::World& world, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& target, float reach);
+    bool isOblivionStationaryMeleeStyle(const ESM4::CombatStyleStandard& style);
+
     // S4's explicit deterministic stationary CSTY profile. Returns true while
     // combat owns package execution. Full movement/style policy belongs to S7.
     bool updateOblivionStationaryMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled);

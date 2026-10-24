@@ -35053,8 +35053,9 @@ TEST(OblivionWorldTest, RootedRejectedScriptTargetRunsExistingEmptyControllerTai
 TEST(OblivionWorldTest, PlayerPowerInputSpeechDrawPrecedesAdmissionAndRestoresWithoutReplay)
 {
     NativeWorldFixture fixture;
-    const auto player = setupCommonHitPlayer(fixture);
+    setupCommonHitPlayer(fixture);
     prepareNativeCombatCommandPlayer(fixture);
+    const auto player = fixture.mWorld.getPlayerPtr();
     auto& world = fixture.mWorld;
     auto& combat = *world.getOblivionCombatService();
     ESM4::GameSetting chance{};
@@ -35095,4 +35096,131 @@ TEST(OblivionWorldTest, PlayerPowerInputSpeechDrawPrecedesAdmissionAndRestoresWi
     world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance);
     EXPECT_THROW(world.rollOblivionPlayerPowerAttackSpeech(), std::invalid_argument);
     EXPECT_EQ(combat.combatRandomState(), 334604033u);
+}
+
+TEST(OblivionWorldTest, EnemyHitNotificationRequiresTheCurrentSingleTargetStationaryController)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    const auto player = fixture.mWorld.getPlayerPtr();
+    const auto style = installMeleeAiStyle(fixture);
+    auto& world = fixture.mWorld;
+    auto npc = addNativeNpc(fixture, 0x900);
+    npc = npc.getCell()->moveTo(npc, player.getCell());
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    const auto owner = npc.getCellRef().getFormKey();
+    const auto target = ESM::FormKey::dynamic("player", 1);
+    world.getOblivionCombatService()->engage(owner, target);
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification(player, npc));
+    ASSERT_TRUE(world.executeOblivionStartCombat(npc, player));
+    EXPECT_TRUE(world.supportsOblivionEnemyHitNotification(player, npc));
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification(npc, player));
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification({}, npc));
+    ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(owner, 1));
+    EXPECT_TRUE(world.supportsOblivionEnemyHitNotification(player, npc));
+    auto record = *world.getStore().search<ESM4::CombatStyle>(style);
+    record.mStandard->mAttackChance = 50;
+    world.getStore().getWritable<ESM4::CombatStyle>().insertStatic(record, style);
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification(player, npc));
+    record.mStandard->mAttackChance = 100;
+    world.getStore().getWritable<ESM4::CombatStyle>().insertStatic(record, style);
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatControllers.at(owner).front().mMarker = 0;
+    readNativeSnapshot(fixture, state); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification(player, npc));
+    state.mCombatControllers.at(owner).front().mMarker = 1;
+    readNativeSnapshot(fixture, state); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    auto other = addNativeNpc(fixture, 0x901);
+    other = other.getCell()->moveTo(other, player.getCell());
+    world.getWorldModel().registerPtr(other);
+    ASSERT_TRUE(world.activateOblivionActor(other));
+    ASSERT_TRUE(world.executeOblivionStartCombat(npc, other));
+    EXPECT_FALSE(world.supportsOblivionEnemyHitNotification(player, npc));
+}
+
+TEST(OblivionWorldTest, PlayerEnemyHitRemovesOnlyFirstFriendEntryOrRequestsIgnoredWarningAfterDamage)
+{
+    for (bool ignored : {false, true}) for (std::uint16_t count : {0u, 3u, 65535u})
+        for (bool duplicate : {false, true})
+    {
+        SCOPED_TRACE(ignored);
+        SCOPED_TRACE(count);
+        SCOPED_TRACE(duplicate);
+        NativeWorldFixture fixture;
+        setupCommonHitPlayer(fixture);
+        prepareNativeCombatCommandPlayer(fixture);
+        const auto player = fixture.mWorld.getPlayerPtr();
+        installMeleeAiStyle(fixture);
+        auto& world = fixture.mWorld;
+        auto npc = addNativeNpc(fixture, 0x900);
+        npc = npc.getCell()->moveTo(npc, player.getCell());
+        world.getWorldModel().registerPtr(npc);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        ASSERT_TRUE(world.executeOblivionStartCombat(npc, player));
+        auto& combat = *world.getOblivionCombatService();
+        const auto owner = npc.getCellRef().getFormKey();
+        const auto target = ESM::FormKey::dynamic("player", 1);
+        combat.setPlayerBaseValue(world.getPlayer(), 17, 75,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        auto state = world.captureOblivionRuntimeState();
+        state.mCombatRngState = 0;
+        state.mFriendHitCounters[owner] = {{target, count, 12.5f}};
+        if (duplicate) state.mFriendHitCounters.at(owner).push_back({target, 9, .25f});
+        readNativeSnapshot(fixture, state); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        ASSERT_TRUE(world.supportsOblivionEnemyHitNotification(player, npc));
+        combat.setSceneIsComplex(true);
+        const float health = combat.getNonPlayerValue(npc, 8), fatigue = combat.getNonPlayerValue(npc, 10);
+        MWMechanics::OblivionPhysicalContactDeltas hit{-7, -3, -1000};
+        hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 1000, 20, 0, 17, true, false, false, false};
+        const auto id = world.beginOblivionPhysicalAction(player);
+        const auto draws = world.commitOblivionPlayerNpcHit(id, player, npc, hit, [&] {
+            EXPECT_EQ(world.getOblivionFriendHit(owner, target), count);
+            EXPECT_EQ(combat.getNonPlayerValue(npc, 8), health);
+            // The notification must re-read the flag after callbacks. A
+            // current controller suppresses increment, not warning speech.
+            ASSERT_TRUE(world.setOblivionIgnoreFriendlyHits(owner, ignored ? 1 : 0));
+        });
+        ASSERT_TRUE(draws);
+        // Negative Fatigue forces primary Hit speech: Expert and primary
+        // scene words always run; the ignored warning adds another scene word.
+        EXPECT_EQ(*draws, ignored ? 3u : 2u);
+        EXPECT_EQ(combat.combatRandomState(), ignored ? 3539360597u : 505908858u);
+        EXPECT_EQ(combat.getNonPlayerValue(npc, 8), health - 3);
+        EXPECT_EQ(combat.getNonPlayerValue(npc, 10), fatigue - 1000);
+        auto saved = world.captureOblivionRuntimeState();
+        const auto expected = ignored ? state.mFriendHitCounters.at(owner)
+            : duplicate ? std::vector<ESM4::FriendHitEntry>{{target, 9, .25f}}
+                : std::vector<ESM4::FriendHitEntry>{};
+        EXPECT_EQ(saved.mFriendHitCounters.at(owner), expected);
+        EXPECT_EQ(saved.mCombatControllers, state.mCombatControllers);
+        EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, player, npc, hit));
+        EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, saved.mFriendHitCounters);
+        readNativeSnapshot(fixture, saved); ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        EXPECT_EQ(world.captureOblivionRuntimeState().mFriendHitCounters, saved.mFriendHitCounters);
+        EXPECT_EQ(combat.combatRandomState(), saved.mCombatRngState);
+    }
+}
+
+TEST(OblivionWorldTest, EnemyHitDoesNotAllocateAnAbsentFriendHitOwner)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    const auto player = fixture.mWorld.getPlayerPtr();
+    installMeleeAiStyle(fixture);
+    auto& world = fixture.mWorld;
+    auto npc = addNativeNpc(fixture, 0x900);
+    npc = npc.getCell()->moveTo(npc, player.getCell());
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.executeOblivionStartCombat(npc, player));
+    const auto owner = npc.getCellRef().getFormKey();
+    ASSERT_FALSE(world.captureOblivionRuntimeState().mFriendHitCounters.contains(owner));
+    MWMechanics::OblivionPhysicalContactDeltas hit{-7, -3, -1000};
+    hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 1000, 20, 0, 17, true, false, false, false};
+    const auto id = world.beginOblivionPhysicalAction(player);
+    ASSERT_TRUE(world.commitOblivionPlayerNpcHit(id, player, npc, hit));
+    EXPECT_FALSE(world.captureOblivionRuntimeState().mFriendHitCounters.contains(owner));
 }

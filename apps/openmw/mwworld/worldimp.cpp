@@ -6,6 +6,7 @@
 #include <components/esm4/loadgmst.hpp>
 #include "worldimp.hpp"
 #include "oblivionweapondrop.hpp"
+#include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
 
@@ -4416,6 +4417,25 @@ namespace MWWorld
         return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
     }
 
+    bool World::supportsOblivionEnemyHitNotification(const Ptr& attacker, const Ptr& victim) const
+    {
+        if (!mOblivionCombat || !mOblivionRuntimeState || !mPlayer || attacker.isEmpty() || victim.isEmpty()
+            || attacker != getPlayerConstPtr() || victim.getType() != ESM::REC_NPC_4) return false;
+        const auto owner = victim.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(owner);
+        const auto* life = mOblivionCombat->findActorLife(owner);
+        if (!values || values->mProcess != ESM4::ActorValueProcess::Active
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || !getOblivionIgnoreFriendlyHits(owner).has_value()) return false;
+        const auto controller = mOblivionRuntimeState->mCombatControllers.find(owner);
+        if (controller == mOblivionRuntimeState->mCombatControllers.end()
+            || controller->second.size() != 1) return false;
+        const auto& target = controller->second.front();
+        if (target.mTarget != ESM::FormKey::dynamic("player", 1) || target.mMarker != 1) return false;
+        const auto policy = resolveOblivionCombatPolicy(mStore, values->mBase, buildOblivionCombatDefaults(mStore));
+        return !policy.mStyle.isNull() && MWMechanics::isOblivionStationaryMeleeStyle(policy.mStandard);
+    }
+
     std::optional<unsigned> World::commitOblivionPlayerNpcHit(std::uint64_t id,
         const Ptr& attacker, const Ptr& victim, const MWMechanics::OblivionPhysicalContactDeltas& deltas, const std::function<void()>& beforeDamage)
     {
@@ -4427,6 +4447,7 @@ namespace MWWorld
             || (victim != player && victim.getType() != ESM::REC_NPC_4)) return std::nullopt;
         const auto attackerKey = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
         if (!combat->isActionPending(id, attackerKey)) return std::nullopt;
+        const bool enemyNotification = supportsOblivionEnemyHitNotification(attacker, victim);
         const auto raw = *deltas.mOrdinaryHitArguments;
         if (raw.mUsedSkill < 12 || raw.mUsedSkill > 32 || deltas.mKnockback
             || deltas.mAttackerReaction || deltas.mVictimReaction || deltas.mVictimCounterRequested
@@ -4491,11 +4512,12 @@ namespace MWWorld
         for (auto& value : draws) { const auto draw = ESM4::combatRandomDraw(cursor); value = draw.mValue; cursor = draw.mNextState; }
         const auto prefix = ESM4::ordinaryHitPrefix(input, draws, knockdown, physical, speech, mastery);
         for (unsigned i = 0; i < prefix.mDraws; ++i) combat->drawNativeRandom();
-        if (prefix.mHitSpeech)
-        {
+        const auto dispatchHitSpeech = [&] {
+            const auto* current = combat->findActorValues(key(victim));
+            if (!current) return;
             // Existing typed constructors expose Low/Active processes; the
             // independent SetUnconscious actor-state producer remains separate.
-            const bool sneaking = receiving->mProcess == ESM4::ActorValueProcess::Active
+            const bool sneaking = current->mProcess == ESM4::ActorValueProcess::Active
                 && victim.getClass().getCreatureStats(victim).getStance(MWMechanics::CreatureStats::Stance_Sneak)
                 && !isSwimming(victim);
             if (!sneaking && (victim == player || !combat->sceneIsComplex() || combat->drawNativeRandom() % 8 == 0))
@@ -4506,7 +4528,8 @@ namespace MWWorld
                 if (auto* scripts = getOblivionScriptManager())
                     scripts->dispatchAutomaticDialogueResponse(ESM::FormKey::content("oblivion.esm", 0xdd), victim, attacker);
             }
-        }
+        };
+        if (prefix.mHitSpeech) dispatchHitSpeech();
         if (!contextExists()) return std::nullopt;
         MWMechanics::OblivionPhysicalContactDeltas tail;
         bool staggerSelected = false;
@@ -4551,6 +4574,43 @@ namespace MWWorld
         if (!continuation || !continuation->commit())
             throw std::runtime_error("ordinary hit continuation rejected after accepted damage");
         if (!contextExists()) return std::nullopt;
+        if (enemyNotification)
+        {
+            // Original virtual3A8 runs after resource, speech and reaction
+            // consequences. Dead receivers return before counter mutation.
+            const auto* currentLife = combat->findActorLife(key(victim));
+            if (currentLife && currentLife->mPhase == ESM4::ActorLifePhase::Alive)
+            {
+                if (!supportsOblivionEnemyHitNotification(attacker, victim))
+                    throw std::runtime_error("NPC hit notification left the stationary enemy domain after callbacks");
+                const auto owner = key(victim);
+                const bool ignored = *getOblivionIgnoreFriendlyHits(owner);
+                const auto before = getOblivionFriendHit(owner, key(attacker)).value();
+                if (ignored)
+                {
+                    // 5FE6F7 skips increment for IgnoreFriendlyHits with a
+                    // current C, then5FE76F requests a second Hit response.
+                    dispatchHitSpeech();
+                    if (!contextExists()) return std::nullopt;
+                }
+                else if (const auto found = mOblivionRuntimeState->mFriendHitCounters.find(owner);
+                    found != mOblivionRuntimeState->mFriendHitCounters.end())
+                {
+                    ESM4::FriendHitCounters counters(true, found->second);
+                    counters.remove(key(attacker)); // Only the first match; keep the allocated owner.
+                    std::vector<ESM4::FriendHitEntry> entries(counters.entries().begin(), counters.entries().end());
+                    found->second.swap(entries);
+                }
+                // The S4 stationary policy re-evaluates its single live enemy
+                // and reaction state each actor frame. Full624C90 replanning,
+                // multi-target scoring and aggression remain S7 policy work.
+                if (mOblivionObservation)
+                    mOblivionObservation->record("enemy-hit-notification", {{"actor", owner.serialize()},
+                        {"attacker", key(attacker).serialize()}, {"action", id}, {"ignored", ignored},
+                        {"counter_before", before}, {"counter_after", getOblivionFriendHit(owner, key(attacker)).value()},
+                        {"secondary_speech_requested", ignored}});
+            }
+        }
         const unsigned consumed = ESM4::combatRandomDistance(startRandom, combat->combatRandomState());
         if (mOblivionObservation)
             mOblivionObservation->record("ordinary-hit-phases", {{"actor", key(attacker).serialize()},

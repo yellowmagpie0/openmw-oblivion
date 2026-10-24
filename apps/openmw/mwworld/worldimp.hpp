@@ -507,6 +507,9 @@ namespace MWWorld
             bool attackerRecoil = false);
         // Common hit phases for a Player/NPC pair, using the actual resource
         // prefix, synchronous automatic speech and fresh reaction/block queries.
+        // One directed enemy with S4's explicit stationary style. Full combat
+        // planning and general assault notification belong to later policy.
+        bool supportsOblivionEnemyHitNotification(const Ptr& attacker, const Ptr& victim) const;
         std::optional<unsigned> commitOblivionPlayerNpcHit(std::uint64_t id,
             const Ptr& attacker, const Ptr& victim, const MWMechanics::OblivionPhysicalContactDeltas& deltas,
             const std::function<void()>& beforeDamage = {});

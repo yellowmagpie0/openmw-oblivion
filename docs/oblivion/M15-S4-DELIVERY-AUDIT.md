@@ -12828,3 +12828,63 @@ Directional/mastery consequences, hit notifications, remaining effects and the
 complete input/interruption/view/device/FPS matrix remain open. **Full M15S4 is
 incomplete.** See [the verification receipt](M15-POWER-INPUT-VERIFICATION.json)
 and [editable cases](../../scripts/data/oblivion_compat/m15_power_input_cases.json).
+
+## Player-to-NPC stationary enemy hit notification
+
+Ordinary Player contacts against the explicit S4 stationary opponent now run the
+native phased damage/speech/reaction path and its subsequent enemy notification.
+Admission requires an active, living TES4 NPC, the authored deterministic CSTY,
+and its actual current controller containing exactly one Player target with
+marker 1. Symmetric engagement alone does not qualify. The existing stationary
+policy continues to evaluate its live enemy and reaction each actor frame;
+full 624C90 private planning and general assault behavior remain separate work.
+
+Notification follows damage, primary Hit speech and reaction/force preparation.
+With IgnoreFriendlyHits false it removes only the first matching friend-counter
+entry, preserves duplicates and an allocated-empty owner, and does not allocate
+an absent owner. With the flag true it preserves the counter, skips increment,
+and requests a second Hit response. The current flag/process are read again
+after callbacks. Existing scene-complex/sneaking gates and automatic dialogue
+selection own both requests and any additional random draws.
+
+Independent original-executable probes pass 288 composed contact/notification
+cases, 72 forced-Fatigue unit-fixture cases and 48 fixture CRT observations. The
+composed corpus includes 72 Stagger and 216 general-hit cases, both ignore flags,
+duplicate, zero and 65535 counts, scene-complex variants and three x87 controls. Native
+general-force arithmetic and its original GMST accessor execute when reached;
+resource/reaction sinks, INFO playback and private AI planning are explicitly
+bounded. The unit probe establishes the extra primary scene-filter word that
+was missing from the first C++ test expectation.
+
+Full normal and ASan/UBSan engine inventories each pass 1,913 tests, without
+skips. These include controller/style admission, first-only removal, ignored
+warning draws, absent-owner behavior, callback flag changes and save/apply
+preservation. The earlier power-input test now obtains the actual Player pointer
+after cell preparation. Component rules and the Python save codec are unchanged;
+the previous component results are historical evidence rather than new runs.
+Leak checks are disabled for the sanitizer runs.
+
+Both builds run both real keyboard courses: a nonignored hit followed by Stagger
+recovery and an ignored hit followed by general force. Across eight distinct
+processes, all 16 saved binary/live states and all four complete fresh initial
+recoveries match. Each first process commits one nonlethal hit / 7 Fatigue debit
+with Health Damage 5.199999809265137; counter 3 becomes an allocated-empty owner
+or stays 3 respectively. Reload repeats no hit, notification, Hit response or
+random selection. The ignored course restores and advances active knockback;
+its three-second wall sleep does not establish force expiry or equal physics
+trajectories. Both primary and secondary requests select stock INFO 051DC6;
+recorded PCM matches the last selected voice once and has no matching voice on
+resume. These runs report no script compilation failures or script diagnostics.
+All 12 captures were inspected for the named opponent, visible Player fists,
+Stagger and recovered gameplay as applicable.
+
+The sheathed-NPC attempt retained correct numerical damage but lacked the plain
+Stagger resource and failed its recovery wait. The accepted retry declares the
+NPC's drawn posture before input; it does not establish the missing native
+undrawn-mode producer. Compile, stale-Player-pointer, RNG-expectation, oracle
+bootstrap, audio-path and additional premature force-expiry assertion failures
+are retained. General friendly/assault/Command/Charm/ghost behavior, directional
+mastery/effect lifecycle, remaining interruption and device/view/FPS cases remain
+open. **Full M15S4 is incomplete.** See the
+[verification receipt](M15-ENEMY-NOTIFICATION-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_enemy_notification_cases.json).

@@ -39,6 +39,19 @@
 
 namespace MWMechanics
 {
+    bool isOblivionStationaryMeleeStyle(const ESM4::CombatStyleStandard& style)
+    {
+        constexpr auto stationaryFlags = static_cast<std::uint8_t>(ESM4::CombatStyleFlag::ChooseAttackChance)
+            | static_cast<std::uint8_t>(ESM4::CombatStyleFlag::DisableFleeing);
+        return style.mFlags == stationaryFlags && style.mAttackChance == 100
+            && style.mBlockChance == 0 && style.mDodgeChance == 0 && style.mAcrobaticDodgeChance == 0
+            && style.mPowerAttackChance == 0 && style.mIdle.mMinimum == 0 && style.mIdle.mMaximum == 0
+            && style.mHold.mMinimum == 0 && style.mHold.mMaximum == 0
+            && style.mAttackRecoilBonus == 0 && style.mAttackUnconsciousBonus == 0 && style.mAttackUnarmedBonus == 0
+            && style.mPowerAttackRecoilBonus == 0 && style.mPowerAttackUnconsciousBonus == 0
+            && style.mDoNotAcquire;
+    }
+
     OblivionMeleeSequenceMetadata captureOblivionMeleeSequenceMetadata(
         MWRender::Animation& animation, std::string_view group, bool reaction)
     {
@@ -251,15 +264,7 @@ namespace MWMechanics
         const auto policy = MWWorld::resolveOblivionCombatPolicy(world.getStore(), values->mBase,
             MWWorld::buildOblivionCombatDefaults(world.getStore()));
         const auto& style = policy.mStandard;
-        constexpr auto stationaryFlags = static_cast<std::uint8_t>(ESM4::CombatStyleFlag::ChooseAttackChance)
-            | static_cast<std::uint8_t>(ESM4::CombatStyleFlag::DisableFleeing);
-        if (policy.mStyle.isNull() || style.mFlags != stationaryFlags || style.mAttackChance != 100
-            || style.mBlockChance != 0 || style.mDodgeChance != 0 || style.mAcrobaticDodgeChance != 0
-            || style.mPowerAttackChance != 0 || style.mIdle.mMinimum != 0 || style.mIdle.mMaximum != 0
-            || style.mHold.mMinimum != 0 || style.mHold.mMaximum != 0
-            || style.mAttackRecoilBonus != 0 || style.mAttackUnconsciousBonus != 0 || style.mAttackUnarmedBonus != 0
-            || style.mPowerAttackRecoilBonus != 0 || style.mPowerAttackUnconsciousBonus != 0
-            || style.mDoNotAcquire != true)
+        if (policy.mStyle.isNull() || !isOblivionStationaryMeleeStyle(style))
         {
             combat->clearMeleeAiIntent(key);
             throw std::runtime_error("native stationary melee requires the explicit S4 deterministic CSTY profile");
@@ -718,12 +723,12 @@ namespace MWMechanics
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
         const auto playerContact = world.getPlayerPtr();
-        // NPC Hit INFOs need the friendly-hit notification/query producer.
-        // Admit the verified Player speech context while that dependency is
-        // still unavailable; keep the existing contact path for other pairs.
+        // NPC Hit responses observe the old friend-hit count; notification
+        // follows reactions. The stationary enemy path owns both stages.
         const bool phased = !contact->isEmpty() && deltas.mOrdinaryHitArguments
-            && attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
-            && *contact == playerContact;
+            && ((attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
+                    && *contact == playerContact)
+                || nativeWorld->supportsOblivionEnemyHitNotification(attacker, *contact));
         // Original600528 blocked dispatch bypasses5FFF99's general-hit force,
         // including its advanced unarmed zero-absorption route.
         if (!phased && !contact->isEmpty() && (contact->getType() == ESM::REC_NPC_4 || contact->getType() == ESM::REC_CREA4)
