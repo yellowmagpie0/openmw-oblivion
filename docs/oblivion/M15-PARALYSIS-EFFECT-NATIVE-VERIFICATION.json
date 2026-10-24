@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_M15S4_acceptance": false,
+  "source_head": "3efbae5fb58f367dad1ed32ee5c2fe11c1fd5f31",
+  "scope": "Independent prerequisites for the S4 combat-triggered paralysis effect. Native construction, recoverable modifier calls and owner timing; no production effect integration or gameplay acceptance.",
+  "accepted_unique_profiles": {
+    "construction": 171,
+    "modifier": 36,
+    "timer": 54,
+    "cancellation": 36
+  },
+  "reports": {
+    "native-paralysis-factory-oracle-03": {
+      "passed": true,
+      "cases": 171,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "f9a75509b8cda1e0ba509970d5318907ce2f3042c54253f29eb15d10278e87a2",
+      "entry": "0041D590",
+      "stop": "RET to sentinel",
+      "boundaries": [
+        "401F00 allocation/401F20 free with nonzero poisoned allocations",
+        "46C2E0 dynamic form registration supplies temporary ID",
+        "416870 installed MGEF lookup supplies declared PARA record, checks code"
+      ],
+      "actual": [
+        "SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized",
+        "EffectItem constructor4149D0/414790",
+        "range/magnitude/area/duration setters",
+        "effect-list insertion and original string setter",
+        "SpellItem virtual initialization"
+      ],
+      "scope": "Complete native fallback spell construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime."
+    },
+    "native-paralysis-active-constructor-oracle-01": {
+      "passed": true,
+      "cases": 171,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "47562d5c35829215d47baabc91265209ddd0a67d6d11c91c27c27283831cafb2",
+      "entry": "0041D590",
+      "stop": "RET to sentinel",
+      "boundaries": [
+        "401F00 allocation/401F20 free with nonzero poisoned allocations",
+        "46C2E0 dynamic form registration supplies temporary ID",
+        "416870 installed MGEF lookup supplies declared PARA record, checks code"
+      ],
+      "actual": [
+        "SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized",
+        "EffectItem constructor4149D0/414790",
+        "range/magnitude/area/duration setters",
+        "effect-list insertion and original string setter",
+        "SpellItem virtual initialization",
+        "ParalysisEffect factory6A37B0, ValueModifierEffect6A82F0 and ActiveEffect68D7A0 constructors"
+      ],
+      "scope": "Complete native fallback spell and active-ParalysisEffect construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime."
+    },
+    "native-paralysis-modifier-oracle-03": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "02a06fb36b98a668d9e817167d2e36adc4944714926415ff9f8bfc843f346730",
+      "actual": [
+        "complete default spell and active-effect construction as constructor oracle",
+        "ParalysisEffect apply6A3730/ValueModifier apply6A86F0,6A8220,6A84D0",
+        "ParalysisEffect remove6A3660/ValueModifier remove6A88D0",
+        "actor paralysis query5E17E0 before effect addition"
+      ],
+      "boundaries": [
+        "factory allocator/form registration/MGEF lookup as constructor oracle",
+        "typed MagicTarget-to-Actor and MagicCaster-to-reference resolution",
+        "actor animation interruption5EF930, feedback6A83D0",
+        "integerAV48 getter and numeric virtual294 and virtual2A4 setter captures; actor predicate198 returnsfalse"
+      ],
+      "scope": "Actual installed PARA flags with absent/present target and caster, existing integerAV48 0/1/2 and3 x87 controls. Add1 and remove1 restore the preexisting value. Null target covers apply only: direct removal on an unbound effect is invalid and retained as failed01; caller removal admission remains to verify. No actual actor modifier storage, timer expiry, casting/resistance, physical animation or gameplay acceptance."
+    },
+    "native-paralysis-timer-oracle-03": {
+      "passed": true,
+      "cases": 54,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "3bb535b4bff1bf56a9e349c3441fcf9dfb018e8d0dce79870497a1c6b0494ffc",
+      "scope": "Actual complete68E670 owner update through native ParalysisEffect apply/update/removal and real default spell/active construction. Positive first frame applies once; timer clamps10, equality expires, zero/negative frames do not apply/advance; terminated+removed prevents replay. Three prior AV48 counts, six step profiles, three x87 controls. Inherited allocator/form/MGEF/target/caster/AV/presentation boundaries retained; target0C returnsfalse and ancillary69D9F0 construction returnsnull. No casting/resistance, native actor modifier storage, save/restart, physical reaction or gameplay acceptance."
+    },
+    "native-paralysis-factory-content-01": {
+      "passed": true,
+      "plugins": [
+        {
+          "name": "Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "masters": [],
+          "record_count": 1167016
+        },
+        {
+          "name": "Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+          "masters": [
+            "oblivion.esm"
+          ],
+          "record_count": 9562
+        }
+      ],
+      "effect": {
+        "key": "content:oblivion.esm:001887",
+        "code": "PARA",
+        "data_hex": "730d00010080ed433000000003000000420000000200cdcd80ab03000000803fc462050078b51800286814002a68140000000000296814000000000000000000",
+        "flags": 16780659,
+        "base_cost": 475.0,
+        "associated_data": 48,
+        "school": 3,
+        "resistance_actor_value": 66
+      },
+      "default_spell": null,
+      "scope": "Independent binary winning MGEF PARA DATA audit and default FormID137 presence check; no engine parser or effect runtime."
+    },
+    "native-paralysis-cancel-oracle-01": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "59ce3498d9ef0efdcd8a7b35e3d0dae3b36b1a80b3c57171ade79b34c7343749",
+      "scope": "Actual68EA10 cancellation wrapper and68E670 owner update with full native PARA construction/apply/remove. Immediate applied cancellation removes once through zero-duration update; deferred cancellation leaves contribution until next update, including zero frame. Pre-apply cancellation never applies or subtracts. Repeated cancellation/update has no modifier replay. Both immediate flags, both applied flags, AV48 initial0/1/2, three x87 controls. Same explicit constructor/modifier/timer ancillary/actor-storage/presentation boundaries; no engine save, physics or gameplay acceptance."
+    }
+  },
+  "retained_failures": {
+    "unbound_removal": "modifier01 called direct removal without an applied live target; invalid lifecycle admission. Null-target apply remains covered; remove is called only with bound target.",
+    "modifier_virtual": "modifier02 observed missing temporary setter at virtual294; original294 now captured separately from2A4, all deltas/order asserted.",
+    "timer_bootstrap": "timer01 nested bootstrap split hit its own source string; no original instructions ran.",
+    "ancillary_construction": "timer02 reached ancillary69D9F0 construction; timer03 declares a null-return ancillary-data boundary instead of inferring that behavior from a misleading label."
+  },
+  "remaining": [
+    "Default137 content-override initialization and all valid override effects",
+    "Actual cast69AF30, effect acceptance/resistance and actor modifier storage",
+    "World effect authority, once-only cleanup and saved continuation",
+    "Native physical paralysis/interruption/rendered and audible recovery",
+    "Directional input/contact/mastery integration and the complete S4 gates"
+  ],
+  "source_files": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_paralysis_effect_native_cases.json",
+      "sha256": "0dc053867add0208422bc714321be1821e310e08c1609ae9d1b5ed584dcda0e1"
+    },
+    {
+      "path": "scripts/tes4_m15_audit.py",
+      "sha256": "f368d1e38d97130f8c021239d1571daa6297eedcab3713cd1d7fb612088259a2"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-oracle-03/corpus.json",
+      "sha256": "f9a75509b8cda1e0ba509970d5318907ce2f3042c54253f29eb15d10278e87a2",
+      "bytes": 70969
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-oracle-03/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-oracle-03/probe.py",
+      "sha256": "cba56b998c16108c3bcc944f36bbc13fd04baca7d212810975fbc0f3453f5b79",
+      "bytes": 5153
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-oracle-03/verification.json",
+      "sha256": "dafcf11ddc0de147c8384555e58c34eafa35aa025eacaabb2ab0b844f27f0fef",
+      "bytes": 1157
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-active-constructor-oracle-01/corpus.json",
+      "sha256": "47562d5c35829215d47baabc91265209ddd0a67d6d11c91c27c27283831cafb2",
+      "bytes": 91516
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-active-constructor-oracle-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+      "bytes": 661
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-active-constructor-oracle-01/probe.py",
+      "sha256": "b49ee1d69a9b288a325af81e6dcde70d482100f2f098ceb1a88365778c3968bf",
+      "bytes": 5981
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-active-constructor-oracle-01/verification.json",
+      "sha256": "af542424279fca173eb8cfbce6ff618d59ea3e234e651adf5a9977d168323433",
+      "bytes": 1284
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-03/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-03/corpus.json",
+      "sha256": "02a06fb36b98a668d9e817167d2e36adc4944714926415ff9f8bfc843f346730",
+      "bytes": 10702
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-03/probe.py",
+      "sha256": "c6b5f6e92fa31fb889e8572d92cbf24d67312195dcd8a372a69e9a4d19f3eee8",
+      "bytes": 4681
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-03/verification.json",
+      "sha256": "eb853f5724ee187c3b8f3cb4a7c80125b115708f5118275e6f0f090abc67736a",
+      "bytes": 1298
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-03/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-03/corpus.json",
+      "sha256": "3bb535b4bff1bf56a9e349c3441fcf9dfb018e8d0dce79870497a1c6b0494ffc",
+      "bytes": 91000
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-03/probe.py",
+      "sha256": "72932677bf84afd03cc86764402457117fdeb6caf54bee37d0b57edb2b6efd20",
+      "bytes": 3487
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-03/verification.json",
+      "sha256": "717eeb417ffd4afa8d0e3751aa0499bd2195db5857e3b85836504019fc738826",
+      "bytes": 839
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-content-01/audit.py",
+      "sha256": "31f1c209d3b97fd55c4e40160ec679e5211708b8f061bc5d5f94bc2d15a78163",
+      "bytes": 1280
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-factory-content-01/verification.json",
+      "sha256": "c0bf449bfede9e401d51d01f3f7797bcb5756e2e149f119f6f1d2560c6e4462a",
+      "bytes": 936
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-01/failure.json",
+      "sha256": "283e0753083eb33011fc711aabb8331368771f325fe10d97f097b1daf0096c82",
+      "bytes": 1381
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-modifier-oracle-02/failure.json",
+      "sha256": "bf8059bd2c2ed6e53d5407fcf6af999feca12f86691cf82f5523322780ef7841",
+      "bytes": 1596
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-01/failure.json",
+      "sha256": "b525ea5b5f0fec91fc5e4666e1295288eaa82d8d04c4b2b74170765e07843625",
+      "bytes": 134
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-01/probe.py",
+      "sha256": "24afcc0867b06abc656fecbf44280168c419e810cd2ec5ab3becb47f1cec8cd3",
+      "bytes": 3301
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-timer-oracle-02/failure.json",
+      "sha256": "48af42915dbec4d36316eaa4b07cec3f58aaf73c5313563e2832b230f13d4626",
+      "bytes": 1412
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cancel-oracle-01/bootstrap.py",
+      "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+      "bytes": 1738
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cancel-oracle-01/corpus.json",
+      "sha256": "59ce3498d9ef0efdcd8a7b35e3d0dae3b36b1a80b3c57171ade79b34c7343749",
+      "bytes": 10063
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cancel-oracle-01/probe.py",
+      "sha256": "834f6863ef311568273d87cc16b3252e3f25cdd4e1d56bd8d3d56c49f5934fe2",
+      "bytes": 3019
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-paralysis-cancel-oracle-01/verification.json",
+      "sha256": "8cd855027632477c812e5990fbc8e4a96dbaedd4ef9c90f9b44679a4e0d44db5",
+      "bytes": 823
+    }
+  ],
+  "verification_layers": {
+    "instruction_execution": true,
+    "installed_record_audit": true,
+    "production_code_changed": false,
+    "new_engine_build_or_tests": false,
+    "gameplay_or_restart_acceptance": false
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "scope": "Independent prerequisites for the S4 combat-triggered paralysis effect. Native construction, recoverable modifier calls and owner timing; no production effect integration or gameplay acceptance.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "default_spell": {
+    "form_id": "000137",
+    "getter": "0041B880/B335AC",
+    "installed_record_present": false,
+    "fallback_factory": "0041D590",
+    "spell_type": 0,
+    "cost": 0,
+    "level": 0,
+    "flags": 1,
+    "effect_code": "PARA",
+    "effect_magnitude": 0,
+    "effect_area": 0,
+    "effect_duration": 10,
+    "effect_range": 0
+  },
+  "installed_MGEF": {
+    "key": "content:oblivion.esm:001887",
+    "code": "PARA",
+    "data_hex": "730d00010080ed433000000003000000420000000200cdcd80ab03000000803fc462050078b51800286814002a68140000000000296814000000000000000000",
+    "flags": 16780659,
+    "base_cost": 475.0,
+    "associated_data": 48,
+    "school": 3,
+    "resistance_actor_value": 66
+  },
+  "active_effect": {
+    "factory": "006A37B0",
+    "vtable": "00A769CC",
+    "value_modifier_constructor": "006A82F0",
+    "actor_value": 48,
+    "magnitude": 1.0,
+    "duration": 10.0,
+    "elapsed": 0.0,
+    "applied": false,
+    "terminated": false,
+    "removed": false
+  },
+  "modifier_calls": {
+    "apply": [
+      "actor preparation5EF930 boundary",
+      "actual actor AV48 integer query5E17E0",
+      "actor virtual294(48,+1,null source)",
+      "feedback6A83D0 boundary"
+    ],
+    "remove": [
+      "actor virtual2A4(48,0,caster actor reference when present)",
+      "actor virtual294(48,-1,null source)"
+    ],
+    "invariant": "Restore preexisting integer0/1/2; actual actor storage remains boundary. Preserve zero-delta call separately from recoverable temporary subtraction."
+  },
+  "owner_update": {
+    "address": "0068E670",
+    "positive_first_frame": "apply once, reset elapsed0, then advance this frame",
+    "zero_or_negative": "no application or advancement; pending removal can still run",
+    "elapsed": "clamp duration, including long frames",
+    "expiry": "elapsed >= duration",
+    "removal": "applied && terminated && !removed; set removed after virtual removal",
+    "replay": "No second apply/remove for a terminated+removed effect"
+  },
+  "native_reports": {
+    "native-paralysis-factory-oracle-03": {
+      "passed": true,
+      "cases": 171,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "f9a75509b8cda1e0ba509970d5318907ce2f3042c54253f29eb15d10278e87a2",
+      "entry": "0041D590",
+      "stop": "RET to sentinel",
+      "boundaries": [
+        "401F00 allocation/401F20 free with nonzero poisoned allocations",
+        "46C2E0 dynamic form registration supplies temporary ID",
+        "416870 installed MGEF lookup supplies declared PARA record, checks code"
+      ],
+      "actual": [
+        "SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized",
+        "EffectItem constructor4149D0/414790",
+        "range/magnitude/area/duration setters",
+        "effect-list insertion and original string setter",
+        "SpellItem virtual initialization"
+      ],
+      "scope": "Complete native fallback spell construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime."
+    },
+    "native-paralysis-active-constructor-oracle-01": {
+      "passed": true,
+      "cases": 171,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "47562d5c35829215d47baabc91265209ddd0a67d6d11c91c27c27283831cafb2",
+      "entry": "0041D590",
+      "stop": "RET to sentinel",
+      "boundaries": [
+        "401F00 allocation/401F20 free with nonzero poisoned allocations",
+        "46C2E0 dynamic form registration supplies temporary ID",
+        "416870 installed MGEF lookup supplies declared PARA record, checks code"
+      ],
+      "actual": [
+        "SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized",
+        "EffectItem constructor4149D0/414790",
+        "range/magnitude/area/duration setters",
+        "effect-list insertion and original string setter",
+        "SpellItem virtual initialization",
+        "ParalysisEffect factory6A37B0, ValueModifierEffect6A82F0 and ActiveEffect68D7A0 constructors"
+      ],
+      "scope": "Complete native fallback spell and active-ParalysisEffect construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime."
+    },
+    "native-paralysis-modifier-oracle-03": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "02a06fb36b98a668d9e817167d2e36adc4944714926415ff9f8bfc843f346730",
+      "actual": [
+        "complete default spell and active-effect construction as constructor oracle",
+        "ParalysisEffect apply6A3730/ValueModifier apply6A86F0,6A8220,6A84D0",
+        "ParalysisEffect remove6A3660/ValueModifier remove6A88D0",
+        "actor paralysis query5E17E0 before effect addition"
+      ],
+      "boundaries": [
+        "factory allocator/form registration/MGEF lookup as constructor oracle",
+        "typed MagicTarget-to-Actor and MagicCaster-to-reference resolution",
+        "actor animation interruption5EF930, feedback6A83D0",
+        "integerAV48 getter and numeric virtual294 and virtual2A4 setter captures; actor predicate198 returnsfalse"
+      ],
+      "scope": "Actual installed PARA flags with absent/present target and caster, existing integerAV48 0/1/2 and3 x87 controls. Add1 and remove1 restore the preexisting value. Null target covers apply only: direct removal on an unbound effect is invalid and retained as failed01; caller removal admission remains to verify. No actual actor modifier storage, timer expiry, casting/resistance, physical animation or gameplay acceptance."
+    },
+    "native-paralysis-timer-oracle-03": {
+      "passed": true,
+      "cases": 54,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "3bb535b4bff1bf56a9e349c3441fcf9dfb018e8d0dce79870497a1c6b0494ffc",
+      "scope": "Actual complete68E670 owner update through native ParalysisEffect apply/update/removal and real default spell/active construction. Positive first frame applies once; timer clamps10, equality expires, zero/negative frames do not apply/advance; terminated+removed prevents replay. Three prior AV48 counts, six step profiles, three x87 controls. Inherited allocator/form/MGEF/target/caster/AV/presentation boundaries retained; target0C returnsfalse and ancillary69D9F0 construction returnsnull. No casting/resistance, native actor modifier storage, save/restart, physical reaction or gameplay acceptance."
+    },
+    "native-paralysis-factory-content-01": {
+      "passed": true,
+      "plugins": [
+        {
+          "name": "Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "masters": [],
+          "record_count": 1167016
+        },
+        {
+          "name": "Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+          "masters": [
+            "oblivion.esm"
+          ],
+          "record_count": 9562
+        }
+      ],
+      "effect": {
+        "key": "content:oblivion.esm:001887",
+        "code": "PARA",
+        "data_hex": "730d00010080ed433000000003000000420000000200cdcd80ab03000000803fc462050078b51800286814002a68140000000000296814000000000000000000",
+        "flags": 16780659,
+        "base_cost": 475.0,
+        "associated_data": 48,
+        "school": 3,
+        "resistance_actor_value": 66
+      },
+      "default_spell": null,
+      "scope": "Independent binary winning MGEF PARA DATA audit and default FormID137 presence check; no engine parser or effect runtime."
+    },
+    "native-paralysis-cancel-oracle-01": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "59ce3498d9ef0efdcd8a7b35e3d0dae3b36b1a80b3c57171ade79b34c7343749",
+      "scope": "Actual68EA10 cancellation wrapper and68E670 owner update with full native PARA construction/apply/remove. Immediate applied cancellation removes once through zero-duration update; deferred cancellation leaves contribution until next update, including zero frame. Pre-apply cancellation never applies or subtracts. Repeated cancellation/update has no modifier replay. Both immediate flags, both applied flags, AV48 initial0/1/2, three x87 controls. Same explicit constructor/modifier/timer ancillary/actor-storage/presentation boundaries; no engine save, physics or gameplay acceptance."
+    }
+  },
+  "reproduction": {
+    "instructions": "Restore editable_sources to the listed repo-relative paths, provide legally supplied SHA-matching original image and installed master/Knights data, and run each final probe with the existing Unicorn venv and a NEW output directory. All proprietary image bytes and generated corpora stay ignored. Metadata is generated with oblivion-native-oracle inspect_pe.py. Do not interpret emulated sinks as engine gameplay.",
+    "editable_sources": {
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/original-exe.json": "{\n  \"sha256\": \"a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6\",\n  \"path\": \"/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe\",\n  \"image_base\": 4194304,\n  \"image_size\": 8409088,\n  \"sections\": [\n    [\n      \".text\",\n      4198400,\n      1024,\n      6450688\n    ],\n    [\n      \".rdata\",\n      10649600,\n      6451712,\n      891392\n    ],\n    [\n      \".data\",\n      11542528,\n      7343104,\n      199680\n    ],\n    [\n      \".tls\",\n      12238848,\n      7542784,\n      512\n    ],\n    [\n      \".rsrc\",\n      12242944,\n      7543296,\n      6144\n    ],\n    [\n      \".bind\",\n      12251136,\n      7549440,\n      349184\n    ]\n  ]\n}\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe.py": "from pathlib import Path\nimport sys,json,hashlib,struct,itertools,collections\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\np=Path(sys.argv[1]);p.mkdir(exist_ok=False);meta=json.loads(Path('build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/original-exe.json').read_text());raw=Path(meta['path']).read_bytes();assert hashlib.sha256(raw).hexdigest()==meta['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0,0x10000);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x100000)\nfor _,va,offset,size in meta['sections']:u.mem_write(va,raw[offset:offset+size])\nw=lambda a,v:u.mem_write(a,struct.pack('<I',v&0xffffffff));ri=lambda a:struct.unpack('<I',u.mem_read(a,4))[0]\ndef ret(v=0,pop=0):\n sp=u.reg_read(UC_X86_REG_ESP);ip=ri(sp);u.reg_write(UC_X86_REG_EAX,v);u.reg_write(UC_X86_REG_ESP,sp+4+pop);u.reg_write(UC_X86_REG_EIP,ip)\ndef string(a):return bytes(u.mem_read(a,128)).split(b'\\0')[0].decode()\nmgef=0x2001000;stack=0x200f000;heap=0x2020000;trace=collections.deque(maxlen=50);events=[];current=None\nu.mem_write(0xb33c10,b'\\1')\ndef hook(uc,ip,size,unused):\n global heap\n trace.append(hex(ip));sp=uc.reg_read(UC_X86_REG_ESP);ecx=uc.reg_read(UC_X86_REG_ECX)\n if ip==0x401f00:\n  size=ri(sp+4);assert 0<size<0x1000;ptr=heap;heap+=(size+15)&~15;u.mem_write(ptr,b'\\xcc'*size);events.append(['allocate',ptr,size]);ret(ptr)\n elif ip==0x401f20:events.append(['free',ri(sp+4)]);ret()\n elif ip==0x46c2e0:events.append(['register-form',ecx]);w(ecx+12,0xff000001);ret()\n elif ip==0x416870:assert ri(sp+4)==0x41524150;events.append(['MGEF-lookup',ri(sp+4)]);ret(mgef)\n if ip==0x2000100:u.emu_stop()\nu.hook_add(UC_HOOK_CODE,hook)\nrows=[]\ntry:\n profiles=list(itertools.product(range(1,8),(False,True),(False,True),(False,True),(127,639,895)))\n profiles += [(7,False,True,False,cw) for cw in (127,639,895)]\n for index,(ranges,noduration,nomagnitude,noarea,cw) in enumerate(profiles):\n  current=dict(ranges=ranges,no_duration=noduration,no_magnitude=nomagnitude,no_area=noarea,controlword=cw);events=[];trace.clear();heap=0x2020000\n  u.mem_write(mgef,bytes(0xa0));w(mgef+0x98,0x41524150);w(mgef+0x60,48);flags=(ranges<<4)|(noduration<<7)|(nomagnitude<<8)|(noarea<<9);flags=16780659 if index>=168 else flags;current['flags']=flags;current['associated_data']=48;w(mgef+0x58,flags)\n  u.mem_write(stack-0x1000,bytes(0x2000));w(stack,0x2000100);w(0,0)\n  for reg,v in [(UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,0),(UC_X86_REG_ESI,0x11111111),(UC_X86_REG_EDI,0x22222222),(UC_X86_REG_EBX,0x33333333),(UC_X86_REG_EBP,0x44444444),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPSW,0),(UC_X86_REG_FPTAG,0xffff)]:u.reg_write(reg,v)\n  u.emu_start(0x41d590,0,count=100000)\n  assert u.reg_read(UC_X86_REG_EIP)==0x2000100\n  spell=u.reg_read(UC_X86_REG_EAX);effect=ri(spell+0x28)\n  row=dict(input=current,spell_type=ri(spell+0x34),cost=ri(spell+0x38),level=ri(spell+0x3c),flags=u.mem_read(spell+0x40,1)[0],name=string(ri(spell+0x1c)),effect=list(struct.unpack('<9I',u.mem_read(effect,36))),events=events)\n  assert row['spell_type']==row['cost']==row['level']==0 and row['flags']==1\n  assert row['name']=='Master Marksman Paralysis'\n  fields=row['effect'];assert fields[:4]==[0x41524150,0,0,0 if noduration else 10]\n  assert fields[4]==(0 if ranges&1 else 1 if ranges&2 else 2) and fields[5:8]==[48 if flags&0x1180000 else 72,0,mgef] and fields[8]==0xbf800000\n  assert ri(spell+0x2c)==0 and u.reg_read(UC_X86_REG_ESP)==stack+4\n  for reg,v in [(UC_X86_REG_ESI,0x11111111),(UC_X86_REG_EDI,0x22222222),(UC_X86_REG_EBX,0x33333333),(UC_X86_REG_EBP,0x44444444)]:assert u.reg_read(reg)==v\n  rows.append(row)\nexcept Exception as e:\n (p/'failure.json').write_text(json.dumps(dict(input=current,error=repr(e),ip=hex(u.reg_read(UC_X86_REG_EIP)),trace=list(trace),events=events),indent=2)+'\\n');raise\nblob=json.dumps(rows,separators=(',',':')).encode();(p/'corpus.json').write_bytes(blob);(p/'probe.py').write_bytes(Path(__file__).read_bytes());(p/'original-exe.json').write_text(json.dumps(meta,indent=2)+'\\n');report=dict(passed=True,cases=len(rows),original_executable_sha256=meta['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),entry='0041D590',stop='RET to sentinel',boundaries=['401F00 allocation/401F20 free with nonzero poisoned allocations','46C2E0 dynamic form registration supplies temporary ID','416870 installed MGEF lookup supplies declared PARA record, checks code'],actual=['SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized','EffectItem constructor4149D0/414790','range/magnitude/area/duration setters','effect-list insertion and original string setter','SpellItem virtual initialization'],scope='Complete native fallback spell construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime.')\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report))\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-active.py": "from pathlib import Path\nimport sys,json,hashlib,struct,itertools,collections\nfrom unicorn import Uc,UC_ARCH_X86,UC_MODE_32,UC_HOOK_CODE\nfrom unicorn.x86_const import *\np=Path(sys.argv[1]);p.mkdir(exist_ok=False);meta=json.loads(Path('build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/original-exe.json').read_text());raw=Path(meta['path']).read_bytes();assert hashlib.sha256(raw).hexdigest()==meta['sha256']=='a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6'\nu=Uc(UC_ARCH_X86,UC_MODE_32);u.mem_map(0,0x10000);u.mem_map(0x400000,0x900000);u.mem_map(0x2000000,0x100000)\nfor _,va,offset,size in meta['sections']:u.mem_write(va,raw[offset:offset+size])\nw=lambda a,v:u.mem_write(a,struct.pack('<I',v&0xffffffff));ri=lambda a:struct.unpack('<I',u.mem_read(a,4))[0]\ndef ret(v=0,pop=0):\n sp=u.reg_read(UC_X86_REG_ESP);ip=ri(sp);u.reg_write(UC_X86_REG_EAX,v);u.reg_write(UC_X86_REG_ESP,sp+4+pop);u.reg_write(UC_X86_REG_EIP,ip)\ndef string(a):return bytes(u.mem_read(a,128)).split(b'\\0')[0].decode()\nmgef=0x2001000;stack=0x200f000;heap=0x2020000;trace=collections.deque(maxlen=50);events=[];current=None\nu.mem_write(0xb33c10,b'\\1')\ndef hook(uc,ip,size,unused):\n global heap\n trace.append(hex(ip));sp=uc.reg_read(UC_X86_REG_ESP);ecx=uc.reg_read(UC_X86_REG_ECX)\n if ip==0x401f00:\n  size=ri(sp+4);assert 0<size<0x1000;ptr=heap;heap+=(size+15)&~15;u.mem_write(ptr,b'\\xcc'*size);events.append(['allocate',ptr,size]);ret(ptr)\n elif ip==0x401f20:events.append(['free',ri(sp+4)]);ret()\n elif ip==0x46c2e0:events.append(['register-form',ecx]);w(ecx+12,0xff000001);ret()\n elif ip==0x416870:assert ri(sp+4)==0x41524150;events.append(['MGEF-lookup',ri(sp+4)]);ret(mgef)\n if ip==0x2000100:u.emu_stop()\nu.hook_add(UC_HOOK_CODE,hook)\nrows=[]\ntry:\n profiles=list(itertools.product(range(1,8),(False,True),(False,True),(False,True),(127,639,895)))\n profiles += [(7,False,True,False,cw) for cw in (127,639,895)]\n for index,(ranges,noduration,nomagnitude,noarea,cw) in enumerate(profiles):\n  current=dict(ranges=ranges,no_duration=noduration,no_magnitude=nomagnitude,no_area=noarea,controlword=cw);events=[];trace.clear();heap=0x2020000\n  u.mem_write(mgef,bytes(0xa0));w(mgef+0x98,0x41524150);w(mgef+0x60,48);flags=(ranges<<4)|(noduration<<7)|(nomagnitude<<8)|(noarea<<9);flags=16780659 if index>=168 else flags;current['flags']=flags;current['associated_data']=48;w(mgef+0x58,flags)\n  u.mem_write(stack-0x1000,bytes(0x2000));w(stack,0x2000100);w(0,0)\n  for reg,v in [(UC_X86_REG_ESP,stack),(UC_X86_REG_ECX,0),(UC_X86_REG_ESI,0x11111111),(UC_X86_REG_EDI,0x22222222),(UC_X86_REG_EBX,0x33333333),(UC_X86_REG_EBP,0x44444444),(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPSW,0),(UC_X86_REG_FPTAG,0xffff)]:u.reg_write(reg,v)\n  u.emu_start(0x41d590,0,count=100000)\n  assert u.reg_read(UC_X86_REG_EIP)==0x2000100\n  spell=u.reg_read(UC_X86_REG_EAX);effect=ri(spell+0x28)\n  row=dict(input=current,spell_type=ri(spell+0x34),cost=ri(spell+0x38),level=ri(spell+0x3c),flags=u.mem_read(spell+0x40,1)[0],name=string(ri(spell+0x1c)),effect=list(struct.unpack('<9I',u.mem_read(effect,36))),events=events)\n  assert row['spell_type']==row['cost']==row['level']==0 and row['flags']==1\n  assert row['name']=='Master Marksman Paralysis'\n  fields=row['effect'];assert fields[:4]==[0x41524150,0,0,0 if noduration else 10]\n  assert fields[4]==(0 if ranges&1 else 1 if ranges&2 else 2) and fields[5:8]==[48 if flags&0x1180000 else 72,0,mgef] and fields[8]==0xbf800000\n  assert ri(spell+0x2c)==0 and u.reg_read(UC_X86_REG_ESP)==stack+4\n  for reg,v in [(UC_X86_REG_ESI,0x11111111),(UC_X86_REG_EDI,0x22222222),(UC_X86_REG_EBX,0x33333333),(UC_X86_REG_EBP,0x44444444)]:assert u.reg_read(reg)==v\n  w(stack,0x2000100);w(stack+4,0x2001600);w(stack+8,spell+0x18);w(stack+12,effect);u.reg_write(UC_X86_REG_ESP,stack)\n  u.emu_start(0x6a37b0,0,count=100000);assert u.reg_read(UC_X86_REG_EIP)==0x2000100 and u.reg_read(UC_X86_REG_ESP)==stack+4\n  active=u.reg_read(UC_X86_REG_EAX);fields=list(struct.unpack('<15I',u.mem_read(active,60)));row['active_effect']=fields\n  assert fields[0]==0xa769cc and fields[1]==0 and fields[2:4]==[spell+0x18,effect]\n  assert fields[4]&0xffffff==0 and fields[5]==0 and fields[6]==(0x3f800000 if nomagnitude else 0)\n  assert fields[7]==(0 if noduration else 0x41200000) and fields[8:11]==[0,0x2001600,0] and fields[11:14]==[0,0,0] and fields[14]==(48 if flags&0x1000000 else 72)\n  rows.append(row)\nexcept Exception as e:\n (p/'failure.json').write_text(json.dumps(dict(input=current,error=repr(e),ip=hex(u.reg_read(UC_X86_REG_EIP)),trace=list(trace),events=events),indent=2)+'\\n');raise\nblob=json.dumps(rows,separators=(',',':')).encode();(p/'corpus.json').write_bytes(blob);(p/'probe.py').write_bytes(Path(__file__).read_bytes());(p/'original-exe.json').write_text(json.dumps(meta,indent=2)+'\\n');report=dict(passed=True,cases=len(rows),original_executable_sha256=meta['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),entry='0041D590',stop='RET to sentinel',boundaries=['401F00 allocation/401F20 free with nonzero poisoned allocations','46C2E0 dynamic form registration supplies temporary ID','416870 installed MGEF lookup supplies declared PARA record, checks code'],actual=['SpellItem/MagicItem/TESForm constructors with original global one-time type table initialized','EffectItem constructor4149D0/414790','range/magnitude/area/duration setters','effect-list insertion and original string setter','SpellItem virtual initialization','ParalysisEffect factory6A37B0, ValueModifierEffect6A82F0 and ActiveEffect68D7A0 constructors'],scope='Complete native fallback spell and active-ParalysisEffect construction,168 cases covering7 nonempty range masks,8 boolean property combinations and3 x87 controls, plus3 actual installed-PARA flag profiles. No allocator failure, MGEF missing, dynamic FormID registry integration, content override initializer, effect casting, resistance or runtime lifetime.')\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report))\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-modifier.py": "from pathlib import Path\nimport sys,json,hashlib,struct,itertools\nbootstrap=Path('build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-active.py').read_text().split('rows=[]')[0]\nexec(compile(bootstrap,'factory-bootstrap','exec'))\nactor=0x2003000;vt=0x2004000;target=actor+0x68;caster=actor+0x5c;balance=0.;callbacks=[]\nu.mem_write(vt,bytes(u.mem_read(0xa6fc9c,0x400)));w(vt+0x284,0x2000200);w(vt+0x2a4,0x2000220);w(vt+0x198,0x2000240);w(vt+0x294,0x2000260)\ndef h(uc,ip,size,unused):\n global balance\n sp=uc.reg_read(UC_X86_REG_ESP);owner=uc.reg_read(UC_X86_REG_ECX)\n if ip==0x6a1d70:assert owner==target;ret(actor)\n elif ip==0x5ef930:assert owner==actor;callbacks.append(['actor-animation-interruption']);ret()\n elif ip==0x699050:assert owner==caster;ret(actor)\n elif ip==0x2000200:assert owner==actor and ri(sp+4)==48;callbacks.append(['integer-AV48-query',int(balance)]);ret(int(balance),4)\n elif ip in [0x2000220,0x2000260]:\n  assert owner==actor and ri(sp+4)==48;av,delta,source=struct.unpack('<IfI',u.mem_read(sp+4,12));balance+=delta;callbacks.append(['actor-virtual294' if ip==0x2000260 else 'actor-virtual2A4',av,delta,source]);ret(0,12)\n elif ip==0x2000240:assert owner==actor and ri(sp+4)==0;ret(0,4)\n elif ip==0x6a83d0:callbacks.append(['feedback-boundary']);ret()\nu.hook_add(UC_HOOK_CODE,h)\ndef call(ip,this,args=()):\n w(stack,0x2000100)\n for i,x in enumerate(args):w(stack+4+4*i,x)\n u.reg_write(UC_X86_REG_ECX,this);u.reg_write(UC_X86_REG_ESP,stack);u.emu_start(ip,0,count=100000);assert u.reg_read(UC_X86_REG_EIP)==0x2000100\n return u.reg_read(UC_X86_REG_EAX)\nrows=[]\ntry:\n for target_present,caster_present,initial,cw in itertools.product((False,True),(False,True),(0,1,2),(127,639,895)):\n  current=dict(target_present=target_present,caster_present=caster_present,initial=initial,controlword=cw);heap=0x2020000;events=[];callbacks=[];trace.clear();balance=float(initial)\n  u.mem_write(actor,bytes(0x300));w(actor,vt);u.mem_write(mgef,bytes(0xa0));w(mgef+0x98,0x41524150);w(mgef+0x58,16780659);w(mgef+0x60,48)\n  u.mem_write(stack-0x1000,bytes(0x2000));w(0,0)\n  for reg,v in [(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)]:u.reg_write(reg,v)\n  spell=call(0x41d590,0);effect=ri(spell+0x28);active=call(0x6a37b0,0,[caster if caster_present else 0,spell+0x18,effect]);w(active+0x20,target if target_present else 0)\n  call(0x6a3730,active);after=balance;calls_apply=list(callbacks)\n  if target_present:call(0x6a3660,active)\n  after_remove=balance\n  assert after==initial+int(target_present) and after_remove==initial\n  deltas=[x for x in callbacks if x[0]=='actor-virtual294'];assert deltas==([['actor-virtual294',48,1.,0],['actor-virtual294',48,-1.,0]] if target_present else [])\n  assert sum(x[0]=='actor-animation-interruption' for x in callbacks)==int(target_present)\n  assert callbacks.index(['integer-AV48-query',initial])<callbacks.index(deltas[0]) if target_present else True\n  rows.append(dict(input=current,after_apply=after,after_remove=after_remove,apply_calls=calls_apply,all_calls=callbacks))\nexcept Exception as e:\n (p/'failure.json').write_text(json.dumps(dict(input=current,error=repr(e),ip=hex(u.reg_read(UC_X86_REG_EIP)),trace=list(trace),events=events,callbacks=callbacks),indent=2)+'\\n');raise\nblob=json.dumps(rows,separators=(',',':')).encode();(p/'corpus.json').write_bytes(blob);(p/'probe.py').write_bytes(Path(__file__).read_bytes());(p/'bootstrap.py').write_text(bootstrap);report=dict(passed=True,cases=len(rows),original_executable_sha256=meta['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),actual=['complete default spell and active-effect construction as constructor oracle','ParalysisEffect apply6A3730/ValueModifier apply6A86F0,6A8220,6A84D0','ParalysisEffect remove6A3660/ValueModifier remove6A88D0','actor paralysis query5E17E0 before effect addition'],boundaries=['factory allocator/form registration/MGEF lookup as constructor oracle','typed MagicTarget-to-Actor and MagicCaster-to-reference resolution','actor animation interruption5EF930, feedback6A83D0','integerAV48 getter and numeric virtual294 and virtual2A4 setter captures; actor predicate198 returnsfalse'],scope='Actual installed PARA flags with absent/present target and caster, existing integerAV48 0/1/2 and3 x87 controls. Add1 and remove1 restore the preexisting value. Null target covers apply only: direct removal on an unbound effect is invalid and retained as failed01; caller removal admission remains to verify. No actual actor modifier storage, timer expiry, casting/resistance, physical animation or gameplay acceptance.');(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report))\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-timer.py": "from pathlib import Path\nimport sys,json,hashlib,struct,itertools\nbootstrap=Path('build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-modifier.py').read_text().split(chr(10)+'rows=[]')[0]\nexec(compile(bootstrap,'paralysis-modifier-bootstrap','exec'))\ntvt=0x2005000\nw(tvt+4,0x2000280);w(tvt+12,0x20002a0)\ndef timerhook(uc,ip,size,unused):\n if ip==0x2000280:assert uc.reg_read(UC_X86_REG_ECX)==target;ret(actor)\n elif ip==0x20002a0:assert uc.reg_read(UC_X86_REG_ECX)==target;ret(0)\n elif ip==0x68e210:callbacks.append(['effect-presentation-boundary']);ret()\n elif ip==0x69d9f0:\n  assert ri(uc.reg_read(UC_X86_REG_ESP)+4)==active\n  callbacks.append(['ancillary-effect-data-boundary']);ret(0)\nu.hook_add(UC_HOOK_CODE,timerhook)\nfword=lambda f:struct.unpack('<I',struct.pack('<f',f))[0]\nrows=[]\ntry:\n for initial,cw,steps in itertools.product((0,1,2),(127,639,895),([0,1,9,1],[0.125]*80,[20],[9.999999046325684,0.00000095367431640625],[0,-1,10],[1,0,1,8])):\n  current=dict(initial=initial,controlword=cw,steps=steps);heap=0x2020000;events=[];callbacks=[];trace.clear();balance=float(initial)\n  u.mem_write(actor,bytes(0x300));w(actor,vt);w(target,tvt);u.mem_write(mgef,bytes(0xa0));w(mgef+0x98,0x41524150);w(mgef+0x58,16780659);w(mgef+0x60,48)\n  u.mem_write(stack-0x1000,bytes(0x2000));w(0,0)\n  for reg,v in [(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)]:u.reg_write(reg,v)\n  spell=call(0x41d590,0);effect=ri(spell+0x28);active=call(0x6a37b0,0,[caster,spell+0x18,effect]);w(active+0x20,target)\n  samples=[]\n  for dt in steps:\n   call(0x68e670,active,[fword(dt)]);samples.append(dict(dt=dt,elapsed=struct.unpack('<f',u.mem_read(active+4,4))[0],applied=u.mem_read(active+0x10,1)[0],terminated=u.mem_read(active+0x11,1)[0],removed=u.mem_read(active+0x12,1)[0],balance=balance))\n  assert samples[-1]['elapsed']==10 and samples[-1]['applied']==samples[-1]['terminated']==samples[-1]['removed']==1 and balance==initial\n  deltas=[x for x in callbacks if x[0]=='actor-virtual294'];assert deltas==[['actor-virtual294',48,1.,0],['actor-virtual294',48,-1.,0]]\n  before=list(callbacks);call(0x68e670,active,[fword(1)]);assert callbacks==before and balance==initial\n  rows.append(dict(input=current,samples=samples,callbacks=callbacks))\nexcept Exception as e:\n (p/'failure.json').write_text(json.dumps(dict(input=current,error=repr(e),ip=hex(u.reg_read(UC_X86_REG_EIP)),trace=list(trace),callbacks=callbacks,samples=samples),indent=2)+'\\n');raise\nblob=json.dumps(rows,separators=(',',':')).encode();(p/'corpus.json').write_bytes(blob);(p/'probe.py').write_bytes(Path(__file__).read_bytes());(p/'bootstrap.py').write_text(bootstrap);report=dict(passed=True,cases=len(rows),original_executable_sha256=meta['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Actual complete68E670 owner update through native ParalysisEffect apply/update/removal and real default spell/active construction. Positive first frame applies once; timer clamps10, equality expires, zero/negative frames do not apply/advance; terminated+removed prevents replay. Three prior AV48 counts, six step profiles, three x87 controls. Inherited allocator/form/MGEF/target/caster/AV/presentation boundaries retained; target0C returnsfalse and ancillary69D9F0 construction returnsnull. No casting/resistance, native actor modifier storage, save/restart, physical reaction or gameplay acceptance.');(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report))\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/audit.py": "from pathlib import Path\nimport sys,json,struct,hashlib\nsys.path.insert(0,'scripts');import tes4_m15_audit as audit\np=Path(sys.argv[1]);p.mkdir(exist_ok=False);winners={};plugins=[]\nfor name in ['Oblivion.esm','Knights.esp']:\n plugin,records=audit.read_plugin(Path('/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data')/name);plugins.append(plugin)\n for r in records:winners[r['key']]=r\nrows=[r for r in winners.values() if r['type']=='MGEF' and any(s['name']=='EDID' and s['payload'].rstrip(b'\\0')==b'PARA' for s in r.get('subrecords',[]))];assert len(rows)==1\nr=rows[0];data=audit._one(r['subrecords'],'DATA',True);flags,cost,associated,school,resistance=struct.unpack_from('<IfIIi',data)\nreport=dict(passed=True,plugins=plugins,effect=dict(key=r['key'],code='PARA',data_hex=data.hex(),flags=flags,base_cost=cost,associated_data=associated,school=school,resistance_actor_value=resistance),default_spell=winners.get('content:oblivion.esm:000137'),scope='Independent binary winning MGEF PARA DATA audit and default FormID137 presence check; no engine parser or effect runtime.')\nassert report['default_spell'] is None\n(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');(p/'audit.py').write_bytes(Path(__file__).read_bytes());print(json.dumps(report))\n",
+      "build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-cancel.py": "from pathlib import Path\nimport sys,json,hashlib,struct,itertools\nbootstrap=Path('build/oblivion-compat/m15/S4/native-paralysis-factory-work-01/probe-timer.py').read_text().split(chr(10)+'rows=[]')[0]\nexec(compile(bootstrap,'paralysis-timer-bootstrap','exec'))\nrows=[]\ntry:\n for initial,cw,applied,immediate in itertools.product((0,1,2),(127,639,895),(False,True),(False,True)):\n  current=dict(initial=initial,controlword=cw,applied=applied,immediate=immediate);heap=0x2020000;events=[];callbacks=[];trace.clear();balance=float(initial)\n  u.mem_write(actor,bytes(0x300));w(actor,vt);w(target,tvt);u.mem_write(mgef,bytes(0xa0));w(mgef+0x98,0x41524150);w(mgef+0x58,16780659);w(mgef+0x60,48)\n  u.mem_write(stack-0x1000,bytes(0x2000));w(0,0)\n  for reg,v in [(UC_X86_REG_FPCW,cw),(UC_X86_REG_FPTAG,0xffff),(UC_X86_REG_FPSW,0)]:u.reg_write(reg,v)\n  spell=call(0x41d590,0);effect=ri(spell+0x28);active=call(0x6a37b0,0,[caster,spell+0x18,effect]);w(active+0x20,target)\n  if applied:call(0x68e670,active,[fword(1)])\n  assert balance==initial+int(applied)\n  call(0x68ea10,active,[int(immediate)]);after_cancel=balance;bits_cancel=list(u.mem_read(active+0x10,3))\n  assert after_cancel==initial+(applied and not immediate) and bits_cancel==[int(applied),1,int(applied and immediate)]\n  call(0x68e670,active,[fword(0)]);assert balance==initial and list(u.mem_read(active+0x10,3))==[int(applied),1,int(applied)]\n  before=list(callbacks)\n  call(0x68ea10,active,[1]);call(0x68e670,active,[fword(10)]);assert callbacks==before and balance==initial\n  deltas=[x for x in callbacks if x[0]=='actor-virtual294'];assert deltas==([['actor-virtual294',48,1.,0],['actor-virtual294',48,-1.,0]] if applied else [])\n  rows.append(dict(input=current,after_cancel=after_cancel,flags_after_cancel=bits_cancel,after_update=balance,callbacks=callbacks))\nexcept Exception as e:\n (p/'failure.json').write_text(json.dumps(dict(input=current,error=repr(e),ip=hex(u.reg_read(UC_X86_REG_EIP)),trace=list(trace),callbacks=callbacks),indent=2)+'\\n');raise\nblob=json.dumps(rows,separators=(',',':')).encode();(p/'corpus.json').write_bytes(blob);(p/'probe.py').write_bytes(Path(__file__).read_bytes());(p/'bootstrap.py').write_text(bootstrap);report=dict(passed=True,cases=len(rows),original_executable_sha256=meta['sha256'],corpus_sha256=hashlib.sha256(blob).hexdigest(),scope='Actual68EA10 cancellation wrapper and68E670 owner update with full native PARA construction/apply/remove. Immediate applied cancellation removes once through zero-duration update; deferred cancellation leaves contribution until next update, including zero frame. Pre-apply cancellation never applies or subtracts. Repeated cancellation/update has no modifier replay. Both immediate flags, both applied flags, AV48 initial0/1/2, three x87 controls. Same explicit constructor/modifier/timer ancillary/actor-storage/presentation boundaries; no engine save, physics or gameplay acceptance.');(p/'verification.json').write_text(json.dumps(report,indent=2)+'\\n');print(json.dumps(report))\n"
+    }
+  },
+  "owner_cancellation": {
+    "address": "0068EA10",
+    "immediate": "Set terminated, then run owner update with zero duration; remove only applied/unremoved contribution.",
+    "deferred": "Set terminated; contribution persists until a subsequent owner update, including dt0.",
+    "pre_application": "Do not apply/subtract; applied and removed stayfalse while terminated istrue.",
+    "replay": "Repeated cancel/update does not repeat modifier calls."
+  }
+}

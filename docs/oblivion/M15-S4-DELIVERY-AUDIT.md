@@ -12888,3 +12888,40 @@ mastery/effect lifecycle, remaining interruption and device/view/FPS cases remai
 open. **Full M15S4 is incomplete.** See the
 [verification receipt](M15-ENEMY-NOTIFICATION-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_enemy_notification_cases.json).
+
+## Combat-triggered paralysis construction and lifecycle provenance
+
+Independent original-executable execution now covers the full fallback spell
+factory and active ParalysisEffect constructors, rather than only the duration
+setter. The installed master/Knights audit finds no FormID 000137 override.
+Its winning PARA record selects AV48 and has NoMagnitude and Recover flags.
+The fallback spell stores magnitude/area zero, duration ten and self range;
+the active effect constructor produces magnitude one and duration ten. Range
+and duration remain subject to the loaded MGEF flags.
+
+The 171 construction profiles include seven nonempty range masks, property
+flag combinations, three x87 controls and the actual installed PARA flags.
+Another 36 modifier profiles execute native apply/removal, preserving existing
+integer AV48 values 0/1/2. Recoverable addition and subtraction use virtual294;
+removal also makes a separate zero-delta virtual2A4 call. Actor storage is an
+explicit argument-capture boundary, not an implemented engine effect.
+
+The actual owner update passes 54 timing profiles: positive first frames apply
+once, elapsed time clamps to duration, equality expires, and later updates do
+not repeat application/removal. Another 36 cancellation profiles execute the
+native cancellation wrapper. Immediate cancellation removes an applied effect
+through a zero-duration update; deferred cancellation waits for the next owner
+update. Cancellation before application never adds or subtracts the modifier.
+Repeated cancellation does not replay it. Direct removal of an unbound effect,
+the initially omitted temporary setter, nested bootstrap splitting and ancillary
+effect-data construction attempts are preserved with their corrected probes.
+
+These are 297 independent native profiles, plus the installed-record audit.
+No production code changed and no new engine-build or gameplay acceptance is
+claimed. Cast admission/resistance, actual actor storage, saved effect state,
+physical paralysis and directional contact integration remain open. The timer
+probe declares an ancillary-data constructor returning null and presentation
+sinks; it does not establish the corresponding rendered/audio behavior.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-PARALYSIS-EFFECT-NATIVE-VERIFICATION.json) and
+[editable probes](../../scripts/data/oblivion_compat/m15_paralysis_effect_native_cases.json).
