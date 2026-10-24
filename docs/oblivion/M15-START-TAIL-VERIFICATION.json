@@ -1,0 +1,663 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "runtime_schema": 69,
+  "full_M15S4_acceptance": false,
+  "source_base": "74d8e0b21a2eabb1461f498f2149689fd5722dc2",
+  "scope": "Script StartCombat empty self-spell selections and caller ordering, with normal-input blocked melee/disarm and exact active-recovery restart. Nonempty production spell selection/casting/effects remain unimplemented.",
+  "checks": {
+    "native-start-empty-tail-normal-05": {
+      "tested_source": {
+        "head": "74d8e0b21a2eabb1461f498f2149689fd5722dc2",
+        "source_fingerprint": "f636f9f2211c93848a09aa2e373f87e4b219932a62c79ad0b91177499fb71068"
+      },
+      "engine": {
+        "executed": 1909,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "b503ee831eb105871597eda6112605f1f41c914f6740b565b41572cfbb3b747c",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "f8c9a3872bc72cfe642b792943e9b70cfb0f5890c13e18b8914d0e531aa2e0e8",
+        "inventory_sha256": "d93bb6b0a5adb9d2b02bb93064b51cf40806a6ab96a0f45702ce86650051e1e6",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    },
+    "native-start-empty-tail-sanitized-04": {
+      "tested_source": {
+        "head": "74d8e0b21a2eabb1461f498f2149689fd5722dc2",
+        "source_fingerprint": "f636f9f2211c93848a09aa2e373f87e4b219932a62c79ad0b91177499fb71068"
+      },
+      "engine": {
+        "executed": 1909,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "0b133b8c09f15dd19cb3fdd7ec395a536323b8e7a2f16e525a61d5c17a4cb900",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "71708bf4084b76b62f6818d1a8ecdfccedc01b2168664171da58125fea072672",
+        "inventory_sha256": "d93bb6b0a5adb9d2b02bb93064b51cf40806a6ab96a0f45702ce86650051e1e6",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "reused_unchanged_checks": {
+    "receipt": "docs/oblivion/M15-CONTROLLER-PRODUCER-VERIFICATION.json",
+    "receipt_sha256": "f4f104baa918a4f1a3980b2048ce94be71417d96f6f54e143c4033d8e67542e8",
+    "normal_components": {
+      "executed": 3064,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "62a34770ca5fbd3eed3d9e4d5e097e93e2d4bcea21fb1e6d195be8e67f9d4523",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "ecccc71950a188f84873f31a8004041369e971fbb4cb99e3e2881ccc5cacb8f0",
+      "inventory_sha256": "54f27adf77b7d6a3ad60c15e5fe71c3597d1b120673eadc830c84fd47230228b",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitized_components": {
+      "executed": 915,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4*",
+      "binary_sha256": "e07e36b79c95829a7eb5f4a6b48308aec44fc510e552ffaebe1322179c4171d1",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "02d48d756770f3e93397f6a97e8ae957914914e2e76da59cc802a9d395a19396",
+      "inventory_sha256": "18ed41224b13111bb2afb6fa2bbc8d4ed2f461a0426b19deed77d8759f0b6cae",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "python": {
+      "executed": 406,
+      "passed": true,
+      "log_sha256": "0bae4e600b50101ef5975c4b8effa12924bcc9f496c5488bebef026a8cd8b50f"
+    },
+    "scope": "Component rules and Python runtime codec implementation unchanged. New shared verification utility executed successfully against both current full gameplay courses; no new broad component/Python run claimed."
+  },
+  "native_oracles": {
+    "native-start-empty-tail-oracle-03": {
+      "passed": true,
+      "cases": 144,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "1b13fa38d702f3a3a5d9f04923528bbfb5823217e83701af4e5c12e8a63878f6",
+      "scope": "Original script StartCombat tail5148E2..514947 with actual current-controller getter and complete5E91E0 empty actor/race spell selection paths, original CRT RNG, actual process active-item getter. Empty equipped magic-item enumeration, allocation/free and CRT thread getter are boundaries. Any active-item699190 call is an ordered argument boundary, not a casting/cancellation semantic proof. No world gameplay or effect lifecycle acceptance."
+    },
+    "native-start-nonempty-tail-oracle-02": {
+      "passed": true,
+      "cases": 48,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "b20b54c09d5af7564b1135aaff77e3a7fa64b068a172df53e9344edce7f2397d",
+      "scope": "Original StartCombat tail5148E2..514947, complete5E91E0 candidate collection/filter/selection, real process selected-item setters/getters, actual699190 casting initialization and casting-item setter. One synthetic normal self-range spell with CHML/INVI/control effect; actor spell list nonempty, race list empty, rawC present. Primary-effect resolution and cast availability are explicit successful input boundaries; equipped-item enumeration empty; PlayCastingAnim is an observed boundary. Original CRT RNG, allocator/free/thread getter boundaries. No effect removal is performed by this path; no animation/effect publication or live acceptance proved."
+    },
+    "native-start-tail-fixture-crt-oracle-01": {
+      "passed": true,
+      "cases": 14,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "11b1e3a1ea520944b13563d61898bec63d8fe2cff8b86300e8a9800c4e8ebdb7",
+      "scope": "Full original47DF80, srand9859D0 and CRT rand9859DD, seed690153517 explicitly on first call then unseeded calls. Only CRT thread-data getter98C0F5 supplies a mapped thread block; no RNG arithmetic or return boundary. Both x87 words. No constructor/contact execution in this primitive probe."
+    },
+    "native-start-self-tail-oracle-01": {
+      "passed": true,
+      "cases": 8,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "6fea250a8e4ef126a696a382cf07e54eb62f436e926dc72bf304815fda085957",
+      "scope": "Self-target wrapper continuation51478F..514947 with an existing empty current controller. Process common-start call is an explicit self-rejection boundary; parsing/initial life/commandability gates are outside the slice. Original script StartCombat tail5148E2..514947 with actual current-controller getter and complete5E91E0 empty actor/race spell selection paths, original CRT RNG, actual process active-item getter. Empty equipped magic-item enumeration, allocation/free and CRT thread getter are boundaries. Any active-item699190 call is an ordered argument boundary, not a casting/cancellation semantic proof. No world gameplay or effect lifecycle acceptance."
+    },
+    "native-controller-melee-prefix-oracle-02": {
+      "passed": true,
+      "cases": 24,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "a23a204a1ca752ac7ad3393386add4c8b0a37beaacc0a06cafee137539cb9fe1",
+      "scope": "Actual common-hit5FFEB5..5FFF52 with Player defender and NPC attacker; original raw damage/probability helpers, vtables/process getters. Feed native CRT draws2/3=5105/27056 after constructor draw1. Agility30/Luck50/full Fatigue140; prearmor damage1. Health1..1.1 with postHP78/79/80 and cached abstract skill12=15/25 are all below the inspected ratio/mastery thresholds. Block25. Both x87 words. Exactly two prefix draws, damage flagfalse and no speech request/callback. Existing AV/resource/animation/facing sinks retained; no full blocked handler or gameplay acceptance."
+    },
+    "native-controller-melee-block-oracle-01": {
+      "passed": true,
+      "cases": 20,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "4f3bcd8c7976975743ac4f942ccd34d680555a609686720d73ddcb54a916ea65",
+      "scope": "Actual blocked-contact600528..60056A with full Counter query5F3C30 and immediate Master disarm5FC2B0. Player bare drawn HTH100 vs drawn nonquest NPC weapon; native CRT draws4/5 raw2938/32501 -> percentiles38/1, Counter miss then Master disarm. Both x87 words, current controller absent/present and decision states0/4/6/12/13. Actual controller notification61DD10 now executes throughRET4 and stores internal state13/clock without calls or extra RNG. Supplied base AV/equipment/DropItem/relation/action/playback/Recoil boundaries retained. No actual inventory mutation, renderer or damage computation in this oracle."
+    }
+  },
+  "native_tail_case_count": 214,
+  "reused_contact_case_count": 44,
+  "content_audit": {
+    "passed": true,
+    "inventory": [
+      {
+        "key": "content:oblivion.esm:027319",
+        "type": "CLOT",
+        "count": 1,
+        "enchantment_fields": []
+      },
+      {
+        "key": "content:oblivion.esm:027318",
+        "type": "CLOT",
+        "count": 1,
+        "enchantment_fields": []
+      },
+      {
+        "key": "content:oblivion.esm:090615",
+        "type": "WEAP",
+        "count": 1,
+        "enchantment_fields": []
+      }
+    ],
+    "inventory_snapshot_sha256": "418dea001984bd6b22813db78ec6311d6c2e7ab26c388719a38c4b4de084e125",
+    "plugins": [
+      {
+        "name": "Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "masters": [],
+        "record_count": 1167016
+      },
+      {
+        "name": "M15StationaryOpponent.esp",
+        "sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
+        "masters": [
+          "oblivion.esm"
+        ],
+        "record_count": 3
+      }
+    ],
+    "actor": "content:oblivion.esm:025200",
+    "race": "content:oblivion.esm:0191c1",
+    "spells": [
+      {
+        "origin": "race",
+        "key": "content:oblivion.esm:047ad5",
+        "plugin": "Oblivion.esm",
+        "record_sha256": "bfdaac9e2def90d35881e521da61d0b40adbcf692dab56f504f44615fefd5a9c",
+        "type": 2,
+        "effects": [
+          {
+            "code": "Z002",
+            "range": 0
+          }
+        ]
+      },
+      {
+        "origin": "race",
+        "key": "content:oblivion.esm:047ad4",
+        "plugin": "Oblivion.esm",
+        "record_sha256": "9ecadb6e6298078bd577ed8a8328657dfcc92fc30a9635473eeb5a03bd521f72",
+        "type": 4,
+        "effects": [
+          {
+            "code": "RSFI",
+            "range": 0
+          }
+        ]
+      }
+    ],
+    "scope": "Winning NPC/race SPLO records and all EFID/EFIT pairs in the installed course load order. No matching CHML/INVI in either list. Initial loaded actor inventory contains only two unenchanted CLOT records and one unenchanted WEAP; the exact load snapshot is identified. Dynamically added spells/casting state are outside this content audit; the fixture is otherwise preserved and no spells are added by the course."
+  },
+  "runtime": {
+    "native-start-empty-tail-melee-runtime-03": {
+      "passed": true,
+      "phase": {
+        "run_id": "native-start-empty-tail-melee-runtime-03",
+        "epoch": 1,
+        "pid": 1879015,
+        "sequence": 4,
+        "tick": 50,
+        "event": "ordinary-hit-phases",
+        "action": 2,
+        "actor": "content:oblivion.esm:01fc43",
+        "blocked_dispatch": true,
+        "counter_prepared": false,
+        "counter_selected": false,
+        "damage_flag": false,
+        "draws": 4,
+        "lower_recoil_draws": 0,
+        "lower_recoil_selected": false,
+        "prefix_draws": 2,
+        "rng_after": 4277529146,
+        "rng_before": 5741206,
+        "speech_requested": false,
+        "stagger_prepared": false,
+        "stagger_selected": false,
+        "victim": "dynamic:player:0000000000000001"
+      },
+      "constructor_draws": 1,
+      "selection_draws": 2,
+      "precontact_draws": 3,
+      "continuation_directory": "second",
+      "physical_actions": {
+        "next": 4,
+        "pending": []
+      },
+      "drop_count": 1,
+      "controller_in_recovery": {
+        "content:oblivion.esm:01fc43": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ]
+      },
+      "compared_final_fields": [
+        "script_instances",
+        "physical_actions",
+        "native_actor_values",
+        "native_actor_bases",
+        "native_actor_life",
+        "next_death_event",
+        "pending_death_events",
+        "native_death_counts",
+        "native_actor_breath",
+        "native_combat_engagements",
+        "physical_action_owners",
+        "combat_rng_state",
+        "native_actor_knockback",
+        "native_actor_ragdolls",
+        "native_bow_states",
+        "native_crime",
+        "spoken_dialogue_infos",
+        "ignore_friendly_hits",
+        "disposition_modifiers",
+        "combat_controllers"
+      ],
+      "epochs": {
+        "first": {
+          "pid": 1879015,
+          "start_ticks": 58043999,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "14d75aaa334d2ee4b11f9d233eb95e0ddb8f87cf0151be0adc516563f4b366b3"
+        },
+        "second": {
+          "pid": 1879384,
+          "start_ticks": 58057598,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "14d75aaa334d2ee4b11f9d233eb95e0ddb8f87cf0151be0adc516563f4b366b3"
+        }
+      },
+      "scope": "One normal contact after authored StartCombat creates current controller; exact binary/live serialization and fresh restoration; logical actor recovery, complete target inventory and loose-item identity. World clock/AI scheduling, actor float Z, loose trajectory and inactive first-person held-block sample times are not compared. Inactive held-block group, retirement, inactivity and pose identity still match.",
+      "first_import_scope": "Legacy schema61 fixture upgraded by codec then normal loader; supplied native authority preserved except absent movement/blend caches. Generic projection/default/content normalization is not claimed byte-exact. Second recovery load is wholly exact.",
+      "library_identity_scope": "Executable, mapped MyGUI and actual environment identified per process.",
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+        "sha256": "14d75aaa334d2ee4b11f9d233eb95e0ddb8f87cf0151be0adc516563f4b366b3",
+        "bytes": 1404124936,
+        "mtime_ns": 1792841915659779400
+      },
+      "captures_reviewed": [
+        "first/uninterrupted-after-recoil.png",
+        "second/resumed-after-recoil.png"
+      ]
+    },
+    "native-start-empty-tail-melee-runtime-sanitized-01": {
+      "passed": true,
+      "phase": {
+        "run_id": "native-start-empty-tail-melee-runtime-sanitized-01",
+        "epoch": 1,
+        "pid": 1878851,
+        "sequence": 4,
+        "tick": 16,
+        "event": "ordinary-hit-phases",
+        "action": 2,
+        "actor": "content:oblivion.esm:01fc43",
+        "blocked_dispatch": true,
+        "counter_prepared": false,
+        "counter_selected": false,
+        "damage_flag": false,
+        "draws": 4,
+        "lower_recoil_draws": 0,
+        "lower_recoil_selected": false,
+        "prefix_draws": 2,
+        "rng_after": 4277529146,
+        "rng_before": 5741206,
+        "speech_requested": false,
+        "stagger_prepared": false,
+        "stagger_selected": false,
+        "victim": "dynamic:player:0000000000000001"
+      },
+      "constructor_draws": 1,
+      "selection_draws": 2,
+      "precontact_draws": 3,
+      "continuation_directory": "second-retry-2",
+      "physical_actions": {
+        "next": 4,
+        "pending": []
+      },
+      "drop_count": 1,
+      "controller_in_recovery": {
+        "content:oblivion.esm:01fc43": [
+          {
+            "target": "dynamic:player:0000000000000001",
+            "priority": 200,
+            "marker": 1,
+            "value_0c": 0.0,
+            "value_10": 0.0
+          }
+        ]
+      },
+      "compared_final_fields": [
+        "script_instances",
+        "physical_actions",
+        "native_actor_values",
+        "native_actor_bases",
+        "native_actor_life",
+        "next_death_event",
+        "pending_death_events",
+        "native_death_counts",
+        "native_actor_breath",
+        "native_combat_engagements",
+        "physical_action_owners",
+        "combat_rng_state",
+        "native_actor_knockback",
+        "native_actor_ragdolls",
+        "native_bow_states",
+        "native_crime",
+        "spoken_dialogue_infos",
+        "ignore_friendly_hits",
+        "disposition_modifiers",
+        "combat_controllers"
+      ],
+      "epochs": {
+        "first": {
+          "pid": 1878851,
+          "start_ticks": 58029209,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "fb2542910f67214a5661254d17d2f483260e674813791f2279e561a1ce4a194a"
+        },
+        "second": {
+          "pid": 1892145,
+          "start_ticks": 58176882,
+          "clock_ticks_per_second": 100,
+          "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+          "command": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+            "--replace=config",
+            "--config",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/config",
+            "--no-grab",
+            "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/userdata/saves/M15Review/Quicksave.omwsave"
+          ],
+          "executable_sha256": "fb2542910f67214a5661254d17d2f483260e674813791f2279e561a1ce4a194a"
+        }
+      },
+      "scope": "One normal contact after authored StartCombat creates current controller; exact binary/live serialization and fresh restoration; logical actor recovery, complete target inventory and loose-item identity. World clock/AI scheduling, actor float Z, loose trajectory and inactive first-person held-block sample times are not compared. Inactive held-block group, retirement, inactivity and pose identity still match.",
+      "first_import_scope": "Legacy schema61 fixture upgraded by codec then normal loader; supplied native authority preserved except absent movement/blend caches. Generic projection/default/content normalization is not claimed byte-exact. Second recovery load is wholly exact.",
+      "library_identity_scope": "Executable, mapped MyGUI and actual environment identified per process.",
+      "binary": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+        "sha256": "fb2542910f67214a5661254d17d2f483260e674813791f2279e561a1ce4a194a",
+        "bytes": 2602594760,
+        "mtime_ns": 1792842022103673994
+      },
+      "captures_reviewed": [
+        "first/uninterrupted-after-recoil.png",
+        "second-retry-2/resumed-after-recoil.png"
+      ]
+    }
+  },
+  "interpretation": "Original5E91E0 selects a usable self magic item containing CHML, then INVI if no selected item. It consumes one word per selection even with no candidates. Original699190 initializes casting; this is not effect removal/cancellation. Current production covers two empty selections with no selected/casting item. Nonempty probe availability/primary-effect/animation are explicit boundaries, not production acceptance.",
+  "expected": {
+    "seed": 690153517,
+    "precontact_raw": [
+      752,
+      0,
+      87
+    ],
+    "precontact_state": 5741206,
+    "contact_raw": [
+      5105,
+      27056,
+      2938,
+      32501
+    ],
+    "contact_draws": 4,
+    "final_state": 4277529146
+  },
+  "sanitizer_retry_scope": "Accepted original first physical epoch1 is paired with fresh logical epoch4 in second-retry-2. Failed epochs2/3 are retained. Retry2 removes four read-only diagnostic commands, moves ordinary down-mouse aim after recovery, and declares SDL300/log600 deadlines. Same actual middle save; no contact/resource/position injection.",
+  "comparison_scope": "All eight accepted F5 binary/live snapshots and both successful whole initial recovery states match. Endpoint native values/bases/life/actions/script/controller/RNG, inventory and dropped identity match. World clocks, positions, loose trajectory and inactive first-person held sample times excluded. Legacy first fixture import normalizes generic defaults; supplied native authority preserved. Exact idle pose parity across builds and isolated stock PCM correlation are not claimed.",
+  "retained_failures": [
+    "native-start-empty-tail-oracle-01",
+    "native-start-nonempty-tail-oracle-01",
+    "native-start-empty-tail-normal-01",
+    "native-start-empty-tail-normal-02",
+    "native-start-empty-tail-normal-03",
+    "native-start-empty-tail-normal-04",
+    "native-start-empty-tail-sanitized-01",
+    "native-start-empty-tail-sanitized-02",
+    "native-start-empty-tail-sanitized-03",
+    "native-start-empty-tail-melee-runtime-02/first",
+    "native-start-empty-tail-melee-runtime-sanitized-01/second",
+    "native-start-empty-tail-melee-runtime-sanitized-01/second-retry"
+  ],
+  "remaining_S4": [
+    "Nonempty self-spell selection/casting/effect lifecycle",
+    "Normal-hit notification and related consequences",
+    "Death/raw0D/mounted/cross-controller cleanup",
+    "Remaining directional/mastery/enchanted combat effects",
+    "Complete safe interruption, input/view/device/FPS and combined restart matrix"
+  ],
+  "source_files": {
+    "apps/openmw/mwworld/worldimp.cpp": "dd3952bbb73ffeb8c50dc4757ccfc221fc1a51d10680a683aafd387dfc9a18d2",
+    "apps/openmw_tests/mwworld/testoblivionworld.cpp": "862a70f89c6a4ecb82646aaf5629720ec5da57ea70e959a1747ab16d4e43372e",
+    "apps/openmw/mwmechanics/character.cpp": "a87c492f783878c107c246b19ea0de7ef90e7eb0dad09519c4a9fa655d645e03",
+    "apps/openmw/mwmechanics/oblivioncombat.cpp": "a5b8d486749995c3c352df95c880673d5c4ef5e1e4277290db60cc4caff9d8ca",
+    "apps/openmw/mwmechanics/oblivionmelee.cpp": "35b004fef7a7f93d4c75583f3844694efcd83c2b170d53cbf06f8bf3c62d2d8b",
+    "components/esm4/combatcontroller.cpp": "b0cd8c073bc188de73bf4c925478cdf94e3fce05d3aea1f90edf1818bb615108",
+    "components/esm4/combatcontroller.hpp": "d00fa0f608bfd97db6a60b0d487bcfc5f215db8a5359770f041cfe4bce724a9c",
+    "components/esm4/runtimestate.cpp": "e4cc77a21552f7eb9fd48401f645f35df3b2b48218daf59690f6be0f82eadab6",
+    "components/esm4/runtimestate.hpp": "629754bec13dceec48206775aa542b3347039a8a972e3866300a9de1d5f5fcc0",
+    "scripts/tes4_runtime_state.py": "eddf10a920d361de8a8d88078fee7e739e7542cf03738a0b7774c0159a7aa2fa",
+    "scripts/verify_m15_controller_melee_runtime.py": "14d6e2b2e28a8483ede11e51e3f0527e17dbc08324b836d942b92bde4217e0bb",
+    "docs/oblivion/M15-COMBAT-STEALTH-CRIME.md": "2ccd716899893e4ce5dc6fd6a392935f2eadfb75ed7c4d3be560e974262994dd",
+    "docs/oblivion/M15-S4-DELIVERY-AUDIT.md": "595dda7b30614b30512242113bc1ec92e162d668d5e4b456effbe991baab452c",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_initial.json": "427e7e13c1c97b38f86810f0a7baec905a2ce8a7106877c05d8b0a0456d68e6f",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_continuation.json": "6e672e8047cef534fc7734597d67a3c0aa80a980f10aa171350d7ad98531313e",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_sanitized_initial.json": "5f80eba1c765f9a47ae2cabf7d955201553f3046daec1ff1a7ad7405447a8af8",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_sanitized_continuation.json": "ae6bf94a68c5053ae27daf8606dd5542abf3128ffe798a9a293e473ae7b72267",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_sanitized_continuation_retry.json": "19de71f4b78c72888ecc96283b44381cd403b81694cbfd07d3e384d5764cf2c0",
+    "scripts/data/oblivion_compat/oblivion_m15_start_tail_melee_sanitized_continuation_retry_2.json": "10b2f626cd5b4a88da412906a98ee2f9dea91ba14cae64c19c85f5c08c00e8f7",
+    "scripts/data/oblivion_compat/m15_start_tail_input.json": "a06794c9d6ca3c8fa526a5717d1235d54395bcf892ea3b9d0e0c206126a82f98",
+    "scripts/data/oblivion_compat/m15_start_tail_cases.json": "2fe7970ff1943f5f8f4d8cc0aee46effe60e40657620291719163d51033ea2ea",
+    "scripts/data/oblivion_compat/m15_start_tail_sanitized_input.json": "77d8b7addf07205f11d2c735b96303b3d76a7692db32cb7bb9000e7ddd7f7d79"
+  },
+  "artifacts": {
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-05/engine-build.log": "3080b39b5b5222306b4162a6678f6fb9cb3ff364318e8e27fc409c6427ae8dd9",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-05/engine-inventory.txt": "d93bb6b0a5adb9d2b02bb93064b51cf40806a6ab96a0f45702ce86650051e1e6",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-05/engine.log": "98f490f1eeb9a4df53ef55a121bc27c2e79a1ed3cc03cca8e833f7fc42c5fbca",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-05/engine.xml": "f8c9a3872bc72cfe642b792943e9b70cfb0f5890c13e18b8914d0e531aa2e0e8",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-05/verification.json": "38c6269aedbd8293c8dff6380ccabdd747b4f309c626fedd46f8b2a51c31824e",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-04/engine-build.log": "33bda10d4507f180ba75aba512920c75923349ac228fd3c4595b087fd7330aff",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-04/engine-inventory.txt": "d93bb6b0a5adb9d2b02bb93064b51cf40806a6ab96a0f45702ce86650051e1e6",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-04/engine.log": "2f9210316df3230f3e7381ca53c85828996184f7e3dc9a1c65fed30837f9a94b",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-04/engine.xml": "71708bf4084b76b62f6818d1a8ecdfccedc01b2168664171da58125fea072672",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-04/verification.json": "ea74eaba7d02687fe496d40fab96b09dca30c8dde0e27564f6c0421418a89d53",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/snapshots/save-3.omwsave": "8400ca6d84570753dad56d1014cd115bf996742a04dedc7a91d3f3f3fe955501",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/live-1-3.json": "781e7fb9f6cebdb6727b1390e9ea46ee79ea81e9fd2033af4d26b98680b6bb8e",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/snapshots/save-5.omwsave": "306fdc72e58a9830ed91eced9226f40ce9ea112bb29817a4e697d9b24f5d5765",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/live-1-5.json": "e784427f039e2c3b8344e08bdfdcfc0c513c9f8374ae7e2165099c21098cb6ed",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/snapshots/save-6.omwsave": "2c62bff378f2c0cf8c5b7095a087ae2a2e20ad66fb48a3c2ab599cab2344a3d9",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/live-1-6.json": "723ddf912ed3e48935430f8217bce564380b7cc0fbf63403e386056c40ea39e4",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/scenario.json": "8b59054fa3a609513339a783342bd00d8d4ef8bf2f3c5376303077f3e289c8fc",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/events.jsonl": "532277bb225224bd4f6a0875139079c6f05ef72341b31d6bac1fa171d9dc36a5",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/snapshots/save-3.omwsave": "221ea04c1eef4e62fa193a48d4f24f4703aa13bd34ae266b50f38b46c6a4a3b8",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/live-2-3.json": "07105392a934dce7ed9675e4ab397cde6e9c31e6345151ec7256aa37f71c4a2c",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/scenario.json": "afa89fd56aeb5b93060764234abea0d5f8b19dcb4881b44711f5ccc7e8894112",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/events.jsonl": "46917755857a8315e2f32e29959cee40820826d0766a39f65a31a6fa9ab38aed",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/loaded-libraries.json": "54c8edc91321d955ce3171c2079d3b62cc9e40e010ead93bd206163a9445ee6b",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/actual-engine-environment.json": "05cb2510dccd80fc2236bc39804fe32314a59d8319a2a3ae402418cd0fc18b28",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/process-epoch.json": "5c5fb7006094ab54c104ed921dbbc76d70530a6e4b0423c0f80cef91686708bc",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/process.log": "ecfb3f3ffd8369be0657e7c952b7646a3824dee52d6460033043817a0ab992ad",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/loaded-libraries.json": "bfd11ca82f0371f1441d0e25d8342facffc14c2c47849e5452a2dedcdc128d21",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/input-pristine.omwsave": "306fdc72e58a9830ed91eced9226f40ce9ea112bb29817a4e697d9b24f5d5765",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/actual-engine-environment.json": "b012f522a44c774d32c7a03f3776922eec442a97e262a0f32b099775a1f73b81",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/process-epoch.json": "bace0c3a67d4a58fb1a556056e367b8f2453f849066caaa0277ebaaafbb05aed",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/process.log": "495c1575677584583dca8dcc916097d4d750e1c1a8c50a3861407f73df4e8485",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/semantic-verification.json": "3f2ee7739636b30fba2b3b4c42d83c4fffe7d7995a72c8ad683594e2867f647b",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/preregistration.json": "5a62abf4b73806c6158eb080a9355bf34818b0ea2812c7e70debd12e4196ed79",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/staged-input.omwsave": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/binary-pin.json": "c73991f6562d78026274a27f98879ef587d973d2c698cfff1e5c9fa325614c88",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/manifest.json": "427e7e13c1c97b38f86810f0a7baec905a2ce8a7106877c05d8b0a0456d68e6f",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/continuation.json": "6e672e8047cef534fc7734597d67a3c0aa80a980f10aa171350d7ad98531313e",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/monitor.py": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/launcher.py": "da499cd0c3f10d30b356a9a9045b157b9357bd78cb0884a700ae779afab97ea7",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/verify.py": "14d6e2b2e28a8483ede11e51e3f0527e17dbc08324b836d942b92bde4217e0bb",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/snapshot-index.json": "f784b114e11239cc7bd0e99334a5b9a8b5faa15c7b3b6826a968d4fb44eeb24a",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/launcher.json": "dc969a2a647141d0f557bf4817bc37ab44ae7ae651d21a72c5a28304b938b8e3",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/uninterrupted-after-recoil.png": "0592dce02d39904a85e0388ca0ac95759f5a5cb2bdb59758fc7ccdcea3cf127a",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/snapshot-index.json": "65735518b3e1c252cd53fff1a992bc8fb73933ee8d85bf4704f127a11782cd80",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/launcher.json": "31fff5bc897a3f44cd14613db33b166a386a7f8c763910f060e0aa87c4c540d7",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/second/resumed-after-recoil.png": "98c580f59197bb552086b4d04d67ccd05c9e4e35c677aff7cb88a67ae075ad11",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/snapshots/save-3.omwsave": "e18c138bac356afcf31c0cbc1552093548e0479a28df292806efe41d2b5d7bd6",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/live-1-3.json": "5b8c31e5b65c1e98dbd4026c5ba5c0ceaa061477c3b5101d914c28c15a0d28ea",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/snapshots/save-5.omwsave": "ed69b9afc8bd19399a79f45d7dcd4ad128b060d7b64711e0673ff5bdfe1ae76a",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/live-1-5.json": "f0bcf8da5a120ab29f3def33d3baf78731e6d220e7d0fb27c047bdd1bf72c57e",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/snapshots/save-6.omwsave": "0716dbe655f7a371613bc9fe11eb42115a6b28a43b1e6d2f1200597a35022048",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/live-1-6.json": "f5cc4a75291cfb11e8732f297fe56a19ecf2cc87851e0fe9f31ce0312a2a3d6e",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/scenario.json": "945178ff2e54221ee37808a394d1f7014a11d7674f277ea4ad0e65637b208cc9",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/events.jsonl": "aa4701eb648876fee355808f4a117df273c6f66e5efece837d7cedea17b074b5",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/snapshots/save-3.omwsave": "57b0dd2700fc6c1a7dfaecb68c8719a9c8d06d96b0dc285205e7fc1ccf89c5db",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/live-4-3.json": "1871e493d9f6ace19ceb429b77e6fffc3ce53b2f369392eb8846166e8b56eac2",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/scenario.json": "2c0c720285aa082b83d436a9a9affd6bd1a1a81604e150fd4c3993746011e8eb",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/events.jsonl": "8e30cf6b29e03ec4312937034ca976435e290c4ee5d5b04a1b93c5664808dd71",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/loaded-libraries.json": "4bf2e0ba460e3c70f4c7d398a332f436f987a8aea0eb7ba380d95c0c0a52fa63",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/input-pristine.omwsave": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/actual-engine-environment.json": "ba99853870e4536031c8156aa6ef2e511ab779ce037731c1cd7a8d5642170283",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/process-epoch.json": "4466a11830ef4cfdabbd10eb25f58d3b1eb81152975feaffdb3d8a666bffbced",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/process.log": "4e4fef7870673ea3657f0aec64638d536965bc0e430aca3b37ce04d1aa7caec6",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/loaded-libraries.json": "add96bba4ef4dc8fd948e8d1fd7e79bcb2171c96d5b04273abc5beaa14f00189",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/input-pristine.omwsave": "ed69b9afc8bd19399a79f45d7dcd4ad128b060d7b64711e0673ff5bdfe1ae76a",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/actual-engine-environment.json": "015e236a76965390bbcd84d24255a0c539e6343d3df0c0f097dee567d610d5e3",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/process-epoch.json": "ae761d9c43c86014843a42b428444ba6908ebbe194118f9528f333b95d1a3798",
+    "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/process.log": "aeff8a57777237f28de3004a91e71ce3a85104f947ca5bb264e8af91ab0548ef",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/semantic-verification.json": "0fae40221a0715bbe5f429e364eb188ee20f29a7c674eee14b2df5598b3b0b13",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/preregistration.json": "77d8b7addf07205f11d2c735b96303b3d76a7692db32cb7bb9000e7ddd7f7d79",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/staged-input.omwsave": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/binary-pin.json": "0c0c568fc3b8d8822e88c1c883785686bf07a562af555cef91c78463f7dd1a40",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/manifest.json": "5f80eba1c765f9a47ae2cabf7d955201553f3046daec1ff1a7ad7405447a8af8",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/continuation.json": "ae6bf94a68c5053ae27daf8606dd5542abf3128ffe798a9a293e473ae7b72267",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/monitor.py": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/launcher.py": "bde23386557499c5fffbe19334955494393098ae00436a30f858cf8fe4045961",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/verify.py": "14d6e2b2e28a8483ede11e51e3f0527e17dbc08324b836d942b92bde4217e0bb",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/continuation-retry.json": "19de71f4b78c72888ecc96283b44381cd403b81694cbfd07d3e384d5764cf2c0",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/continuation-retry-2.json": "10b2f626cd5b4a88da412906a98ee2f9dea91ba14cae64c19c85f5c08c00e8f7",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/snapshot-index.json": "2f21f5737c66e540c281849e00b7dc65841c91e61e63ce3414f2d4290788cd54",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/launcher.json": "d4965b65cf1fb6f092c9116b6356612e31d6e33a7f37a3c462d232e335f91ad8",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/first/uninterrupted-after-recoil.png": "e693430956e65321f00edcb64b070e57080003f66e532969ba955cd83d785354",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/snapshot-index.json": "d29226615cb388b0404ed053ba7b107f0276218abaca6af06fe9dfd831d10ed1",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/launcher.json": "e4fb84346cc5db9c76b23e58951bc9cbdceef40ce56b0ed65147047720746a4c",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry-2/resumed-after-recoil.png": "5931fdac901f5a83ad0f780215f4bdd9210bfbb3655ecedb9f8d0e803a793360",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/launcher-retry.py": "a03335e17c85178fd8a7fed2260e9f5663f8f42d5641d82a6e3372c3af1a1202",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/launcher-retry-2.py": "1719ad2cc5debbee7f84c212a35e4e75f38f6cc71ac6c03027a9e3b741822c31",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/preregistration-before-retry.json": "da87cc2ea8669bf97d0d4533ba234ea2bd457226a58237f5e743187b7c3c4852",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/preregistration-before-retry-2.json": "c6d424e61ebd95eac42afcdf4614b95109cd00b171476bc2d1c52fde0274999f",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-oracle-03/probe.py": "9b1296bee2c85dc9488580a98e83a48c9c2e99cb94dbf382eeabbec5c96d16f1",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-oracle-03/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-oracle-03/corpus.json": "1b13fa38d702f3a3a5d9f04923528bbfb5823217e83701af4e5c12e8a63878f6",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-oracle-03/verification.json": "49ce3fe92dfcea5973f27c8f8e8bf3a96fcf22fd2e39e15c6613a3ee90d01966",
+    "build/oblivion-compat/m15/S4/native-start-nonempty-tail-oracle-02/probe.py": "d8456ef2ad6798a454f03989c7b5daf2519891b58ff2e05310f543880efb88ed",
+    "build/oblivion-compat/m15/S4/native-start-nonempty-tail-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-start-nonempty-tail-oracle-02/corpus.json": "b20b54c09d5af7564b1135aaff77e3a7fa64b068a172df53e9344edce7f2397d",
+    "build/oblivion-compat/m15/S4/native-start-nonempty-tail-oracle-02/verification.json": "cdc958a944865963029d23bf74d44bff67808e355873a6f1bf35719e9e2fbb62",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-crt-oracle-01/probe.py": "ff2724316e506a54d514150dc7be6f015935b3747b46bfe61005ca3c971db565",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-crt-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-crt-oracle-01/corpus.json": "11b1e3a1ea520944b13563d61898bec63d8fe2cff8b86300e8a9800c4e8ebdb7",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-crt-oracle-01/verification.json": "472f38d2f23d932732ae1ca2efcfcb218467136fe619bf094f8b231e51c4e8af",
+    "build/oblivion-compat/m15/S4/native-start-self-tail-oracle-01/probe.py": "d6243be36fd6d7c4c0c7bb1fa088e3ab69f7c167cd5460d793d667b2ef8cdfbd",
+    "build/oblivion-compat/m15/S4/native-start-self-tail-oracle-01/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-start-self-tail-oracle-01/corpus.json": "6fea250a8e4ef126a696a382cf07e54eb62f436e926dc72bf304815fda085957",
+    "build/oblivion-compat/m15/S4/native-start-self-tail-oracle-01/verification.json": "eb1ffded461445b2cfbe8c2afaca53f0eb9a0fea313d9a15955fdc93165b0962",
+    "build/oblivion-compat/m15/S4/native-controller-melee-prefix-oracle-02/original-exe.json": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c",
+    "build/oblivion-compat/m15/S4/native-controller-melee-prefix-oracle-02/probe.py": "7b852e2d26fb735b9589c1d67aaa13c48c0a07923402b18969634938d857a40f",
+    "build/oblivion-compat/m15/S4/native-controller-melee-prefix-oracle-02/corpus.json": "a23a204a1ca752ac7ad3393386add4c8b0a37beaacc0a06cafee137539cb9fe1",
+    "build/oblivion-compat/m15/S4/native-controller-melee-prefix-oracle-02/verification.json": "ac47832f41145e6b6aceb7b844b0aead32876c49e0e34ccfb018a208f578628b",
+    "build/oblivion-compat/m15/S4/native-controller-melee-block-oracle-01/probe.py": "5c3c6515232a80526e98926c6cfcabbefb8c033a925fc07ccdfe16a2632ca2ec",
+    "build/oblivion-compat/m15/S4/native-controller-melee-block-oracle-01/corpus.json": "4f3bcd8c7976975743ac4f942ccd34d680555a609686720d73ddcb54a916ea65",
+    "build/oblivion-compat/m15/S4/native-controller-melee-block-oracle-01/verification.json": "3d6731880c523fbfcd5af169ccf422c5d79e7d5c2bc2b0c4d157bb7243e0b136",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-content-02/audit.py": "ba4c5a122b77ccde33d753c291a4eaf9520198bb795274b700a211bb05d79287",
+    "build/oblivion-compat/m15/S4/native-start-tail-fixture-content-02/verification.json": "0d10438ea80f49226009610654266a298b2d3c1cbaab6bac086d41e3231ff892",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-oracle-01/failure.json": "0b5c8b2e41f32a8de27c52fb150e85502bc8b209ba0862576f0c32ad6351527d",
+    "build/oblivion-compat/m15/S4/native-start-nonempty-tail-oracle-01/failure.json": "244d2cb45f9ec0b5746c7ed0dfe6903c5c56a5f130606eef687aa2ad06c0ebaa",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-01/verification.json": "9508ea33db35563606f48f85b7e315fd24e7f411f0faea644318b43c5aa41cda",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-02/verification.json": "8534021e67df0b6b4d142ff7a9c2bfd44e0788ea1eaba11ca69723d68b7fd6b6",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-03/verification.json": "ae5f5445e82d9c81715036c95daf15018b087ed584da3b02339acc64fa2cebde",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-03/interruption.json": "141555783875464ffaa1faea426d3e98c3cbc50383c1ef05a7a83f0b6cae8779",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-normal-04/verification.json": "fcb090f1089bde22ecb6eebbe3694cee3a9be5ee40faf0358b439b9b4f59bb3e",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-01/verification.json": "a36099dedd1c52c13b67f4f1c8bec11d12ef91053af21b6bb1bd9e248bf45ebf",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-01/interruption.json": "299870316ed5f02858ad44fc3f2c6be66d231b874dc5b64f438f218786968498",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-02/verification.json": "9b6068ff95c8a96eaa80f5a49bbe3bbbe47bd0a443e3a3dc1f128f6c824f70dd",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-02/interruption.json": "f6908e741512a00738d10d8b778ff7678bfccd8528c1600654709e3b6af4e934",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-sanitized-03/verification.json": "e2153da60092d968a0f09a37081924bd492d9fed7569c6dbac5d348863a56ddf",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/activation-failure.json": "8ae47b0084a6148666abc53680a2c0242f3f7234f2b56420761ab5780a0ba922",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/scenario.json": "cc371bfc28aed799b2afce94ec737e5e5cfbba845bd2bfb2e49cf66fb124e33d",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/launcher.json": "513a58d098fdc8ea7e0edb922f163f5795881b3b4217b96d8ac15e538ab00ed9",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/monitor.log": "c8a56274380baf1fcc567c9fc020f889f66c8069779523eef7f06af43aeaa2c3",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/process-epoch.json": "e23bf04b7da72023dda4abb6b5e110a6b593e73d3d6f69ea560b140811e38d4a",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-02/first/events.jsonl": "18e2f5a5390f005e3a639541114fa81f7a65b96daddf0e3da68f3ad5b622e19c",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second/scenario.json": "132ce669d2cca8f3cbdb6b956937b5e26b4dd8edc55955632dd3e9d5f6e125a6",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second/launcher.json": "838d31d69c2350e48a363cac1a8dd3c8d0a9ad6a38b3468484f69fd11182c730",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second/monitor.log": "4347ec5f9e88af3c5f1cea0dbed7bcc2f025c89124fe01475d43c4915b67028d",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second/process-epoch.json": "ad26da3e1f71a8ec0a5ceeb8dd8972da2a22f864788c1d96b08d080a2396ddec",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second/events.jsonl": "4cb1f3af4de5a8785883a3cda1b1ffa144ad93b76ea41bc4136a5bcd512a18ee",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/activation-failure.json": "f032c8ca82f6bf636897cd6851e527f5ec7965827396ddeb79f0b4c5a6f7a368",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/scenario.json": "33661c53c48993d5528dbb4c671585aa38d44b390f86c5dabba2fc253cb51d96",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/launcher.json": "95a2687d8605e9a0b76bd47d5ba41b5ec745eddd2fa914330dda1df5ca7a8812",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/monitor.log": "991410a3a1cd9d3aebcc32c0c1b62c241114fa3b920229617403aa77943b710f",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/process-epoch.json": "d581895049f140ff6e315341005d80165ae05427ff74cca1d5cc648bf924cda1",
+    "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-sanitized-01/second-retry/events.jsonl": "e4f65986d5c0e1e464fc37373eec161e7825d5b2d5ebb0978f0858ddb1c6f463"
+  },
+  "runtime_binary_validation": "Successful course verifiers rechecked both pinned game executables after the final full target builds. The final fixture/verification-utility changes did not alter the production World source or game binaries."
+}

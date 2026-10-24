@@ -5535,9 +5535,11 @@ namespace
         EXPECT_FALSE(world.hasOblivionCombatController(keys[1]).value());
         EXPECT_EQ(ObScript::asInteger(host.call("GetCurrentAIPackage", {}, {}, context, {})), 5);
         EXPECT_EQ(ObScript::asInteger(host.call("GetCurrentAIProcedure", {}, {}, context, {})), 13);
-        const auto first = snapshot();
+        auto first = ESM4::RuntimeState::deserializeBinary(snapshot());
         host.call("startcombat", ref(keys[0]), {ref(keys[1])}, {}, {});
-        EXPECT_EQ(snapshot(), first); // Repeat is idempotent.
+        // Targets are unchanged, but the two empty spell selections run again.
+        for (unsigned i = 0; i < 2; ++i) first.mCombatRngState = first.mCombatRngState * 214013u + 2531011u;
+        EXPECT_EQ(snapshot(), first.serializeBinary());
         host.call("STARTCOMBAT", ref(keys[1]), {ref(keys[2])}, {}, {});
         EXPECT_TRUE(service.isInCombatWith(keys[1], keys[2]));
         const auto a = service.allocateAction(keys[0]);
@@ -34921,15 +34923,18 @@ TEST(OblivionWorldTest, StartCombatCreatesDirectedPackagesAndRetainsHiddenPlayer
     const auto alias = ESM::FormKey::content("Oblivion.esm", 0x14);
     MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
     const auto ref = [](const ESM::FormKey& key) -> ObScript::Value { return ObScript::ReferenceValue{key, {}}; };
-    const auto nextRandom = [](std::uint32_t seed) { return seed * 214013u + 2531011u; };
+    const auto advanceRandom = [](std::uint32_t seed, unsigned count) {
+        while (count--) seed = seed * 214013u + 2531011u;
+        return seed;
+    };
     const auto initialRandom = combat.combatRandomState();
     host.call("StartCombat", ref(owner), {ref(alias)}, {}, {});
-    EXPECT_EQ(combat.combatRandomState(), nextRandom(initialRandom));
+    EXPECT_EQ(combat.combatRandomState(), advanceRandom(initialRandom, 3));
     EXPECT_TRUE(world.hasOblivionCombatController(owner).value());
     EXPECT_FALSE(world.hasOblivionCombatController(target).value());
     EXPECT_TRUE(world.isOblivionInCombat(player).value());
     host.call("StartCombat", ref(owner), {ref(player)}, {}, {});
-    EXPECT_EQ(combat.combatRandomState(), nextRandom(initialRandom));
+    EXPECT_EQ(combat.combatRandomState(), advanceRandom(initialRandom, 5));
     host.call("StartCombat", ref(owner), {ref(target)}, {}, {});
     auto state = world.captureOblivionRuntimeState();
     ASSERT_EQ(state.mCombatControllers.at(owner).size(), 2u);
@@ -34939,7 +34944,7 @@ TEST(OblivionWorldTest, StartCombatCreatesDirectedPackagesAndRetainsHiddenPlayer
     EXPECT_EQ(state.mCombatControllers.at(owner)[1].mPriority, 200);
     host.call("StartCombat", ref(owner), {ref(target)}, {}, {});
     EXPECT_EQ(world.captureOblivionRuntimeState().mCombatControllers.at(owner)[0].mPriority, 240);
-    EXPECT_EQ(combat.combatRandomState(), nextRandom(initialRandom));
+    EXPECT_EQ(combat.combatRandomState(), advanceRandom(initialRandom, 9));
     // Player owns a hidden base package, while its +330 controller getter is null.
     for (unsigned i = 0; i < 2; ++i)
     {
@@ -34955,7 +34960,7 @@ TEST(OblivionWorldTest, StartCombatCreatesDirectedPackagesAndRetainsHiddenPlayer
         EXPECT_EQ(hidden.front().mPriority, 200);
         EXPECT_FALSE(combat.isInCombatWith(player, target));
     }
-    EXPECT_EQ(combat.combatRandomState(), nextRandom(nextRandom(nextRandom(initialRandom))));
+    EXPECT_EQ(combat.combatRandomState(), advanceRandom(initialRandom, 11));
     host.call("StopCombat", ref(owner), {}, {}, {});
     EXPECT_FALSE(world.hasOblivionCombatController(owner).value());
     EXPECT_FALSE(world.isOblivionInCombat(player).value());
@@ -34971,4 +34976,76 @@ TEST(OblivionWorldTest, StartCombatCreatesDirectedPackagesAndRetainsHiddenPlayer
     host.call("StopCombat", ref(alias), {}, {}, {});
     EXPECT_TRUE(world.hasOblivionBaseCombatPackage(player).value());
     EXPECT_EQ(combat.combatRandomState(), state.mCombatRngState);
+}
+
+TEST(OblivionWorldTest, CreatureScriptStartConsumesEmptySelectionDrawsWithoutNpcConstructorDraw)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    auto& world = fixture.mWorld;
+    auto actor = addEquipmentCreature(fixture);
+    actor = actor.getCell()->moveTo(actor, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(actor);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+    auto& combat = *world.getOblivionCombatService();
+    const std::array<MWWorld::Ptr, 1> residents{actor};
+    combat.setNonPlayerBaseValue(actor, 4, 1, residents); // Moving actors bypass the rooted distance gate.
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatRngState = 15;
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    const auto key = actor.getCellRef().getFormKey();
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, actor));
+    EXPECT_EQ(combat.combatRandomState(), 15u); // Self rejection has no controller or tail.
+    EXPECT_FALSE(world.hasOblivionCombatController(key).value());
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, world.getPlayerPtr()));
+    EXPECT_EQ(combat.combatRandomState(), 334604033u); // Native empty CHML/INVI selections.
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, world.getPlayerPtr()));
+    EXPECT_EQ(combat.combatRandomState(), 192599427u); // Existing target repeats both selections.
+    const auto targets = world.captureOblivionRuntimeState().mCombatControllers.at(key);
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, actor));
+    EXPECT_EQ(combat.combatRandomState(), 338315285u); // Existing C admits the tail even after self rejection.
+    EXPECT_EQ(world.captureOblivionRuntimeState().mCombatControllers.at(key), targets);
+    EXPECT_FALSE(combat.isInCombatWith(key, key));
+    auto life = *combat.findActorLife(key);
+    life.mPhase = ESM4::ActorLifePhase::Dead;
+    combat.publishNonPlayerLife(actor, life);
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, world.getPlayerPtr()));
+    EXPECT_EQ(combat.combatRandomState(), 338315285u); // The command's life gate precedes the tail.
+}
+
+TEST(OblivionWorldTest, RootedRejectedScriptTargetRunsExistingEmptyControllerTailWithoutEngagement)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    auto& world = fixture.mWorld;
+    auto actor = addNativeNpc(fixture, 0x900);
+    actor = actor.getCell()->moveTo(actor, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(actor);
+    auto position = actor.getRefData().getPosition();
+    position.pos[0] = 10000.f;
+    actor.getRefData().setPosition(position);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+    auto& combat = *world.getOblivionCombatService();
+    const std::array<MWWorld::Ptr, 1> residents{actor};
+    combat.setNonPlayerBaseValue(actor, 4, 0, residents);
+    const auto key = actor.getCellRef().getFormKey();
+    const auto player = ESM::FormKey::dynamic("player", 1);
+    const auto before = combat.combatRandomState();
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, world.getPlayerPtr()));
+    EXPECT_EQ(combat.combatRandomState(), before);
+    EXPECT_FALSE(world.hasOblivionCombatController(key).value());
+    auto state = world.captureOblivionRuntimeState();
+    state.mCombatRngState = 15;
+    state.mCombatControllers[key] = {};
+    readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, world.getPlayerPtr()));
+    EXPECT_TRUE(world.hasOblivionCombatController(key).value());
+    EXPECT_TRUE(world.captureOblivionRuntimeState().mCombatControllers.at(key).empty());
+    EXPECT_FALSE(combat.isInCombatWith(key, player));
+    EXPECT_FALSE(world.isOblivionInCombat(player).value());
+    EXPECT_EQ(combat.combatRandomState(), 334604033u);
 }

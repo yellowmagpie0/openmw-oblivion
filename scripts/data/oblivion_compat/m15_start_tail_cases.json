@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "scope": "Editable expected observations for the script StartCombat self-spell selection tail; native probes identify every boundary. Production covers the empty/no-selected-item branch. Nonempty selection/casting lifecycle remains open.",
+  "native_probes": {
+    "empty_tail": {
+      "cases": 144,
+      "corpus_sha256": "1b13fa38d702f3a3a5d9f04923528bbfb5823217e83701af4e5c12e8a63878f6"
+    },
+    "nonempty_tail": {
+      "cases": 48,
+      "corpus_sha256": "b20b54c09d5af7564b1135aaff77e3a7fa64b068a172df53e9344edce7f2397d"
+    },
+    "fixture_crt": {
+      "cases": 14,
+      "corpus_sha256": "11b1e3a1ea520944b13563d61898bec63d8fe2cff8b86300e8a9800c4e8ebdb7"
+    },
+    "existing_controller_self": {
+      "cases": 8,
+      "corpus_sha256": "6fea250a8e4ef126a696a382cf07e54eb62f436e926dc72bf304815fda085957"
+    }
+  },
+  "cases": [
+    {
+      "visible_controller": false,
+      "selection_draws": 0
+    },
+    {
+      "actor": "Player",
+      "hidden_package": true,
+      "visible_controller": false,
+      "selection_draws": 0
+    },
+    {
+      "visible_controller": true,
+      "selected_item": null,
+      "matching_spells": [],
+      "selection_order": [
+        "CHML",
+        "INVI"
+      ],
+      "selection_draws": 2
+    },
+    {
+      "visible_controller": true,
+      "selected_item": "existing",
+      "matching_spells": [],
+      "selection_order": [
+        "CHML"
+      ],
+      "selection_draws": 1,
+      "casting_initialization_call": true
+    },
+    {
+      "visible_controller": true,
+      "selected_item": null,
+      "usable_self_spell": "CHML",
+      "selection_order": [
+        "CHML"
+      ],
+      "selection_draws": 1,
+      "selected_slot": "process+148",
+      "casting_slot": "process+144",
+      "casting_target_slot": "process+178"
+    },
+    {
+      "visible_controller": true,
+      "selected_item": null,
+      "usable_self_spell": "INVI",
+      "selection_order": [
+        "CHML",
+        "INVI"
+      ],
+      "selection_draws": 2
+    },
+    {
+      "visible_controller": true,
+      "self_target_rejected": true,
+      "selected_item": null,
+      "matching_spells": [],
+      "selection_draws": 2,
+      "target_list_changes": false
+    },
+    {
+      "visible_controller": true,
+      "rooted_target_out_of_reach": true,
+      "selected_item": null,
+      "matching_spells": [],
+      "selection_draws": 2,
+      "engagement_added": false
+    }
+  ],
+  "fixture_rng": {
+    "seed": 690153517,
+    "precontact_raw": [
+      752,
+      0,
+      87
+    ],
+    "precontact_state": 5741206,
+    "contact_raw": [
+      5105,
+      27056,
+      2938,
+      32501
+    ],
+    "contact_draws": 4,
+    "final_state": 4277529146
+  },
+  "interpretation_correction": "5E91E0 selects a usable self spell containing the requested effect; it does not remove effects. 699190 initializes casting; it is not a cancellation path. Nonempty probes bound availability, primary-effect resolution and casting animation; production nonempty behavior is not implemented."
+}

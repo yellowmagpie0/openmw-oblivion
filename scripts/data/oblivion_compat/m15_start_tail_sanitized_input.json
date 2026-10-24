@@ -1,0 +1,84 @@
+{
+  "scope": "ASan/UBSan rendered normal-input repetition. Normal-input Space activation invokes authored StartCombat; held Player block receives one production NPC contact. Actual F5 during recovery, natural uninterrupted recovery, fresh-process recovery without replay. Initial imported schema61 upgraded by codec; no initial controller, no contact/outcome injection.",
+  "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-controller-melee-runtime-03/staged-input.omwsave",
+  "source_sha256": "f653d0b710edbf14ed695543eb771ecbd44abfa3e02cbc040cd3d5ab1b4f99e0",
+  "source_schema": 69,
+  "runtime_schema": 69,
+  "input_sha256": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
+  "expected_contacts_per_epoch": [
+    1,
+    0
+  ],
+  "expected_constructor_draws": 1,
+  "expected_rng_before_contact": 5741206,
+  "expected_contact_draws": 4,
+  "expected_rng_after_contact": 4277529146,
+  "expected_initial_controller": {},
+  "expected_mid_controller": {
+    "content:oblivion.esm:01fc43": [
+      {
+        "target": "dynamic:player:0000000000000001",
+        "priority": 200,
+        "marker": 1,
+        "value_0c": 0.0,
+        "value_10": 0.0
+      }
+    ]
+  },
+  "expected_final_controller": {},
+  "previous_ordinary_hit_phase_evidence": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/semantic-verification.json",
+  "expected": "Constructor raw752 followed by two empty selection raw0/87. Precontact state5741206; original contact raw5105/27056/2938/32501 unchanged: four contact draws, no speech, Counter38miss, Master1disarm, one worn sword drop and active Recoil/BlockHit. Seven total draws fromseed690153517 to4277529146. Fresh recovery no replay.",
+  "full_M15S4_acceptance": false,
+  "expected_prefix_draws": 2,
+  "expected_speech_requested": false,
+  "expected_counter_percentile": 38,
+  "expected_master_disarm_percentile": 1,
+  "native_expectation_evidence": [
+    "native-controller-melee-crt-oracle-01",
+    "native-controller-melee-prefix-oracle-02",
+    "native-controller-melee-block-oracle-01",
+    "native-start-empty-tail-oracle-03",
+    "native-start-nonempty-tail-oracle-02",
+    "native-start-tail-fixture-crt-oracle-01",
+    "native-start-tail-fixture-spells-01",
+    "native-start-self-tail-oracle-01",
+    "native-start-tail-fixture-content-02"
+  ],
+  "prior_pilot": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-01",
+  "retained_expected_budget_failure": "build/oblivion-compat/m15/S4/native-controller-melee-runtime-01/budget-failure-01.json",
+  "sanitizer_options": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "continuation_view_adjustment": {
+    "mouse_delta": [
+      0,
+      80
+    ],
+    "timing": "after focus before block key",
+    "reason": "Mid-save Player stands on dropped sword, z-77 rather than floor-109. Downward normal mouse aim restores the normal activation ray. Diagnostic activation-review-01 stopped after recovery without another contact."
+  },
+  "comparison_excludes": [
+    "world scheduling and native clocks",
+    "Player/NPC reference position including intended pitch change",
+    "loose weapon trajectory/root local"
+  ],
+  "expected_initial_rng": 690153517,
+  "expected_precontact_draws": 3,
+  "expected_selection_draws": 2,
+  "source_changes": [
+    "combat_rng_state only (15 ->690153517)"
+  ],
+  "seed_selection_reason": "Fixture seed chosen before execution so three native precontact draws (constructor plus empty CHML/INVI selections) reach5741206. Existing independently verified contact raw words and disarm/recovery cross remain unchanged; no production RNG or outcome override.",
+  "mapped_libraries_required": true,
+  "continuation_directory": "second-retry-2",
+  "continuation_retry": {
+    "failed_attempt": "second",
+    "reason": "SDL mouse_move was not acknowledged within60seconds; no new contact, no F5, clean shutdown. Fresh retry of same actual middle save with SDL delivery300seconds and wait_log600seconds. Initial accepted epoch1 is reused explicitly; failed physical epoch2 retained and successful retry records logical epoch3."
+  },
+  "continuation_retry_2": {
+    "failed_attempt": "second-retry",
+    "reason": "Aim before recovery did not produce post-recovery activation. Move the same ordinary mouse0,80 after observed recovered cause2; remove four read-only acceptance commands. No position, contact or resource injection. Same actual first middle save; logical epoch4, fresh process."
+  }
+}

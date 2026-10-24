@@ -2635,8 +2635,9 @@ namespace MWWorld
         };
         const auto owner = keyOf(actor), target = keyOf(opponent);
         // The native command checks +198(false) on both actors before invoking
-        // the process. Valid self/dead/essential-unconscious requests are no-ops.
-        if (owner == target || mOblivionCombat->findActorLife(owner)->mPhase != ESM4::ActorLifePhase::Alive
+        // the process. Self rejection is later: an existing visible controller
+        // still admits the script's spell-selection tail after that rejection.
+        if (mOblivionCombat->findActorLife(owner)->mPhase != ESM4::ActorLifePhase::Alive
             || mOblivionCombat->findActorLife(target)->mPhase != ESM4::ActorLifePhase::Alive)
             return true;
         const bool player = actor == getPlayerPtr();
@@ -2645,7 +2646,7 @@ namespace MWWorld
                 ? mOblivionRuntimeState->mCombatControllers.at(owner) : std::vector<ESM4::CombatControllerTarget>{});
         const auto priority = targets.nextScriptPriority();
         const bool existing = targets.contains(target);
-        bool admitted = true;
+        bool admitted = owner != target;
         if (!existing)
         {
             if (actor.getType() == ESM::REC_CREA4 && mOblivionAi)
@@ -2717,8 +2718,20 @@ namespace MWWorld
             std::vector<ESM4::CombatControllerTarget>(targets.entries().begin(), targets.entries().end()));
         // Finish all allocations before publishing. Keep the combat service's
         // address and any active contact-continuation leases intact.
-        if (!player && !existing) mOblivionCombat->engage(owner, target);
+        if (!player && admitted && !existing) mOblivionCombat->engage(owner, target);
         if (player || (!current && actor.getType() == ESM::REC_NPC_4)) mOblivionCombat->drawNativeRandom();
+        // Script tail 5148E2 queries the visible +330 controller, so hidden
+        // Player packages skip it. In the current no-active-magic-item domain,
+        // both CHML and INVI selections execute 5E91E0. Each consumes a random
+        // word even when there are no matching spells. Existing targets and
+        // allocated-empty controllers still execute this tail. Nonempty spell
+        // selection and casting initialization require their own lifecycle owner;
+        // these draws do not stand in for those unimplemented consequences.
+        if (!player)
+        {
+            mOblivionCombat->drawNativeRandom();
+            mOblivionCombat->drawNativeRandom();
+        }
         if (initial) mOblivionRuntimeState.swap(initial);
         mOblivionRuntimeState->mCombatControllers.swap(controllers);
         return true;

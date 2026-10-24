@@ -6,6 +6,70 @@ started on 2026-09-19 at `72515455b345ef8700a3c8ebf10feef89db737d1`, with a clea
 worktree on `master`. Only the bounded slices described below are verified;
 full M15 gameplay acceptance remains outstanding.
 
+## S4 script self-spell selection tail and empty-selection RNG — 2026-10-24
+
+Script StartCombat now consumes the two native selection draws in the supported
+empty/no-selected-magic-item branch. A visible NPC/Creature controller first
+selects a usable self spell containing CHML, then tries INVI if no item was
+selected. Each selection consumes one random word even with no candidates.
+Player's hidden package is invisible through +330 and skips this tail. Repeated
+targets and an existing empty controller still run it. Self rejection now occurs
+after the command life gate, so an existing controller also runs the tail for a
+self-target request. A rejected rooted target no longer acquires an engagement
+edge; the existing controller still incurs selection draws.
+
+The earlier “removal/cancellation” interpretation was wrong. Original 5E91E0
+selects a magic item, and 699190 initializes casting. The nonempty probe observes
+actual selected/casting item and target setters plus a casting animation request.
+Availability, primary-effect resolution and animation are explicit boundaries.
+**Production nonempty selection, casting and effect lifecycle remain open.**
+The new native evidence passes 144 empty-tail, 48 bounded nonempty, 14 fixture
+CRT and 8 existing-controller self-target cases. A winning-record audit confirms
+that the course actor/race spells contain no CHML/INVI, and its inventory has
+only two unenchanted clothing records and an unenchanted sword.
+
+Both full engine inventories pass **1,909 tests**, normally and under ASan/UBSan,
+with exact inventory agreement and no skips. Leak detection is disabled. Tested
+source fingerprint: `f636f9f2211c93848a09aa2e373f87e4b219932a62c79ad0b91177499fb71068`.
+Unchanged component/Python implementation retains the preceding producer
+checkpoint's coverage; those suites were not rerun for this World adapter change.
+Failed fixture, compilation and deliberately interrupted attempts are retained.
+
+Four accepted rendered processes verify the actual controller -> contact ->
+blocked hit -> disarm -> active-recovery F5 -> fresh recovery route in both
+builds. The fixture seed 690153517 was declared before execution to align three
+precontact words (constructor752, selections0/87) with the previously verified
+contact words5105/27056/2938/32501. Seven total draws end at4277529146. This
+preserves Counter38 miss, Master1 disarm, Player Health damage
+1.009374976158142, zero Player block Fatigue cost and sword condition
+55.70000076293945. No contact, resource, position or outcome is injected.
+
+All eight accepted F5 binary/live states match, and successful fresh recovery
+loads restore complete logical state exactly. Recovered actor values, life,
+actions, script/controller state, inventories, drop identity and RNG match
+uninterrupted continuation without another contact or constructor. Clocks,
+positions, loose trajectory and inactive first-person held-block sample times
+remain outside endpoint comparison. Both actors finish at process action-1,
+with no active strike/reaction/held block. All four accepted captures were
+inspected and mapped MyGUI libraries and actual sanitizer environments recorded.
+Exact idle pose parity across builds is not claimed.
+
+Retained attempts include a normal activation miss and two sanitizer reload
+failures: a 60-second SDL delivery timeout, then an activation miss after later
+legitimate contacts. The successful sanitizer continuation is explicitly a fresh
+logical epoch4 paired with the original accepted epoch1; failed epochs2/3 remain
+intact. It removes four read-only diagnostic commands, uses longer declared
+input/log deadlines and aims down after natural recovery before Space. The
+normal uninterrupted course also declares that view adjustment. The same actual
+middle save is used. These are harness/input changes, not gameplay overrides.
+
+**Full M15S4 remains incomplete.** Nonempty casting, normal-hit notification,
+death/upper-package/mounted/group cleanup and the remaining directional,
+mastery/effect, interruption and input/view/FPS matrix remain open. See
+[the receipt](M15-START-TAIL-VERIFICATION.json),
+[editable cases](../../scripts/data/oblivion_compat/m15_start_tail_cases.json) and
+[input recipe](../../scripts/data/oblivion_compat/m15_start_tail_input.json).
+
 ## S4 normal melee after script package creation — 2026-10-24
 
 Four real processes, two per build, verify a production NPC attack against held
@@ -96,7 +160,7 @@ cases. An additional 480 constructor probes cover nonempty actor/race SpellItem
 lists and both accepted/rejected cast availability, with empty effect lists and
 resource models. General nonempty effect/resource/inventory paths remain open.
 
-Full S4 remains incomplete. StartCombat CHML/INVI and casting cancellation,
+Full S4 remains incomplete. StartCombat nonempty CHML/INVI selection and casting initialization,
 normal-hit notification, death/upper-package/mounted/group cleanup, the remaining normal-input
 attack/block and in-flight restart matrix, and the remaining
 input/view/FPS/mastery/effect matrix still require implementation or acceptance.

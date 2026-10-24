@@ -10,14 +10,21 @@ def equal(a,b):
     if isinstance(a,list) and isinstance(b,list):return len(a)==len(b) and all(equal(x,y) for x,y in zip(a,b))
     if isinstance(a,float) or isinstance(b,float):return type(a) in (float,int) and type(b) in (float,int) and a==b and struct.pack('<d',a)==struct.pack('<d',b)
     return type(a)==type(b) and a==b
-recipe=read(b/'preregistration.json');initial=load_save(b/'staged-input.omwsave')
-check_initial=initial['schema_version']==69 and initial['combat_controllers']=={} and initial['combat_rng_state']==15
+recipe=read(b/'preregistration.json');phase_paths={'first':b/'first','second':b/recipe.get('continuation_directory','second')};initial=load_save(b/'staged-input.omwsave')
+check_initial=initial['schema_version']==69 and initial['combat_controllers']=={} and initial['combat_rng_state']==recipe.get('expected_initial_rng',15)
 assert check_initial and sha(b/'staged-input.omwsave')==recipe['input_sha256']
+if 'expected_precontact_draws' in recipe:
+    original=load_save(Path(recipe['source']))
+    original['combat_rng_state']=recipe['expected_initial_rng']
+    assert equal(initial,original), 'only preregistered fixture seed changes'
+    precontact=initial['combat_rng_state']
+    for _ in range(recipe['expected_precontact_draws']):precontact=(precontact*214013+2531011)&0xffffffff
+    assert precontact==recipe['expected_rng_before_contact']
 def check(condition, message):
     if not condition:raise AssertionError(message)
 phases={};states={};pins={};epochs={}
 for name in ('first','second'):
-    out=b/name
+    out=phase_paths[name]
     check(read(out/'scenario.json')['passed'],name+' scenario failed')
     check(read(out/'launcher.json')['scenario_returncode']==0,name+' launcher failed')
     epochs[name]=read(out/'process-epoch.json')
@@ -41,13 +48,14 @@ check(p['blocked_dispatch'] and not p['counter_selected'] and not p['counter_pre
 check(not p['speech_requested'],'native prefix must skip speech request')
 check(p['draws']==recipe['expected_contact_draws']==4 and p['prefix_draws']==2,'native four-draw hit budget')
 check(p['rng_before']==recipe['expected_rng_before_contact']==5741206 and p['rng_after']==recipe['expected_rng_after_contact']==4277529146,'constructor and phased-hit RNG')
-check(states['first'][0]['combat_controllers']=={} and states['first'][0]['combat_rng_state']==15,'baseline before authored StartCombat')
+check(states['first'][0]['combat_controllers']=={} and states['first'][0]['combat_rng_state']==recipe.get('expected_initial_rng',15),'baseline before authored StartCombat')
 cursor=p['rng_before']
 for _ in range(p['draws']):cursor=(cursor*214013+2531011)&0xffffffff
 check(cursor==p['rng_after'],'independent CRT draw count')
 middle=states['first'][-2];f=states['first'][-1];z=states['second'][-1]
-check(equal(middle,load_save(b/'second/input-pristine.omwsave')),'fresh process source')
-check(equal(middle,read(b/'second/live-2-2.json')),'exact initial restoration')
+check(equal(middle,load_save(phase_paths['second']/'input-pristine.omwsave')),'fresh process source')
+load_event=next(json.loads(line) for line in (phase_paths['second']/'events.jsonl').read_text().splitlines() if json.loads(line)['event']=='load-complete')
+check(equal(middle,read(phase_paths['second']/load_event['live'])),'exact initial restoration')
 check(middle['physical_actions']=={'next':3,'pending':[]},'consumed single cause')
 check(f['physical_actions']==z['physical_actions']=={'next':4,'pending':[]},'next intent cancelled by StopCombat')
 for state in (middle,f,z):
@@ -100,7 +108,7 @@ for a,c in zip(f['native_loose_weapons'],z['native_loose_weapons']):
 check((epochs['first']['pid'],epochs['first']['start_ticks'])!=(epochs['second']['pid'],epochs['second']['start_ticks']),'fresh epoch')
 check(epochs['first']['executable_sha256']==epochs['second']['executable_sha256']==read(b/'binary-pin.json')['sha256'],'same binary')
 for phase,expected_state in [('first',initial),('second',middle)]:
-    out=b/phase;events=[json.loads(line) for line in (out/'events.jsonl').read_text().splitlines()]
+    out=phase_paths[phase];events=[json.loads(line) for line in (out/'events.jsonl').read_text().splitlines()]
     loads=[e for e in events if e['event']=='load-complete'];check(len(loads)==1,'one actual load per process')
     restored=read(out/loads[0]['live'])
     if phase=='second':check(equal(restored,expected_state),'full fresh recovery initial logical state')
@@ -109,6 +117,10 @@ for phase,expected_state in [('first',initial),('second',middle)]:
             if (key.startswith('native_') and key not in ('native_movement','native_physical_blend_time_cache')) or key in ('physical_actions','physical_action_owners','combat_rng_state','combat_controllers'):
                 check(equal(restored[key],expected_state[key]),'legacy import preserves supplied authority '+key)
     check(sum('startcombat actor=content:oblivion.esm:01fc43' in line for line in (out/'process.log').read_text().splitlines())==(1 if phase=='first' else 0),'no repeated constructor after load')
+    if recipe.get('mapped_libraries_required',False):
+        libs=read(out/'loaded-libraries.json');check(len(libs['libraries'])==1 and libs['pid']==epochs[phase]['pid'],'mapped MyGUI identity')
+        for path,v in libs['libraries'].items():check(sha(path)==v['sha256'],'mapped MyGUI hash')
+        pins[str(out/'loaded-libraries.json')]=sha(out/'loaded-libraries.json')
     if 'sanitizer_options' in recipe:
         env=read(out/'actual-engine-environment.json')
         for k,v in recipe['sanitizer_options'].items():check((env[k].split(':')[0]==v if k=='LD_PRELOAD' else env[k]==v),'actual sanitizer options')
@@ -117,4 +129,8 @@ for phase,expected_state in [('first',initial),('second',middle)]:
 check(sha(recipe['source'])==recipe['source_sha256'],'source preserved')
 check(sha(read(b/'binary-pin.json')['path'])==read(b/'binary-pin.json')['sha256'],'runtime binary preserved')
 r={'passed':True,'scope':'One normal contact after authored StartCombat creates current controller; exact binary/live serialization and fresh restoration; logical actor recovery, complete target inventory and loose-item identity. World clock/AI scheduling, actor float Z, loose trajectory and inactive first-person held-block sample times are not compared. Inactive held-block group, retirement, inactivity and pose identity still match.','phase':p,'runtime_schema':69,'controller_in_recovery':middle['combat_controllers'],'constructor_draws':1,'native_oracles':recipe['native_expectation_evidence'],'compared_final_fields':compared,'first_snapshot_count':len(states['first']),'second_snapshot_count':len(states['second']),'physical_actions':f['physical_actions'],'drop_count':len(f['native_loose_weapons']),'epochs':epochs,'pins':pins,'library_identity_scope':'Executable pinned in each actual process; this course monitor did not capture mapped library identities. Prior producer course library evidence is separate.','first_import_scope':'Legacy schema61 fixture upgraded by codec then normal loader; supplied native authority preserved except absent movement/blend caches. Generic projection/default/content normalization is not claimed byte-exact. Second recovery load is wholly exact.','full_M15S4_acceptance':False}
+r['continuation_directory']=recipe.get('continuation_directory','second')
+r['selection_draws']=recipe.get('expected_selection_draws',0)
+r['precontact_draws']=recipe.get('expected_precontact_draws',1)
+if recipe.get('mapped_libraries_required',False):r['library_identity_scope']='Executable, mapped MyGUI and actual environment identified per process.'
 (b/'semantic-verification.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({k:r[k] for k in ('passed','phase','drop_count','physical_actions')}))
