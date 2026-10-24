@@ -35224,3 +35224,52 @@ TEST(OblivionWorldTest, EnemyHitDoesNotAllocateAnAbsentFriendHitOwner)
     ASSERT_TRUE(world.commitOblivionPlayerNpcHit(id, player, npc, hit));
     EXPECT_FALSE(world.captureOblivionRuntimeState().mFriendHitCounters.contains(owner));
 }
+
+
+TEST(OblivionWorldTest, MeleeParalysis70CaptureApplyPreservesOwnershipWithoutReplayingModifiers)
+{
+    NativeWorldFixture fixture;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    auto& world = fixture.mWorld;
+    auto npc = addNativeNpc(fixture, 0x900);
+    npc = npc.getCell()->moveTo(npc, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    const auto npcKey = npc.getCellRef().getFormKey();
+    auto state = world.captureOblivionRuntimeState();
+    const auto player = state.mPlayer.mReference;
+    state.mPhysicalActions.mNext = 4;
+    auto actor = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+        [&](const auto& value) { return value.mActor == player; });
+    ASSERT_NE(actor, state.mNativeActorValues.end());
+    actor->mValues[48].mModifiers[0] = 1.f;
+    actor->mMeleeParalysis = {{1, {10, 0, false, true, false}},
+        {2, {10, 2, true, false, false}}, {3, {10, 10, true, true, true}}};
+    const auto expected = *actor;
+    auto victim = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+        [&](const auto& value) { return value.mActor == npcKey; });
+    ASSERT_NE(victim, state.mNativeActorValues.end());
+    victim->mValues[48].mModifiers[0].reset();
+    victim->mMeleeParalysis = {{1, {10, 10, true, true, true}}};
+    const auto npcExpected = *victim;
+    for (int reload = 0; reload < 2; ++reload)
+    {
+        readNativeSnapshot(fixture, ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+        ASSERT_NO_THROW(world.applyOblivionRuntimeState());
+        state = world.captureOblivionRuntimeState();
+        const auto restored = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+            [&](const auto& value) { return value.mActor == player; });
+        ASSERT_NE(restored, state.mNativeActorValues.end());
+        EXPECT_EQ(restored->mMeleeParalysis, expected.mMeleeParalysis);
+        EXPECT_EQ(restored->mValues[48], expected.mValues[48]);
+        const auto npcRestored = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+            [&](const auto& value) { return value.mActor == npcKey; });
+        ASSERT_NE(npcRestored, state.mNativeActorValues.end());
+        EXPECT_EQ(npcRestored->mMeleeParalysis, npcExpected.mMeleeParalysis);
+        EXPECT_EQ(npcRestored->mValues[48], npcExpected.mValues[48]);
+        auto legacy = state;
+        legacy.mVersion = 69;
+        EXPECT_THROW(world.getOblivionCombatService()->capture(legacy), std::invalid_argument);
+    }
+}

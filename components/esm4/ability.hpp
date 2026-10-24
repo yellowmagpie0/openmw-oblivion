@@ -36,6 +36,31 @@ namespace ESM4
     // rounding, including cancellation to zero below100. No RNG is consumed.
     float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance);
 
+    // Narrow owned lifecycle for the verified recoverable, NoMagnitude PARA
+    // effect. Actor preparation, modifier writes and collection ownership stay
+    // with the caller; restoring this state must not replay application.
+    struct CombatParalysisState
+    {
+        float mDuration = 0;
+        float mElapsed = 0;
+        bool mApplied = false;
+        bool mTerminated = false;
+        bool mRemoved = false;
+        void validate() const;
+        friend bool operator==(const CombatParalysisState&, const CombatParalysisState&) = default;
+    };
+    struct CombatParalysisUpdate
+    {
+        CombatParalysisState mState;
+        // Apply: actor preparation then temporary AV48 +1.
+        // Remove: Damage AV48 +0 then temporary AV48 -1, in that order.
+        // Both can occur in one update of a zero-duration effect.
+        bool mApply = false;
+        bool mRemove = false;
+    };
+    CombatParalysisUpdate updateCombatParalysis(CombatParalysisState state, float duration);
+    CombatParalysisUpdate cancelCombatParalysis(CombatParalysisState state, bool immediate);
+
     // Native ASCII comparison key, not a display label. Only the first thirty
     // name bytes are read; ignored quantities use the original 1000 sentinel.
     std::string passiveEffectComparisonKey(std::uint32_t flags, std::uint32_t school,

@@ -908,8 +908,18 @@ namespace ESM4
                     throw std::runtime_error("Duplicate TES4 passive ability ownership");
             }
         }
+        if (mMeleeParalysis.size() > sMaximumCollectionSize)
+            throw std::runtime_error("TES4 melee paralysis list exceeds the size limit");
+        std::set<std::uint64_t> paralysisCauses;
+        for (const auto& effect : mMeleeParalysis)
+        {
+            if (effect.mCauseAction == 0 || !paralysisCauses.insert(effect.mCauseAction).second)
+                throw std::runtime_error("Invalid or duplicate TES4 melee paralysis cause");
+        }
         try
         {
+            for (const auto& effect : mMeleeParalysis)
+                effect.mState.validate();
             for (const auto& value : mValues)
                 composeActorValue(value, mOwner, mProcess);
             if (mBounty && mOwner == ActorValueOwner::Player)
@@ -1636,6 +1646,13 @@ namespace ESM4
         for (const auto& actor : mNativeActorValues)
         {
             actor.validate();
+            if (mVersion < 70 && !actor.mMeleeParalysis.empty())
+                throw std::runtime_error("TES4 melee paralysis ownership requires schema70");
+            for (const auto& effect : actor.mMeleeParalysis)
+                if (effect.mCauseAction >= mPhysicalActions.mNext
+                    || std::find(mPhysicalActions.mPending.begin(), mPhysicalActions.mPending.end(),
+                        effect.mCauseAction) != mPhysicalActions.mPending.end())
+                    throw std::runtime_error("TES4 melee paralysis requires a committed contact cause");
             if (actor.mReputation && (mVersion < 46 || mPlayer.mActorValues.contains("infamy")))
                 throw std::runtime_error("Owned Player reputation requires schema46 and no legacy Infamy authority");
             if (mVersion < 44 && (actor.mBounty || actor.mPlayerInShiveringIsles))
@@ -2740,6 +2757,18 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 70)
+                {
+                    writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mMeleeParalysis.size()));
+                    for (const auto& effect : actor.mMeleeParalysis)
+                    {
+                        writer.integer(effect.mCauseAction);
+                        writer.floating(effect.mState.mDuration);
+                        writer.floating(effect.mState.mElapsed);
+                        writer.integer<std::uint8_t>(effect.mState.mApplied
+                            | (effect.mState.mTerminated << 1) | (effect.mState.mRemoved << 2));
+                    }
+                }
             }
         }
         if (mVersion >= 11)
@@ -3732,6 +3761,24 @@ namespace ESM4
                             }
                             actor.mPassiveAbilities->push_back(std::move(ability));
                         }
+                    }
+                }
+                if (result.mVersion >= 70)
+                {
+                    const auto effectCount = reader.count();
+                    for (std::uint32_t j = 0; j < effectCount; ++j)
+                    {
+                        RuntimeMeleeParalysis effect;
+                        effect.mCauseAction = reader.integer<std::uint64_t>();
+                        effect.mState.mDuration = reader.float32();
+                        effect.mState.mElapsed = reader.float32();
+                        const auto flags = reader.integer<std::uint8_t>();
+                        if (flags > 7)
+                            throw std::runtime_error("Invalid TES4 melee paralysis flags");
+                        effect.mState.mApplied = flags & 1;
+                        effect.mState.mTerminated = flags & 2;
+                        effect.mState.mRemoved = flags & 4;
+                        actor.mMeleeParalysis.push_back(effect);
                     }
                 }
                 result.mNativeActorValues.push_back(std::move(actor));
@@ -4889,6 +4936,28 @@ namespace ESM4
                         stream << *actor.mProcessAction;
                     else
                         stream << "null";
+                }
+                if (mVersion >= 70 && !actor.mMeleeParalysis.empty())
+                {
+                    stream << ",\"melee_paralysis\":[";
+                    bool firstEffect = true;
+                    const auto number = [&](float value) {
+                        if (value == 0 && std::signbit(value)) stream << "-0.0";
+                        else stream << std::setprecision(17) << value;
+                    };
+                    for (const auto& effect : actor.mMeleeParalysis)
+                    {
+                        if (!firstEffect) stream << ',';
+                        firstEffect = false;
+                        stream << "{\"cause\":" << effect.mCauseAction << ",\"duration\":";
+                        number(effect.mState.mDuration);
+                        stream << ",\"elapsed\":";
+                        number(effect.mState.mElapsed);
+                        stream << ",\"applied\":" << (effect.mState.mApplied ? "true" : "false")
+                               << ",\"terminated\":" << (effect.mState.mTerminated ? "true" : "false")
+                               << ",\"removed\":" << (effect.mState.mRemoved ? "true" : "false") << '}';
+                    }
+                    stream << ']';
                 }
                 if (mVersion >= 44)
                 {

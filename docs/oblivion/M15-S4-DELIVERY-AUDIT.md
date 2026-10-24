@@ -12964,3 +12964,57 @@ forward mastery integration and the remaining S4 gates remain open.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-PARALYSIS-CAST-VERIFICATION.json) and
 [editable cast probes](../../scripts/data/oblivion_compat/m15_paralysis_cast_native_cases.json).
+
+## Owned melee paralysis lifecycle and schema 70 persistence
+
+The shared PARA lifecycle now preserves duration, elapsed time, and separate
+applied/terminated/removed flags. A positive first frame applies once and advances
+in that frame; elapsed clamps to duration, equality expires, and zero-duration
+effects apply/remove together. Zero or negative frames do not start or advance
+an effect. Immediate and deferred cancellation preserve native once-only cleanup,
+including cancellation before application. The pure helper returns modifier intent;
+live effect admission and owner updates are not wired by this checkpoint.
+
+Schema 70 stores ordered actor-owned effects with committed contact causes.
+Both C++ and Python reject invalid lifecycles, unknown wire flags, duplicate,
+pending or out-of-range causes, oversized counts and truncated records.
+Actor-value storage remains independent of ownership: an opposing contribution
+or native NPC zero removal can leave an absent Maximum AV48 slot while lifecycle
+flags still need preservation. Component and World tests retain that absence
+without reconstruction. Legacy saves retain their AV48 modifiers and gain no
+inferred effects. The three fixture helpers and editable recipe targets now
+admit schema 70; the full Python run caught their stale schema 69 limits.
+
+Independent original-executable evidence includes 108 timer profiles, 20,736 matching
+replacement profiles and 1,152 frame-phase profiles. The PC24 timer corpus supplies
+564 exact C++ sample comparisons. Matching-prototype cancellation stops at the
+first matching nonterminated effect in forward order. Actor virtual +0x2E4 resolves
+to 5F43E0 and carries the per-actor clock delta through 6A2280/68E670 before the
+5FAB5C life/controller/friend/resource continuation. Process, presentation and
+raw attachment/flag/global-predicate gates are exercised. Queries, modifier
+storage, presentation, ancillary data and Player menu notifications remain
+explicit boundaries; first Player apply/update produces two captured native
+menu notifications. These probes do not establish a complete actor frame or
+rendered effect behavior.
+
+Complete checks pass 3,074 normal component tests, 925 sanitized ESM4 tests,
+1,914 engine tests in each build, and 409 Python tests, with exact C++ inventories
+and no failures/skips in the accepted selections. The first full Python attempt
+failed seven fixture compatibility cases after its C++ modes passed; final
+Python evidence follows the six compatibility-only edits. Compiled C++ source
+pins remain unchanged. ASan/UBSan leak checks are disabled.
+
+Normal and instrumented populated storage courses each use two fresh process
+identities and three saved states. Initial loads and all saved binary/live
+snapshots agree exactly, preserving active, pre-cancelled and retired effect
+flags and AV48 values without replay. A third normal process loads the untouched
+schema 69 save and writes two schema 70 saves without inferring ownership.
+The five captures show the rendered dungeon, named NPC and HUD; they do not
+prove physical paralysis. All owned effects are declared injected storage
+fixtures. Their timers remain static because the gameplay updater is not yet
+connected. Runtime proc admission, expiry, matching-effect replacement, native
+modifier callbacks, physical paralysis/recovery, forward mastery contacts and
+the remaining S4 input/device/FPS/interruption/restart gates remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-PARALYSIS-STATE-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_state_cases.json).

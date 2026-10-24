@@ -208,3 +208,70 @@ TEST(ESM4AbilityInputs, ResistanceRejectsNonfiniteInputsAndUnrepresentableResult
     EXPECT_THROW(ESM4::nativeEffectResistanceMultiplier(
         -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()), std::invalid_argument);
 }
+
+TEST(ESM4AbilityInputs, ParalysisLifecycleReplaysOriginalOwnerUpdates)
+{
+    struct Step { bool reset; std::uint32_t duration, delta, elapsed, flags; bool apply, remove; };
+    static constexpr std::array<Step, 564> steps{{
+#include "paralysistimer_expected.inc"
+    }};
+    ESM4::CombatParalysisState state;
+    for (std::size_t i = 0; i < steps.size(); ++i)
+    {
+        SCOPED_TRACE(i);
+        const auto& step = steps[i];
+        if (step.reset) state = {std::bit_cast<float>(step.duration)};
+        const auto unchanged = state;
+        const auto result = ESM4::updateCombatParalysis(state, std::bit_cast<float>(step.delta));
+        EXPECT_EQ(state, unchanged);
+        EXPECT_EQ(result.mApply, step.apply);
+        EXPECT_EQ(result.mRemove, step.remove);
+        EXPECT_EQ(std::bit_cast<std::uint32_t>(result.mState.mElapsed), step.elapsed);
+        EXPECT_EQ(result.mState.mApplied, bool(step.flags & 1));
+        EXPECT_EQ(result.mState.mTerminated, bool(step.flags & 2));
+        EXPECT_EQ(result.mState.mRemoved, bool(step.flags & 4));
+        state = result.mState;
+    }
+}
+
+TEST(ESM4AbilityInputs, ParalysisCancellationPreservesNativeImmediateAndDeferredCleanup)
+{
+    for (bool applied : {false, true}) for (bool immediate : {false, true})
+    {
+        ESM4::CombatParalysisState state{10, applied ? 1.f : 0.f, applied};
+        const auto cancelled = ESM4::cancelCombatParalysis(state, immediate);
+        EXPECT_FALSE(cancelled.mApply);
+        EXPECT_EQ(cancelled.mRemove, applied && immediate);
+        EXPECT_EQ(cancelled.mState.mApplied, applied);
+        EXPECT_TRUE(cancelled.mState.mTerminated);
+        EXPECT_EQ(cancelled.mState.mRemoved, applied && immediate);
+        const auto cleanup = ESM4::updateCombatParalysis(cancelled.mState, 0);
+        EXPECT_FALSE(cleanup.mApply);
+        EXPECT_EQ(cleanup.mRemove, applied && !immediate);
+        EXPECT_EQ(cleanup.mState.mRemoved, applied);
+        const auto again = ESM4::cancelCombatParalysis(cleanup.mState, true);
+        EXPECT_FALSE(again.mApply);
+        EXPECT_FALSE(again.mRemove);
+        const auto retired = ESM4::updateCombatParalysis(again.mState, 20);
+        EXPECT_FALSE(retired.mApply);
+        EXPECT_FALSE(retired.mRemove);
+        EXPECT_EQ(retired.mState, cleanup.mState);
+    }
+}
+
+TEST(ESM4AbilityInputs, ParalysisLifecycleRejectsMalformedStateAndNonfiniteFrames)
+{
+    for (const auto& state : {ESM4::CombatParalysisState{-1}, {10, -1}, {10, 11},
+             {10, 1}, {10, 10, true}, {10, 0, false, true, true}, {10, 0, true, false, true}})
+    {
+        EXPECT_THROW(ESM4::updateCombatParalysis(state, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::cancelCombatParalysis(state, true), std::invalid_argument);
+    }
+    for (float invalid : {std::numeric_limits<float>::infinity(),
+             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN()})
+    {
+        EXPECT_THROW(ESM4::updateCombatParalysis({10}, invalid), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateCombatParalysis({invalid}, 1), std::invalid_argument);
+        EXPECT_THROW(ESM4::updateCombatParalysis({10, invalid}, 1), std::invalid_argument);
+    }
+}

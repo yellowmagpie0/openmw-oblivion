@@ -6357,6 +6357,8 @@ namespace MWMechanics
         actors.reserve(mActorValues.size());
         for (const auto& [key, actor] : mActorValues)
         {
+            if (state.mVersion < 70 && !actor.mMeleeParalysis.empty())
+                throw std::invalid_argument("native melee paralysis requires an Oblivion v70+ save");
             if (state.mVersion < 26 && actor.mProcessAction)
                 throw std::invalid_argument("native process action requires an Oblivion v26+ save");
             if (state.mVersion < 25 && actor.mProcessKnockedState)

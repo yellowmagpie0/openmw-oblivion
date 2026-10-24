@@ -17,6 +17,7 @@
 #include <components/esm/position.hpp>
 
 #include "aiphase.hpp"
+#include "ability.hpp"
 #include "actormovementstate.hpp"
 #include "actionledger.hpp"
 #include "crimecontracts.hpp"
@@ -52,7 +53,8 @@ namespace ESM4
     // v67 retains actor-owned ordered friend-hit lists, including allocated
     // empty owners, zero/wrapped counts and exact finite timer values.
     // v68 retains current base combat-controller presence and directed targets.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 69;
+    // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 70;
 
     struct RuntimeContentIdentity
     {
@@ -307,6 +309,16 @@ namespace ESM4
         friend bool operator==(const RuntimePassiveAbility&, const RuntimePassiveAbility&) = default;
     };
 
+    struct RuntimeMeleeParalysis
+    {
+        // Committed melee contact which admitted the default self-cast PARA.
+        // Caster is the receiving actor, magnitude is one and AV is48. These
+        // are resolved owned effects, not a general spell or effect format.
+        std::uint64_t mCauseAction = 0;
+        CombatParalysisState mState;
+        friend bool operator==(const RuntimeMeleeParalysis&, const RuntimeMeleeParalysis&) = default;
+    };
+
     struct RuntimeActorValues
     {
         ESM::FormKey mActor;
@@ -334,6 +346,11 @@ namespace ESM4
         // Null means unknown legacy ownership. An empty vector means known
         // no applied abilities; neither state permits guessing from AV bases.
         std::optional<std::vector<RuntimePassiveAbility>> mPassiveAbilities;
+
+        // v70: application order and lifecycle of owned melee paralysis.
+        // Earlier fork schemas never produced these effects: empty ownership
+        // does not reinterpret an existing Script/Temporary AV48 modifier.
+        std::vector<RuntimeMeleeParalysis> mMeleeParalysis;
 
         // v25: signed native High/MiddleHigh process knocked byte. Absence
         // retains unknown legacy Active-process state; Low queries return zero.

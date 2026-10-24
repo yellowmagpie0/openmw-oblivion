@@ -4,6 +4,7 @@
 #include "loadspel.hpp"
 
 #include <bit>
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <charconv>
@@ -12,6 +13,49 @@
 
 namespace ESM4
 {
+    void CombatParalysisState::validate() const
+    {
+        if (!std::isfinite(mDuration) || mDuration < 0 || !std::isfinite(mElapsed)
+            || mElapsed < 0 || mElapsed > mDuration || (!mApplied && mElapsed != 0)
+            || (mRemoved && (!mApplied || !mTerminated))
+            || (mApplied && !mTerminated && mElapsed >= mDuration))
+            throw std::invalid_argument("invalid native combat paralysis lifecycle");
+    }
+
+    CombatParalysisUpdate updateCombatParalysis(CombatParalysisState state, float duration)
+    {
+        state.validate();
+        if (!std::isfinite(duration))
+            throw std::invalid_argument("nonfinite native combat paralysis frame");
+        CombatParalysisUpdate result{state};
+        auto& next = result.mState;
+        if (duration > 0 && !next.mTerminated)
+        {
+            if (!next.mApplied)
+            {
+                next.mApplied = true;
+                result.mApply = true;
+            }
+            next.mElapsed = static_cast<float>(std::min(double(next.mDuration), double(next.mElapsed) + duration));
+            if (next.mElapsed >= next.mDuration)
+                next.mTerminated = true;
+        }
+        if (next.mApplied && next.mTerminated && !next.mRemoved)
+        {
+            next.mRemoved = true;
+            result.mRemove = true;
+        }
+        next.validate();
+        return result;
+    }
+
+    CombatParalysisUpdate cancelCombatParalysis(CombatParalysisState state, bool immediate)
+    {
+        state.validate();
+        state.mTerminated = true;
+        return immediate ? updateCombatParalysis(state, 0) : CombatParalysisUpdate{state};
+    }
+
     float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance)
     {
         if (!std::isfinite(generalResistance) || !std::isfinite(effectResistance))

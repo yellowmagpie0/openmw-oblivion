@@ -5510,3 +5510,97 @@ TEST(ESM4RuntimeState, HiddenPlayerCombatPackage69PreservesTargetsAndRejectsOlde
     state.mCombatControllers[player] = {};
     EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mCombatControllers.contains(player));
 }
+
+namespace
+{
+    ESM4::RuntimeState meleeParalysisState()
+    {
+        auto state = combatControllerState();
+        state.mVersion = 70;
+        state.mPhysicalActions.mNext = 4;
+        std::sort(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+            [](const auto& a, const auto& b) { return a.mActor < b.mActor; });
+        auto& actor = state.mNativeActorValues.front();
+        actor.mValues[48].mModifiers[0] = 1.f;
+        actor.mMeleeParalysis = {{1, {10, 0, false, true, false}},
+            {2, {10, 2, true, false, false}}, {3, {10, 10, true, true, true}}};
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, MeleeParalysis70PreservesOrderedOwnershipWithoutReplayingModifiers)
+{
+    const auto state = meleeParalysisState();
+    const auto wire = state.serializeBinary();
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded.mNativeActorValues, state.mNativeActorValues);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+    // An independently opposing Maximum contribution can cancel an applied
+    // effect to zero. Native NPC sparse storage removes that slot; ownership
+    // must survive independently, including after normal effect removal.
+    auto sparse = state;
+    auto& value = sparse.mNativeActorValues.front().mValues[48];
+    value.mModifiers[0] = -1.f;
+    value = ESM4::changeActorValueModifier(value, ESM4::ActorValueOwner::NonPlayer, 48,
+        ESM4::ActorValueModifier::Maximum, 1.f);
+    ASSERT_FALSE(value.mModifiers[0]);
+    const auto restored = ESM4::RuntimeState::deserializeBinary(sparse.serializeBinary());
+    EXPECT_EQ(restored.mNativeActorValues, sparse.mNativeActorValues);
+    auto legacy = state;
+    legacy.mVersion = 69;
+    EXPECT_THROW(legacy.serializeBinary(), std::runtime_error);
+    legacy.mNativeActorValues.front().mMeleeParalysis.clear();
+    const auto migrated = ESM4::RuntimeState::deserializeBinary(legacy.serializeBinary());
+    EXPECT_TRUE(migrated.mNativeActorValues.front().mMeleeParalysis.empty());
+    EXPECT_EQ(migrated.mNativeActorValues.front().mValues[48], legacy.mNativeActorValues.front().mValues[48]);
+}
+
+TEST(ESM4RuntimeState, MeleeParalysis70HasLiteralWireAndRejectsCorruptFlagsCountAndTruncation)
+{
+    auto state = meleeParalysisState();
+    auto& effects = state.mNativeActorValues.front().mMeleeParalysis;
+    effects = {{0x1122334455667788ull, {10, 2, true, false, false}}};
+    state.mPhysicalActions.mNext = effects.front().mCauseAction + 1;
+    const auto wire = state.serializeBinary();
+    const std::vector<std::uint8_t> tuple{0x88,0x77,0x66,0x55,0x44,0x33,0x22,0x11,
+        0,0,0x20,0x41, 0,0,0,0x40, 1};
+    const auto found = std::search(wire.begin(), wire.end(), tuple.begin(), tuple.end());
+    ASSERT_NE(found, wire.end());
+    const auto offset = found - wire.begin();
+    ASSERT_GE(offset, 4);
+    for (const auto flags : {4, 8, 255})
+    {
+        auto corrupt = wire;
+        corrupt[offset + 16] = flags;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    }
+    auto corrupt = wire;
+    std::fill(corrupt.begin() + offset - 4, corrupt.begin() + offset, 255);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+    corrupt.assign(wire.begin(), wire.begin() + offset + 16);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(corrupt), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, MeleeParalysis70RejectsInvalidLifecycleAndUncommittedIdentity)
+{
+    const auto state = meleeParalysisState();
+    for (const auto cause : {0ull, 3ull, 4ull})
+    {
+        auto bad = state;
+        bad.mNativeActorValues.front().mMeleeParalysis[1].mCauseAction = cause;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+    auto bad = state;
+    bad.mPhysicalActions.mPending = {2};
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    const std::array<ESM4::CombatParalysisState, 8> invalid{{{-1}, {10,-1}, {10,11}, {10,1},
+        {10,10,true}, {10,0,false,true,true}, {10,0,true,false,true},
+        {std::numeric_limits<float>::infinity()}}};
+    for (const auto& effect : invalid)
+    {
+        bad = state;
+        bad.mNativeActorValues.front().mMeleeParalysis[1].mState = effect;
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    }
+}

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 69
+CURRENT_VERSION = 70
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1016,6 +1016,26 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 low = native_float(base_value + script + damage)
                 if process == 1:
                     native_float(low + maximum)
+
+        paralysis = check_collection(actor.get("melee_paralysis", []), "melee paralysis list")
+        if version < 70 and paralysis:
+            raise RuntimeStateError("TES4 melee paralysis ownership requires version 70")
+        causes = set()
+        for effect in paralysis:
+            if not isinstance(effect, dict) or set(effect) != {
+                    "cause", "duration", "elapsed", "applied", "terminated", "removed"}:
+                raise RuntimeStateError("Invalid TES4 melee paralysis state")
+            cause = effect["cause"]
+            if type(cause) is not int or not 0 < cause < next_action or cause in seen_actions or cause in causes:
+                raise RuntimeStateError("Invalid, duplicate or uncommitted TES4 melee paralysis cause")
+            causes.add(cause)
+            duration, elapsed = native_float(effect["duration"]), native_float(effect["elapsed"])
+            applied, terminated, removed = (effect[key] for key in ("applied", "terminated", "removed"))
+            if (any(type(flag) is not bool for flag in (applied, terminated, removed))
+                    or duration < 0 or not 0 <= elapsed <= duration or (not applied and elapsed != 0)
+                    or (removed and not (applied and terminated))
+                    or (applied and not terminated and elapsed >= duration)):
+                raise RuntimeStateError("Invalid TES4 melee paralysis lifecycle")
 
         if bounty is not None and owner == 0:
             native_float(native_float(bounty["normal"]) + sum(
@@ -2402,6 +2422,17 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                 effect.append(reader.unpack("<f") if initial_present else None)
                             ability["effects"].append(effect)
                         actor["passive_abilities"].append(ability)
+            if version >= 70:
+                paralysis = []
+                for _ in range(reader.count()):
+                    cause, duration, elapsed, flags = reader.unpack("<Q"), reader.unpack("<f"), reader.unpack("<f"), reader.unpack("<B")
+                    if flags > 7:
+                        raise RuntimeStateError("Invalid TES4 melee paralysis flags")
+                    paralysis.append({"cause": cause, "duration": duration, "elapsed": elapsed,
+                                      "applied": bool(flags & 1), "terminated": bool(flags & 2),
+                                      "removed": bool(flags & 4)})
+                if paralysis:
+                    actor["melee_paralysis"] = paralysis
             result["native_actor_values"].append(actor)
     if version >= 11:
         result["native_actor_bases"] = []
@@ -3063,6 +3094,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                                 writer.pack("<B", initial_magnitude is not None)
                                 if initial_magnitude is not None:
                                     writer.pack("<f", initial_magnitude)
+            if version >= 70:
+                paralysis = actor.get("melee_paralysis", [])
+                writer.pack("<I", len(paralysis))
+                for effect in paralysis:
+                    writer.pack("<Q", effect["cause"])
+                    writer.pack("<f", effect["duration"])
+                    writer.pack("<f", effect["elapsed"])
+                    writer.pack("<B", effect["applied"] | (effect["terminated"] << 1) | (effect["removed"] << 2))
     if version >= 11:
         bases = sorted(state.get("native_actor_bases", []), key=lambda base: base["base"])
         writer.pack("<I", len(bases))
@@ -3782,6 +3821,16 @@ def _upgrade_friend_hit_counters(state: dict[str, Any]) -> None:
     state.setdefault("friend_hit_counters", {})
 
 
+def _upgrade_melee_paralysis(state: dict[str, Any]) -> None:
+    actors = state.get("native_actor_values", [])
+    if not isinstance(actors, list):
+        raise RuntimeStateError("Invalid native actor values list")
+    if state.get("schema_version", 1) < 70 and any(
+            isinstance(actor, dict) and actor.get("melee_paralysis")
+            for actor in actors):
+        raise RuntimeStateError("Legacy state cannot contain melee paralysis ownership")
+
+
 def _upgrade_combat_controllers(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 68 and state.get("combat_controllers"):
         raise RuntimeStateError("Legacy runtime schema cannot contain combat controllers")
@@ -3815,6 +3864,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_disposition_modifiers(state)
     _upgrade_friend_hit_counters(state)
     _upgrade_combat_controllers(state)
+    _upgrade_melee_paralysis(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -3902,6 +3952,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_disposition_modifiers(result)
     _upgrade_friend_hit_counters(result)
     _upgrade_combat_controllers(result)
+    _upgrade_melee_paralysis(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

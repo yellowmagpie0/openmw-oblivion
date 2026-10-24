@@ -167,6 +167,73 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "values": [[0., None, None, None] for _ in range(72)], "player_form_values": None})
         return state
 
+    @classmethod
+    def melee_paralysis_state(cls):
+        state = cls.combat_controller_state()
+        state["schema_version"] = 70
+        state["physical_actions"] = {"next": 4, "pending": []}
+        state["native_actor_values"].sort(key=lambda actor: actor["actor"])
+        actor = state["native_actor_values"][1]
+        actor["values"][48][1] = 1.
+        actor["melee_paralysis"] = [
+            dict(cause=1, duration=10., elapsed=0., applied=False, terminated=True, removed=False),
+            dict(cause=2, duration=10., elapsed=2., applied=True, terminated=False, removed=False),
+            dict(cause=3, duration=10., elapsed=10., applied=True, terminated=True, removed=True)]
+        return state
+
+    def test_melee_paralysis70_preserves_ordered_lifecycle_and_modifier(self):
+        state = self.melee_paralysis_state()
+        payload = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(payload)
+        self.assertEqual(loaded["native_actor_values"][1]["melee_paralysis"],
+                         state["native_actor_values"][1]["melee_paralysis"])
+        self.assertEqual(loaded["native_actor_values"][1]["values"], state["native_actor_values"][1]["values"])
+        self.assertEqual(state_io.encode_payload(loaded), payload)
+        state["schema_version"] = 69
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.mutate_for_acceptance(state, "legacy")
+        del state["native_actor_values"][1]["melee_paralysis"]
+        legacy = state_io.decode_payload(state_io.encode_payload(state))
+        legacy["schema_version"] = 70
+        migrated = state_io.decode_payload(state_io.encode_payload(legacy))
+        self.assertNotIn("melee_paralysis", migrated["native_actor_values"][1])
+        self.assertEqual(migrated["native_actor_values"][1]["values"][48][1], 1.)
+
+    def test_melee_paralysis70_literal_wire_and_corruption(self):
+        state = self.melee_paralysis_state()
+        effect = state["native_actor_values"][1]["melee_paralysis"][1]
+        effect["cause"] = 0x1122334455667788
+        state["physical_actions"]["next"] = effect["cause"] + 1
+        state["native_actor_values"][1]["melee_paralysis"] = [effect]
+        wire = state_io.encode_payload(state)
+        literal = struct.pack("<QffB", effect["cause"], 10., 2., 1)
+        offset = wire.index(literal)
+        for flags in (4, 8, 255):
+            bad = bytearray(wire); bad[offset + 16] = flags
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        bad = bytearray(wire); struct.pack_into("<I", bad, offset - 4, 0xffffffff)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:offset + 16])
+
+    def test_melee_paralysis70_rejects_invalid_lifecycle_and_identity(self):
+        cases = [("cause", 0), ("cause", 3), ("cause", 4), ("cause", True),
+            ("duration", -1.), ("duration", float("inf")), ("elapsed", -1.),
+            ("elapsed", 11.), ("elapsed", 10.), ("applied", False),
+            ("removed", True), ("applied", 1)]
+        for key, value in cases:
+            with self.subTest(key=key, value=value):
+                state = self.melee_paralysis_state()
+                state["native_actor_values"][1]["melee_paralysis"][1][key] = value
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.melee_paralysis_state(); state["physical_actions"]["pending"] = [2]
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        # Sparse modifier storage and effect ownership are independent.
+        state = self.melee_paralysis_state(); state["native_actor_values"][1]["values"][48][1] = None
+        loaded = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertIsNone(loaded["native_actor_values"][1]["values"][48][1])
+        self.assertEqual(loaded["native_actor_values"][1]["melee_paralysis"],
+                         state["native_actor_values"][1]["melee_paralysis"])
+
     def test_combat_controllers68_literal_wire_and_legacy_rewrite(self):
         state = self.combat_controller_state(); state["schema_version"] = 67
         legacy = state_io.encode_payload(state)
