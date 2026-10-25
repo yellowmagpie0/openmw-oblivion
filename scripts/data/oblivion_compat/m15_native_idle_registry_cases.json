@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "m15_native_idle_registry",
+  "entry": "registerNativeIdleRecords / buildOblivionNativeIdleIndex",
+  "scope": "Content-derived ordered registration index and actual ESMStore adapter. Does not start a physical reaction, resolve CTDA or play GetUp.",
+  "rules": [
+    "Replay typed single definitions in supplied order. Parent and predecessor identities must be earlier definitions in this supported profile; root model keys must be nonempty.",
+    "Live null-predecessor insertion starts at front; Deleted null-predecessor insertion appends. Found predecessor inserts after it; a known typed predecessor absent from this sibling array appends.",
+    "Store compiled parent/predecessor repair separately from authored DATA. Case-fold model bank equality while preserving raw model-key rules and separators.",
+    "Inspect full FormKey history, including same-plugin duplicates. Current adapter requires one original static definition per IDLE key and no deleted, overridden, type-changed, dynamic or unindexed definitions. Unknown loader lifecycle remains open, not inferred from final winner order."
+  ],
+  "component_native_cases": {
+    "root": 40,
+    "child_registration_prefix": 128,
+    "direct_child_index_160": "Additional original evidence only; factory has no direct index-insert API, so not counted as C++ comparisons.",
+    "fixture_mapping": "Typed predecessors outside the target array are earlier definitions in a separate bank. Native target-array input/output and live repaired links remain unchanged.",
+    "additional": [
+      "Case-folded bank merge plus selector composition",
+      "Unsupported duplicate/null/forward/unresolved-root rejection",
+      "Authored DATA unchanged"
+    ]
+  },
+  "actual_store_tests": [
+    "Real binary IDLE loading builds reversed independent roots, DATA-relative insertion and child selection",
+    "Remapped master indices and unrelated same-local-ID plugins retain separate identities",
+    "Override and same-plugin duplicate histories reject before reconstruction",
+    "Tombstone, erased typed record, dynamic replacement and unindexed static definitions reject without metadata mutation",
+    "Empty registry is valid"
+  ],
+  "installed_master": {
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "records": 650,
+    "roots": 208,
+    "children": 442,
+    "model_banks": 44,
+    "resolved_master_index": 1,
+    "comparison": [
+      "All model-bank root order",
+      "All child order",
+      "All compiled parent/predecessor links",
+      "All authored IDs,parent,previous,flags,ANAM,raw model fields against independent raw decode"
+    ],
+    "normal_sanitized_complete_index_sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+    "scope": "Production store/component source linked into a standalone read-only checker with the tested engine link configuration. Not a game session or actor/animation/physics/restart acceptance."
+  },
+  "remaining": [
+    "Verify native override/deletion/forward-reference loader lifecycle and extend supported registry history",
+    "World recovery raw actor model/CTDA context binding",
+    "Exact selected KF playback and slot5 owner/save state",
+    "Automatic physical admission/controller/FSM/GetUp, normal-input mastery and remaining full M15S4 gates"
+  ]
+}

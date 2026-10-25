@@ -1,0 +1,1127 @@
+{
+  "schema_version": 1,
+  "id": "m15_native_idle_registry",
+  "status": "Ordered single-definition registry and store-backed index verified; physical recovery and full M15S4 remain incomplete.",
+  "tested_source": {
+    "head": "2316200551bd6572707cd1644c6ab7e9111aae44",
+    "source_fingerprint": "24038585f56cbc9b7bf036705b3900b0c5104911dd33b8062086de9b2576b451"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/nativeidle.hpp",
+      "sha256": "ea85570a4d663829f5def846a8d960f62ec542cbdb308c5dd690f89f7c06256e",
+      "bytes": 2839
+    },
+    {
+      "path": "components/esm4/nativeidle.cpp",
+      "sha256": "3678c1736236950146567b7ecc280cd94aab429d6789fa7ae3f6ea2209140ef3",
+      "bytes": 8333
+    },
+    {
+      "path": "apps/components_tests/CMakeLists.txt",
+      "sha256": "ef13bf629e56a2c43c3ab4f58ac2428ae64775179c8bc289f25a0c853da62d7f",
+      "bytes": 5749
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeidleregistration.cpp",
+      "sha256": "2cf7ba4b0c4016d95a7083f4e8a98e493ed85bfe773385a200e1e16022dfdbf8",
+      "bytes": 5817
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_registration_expected.inc",
+      "sha256": "4dbf63fb14238079205a3916a8a595c9805b5ab7ca82a7db36af3ad9f503a87b",
+      "bytes": 11375
+    },
+    {
+      "path": "apps/openmw/CMakeLists.txt",
+      "sha256": "fb51ee635704d8f95a33eed5364e1c28a6ec6dcbe6f3e2520651738e587d68c1",
+      "bytes": 11634
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionnativeidle.hpp",
+      "sha256": "018268ce1d32edf5626e1046577027edbb61509a8db722f69387808823dae743",
+      "bytes": 734
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionnativeidle.cpp",
+      "sha256": "55b5cd14106af99c1269aeefe364582d6e7d3bb412bd00235cdd365eb2a2018d",
+      "bytes": 2024
+    },
+    {
+      "path": "apps/openmw_tests/CMakeLists.txt",
+      "sha256": "b8f885a6fb3e1bb7f395923290531f0c6aadc4b8601a3d836efc0bb42709e051",
+      "bytes": 3719
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionnativeidle.cpp",
+      "sha256": "8ca8865a9b0498c889b72a5d4ff80d67ba37095f19a1c185994dab1d89f1800a",
+      "bytes": 6746
+    }
+  ],
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_native_idle_registry_cases.json",
+    "sha256": "29717ca282eaa353472ff5fd645d2918712a5d530a78668d28224224671f048c",
+    "bytes": 3354
+  },
+  "checks": [
+    {
+      "name": "normal-01",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/verification.json",
+        "sha256": "b54d4fbf9b93b8b86849151f506f54593dacf82d8a598df92174c2f18963eddf",
+        "bytes": 3852
+      },
+      "results": [
+        {
+          "mode": "components",
+          "result": {
+            "executed": 3099,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "40d26fde2576950676d6881285388446465ff29b461815e8c509df2c9db295c6",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "e2f6649066ae5c758a707075d338fe4a570caa21eada8dbeac6c92d14fe0d75a",
+            "inventory_sha256": "af7be759a09d2b9b9dcd794bab28ae6ce8d2eccf9f4144e794437811e986dc26",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "files": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/components-build.log",
+              "sha256": "691d3c85724dea82ebd09dd0a4be1b2aba1b456f8875f594880f8bbeadee4722",
+              "bytes": 4999
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/components-inventory.txt",
+              "sha256": "af7be759a09d2b9b9dcd794bab28ae6ce8d2eccf9f4144e794437811e986dc26",
+              "bytes": 197287
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/components.log",
+              "sha256": "7be55fed5265b95f79cd72cff1cf0a3009ead0ebc3a37ed589c05be168eb6ada",
+              "bytes": 617084
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/components.xml",
+              "sha256": "e2f6649066ae5c758a707075d338fe4a570caa21eada8dbeac6c92d14fe0d75a",
+              "bytes": 2366198
+            }
+          ]
+        },
+        {
+          "mode": "engine",
+          "result": {
+            "executed": 1942,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "b043284b7cad215dc4f19094e5d60b80d751741c060c08d6ba6f1195c11c2a28",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "9e68ff239d1e282f7fb8c98f13376c420deae34aff822e19e61a14ddda64734a",
+            "inventory_sha256": "c0234e9cac1d551d20f6bc38a97a354301951ea987a3b16dc85df53773084d29",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "files": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/engine-build.log",
+              "sha256": "66051f8dda1161118b8063fa5321f8a2259f9f2d5896da18f51ca0015debaa2e",
+              "bytes": 1916
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/engine-inventory.txt",
+              "sha256": "c0234e9cac1d551d20f6bc38a97a354301951ea987a3b16dc85df53773084d29",
+              "bytes": 137280
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/engine.log",
+              "sha256": "fa338366710cb04a0853aa8d10c012608b8d50b289ad24429502965682e4fe83",
+              "bytes": 2397947
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-normal-01/engine.xml",
+              "sha256": "9e68ff239d1e282f7fb8c98f13376c420deae34aff822e19e61a14ddda64734a",
+              "bytes": 639168
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sanitized-01",
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/verification.json",
+        "sha256": "9f2ba2fa70c8f9b16a07594e7f8fc7dcf4c09a025c1a33a4e0206783b46c9488",
+        "bytes": 4029
+      },
+      "results": [
+        {
+          "mode": "sanitize",
+          "result": {
+            "executed": 950,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "0f2f791dad277b7af55b1c26be1f075b257814aa8afe59add46fccbe2f384634",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "2f259e494f52e55dff6eaede01afd4fdac8abb24307160d88369d663a1c57037",
+            "inventory_sha256": "aef427480eb3baa82446b002a2fb845da59d75702c19824ab1015de538a17590",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "files": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/sanitize-build.log",
+              "sha256": "8c4f33672aa2fdd61e08d1e0b4d1aeb0fde231ad8968ca0b98ce1c761b54456f",
+              "bytes": 4994
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/sanitize-inventory.txt",
+              "sha256": "aef427480eb3baa82446b002a2fb845da59d75702c19824ab1015de538a17590",
+              "bytes": 197287
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/sanitize.log",
+              "sha256": "efe01271db30816eb36123a1d2982234d83a03d9774133209c725ceafd2372ee",
+              "bytes": 177273
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/sanitize.xml",
+              "sha256": "2f259e494f52e55dff6eaede01afd4fdac8abb24307160d88369d663a1c57037",
+              "bytes": 1641960
+            }
+          ]
+        },
+        {
+          "mode": "engine",
+          "result": {
+            "executed": 1942,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "9d0981d99c162f4c1bddd9cb5d1caa04fea4ca53330e160b9372deed7637a58c",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "e570eb3bceac9bbbf07d40f3f4b63b249bc8f811860ec0f243e202f89e414819",
+            "inventory_sha256": "c0234e9cac1d551d20f6bc38a97a354301951ea987a3b16dc85df53773084d29",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "files": [
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/engine-build.log",
+              "sha256": "8a148fa56355b793b20195bc95ceb3865e822b64eafa8d839096b65e54d98478",
+              "bytes": 1916
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/engine-inventory.txt",
+              "sha256": "c0234e9cac1d551d20f6bc38a97a354301951ea987a3b16dc85df53773084d29",
+              "bytes": 137280
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/engine.log",
+              "sha256": "205aa5d0b0cbde208c20266aabca7904b29f94334f64cc3ca6232ce9ec77df96",
+              "bytes": 2398550
+            },
+            {
+              "path": "build/oblivion-compat/m15/S4/native-getup-registry-checks-sanitized-01/engine.xml",
+              "sha256": "e570eb3bceac9bbbf07d40f3f4b63b249bc8f811860ec0f243e202f89e414819",
+              "bytes": 641021
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "independent_original_and_raw_inputs": [
+    {
+      "report": {
+        "passed": true,
+        "profiles": 40,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "0c18f32aea271adfa47097ee4577505cdbc0faf3e8f1e456973142ffe3f0da94",
+        "actual_path": "root IDLE registration block520BAF..520C42, actual494E90 search/494ED0 indexing,52F3C0 insertion/memmove",
+        "boundaries": [
+          "5216A0 supplies already-resolved model bank; scalar previous/record pointers are already resolved from DATA links; no TES file reader",
+          "5A56F0 dense uniquely-owned array sharing/compaction bookkeeping bypassed, capacity16 prevents reallocation",
+          "IDLE RTTI supplies declared typed records"
+        ],
+        "finding": "Independent live root records lacking a predecessor are inserted at front, reversing their load order; a found predecessor inserts after it, a missing predecessor appends; Deleted root without predecessor appends. Previous links are rewritten around insertion.",
+        "scope": "Narrow root registration block, not complete plugin override/file loading."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/root-order-report.json",
+          "sha256": "f83e3d9013cddab5f96532bcff8b67616c2fea3284bcda9eea4fab073ba96ce4",
+          "bytes": 1024
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/root-order-corpus.json",
+          "sha256": "0c18f32aea271adfa47097ee4577505cdbc0faf3e8f1e456973142ffe3f0da94",
+          "bytes": 4524
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/root-order-probe.py",
+          "sha256": "e46484498fc6b0e14a44a8cc4328aab05284b3971d71bae86389824c3782b188",
+          "bytes": 3389
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "profiles": 288,
+        "load_prefix_cases": 128,
+        "full_insert_cases": 160,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "0d0067a02af83f3a5548ace16bc11e1f46d61d049611e1c8177910e29f6bb031",
+        "actual_paths": [
+          "520B2F..520B6D child DATA registration prefix",
+          "full520780 child insertion and actual52F3C0 insertion/memmove",
+          "actual494E90 search and494ED0 indexed lookup"
+        ],
+        "boundaries": [
+          "Parent/previous/record pointers already resolved; no TES reader or actual override/deleted loader execution",
+          "Existing dense unique array with capacity16;5A56F0 sharing/compaction bookkeeping returns at boundary",
+          "Prior supplied typed IDLE RTTI at9832E6; actual index/search/insertion/link writes execute"
+        ],
+        "boundary_calls": {
+          "dense_bookkeeping": 208
+        },
+        "findings": [
+          "Null predecessor live child inserts front; Deleted child with null predecessor appends",
+          "Found predecessor inserts after it; missing predecessor appends",
+          "Full child insertion clamps unsigned index to current count",
+          "Insertion writes child parent/predecessor and repairs successor predecessor; null child leaves storage and links unchanged"
+        ],
+        "scope": "Native child registration/insertion ordering only, not full plugin root-bank lifecycle, selection, animation, physical reaction or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/report.json",
+          "sha256": "28429e2f920f1d51eded7d7f422a6a8a5190de29192eea0ead968b9ad1859906",
+          "bytes": 1402
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/corpus.json",
+          "sha256": "0d0067a02af83f3a5548ace16bc11e1f46d61d049611e1c8177910e29f6bb031",
+          "bytes": 44427
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/probe.py",
+          "sha256": "0790451fb6a402af41d4d2949f8497bc3518eb0f8916825886912d51eba558f6",
+          "bytes": 5026
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "cases": 650,
+        "root_insertions": 208,
+        "child_insertions": 442,
+        "model_banks": 44,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "audit_records_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "corpus_sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+        "boundary_calls": {
+          "bank_resolutions": 208,
+          "dense_bookkeeping": 650
+        },
+        "actual_paths": [
+          "520B2F..520B6D registration dispatch and520BAF..520C42 root insertion",
+          "full520780 child insertion",
+          "actual494E90/494ED0 array search/index and52F3C0 insertion/memmove"
+        ],
+        "boundaries": [
+          "650 typed form identities/parent/previous/flags decoded independently from pinned master; not full native form construction or TES reader",
+          "5216A0 receives declared raw-model bank selected with reviewed native key formula; bank constructor/hash not executed here",
+          "All child/bank arrays preallocated unique dense capacity650;5A56F0 sharing/compaction bookkeeping bypassed",
+          "IDLE RTTI at9832E6 supplied typed objects; actual insertion and parent/predecessor repair executes"
+        ],
+        "scope": "Complete installed-master IDLE registration sequence normalized as ordered model banks and child lists. No duplicate/deleted/forward-linked records occur in this master. This does not establish plugin overrides/Deleted loader lifecycle, World integration, GetUp playback or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/report.json",
+          "sha256": "4c363922300e42475a4693e6b0b345059ba1a9002db6fc6de01bec6f72cf9943",
+          "bytes": 1572
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/corpus.json",
+          "sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+          "bytes": 75255
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/probe.py",
+          "sha256": "0c326f6590f8d703e249d3675a892c546ffee1ffa003ddf0f269c780b5b8c594",
+          "bytes": 6267
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "source": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "records": 650,
+        "roots": 208,
+        "children": 442,
+        "deleted": 0,
+        "duplicates": [],
+        "forward_or_missing_parent": [],
+        "forward_or_missing_previous": [],
+        "final_missing_parent": [],
+        "final_missing_previous": [],
+        "foreign_previous": [],
+        "root_model_banks": 44,
+        "empty_root_model_keys": 0,
+        "getup_records": 83,
+        "records_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "scope": "Independent raw installed-master decode in physical record order. Model-bank classification uses reviewed native path formula in Python, not running game or production C++. Does not establish original loader override/Deleted behavior."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/report.json",
+          "sha256": "e29b7e2d5d9707164d8c73a6701ff27bd27b6bed6297f5bdff53b07f6b6afe17",
+          "bytes": 857
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/records.json",
+          "sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+          "bytes": 111151
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/probe.py",
+          "sha256": "e14869f0c866a426e27363ce4eb632831150bdd01d8e59c79e65fa08bb4cad66",
+          "bytes": 3734
+        }
+      ]
+    }
+  ],
+  "actual_installed_store": [
+    {
+      "mode": "normal",
+      "report": {
+        "passed": true,
+        "mode": "normal",
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/c++",
+              "-DBOOST_CONTAINER_DYN_LINK",
+              "-DBOOST_CONTAINER_NO_LIB",
+              "-DBOOST_IOSTREAMS_DYN_LINK",
+              "-DBOOST_IOSTREAMS_NO_LIB",
+              "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+              "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+              "-DBOOST_RANDOM_DYN_LINK",
+              "-DBOOST_RANDOM_NO_LIB",
+              "-DBOOST_REGEX_DYN_LINK",
+              "-DBOOST_REGEX_NO_LIB",
+              "-DBT_USE_DOUBLE_PRECISION",
+              "-DMYGUI_DONT_USE_OBSOLETE=ON",
+              "-DOPENMW_DATA_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests/data\"",
+              "-DOPENMW_PROJECT_SOURCE_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion\"",
+              "-DRC_DISABLE_ASSERTS",
+              "-D__STDC_CONSTANT_MACROS",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/.",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DebugUtils/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Recast/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Detour/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DetourTileCache/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/extern/Base64/.",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol_config",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol3",
+              "-isystem",
+              "/usr/include/luajit-2.1",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+              "-isystem",
+              "/usr/include/AL",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3/MyGUIEngine/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock",
+              "-isystem",
+              "/usr/include/SDL2",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/osg-ffmpeg-videoplayer/include",
+              "-isystem",
+              "/usr/include/ffmpeg",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/tinyxml",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/smhasher/include",
+              "-O2",
+              "-g",
+              "-DNDEBUG",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-Wundef",
+              "-Wextra-semi",
+              "-Wno-unused-parameter",
+              "-pedantic",
+              "-Wno-long-long",
+              "-Wnon-virtual-dtor",
+              "-Wunused",
+              "-Wshadow",
+              "-Wno-unused-but-set-parameter",
+              "-Wduplicated-branches",
+              "-Wduplicated-cond",
+              "-Wlogical-op",
+              "-Wno-array-bounds",
+              "-c",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-work-01/compare-installed.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compare.o"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "log": "compile.log",
+            "returncode": 0,
+            "seconds": 3.2754387749591842
+          },
+          {
+            "argv": [
+              "/usr/bin/c++",
+              "-O2",
+              "-g",
+              "-DNDEBUG",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compare.o",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compare",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath",
+              "../../lib/libgtest.a",
+              "../../lib/libgmock.a",
+              "../openmw/libopenmw-lib.a",
+              "../../lib/libgtest.a",
+              "/usr/lib64/libopenal.so",
+              "../../extern/osg-ffmpeg-videoplayer/libosg-ffmpeg-videoplayer.a",
+              "/usr/lib64/libavcodec.so",
+              "/usr/lib64/libavformat.so",
+              "/usr/lib64/libavutil.so",
+              "/usr/lib64/libswscale.so",
+              "/usr/lib64/libswresample.so",
+              "../../extern/oics/liboics.a",
+              "../../extern/oics/liblocal_tinyxml.a",
+              "../../components/libcomponents.a",
+              "/usr/lib64/libosgParticle.so",
+              "/usr/lib64/libosgViewer.so",
+              "/usr/lib64/libosgShadow.so",
+              "/usr/lib64/libboost_program_options.so.1.90.0",
+              "/usr/lib64/libboost_container.so.1.90.0",
+              "../../_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+              "-ldl",
+              "/usr/lib64/libfreetype.so",
+              "/usr/lib64/libz.so",
+              "/usr/lib64/libSDL2-2.0.so.0.3200.74",
+              "/usr/lib64/libosgAnimation.so",
+              "/usr/lib64/libosgGA.so",
+              "/usr/lib64/libosgText.so",
+              "/usr/lib64/libosgDB.so",
+              "/usr/lib64/libosgUtil.so",
+              "/usr/lib64/libosgSim.so",
+              "/usr/lib64/libosg.so",
+              "/usr/lib64/libOpenThreads.so",
+              "/usr/lib64/libboost_iostreams.so.1.90.0",
+              "/usr/lib64/libboost_random.so.1.90.0",
+              "/usr/lib64/libboost_regex.so.1.90.0",
+              "/usr/lib64/libGL.so",
+              "/usr/lib64/libluajit-5.1.so",
+              "/usr/lib64/liblz4.so",
+              "../../_deps/recastnavigation-build/DebugUtils/libDebugUtils.a",
+              "../../_deps/recastnavigation-build/DetourTileCache/libDetourTileCache.a",
+              "../../_deps/recastnavigation-build/Detour/libDetour.a",
+              "../../_deps/recastnavigation-build/Recast/libRecast.a",
+              "/usr/lib64/libsqlite3.so",
+              "../../extern/smhasher/libsmhasher.a",
+              "/usr/lib64/libicuuc.so",
+              "/usr/lib64/libicui18n.so",
+              "/usr/lib64/libicudata.so",
+              "/usr/lib64/libz.so",
+              "/usr/lib64/libyaml-cpp.so.0.8.0",
+              "../../_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17",
+              "../../_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17",
+              "../../_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests",
+            "log": "link.log",
+            "returncode": 0,
+            "seconds": 9.794069938012399
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compare",
+              "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "log": "run.log",
+            "returncode": 0,
+            "seconds": 9.241827007033862
+          }
+        ],
+        "records": 650,
+        "banks": 44,
+        "native_corpus_sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+        "raw_corpus_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "actual_sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+        "binary_sha256": "f06abdd8a16a73ea05465bc0d027773432bf7803363c0a3f512cbdc32ed95080",
+        "source_sha256": "bc4611312fbe85476fc2a6504f9c53ba871780ffcd5fb92484927b383eed9cf5",
+        "scope": "Actual production ESMStore load at shifted index1, native registry adapter/factory, complete650 native model-bank/child/live-link comparison and all650 authored fields compared to independent raw master audit. No actors, CTDA selection, animation/physics, input, saves or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/verification.json",
+          "sha256": "20f126bd8458b90ff5d8a4c7eed05f804679cf27232dc374e3f7a043deffc23c",
+          "bytes": 8373
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compile.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/link.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/run.log",
+          "sha256": "849faf2e8008fee3be62a3d53488df2a6a8f77d6c3f22f0013f224e3976819ce",
+          "bytes": 114978
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/index.json",
+          "sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+          "bytes": 180653
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-02/compare",
+          "sha256": "f06abdd8a16a73ea05465bc0d027773432bf7803363c0a3f512cbdc32ed95080",
+          "bytes": 633480672
+        }
+      ]
+    },
+    {
+      "mode": "sanitized",
+      "report": {
+        "passed": true,
+        "mode": "sanitized",
+        "environment": {
+          "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/c++",
+              "-DBOOST_CONTAINER_DYN_LINK",
+              "-DBOOST_CONTAINER_NO_LIB",
+              "-DBOOST_IOSTREAMS_DYN_LINK",
+              "-DBOOST_IOSTREAMS_NO_LIB",
+              "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+              "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+              "-DBOOST_RANDOM_DYN_LINK",
+              "-DBOOST_RANDOM_NO_LIB",
+              "-DBOOST_REGEX_DYN_LINK",
+              "-DBOOST_REGEX_NO_LIB",
+              "-DBT_USE_DOUBLE_PRECISION",
+              "-DMYGUI_DONT_USE_OBSOLETE=ON",
+              "-DOPENMW_DATA_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/apps/openmw_tests/data\"",
+              "-DOPENMW_PROJECT_SOURCE_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion\"",
+              "-D__STDC_CONSTANT_MACROS",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/.",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DebugUtils/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Recast/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Detour/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DetourTileCache/Include",
+              "-I/home/maciek/openmw-oblivion/openmw-oblivion/extern/Base64/.",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol_config",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol3",
+              "-isystem",
+              "/usr/include/luajit-2.1",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+              "-isystem",
+              "/usr/include/AL",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3/MyGUIEngine/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock",
+              "-isystem",
+              "/usr/include/SDL2",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/osg-ffmpeg-videoplayer/include",
+              "-isystem",
+              "/usr/include/ffmpeg",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/include",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/tinyxml",
+              "-isystem",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/extern/smhasher/include",
+              "-fsanitize=address,undefined",
+              "-fno-omit-frame-pointer",
+              "-O1",
+              "-g",
+              "-std=c++20",
+              "-Wall",
+              "-Wextra",
+              "-Wundef",
+              "-Wextra-semi",
+              "-Wno-unused-parameter",
+              "-pedantic",
+              "-Wno-long-long",
+              "-Wnon-virtual-dtor",
+              "-Wunused",
+              "-Wshadow",
+              "-Wno-unused-but-set-parameter",
+              "-Wduplicated-branches",
+              "-Wduplicated-cond",
+              "-Wlogical-op",
+              "-Wno-array-bounds",
+              "-Wno-duplicated-branches",
+              "-Wno-duplicated-cond",
+              "-c",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-work-01/compare-installed.cpp",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compare.o"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "log": "compile.log",
+            "returncode": 0,
+            "seconds": 3.975968347978778
+          },
+          {
+            "argv": [
+              "/usr/bin/c++",
+              "-fsanitize=address,undefined",
+              "-fno-omit-frame-pointer",
+              "-O1",
+              "-g",
+              "-fsanitize=address,undefined",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compare.o",
+              "-o",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compare",
+              "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64",
+              "../../lib/libgtest.a",
+              "../../lib/libgmock.a",
+              "../openmw/libopenmw-lib.a",
+              "../../lib/libgtest.a",
+              "/usr/lib64/libopenal.so",
+              "../../extern/osg-ffmpeg-videoplayer/libosg-ffmpeg-videoplayer.a",
+              "/usr/lib64/libavcodec.so",
+              "/usr/lib64/libavformat.so",
+              "/usr/lib64/libavutil.so",
+              "/usr/lib64/libswscale.so",
+              "/usr/lib64/libswresample.so",
+              "../../extern/oics/liboics.a",
+              "../../extern/oics/liblocal_tinyxml.a",
+              "../../components/libcomponents.a",
+              "/usr/lib64/libosgParticle.so",
+              "/usr/lib64/libosgViewer.so",
+              "/usr/lib64/libosgShadow.so",
+              "/usr/lib64/libboost_program_options.so.1.90.0",
+              "/usr/lib64/libboost_container.so.1.90.0",
+              "../../_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3",
+              "-ldl",
+              "/usr/lib64/libfreetype.so",
+              "/usr/lib64/libz.so",
+              "/usr/lib64/libSDL2-2.0.so.0.3200.74",
+              "/usr/lib64/libosgAnimation.so",
+              "/usr/lib64/libosgGA.so",
+              "/usr/lib64/libosgText.so",
+              "/usr/lib64/libosgDB.so",
+              "/usr/lib64/libosgUtil.so",
+              "/usr/lib64/libosgSim.so",
+              "/usr/lib64/libosg.so",
+              "/usr/lib64/libOpenThreads.so",
+              "/usr/lib64/libboost_iostreams.so.1.90.0",
+              "/usr/lib64/libboost_random.so.1.90.0",
+              "/usr/lib64/libboost_regex.so.1.90.0",
+              "/usr/lib64/libGL.so",
+              "/usr/lib64/libluajit-5.1.so",
+              "/usr/lib64/liblz4.so",
+              "../../_deps/recastnavigation-build/DebugUtils/libDebugUtils-d.a",
+              "../../_deps/recastnavigation-build/DetourTileCache/libDetourTileCache-d.a",
+              "../../_deps/recastnavigation-build/Detour/libDetour-d.a",
+              "../../_deps/recastnavigation-build/Recast/libRecast-d.a",
+              "/usr/lib64/libsqlite3.so",
+              "../../extern/smhasher/libsmhasher.a",
+              "/usr/lib64/libicuuc.so",
+              "/usr/lib64/libicui18n.so",
+              "/usr/lib64/libicudata.so",
+              "/usr/lib64/libz.so",
+              "/usr/lib64/libyaml-cpp.so.0.8.0",
+              "../../_deps/bullet-build/src/BulletDynamics/libBulletDynamics.a",
+              "../../_deps/bullet-build/src/BulletCollision/libBulletCollision.a",
+              "../../_deps/bullet-build/src/LinearMath/libLinearMath.a"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/apps/openmw_tests",
+            "log": "link.log",
+            "returncode": 0,
+            "seconds": 19.768494516960345
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compare",
+              "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm"
+            ],
+            "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+            "log": "run.log",
+            "returncode": 0,
+            "seconds": 74.08810014801566
+          }
+        ],
+        "records": 650,
+        "banks": 44,
+        "native_corpus_sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+        "raw_corpus_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "actual_sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+        "binary_sha256": "1589d30e45a4a8b70ecda15d50cb6231df5c1c7ede0888725f86b64197a5db49",
+        "source_sha256": "bc4611312fbe85476fc2a6504f9c53ba871780ffcd5fb92484927b383eed9cf5",
+        "scope": "Actual production ESMStore load at shifted index1, native registry adapter/factory, complete650 native model-bank/child/live-link comparison and all650 authored fields compared to independent raw master audit. No actors, CTDA selection, animation/physics, input, saves or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/verification.json",
+          "sha256": "5bd533c0ab0ed8f50a2891d37ec9754f91065be9b4ee32ec48423aa79ba24436",
+          "bytes": 8477
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compile.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/link.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/run.log",
+          "sha256": "849faf2e8008fee3be62a3d53488df2a6a8f77d6c3f22f0013f224e3976819ce",
+          "bytes": 114978
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/index.json",
+          "sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+          "bytes": 180653
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-sanitized-01/compare",
+          "sha256": "1589d30e45a4a8b70ecda15d50cb6231df5c1c7ede0888725f86b64197a5db49",
+          "bytes": 1690339456
+        }
+      ]
+    }
+  ],
+  "reproduction_helpers": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-registry-work-01/generate-registration-expected.py",
+      "sha256": "4b222d81d222542a31c9fe9cb528b7237c09dad37b0483aa63c14819b0c0e84f",
+      "bytes": 1727
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-registry-work-01/expected-generation.json",
+      "sha256": "02475d9014fa550707347ce8b4091f422cd29fbe05faa64e501a00adb655cb1d",
+      "bytes": 757
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-registry-work-01/compare-installed.cpp",
+      "sha256": "bc4611312fbe85476fc2a6504f9c53ba871780ffcd5fb92484927b383eed9cf5",
+      "bytes": 2665
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-registry-work-01/run-installed.py",
+      "sha256": "1fd9c5f57b1d55cdaded97427680550c4c8a8b2af65ea30ab56f786e1966312e",
+      "bytes": 3681
+    }
+  ],
+  "retained_comparison_attempt": {
+    "report": {
+      "passed": true,
+      "mode": "normal",
+      "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "commands": [
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-DBOOST_CONTAINER_DYN_LINK",
+            "-DBOOST_CONTAINER_NO_LIB",
+            "-DBOOST_IOSTREAMS_DYN_LINK",
+            "-DBOOST_IOSTREAMS_NO_LIB",
+            "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+            "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+            "-DBOOST_RANDOM_DYN_LINK",
+            "-DBOOST_RANDOM_NO_LIB",
+            "-DBOOST_REGEX_DYN_LINK",
+            "-DBOOST_REGEX_NO_LIB",
+            "-DBT_USE_DOUBLE_PRECISION",
+            "-DMYGUI_DONT_USE_OBSOLETE=ON",
+            "-DOPENMW_DATA_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests/data\"",
+            "-DOPENMW_PROJECT_SOURCE_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion\"",
+            "-DRC_DISABLE_ASSERTS",
+            "-D__STDC_CONSTANT_MACROS",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/.",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DebugUtils/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Recast/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Detour/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DetourTileCache/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/extern/Base64/.",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol_config",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol3",
+            "-isystem",
+            "/usr/include/luajit-2.1",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+            "-isystem",
+            "/usr/include/AL",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3/MyGUIEngine/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock",
+            "-isystem",
+            "/usr/include/SDL2",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/osg-ffmpeg-videoplayer/include",
+            "-isystem",
+            "/usr/include/ffmpeg",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/tinyxml",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/smhasher/include",
+            "-O2",
+            "-g",
+            "-DNDEBUG",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wundef",
+            "-Wextra-semi",
+            "-Wno-unused-parameter",
+            "-pedantic",
+            "-Wno-long-long",
+            "-Wnon-virtual-dtor",
+            "-Wunused",
+            "-Wshadow",
+            "-Wno-unused-but-set-parameter",
+            "-Wduplicated-branches",
+            "-Wduplicated-cond",
+            "-Wlogical-op",
+            "-Wno-array-bounds",
+            "-c",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-work-01/compare-installed.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/compare.o"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "compile.log",
+          "returncode": 0,
+          "seconds": 2.920340875047259
+        },
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-O2",
+            "-g",
+            "-DNDEBUG",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/compare.o",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/compare",
+            "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath",
+            "../../lib/libgtest.a",
+            "../../lib/libgmock.a",
+            "../openmw/libopenmw-lib.a",
+            "../../lib/libgtest.a",
+            "/usr/lib64/libopenal.so",
+            "../../extern/osg-ffmpeg-videoplayer/libosg-ffmpeg-videoplayer.a",
+            "/usr/lib64/libavcodec.so",
+            "/usr/lib64/libavformat.so",
+            "/usr/lib64/libavutil.so",
+            "/usr/lib64/libswscale.so",
+            "/usr/lib64/libswresample.so",
+            "../../extern/oics/liboics.a",
+            "../../extern/oics/liblocal_tinyxml.a",
+            "../../components/libcomponents.a",
+            "/usr/lib64/libosgParticle.so",
+            "/usr/lib64/libosgViewer.so",
+            "/usr/lib64/libosgShadow.so",
+            "/usr/lib64/libboost_program_options.so.1.90.0",
+            "/usr/lib64/libboost_container.so.1.90.0",
+            "../../_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+            "-ldl",
+            "/usr/lib64/libfreetype.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libSDL2-2.0.so.0.3200.74",
+            "/usr/lib64/libosgAnimation.so",
+            "/usr/lib64/libosgGA.so",
+            "/usr/lib64/libosgText.so",
+            "/usr/lib64/libosgDB.so",
+            "/usr/lib64/libosgUtil.so",
+            "/usr/lib64/libosgSim.so",
+            "/usr/lib64/libosg.so",
+            "/usr/lib64/libOpenThreads.so",
+            "/usr/lib64/libboost_iostreams.so.1.90.0",
+            "/usr/lib64/libboost_random.so.1.90.0",
+            "/usr/lib64/libboost_regex.so.1.90.0",
+            "/usr/lib64/libGL.so",
+            "/usr/lib64/libluajit-5.1.so",
+            "/usr/lib64/liblz4.so",
+            "../../_deps/recastnavigation-build/DebugUtils/libDebugUtils.a",
+            "../../_deps/recastnavigation-build/DetourTileCache/libDetourTileCache.a",
+            "../../_deps/recastnavigation-build/Detour/libDetour.a",
+            "../../_deps/recastnavigation-build/Recast/libRecast.a",
+            "/usr/lib64/libsqlite3.so",
+            "../../extern/smhasher/libsmhasher.a",
+            "/usr/lib64/libicuuc.so",
+            "/usr/lib64/libicui18n.so",
+            "/usr/lib64/libicudata.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libyaml-cpp.so.0.8.0",
+            "../../_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17",
+            "../../_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17",
+            "../../_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests",
+          "log": "link.log",
+          "returncode": 0,
+          "seconds": 7.533182236016728
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/compare",
+            "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "run.log",
+          "returncode": 0,
+          "seconds": 10.040662635001354
+        }
+      ],
+      "records": 650,
+      "banks": 44,
+      "native_corpus_sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+      "raw_corpus_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+      "actual_sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+      "binary_sha256": "ba9f9cca03dff51232e180d7b04aababde2a7facfaba0f1285683195868a5a4d",
+      "source_sha256": "afc4b63289ac32b8455da9f35dc5b7bb292b8f81ae5ac08fbae68fd516e30fe0",
+      "scope": "Actual production ESMStore load at shifted index1, native registry adapter/factory, complete650 native model-bank/child/live-link comparison and all650 authored fields compared to independent raw master audit. No actors, CTDA selection, animation/physics, input, saves or gameplay."
+    },
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/verification.json",
+        "sha256": "9949671a2f28a5a6e3e642b78d8fa7cf0b28c17036173eb73c01ffd2b74706b6",
+        "bytes": 8373
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/compile.log",
+        "sha256": "702f773b19985712ed9e691bd8477b0ab05fc5f8698b0d9ff861f0c146106580",
+        "bytes": 2692
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-installed-normal-01/index.json",
+        "sha256": "5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208",
+        "bytes": 180653
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-registry-work-01/compare-installed-before-warning-fix.cpp",
+        "sha256": "afc4b63289ac32b8455da9f35dc5b7bb292b8f81ae5ac08fbae68fd516e30fe0",
+        "bytes": 2645
+      }
+    ],
+    "scope": "Initial actual650 normal comparison passes with misleading-indentation warnings in the private checker. Braces clarify the same unconditional comma assignment; final normal02 and sanitized01 use identical checker C++ bytes and have matching complete index outputs. No production change made for this warning."
+  },
+  "sanitizer": "ASan/UBSan halt on errors; detect_leaks=0. No leak coverage.",
+  "validation_layers": {
+    "portable_native_order_and_link_comparisons": true,
+    "actual_record_loader_and_metadata_preflight": true,
+    "complete_installed_content_index_and_authored_reinspection": true,
+    "same_normal_and_instrumented_result": true,
+    "actor_condition_context_or_World_recovery": false,
+    "animation_or_physics_or_gameplay_or_restart": false,
+    "full_M15S4": false
+  },
+  "not_rerun": [
+    "Python/schema/runtime unchanged; no new normal-input course claimed. Existing selector9 tests remain selected in both full component runs."
+  ],
+  "installed_content_comparison_fields": {
+    "ordered_structure": [
+      "banks",
+      "children",
+      "compiled parent/predecessor links"
+    ],
+    "authored_fields_per_record": [
+      "id",
+      "parent",
+      "previous",
+      "flags",
+      "anam",
+      "model"
+    ],
+    "not_asserted": [
+      "CTDA contents or evaluation",
+      "editor ID",
+      "bound radius",
+      "other record types",
+      "actors/animation/physics/runtime state"
+    ],
+    "note": "The private checker report phrase all650 authored fields means these six declared fields for each of650 records; it is not an audit of every IDLE subrecord."
+  }
+}

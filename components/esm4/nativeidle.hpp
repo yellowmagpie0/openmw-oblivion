@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <functional>
 #include <map>
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -23,6 +24,9 @@ namespace ESM4
     {
         const IdleAnimation* mRecord;
         std::vector<std::size_t> mChildren;
+        // Compiled native links, separate from the authored DATA fields.
+        std::optional<std::size_t> mParent = {};
+        std::optional<std::size_t> mPrevious = {};
     };
 
     struct NativeIdleModelBank
@@ -30,6 +34,19 @@ namespace ESM4
         std::string mKey;
         std::vector<std::size_t> mRoots;
     };
+
+    struct NativeIdleRegistrationIndex
+    {
+        std::vector<NativeIdleNode> mNodes;
+        std::vector<NativeIdleModelBank> mBanks;
+    };
+
+    // Replay one definition per typed identity in registration order. This
+    // supported profile requires parent/predecessor identities to be earlier
+    // definitions and nonempty root model keys. It does not infer native
+    // override/deletion-loader semantics from a final winning snapshot.
+    // Insertion itself retains Deleted flags and their append rule.
+    NativeIdleRegistrationIndex registerNativeIdleRecords(std::span<const IdleAnimation* const> records);
 
     // An already-built native bank/forest, not a reconstruction of DATA links
     // from winning records. Registration order and link repair belong to the

@@ -57,6 +57,59 @@ namespace ESM4
         return dot != std::string_view::npos && foldedKey(model.substr(dot)) == ".kf";
     }
 
+    NativeIdleRegistrationIndex registerNativeIdleRecords(std::span<const IdleAnimation* const> records)
+    {
+        NativeIdleRegistrationIndex result;
+        result.mNodes.reserve(records.size());
+        std::map<ESM::FormId, std::size_t> identities;
+        std::map<std::string, std::size_t> banks;
+        for (const auto* record : records)
+        {
+            if (!record || record->mId.mIndex == 0 || identities.contains(record->mId))
+                throw std::invalid_argument("native idle registration requires one definition per typed identity");
+            const auto resolve = [&](ESM::FormId id) -> std::optional<std::size_t> {
+                if (id.mIndex == 0)
+                    return {};
+                const auto found = identities.find(id);
+                if (found == identities.end())
+                    throw std::invalid_argument("native idle registration requires earlier parent/predecessor definitions");
+                return found->second;
+            };
+            const auto parent = resolve(record->mParent);
+            const auto previous = resolve(record->mPrevious);
+            const auto index = result.mNodes.size();
+            result.mNodes.push_back({record, {}, parent, {}});
+            std::vector<std::size_t>* siblings;
+            if (parent)
+                siblings = &result.mNodes[*parent].mChildren;
+            else
+            {
+                auto key = nativeIdleModelKey(record->mModel.getOriginal());
+                if (key.empty())
+                    throw std::invalid_argument("native idle registration requires a resolved nonempty root model bank");
+                const auto [found, inserted] = banks.emplace(foldedKey(key), result.mBanks.size());
+                if (inserted)
+                    result.mBanks.push_back({std::move(key), {}});
+                siblings = &result.mBanks[found->second].mRoots;
+            }
+            // Actual520B2F dispatch: null predecessor starts a live chain at
+            // the front; Deleted starts at the end. A known predecessor in
+            // another array is absent from this one and also appends.
+            auto position = previous || (record->mFlags & Rec_Deleted) ? siblings->size() : 0;
+            if (previous)
+                if (const auto found = std::find(siblings->begin(), siblings->end(), *previous);
+                    found != siblings->end())
+                    position = static_cast<std::size_t>(found - siblings->begin()) + 1;
+            result.mNodes[index].mPrevious = position == 0
+                ? std::nullopt : std::optional((*siblings)[position - 1]);
+            if (position != siblings->size())
+                result.mNodes[(*siblings)[position]].mPrevious = index;
+            siblings->insert(siblings->begin() + position, index);
+            identities.emplace(record->mId, index);
+        }
+        return result;
+    }
+
     NativeIdleSelector::NativeIdleSelector(
         std::vector<NativeIdleNode> nodes, std::span<const NativeIdleModelBank> banks)
         : mNodes(std::move(nodes))

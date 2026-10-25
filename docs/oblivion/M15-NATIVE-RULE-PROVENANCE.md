@@ -18847,3 +18847,51 @@ playback, physical owner/controller/FSM/GetUp/restart and normal-input direction
 mastery remain open. **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-IDLE-SELECTOR-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_selector_cases.json).
+
+
+## Ordered native IDLE registration and actual store binding
+
+`registerNativeIdleRecords` now builds the selector's ordered banks and child
+lists from registration order. It applies the verified front/after/append rules
+and repairs live parent/predecessor links in separate compiled data. Authored
+DATA fields stay unchanged. Its current profile requires unique definitions,
+earlier parent/predecessor identities and nonempty root model keys.
+
+`buildOblivionNativeIdleIndex` consumes actual ESMStore order and provenance.
+It checks full per-key history, including same-plugin duplicates, indexed static
+identity and typed-definition agreement. Override/deleted/dynamic/unindexed
+profiles remain outside this adapter until their native loader lifecycle is
+verified; final winning order alone is insufficient to reconstruct those events.
+The installed master meets the current profile. No actor or animation state is
+changed while constructing or rejecting an index.
+
+Three component cases cover **168 original registration profiles** (40 root,
+128 child-prefix), case-folded banks/selector composition, authored-link retention
+and unsupported inputs. Five actual-loader engine cases cover remapped indices,
+separate same-local-ID plugins, root/child order and rejected content histories.
+Original direct child-index 160 cases remain additional evidence, not additional
+C++ comparisons for a factory that does not expose that entrypoint.
+
+The production store adapter loads the independently pinned installed master at
+resolved index 1 in both normal and instrumented read-only checkers. The ordered model banks,
+children and compiled links for all 650 records match the original registration
+snapshot. Six authored fields per record (ID, parent, predecessor, flags, ANAM
+and raw model) match the independent raw decoder. Both builds produce the
+same complete index SHA256 `5592397954752326b929fe00c9ab072b624437f97a494e3ca3f1b0b16d940208` over 44 banks.
+The first normal checker passed with indentation warnings; final checkers use
+identical clarified C++ source and no such warnings. This is real record loading
+and semantic reinspection, not a game session or GetUp playback observation.
+
+At parent `2316200551bd6572707cd1644c6ab7e9111aae44` and tested dirty source fingerprint
+`24038585f56cbc9b7bf036705b3900b0c5104911dd33b8062086de9b2576b451`, final normal checks pass **3,099
+component tests** and **1,942 engine tests**; ASan/UBSan checks pass **950 ESM4
+tests** and **1,942 engine tests**. All inventories match, no failures/skips.
+Leak checks are disabled. Engine mode links openmw/openmw-tests/esmtool; the
+installed-content check uses the corresponding engine libraries/flags. Existing
+selector tests remain covered. Python/schema/runtime were unchanged and not rerun.
+
+Native override/deletion/forward-reference lifecycle, World recovery model/CTDA
+binding, exact KF/slot5 playback, physical owner/controller/FSM/GetUp/restart and
+normal-input directional mastery remain open. **Full M15S4 remains incomplete.**
+See the [verification receipt](M15-NATIVE-IDLE-REGISTRY-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_registry_cases.json).
