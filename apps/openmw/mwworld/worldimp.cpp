@@ -177,10 +177,30 @@
 
 namespace MWWorld
 {
+    struct World::OblivionGetUpResources
+    {
+        using Resource = std::shared_ptr<const MWRender::Animation::NativeIdleResource>;
+        std::map<ESM::FormKey, std::pair<ESM4::RuntimeGetUpIdle, Resource>> mActors;
+    };
+
+    namespace
+    {
+        std::string getUpResourceHash(std::string_view bytes)
+        {
+            constexpr char digits[] = "0123456789abcdef";
+            std::string result;
+            result.reserve(bytes.size() * 2);
+            for (unsigned char c : bytes) { result += digits[c >> 4]; result += digits[c & 15]; }
+            return result;
+        }
+        std::string_view getUpCString(std::string_view text) { return text.substr(0, text.find('\0')); }
+    }
+
     struct World::PreparedOblivionServices
     {
         std::optional<MWMechanics::OblivionCombatService> mCombat;
         decltype(World::mOblivionLooseWeaponStates) mLooseWeapons;
+        decltype(World::mOblivionGetUpResources) mGetUpResources;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
         std::optional<ESMStore::PreparedDynamicRecords> mDefinitions;
@@ -380,6 +400,7 @@ namespace MWWorld
         decltype(World::mPrng) mPrng{};
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
+        decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
         decltype(World::mPendingOblivionRuntimeState) mPendingOblivionRuntimeState{};
         decltype(World::mPendingOblivionServices) mPendingOblivionServices{};
         decltype(World::mSharedDefinitionsPrepared) mSharedDefinitionsPrepared{};
@@ -450,6 +471,7 @@ namespace MWWorld
         swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
+        swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionRuntimeState)>);
         swap(mPendingOblivionRuntimeState, data.mPendingOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionServices)>);
@@ -550,6 +572,7 @@ namespace MWWorld
         mPendingOblivionRuntimeState.reset();
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionGetUpResources.reset();
         mPlayer.reset();
         mOblivionCombat.reset();
     }
@@ -1369,6 +1392,7 @@ namespace MWWorld
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionGetUpResources.reset();
         mPendingOblivionRuntimeState.reset();
         mPendingOblivionServices.reset();
         mSharedDefinitionsPrepared = false;
@@ -3201,6 +3225,151 @@ namespace MWWorld
             if (!idleKey) throw std::logic_error("native GetUp selected an unindexed record");
             result.mIdle = *idleKey;
             result.mModel = selected->mModel.getOriginal();
+        }
+        return result;
+    }
+
+    struct World::PreparedOblivionGetUpIdle::Data
+    {
+        World* mWorld;
+        std::weak_ptr<const char> mIdentity;
+        std::uint64_t mClearGeneration;
+        Ptr mActor;
+        OblivionNativeIdleSelection mSelection;
+        std::unique_ptr<MWRender::Animation::PreparedNativeIdleSource> mBinding;
+        std::unique_ptr<MWMechanics::OblivionCombatService::PreparedGetUpIdle> mState;
+        std::shared_ptr<const OblivionGetUpResources> mExpected;
+        std::shared_ptr<const OblivionGetUpResources> mNext;
+        bool mConsumed = false;
+    };
+    World::PreparedOblivionGetUpIdle::PreparedOblivionGetUpIdle(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    World::PreparedOblivionGetUpIdle::~PreparedOblivionGetUpIdle() = default;
+    const OblivionNativeIdleSelection& World::PreparedOblivionGetUpIdle::selection() const
+    { return mData->mSelection; }
+    bool World::PreparedOblivionGetUpIdle::isValid() const noexcept
+    {
+        const auto* data = mData.get();
+        if (!data || data->mConsumed || data->mIdentity.expired() || !data->mState || !data->mBinding)
+            return false;
+        const auto& world = *data->mWorld;
+        if (data->mIdentity.lock() != world.mOblivionRestoreIdentity
+            || data->mClearGeneration != world.mOblivionClearGeneration
+            || data->mExpected != world.mOblivionGetUpResources
+            || (world.mRetainedSimulation && !world.mRetainedSimulation->mDetached)
+            || !data->mState->isValid() || !data->mBinding->isValid()) return false;
+        try
+        {
+            const auto subject = world.oblivionActorQuerySubject(data->mSelection.mActor);
+            if (!subject || *subject != data->mActor || subject->isInCell() != data->mActor.isInCell()
+                || (subject->isInCell() && subject->getCell() != data->mActor.getCell())) return false;
+            // IDLE conditions also read draw/equipment/package/World inputs
+            // outside actor values. Revalidate the result with the same local
+            // CRT seed; this never consumes live RNG or acquires another KF.
+            // Saved resource readmission deliberately does not run this path.
+            const auto current = world.prepareOblivionGetUpIdle(data->mActor);
+            const auto& selected = data->mSelection;
+            return current.mActor == selected.mActor
+                && getUpCString(current.mActorModel) == getUpCString(selected.mActorModel)
+                && current.mIdle == selected.mIdle && getUpCString(current.mModel) == getUpCString(selected.mModel)
+                && current.mExpectedRandomState == selected.mExpectedRandomState
+                && current.mNextRandomState == selected.mNextRandomState
+                && current.mRandomDraws == selected.mRandomDraws;
+        }
+        catch (...) { return false; }
+    }
+    bool World::PreparedOblivionGetUpIdle::commit() noexcept
+    {
+        if (!isValid() || !mData->mState->commit()) return false;
+        mData->mWorld->mOblivionGetUpResources.swap(mData->mNext);
+        mData->mConsumed = true;
+        return true;
+    }
+    std::unique_ptr<World::PreparedOblivionGetUpIdle> World::prepareOblivionGetUpIdleRequest(
+        MWRender::Animation& animation, const Ptr& actor)
+    {
+        const auto owner = animation.getPtr();
+        if (owner != actor || owner.isInCell() != actor.isInCell()
+            || (owner.isInCell() && owner.getCell() != actor.getCell()))
+            throw std::invalid_argument("GetUp request requires its actor renderer");
+        auto data = std::make_unique<PreparedOblivionGetUpIdle::Data>();
+        data->mWorld = this; data->mIdentity = mOblivionRestoreIdentity;
+        data->mClearGeneration = mOblivionClearGeneration; data->mActor = actor;
+        data->mSelection = prepareOblivionGetUpIdle(actor);
+        const auto& selected = data->mSelection;
+        if (!selected.mIdle.isNull())
+        {
+            const auto resource = animation.acquireNativeIdleResource(selected.mModel);
+            if (!resource) throw std::invalid_argument("Selected GetUp KF is unavailable or unsupported");
+            data->mBinding = animation.prepareNativeIdleSource(*resource);
+            if (!data->mBinding) throw std::invalid_argument("Selected GetUp KF cannot bind its actor scene");
+            const auto* values = mOblivionCombat->findActorValues(selected.mActor);
+            ESM4::RuntimeGetUpIdle idle{values->mBase, selected.mIdle,
+                std::string(getUpCString(selected.mActorModel)), std::string(getUpCString(selected.mModel)),
+                getUpResourceHash(resource->fileHash())};
+            data->mState = mOblivionCombat->prepareGetUpIdle(selected.mActor, idle,
+                {selected.mExpectedRandomState, selected.mNextRandomState, selected.mRandomDraws});
+            if (!data->mState) throw std::logic_error("GetUp selection became stale during preparation");
+            data->mExpected = mOblivionGetUpResources;
+            auto next = data->mExpected ? std::make_shared<OblivionGetUpResources>(*data->mExpected)
+                                      : std::make_shared<OblivionGetUpResources>();
+            next->mActors.insert_or_assign(selected.mActor, std::pair{std::move(idle), resource});
+            data->mNext = std::move(next);
+        }
+        // Null IDLE selections retain their staged random transition for the
+        // caller's distinct reset path, but this ready-resource commit rejects them.
+        return std::unique_ptr<PreparedOblivionGetUpIdle>(new PreparedOblivionGetUpIdle(std::move(data)));
+    }
+
+    std::shared_ptr<const World::OblivionGetUpResources> World::prepareOblivionGetUpResources(
+        const ESM4::RuntimeState& state, const ESMStore* incoming) const
+    {
+        if (state.mNativeGetUpIdles.empty()) return {};
+        if (!mResourceSystem) throw std::invalid_argument("Saved GetUp has no resource service");
+        auto result = std::make_shared<OblivionGetUpResources>();
+        const auto index = buildOblivionNativeIdleIndex(mStore);
+        const auto lookup = [&]<class T>(const ESM::FormKey& key) -> const T* {
+            if (incoming) if (const auto* record = incoming->search<T>(key)) return record;
+            return mStore.search<T>(key);
+        };
+        for (const auto& [actor, idle] : state.mNativeGetUpIdles)
+        {
+            idle.validate();
+            const auto* record = lookup.template operator()<ESM4::IdleAnimation>(idle.mIdle);
+            if (!record || getUpCString(record->mModel.getOriginal()) != idle.mModel)
+                throw std::invalid_argument("Saved GetUp IDLE differs from winning content");
+            auto base = idle.mBase;
+            if (actor == state.mPlayer.mReference)
+            {
+                const auto authored = mStore.findEsm4FormKey("Player");
+                if (!authored) throw std::invalid_argument("Saved GetUp Player model has no authored NPC");
+                base = *authored;
+            }
+            std::string_view model;
+            if (const auto* npc = lookup.template operator()<ESM4::Npc>(base); npc && npc->mIsTES4)
+                model = npc->mModel.getOriginal();
+            else if (const auto* creature = lookup.template operator()<ESM4::Creature>(base))
+                model = creature->mModel.getOriginal();
+            else throw std::invalid_argument("Saved GetUp has no native actor model");
+            if (getUpCString(model) != idle.mActorModel)
+                throw std::invalid_argument("Saved GetUp actor model differs from winning content");
+            const auto key = ESM4::nativeIdleModelKey(model);
+            std::vector<std::size_t> pending;
+            for (const auto& bank : index.mBanks)
+                if (Misc::StringUtils::ciEqual(key, bank.mKey)) pending = bank.mRoots;
+            bool member = false;
+            while (!pending.empty())
+            {
+                const auto node = pending.back(); pending.pop_back();
+                const auto& entry = index.mNodes.at(node);
+                member |= entry.mRecord->mId == record->mId;
+                pending.insert(pending.end(), entry.mChildren.begin(), entry.mChildren.end());
+            }
+            if (!member) throw std::invalid_argument("Saved GetUp IDLE is outside its actor model bank");
+            const auto resource = MWRender::Animation::acquireNativeIdleResource(*mResourceSystem, idle.mModel);
+            if (!resource || getUpResourceHash(resource->fileHash()) != idle.mAssetHash)
+                throw std::invalid_argument("Saved GetUp KF differs from acquired bytes");
+            result->mActors.emplace(actor, std::pair{idle, resource});
         }
         return result;
     }
@@ -5346,6 +5515,8 @@ namespace MWWorld
         std::optional<OblivionScriptManager::PreparedRestore> preparedScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> preparedAi;
         auto retained = std::move(mPendingOblivionServices);
+        auto preparedGetUpResources = retained && retained->mGetUpResources ? retained->mGetUpResources
+            : prepareOblivionGetUpResources(state);
         auto preparedLooseWeapons = retained && retained->mLooseWeapons ? retained->mLooseWeapons
             : std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
         if (retained)
@@ -5893,6 +6064,7 @@ namespace MWWorld
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
+        mOblivionGetUpResources = std::move(preparedGetUpResources);
         preparedRegistry.commit();
         for (auto& reference : reconstructed)
             reference->commit();
@@ -6242,6 +6414,8 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion)
             throw std::runtime_error("TES4 runtime state encountered while the Morrowind profile is active");
         validateOblivionSnapshotContent(state, mOblivionContentIdentities);
+        auto getupResources = prepareOblivionGetUpResources(state, incoming);
+        if (prepared) prepared->mGetUpResources = std::move(getupResources);
         for (const auto& [key, ignored] : state.mIgnoreFriendlyHits)
             if (key.isContent() && !mStore.search<ESM4::ActorCharacter>(key)
                 && !mStore.search<ESM4::ActorCreature>(key) && !mStore.search<ESM4::Reference>(key))

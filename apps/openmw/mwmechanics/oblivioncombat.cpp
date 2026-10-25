@@ -7,6 +7,7 @@
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadidle.hpp>
 
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/runtimereferences.hpp>
@@ -720,6 +721,7 @@ namespace MWMechanics
     {
         mPreparedReleaseIdentity.mValue.reset();
         mPreparedRagdollIdentity.mValue.reset();
+        mPreparedGetUpIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
         mSceneIsComplex = false;
@@ -732,6 +734,7 @@ namespace MWMechanics
         mBowStates.clear();
         mActorKnockback.clear();
         mActorRagdolls.clear();
+        mGetUpIdles.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -5719,6 +5722,7 @@ namespace MWMechanics
             throw std::invalid_argument("native knocked transition requires actor authority");
         if (found->second.mProcess == ESM4::ActorValueProcess::Low)
             return; // Original Low/MiddleLow virtual68F970 is a no-op.
+        mPreparedGetUpIdentity.mValue.reset();
         found->second.mProcessKnockedState = state;
     }
 
@@ -6205,6 +6209,87 @@ namespace MWMechanics
         return found == mActorBreath.end() ? std::nullopt : std::optional(found->second);
     }
 
+    std::optional<ESM4::RuntimeGetUpIdle> OblivionCombatService::getUpIdle(const ESM::FormKey& actor) const
+    {
+        const auto found = mGetUpIdles.find(actor);
+        return found == mGetUpIdles.end() ? std::nullopt : std::optional(found->second);
+    }
+
+    struct OblivionCombatService::PreparedGetUpIdle::Impl
+    {
+        OblivionCombatService* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        ESM::FormKey mActor;
+        ESM4::RuntimeActorValues mValues;
+        ESM4::RuntimeActorLife mLife;
+        std::optional<ESM4::RuntimeGetUpIdle> mExpected;
+        std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mNext;
+        OblivionCombatRandomTransition mRandom;
+        bool mCommitted = false;
+    };
+
+    OblivionCombatService::PreparedGetUpIdle::PreparedGetUpIdle(std::unique_ptr<Impl> impl)
+        : mImpl(std::move(impl)) {}
+    OblivionCombatService::PreparedGetUpIdle::~PreparedGetUpIdle() = default;
+    bool OblivionCombatService::PreparedGetUpIdle::isValid() const noexcept
+    { return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->validateGetUpIdle(*this); }
+    bool OblivionCombatService::PreparedGetUpIdle::commit() noexcept
+    { return mImpl && !mImpl->mIdentity.expired() && mImpl->mOwner->commitGetUpIdle(*this); }
+
+    std::unique_ptr<OblivionCombatService::PreparedGetUpIdle> OblivionCombatService::prepareGetUpIdle(
+        const ESM::FormKey& actor, const ESM4::RuntimeGetUpIdle& idle,
+        const OblivionCombatRandomTransition& random)
+    {
+        idle.validate();
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || values->mBase != idle.mBase || life->mBase != idle.mBase
+            || life->mPhase == ESM4::ActorLifePhase::Dead || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mProcessKnockedState != 3 || ESM4::runtimeReferenceKey(actor) != actor
+            || ESM::FormKey::deserialize(actor.serialize()) != actor)
+            throw std::invalid_argument("GetUp IDLE preparation requires its nonterminal raw3 actor");
+        if (random.mExpectedState != mCombatRngState) return {};
+        auto next = random.mExpectedState;
+        for (unsigned i = 0; i < random.mDraws; ++i) next = ESM4::combatRandomDraw(next).mNextState;
+        if (next != random.mNextState)
+            throw std::invalid_argument("GetUp IDLE random transition does not match CRT draws");
+        auto data = std::make_unique<PreparedGetUpIdle::Impl>();
+        data->mOwner = this; data->mActor = actor; data->mValues = *values; data->mLife = *life;
+        data->mExpected = getUpIdle(actor); data->mNext.emplace(actor, idle); data->mRandom = random;
+        if (!mPreparedGetUpIdentity.mValue) mPreparedGetUpIdentity.mValue = std::make_shared<const char>();
+        data->mIdentity = mPreparedGetUpIdentity.mValue;
+        return std::unique_ptr<PreparedGetUpIdle>(new PreparedGetUpIdle(std::move(data)));
+    }
+
+    bool OblivionCombatService::validateGetUpIdle(const PreparedGetUpIdle& update) const noexcept
+    {
+        const auto* data = update.mImpl.get();
+        if (!data || data->mOwner != this || data->mCommitted || data->mIdentity.expired()
+            || data->mIdentity.lock() != mPreparedGetUpIdentity.mValue
+            || mCombatRngState != data->mRandom.mExpectedState) return false;
+        const auto* values = findActorValues(data->mActor);
+        const auto* life = findActorLife(data->mActor);
+        const auto found = mGetUpIdles.find(data->mActor);
+        return values && life && *values == data->mValues && *life == data->mLife
+            && (data->mExpected ? found != mGetUpIdles.end() && found->second == *data->mExpected
+                               : found == mGetUpIdles.end());
+    }
+
+    bool OblivionCombatService::commitGetUpIdle(PreparedGetUpIdle& update) noexcept
+    {
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpIdle>);
+        if (!validateGetUpIdle(update)) return false;
+        auto& data = *update.mImpl;
+        const auto found = mGetUpIdles.find(data.mActor);
+        if (found == mGetUpIdles.end()) mGetUpIdles.insert(data.mNext.extract(data.mNext.begin()));
+        else std::swap(found->second, data.mNext.begin()->second);
+        mActorValues.find(data.mActor)->second.mProcessKnockedState = 5;
+        mCombatRngState = data.mRandom.mNextState;
+        data.mCommitted = true;
+        mPreparedGetUpIdentity.mValue.reset();
+        return true;
+    }
+
     std::optional<ESM4::TimedKnockbackState> OblivionCombatService::actorKnockback(const ESM::FormKey& actor) const
     {
         const auto found = mActorKnockback.find(actor);
@@ -6440,6 +6525,8 @@ namespace MWMechanics
             throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
         if (state.mVersion < 30 && !mActorKnockback.empty())
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
+        if (state.mVersion < 71 && !mGetUpIdles.empty())
+            throw std::invalid_argument("selected GetUp IDLE ownership requires schema71");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
             throw std::invalid_argument("native physical poses require an Oblivion v31+ save");
         if (state.mVersion < 39 && std::any_of(mBowStates.begin(), mBowStates.end(),
@@ -6544,6 +6631,7 @@ namespace MWMechanics
         auto animationClocks = mAnimationClocks;
         auto knockback = mActorKnockback;
         auto ragdolls = mActorRagdolls;
+        auto getupIdles = mGetUpIdles;
         state.mCombatRngState = mCombatRngState;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
@@ -6556,6 +6644,7 @@ namespace MWMechanics
         state.mNativePlayerBowTimer = mPlayerBowTimer;
         state.mNativeActorKnockback.swap(knockback);
         state.mNativeActorRagdolls.swap(ragdolls);
+        state.mNativeGetUpIdles.swap(getupIdles);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -6660,6 +6749,13 @@ namespace MWMechanics
     void OblivionCombatService::restore(const ESM4::RuntimeState& state, const MWWorld::ESMStore& store)
     {
         state.validate();
+        for (const auto& [actor, idle] : state.mNativeGetUpIdles)
+        {
+            const auto* record = store.search<ESM4::IdleAnimation>(idle.mIdle);
+            if (!record || std::string_view(record->mModel.getOriginal()).substr(
+                    0, record->mModel.getOriginal().find('\0')) != idle.mModel)
+                throw std::invalid_argument("Saved GetUp IDLE differs from winning content");
+        }
         for (const auto& actor : state.mNativeActorValues)
             if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
                 nonPlayerContentIsCreature(actor, store);
@@ -6726,6 +6822,7 @@ namespace MWMechanics
         auto animationClocks = state.mNativeAnimationClocks;
         auto knockback = state.mNativeActorKnockback;
         auto ragdolls = state.mNativeActorRagdolls;
+        auto getupIdles = state.mNativeGetUpIdles;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -6763,6 +6860,7 @@ namespace MWMechanics
         std::deque<ESM4::RuntimeActorDeathEvent> events(state.mPendingDeathEvents.begin(), state.mPendingDeathEvents.end());
         mPreparedReleaseIdentity.mValue.reset();
         mPreparedRagdollIdentity.mValue.reset();
+        mPreparedGetUpIdentity.mValue.reset();
         mActions = std::move(actions);
         mScriptDispositionPair.reset();
         mCombatRngState = state.mCombatRngState;
@@ -6774,6 +6872,7 @@ namespace MWMechanics
         mPlayerBowTimer = state.mNativePlayerBowTimer;
         mActorKnockback.swap(knockback);
         mActorRagdolls.swap(ragdolls);
+        mGetUpIdles.swap(getupIdles);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

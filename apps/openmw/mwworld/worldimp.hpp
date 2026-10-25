@@ -209,6 +209,10 @@ namespace MWWorld
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
         std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
+        struct OblivionGetUpResources;
+        std::shared_ptr<const OblivionGetUpResources> mOblivionGetUpResources;
+        std::shared_ptr<const OblivionGetUpResources> prepareOblivionGetUpResources(
+            const ESM4::RuntimeState& state, const ESMStore* incoming = nullptr) const;
         std::unique_ptr<ESM4::RuntimeState> mPendingOblivionRuntimeState;
         struct PreparedOblivionServices;
         class PreparedOblivionSaveStateImpl;
@@ -475,6 +479,25 @@ namespace MWWorld
         // Original521450 uses the raw actor base model and null second
         // reference. This prepares selection only; it does not start recovery.
         OblivionNativeIdleSelection prepareOblivionGetUpIdle(const Ptr& actor) const;
+        class PreparedOblivionGetUpIdle
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedOblivionGetUpIdle(std::unique_ptr<Data> data);
+            friend class World;
+        public:
+            ~PreparedOblivionGetUpIdle();
+            PreparedOblivionGetUpIdle(const PreparedOblivionGetUpIdle&) = delete;
+            PreparedOblivionGetUpIdle& operator=(const PreparedOblivionGetUpIdle&) = delete;
+            const OblivionNativeIdleSelection& selection() const;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        // Selection/resource preparation only. Caller owns the native raw3
+        // eligibility and root/FaceGen prefix. A null selection is inspectable
+        // but cannot commit here: its distinct root-reset branch remains caller-owned.
+        std::unique_ptr<PreparedOblivionGetUpIdle> prepareOblivionGetUpIdleRequest(
+            MWRender::Animation& animation, const Ptr& actor);
         // Borrow the current actor renderer with an already resolved native
         // reference placement. No process/knocked-state predicate participates.
         double getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,

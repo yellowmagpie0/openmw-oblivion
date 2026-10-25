@@ -1,6 +1,7 @@
 #include "runtimestate.hpp"
 
 #include "ability.hpp"
+#include "nativeidle.hpp"
 #include "crimecontractsio.hpp"
 #include "runtimereferences.hpp"
 
@@ -1534,6 +1535,27 @@ namespace ESM4
         }
     }
 
+    void RuntimeGetUpIdle::validate() const
+    {
+        try
+        {
+            if (mBase.isNull() || !mIdle.isContent()
+                || ESM::FormKey::deserialize(mBase.serialize()) != mBase
+                || ESM::FormKey::deserialize(mIdle.serialize()) != mIdle)
+                throw std::runtime_error("Invalid native GetUp identity");
+            for (const auto* path : {&mActorModel, &mModel})
+                if (path->empty() || path->find('\0') != std::string::npos
+                    || path->size() >= 260 || std::any_of(path->begin(), path->end(),
+                        [](unsigned char c) { return c >= 128; }))
+                    throw std::runtime_error("Invalid native GetUp authored C-string path");
+            if (!nativeIdleHasFile(mModel) || mAssetHash.size() != 32
+                || std::any_of(mAssetHash.begin(), mAssetHash.end(), [](char c) {
+                    return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f'); }))
+                throw std::runtime_error("Invalid native GetUp KF identity");
+        }
+        catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+    }
+
     void RuntimeState::validate() const
     {
         try { mNativeCrime.validate(); }
@@ -1863,6 +1885,20 @@ namespace ESM4
             if (reference.isNull() || owner == actorBases.end() || owner->second != weapon.mBase
                 || nativeActors.contains(reference) || reference == mPlayer.mReference)
                 throw std::runtime_error("Dangling, actor or mismatched TES4 loose weapon owner");
+        }
+        checkSize(mNativeGetUpIdles.size(), "native GetUp IDLE list");
+        if (mVersion < 71 && !mNativeGetUpIdles.empty())
+            throw std::runtime_error("Native GetUp IDLE ownership requires schema71");
+        for (const auto& [actor, idle] : mNativeGetUpIdles)
+        {
+            idle.validate();
+            const auto values = nativeActors.find(actor);
+            const auto life = lives.find(actor);
+            if (values == nativeActors.end() || values->second != idle.mBase
+                || life == lives.end() || life->second->mBase != idle.mBase
+                || runtimeReferenceKey(actor) != actor
+                || ESM::FormKey::deserialize(actor.serialize()) != actor)
+                throw std::runtime_error("Dangling or mismatched native GetUp IDLE owner");
         }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
@@ -3019,6 +3055,19 @@ namespace ESM4
                 writer.floating(pulse.mRemaining);
             }
         }
+        if (mVersion >= 71)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeGetUpIdles.size()));
+            for (const auto& [actor, idle] : mNativeGetUpIdles)
+            {
+                writeKey(writer, actor);
+                writeKey(writer, idle.mBase);
+                writeKey(writer, idle.mIdle);
+                writer.string(idle.mActorModel);
+                writer.string(idle.mModel);
+                writer.string(idle.mAssetHash);
+            }
+        }
         if (mVersion >= 31)
         {
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorRagdolls.size()));
@@ -4096,6 +4145,29 @@ namespace ESM4
                 pulse.mRemaining = reader.float32();
                 if (!result.mNativeActorKnockback.emplace(std::move(actor), pulse).second)
                     throw std::runtime_error("Duplicate TES4 native actor knockback");
+            }
+        }
+        if (result.mVersion >= 71)
+        {
+            const auto key = [&] {
+                const auto text = reader.string();
+                try
+                {
+                    auto value = ESM::FormKey::deserialize(text);
+                    if (value.serialize() != text) throw std::runtime_error("Noncanonical GetUp wire key");
+                    return value;
+                }
+                catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+            };
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto actor = key();
+                RuntimeGetUpIdle idle;
+                idle.mBase = key(); idle.mIdle = key();
+                idle.mActorModel = reader.string(); idle.mModel = reader.string(); idle.mAssetHash = reader.string();
+                if (!result.mNativeGetUpIdles.emplace(actor, std::move(idle)).second)
+                    throw std::runtime_error("Duplicate native GetUp IDLE owner");
             }
         }
         if (result.mVersion >= 31)
@@ -5418,6 +5490,23 @@ namespace ESM4
                 stream << "],\"remaining\":";
                 floating(pulse.mRemaining);
                 stream << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 71)
+        {
+            stream << ",\"native_getup_idles\":[";
+            bool first = true;
+            for (const auto& [actor, idle] : mNativeGetUpIdles)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                    << "\",\"base\":\"" << escapeJson(idle.mBase.serialize())
+                    << "\",\"idle\":\"" << escapeJson(idle.mIdle.serialize())
+                    << "\",\"actor_model\":\"" << escapeJson(idle.mActorModel)
+                    << "\",\"model\":\"" << escapeJson(idle.mModel)
+                    << "\",\"asset_hash\":\"" << idle.mAssetHash << "\"}";
             }
             stream << ']';
         }

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 70
+CURRENT_VERSION = 71
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1255,6 +1255,28 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if actor in clock_actors or actor not in native_keys or actor not in phases or native_float(entry["clock"]) < 0:
             raise RuntimeStateError("Duplicate, dangling or invalid TES4 animation clock")
         clock_actors.add(actor)
+    getup_idles = check_collection(state.get("native_getup_idles", []), "native GetUp IDLE list")
+    if version < 71 and getup_idles:
+        raise RuntimeStateError("Native GetUp IDLE ownership requires schema71")
+    getup_actors: set[str] = set()
+    for entry in getup_idles:
+        if not isinstance(entry, dict) or set(entry) != {"actor", "base", "idle", "actor_model", "model", "asset_hash"}:
+            raise RuntimeStateError("Invalid native GetUp IDLE shape")
+        actor, base, idle = entry["actor"], entry["base"], entry["idle"]
+        for key in (actor, base, idle):
+            native_key(key)
+        if (not idle.startswith("content:") or actor in getup_actors or actor not in native_keys
+                or value_bases.get(actor) != base or actor not in life_keys):
+            raise RuntimeStateError("Duplicate, dangling or mismatched native GetUp IDLE owner")
+        getup_actors.add(actor)
+        for field in ("actor_model", "model"):
+            path = entry[field]
+            if not isinstance(path, str) or not path or len(path) >= 260 or any(ord(c) == 0 or ord(c) >= 128 for c in path):
+                raise RuntimeStateError("Invalid native GetUp authored C-string path")
+        digest = entry["asset_hash"]
+        if (not entry["model"].lower().endswith(".kf") or not isinstance(digest, str)
+                or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest)):
+            raise RuntimeStateError("Invalid native GetUp KF identity")
     pulses = check_collection(state.get("native_actor_knockback", []), "native actor knockback list")
     if version < 30 and pulses:
         raise RuntimeStateError("TES4 actor knockback requires version30")
@@ -2611,6 +2633,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_actor_knockback"] = [{"actor": reader.string(),
             "acceleration": [reader.unpack("<f") for _ in range(3)], "remaining": reader.unpack("<f")}
             for _ in range(reader.count())]
+    if version >= 71:
+        result["native_getup_idles"] = [dict(zip(
+            ("actor", "base", "idle", "actor_model", "model", "asset_hash"),
+            (reader.string() for _ in range(6)))) for _ in range(reader.count())]
     if version >= 31:
         result["native_actor_ragdolls"] = []
         for _ in range(reader.count()):
@@ -3340,6 +3366,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for component in entry["acceleration"]:
                 writer.pack("<f", component)
             writer.pack("<f", entry["remaining"])
+    if version >= 71:
+        idles = sorted(state.get("native_getup_idles", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(idles))
+        for entry in idles:
+            for field in ("actor", "base", "idle", "actor_model", "model", "asset_hash"):
+                writer.string(entry[field])
     if version >= 31:
         ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
         writer.pack("<I", len(ragdolls))
@@ -3641,6 +3673,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 30 and state.get("native_actor_knockback"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor knockback")
     state.setdefault("native_actor_knockback", [])
+    if state.get("schema_version", 1) < 71 and state.get("native_getup_idles"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry selected GetUp IDLE ownership")
+    state.setdefault("native_getup_idles", [])
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])

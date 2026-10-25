@@ -54,7 +54,8 @@ namespace ESM4
     // empty owners, zero/wrapped counts and exact finite timer values.
     // v68 retains current base combat-controller presence and directed targets.
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 70;
+    // v71 retains selected GetUp IDLE resource ownership before sequence start.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 71;
 
     struct RuntimeContentIdentity
     {
@@ -521,6 +522,21 @@ namespace ESM4
         friend bool operator==(const RuntimeActorLife&, const RuntimeActorLife&) = default;
     };
 
+    // Selected logical-slot5/policy1 resource, before sequence attachment.
+    // This is resource ownership, not a sequence clock or a knocked-state enum.
+    // Raw authored C-string prefixes preserve case and separators; the hash is
+    // the loaded KF's opaque16 bytes encoded as lowercase hexadecimal.
+    struct RuntimeGetUpIdle
+    {
+        ESM::FormKey mBase;
+        ESM::FormKey mIdle;
+        std::string mActorModel;
+        std::string mModel;
+        std::string mAssetHash;
+        void validate() const;
+        friend bool operator==(const RuntimeGetUpIdle&, const RuntimeGetUpIdle&) = default;
+    };
+
     // Logical strike kinds, with stock native group selection owned by the
     // controller adapter. These values are save enums, not raw TES4 group IDs.
     enum class MeleeStrikeKind : std::uint8_t
@@ -768,6 +784,9 @@ namespace ESM4
         // v30: timed native Havok pulse, independent of attack continuation.
         // Older saves start without inferred physical forces.
         std::map<ESM::FormKey, TimedKnockbackState> mNativeActorKnockback;
+        // No legacy selection is inferred; a restore must reacquire this exact
+        // KF identity without running conditions or replaying selection RNG.
+        std::map<ESM::FormKey, RuntimeGetUpIdle> mNativeGetUpIdles;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
         // Absent in older saves: never infer solver history or skip flags.

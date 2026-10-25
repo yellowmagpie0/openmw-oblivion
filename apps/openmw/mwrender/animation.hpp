@@ -619,6 +619,8 @@ namespace MWRender
             const SceneUtil::ControllerSequenceMetadata& metadata() const;
         };
         std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(std::string_view model) const;
+        static std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(
+            Resource::ResourceSystem& resources, std::string_view model);
         class PreparedNativeIdleSource
         {
             struct Data;

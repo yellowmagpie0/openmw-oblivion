@@ -14094,3 +14094,36 @@ save schema or runtime acceptance is claimed. See the
 
 Tested source fingerprint: `0d562a2ac25bb32b97ed1212360a2eb44bf9e98c14134108b462e0e421400ebd`
 on parent `77e487d97316e10b713ad06bb42b9d2bb259aec3`.
+
+### Selected GetUp resource ownership and ready publication, schema 71
+
+Selected IDLE identity, authored C-string paths and loaded KF hash now persist
+without renderer pointers or inferred legacy selection. A guarded World/service
+transaction publishes that identity, raw state 3 -> 5 and staged RNG together.
+It guards current selection context, source/cell/lifecycle, service replacement,
+World clear and frozen outgoing retention. Preparation/ready publication changes
+no live alias/root binding, sequence, process action 11 or contact ledger.
+Readmission checks winning paths, bank membership and exact acquired bytes without
+selection-condition evaluation or RNG replay. Resource caches survive through the
+appropriate World runtime-field retention/rollback ownership.
+
+Final full engine suites pass **1,975 cases in each build**. Unchanged component
+and Python inputs retain **3,133 component cases per build** and **413 Python
+cases**, with the two-file final engine-only change pinned. Focused leak-enabled
+coverage passes **3 component and 24 engine cases**. Inventories/XML agree, with
+no skips/failures or changed-line production CMake warnings. Six separate headless
+processes verify T4ST resource/ready-state continuation and changed-KF rejection,
+with exact C++/Python payload/state and pristine-hash comparisons. This is bounded
+engine-library evidence, not a full shared-save or normal-input recovery course.
+The frozen-World regression and earlier fixture/verifier failures remain retained.
+
+**M15S4 remains incomplete.** The natural recovery dispatcher, caller prefixes,
+null-IDLE reset/async profile and slot5 start/clock/completion/action lifecycle are
+next. Directional mastery, generic package ownership and the complete S4
+view/device/FPS/normal-input/restart matrix remain open. See the
+[receipt](M15-NATIVE-GETUP-IDLE-OWNERSHIP-VERIFICATION.json) and
+[cases](../../scripts/data/oblivion_compat/m15_native_getup_idle_ownership_cases.json).
+
+Final engine source fingerprint:
+`9a8a4340f3d8f6440ebebf6f0af66c95853a21ad31f9343796ec7ceadb86286a`
+on parent `bc9f07bad65ad92513f2fddd0f1f31da009a5f2d`.

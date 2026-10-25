@@ -5,6 +5,7 @@
 #include "apps/openmw/mwworld/worldmodel.hpp"
 #include "apps/openmw/mwworld/cellstore.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
+#include "apps/openmw/mwmechanics/creaturestats.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/loadnpc.hpp>
@@ -18,6 +19,11 @@
 #include <osg/FrameStamp>
 #include <osgUtil/UpdateVisitor>
 #include <fstream>
+#include <bit>
+#include <components/esm3/loadrace.hpp>
+#include <components/esm4/loadcell.hpp>
+#include <components/files/hash.hpp>
+#include "apps/openmw/mwworld/player.hpp"
 
 namespace
 {
@@ -29,11 +35,12 @@ namespace
     { return bytes(tag) + bytes(static_cast<std::uint16_t>(value.size())) + value; }
     std::string record(std::uint32_t tag, std::uint32_t id, const std::string& value)
     { return bytes(tag) + bytes(static_cast<std::uint32_t>(value.size())) + bytes(0u) + bytes(id) + bytes(0u) + value; }
-    std::string idle(std::uint32_t id, std::uint32_t parent, const std::string& model)
+    std::string idle(std::uint32_t id, std::uint32_t parent, const std::string& model,
+        const std::string& conditions = {})
     {
         return record(ESM4::REC_IDLE, id, sub(ESM::fourCC("EDID"), std::string("ExactIdle") + '\0')
             + sub(ESM::fourCC("MODL"), model + '\0') + sub(ESM::fourCC("ANAM"), std::string(1, 5))
-            + sub(ESM::fourCC("DATA"), bytes(parent) + bytes(0u)));
+            + sub(ESM::fourCC("DATA"), bytes(parent) + bytes(0u)) + conditions);
     }
     std::string kf(float translation, std::string_view root = "Bip01", bool duplicate = false,
         bool trackless = false)
@@ -340,4 +347,278 @@ TEST(NativeIdleWorldResourceTest, WorldSelectedOutsideKfKeepsItsExactIdentityThr
     const auto group = resource->group(); ASSERT_TRUE(resource->commit()); animation->sample(group);
     EXPECT_FLOAT_EQ(animation->mBone->getControllerTransform().mTranslation.x(), 9);
     combat.capture(after); EXPECT_EQ(after, before);
+}
+
+namespace
+{
+    struct NativeGetUpRequestTest : testing::Test
+    {
+        static std::string records()
+        {
+            const std::array<std::uint32_t, 6> condition{0x60, std::bit_cast<std::uint32_t>(0.f), 77, 0, 0, 0};
+            return idle(0xa00, 0, "Dog\\IdleAnims", sub(ESM::fourCC("CTDA"), bytes(condition)))
+                + idle(0xa01, 0xa00, "Outside\\same.kf")
+                + idle(0xb00, 0, "Cat\\IdleAnims\\Other.kf");
+        }
+        TestingOpenMW::NativeWorldFixture mFixture{false, false, false, {}, {}, records(), 3};
+        MWWorld::Ptr mActor;
+        osg::ref_ptr<IdleAnimation> mAnimation;
+        NativeGetUpRequestTest()
+        {
+            auto& world = mFixture.mWorld; auto& store = world.getStore();
+            MWClass::Npc::registerSelf(); world.setupPlayer();
+            ESM4::Race race{}; race.mId = {0x810, 0};
+            race.mAttribMale = {40, 40, 40, 40, 40, 40, 40, 40}; race.mAttribFemale = race.mAttribMale;
+            store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0x810));
+            ESM::Race shared{}; shared.blank(); shared.mId = ESM::RefId(race.mId);
+            store.getWritable<ESM::Race>().insertStatic(shared);
+            const auto baseKey = ESM::FormKey::content("headless.esm", 0x800);
+            auto base = *store.search<ESM4::Npc>(baseKey); base.mModel = "DoG\\Skeleton.NIF"; base.mRace = race.mId;
+            store.getWritable<ESM4::Npc>().insertStatic(base, baseKey);
+            MWClass::ESM4Npc::registerSelf();
+            ESM4::ActorCharacter reference{}; reference.mId = {0x900, 0};
+            reference.mFormKey = ESM::FormKey::content("headless.esm", 0x900);
+            reference.mBaseObj = base.mId; reference.mBaseKey = baseKey;
+            store.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Npc> live(reference, store.search<ESM4::Npc>(baseKey));
+            auto& cell = world.getWorldModel().getDraftCell(); mActor = MWWorld::Ptr(cell.insert(&live), &cell);
+            world.getWorldModel().registerPtr(mActor);
+            if (!world.activateOblivionActor(mActor)) throw std::runtime_error("request fixture actor admission failed");
+            combat().setProcessKnockedState(key(), 3);
+            write(kf(9));
+            mFixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(mFixture.mDirectory));
+            mFixture.mVfs.buildIndex();
+            mAnimation = new IdleAnimation(mActor, mFixture.mResources);
+            ESM4::Cell nativeCell{}; nativeCell.mId = ESM::RefId(ESM::FormId{1, 0});
+            nativeCell.mFormKey = ESM::FormKey::content("headless.esm", 1);
+            nativeCell.mCellFlags = ESM4::CELL_Interior;
+            store.getWritable<ESM4::Cell>().insertStatic(nativeCell, nativeCell.mFormKey);
+        }
+        ESM::FormKey key() const { return mActor.getCellRef().getFormKey(); }
+        MWMechanics::OblivionCombatService& combat() { return *mFixture.mWorld.getOblivionCombatService(); }
+        void write(const std::string& data)
+        {
+            const auto path = mFixture.mDirectory / "meshes/outside/same.kf";
+            std::filesystem::create_directories(path.parent_path());
+            std::ofstream out(path, std::ios::binary); out.write(data.data(), data.size());
+            if (!out) throw std::runtime_error("request fixture KF write failed");
+        }
+        ESM4::RuntimeState snapshot()
+        {
+            ESM4::RuntimeState state;
+            const auto path = mFixture.mDirectory / "headless.esm";
+            std::ifstream stream(path, std::ios::binary);
+            state.mContent = {{"headless.esm", "sha256:" + Files::getSha256(path.string(), stream)}};
+            state.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            state.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+            state.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+            state.mPlayer.mClass = ESM::FormKey::dynamic("player-class", 1);
+            ESM4::RuntimeReferenceState ref;
+            ref.mKey = key(); ref.mBase = combat().findActorValues(key())->mBase; ref.mCell = state.mPlayer.mCell;
+            state.mReferences.push_back(ref);
+            combat().capture(state);
+            state.validate();
+            return state;
+        }
+    };
+}
+
+TEST_F(NativeGetUpRequestTest, PublishesSelectedResourceRawByteAndRngTogetherWithoutStartingPlayback)
+{
+    auto& world = mFixture.mWorld;
+    const auto before = snapshot(); const auto count = mAnimation->sources();
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->isValid());
+    const auto selection = prepared->selection(); EXPECT_EQ(selection.mRandomDraws, 1);
+    EXPECT_EQ(snapshot(), before); EXPECT_EQ(mAnimation->sources(), count);
+    EXPECT_FALSE(mAnimation->reactionRoot());
+    auto competing = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(competing->isValid());
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(competing->commit());
+    const auto selected = combat().getUpIdle(key()); ASSERT_TRUE(selected);
+    EXPECT_EQ(selected->mActorModel, "DoG\\Skeleton.NIF");
+    EXPECT_EQ(selected->mIdle, selection.mIdle); EXPECT_EQ(selected->mModel, selection.mModel);
+    EXPECT_EQ(selected->mAssetHash.size(), 32);
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    EXPECT_EQ(combat().combatRandomState(), selection.mNextRandomState);
+    EXPECT_EQ(combat().findActorValues(key())->mProcessAction, before.mNativeActorValues.front().mProcessAction);
+    EXPECT_EQ(mAnimation->sources(), count); EXPECT_FALSE(mAnimation->reactionRoot());
+    auto expected = before;
+    expected.mNativeActorValues.front().mProcessKnockedState = 5;
+    expected.mCombatRngState = selection.mNextRandomState;
+    expected.mNativeGetUpIdles.emplace(key(), *selected);
+    EXPECT_EQ(snapshot(), expected);
+    const auto wire = snapshot().serializeBinary(); const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    MWMechanics::OblivionCombatService restored; restored.restore(loaded, world.getStore());
+    EXPECT_EQ(restored.getUpIdle(key()), selected);
+    EXPECT_EQ(restored.combatRandomState(), selection.mNextRandomState);
+    EXPECT_EQ(restored.getProcessKnockedState(key()), 5);
+    auto legacy = before; legacy.mVersion = 70;
+    EXPECT_THROW(combat().capture(legacy), std::invalid_argument);
+    auto expectedLegacy = before; expectedLegacy.mVersion = 70;
+    EXPECT_EQ(legacy, expectedLegacy);
+}
+
+TEST_F(NativeGetUpRequestTest, RejectsStaleDrawStateRendererAndServiceReplacementBeforePublication)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    combat().drawNativeRandom(); const auto afterDraw = snapshot();
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), afterDraw);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    combat().setProcessKnockedState(key(), 0); combat().setProcessKnockedState(key(), 3);
+    EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(combat().getUpIdle(key()));
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    mAnimation->clear(); EXPECT_FALSE(prepared->commit());
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    const auto current = snapshot(); combat().restore(current, world.getStore());
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), current);
+    osg::ref_ptr<IdleAnimation> foreign = new IdleAnimation(world.getPlayerPtr(), mFixture.mResources);
+    EXPECT_THROW(world.prepareOblivionGetUpIdleRequest(*foreign, mActor), std::invalid_argument);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    mAnimation = nullptr; EXPECT_FALSE(prepared->commit());
+    EXPECT_EQ(snapshot(), current);
+}
+
+TEST_F(NativeGetUpRequestTest, SavedResourceAdmissionChecksWinningPathsBankAndExactLoadedHash)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
+    const auto saved = snapshot(); ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    const auto reject = [&](const auto& change) {
+        auto bad = saved; change(bad.mNativeGetUpIdles.at(key()));
+        EXPECT_THROW(world.validateOblivionSaveState(bad), std::exception);
+        EXPECT_EQ(snapshot(), saved);
+    };
+    reject([](auto& idle) { idle.mIdle = ESM::FormKey::content("headless.esm", 0xabc); });
+    reject([](auto& idle) { idle.mActorModel = "Cat\\Skeleton.nif"; });
+    reject([](auto& idle) { idle.mModel = "Missing\\same.kf"; });
+    reject([](auto& idle) { idle.mAssetHash[0] = idle.mAssetHash[0] == '0' ? '1' : '0'; });
+    reject([](auto& idle) { idle.mIdle = ESM::FormKey::content("headless.esm", 0xb00);
+        idle.mModel = "Cat\\IdleAnims\\Other.kf"; });
+    write(kf(27)); mFixture.mResources.clearCache();
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+    EXPECT_EQ(snapshot(), saved);
+}
+
+TEST_F(NativeGetUpRequestTest, NullSelectionAndUnavailableKfCannotPublishStagedRandomOrReadyState)
+{
+    auto& world = mFixture.mWorld; auto& store = world.getStore();
+    const auto idleKey = ESM::FormKey::content("headless.esm", 0xa01);
+    auto child = *store.search<ESM4::IdleAnimation>(idleKey);
+    ESM4::PackageCondition absentCallback{}; absentCallback.mFunction = 0;
+    child.mConditions = {absentCallback};
+    store.getWritable<ESM4::IdleAnimation>().insertStatic(child, idleKey);
+    const auto before = snapshot();
+    auto missing = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    EXPECT_TRUE(missing->selection().mIdle.isNull()); EXPECT_EQ(missing->selection().mRandomDraws, 1);
+    EXPECT_FALSE(missing->isValid()); EXPECT_FALSE(missing->commit()); EXPECT_EQ(snapshot(), before);
+    child.mConditions.clear(); store.getWritable<ESM4::IdleAnimation>().insertStatic(child, idleKey);
+    ASSERT_TRUE(std::filesystem::remove(mFixture.mDirectory / "meshes/outside/same.kf"));
+    mFixture.mResources.clearCache();
+    EXPECT_THROW(world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor), std::exception);
+    EXPECT_EQ(snapshot(), before);
+}
+
+TEST_F(NativeGetUpRequestTest, ZeroDrawAndMalformedRandomTransitionsKeepSharedAuthorityConsistent)
+{
+    auto& world = mFixture.mWorld; auto& store = world.getStore();
+    const auto rootKey = ESM::FormKey::content("headless.esm", 0xa00);
+    auto root = *store.search<ESM4::IdleAnimation>(rootKey); root.mConditions.clear();
+    store.getWritable<ESM4::IdleAnimation>().insertStatic(root, rootKey);
+    auto ready = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    EXPECT_EQ(ready->selection().mRandomDraws, 0); ASSERT_TRUE(ready->commit());
+    const auto idle = *combat().getUpIdle(key());
+    combat().setProcessKnockedState(key(), 3); const auto before = snapshot();
+    const auto seed = combat().combatRandomState();
+    EXPECT_THROW(combat().prepareGetUpIdle(key(), idle, {seed, seed ^ 1, 0}), std::invalid_argument);
+    EXPECT_FALSE(combat().prepareGetUpIdle(key(), idle, {seed ^ 1, seed ^ 1, 0}));
+    auto bad = idle; bad.mBase = ESM::FormKey::content("headless.esm", 0xabc);
+    EXPECT_THROW(combat().prepareGetUpIdle(key(), bad, {seed, seed, 0}), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
+    auto direct = combat().prepareGetUpIdle(key(), idle, {seed, seed, 0}); ASSERT_TRUE(direct->isValid());
+    auto copy = combat(); combat() = std::move(copy);
+    EXPECT_FALSE(direct->commit()); EXPECT_EQ(snapshot(), before);
+    direct = combat().prepareGetUpIdle(key(), idle, {seed, seed, 0}); ASSERT_TRUE(direct->commit());
+    auto expected = before; expected.mNativeActorValues.front().mProcessKnockedState = 5;
+    EXPECT_EQ(snapshot(), expected);
+}
+
+TEST_F(NativeGetUpRequestTest, PreparedSelectionRejectsChangedDrawContextOutsideActorValueAuthority)
+{
+    auto& world = mFixture.mWorld; auto& store = world.getStore();
+    const auto rootKey = ESM::FormKey::content("headless.esm", 0xa00);
+    auto root = *store.search<ESM4::IdleAnimation>(rootKey);
+    ESM4::PackageCondition sheathed{}; sheathed.mFunction = 101;
+    sheathed.mOperator = ESM4::ConditionOperator::Equal; sheathed.mComparisonValue = 0;
+    root.mConditions.push_back(sheathed); store.getWritable<ESM4::IdleAnimation>().insertStatic(root, rootKey);
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    const auto before = snapshot(); const auto values = *combat().findActorValues(key());
+    mActor.getClass().getCreatureStats(mActor).setDrawState(MWMechanics::DrawState::Weapon);
+    EXPECT_EQ(*combat().findActorValues(key()), values);
+    EXPECT_EQ(world.getOblivionScriptIsWeaponOut(key()), 1.0);
+    EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), before);
+    const auto next = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    EXPECT_TRUE(next->selection().mIdle.isNull()); EXPECT_EQ(next->selection().mRandomDraws, 1);
+    EXPECT_EQ(combat().combatRandomState(), before.mCombatRngState);
+}
+
+TEST_F(NativeGetUpRequestTest, PreparedSelectionRejectsChangedAuthoredActorAndIdleModels)
+{
+    auto& world = mFixture.mWorld; auto& store = world.getStore();
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    const auto before = snapshot(); const auto baseKey = ESM::FormKey::content("headless.esm", 0x800);
+    const auto original = *store.search<ESM4::Npc>(baseKey);
+    auto changed = original; changed.mModel = "DoG\\Other.NIF";
+    store.getWritable<ESM4::Npc>().insertStatic(changed, baseKey);
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), before);
+    store.getWritable<ESM4::Npc>().insertStatic(original, baseKey);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    const auto idleKey = ESM::FormKey::content("headless.esm", 0xa01);
+    auto child = *store.search<ESM4::IdleAnimation>(idleKey); child.mModel = "Outside\\Other.kf";
+    store.getWritable<ESM4::IdleAnimation>().insertStatic(child, idleKey);
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), before);
+}
+
+TEST_F(NativeGetUpRequestTest, PreparedRequestKeepsAcquiredKfWhenCacheAndFileBytesChange)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
+    const auto original = *combat().getUpIdle(key());
+    combat().setProcessKnockedState(key(), 3);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    write(kf(27)); mFixture.mResources.clearCache();
+    ASSERT_TRUE(prepared->commit()); EXPECT_EQ(combat().getUpIdle(key()), original);
+    combat().setProcessKnockedState(key(), 3);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
+    ASSERT_TRUE(combat().getUpIdle(key()));
+    EXPECT_NE(combat().getUpIdle(key())->mAssetHash, original.mAssetHash);
+    EXPECT_EQ(mAnimation->sources(), 0); EXPECT_FALSE(mAnimation->reactionRoot());
+}
+
+TEST_F(NativeGetUpRequestTest, WorldClearInvalidatesPreparationBeforeReadingRetiredActorPointers)
+{
+    auto& world = mFixture.mWorld; const auto actor = key();
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->isValid());
+    world.clear();
+    EXPECT_NE(mAnimation->getObjectRoot(), nullptr);
+    EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+    EXPECT_EQ(world.getOblivionCombatService()->findActorValues(actor), nullptr);
+    EXPECT_FALSE(world.getOblivionCombatService()->getUpIdle(actor));
+}
+
+TEST_F(NativeGetUpRequestTest, FrozenOutgoingSimulationRejectsReadyPublicationUntilRetentionIsCancelled)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared->isValid()); const auto before = snapshot();
+    {
+        auto archive = world.retainSimulation();
+        EXPECT_FALSE(prepared->isValid()); ASSERT_FALSE(prepared->commit());
+        auto during = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+        EXPECT_FALSE(during->isValid()); ASSERT_FALSE(during->commit());
+        EXPECT_EQ(snapshot(), before);
+    }
+    ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    EXPECT_FALSE(prepared->commit());
 }

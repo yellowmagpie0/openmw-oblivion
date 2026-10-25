@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "runtime_schema": 71,
+  "scope": "Selected GetUp IDLE resource ownership and guarded ready publication before native sequence start",
+  "contract": {
+    "fields": [
+      "actor map key",
+      "base",
+      "idle",
+      "actor_model C-string prefix",
+      "authored KF model C-string prefix",
+      "opaque16-byte KF hash encoded lower hex32"
+    ],
+    "publication": [
+      "Durable selected identity, raw3->5 and staged CRT state commit together.",
+      "No renderer alias/root binding, sequence start, process action11, contact action allocation or body transition.",
+      "Selection-context revalidation uses the same local CRT seed without advancing live RNG or loading another KF.",
+      "Readmission validates winning actor/IDLE paths, actor bank membership and exact acquired KF hash without reevaluating conditions."
+    ]
+  },
+  "cases": [
+    {
+      "id": "getup71-wire",
+      "tests": [
+        "ESM4RuntimeState.GetUpIdle71PreservesSelectedResourceWireWithoutInferringLegacySelection",
+        "ESM4RuntimeState.GetUpIdle71RejectsDanglingModelsHashesVersionsAndNoncanonicalWire"
+      ],
+      "expected": [
+        "Counted sorted map of six strings, between knockback and ragdoll fields.",
+        "C++ binary/JSON and Python roundtrips agree; duplicate/noncanonical/dangling owners and invalid paths/hashes/versions reject.",
+        "Legacy schemas never infer a resource; writing populated ownership to schema70 rejects."
+      ]
+    },
+    {
+      "id": "getup71-ready",
+      "tests": [
+        "NativeGetUpRequestTest.PublishesSelectedResourceRawByteAndRngTogetherWithoutStartingPlayback",
+        "NativeGetUpRequestTest.ZeroDrawAndMalformedRandomTransitionsKeepSharedAuthorityConsistent"
+      ],
+      "expected": [
+        "Preparation changes no captured logical state or source registration.",
+        "Exactly one commit publishes raw5/resource/RNG; zero draws preserve the stream.",
+        "Action ledger, process action, animation sources/root and other fields survive. Forged/stale random transitions reject."
+      ]
+    },
+    {
+      "id": "getup71-stale",
+      "tests": [
+        "NativeGetUpRequestTest.RejectsStaleDrawStateRendererAndServiceReplacementBeforePublication",
+        "NativeGetUpRequestTest.PreparedSelectionRejectsChangedDrawContextOutsideActorValueAuthority",
+        "NativeGetUpRequestTest.PreparedSelectionRejectsChangedAuthoredActorAndIdleModels"
+      ],
+      "expected": [
+        "Competing plans, RNG changes, raw-state ABA, source generation, foreign/expired renderer, service restore/copy/move, current draw state and authored model changes cannot publish stale selection."
+      ]
+    },
+    {
+      "id": "getup71-asset-owner",
+      "tests": [
+        "NativeGetUpRequestTest.PreparedRequestKeepsAcquiredKfWhenCacheAndFileBytesChange",
+        "NativeGetUpRequestTest.SavedResourceAdmissionChecksWinningPathsBankAndExactLoadedHash"
+      ],
+      "expected": [
+        "A prepared request keeps its original KF after cache eviction/file replacement; a fresh request acquires the new hash.",
+        "Saved missing/changed IDLE/model/bank/hash inputs reject before logical publication."
+      ]
+    },
+    {
+      "id": "getup71-null",
+      "tests": [
+        "NativeGetUpRequestTest.NullSelectionAndUnavailableKfCannotPublishStagedRandomOrReadyState"
+      ],
+      "expected": [
+        "Null selection remains inspectable with its staged draw budget but cannot commit through the ready-resource API.",
+        "Missing/unsupported synchronous resource acquisition leaves live RNG and ownership unchanged. Native async status0 behavior is outside this API."
+      ]
+    },
+    {
+      "id": "getup71-lifecycle",
+      "tests": [
+        "NativeGetUpRequestTest.WorldClearInvalidatesPreparationBeforeReadingRetiredActorPointers",
+        "NativeGetUpRequestTest.FrozenOutgoingSimulationRejectsReadyPublicationUntilRetentionIsCancelled"
+      ],
+      "expected": [
+        "Clear rejects retained plans before retired actor pointers are read.",
+        "Outgoing World retention blocks ready publication; cancelling retention preserves a previously prepared valid plan.",
+        "Resource cache participates in World runtime-field retention and release."
+      ]
+    },
+    {
+      "id": "getup71-migration",
+      "tests": [
+        "ESM4RuntimeState.actorClockWireRejectsDuplicateNoncanonicalOversizedAndTruncatedData",
+        "scripts.tests.test_tes4_runtime_state.Tes4RuntimeStateTests.test_getup_idle71_wire_roundtrip_and_legacy_absence",
+        "scripts.tests.test_tes4_runtime_state.Tes4RuntimeStateTests.test_getup_idle71_rejects_identity_path_hash_and_shape_corruption"
+      ],
+      "expected": [
+        "Clock corruption coverage remains version16..71 with the new empty collection counted.",
+        "Three existing typed fixture migrators explicitly support71 and preserve all undeclared fields with empty GetUp defaults."
+      ]
+    },
+    {
+      "id": "getup71-fresh-headless",
+      "profiles": [
+        "normal producer/consumer/changed-KF rejection",
+        "ASan/UBSan+leaks producer/consumer/changed-KF rejection"
+      ],
+      "expected": {
+        "initial_crt_state": 1,
+        "next_crt_state_after_one_draw": 2745024,
+        "actor": "content:headless.esm:000900",
+        "idle": "content:headless.esm:000a01",
+        "actor_model": "DoG\\Skeleton.NIF",
+        "model": "Outside\\same.kf",
+        "raw_knocked": 5,
+        "process_count": 6,
+        "invariants": [
+          "Distinct PIDs and pristine fixture-save hash.",
+          "C++ producer/consumer canonical JSON identical; full Python DTO and reencoded payload identical.",
+          "A newly unavailable selection condition cannot cause reselection or RNG replay at readmission.",
+          "Changed KF rejects before service mutation."
+        ]
+      },
+      "scope": "Standalone headless host using production libraries/World admission/service restore and a T4ST-only fixture; no full shared save/load or normal-input gameplay acceptance."
+    }
+  ],
+  "open_delivery": [
+    "Natural CharacterController initial/Down/GetUp dispatcher and caller root/FaceGen/constraint prefixes.",
+    "Null-IDLE root-reset and live RNG publication branch, native asynchronous request profile.",
+    "Actual slot5/slot0 sequence start, NI clock/completion, action11 and full request lifecycle persistence.",
+    "Directional mastery, generic package ownership and complete S4 normal-input view/device/FPS/fresh-process matrix."
+  ]
+}

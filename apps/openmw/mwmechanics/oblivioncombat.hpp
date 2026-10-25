@@ -411,6 +411,7 @@ namespace MWMechanics
             { if (this != &other) { mValue.reset(); other.mValue.reset(); } return *this; }
         } mPreparedReleaseIdentity;
         PreparedReleaseIdentity mPreparedRagdollIdentity;
+        PreparedReleaseIdentity mPreparedGetUpIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
         // Process-frame flag B333B8: consumed by the next frame clock, then
@@ -426,6 +427,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeBowState> mBowStates;
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
+        std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mGetUpIdles;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         ESM4::RuntimeMeleeState prepareMeleeStrikeState(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
@@ -501,6 +503,27 @@ namespace MWMechanics
         OblivionActorLifeAdoption guardLifeAdoption(const MWWorld::Ptr& actor, MWWorld::Player* player = nullptr);
         static bool canSpendFatigue(const MWWorld::Ptr& actor);
         void clear();
+        std::optional<ESM4::RuntimeGetUpIdle> getUpIdle(const ESM::FormKey& actor) const;
+        class PreparedGetUpIdle
+        {
+            struct Impl;
+            std::unique_ptr<Impl> mImpl;
+            explicit PreparedGetUpIdle(std::unique_ptr<Impl> impl);
+            friend class OblivionCombatService;
+        public:
+            ~PreparedGetUpIdle();
+            PreparedGetUpIdle(const PreparedGetUpIdle&) = delete;
+            PreparedGetUpIdle& operator=(const PreparedGetUpIdle&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        // Selected resource is acquired by the caller before preparation.
+        // Commit publishes its durable identity, raw3->5 and staged CRT state
+        // together; no contact action, sequence start or process action11.
+        std::unique_ptr<PreparedGetUpIdle> prepareGetUpIdle(const ESM::FormKey& actor,
+            const ESM4::RuntimeGetUpIdle& idle, const OblivionCombatRandomTransition& random);
+        bool validateGetUpIdle(const PreparedGetUpIdle& update) const noexcept;
+        bool commitGetUpIdle(PreparedGetUpIdle& update) noexcept;
         std::optional<ESM4::TimedKnockbackState> actorKnockback(const ESM::FormKey& actor) const;
         // Physics snapshots state on the main thread. A newer hit prevents an
         // older asynchronous simulation from overwriting its pulse on sync.

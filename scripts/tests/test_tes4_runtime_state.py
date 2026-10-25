@@ -152,6 +152,61 @@ def make_m14_state() -> dict:
 
 class Tes4RuntimeStateTests(unittest.TestCase):
 
+    @classmethod
+    def getup_idle_state(cls):
+        state = cls.combat_controller_state(); state["schema_version"] = 71
+        state["native_actor_life"] = [{"actor": a["actor"], "base": a["base"], "phase": 0,
+            "recovery_remaining": 0., "killer": "null"} for a in state["native_actor_values"]]
+        a = state["native_actor_values"][1]
+        state["native_getup_idles"] = [{"actor": a["actor"], "base": a["base"],
+            "idle": "content:oblivion.esm:000a01", "actor_model": "Dog\\Skeleton.NIF",
+            "model": "Outside\\GetUp.KF", "asset_hash": "00112233445566778899aabbccddeeff"}]
+        return state
+
+    def test_getup_idle71_wire_roundtrip_and_legacy_absence(self):
+        state = self.getup_idle_state(); entry = state["native_getup_idles"][0]
+        wire = state_io.encode_payload(state)
+        strings = [entry[k].encode() for k in ("actor", "base", "idle", "actor_model", "model", "asset_hash")]
+        expected = b"".join(struct.pack("<I", len(v)) + v for v in strings)
+        start = wire.index(expected)
+        self.assertEqual(wire[start-4:start], struct.pack("<I", 1))
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_getup_idles"], state["native_getup_idles"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        bad = bytearray(wire); bad[start-4] = 2; bad[start:start] = expected
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        state["schema_version"] = 70
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.mutate_for_acceptance(state, "legacy")
+        del state["native_getup_idles"]
+        legacy = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertFalse(legacy.get("native_getup_idles"))
+        payload = state_io.encode_payload(legacy)
+        body = struct.pack("<4sII", b"VERS", 4, 70) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        record = struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)/"old.omwsave"; target = Path(directory)/"new.omwsave"
+            source.write_bytes(record)
+            state_io.write_save(source, target, legacy)
+            self.assertEqual(state_io.load_save(target)["native_getup_idles"], [])
+            current = self.getup_idle_state()
+            state_io.write_save(source, target, current)
+            self.assertEqual(state_io.load_save(target)["native_getup_idles"], current["native_getup_idles"])
+
+
+    def test_getup_idle71_rejects_identity_path_hash_and_shape_corruption(self):
+        for field, value in [("actor", "content:oblivion.esm:000999"), ("base", None),
+                ("idle", "dynamic:idle:0000000000000001"), ("model", "outside.nif"),
+                ("model", "a\0.kf"), ("model", "x"*260), ("model", "é.kf"),
+                ("actor_model", ""), ("asset_hash", "F"*32), ("asset_hash", "0"*31)]:
+            with self.subTest(field=field, value=value):
+                state = self.getup_idle_state(); state["native_getup_idles"][0][field] = value
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.getup_idle_state(); state["native_getup_idles"] *= 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.getup_idle_state(); state["native_actor_life"] = []
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     @staticmethod
     def combat_controller_state():
         state = make_state(); state["schema_version"] = 68; state["ai_rng_state"] = 1

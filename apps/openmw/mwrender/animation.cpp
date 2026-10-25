@@ -1033,11 +1033,17 @@ namespace MWRender
     std::shared_ptr<const Animation::NativeIdleResource> Animation::acquireNativeIdleResource(
         std::string_view model) const
     {
-        if (!mResourceSystem || !ESM4::nativeIdleHasFile(model)) return nullptr;
+        return mResourceSystem ? acquireNativeIdleResource(*mResourceSystem, model) : nullptr;
+    }
+
+    std::shared_ptr<const Animation::NativeIdleResource> Animation::acquireNativeIdleResource(
+        Resource::ResourceSystem& resources, std::string_view model)
+    {
+        if (!ESM4::nativeIdleHasFile(model)) return nullptr;
         model = model.substr(0, model.find('\0'));
         const auto path = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
-        if (!mResourceSystem->getVFS()->exists(path)) return nullptr;
-        const auto frames = mResourceSystem->getKeyframeManager()->get(path);
+        if (!resources.getVFS()->exists(path)) return nullptr;
+        const auto frames = resources.getKeyframeManager()->get(path);
         // A filename-stem alias cannot disambiguate multiplexed sequences.
         // A trackless native sequence still carries a valid clock/resource.
         if (!frames || frames->mControllerSequences.size() != 1 || frames->mFileHash.size() != 16)

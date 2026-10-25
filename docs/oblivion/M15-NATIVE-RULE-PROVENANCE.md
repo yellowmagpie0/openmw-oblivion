@@ -19523,3 +19523,81 @@ and the full normal-input view/device/FPS/fresh-process matrix remain open. See 
 
 Tested source fingerprint: `0d562a2ac25bb32b97ed1212360a2eb44bf9e98c14134108b462e0e421400ebd`
 on parent `77e487d97316e10b713ad06bb42b9d2bb259aec3`.
+
+### Selected GetUp IDLE ownership and atomic ready publication (schema 71)
+
+`RuntimeGetUpIdle` now saves the selected resource's actor/base binding, IDLE
+FormKey, raw authored actor/KF C-string prefixes and opaque 16-byte parsed KF hash
+as lowercase hex. A counted actor map is encoded between knockback and ragdoll
+state in schema 71. C++ binary/JSON and Python agree on its six-string wire entry.
+Older schemas infer no resource, and populated ownership cannot be written to an
+older schema. Validators reject duplicate/noncanonical/dangling bindings, invalid
+paths/hashes and incompatible versions. Existing clock corruption tests still
+cover every schema from 16 through 71. Three checked save-fixture migration tools
+and their editable recipes explicitly add the empty schema-71 default.
+
+`OblivionCombatService::prepareGetUpIdle` stages map storage and verifies the CRT
+transition over complete actor-value/lifecycle snapshots. Its nonthrowing commit
+publishes resource identity, raw knocked byte 3 -> 5 and RNG together. Competing,
+consumed, restored/copied/moved service and raw-state ABA preparations reject.
+No contact action is allocated, no process action 11 is set and no clock advances.
+The resource map does not assert a sequence state or replace the knocked byte.
+
+`World::prepareOblivionGetUpIdleRequest` selects once for acquisition and retains
+the loaded KF independently of the renderer. Before publication it revalidates
+the selection result against current draw/equipment/package/World inputs using
+the same local CRT seed. This consumes no live RNG and acquires no replacement KF.
+Actor, cell, root/source generation, World lifetime/clear generation and current
+cache ownership also guard publication. The staged renderer binding is not
+committed: readiness changes no live alias, root binding or playback. A retained
+request keeps its loaded hash after cache/file replacement; a fresh request can
+acquire the new bytes. Null selection remains inspectable with its staged draws,
+but its distinct root-reset/RNG branch is not implemented by this ready API.
+Missing or unsupported synchronous resources reject before logical publication.
+
+World save admission reacquires and retains the exact KF after checking winning
+actor/IDLE paths and model-bank membership. It does not evaluate selection
+conditions or replay selection RNG. Cache ownership participates in runtime-field
+retention, rollback and release. An explicit negative probe found that the initial
+prepared API could mutate a frozen outgoing World. The fixed API uses the existing
+World freeze contract; a tracked regression verifies no publication during
+retention and successful use of the original plan after retention is cancelled.
+World clear also invalidates plans before retired actor pointers are read.
+
+Final engine runs pass all **1,975 tests** in both normal and ASan/UBSan builds.
+The unchanged component/Python inputs retain full passing runs of **3,133
+component tests per build** and **413 Python tests**; the receipt pins the exact
+two-file engine-only change for the final freeze fix. Leak-enabled focused runs
+pass **3 component and 24 engine cases**, including all new ownership/lifecycle
+cases. Full sanitizer suites retain the documented unrelated suite-leak exception.
+No production CMake warning originates on a changed line. Separate standalone
+hosts record their include-generated `-Wsubobject-linkage` warnings explicitly.
+
+Six fresh standalone headless processes exercise T4ST fixture production,
+service/World-resource readmission and changed-KF rejection in both builds, with
+leak detection enabled in the instrumented host. They require distinct PIDs,
+unchanged input hashes, identical C++ producer/consumer canonical JSON and exact
+Python DTO/payload reencoding. A newly unavailable condition cannot force
+reselection at readmission. One draw from CRT state 1 persists state 2,745,024 and
+raw byte 5 without action/sequence replay. These are T4ST-only engine-library
+fixtures, **not full shared-save loading, rendered recovery or normal input**.
+The earlier 386 hash-identified original request protocol profiles remain the
+independent reference; this chunk adds no new original-executable probe claim.
+
+Retained failures include the initial Python fixture/migration-tool errors, the
+all-version clock test's omitted four-byte schema-71 suffix, the stopped/drained
+sanitizer preflight, the frozen-World defect and a standalone verifier that first
+compared payload bytes with the record-size tuple member. Corrected candidates
+and verifiers reran in fresh evidence directories.
+
+**Full M15S4 remains incomplete.** Natural initial/Down/GetUp dispatch and caller
+root/FaceGen/constraint prefixes, null-IDLE reset and asynchronous request behavior,
+actual slot5 start/NI clock/completion/action 11 and complete request persistence,
+directional mastery, generic package ownership and the full normal-input
+view/device/FPS/fresh-process matrix remain open. See the
+[receipt](M15-NATIVE-GETUP-IDLE-OWNERSHIP-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_getup_idle_ownership_cases.json).
+
+Final engine source fingerprint:
+`9a8a4340f3d8f6440ebebf6f0af66c95853a21ad31f9343796ec7ceadb86286a`
+on parent `bc9f07bad65ad92513f2fddd0f1f31da009a5f2d`.

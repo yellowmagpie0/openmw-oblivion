@@ -1742,7 +1742,7 @@ namespace
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
-                + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0);
+                + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5619,4 +5619,80 @@ TEST(ESM4RuntimeState, GetUpTerminalCursorAndReversedBoundsRoundTrip)
     EXPECT_NE(restored.canonicalJson().find("\"cursor\":1"), std::string::npos);
     blend.mCursor = 2;
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}
+
+namespace
+{
+    ESM4::RuntimeState getUpIdleState()
+    {
+        auto state = combatControllerState();
+        for (const auto& actor : state.mNativeActorValues)
+            state.mNativeActorLife.push_back({actor.mActor, actor.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        const auto& actor = state.mNativeActorValues.front();
+        state.mNativeGetUpIdles.emplace(actor.mActor, ESM4::RuntimeGetUpIdle{actor.mBase,
+            ESM::FormKey::content("oblivion.esm", 0xa01), "Dog\\Skeleton.NIF", "Outside\\GetUp.KF",
+            "00112233445566778899aabbccddeeff"});
+        return state;
+    }
+    std::string getUpWireEntry(const ESM::FormKey& actor, const ESM4::RuntimeGetUpIdle& idle)
+    {
+        std::string result;
+        for (const auto& value : {actor.serialize(), idle.mBase.serialize(), idle.mIdle.serialize(),
+                 idle.mActorModel, idle.mModel, idle.mAssetHash})
+        {
+            const auto size = static_cast<std::uint32_t>(value.size());
+            for (unsigned shift : {0, 8, 16, 24}) result += static_cast<char>(size >> shift);
+            result += value;
+        }
+        return result;
+    }
+}
+
+TEST(ESM4RuntimeState, GetUpIdle71PreservesSelectedResourceWireWithoutInferringLegacySelection)
+{
+    auto state = getUpIdleState();
+    const auto& [actor, idle] = *state.mNativeGetUpIdles.begin();
+    const auto entry = getUpWireEntry(actor, idle);
+    const auto wire = state.serializeBinary();
+    const auto found = std::search(wire.begin(), wire.end(), entry.begin(), entry.end());
+    ASSERT_NE(found, wire.end()); const auto start = std::distance(wire.begin(), found); ASSERT_GE(start, 4);
+    EXPECT_EQ((std::vector<std::uint8_t>(found - 4, found)), (std::vector<std::uint8_t>{1, 0, 0, 0}));
+    const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(loaded, state); EXPECT_EQ(loaded.serializeBinary(), wire);
+    EXPECT_NE(loaded.canonicalJson().find("\"native_getup_idles\":[{\"actor\":"), std::string::npos);
+    state.mVersion = 70;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeGetUpIdles.clear();
+    const auto legacy = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_TRUE(legacy.mNativeGetUpIdles.empty());
+    EXPECT_EQ(legacy.mCombatRngState, state.mCombatRngState);
+}
+
+TEST(ESM4RuntimeState, GetUpIdle71RejectsDanglingModelsHashesVersionsAndNoncanonicalWire)
+{
+    const auto valid = getUpIdleState();
+    const auto reject = [&](const auto& mutate) {
+        auto bad = valid; mutate(bad);
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto& state) { state.mNativeActorLife.clear(); });
+    reject([](auto& state) { state.mNativeActorValues.clear(); });
+    reject([](auto& state) { state.mNativeGetUpIdles.begin()->second.mBase = {}; });
+    reject([](auto& state) { state.mNativeGetUpIdles.begin()->second.mIdle = ESM::FormKey::dynamic("idle", 1); });
+    for (const auto& model : {std::string{}, std::string("a\0.kf", 5), std::string(260, 'a'), std::string("\x80.kf")})
+        reject([&](auto& state) { state.mNativeGetUpIdles.begin()->second.mModel = model; });
+    for (const auto& hash : {std::string{}, std::string(32, 'F'), std::string(31, '0'), std::string(33, '0')})
+        reject([&](auto& state) { state.mNativeGetUpIdles.begin()->second.mAssetHash = hash; });
+    reject([](auto& state) { state.mNativeGetUpIdles.begin()->second.mModel = "outside.nif"; });
+    const auto& [actor, idle] = *valid.mNativeGetUpIdles.begin();
+    auto wire = valid.serializeBinary(); const auto entry = getUpWireEntry(actor, idle);
+    const auto found = std::search(wire.begin(), wire.end(), entry.begin(), entry.end());
+    ASSERT_NE(found, wire.end()); const auto start = std::distance(wire.begin(), found); ASSERT_GE(start, 4);
+    wire[start - 4] = 2; wire.insert(wire.begin() + start, entry.begin(), entry.end());
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
+    wire = valid.serializeBinary();
+    const std::string plugin = "oblivion.esm";
+    const auto key = std::search(wire.begin() + start, wire.end(), plugin.begin(), plugin.end());
+    ASSERT_NE(key, wire.end()); *key = 'O';
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }
