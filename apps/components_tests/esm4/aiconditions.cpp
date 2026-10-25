@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <array>
+#include <limits>
 
 #include <components/esm4/aiconditions.hpp>
 
@@ -117,4 +118,114 @@ TEST(ESM4AIConditions, DiagnosticStatusesPropagateOnlyThroughVisitedOrGroups)
     EXPECT_EQ(ESM4::evaluateConditions(conditions, context), ESM4::ConditionResult::MissingContext);
     conditions[0].mFunction = 2;
     EXPECT_EQ(ESM4::evaluateConditions(conditions, context), ESM4::ConditionResult::True);
+}
+
+TEST(ESM4AIConditions, NativeComparisonUsesFloatStoresAndOriginalUnorderedBranches)
+{
+    // Original56AC50/56A3B0, comparison-corpus.json, both x87 words.
+    EXPECT_TRUE(ESM4::nativeConditionComparison(16777217., 16777216.f, 0));
+    EXPECT_TRUE(ESM4::nativeConditionComparison(1. + 0x1p-25, 1, 0));
+    EXPECT_TRUE(ESM4::nativeConditionComparison(-0., 0, 0));
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    const auto inf = std::numeric_limits<float>::infinity();
+    EXPECT_FALSE(ESM4::nativeConditionComparison(nan, 0, 0));
+    for (unsigned op = 1; op < 8; ++op)
+    {
+        EXPECT_TRUE(ESM4::nativeConditionComparison(nan, 0, op));
+        EXPECT_TRUE(ESM4::nativeConditionComparison(0, nan, op));
+    }
+    EXPECT_TRUE(ESM4::nativeConditionComparison(inf, inf, 0));
+    EXPECT_TRUE(ESM4::nativeConditionComparison(1e40, inf, 0));
+    EXPECT_TRUE(ESM4::nativeConditionComparison(-1e40, -inf, 0));
+    EXPECT_FALSE(ESM4::nativeConditionComparison(inf, inf, 2));
+    EXPECT_TRUE(ESM4::nativeConditionComparison(-inf, 0, 4));
+}
+
+TEST(ESM4AIConditions, NativeDispatchDistinguishesRequiredNullSubjectAndCallbackFailureFromZero)
+{
+    ESM4::NativeConditionEvaluationContext context;
+    context.mHasActor = true;
+    unsigned calls = 0;
+    bool opposite = false;
+    context.mResolve = [&](const auto&, auto subject, bool defaultReference) {
+        ++calls;
+        EXPECT_EQ(subject, ESM4::ConditionSubject::Target);
+        opposite = defaultReference;
+        return ESM4::ConditionValue::value(0);
+    };
+    auto c = condition(0);
+    c.mRunOnTarget = true;
+    c.mOperator = ESM4::ConditionOperator::Equal;
+    c.mFunction = 101;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::False);
+    EXPECT_EQ(calls, 0u);
+    c.mFunction = 18; // Actual table marks GetCurrentTime subjectless.
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    EXPECT_FALSE(opposite);
+    c.mFunction = 53;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    EXPECT_TRUE(opposite); // Reference argument defaults after subject swap.
+    c.mFunction = 79;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    EXPECT_FALSE(opposite); // Quest argument is not a reference argument.
+    c.mFunction = 0;
+    const auto before = calls;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::False);
+    EXPECT_EQ(calls, before); // Native callback absent, not implementation unavailable.
+    c.mFunction = 369;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::Unsupported);
+    c.mFunction = 18;
+    c.mOperator = ESM4::ConditionOperator::Unknown;
+    c.mFlags = 0xe0;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    context.mResolve = [](const auto&, auto, bool) { return ESM4::ConditionValue::failed(); };
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::False);
+}
+
+TEST(ESM4AIConditions, NativeGlobalComparisonDistinguishesNullGlobalAndUnavailableResolver)
+{
+    ESM4::NativeConditionEvaluationContext context;
+    context.mHasActor = true;
+    context.mResolve = [](const auto&, auto, bool) { return ESM4::ConditionValue::value(0); };
+    auto c = condition(123);
+    c.mFunction = 101;
+    c.mOperator = ESM4::ConditionOperator::Equal;
+    c.mUseGlobal = true;
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    c.mComparisonGlobalKey = ESM::FormKey::content("test.esm", 1);
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::MissingContext);
+    context.mResolveGlobal = [](const auto&) -> std::optional<double> { return std::nullopt; };
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::True);
+    context.mResolveGlobal = [](const auto&) -> std::optional<double> { return 1; };
+    EXPECT_EQ(ESM4::evaluateNativeCondition(c, context), ESM4::ConditionResult::False);
+}
+
+TEST(ESM4AIConditions, NativeListPreservesDeferredDispositionCallsAndRejectsUnavailableOrBranches)
+{
+    ESM4::NativeConditionEvaluationContext context;
+    context.mHasActor = true;
+    std::vector<int> calls;
+    context.mResolve = [&](const auto& c, auto, bool) {
+        calls.push_back(c.mFunction);
+        return ESM4::ConditionValue::value(0);
+    };
+    auto disposition = condition(1);
+    disposition.mFunction = 76;
+    disposition.mOperator = ESM4::ConditionOperator::Greater;
+    auto random = condition(1);
+    random.mFunction = 77;
+    random.mOperator = ESM4::ConditionOperator::Equal;
+    EXPECT_EQ(ESM4::evaluateNativeConditions(std::array{disposition, random}, context), ESM4::ConditionResult::False);
+    EXPECT_EQ(calls, (std::vector<int>{76, 77}));
+    calls.clear();
+    EXPECT_EQ(ESM4::evaluateNativeConditions(std::array{random, disposition}, context), ESM4::ConditionResult::False);
+    EXPECT_EQ(calls, (std::vector<int>{77}));
+    disposition.mOr = true;
+    random.mComparisonValue = 0;
+    calls.clear();
+    EXPECT_EQ(ESM4::evaluateNativeConditions(std::array{disposition, random}, context), ESM4::ConditionResult::True);
+    EXPECT_EQ(calls, (std::vector<int>{76, 77}));
+    context.mResolve = [](const auto&, auto, bool) { return ESM4::ConditionValue::unsupported(); };
+    EXPECT_EQ(ESM4::evaluateNativeConditions(std::array{disposition, random}, context), ESM4::ConditionResult::Unsupported);
+    EXPECT_EQ(ESM4::evaluateNativeConditions({}, context), ESM4::ConditionResult::True);
 }

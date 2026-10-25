@@ -112,6 +112,7 @@ namespace MWWorld
     class ProjectileManager;
     class OblivionScriptManager;
     struct EquippedWeaponDrop;
+    struct OblivionNativeIdleSelection;
 
     /// \brief The game world and its visual representation
 
@@ -466,6 +467,9 @@ namespace MWWorld
         std::optional<double> getOblivionScriptIsFacingUp(const ESM::FormKey& actor) const;
         std::optional<double> getOblivionScriptIsWeaponOut(const ESM::FormKey& actor) const;
         std::optional<double> getOblivionScriptWeaponAnimationType(const ESM::FormKey& actor) const;
+        // Original521450 uses the raw actor base model and null second
+        // reference. This prepares selection only; it does not start recovery.
+        OblivionNativeIdleSelection prepareOblivionGetUpIdle(const Ptr& actor) const;
         // Borrow the current actor renderer with an already resolved native
         // reference placement. No process/knocked-state predicate participates.
         double getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,

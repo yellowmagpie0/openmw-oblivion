@@ -9,6 +9,7 @@
 */
 #include "aiconditions.hpp"
 
+#include <array>
 #include <cmath>
 
 namespace ESM4
@@ -36,6 +37,8 @@ namespace ESM4
         ConditionResult fromValue(ConditionValue value, const PackageCondition& condition,
             const ConditionEvaluationContext& context)
         {
+            if (value.mStatus == ConditionValueStatus::Failed)
+                return ConditionResult::False;
             if (value.mStatus != ConditionValueStatus::Value || !std::isfinite(value.mValue))
             {
                 return value.mStatus == ConditionValueStatus::Unsupported ? ConditionResult::Unsupported
@@ -117,6 +120,134 @@ namespace ESM4
             }
         }
         return ConditionResult::True;
+    }
+
+    std::optional<NativeConditionFunction> nativeConditionFunction(std::int32_t function)
+    {
+        static constexpr std::array<NativeConditionFunction, 369> functions{{
+#include "native_condition_functions.inc"
+        }};
+        if (function < 0 || static_cast<std::size_t>(function) >= functions.size()) return std::nullopt;
+        return functions[function];
+    }
+
+    bool nativeConditionComparison(double actual, float expected, std::uint8_t operation)
+    {
+        const float stored = static_cast<float>(actual);
+        if (operation > 5) return true;
+        if (std::isnan(stored) || std::isnan(expected)) return operation != 0;
+        switch (operation)
+        {
+            case 0: return stored == expected;
+            case 1: return stored != expected;
+            case 2: return stored > expected;
+            case 3: return stored >= expected;
+            case 4: return stored < expected;
+            case 5: return stored <= expected;
+        }
+        return false;
+    }
+
+    namespace
+    {
+        ConditionResult evaluateNativeConditionImpl(const PackageCondition& condition,
+            const NativeConditionEvaluationContext& context, bool& deferred)
+        {
+            deferred = false;
+            if ((condition.mRunOn != ConditionRunOn::Subject && condition.mRunOn != ConditionRunOn::Target)
+                || !condition.mRunOnReferenceKey.isNull()) return ConditionResult::Unsupported;
+            const auto function = nativeConditionFunction(condition.mFunction);
+            if (!function) return ConditionResult::Unsupported;
+            if (!function->mHasCallback) return ConditionResult::False;
+            const bool target = condition.mRunOnTarget || condition.mRunOn == ConditionRunOn::Target;
+            if (function->mRequiresSubject && !(target ? context.mHasTarget : context.mHasActor))
+                return ConditionResult::False;
+            if (!context.mResolve) return ConditionResult::MissingContext;
+            const auto value = context.mResolve(condition, target ? ConditionSubject::Target : ConditionSubject::Self,
+                function->mDefaultOppositeReference);
+            if (value.mStatus == ConditionValueStatus::Failed) return ConditionResult::False;
+            if (value.mStatus != ConditionValueStatus::Value)
+                return value.mStatus == ConditionValueStatus::Unsupported
+                    ? ConditionResult::Unsupported : ConditionResult::MissingContext;
+            float comparison = condition.mComparisonValue;
+            if (condition.mUseGlobal)
+            {
+                comparison = 0; // Actual null global pointer falls back to float0.
+                if (!condition.mComparisonGlobalKey.isNull())
+                {
+                    if (!context.mResolveGlobal) return ConditionResult::MissingContext;
+                    if (const auto global = context.mResolveGlobal(condition.mComparisonGlobalKey))
+                        comparison = static_cast<float>(*global);
+                }
+            }
+            const auto operation = condition.mOperator == ConditionOperator::Unknown
+                ? static_cast<std::uint8_t>(condition.mFlags >> 5) : static_cast<std::uint8_t>(condition.mOperator);
+            if (condition.mOperator == ConditionOperator::Unknown && operation < 6)
+                return ConditionResult::Unsupported;
+            const bool matches = nativeConditionComparison(value.mValue, comparison, operation);
+            deferred = !matches && condition.mFunction == 76 && (operation == 2 || operation == 3);
+            return matches ? ConditionResult::True : ConditionResult::False;
+        }
+    }
+
+    ConditionResult evaluateNativeCondition(
+        const PackageCondition& condition, const NativeConditionEvaluationContext& context)
+    {
+        bool deferred;
+        return evaluateNativeConditionImpl(condition, context, deferred);
+    }
+
+    ConditionResult evaluateNativeConditions(
+        std::span<const PackageCondition> conditions, const NativeConditionEvaluationContext& context)
+    {
+        bool passed = true, inOr = false, group = false;
+        bool deferredFailure = false, groupDeferred = false, groupOrdinaryFailure = false;
+        for (const auto& condition : conditions)
+        {
+            if (!inOr || !group)
+            {
+                bool deferred;
+                const auto current = evaluateNativeConditionImpl(condition, context, deferred);
+                // Missing fork implementations/inputs are not native callback
+                // failure. A later OR cannot hide an unproved read.
+                if (current == ConditionResult::MissingContext || current == ConditionResult::Unsupported)
+                    return current;
+                const bool value = current == ConditionResult::True;
+                if (!inOr)
+                {
+                    if (condition.mOr)
+                    {
+                        inOr = true;
+                        group = value;
+                        groupDeferred = deferred;
+                        groupOrdinaryFailure = !value && !deferred;
+                        continue;
+                    }
+                    passed = passed && value;
+                    deferredFailure = deferredFailure || deferred;
+                    if (!passed && !deferredFailure) return ConditionResult::False;
+                    continue;
+                }
+                group = value;
+                groupDeferred = groupDeferred || deferred;
+                groupOrdinaryFailure = groupOrdinaryFailure || (!value && !deferred);
+            }
+            if (!condition.mOr)
+            {
+                inOr = false;
+                passed = passed && group;
+                if (!passed)
+                {
+                    deferredFailure = deferredFailure || (groupDeferred && !groupOrdinaryFailure);
+                    if (!deferredFailure) return ConditionResult::False;
+                }
+            }
+        }
+        // Failed disposition >/>= comparisons mark a deferred failure in
+        // 56A510. Even an already false AND list then continues executing,
+        // preserving subsequent callback/RNG effects. Ordinary failures before
+        // that marker still exit immediately. The wrapper discards the marker.
+        return passed && (!inOr || group) ? ConditionResult::True : ConditionResult::False;
     }
 
     std::string_view conditionFunctionName(std::int32_t function)

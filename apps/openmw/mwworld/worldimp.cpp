@@ -5,6 +5,9 @@
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadgmst.hpp>
 #include "worldimp.hpp"
+#include "oblivionnativeidle.hpp"
+#include <components/esm4/loadidle.hpp>
+#include "../mwclass/esm4npc.hpp"
 #include "oblivionweapondrop.hpp"
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
@@ -2997,7 +3000,6 @@ namespace MWWorld
         if (!subject) return std::nullopt;
         const auto& resident = *subject;
         const auto key = ESM4::runtimeReferenceKey(actor);
-        const auto* values = mOblivionCombat ? mOblivionCombat->findActorValues(key) : nullptr;
         const bool player = key == ESM::FormKey::dynamic("player", 1);
         // An actor with no resident scene has no matching Spine, as in native.
         const auto* animation = resident.isEmpty() ? nullptr : getAnimation(ConstPtr(resident));
@@ -3010,8 +3012,8 @@ namespace MWWorld
             placement = MWRender::resolveOblivionNpcDropPlacement(resident, mStore);
         else if (player)
         {
-            const auto* base = mStore.search<ESM4::Npc>(values ? values->mBase
-                : ESM::FormKey::content("Oblivion.esm", 7));
+            const auto authored = getOblivionReferenceBaseKey(key);
+            const auto* base = authored ? mStore.search<ESM4::Npc>(*authored) : nullptr;
             if (!base || !base->mIsTES4)
                 throw std::invalid_argument("native Player Spine query requires its NPC base");
             const auto* race = mStore.get<ESM4::Race>().search(base->mRace);
@@ -3098,6 +3100,68 @@ namespace MWWorld
         // skill/type fields cannot substitute for the native WEAP category.
         return ESM4::nativeWeaponAnimationType(true, true,
             std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(weapon->mData.type)));
+    }
+
+    OblivionNativeIdleSelection World::prepareOblivionGetUpIdle(const Ptr& actor) const
+    {
+        if (mGameProfile != ESM::GameProfile::Oblivion || !mOblivionCombat || !mOblivionAi || actor.isEmpty())
+            throw std::invalid_argument("native GetUp selection requires its actor services");
+        const bool player = actor == getPlayerConstPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const auto subject = oblivionActorQuerySubject(key);
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!subject || *subject != actor || !values || values->mProcess != ESM4::ActorValueProcess::Active
+            || values->mOwner != (player ? ESM4::ActorValueOwner::Player : ESM4::ActorValueOwner::NonPlayer)
+            || (!player && values->mBase != nativeActorBase(actor)) || !actor.getRefData().getCustomData())
+            throw std::invalid_argument("native GetUp selection requires a resident active actor view");
+        std::string_view model;
+        if (player)
+        {
+            // Actor values use the mutable player-base mechanics proxy. The
+            // model belongs to the authored NPC resolved by the World.
+            const auto authored = getOblivionReferenceBaseKey(key);
+            const auto* base = authored ? mStore.search<ESM4::Npc>(*authored) : nullptr;
+            if (!base || !base->mIsTES4) throw std::invalid_argument("native GetUp Player base is unavailable");
+            model = base->mModel.getOriginal();
+        }
+        else if (actor.getType() == ESM::REC_NPC_4)
+        {
+            const auto* base = MWClass::ESM4Npc::getTraitsRecord(actor);
+            if (!base || !base->mIsTES4) throw std::invalid_argument("native GetUp NPC traits are unavailable");
+            model = base->mModel.getOriginal();
+        }
+        else if (actor.getType() == ESM::REC_CREA4)
+            model = actor.get<ESM4::Creature>()->mBase->mModel.getOriginal();
+        else throw std::invalid_argument("native GetUp selection requires a native actor class");
+        const auto index = buildOblivionNativeIdleIndex(mStore);
+        const ESM4::NativeIdleSelector selector(index.mNodes, index.mBanks);
+        OblivionNativeIdleSelection result;
+        result.mActor = key;
+        result.mActorModel = model;
+        result.mExpectedRandomState = result.mNextRandomState = mOblivionCombat->combatRandomState();
+        MWMechanics::OblivionAiService::DialogueConditionInputs inputs;
+        inputs.mRandomDraw = [&]() -> unsigned {
+            if (result.mRandomDraws == std::numeric_limits<std::uint32_t>::max())
+                throw std::invalid_argument("native idle random draw count overflow");
+            const auto draw = ESM4::combatRandomDraw(result.mNextRandomState);
+            result.mNextRandomState = draw.mNextState;
+            ++result.mRandomDraws;
+            return draw.mValue;
+        };
+        const auto* selected = selector.select(model, [&](const ESM4::IdleAnimation& idle) {
+            const auto condition = mOblivionAi->evaluateNativeIdleConditions(actor, idle.mConditions, inputs);
+            if (condition == ESM4::ConditionResult::MissingContext || condition == ESM4::ConditionResult::Unsupported)
+                throw std::invalid_argument("native GetUp reached an unavailable IDLE condition");
+            return condition == ESM4::ConditionResult::True;
+        });
+        if (selected)
+        {
+            const auto idleKey = mStore.get<ESM4::IdleAnimation>().findFormKey(ESM::RefId(selected->mId));
+            if (!idleKey) throw std::logic_error("native GetUp selected an unindexed record");
+            result.mIdle = *idleKey;
+            result.mModel = selected->mModel.getOriginal();
+        }
+        return result;
     }
 
     bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate)

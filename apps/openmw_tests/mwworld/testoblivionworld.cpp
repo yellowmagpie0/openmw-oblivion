@@ -25,6 +25,11 @@
 #include "apps/openmw/mwscript/compilercontext.hpp"
 #include <components/esm3/loadscpt.hpp>
 #include "inventorywindowmanager.hpp"
+#include "apps/openmw/mwgui/mode.hpp"
+#include "apps/openmw/mwworld/oblivionnativeidle.hpp"
+#include <components/esm4/loadidle.hpp>
+#include <components/esm4/reader.hpp>
+#include <components/loadinglistener/loadinglistener.hpp>
 #include <cstdlib>
 #include "apps/openmw/mwmechanics/autocalcspell.hpp"
 #include "apps/openmw/mwmechanics/spellcalculation.hpp"
@@ -35858,4 +35863,213 @@ TEST(OblivionWorldTest, NativeRecoveryQueriesShareDrawEquipmentAndScriptConditio
             }
         }
     }
+}
+
+
+namespace
+{
+    struct NativeIdleQueryWindows : TestingOpenMW::InventoryWindowManager
+    {
+        bool mRace = false;
+        bool containsMode(MWGui::GuiMode mode) const override { return mRace && mode == MWGui::GM_Race; }
+        bool isGuiMode() const override { return mRace; }
+    };
+
+    template <class T> std::string idleQueryBytes(const T& value)
+    {
+        return {reinterpret_cast<const char*>(&value), sizeof(value)};
+    }
+    std::string idleQuerySub(std::uint32_t tag, const std::string& data)
+    {
+        return idleQueryBytes(tag) + idleQueryBytes(static_cast<std::uint16_t>(data.size())) + data;
+    }
+    std::string idleQueryRecord(std::uint32_t tag, std::uint32_t id, const std::string& data)
+    {
+        return idleQueryBytes(tag) + idleQueryBytes(static_cast<std::uint32_t>(data.size()))
+            + idleQueryBytes(0u) + idleQueryBytes(id) + idleQueryBytes(0u) + data;
+    }
+    std::string idleQueryCondition(std::uint32_t fn, float comparison, std::uint8_t flags = 0,
+        std::uint32_t parameter = 0)
+    {
+        const std::array<std::uint32_t, 6> data{flags, std::bit_cast<std::uint32_t>(comparison), fn, parameter, 0, 0};
+        return idleQuerySub(ESM::fourCC("CTDA"), idleQueryBytes(data));
+    }
+    std::string idleQueryIdle(std::uint32_t id, const std::string& model, std::uint32_t parent,
+        std::uint32_t previous, const std::string& conditions = {}, std::uint8_t anam = 5)
+    {
+        return idleQueryRecord(ESM4::REC_IDLE, id,
+            idleQuerySub(ESM::fourCC("EDID"), std::string("QueryIdle") + '\0')
+            + idleQuerySub(ESM::fourCC("MODL"), model + '\0')
+            + idleQuerySub(ESM::fourCC("ANAM"), std::string(1, static_cast<char>(anam)))
+            + idleQuerySub(ESM::fourCC("DATA"), idleQueryBytes(parent) + idleQueryBytes(previous)) + conditions);
+    }
+    void setIdleQueryNpcModel(NativeWorldFixture& fixture, const std::string& model)
+    {
+        const auto key = ESM::FormKey::content("headless.esm", 0x800);
+        auto base = *fixture.mWorld.getStore().search<ESM4::Npc>(key);
+        base.mModel = model;
+        fixture.mWorld.getStore().getWritable<ESM4::Npc>().insertStatic(base, key);
+    }
+}
+
+TEST(OblivionWorldTest, NativeGetUpSelectionUsesRawActorModelsLiveQueriesAndActualOverrideEvents)
+{
+    NativeIdleQueryWindows windows;
+    const auto records = idleQueryIdle(0xa00, "Dog\\IdleAnims", 0, 0, idleQueryCondition(36, 1, 0, 1036))
+        + idleQueryIdle(0xa01, "Dog\\IdleAnims\\Escort.kf", 0, 0xa00,
+            idleQueryCondition(111, 1) + idleQueryCondition(110, 2))
+        + idleQueryIdle(0xa02, "Dog\\IdleAnims", 0, 0xa01,
+            idleQueryCondition(106, 1) + idleQueryCondition(107, 0, 0x20))
+        + idleQueryIdle(0xa03, "Outside\\NullTarget.kf", 0xa02, 0, idleQueryCondition(101, 0, 2))
+        + idleQueryIdle(0xa04, "Outside\\Old.kf", 0xa02, 0xa03,
+            idleQueryCondition(108, 0) + idleQueryCondition(101, 0))
+        + idleQueryIdle(0xa04, "Outside\\WinningGetUp.KF", 0xa02, 0xa03,
+            idleQueryCondition(108, 0) + idleQueryCondition(101, 0));
+    NativeWorldFixture fixture(false, false, false, {}, {}, records, 6);
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    setIdleQueryNpcModel(fixture, "DoG\\Skeleton.NIF");
+    MWClass::Npc::registerSelf();
+    world.setupPlayer();
+    ESM4::Npc playerBase{};
+    playerBase.mId = {7, 1};
+    playerBase.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    playerBase.mIsTES4 = true;
+    playerBase.mData.health = 100;
+    playerBase.mModel = "DoG\\Skeleton.NIF";
+    store.getWritable<ESM4::Npc>().insertStatic(playerBase, playerBase.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    const auto player = world.getPlayerPtr();
+    const auto npc = addNativeNpc(fixture, 0x801);
+    world.getWorldModel().registerPtr(npc);
+    const auto creature = addEquipmentCreature(fixture);
+    auto creatureBase = *creature.get<ESM4::Creature>()->mBase;
+    creatureBase.mModel = "DoG\\Skeleton.NIF";
+    store.getWritable<ESM4::Creature>().insertStatic(creatureBase, creatureBase.mFormKey);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.activateOblivionActor(creature));
+    auto& combat = *world.getOblivionCombatService();
+    const auto playerKey = ESM::FormKey::dynamic("player", 1);
+    const auto authoredPlayerBase = world.getOblivionReferenceBaseKey(playerKey);
+    ASSERT_TRUE(authoredPlayerBase);
+    ASSERT_NE(*authoredPlayerBase, combat.findActorValues(playerKey)->mBase);
+    ASSERT_EQ(combat.findActorValues(playerKey)->mBase, ESM::FormKey::dynamic("player-base", 1));
+    const auto contentBefore = store.getFormKeyIndex().serialize();
+    for (const auto& actor : {player, npc, creature})
+    {
+        const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        SCOPED_TRACE(key.serialize());
+        combat.setProcessKnockedState(key, 3);
+        ESM4::RuntimeState before, after;
+        combat.capture(before);
+        const auto selected = world.prepareOblivionGetUpIdle(actor);
+        EXPECT_EQ(selected.mActor, key);
+        EXPECT_EQ(selected.mActorModel, "DoG\\Skeleton.NIF");
+        EXPECT_EQ(selected.mIdle, ESM::FormKey::content("headless.esm", 0xa04));
+        EXPECT_EQ(selected.mModel, "Outside\\WinningGetUp.KF");
+        EXPECT_EQ(selected.mRandomDraws, 0u);
+        EXPECT_EQ(selected.mExpectedRandomState, selected.mNextRandomState);
+        combat.capture(after);
+        EXPECT_EQ(after, before);
+        EXPECT_EQ(store.getFormKeyIndex().serialize(), contentBefore);
+    }
+    const auto low = addNativeNpc(fixture, 0x802);
+    world.getWorldModel().registerPtr(low);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(low, ESM4::ActorValueProcess::Low));
+    EXPECT_THROW(world.prepareOblivionGetUpIdle(low), std::invalid_argument);
+    auto* ai = world.getOblivionAiService();
+    ASSERT_NE(ai, nullptr);
+    ESM4::PackageCondition clock;
+    clock.mFunction = 18;
+    clock.mRunOnTarget = true;
+    clock.mOperator = ESM4::ConditionOperator::GreaterOrEqual;
+    clock.mComparisonValue = 0;
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(npc, std::span(&clock, 1), {}), ESM4::ConditionResult::True);
+}
+
+TEST(OblivionWorldTest, NativeGetUpPreparationStagesRandomAndCannotHideUnavailableConditions)
+{
+    const auto random = idleQueryCondition(77, 0, 0x60);
+    const auto records = idleQueryIdle(0xa00, "Dog\\IdleAnims", 0, 0, random)
+        + idleQueryIdle(0xa01, "Outside\\Unknown.kf", 0xa00, 0, idleQueryCondition(12, 0))
+        + idleQueryIdle(0xa02, "Outside\\Fallback.kf", 0xa00, 0xa01)
+        + idleQueryIdle(0xb00, "Cat\\IdleAnims", 0, 0, random, 0x85)
+        + idleQueryIdle(0xb01, "Cat\\IdleAnims\\Later.kf", 0, 0xb00);
+    NativeWorldFixture fixture(false, false, false, {}, {}, records, 5);
+    auto& world = fixture.mWorld;
+    setIdleQueryNpcModel(fixture, "Dog\\Skeleton.nif");
+    const auto npc = addNativeNpc(fixture, 0x801);
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    auto& combat = *world.getOblivionCombatService();
+    ESM4::RuntimeState before, after;
+    combat.capture(before);
+    EXPECT_THROW(world.prepareOblivionGetUpIdle(npc), std::invalid_argument);
+    combat.capture(after);
+    EXPECT_EQ(after, before);
+    // A real successful override replaces the unavailable predicate with an
+    // absent native callback (legitimate false), allowing the next child.
+    const auto patch = idleQueryRecord(ESM4::REC_TES4, 0,
+        idleQuerySub(ESM::fourCC("HEDR"), idleQueryBytes(1.f) + idleQueryBytes(1u) + idleQueryBytes(0x1000u))
+        + idleQuerySub(ESM::fourCC("MAST"), std::string("headless.esm") + '\0')
+        + idleQuerySub(ESM::fourCC("DATA"), std::string(8, '\0')))
+        + idleQueryIdle(0xa01, "Outside\\KnownFalse.kf", 0xa00, 0, idleQueryCondition(0, 0));
+    auto stream = std::make_unique<std::stringstream>(patch, std::ios::in | std::ios::binary);
+    ESM4::Reader reader(std::move(stream), "patch.esp", nullptr, nullptr, true);
+    reader.setModIndex(1);
+    reader.updateModIndices({{"headless.esm", 0}, {"patch.esp", 1}});
+    Loading::Listener listener;
+    world.getStore().loadESM4(reader, &listener);
+    const auto selected = world.prepareOblivionGetUpIdle(npc);
+    EXPECT_EQ(selected.mIdle, ESM::FormKey::content("headless.esm", 0xa02));
+    EXPECT_EQ(selected.mRandomDraws, 1u);
+    EXPECT_EQ(selected.mExpectedRandomState, combat.combatRandomState());
+    EXPECT_EQ(selected.mNextRandomState, ESM4::combatRandomDraw(selected.mExpectedRandomState).mNextState);
+    EXPECT_EQ(combat.combatRandomState(), selected.mExpectedRandomState);
+    setIdleQueryNpcModel(fixture, "Cat\\Skeleton.nif");
+    const auto empty = world.prepareOblivionGetUpIdle(npc);
+    EXPECT_TRUE(empty.mIdle.isNull());
+    EXPECT_TRUE(empty.mModel.empty());
+    EXPECT_EQ(empty.mRandomDraws, 1u); // Optional no-file stops the later root.
+    combat.capture(after);
+    EXPECT_EQ(after, before);
+}
+
+
+TEST(OblivionWorldTest, NativeIdleSubjectlessReferenceUsesOppositeActorWithoutInventingQuestContext)
+{
+    NativeIdleQueryWindows windows;
+    NativeWorldFixture fixture(false, false, true);
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld;
+    const auto actor = addNativeNpc(fixture, 0x801);
+    world.getWorldModel().registerPtr(actor);
+    ASSERT_TRUE(world.activateOblivionActor(actor));
+    auto* scripts = world.getOblivionScriptManager();
+    auto* ai = world.getOblivionAiService();
+    ASSERT_NE(scripts, nullptr);
+    ASSERT_NE(ai, nullptr);
+    ASSERT_TRUE(scripts->dispatchObjectEvent(actor, "onactivate"));
+    const auto key = actor.getCellRef().getFormKey();
+    ASSERT_EQ(scripts->scriptVariable(key, 1), 1.0);
+    ESM4::PackageCondition c;
+    c.mFunction = 53;
+    c.mRunOnTarget = true;
+    c.mOperator = ESM4::ConditionOperator::Equal;
+    c.mComparisonValue = 1;
+    c.mParameter2.mNumber = 1;
+    ESM4::RuntimeState before, after;
+    scripts->capture(before);
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(actor, std::span(&c, 1), {}), ESM4::ConditionResult::True);
+    c.mFunction = 79;
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(actor, std::span(&c, 1), {}), ESM4::ConditionResult::False);
+    c.mFunction = 36;
+    c.mComparisonValue = 0;
+    c.mParameter1.mNumber = 1036;
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(actor, std::span(&c, 1), {}), ESM4::ConditionResult::True);
+    windows.mRace = true;
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(actor, std::span(&c, 1), {}), ESM4::ConditionResult::False);
+    scripts->capture(after);
+    EXPECT_EQ(after, before);
 }

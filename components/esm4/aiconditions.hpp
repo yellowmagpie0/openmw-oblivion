@@ -35,6 +35,7 @@ namespace ESM4
         Value,
         MissingContext,
         Unsupported,
+        Failed,
     };
 
     struct ConditionValue
@@ -45,6 +46,8 @@ namespace ESM4
         static ConditionValue value(double value) { return { ConditionValueStatus::Value, value }; }
         static ConditionValue missing() { return { ConditionValueStatus::MissingContext, 0.0 }; }
         static ConditionValue unsupported() { return { ConditionValueStatus::Unsupported, 0.0 }; }
+        // An executed native callback returned failure, before comparison.
+        static ConditionValue failed() { return { ConditionValueStatus::Failed, 0.0 }; }
     };
 
     struct ConditionEvaluationContext
@@ -71,6 +74,37 @@ namespace ESM4
 
     ConditionResult evaluateConditions(
         std::span<const PackageCondition> conditions, const ConditionEvaluationContext& context);
+
+    struct NativeConditionFunction
+    {
+        std::string_view mName;
+        bool mHasCallback;
+        bool mRequiresSubject;
+        bool mDefaultOppositeReference;
+    };
+
+    // Actual 1.2.0416 command table properties, not another game's labels or
+    // inferred requirements. Values outside the verified table are absent.
+    std::optional<NativeConditionFunction> nativeConditionFunction(std::int32_t function);
+
+    struct NativeConditionEvaluationContext
+    {
+        // The last flag classifies a null first reference/actor parameter:
+        // the resolver substitutes the opposite context after subject swap.
+        std::function<ConditionValue(const PackageCondition&, ConditionSubject, bool)> mResolve;
+        std::function<std::optional<double>(const ESM::FormKey&)> mResolveGlobal;
+        bool mHasActor = false;
+        bool mHasTarget = false;
+    };
+
+    // Original56AC50 narrows the callback's double to float before56A3B0.
+    // Unordered comparisons fail equality and pass the other operations;
+    // encoded operations6/7 pass after a successful callback.
+    bool nativeConditionComparison(double actual, float expected, std::uint8_t operation);
+    ConditionResult evaluateNativeCondition(
+        const PackageCondition& condition, const NativeConditionEvaluationContext& context);
+    ConditionResult evaluateNativeConditions(
+        std::span<const PackageCondition> conditions, const NativeConditionEvaluationContext& context);
 
     std::string_view conditionFunctionName(std::int32_t function);
 }

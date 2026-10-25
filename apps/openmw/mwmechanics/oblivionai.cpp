@@ -54,6 +54,8 @@
 
 #include "../mwbase/environment.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
+#include "../mwbase/windowmanager.hpp"
+#include "../mwgui/mode.hpp"
 #include "../mwphysics/physicssystem.hpp"
 #include "../mwworld/cellstore.hpp"
 #include "../mwworld/containerstore.hpp"
@@ -1739,6 +1741,127 @@ namespace MWMechanics
             };
         }
         return ESM4::evaluateConditions(conditions, context);
+    }
+
+    ESM4::ConditionResult OblivionAiService::evaluateNativeIdleConditions(const MWWorld::Ptr& actor,
+        std::span<const ESM4::PackageCondition> conditions, const DialogueConditionInputs& inputs) const
+    {
+        if (actor.isEmpty() || !handles(actor)) return ESM4::ConditionResult::MissingContext;
+        LiveActor live;
+        if (const auto found = mActors.find(actorKey(actor)); found != mActors.end())
+            live.mState = found->second.mState;
+        live.mState.mActor = actorKey(actor);
+        live.mState.mBase = baseKey(actor);
+        live.mState.mCell = cellKey(actor);
+        live.mState.mTarget = {};
+        const MWWorld::Ptr target;
+        const auto context = conditionContext(actor, live, &inputs, &target);
+        ESM4::NativeConditionEvaluationContext native;
+        native.mHasActor = true;
+        native.mResolveGlobal = context.mResolveGlobal;
+        native.mResolve = [&](const ESM4::PackageCondition& authored, ESM4::ConditionSubject subject,
+                              bool defaultReference) -> ESM4::ConditionValue {
+            auto condition = authored;
+            if (defaultReference && condition.mParameter1.mReferenceKey.isNull())
+                condition.mParameter1.mReferenceKey = subject == ESM4::ConditionSubject::Target
+                    ? actorKey(actor) : ESM::FormKey{};
+            const auto& key = condition.mParameter1.mReferenceKey;
+            const auto* scripts = mWorld.getOblivionScriptManager();
+            const auto function = ESM4::nativeConditionFunction(condition.mFunction);
+            try
+            {
+                // These callbacks do not require the selected subject. Keep
+                // their actual global/reference owners even when Target is null.
+                switch (condition.mFunction)
+                {
+                    case 18: return value(now().mHour);
+                    case 36:
+                    {
+                        const auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
+                        if (!windows) return ESM4::ConditionValue::missing();
+                        const auto menu = condition.mParameter1.mNumber;
+                        if (menu == 0) return value(windows->isGuiMode());
+                        if (menu == 1036) return value(windows->containsMode(MWGui::GM_Race));
+                        if (menu == 1009) return value(windows->containsMode(MWGui::GM_Dialogue));
+                        // Persuasion has no independent shared mode. Its
+                        // absence is known outside GUI; an active view needs
+                        // an explicit native persuasion-menu binding.
+                        if (menu == 1034 && !windows->isGuiMode()) return value(0);
+                        return ESM4::ConditionValue::unsupported();
+                    }
+                    case 53:
+                    case 79:
+                    {
+                        if (key.isNull()) return value(0);
+                        if (!scripts) return ESM4::ConditionValue::missing();
+                        const auto local = condition.mFunction == 53
+                            ? scripts->scriptVariable(key, condition.mParameter2.mNumber)
+                            : scripts->questVariable(key, condition.mParameter2.mNumber);
+                        return local ? value(*local) : ESM4::ConditionValue::missing();
+                    }
+                    case 56:
+                    case 58:
+                    case 59:
+                    {
+                        if (!scripts) return ESM4::ConditionValue::missing();
+                        const auto* quest = key.isNull() ? nullptr : scripts->findQuestState(key);
+                        if (condition.mFunction == 56) return value(quest && quest->mRunning);
+                        if (condition.mFunction == 58) return value(quest ? quest->mStage : 0);
+                        return value(quest && std::binary_search(quest->mCompletedStages.begin(),
+                            quest->mCompletedStages.end(), condition.mParameter2.mNumber));
+                    }
+                    case 62: case 75: case 266: case 267:
+                    {
+                        const auto flags = mWorld.getCurrentWeather().mNativeClassification;
+                        const auto mask = condition.mFunction == 62 ? ESM4::Weather::Classification_Rainy
+                            : condition.mFunction == 75 ? ESM4::Weather::Classification_Snow
+                            : condition.mFunction == 266 ? ESM4::Weather::Classification_Pleasant
+                            : ESM4::Weather::Classification_Cloudy;
+                        return value((flags & mask) != 0);
+                    }
+                    case 77:
+                    {
+                        if (!inputs.mRandomDraw) return ESM4::ConditionValue::unsupported();
+                        const auto draw = inputs.mRandomDraw();
+                        if (draw > 32767) return ESM4::ConditionValue::unsupported();
+                        return value(draw % 100);
+                    }
+                    case 84:
+                    {
+                        const auto* combat = mWorld.getOblivionCombatService();
+                        return combat ? value(combat->getDeadCount(key)) : ESM4::ConditionValue::missing();
+                    }
+                    case 111:
+                    {
+                        // Native5E6BC0 is false with no package-progress
+                        // object. Do not infer its native wait flag/procedure
+                        // from the unrelated shared PackagePhase enum.
+                        const auto* current = state(actor);
+                        if ((!current || current->mPackage.isNull())
+                            && !mWorld.hasOblivionBaseCombatPackage(actorKey(actor)).value_or(false))
+                            return value(0);
+                        return ESM4::ConditionValue::unsupported();
+                    }
+                    case 170: return value(ESM4::calendarDayOfWeek(now()));
+                    case 171: return value(mWorld.isPlayerInJail());
+                    case 249:
+                    {
+                        const auto* combat = mWorld.getOblivionCombatService();
+                        const auto reputation = combat ? combat->playerReputation() : std::nullopt;
+                        return reputation ? value(reputation->mFame) : ESM4::ConditionValue::missing();
+                    }
+                    case 365: return playerRealmCondition();
+                }
+                if (subject == ESM4::ConditionSubject::Target) return ESM4::ConditionValue::unsupported();
+                // Reject mismatched command labels from extended layouts;
+                // they cannot select another game's handler in native TES4.
+                if (!function || function->mName != ESM4::conditionFunctionName(condition.mFunction))
+                    return ESM4::ConditionValue::unsupported();
+                return context.mResolve(condition, subject);
+            }
+            catch (const std::invalid_argument&) { return ESM4::ConditionValue::unsupported(); }
+        };
+        return ESM4::evaluateNativeConditions(conditions, native);
     }
 
     ESM4::ConditionValue OblivionAiService::playerRealmCondition() const

@@ -793,6 +793,14 @@ namespace MWWorld
             program = direct->second;
         else if (const auto script = mScripts.find(target); script != mScripts.end())
             program = script->second;
+        else if (const auto currentBase = mWorld.getOblivionReferenceBaseKey(target))
+        {
+            // Resident/dynamic references can be created after initial script
+            // binding. Read their current base without materializing a cell or
+            // constructing a second reference/script ownership cache.
+            if (const auto base = mBaseScripts.find(*currentBase); base != mBaseScripts.end())
+                program = base->second;
+        }
         else if (const auto reference = mReferenceBases.find(target); reference != mReferenceBases.end())
         {
             if (const auto base = mBaseScripts.find(reference->second); base != mBaseScripts.end())

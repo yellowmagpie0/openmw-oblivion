@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "scope": "Native nullable CTDA dispatch, comparator/list callback order, raw-model World GetUp selection with staged RNG",
+  "rules": [
+    "Use actual TES4 command metadata for all369 functions: callback presence, required subject, first reference parameter defaulting to opposite context. Missing required subject/no callback returns false before comparison.",
+    "Narrow callback double to binary32 before comparison. NaN equality is false; other five operations true. Raw operations6/7 are true after successful callback. Null global pointer compares float0.",
+    "Native OR skips remaining callbacks after true. Failed GetDisposition greater/greater-equal comparisons can defer list failure and preserve later callback/RNG effects; ordinary prior failures still stop.",
+    "GetUp selects using the raw authored actor base model (Player mechanics player-base proxy is distinct), successful IDLE registration/override history and actual nullable-target World queries. Preserve selected stable FormKey and raw KF path.",
+    "Preparation snapshots expected RNG state and stages draws without changing live combat state. Null optional no-file selection preserves draw prefix."
+  ],
+  "native_function_source": {
+    "path": "components/esm4/native_condition_functions.inc",
+    "sha256": "3d8588c2a83036905f259a0b5b4c12202264cf3f929acab2daf2c26982609aa6"
+  },
+  "golden_counts": {
+    "passed": true,
+    "rows": 47520,
+    "comparisons": 5928,
+    "contexts": 17712,
+    "lists": 23880
+  },
+  "world_regressions": [
+    "Actual loaded IDLE records with same-plugin override; Player/NPC/Creature raw mixed-case model and selected KF outside skeleton directory",
+    "Race/Escort pruning, live pose/knocked/weapon queries, required-null-target Eq0 false, Low actor rejection",
+    "Unavailable reached callback aborts without fallback or live RNG mutation; actual patch replacing it with legitimate missing callback permits next child",
+    "Optional no-file root stops later root and retains staged RNG prefix",
+    "Subjectless GetScriptVariable target-null defaults to opposite actor, including resident references created after initial script binding; quest parameter does not gain actor default; RaceSex GUI toggles query"
+  ],
+  "limits": [
+    "GetUp preparation has no natural physical-FSM caller, exact KF/slot5 playback, live RNG publication or restart ownership yet.",
+    "Native IsWaiting is bound only for known absent package progress. Reached active package/combat progress remains Unsupported; PackagePhase::Wait is not a proven native predicate.",
+    "MenuMode supports general GUI, RaceSex1036, Dialog1009 and known absence of Persuasion1034 outside GUI. Other specific menus/active persuasion remain Unsupported.",
+    "Unknown or unavailable fork condition inputs reject selection; they are not a native false callback result and cannot be hidden by later OR alternatives.",
+    "The comparison oracle supplies callback success/double values. Raw-model oracle supplies typed native actor/base objects; neither executes native producer construction or gameplay.",
+    "Full-suite LeakSanitizer cleanliness remains open;19734 bytes/372 allocations reproduce with every World test excluded. New3 World tests and golden comparison pass with leaks enabled.",
+    "No new installed full-bank selection or normal-input runtime course ran. Directional mastery, physical recovery playback/restart and full M15S4 acceptance remain open."
+  ]
+}

@@ -13705,3 +13705,64 @@ attempts and the verified owned-process stop record remain in the evidence.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-RECOVERY-QUERY-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_recovery_query_cases.json).
+
+
+### Native nullable IDLE selection and staged GetUp queries
+
+The World can now prepare a GetUp IDLE using the raw Player/NPC/Creature base
+model, actual IDLE registration/override events and native nullable-target
+conditions. The result retains the selected stable FormKey, exact authored KF
+path, expected/next RNG state and draw count. Preparation changes no live RNG
+or actor state. Reached unavailable inputs reject selection. It has no natural
+physical recovery caller or animation publication yet.
+
+The separate native CTDA evaluator uses all 369 original command signatures,
+required-subject admission and opposite-reference defaults. It preserves the
+original binary32 callback store, NaN/Inf behavior, operations 6/7 and null-global
+zero. A failed GetDisposition >/>= can defer list failure and allow later
+callbacks/RNG; ordinary earlier failure still stops. Exact callback ordering
+matters even when a simpler OR implementation returns the same boolean. The
+legacy package/dialogue evaluator retains its existing comparison behavior.
+
+Both rebuilt production libraries match **47,520 original-output cases**:
+5,928 comparisons, 17,712 command-context cases and 23,880 list traces. The new
+original probes execute 21,410 comparison/list and 38,208 follow-up executions
+under both x87 precision words; callbacks supply their declared success/value.
+A further 42 raw-model profiles execute actual actor virtual base getters, full
+TESModel RTTI casting and raw string getters without game-function stubs. Typed
+objects and strings are supplied; actor construction is outside that probe.
+
+World regressions cover actual loaded IDLE overrides, raw mixed-case actor/KF
+paths, Player/NPC/Creature, null-target false-before-comparison, staged random
+prefixes, unavailable-callback rejection, optional no-file stopping, GUI state
+and opposite-context script locals. Script local lookup resolves resident
+references created after initial script binding through the existing World
+base authority without creating another cache. Player raw-model and shared
+Spine lookup now resolve the authored NPC through the World, keeping its
+mutable mechanics proxy distinct. The first engine run exposed that identity
+error; the corrected test asserts the two base identities remain distinct.
+
+Unchanged component sources retain **3,111 normal component** and **962 ESM4
+sanitizer** passes, with identical built-library hashes. Fresh engine reruns
+pass **1,951/1,951** in both configurations with exact inventory/XML agreement
+and no failures/skips. Both engine modes build openmw, openmw-tests and esmtool.
+The full engine and component sanitizer modes disable leak detection. The new
+three World tests and the golden comparison pass separately with leaks enabled.
+The leak-enabled full engine run passed all assertions but failed at process
+exit with **19,734 bytes/372 allocations**. The same leak reproduces with all
+618 World tests excluded; the six input tests alone pass with leaks enabled.
+Full-suite LeakSanitizer cleanliness remains open. All failed and diagnostic
+reports are retained, including the first Player lookup failure, stopped
+sanitizer sibling, syntax/model harness corrections and the disproved simple
+callback-order hypothesis. No Python/schema or loader/index change required
+repeating the prior 410 Python tests or 677-IDLE/44-bank installed comparisons.
+
+IsWaiting is known only for absent package progress; active AI/combat progress
+stays Unsupported pending its native owner. The GUI bridge covers general
+mode, RaceSex, Dialog and known absence of Persuasion outside GUI; it does not
+claim full native menu coverage. Exact KF/slot5 playback, physical FSM/GetUp
+publication and restart, directional mastery and normal-input acceptance remain
+open. No installed full-bank selection or normal-input gameplay course ran in
+this chunk. **Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-IDLE-SELECTION-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_selection_cases.json).

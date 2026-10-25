@@ -126,6 +126,10 @@ namespace MWMechanics
         ESM4::ConditionResult evaluateDialogueConditions(const MWWorld::Ptr& speaker,
             const MWWorld::Ptr& target, std::span<const ESM4::PackageCondition> conditions, bool diagnose = false,
             const DialogueConditionInputs* inputs = nullptr) const;
+        // Native IDLE conditions have a genuinely nullable opposite context.
+        // Random draws, when reached, belong to the caller's preparation.
+        ESM4::ConditionResult evaluateNativeIdleConditions(const MWWorld::Ptr& actor,
+            std::span<const ESM4::PackageCondition> conditions, const DialogueConditionInputs& inputs) const;
         ESM4::DetectionResult detection(const MWWorld::ConstPtr& observer, const MWWorld::ConstPtr& target) const;
 
         // Resolve a stable TES4 reference through the native actor/reference
