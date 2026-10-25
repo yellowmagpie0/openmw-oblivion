@@ -23,6 +23,8 @@
 #include "crimecontracts.hpp"
 #include "actorvalues.hpp"
 #include "physicalcombat.hpp"
+#include "nativeclampsequence.hpp"
+#include "nativeidlerequest.hpp"
 #include "projectilerules.hpp"
 #include "physicalblendsettings.hpp"
 #include "droprelations.hpp"
@@ -55,7 +57,7 @@ namespace ESM4
     // v68 retains current base combat-controller presence and directed targets.
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 71;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 72;
 
     struct RuntimeContentIdentity
     {
@@ -587,6 +589,31 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeMeleePoseSnapshot&, const RuntimeMeleePoseSnapshot&) = default;
     };
+    // v72: shared, actor-local noncontact ownership. IDs are portable references,
+    // independent of the combat contact ledger. The allocation frontier survives
+    // removal so a later request cannot reuse an old identity after restore.
+    struct RuntimeGetUpSequence
+    {
+        std::uint64_t mResource = 0;
+        NativeClampSequenceState mState;
+        std::optional<float> mTransitionFrame;
+        std::optional<RuntimeMeleePoseSnapshot> mPoseSnapshot;
+        bool mManaged = true;
+        friend bool operator==(const RuntimeGetUpSequence&, const RuntimeGetUpSequence&) = default;
+    };
+    struct RuntimeGetUpPlayback
+    {
+        std::uint64_t mNextIdentity = 1;
+        NativeIdleRequestSlots mRequests;
+        std::map<std::uint64_t, RuntimeGetUpIdle> mResources;
+        std::map<std::uint64_t, RuntimeGetUpSequence> mSequences;
+        std::uint64_t mCachedSequence = 0; // verified SpecialIdle group2 only
+        std::uint64_t mResidentSequence = 0; // resident physical slot0
+        std::uint64_t mActionSequence = 0; // process reference owned by this graph
+        void validate(std::optional<float> clock) const;
+        friend bool operator==(const RuntimeGetUpPlayback&, const RuntimeGetUpPlayback&) = default;
+    };
+
     using RuntimeReactionRetirement = MeleeSequenceRetirement;
     struct RuntimeMeleeStrike
     {
@@ -787,6 +814,7 @@ namespace ESM4
         // No legacy selection is inferred; a restore must reacquire this exact
         // KF identity without running conditions or replaying selection RNG.
         std::map<ESM::FormKey, RuntimeGetUpIdle> mNativeGetUpIdles;
+        std::map<ESM::FormKey, RuntimeGetUpPlayback> mNativeGetUpPlayback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
         // Absent in older saves: never infer solver history or skip flags.

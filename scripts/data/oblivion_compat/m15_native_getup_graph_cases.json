@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "runtime_schema": 72,
+  "scope": "Noncontact body GetUp request/resource/sequence graph persistence and readmission foundation",
+  "invariants": [
+    "Actor-local identities share one retained allocation frontier and are independent of combat contact IDs.",
+    "Primary, secondary and two fixed retired positions preserve absence; requests may share a single sequence identity.",
+    "Resources retain selected IDLE, actor base/model, authored KF path and exact hash.",
+    "Sequences retain manager membership, Start progress, inactive state, timing sentinels, retirement and captured pose tracks/destination.",
+    "Resident slot0, group2 cache and process sequence references are distinct and validated.",
+    "Restore never advances a clock, fabricates a request from schema71 resource ownership, reruns IDLE conditions or draws RNG.",
+    "World admission reacquires every retained resource with winning model/bank/KF checks; attached sequences require matching-key SpecialIdle group2 clamp2 metadata. Loaded ready resources may lack playable metadata.",
+    "Resource-only ready transaction rejects an existing graph before mutating raw state, RNG or selected resource. Combined ownership replacement remains a separate integration."
+  ],
+  "verification": {
+    "new_components": 5,
+    "new_engine": 2,
+    "new_python": 4,
+    "wire_cases": {
+      "accepted": 5,
+      "rejected": 15
+    },
+    "separate_processes_per_build": 3,
+    "classifier_reused_original_profiles": 27
+  },
+  "open": [
+    "Natural creation and atomic replacement of the graph through resource/request transactions.",
+    "Actual World/renderer start, shared sequence updates, cache/action cleanup and graph projection on restore.",
+    "Loaded-resource identity reconciliation for future acquisitions after restore; do not infer identity solely from path/hash.",
+    "Natural recovery dispatcher and physical caller prefixes, including actual Player view policy.",
+    "Remaining M15S4 normal-input, device/view/FPS, audio and canonical full-save restart gates."
+  ],
+  "serialization_fixtures": "Synthetic graph states test the fork format and identity semantics; their timing does not assert an original-game frame course.",
+  "wire_cases": {
+    "accepted": [
+      "shared",
+      "ready",
+      "pose",
+      "retiring",
+      "detached"
+    ],
+    "rejected": [
+      "future-frontier",
+      "presence-boolean",
+      "bound-boolean",
+      "duplicate-request",
+      "dangling-resource",
+      "dangling-sequence",
+      "pending-profile",
+      "duplicate-owner",
+      "duplicate-resource",
+      "managed-boolean",
+      "sequence-future-id",
+      "sequence-resource",
+      "optional-boolean",
+      "nonfinite-output",
+      "truncated"
+    ]
+  }
+}

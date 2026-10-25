@@ -1742,7 +1742,8 @@ namespace
                 + (version >= 36 ? 1 : 0) + (version >= 37 ? 1 : 0) + (version >= 38 ? 4 : 0)
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
-                + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0);
+                + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
+                + (version >= 72 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -5695,4 +5696,101 @@ TEST(ESM4RuntimeState, GetUpIdle71RejectsDanglingModelsHashesVersionsAndNoncanon
     const auto key = std::search(wire.begin() + start, wire.end(), plugin.begin(), plugin.end());
     ASSERT_NE(key, wire.end()); *key = 'O';
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
+}
+
+namespace
+{
+    ESM4::RuntimeState getUpGraphState()
+    {
+        auto state = getUpIdleState();
+        const auto& [actor, resource] = *state.mNativeGetUpIdles.begin();
+        state.mNativeAnimationClocks.emplace(actor, 4.f);
+        auto& graph = state.mNativeGetUpPlayback[actor];
+        graph.mNextIdentity = 100; // preserve allocations no longer retained
+        graph.mResources.emplace(2, resource);
+        ESM4::RuntimeGetUpSequence sequence;
+        sequence.mResource = 2;
+        sequence.mState.mTiming = {false, -1.f, 1.f, 0.f, 4.f, 3.f, 2.f};
+        graph.mSequences.emplace(3, sequence);
+        graph.mCachedSequence = graph.mResidentSequence = graph.mActionSequence = 3;
+        graph.mRequests.mPrimary = ESM4::NativeIdleRequest{4, 2, 3, 2, true};
+        graph.mRequests.mRetired[0] = ESM4::NativeIdleRequest{5, 2, 3, 2, true};
+        graph.mRequests.mRetired[1] = ESM4::NativeIdleRequest{6, 2, 3, 3, true};
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, GetUpGraph72RetainsSharedReferencesFixedSlotsAndAllocationFrontier)
+{
+    auto state = getUpGraphState();
+    const auto wire = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored, state); EXPECT_EQ(restored.serializeBinary(), wire);
+    const auto& graph = restored.mNativeGetUpPlayback.begin()->second;
+    EXPECT_EQ(graph.mSequences.size(), 1); EXPECT_EQ(graph.mResources.size(), 1);
+    EXPECT_EQ(graph.mNextIdentity, 100);
+    EXPECT_EQ(graph.mRequests.mPrimary->mSequence, graph.mRequests.mRetired[0]->mSequence);
+    EXPECT_FALSE(graph.mRequests.mSecondary);
+    EXPECT_NE(restored.canonicalJson().find("\"native_getup_playback\":[{\"actor\":"), std::string::npos);
+    state.mVersion = 71; EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mNativeGetUpPlayback.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mNativeGetUpPlayback.empty());
+}
+
+TEST(ESM4RuntimeState, GetUpGraph72RejectsDanglingOrAliasedIdentitiesAndUnsupportedLifecycle)
+{
+    const auto valid = getUpGraphState();
+    const auto reject = [&](const auto& mutate) {
+        auto state = valid; mutate(state, state.mNativeGetUpPlayback.begin()->second);
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto&, auto& graph) { graph.mNextIdentity = 6; });
+    reject([](auto&, auto& graph) { graph.mRequests.mRetired[0]->mIdentity = 4; });
+    reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mIdentity = 2; });
+    reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mSequence = 99; });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mResource = 99; });
+    reject([](auto&, auto& graph) { graph.mResidentSequence = 99; });
+    reject([](auto&, auto& graph) { graph.mCachedSequence = 99; });
+    reject([](auto&, auto& graph) { graph.mActionSequence = 99; });
+    reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mStatus = 0; });
+    reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mActorBound = false; });
+    reject([](auto& state, auto&) { state.mNativeAnimationClocks.clear(); });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mTiming.mOffset.reset(); });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mTiming.mOutputTime = std::numeric_limits<float>::infinity(); });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mManaged = false; });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mRetirement = ESM4::MeleeSequenceRetirement{1.f, 4.f}; });
+    reject([](auto&, auto& graph) { graph.mResources.emplace(9, graph.mResources.at(2)); });
+}
+
+TEST(ESM4RuntimeState, GetUpGraph72DetachedSharedSequenceAndRetirementSurviveWithoutClockAdvance)
+{
+    auto state = getUpGraphState(); auto& graph = state.mNativeGetUpPlayback.begin()->second;
+    graph.mCachedSequence = graph.mResidentSequence = 0;
+    auto& sequence = graph.mSequences.at(3);
+    sequence.mManaged = false; sequence.mState.mInactive = true;
+    sequence.mState.mTiming.mLastInput = -0.f;
+    state.mNativeAnimationClocks.begin()->second = std::numeric_limits<float>::max();
+    const auto wire = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored.serializeBinary(), wire);
+    EXPECT_TRUE(std::signbit(*restored.mNativeGetUpPlayback.begin()->second.mSequences.at(3).mState.mTiming.mLastInput));
+    sequence.mManaged = true; sequence.mState.mInactive = false;
+    sequence.mState.mRetirement = ESM4::MeleeSequenceRetirement{1.f, 3.f};
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+}
+
+TEST(ESM4RuntimeState, GetUpGraph72PoseCaptureRetainsTransformAndRequiresMatchingDestination)
+{
+    auto state = getUpGraphState(); auto& sequence = state.mNativeGetUpPlayback.begin()->second.mSequences.at(3);
+    sequence.mState.mTiming = {true, -1.f, std::nullopt, 2.f, std::nullopt, 0.f, 0.f};
+    sequence.mTransitionFrame = .5f;
+    ESM4::RuntimeMeleePoseSnapshot pose; pose.mDestinationFrame = .5f;
+    pose.mTracks.push_back({"Bip01", {1, -0.f, 3}, {1, 0, 0, 0}, 1.f, 7});
+    sequence.mPoseSnapshot = pose;
+    const auto wire = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(wire).serializeBinary(), wire);
+    sequence.mPoseSnapshot->mDestinationFrame = .75f;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    sequence.mPoseSnapshot.reset();
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
 }

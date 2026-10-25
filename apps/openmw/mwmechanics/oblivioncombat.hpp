@@ -428,6 +428,7 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::TimedKnockbackState> mActorKnockback;
         std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll> mActorRagdolls;
         std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mGetUpIdles;
+        std::map<ESM::FormKey, ESM4::RuntimeGetUpPlayback> mGetUpPlayback;
         void consumeContactAction(std::uint64_t id, const ESM::FormKey& actor) noexcept;
         void clearMeleePlaybackAction(const ESM::FormKey& actor) noexcept;
         ESM4::RuntimeMeleeState prepareMeleeStrikeState(const ESM::FormKey& actor, ESM4::MeleeStrikeKind kind,
@@ -504,6 +505,7 @@ namespace MWMechanics
         static bool canSpendFatigue(const MWWorld::Ptr& actor);
         void clear();
         std::optional<ESM4::RuntimeGetUpIdle> getUpIdle(const ESM::FormKey& actor) const;
+        std::optional<ESM4::RuntimeGetUpPlayback> getUpPlayback(const ESM::FormKey& actor) const;
         class PreparedGetUpIdle
         {
             struct Impl;

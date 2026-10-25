@@ -14240,3 +14240,69 @@ Editable cases: [m15_native_getup_request_cases.json](../../scripts/data/oblivio
 Evidence: [M15-NATIVE-GETUP-REQUEST-VERIFICATION.json](M15-NATIVE-GETUP-REQUEST-VERIFICATION.json).
 Tested source fingerprint: `730b933a2382f84d986a8e2b2002c1867bd7a4821c078ca4831a7abf828b3c1e`
 on parent `6561a57376dfdd2b95fa943a40fb247b9036ff45`.
+
+### Shared GetUp graph persistence and retained-resource admission
+
+This is **persistence infrastructure, not M15S4 delivery**. Runtime schema 72
+stores actor-local request/resource/sequence identities and an explicit allocation
+frontier, independently of combat contact IDs. Primary, secondary and fixed D4/D8
+positions retain absence and shared sequence references. Saved sequence entries carry manager membership flags, Start progress, timing
+sentinels, retirement, inactivity and captured pose data. Resident slot0, SpecialIdle group2 cache and process sequence
+references remain distinct. Admission validates identity uniqueness, reference
+closure, supported lifecycle/timing and actor ownership without advancing clocks.
+Legacy schema71 resources do not fabricate requests or sequences.
+
+The service captures, restores and clears this graph. World preparation retains
+all referenced KF resources, including those owned only by old requests, and
+checks winning IDLE/model paths, actor-bank membership and exact acquired bytes
+without rerunning selection conditions or RNG. Sequence-bearing state requires
+matching-key SpecialIdle group2 clamp2 metadata; a ready resource can still lack
+playable metadata. The new classifier matches the group2 projection of 27
+previously executed original-executable classification profiles. Those original
+instructions are not rerun in this chunk. Pending asynchronous IO remains outside
+this stored profile.
+
+The existing resource-only ready transaction now rejects an owned graph before
+changing raw state, resource selection or RNG. It cannot bypass native ordered
+retirement/destruction and logical-slot5 reset by overwriting only the latest
+resource DTO. A combined ownership transaction must implement replacement.
+
+Final normal and sanitized checks each pass **3,153 component and 1,977 engine
+tests**; **417 Python tests** pass. Inventories/XML agree with zero failures or
+skips. Five focused component cases and two engine cases pass with leak detection
+enabled. Full sanitizer suites retain the documented unrelated suite-leak
+exception; they are not leak coverage. Engine build logs contain 71/72 existing
+warnings on unchanged lines, with no changed-line warning or suppression. Final
+incremental component builds report no warnings.
+
+Six separate headless continuation processes preserve identical save bytes,
+shared references, distinct retained resource identities, captured poses and the
+allocation frontier across C++/Python. They restore with newly unavailable IDLE
+conditions without reselection or another draw, and reject changed KF bytes
+before service mutation. Twenty additional payload cases per build agree between
+C++ and Python: five accepted graph states and fifteen corrupt inputs. Sanitized
+continuation and payload probes also enable leak checks. These inject synthetic
+graph fixtures and read/write T4ST only; they do not run canonical shared-save
+loading, reconstruct renderer playback or prove normal-input recovery.
+
+The serializer scope errors, old corruption-test suffix omission and same-line
+GoogleTest label collision remain retained as failed attempts. Known-repeat
+sanitizer builds were stopped by their exact owned process groups and drained
+before edits. Clean final component receipts were collected after the earlier
+combined runners omitted a final source snapshot on engine failure.
+
+Natural graph creation, combined request/resource/renderer publication, actual
+start/frame/completion/action ownership and renderer restoration remain open.
+Future acquisition must reconcile retained loaded-resource identities explicitly;
+equal path/hash alone does not identify an opaque graph resource. Cold/pose
+replacement and the all-slot reset need their actual caller behavior. Natural
+recovery prefixes, Player view policy and the remaining S4 normal-input,
+device/FPS/audio/mastery/full-save acceptance matrix are still incomplete.
+
+Editable cases: [m15_native_getup_graph_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_graph_cases.json).
+Evidence: [M15-NATIVE-GETUP-GRAPH-VERIFICATION.json](M15-NATIVE-GETUP-GRAPH-VERIFICATION.json).
+Final engine source fingerprint: `3988174c2d167e7f469467474f807ec873584ae88f2f6970d21596265415df73`.
+Final component/Python fingerprint including the new case manifest:
+`b6b957f80e255068f31848132f4abafe4e47870f0911b2845ae3603a10f6ae10`.
+Both use parent `be5ee8f32cbbf056371bc7172a49b41f13d4635f`; only the case manifest
+was added after the final engine checks.

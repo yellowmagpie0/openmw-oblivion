@@ -6432,3 +6432,12 @@ TEST(ESM4PhysicalCombat, AuthoredBlendRetainsTerminalCursorAndExtrapolatesBefore
     EXPECT_EQ(before.mCursor, 0u);
     EXPECT_EQ(before.mGains, (ESM4::PhysicalBlendGains{-.5f, -1.5f}));
 }
+
+TEST(ESM4PhysicalCombat, GetUpSpecialIdleGroupIgnoresFilenamePrefixAndTruncatesSuffix)
+{
+    for (const auto name : {"SpecialIdle", "SpecialIdle_GetUp", "sPeCiAlIdLe"})
+        EXPECT_EQ(ESM4::nativeGetUpSequenceGroup(name), 2);
+    EXPECT_EQ(ESM4::nativeGetUpSequenceGroup(std::string_view("SPECIALIDLE\0ignored", 19)), 2);
+    for (const auto name : {"GetUpFaceUp", "Idle", "DynamicIdle", "Recoil", "SpecialIdleX", ""})
+        EXPECT_FALSE(ESM4::nativeGetUpSequenceGroup(name));
+}

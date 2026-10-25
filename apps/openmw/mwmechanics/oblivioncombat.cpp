@@ -736,6 +736,7 @@ namespace MWMechanics
         mActorKnockback.clear();
         mActorRagdolls.clear();
         mGetUpIdles.clear();
+        mGetUpPlayback.clear();
         mActorValues.clear();
         mActorBases.clear();
         mActorLife.clear();
@@ -6207,6 +6208,12 @@ namespace MWMechanics
         return found == mGetUpIdles.end() ? std::nullopt : std::optional(found->second);
     }
 
+    std::optional<ESM4::RuntimeGetUpPlayback> OblivionCombatService::getUpPlayback(const ESM::FormKey& actor) const
+    {
+        const auto found = mGetUpPlayback.find(actor);
+        return found == mGetUpPlayback.end() ? std::nullopt : std::optional(found->second);
+    }
+
     struct OblivionCombatService::PreparedGetUpIdle::Impl
     {
         OblivionCombatService* mOwner;
@@ -6233,6 +6240,10 @@ namespace MWMechanics
         const OblivionCombatRandomTransition& random)
     {
         idle.validate();
+        // This resource-only transaction cannot perform the ordered retire/
+        // destroy/cache effects needed to replace an existing request graph.
+        if (mGetUpPlayback.contains(actor))
+            throw std::invalid_argument("GetUp resource-only preparation cannot replace an owned request graph");
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
         if (!values || !life || values->mBase != idle.mBase || life->mBase != idle.mBase
@@ -6517,6 +6528,8 @@ namespace MWMechanics
             throw std::invalid_argument("native combat random state requires an Oblivion v27+ save");
         if (state.mVersion < 30 && !mActorKnockback.empty())
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
+        if (state.mVersion < 72 && !mGetUpPlayback.empty())
+            throw std::invalid_argument("GetUp playback ownership requires schema72");
         if (state.mVersion < 71 && !mGetUpIdles.empty())
             throw std::invalid_argument("selected GetUp IDLE ownership requires schema71");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
@@ -6624,6 +6637,7 @@ namespace MWMechanics
         auto knockback = mActorKnockback;
         auto ragdolls = mActorRagdolls;
         auto getupIdles = mGetUpIdles;
+        auto getupPlayback = mGetUpPlayback;
         state.mCombatRngState = mCombatRngState;
         state.mNativeActorBases.swap(bases);
         state.mNativeActorValues.swap(actors);
@@ -6637,6 +6651,7 @@ namespace MWMechanics
         state.mNativeActorKnockback.swap(knockback);
         state.mNativeActorRagdolls.swap(ragdolls);
         state.mNativeGetUpIdles.swap(getupIdles);
+        state.mNativeGetUpPlayback.swap(getupPlayback);
         state.mNativeActorLife.swap(lives);
         state.mNativeDeathCounts.swap(deathCounts);
         state.mNativeActorBreath.swap(breath);
@@ -6748,6 +6763,14 @@ namespace MWMechanics
                     0, record->mModel.getOriginal().find('\0')) != idle.mModel)
                 throw std::invalid_argument("Saved GetUp IDLE differs from winning content");
         }
+        for (const auto& [actor, graph] : state.mNativeGetUpPlayback)
+            for (const auto& [id, resource] : graph.mResources)
+            {
+                const auto* record = store.search<ESM4::IdleAnimation>(resource.mIdle);
+                if (!record || std::string_view(record->mModel.getOriginal()).substr(
+                        0, record->mModel.getOriginal().find('\0')) != resource.mModel)
+                    throw std::invalid_argument("Saved GetUp graph IDLE differs from winning content");
+            }
         for (const auto& actor : state.mNativeActorValues)
             if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
                 nonPlayerContentIsCreature(actor, store);
@@ -6815,6 +6838,7 @@ namespace MWMechanics
         auto knockback = state.mNativeActorKnockback;
         auto ragdolls = state.mNativeActorRagdolls;
         auto getupIdles = state.mNativeGetUpIdles;
+        auto getupPlayback = state.mNativeGetUpPlayback;
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> actors;
         for (const auto& actor : state.mNativeActorValues)
             actors.emplace(actor.mActor, actor);
@@ -6865,6 +6889,7 @@ namespace MWMechanics
         mActorKnockback.swap(knockback);
         mActorRagdolls.swap(ragdolls);
         mGetUpIdles.swap(getupIdles);
+        mGetUpPlayback.swap(getupPlayback);
         mActorValues.swap(actors);
         mActorBases.swap(bases);
         mActorLife.swap(lives);

@@ -127,6 +127,114 @@ namespace ESM4
             std::size_t mOffset = 0;
         };
 
+        void writeMeleePose(BinaryWriter&, const RuntimeMeleePoseSnapshot&);
+        RuntimeMeleePoseSnapshot readMeleePose(BinaryReader&);
+
+        void writeGetUpPlayback(BinaryWriter& writer, const RuntimeGetUpPlayback& graph)
+        {
+            writer.integer(graph.mNextIdentity);
+            for (auto id : {graph.mCachedSequence, graph.mResidentSequence, graph.mActionSequence}) writer.integer(id);
+            for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                     &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+            {
+                writer.integer<std::uint8_t>(slot->has_value());
+                if (!*slot) continue;
+                const auto& request = **slot;
+                writer.integer(request.mIdentity); writer.integer(request.mResource); writer.integer(request.mSequence);
+                writer.integer(request.mStatus); writer.integer<std::uint8_t>(request.mActorBound);
+            }
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(graph.mResources.size()));
+            for (const auto& [id, resource] : graph.mResources)
+            {
+                writer.integer(id);
+                for (const auto& text : {resource.mBase.serialize(), resource.mIdle.serialize(),
+                         resource.mActorModel, resource.mModel, resource.mAssetHash}) writer.string(text);
+            }
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(graph.mSequences.size()));
+            const auto optional = [&](std::optional<float> value) {
+                writer.integer<std::uint8_t>(value.has_value()); if (value) writer.floating(*value);
+            };
+            for (const auto& [id, sequence] : graph.mSequences)
+            {
+                writer.integer(id); writer.integer(sequence.mResource);
+                writer.integer<std::uint8_t>(sequence.mManaged);
+                const auto& state = sequence.mState;
+                writer.integer<std::uint8_t>(state.mStarted); writer.integer<std::uint8_t>(state.mInactive);
+                const auto& timing = state.mTiming;
+                writer.integer<std::uint8_t>(timing.mEasing);
+                optional(timing.mOffset); optional(timing.mEaseStart); optional(timing.mLastInput);
+                writer.floating(timing.mEaseEnd); writer.floating(timing.mWeightedTime); writer.floating(timing.mOutputTime);
+                optional(sequence.mTransitionFrame);
+                writer.integer<std::uint8_t>(sequence.mPoseSnapshot.has_value());
+                if (sequence.mPoseSnapshot) writeMeleePose(writer, *sequence.mPoseSnapshot);
+                writer.integer<std::uint8_t>(state.mRetirement.has_value());
+                if (state.mRetirement) { writer.floating(state.mRetirement->mDuration); optional(state.mRetirement->mStartClock); }
+            }
+        }
+
+        RuntimeGetUpPlayback readGetUpPlayback(BinaryReader& reader)
+        {
+            const auto boolean = [&] {
+                const auto value = reader.integer<std::uint8_t>();
+                if (value > 1) throw std::runtime_error("Invalid GetUp graph boolean");
+                return value != 0;
+            };
+            const auto optional = [&]() -> std::optional<float> {
+                if (!boolean()) return {};
+                return reader.float32();
+            };
+            const auto key = [&] {
+                const auto text = reader.string();
+                try {
+                    auto value = ESM::FormKey::deserialize(text);
+                    if (value.serialize() != text) throw std::runtime_error("Noncanonical GetUp graph key");
+                    return value;
+                } catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+            };
+            RuntimeGetUpPlayback graph;
+            graph.mNextIdentity = reader.integer<std::uint64_t>();
+            graph.mCachedSequence = reader.integer<std::uint64_t>();
+            graph.mResidentSequence = reader.integer<std::uint64_t>();
+            graph.mActionSequence = reader.integer<std::uint64_t>();
+            for (auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                     &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+            {
+                if (!boolean()) continue;
+                NativeIdleRequest request;
+                request.mIdentity = reader.integer<std::uint64_t>(); request.mResource = reader.integer<std::uint64_t>();
+                request.mSequence = reader.integer<std::uint64_t>(); request.mStatus = reader.integer<std::uint32_t>();
+                request.mActorBound = boolean(); *slot = request;
+            }
+            auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                RuntimeGetUpIdle resource;
+                resource.mBase = key(); resource.mIdle = key(); resource.mActorModel = reader.string();
+                resource.mModel = reader.string(); resource.mAssetHash = reader.string();
+                if (!graph.mResources.emplace(id, std::move(resource)).second)
+                    throw std::runtime_error("Duplicate GetUp graph resource");
+            }
+            count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto id = reader.integer<std::uint64_t>();
+                RuntimeGetUpSequence sequence;
+                sequence.mResource = reader.integer<std::uint64_t>(); sequence.mManaged = boolean();
+                auto& state = sequence.mState;
+                state.mStarted = boolean(); state.mInactive = boolean(); auto& timing = state.mTiming;
+                timing.mEasing = boolean(); timing.mOffset = optional(); timing.mEaseStart = optional();
+                timing.mLastInput = optional(); timing.mEaseEnd = reader.float32();
+                timing.mWeightedTime = reader.float32(); timing.mOutputTime = reader.float32();
+                sequence.mTransitionFrame = optional();
+                if (boolean()) sequence.mPoseSnapshot = readMeleePose(reader);
+                if (boolean()) state.mRetirement = MeleeSequenceRetirement{reader.float32(), optional()};
+                if (!graph.mSequences.emplace(id, std::move(sequence)).second)
+                    throw std::runtime_error("Duplicate GetUp graph sequence");
+            }
+            return graph;
+        }
+
         void writeMeleePose(BinaryWriter& writer, const RuntimeMeleePoseSnapshot& pose)
         {
             writer.floating(pose.mDestinationFrame);
@@ -1556,6 +1664,106 @@ namespace ESM4
         catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
     }
 
+    void RuntimeGetUpPlayback::validate(std::optional<float> clock) const
+    {
+        if (mResources.size() > sMaximumCollectionSize || mSequences.size() > sMaximumCollectionSize)
+            throw std::runtime_error("GetUp graph exceeds collection size limit");
+        if (!mNextIdentity || (clock && (!std::isfinite(*clock) || *clock < 0)))
+            throw std::runtime_error("Invalid GetUp graph allocation frontier or clock");
+        std::set<std::uint64_t> identities, resources, sequences;
+        const auto identity = [&](std::uint64_t id) {
+            if (!id || id >= mNextIdentity || !identities.insert(id).second)
+                throw std::runtime_error("Duplicate, null or future GetUp graph identity");
+        };
+        for (const auto& [id, resource] : mResources) { identity(id); resource.validate(); }
+        for (const auto& [id, sequence] : mSequences)
+        {
+            identity(id);
+            if (!clock || !mResources.contains(sequence.mResource))
+                throw std::runtime_error("GetUp sequence lacks its resource or actor clock");
+            resources.insert(sequence.mResource);
+            const auto& state = sequence.mState;
+            // Static supported-profile validation. Do not advance a restored
+            // sequence or evaluate keys while admitting its stored timing.
+            const auto finite = [](float value) {
+                if (!std::isfinite(value)) throw std::runtime_error("Nonfinite GetUp sequence timing");
+            };
+            const auto& timing = state.mTiming;
+            for (float value : {timing.mEaseEnd, timing.mWeightedTime, timing.mOutputTime}) finite(value);
+            for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput,
+                     sequence.mTransitionFrame}) if (value) finite(*value);
+            const bool capture = sequence.mTransitionFrame && timing.mEasing && timing.mOffset
+                && !timing.mEaseStart && !timing.mLastInput;
+            if ((!capture && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
+                        || timing.mOffset.has_value() != timing.mLastInput.has_value()))
+                || (sequence.mTransitionFrame && !timing.mEasing)
+                || (state.mInactive && timing.mEasing))
+                throw std::runtime_error("Partial or inconsistent GetUp sequence timing");
+            if (sequence.mTransitionFrame.has_value() != sequence.mPoseSnapshot.has_value())
+                throw std::runtime_error("GetUp pose transition lacks its captured pose");
+            if (sequence.mPoseSnapshot)
+            {
+                sequence.mPoseSnapshot->validate();
+                if (sequence.mPoseSnapshot->mDestinationFrame != *sequence.mTransitionFrame
+                    || timing.mEaseEnd <= timing.mEaseStart.value_or(0))
+                    throw std::runtime_error("Invalid GetUp captured pose transition");
+            }
+            if (state.mRetirement)
+            {
+                const auto& retirement = *state.mRetirement;
+                finite(retirement.mDuration);
+                if (retirement.mDuration <= 0 || !timing.mOffset || timing.mEasing || sequence.mTransitionFrame)
+                    throw std::runtime_error("Invalid GetUp sequence retirement");
+                if (retirement.mStartClock)
+                {
+                    finite(*retirement.mStartClock);
+                    const float stop = static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration);
+                    finite(stop);
+                    if (state.mInactive && *clock < stop)
+                        throw std::runtime_error("Premature inactive GetUp retirement");
+                }
+                else if (state.mInactive) throw std::runtime_error("Unanchored inactive GetUp retirement");
+            }
+            if (!sequence.mManaged && !state.mInactive)
+                throw std::runtime_error("Detached GetUp sequence is still active");
+        }
+        const auto reference = [&](std::uint64_t id) {
+            if (id && !mSequences.contains(id)) throw std::runtime_error("Dangling GetUp sequence reference");
+            if (id) sequences.insert(id);
+        };
+        for (const auto* slot : {&mRequests.mPrimary, &mRequests.mSecondary,
+                 &mRequests.mRetired[0], &mRequests.mRetired[1]})
+        {
+            if (!*slot) continue;
+            const auto& request = **slot;
+            identity(request.mIdentity);
+            // Only the synchronous loaded-resource profile has readmission
+            // evidence. Do not serialize an invented asynchronous IO request.
+            if (request.mStatus < 1 || request.mStatus > 3 || !mResources.contains(request.mResource)
+                || (request.mStatus == 1 && (request.mSequence || request.mActorBound))
+                || (request.mStatus == 2 && (!request.mSequence || !request.mActorBound))
+                || (request.mSequence != 0) != request.mActorBound)
+                throw std::runtime_error("Unsupported GetUp request lifecycle");
+            resources.insert(request.mResource);
+            reference(request.mSequence);
+            if (request.mSequence && mSequences.at(request.mSequence).mResource != request.mResource)
+                throw std::runtime_error("GetUp request and sequence resource differ");
+        }
+        for (auto id : {mCachedSequence, mResidentSequence, mActionSequence}) reference(id);
+        if (mCachedSequence && !mSequences.at(mCachedSequence).mManaged)
+            throw std::runtime_error("GetUp cache references detached sequence");
+        if (mResidentSequence)
+        {
+            const auto& sequence = mSequences.at(mResidentSequence);
+            if (!sequence.mManaged || sequence.mState.mInactive || sequence.mState.mRetirement)
+                throw std::runtime_error("Invalid resident GetUp sequence");
+        }
+        if (resources.size() != mResources.size()) throw std::runtime_error("Unowned GetUp resource");
+        for (const auto& [id, sequence] : mSequences)
+            if (!sequence.mManaged && !sequences.contains(id))
+                throw std::runtime_error("Unowned detached GetUp sequence");
+    }
+
     void RuntimeState::validate() const
     {
         try { mNativeCrime.validate(); }
@@ -1899,6 +2107,20 @@ namespace ESM4
                 || runtimeReferenceKey(actor) != actor
                 || ESM::FormKey::deserialize(actor.serialize()) != actor)
                 throw std::runtime_error("Dangling or mismatched native GetUp IDLE owner");
+        }
+        checkSize(mNativeGetUpPlayback.size(), "native GetUp playback list");
+        if (mVersion < 72 && !mNativeGetUpPlayback.empty())
+            throw std::runtime_error("Native GetUp playback requires schema72");
+        for (const auto& [actor, playback] : mNativeGetUpPlayback)
+        {
+            if (!nativeActors.contains(actor) || !lives.contains(actor)
+                || runtimeReferenceKey(actor) != actor || ESM::FormKey::deserialize(actor.serialize()) != actor)
+                throw std::runtime_error("Dangling native GetUp playback owner");
+            const auto clock = mNativeAnimationClocks.find(actor);
+            playback.validate(clock == mNativeAnimationClocks.end() ? std::nullopt : std::optional(clock->second));
+            for (const auto& [id, resource] : playback.mResources)
+                if (resource.mBase != nativeActors.at(actor) || resource.mBase != lives.at(actor)->mBase)
+                    throw std::runtime_error("GetUp graph resource belongs to another actor base");
         }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
@@ -3068,6 +3290,11 @@ namespace ESM4
                 writer.string(idle.mAssetHash);
             }
         }
+        if (mVersion >= 72)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeGetUpPlayback.size()));
+            for (const auto& [actor, graph] : mNativeGetUpPlayback) { writeKey(writer, actor); writeGetUpPlayback(writer, graph); }
+        }
         if (mVersion >= 31)
         {
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorRagdolls.size()));
@@ -4168,6 +4395,21 @@ namespace ESM4
                 idle.mActorModel = reader.string(); idle.mModel = reader.string(); idle.mAssetHash = reader.string();
                 if (!result.mNativeGetUpIdles.emplace(actor, std::move(idle)).second)
                     throw std::runtime_error("Duplicate native GetUp IDLE owner");
+            }
+        }
+        if (result.mVersion >= 72)
+        {
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto text = reader.string();
+                ESM::FormKey actor;
+                try { actor = ESM::FormKey::deserialize(text); }
+                catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+                if (actor.serialize() != text) throw std::runtime_error("Noncanonical GetUp playback owner");
+                auto graph = readGetUpPlayback(reader);
+                if (!result.mNativeGetUpPlayback.emplace(actor, std::move(graph)).second)
+                    throw std::runtime_error("Duplicate GetUp playback owner");
             }
         }
         if (result.mVersion >= 31)
@@ -5507,6 +5749,77 @@ namespace ESM4
                     << "\",\"actor_model\":\"" << escapeJson(idle.mActorModel)
                     << "\",\"model\":\"" << escapeJson(idle.mModel)
                     << "\",\"asset_hash\":\"" << idle.mAssetHash << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 72)
+        {
+            stream << ",\"native_getup_playback\":[";
+            bool first = true;
+            const auto floating = [&](float value) {
+                if (value == 0 && std::signbit(value)) stream << "-0.0";
+                else stream << std::setprecision(17) << value;
+            };
+            const auto optional = [&](std::optional<float> value) {
+                if (value) floating(*value); else stream << "null";
+            };
+            for (const auto& [actor, graph] : mNativeGetUpPlayback)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"next_identity\":" << graph.mNextIdentity
+                    << ",\"cached_sequence\":" << graph.mCachedSequence << ",\"resident_sequence\":" << graph.mResidentSequence
+                    << ",\"action_sequence\":" << graph.mActionSequence << ",\"requests\":[";
+                bool firstSlot = true;
+                for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                         &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+                {
+                    if (!firstSlot) stream << ',';
+                    firstSlot = false;
+                    if (!*slot) { stream << "null"; continue; }
+                    const auto& request = **slot;
+                    stream << "{\"id\":" << request.mIdentity << ",\"resource\":" << request.mResource
+                        << ",\"sequence\":" << request.mSequence << ",\"status\":" << request.mStatus
+                        << ",\"actor_bound\":" << (request.mActorBound ? "true" : "false") << '}';
+                }
+                stream << "],\"resources\":["; bool firstResource = true;
+                for (const auto& [id, resource] : graph.mResources)
+                {
+                    if (!firstResource) stream << ',';
+                    firstResource = false;
+                    stream << "{\"id\":" << id << ",\"base\":\"" << escapeJson(resource.mBase.serialize())
+                        << "\",\"idle\":\"" << escapeJson(resource.mIdle.serialize())
+                        << "\",\"actor_model\":\"" << escapeJson(resource.mActorModel)
+                        << "\",\"model\":\"" << escapeJson(resource.mModel)
+                        << "\",\"asset_hash\":\"" << resource.mAssetHash << "\"}";
+                }
+                stream << "],\"sequences\":["; bool firstSequence = true;
+                for (const auto& [id, sequence] : graph.mSequences)
+                {
+                    if (!firstSequence) stream << ',';
+                    firstSequence = false;
+                    const auto& state = sequence.mState; const auto& timing = state.mTiming;
+                    stream << "{\"id\":" << id << ",\"resource\":" << sequence.mResource
+                        << ",\"managed\":" << (sequence.mManaged ? "true" : "false")
+                        << ",\"started\":" << (state.mStarted ? "true" : "false")
+                        << ",\"inactive\":" << (state.mInactive ? "true" : "false")
+                        << ",\"timing\":{\"easing\":" << (timing.mEasing ? "true" : "false") << ",\"offset\":";
+                    optional(timing.mOffset); stream << ",\"ease_start\":"; optional(timing.mEaseStart);
+                    stream << ",\"last_input\":"; optional(timing.mLastInput);
+                    stream << ",\"ease_end\":"; floating(timing.mEaseEnd);
+                    stream << ",\"weighted_time\":"; floating(timing.mWeightedTime);
+                    stream << ",\"output_time\":"; floating(timing.mOutputTime);
+                    stream << "},\"transition_frame\":"; optional(sequence.mTransitionFrame);
+                    stream << ",\"pose_snapshot\":";
+                    if (sequence.mPoseSnapshot) writeMeleePoseJson(stream, *sequence.mPoseSnapshot); else stream << "null";
+                    stream << ",\"retirement\":";
+                    if (state.mRetirement) {
+                        stream << "{\"duration\":"; floating(state.mRetirement->mDuration);
+                        stream << ",\"start_clock\":"; optional(state.mRetirement->mStartClock); stream << '}';
+                    } else stream << "null";
+                    stream << '}';
+                }
+                stream << "]}";
             }
             stream << ']';
         }

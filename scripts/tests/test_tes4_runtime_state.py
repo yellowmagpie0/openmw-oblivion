@@ -207,6 +207,75 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state = self.getup_idle_state(); state["native_actor_life"] = []
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
+    @classmethod
+    def getup_graph_state(cls):
+        state = cls.getup_idle_state(); state["schema_version"] = 72
+        idle = state["native_getup_idles"][0]; actor = idle["actor"]
+        state["native_animation_clocks"] = [{"actor": actor, "clock": 4.}]
+        resource = {key: value for key, value in idle.items() if key != "actor"}; resource["id"] = 2
+        timing = {"easing": False, "offset": -1., "ease_start": 1., "last_input": 4.,
+                  "ease_end": 0., "weighted_time": 3., "output_time": 2.}
+        sequence = {"id": 3, "resource": 2, "managed": True, "started": False, "inactive": False,
+                    "timing": timing, "transition_frame": None, "pose_snapshot": None, "retirement": None}
+        request = {"id": 4, "resource": 2, "sequence": 3, "status": 2, "actor_bound": True}
+        state["native_getup_playback"] = [{"actor": actor, "next_identity": 100, "cached_sequence": 3,
+            "resident_sequence": 3, "action_sequence": 3, "requests": [request, None,
+                dict(request, id=5), dict(request, id=6, status=3)], "resources": [resource], "sequences": [sequence]}]
+        return state
+
+    def test_getup_graph72_roundtrip_shared_references_frontier_and_legacy_absence(self):
+        state = self.getup_graph_state(); wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_getup_playback"], state["native_getup_playback"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        state["schema_version"] = 71
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError): state_io.mutate_for_acceptance(state, "legacy")
+        del state["native_getup_playback"]
+        self.assertFalse(state_io.decode_payload(state_io.encode_payload(state)).get("native_getup_playback"))
+
+    def test_getup_graph72_rejects_dangling_identity_phase_and_timing(self):
+        changes = [lambda g: g.update(next_identity=6), lambda g: g.update(resident_sequence=99),
+            lambda g: g.update(cached_sequence=99), lambda g: g.update(action_sequence=99),
+            lambda g: g["requests"][0].update(id=2), lambda g: g["requests"][0].update(sequence=99),
+            lambda g: g["requests"][0].update(actor_bound=False), lambda g: g["requests"][0].update(status=0),
+            lambda g: g["sequences"][0].update(resource=99), lambda g: g["sequences"][0].update(managed=False),
+            lambda g: g["sequences"][0]["timing"].update(offset=None),
+            lambda g: g["sequences"][0]["timing"].update(output_time=float("inf")),
+            lambda g: g["resources"].append(dict(g["resources"][0], id=9)),
+            lambda g: g["requests"][2].update(id=4), lambda g: g.update(next_identity=True),
+            lambda g: g["requests"][0].update(resource=True), lambda g: g["sequences"][0].update(managed=1)]
+        for index, change in enumerate(changes):
+            with self.subTest(index=index):
+                state = self.getup_graph_state(); change(state["native_getup_playback"][0])
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.getup_graph_state(); state["native_animation_clocks"] = []
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_getup_graph72_preserves_detached_shared_sequence_negative_zero_and_retirement(self):
+        state = self.getup_graph_state(); graph = state["native_getup_playback"][0]
+        graph.update(cached_sequence=0, resident_sequence=0); sequence = graph["sequences"][0]
+        sequence.update(managed=False, inactive=True); sequence["timing"]["last_input"] = -0.
+        state["native_animation_clocks"][0]["clock"] = 3.4028234663852886e38
+        wire = state_io.encode_payload(state); loaded = state_io.decode_payload(wire)
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        self.assertEqual(math.copysign(1, loaded["native_getup_playback"][0]["sequences"][0]["timing"]["last_input"]), -1)
+        sequence.update(managed=True, inactive=False, retirement={"duration": 1., "start_clock": 3.})
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(state_io.encode_payload(state))), state_io.encode_payload(state))
+
+    def test_getup_graph72_captured_pose_requires_matching_destination(self):
+        state = self.getup_graph_state(); sequence = state["native_getup_playback"][0]["sequences"][0]
+        sequence["timing"].update(easing=True, offset=-1., ease_start=None, last_input=None, ease_end=2.)
+        sequence["transition_frame"] = .5
+        sequence["pose_snapshot"] = {"destination_frame": .5, "tracks": [{"bone": "Bip01",
+            "translation": [1., -0., 3.], "rotation": [1., 0., 0., 0.], "scale": 1., "priority": 7}]}
+        wire = state_io.encode_payload(state)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(wire)), wire)
+        sequence["pose_snapshot"]["destination_frame"] = .75
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        sequence["pose_snapshot"] = None
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
     @staticmethod
     def combat_controller_state():
         state = make_state(); state["schema_version"] = 68; state["ai_rng_state"] = 1

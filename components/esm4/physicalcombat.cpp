@@ -333,6 +333,12 @@ namespace ESM4
         return static_cast<std::uint16_t>((movement << 12) | (family << 8) | *base);
     }
 
+    std::optional<std::uint16_t> nativeGetUpSequenceGroup(std::string_view sequenceName)
+    {
+        constexpr std::array<std::pair<std::string_view, std::uint16_t>, 1> names{{{"specialidle", 2}}};
+        return nativeSequenceGroup(sequenceName, "", names);
+    }
+
     std::optional<std::uint16_t> nativeReactionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename)
     {

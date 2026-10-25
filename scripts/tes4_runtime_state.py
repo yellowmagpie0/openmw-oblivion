@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 71
+CURRENT_VERSION = 72
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1655,6 +1655,119 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Zero TES4 captured pose quaternion")
             native_float(track["scale"])
 
+    graphs = check_collection(state.get("native_getup_playback", []), "native GetUp playback list")
+    if version < 72 and graphs:
+        raise RuntimeStateError("Native GetUp playback requires schema72")
+    graph_clocks = {entry["actor"]: entry["clock"] for entry in clocks}
+    graph_actors: set[str] = set()
+    for graph in graphs:
+        if not isinstance(graph, dict) or set(graph) != {"actor", "next_identity", "cached_sequence", "resident_sequence", "action_sequence", "requests", "resources", "sequences"}:
+            raise RuntimeStateError("Invalid GetUp graph shape")
+        actor = graph["actor"]; native_key(actor)
+        if actor in graph_actors or actor not in native_keys or actor not in life_keys:
+            raise RuntimeStateError("Duplicate or dangling GetUp graph owner")
+        graph_actors.add(actor)
+        frontier = graph["next_identity"]
+        if type(frontier) is not int or not 1 <= frontier < 1 << 64:
+            raise RuntimeStateError("Invalid GetUp allocation frontier")
+        ids: set[int] = set()
+        def identity(value):
+            if type(value) is not int or not 0 < value < frontier or value in ids:
+                raise RuntimeStateError("Duplicate, null or future GetUp graph identity")
+            ids.add(value)
+        def reference(value, table):
+            if type(value) is not int or not 0 <= value < 1 << 64 or (value and value not in table):
+                raise RuntimeStateError("Dangling GetUp sequence reference")
+        resources = {}; used_resources = set(); sequences = {}; used_sequences = set()
+        for resource in check_collection(graph["resources"], "GetUp graph resources"):
+            if not isinstance(resource, dict) or set(resource) != {"id", "base", "idle", "actor_model", "model", "asset_hash"}:
+                raise RuntimeStateError("Invalid GetUp resource shape")
+            identity(resource["id"]); resources[resource["id"]] = resource
+            for key in (resource["base"], resource["idle"]): native_key(key)
+            if resource["base"] != value_bases[actor] or not resource["idle"].startswith("content:"):
+                raise RuntimeStateError("Mismatched GetUp graph resource owner")
+            for field in ("actor_model", "model"):
+                path = resource[field]
+                if not isinstance(path, str) or not path or len(path) >= 260 or any(ord(c) == 0 or ord(c) >= 128 for c in path):
+                    raise RuntimeStateError("Invalid GetUp graph authored path")
+            digest = resource["asset_hash"]
+            if (not resource["model"].lower().endswith(".kf") or not isinstance(digest, str)
+                    or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest)):
+                raise RuntimeStateError("Invalid GetUp graph KF identity")
+        clock = graph_clocks.get(actor)
+        def finite_optional(value):
+            if value is not None: native_float(value)
+        for sequence in check_collection(graph["sequences"], "GetUp graph sequences"):
+            if not isinstance(sequence, dict) or set(sequence) != {"id", "resource", "managed", "started", "inactive", "timing", "transition_frame", "pose_snapshot", "retirement"}:
+                raise RuntimeStateError("Invalid GetUp sequence shape")
+            identity(sequence["id"]); sequences[sequence["id"]] = sequence
+            if type(sequence["resource"]) is not int or sequence["resource"] not in resources or clock is None:
+                raise RuntimeStateError("GetUp sequence lacks resource or clock")
+            used_resources.add(sequence["resource"])
+            for field in ("managed", "started", "inactive"):
+                if type(sequence[field]) is not bool: raise RuntimeStateError("Invalid GetUp sequence boolean")
+            timing = sequence["timing"]
+            if not isinstance(timing, dict) or set(timing) != {"easing", "offset", "ease_start", "last_input", "ease_end", "weighted_time", "output_time"} or type(timing["easing"]) is not bool:
+                raise RuntimeStateError("Invalid GetUp sequence timing")
+            for field in ("ease_end", "weighted_time", "output_time"): native_float(timing[field])
+            for field in ("offset", "ease_start", "last_input"): finite_optional(timing[field])
+            transition = sequence["transition_frame"]; finite_optional(transition)
+            capture = transition is not None and timing["easing"] and timing["offset"] is not None and timing["ease_start"] is None and timing["last_input"] is None
+            if ((not capture and ((timing["offset"] is None) != (timing["ease_start"] is None) or (timing["offset"] is None) != (timing["last_input"] is None)))
+                    or (transition is not None and not timing["easing"]) or (sequence["inactive"] and timing["easing"])):
+                raise RuntimeStateError("Partial or inconsistent GetUp sequence timing")
+            pose = sequence["pose_snapshot"]
+            if (pose is None) != (transition is None):
+                raise RuntimeStateError("GetUp pose transition lacks captured pose")
+            if pose is not None:
+                melee_pose(pose, timing)
+                if native_float(pose["destination_frame"]) != native_float(transition):
+                    raise RuntimeStateError("Mismatched GetUp pose destination")
+            retirement = sequence["retirement"]
+            if retirement is not None:
+                if not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}:
+                    raise RuntimeStateError("Invalid GetUp retirement shape")
+                duration = native_float(retirement["duration"]); start = retirement["start_clock"]; finite_optional(start)
+                if duration <= 0 or timing["offset"] is None or timing["easing"] or transition is not None:
+                    raise RuntimeStateError("Invalid GetUp retirement")
+                if start is not None:
+                    try: stop = struct.unpack("<f", struct.pack("<f", native_float(start) + duration))[0]
+                    except (OverflowError, struct.error) as error: raise RuntimeStateError("Invalid GetUp retirement clock") from error
+                    if not math.isfinite(stop) or (sequence["inactive"] and native_float(clock) < stop):
+                        raise RuntimeStateError("Invalid GetUp retirement clock")
+                elif sequence["inactive"]: raise RuntimeStateError("Unanchored inactive GetUp retirement")
+            if not sequence["managed"] and not sequence["inactive"]:
+                raise RuntimeStateError("Detached GetUp sequence is active")
+        requests = graph["requests"]
+        if not isinstance(requests, list) or len(requests) != 4:
+            raise RuntimeStateError("GetUp requires four fixed request slots")
+        for request in requests:
+            if request is None: continue
+            if not isinstance(request, dict) or set(request) != {"id", "resource", "sequence", "status", "actor_bound"}:
+                raise RuntimeStateError("Invalid GetUp request shape")
+            identity(request["id"]); reference(request["sequence"], sequences)
+            status = request["status"]; bound = request["actor_bound"]; seq = request["sequence"]
+            if (type(request["resource"]) is not int or request["resource"] not in resources
+                    or type(status) is not int or not 1 <= status <= 3 or type(bound) is not bool
+                    or (status == 1 and (seq or bound)) or (status == 2 and (not seq or not bound)) or bool(seq) != bound):
+                raise RuntimeStateError("Unsupported GetUp request lifecycle")
+            used_resources.add(request["resource"])
+            if seq:
+                used_sequences.add(seq)
+                if sequences[seq]["resource"] != request["resource"]:
+                    raise RuntimeStateError("GetUp request and sequence resource differ")
+        for field in ("cached_sequence", "resident_sequence", "action_sequence"):
+            seq = graph[field]; reference(seq, sequences)
+            if seq: used_sequences.add(seq)
+        if graph["cached_sequence"] and not sequences[graph["cached_sequence"]]["managed"]:
+            raise RuntimeStateError("GetUp cache references detached sequence")
+        if graph["resident_sequence"]:
+            seq = sequences[graph["resident_sequence"]]
+            if not seq["managed"] or seq["inactive"] or seq["retirement"] is not None:
+                raise RuntimeStateError("Invalid resident GetUp sequence")
+        if len(used_resources) != len(resources) or any(not seq["managed"] and identity not in used_sequences for identity, seq in sequences.items()):
+            raise RuntimeStateError("Unowned GetUp graph node")
+
     def melee_reaction(reaction, actor, strike, clock, require_action):
         fields = {"contact_id", "kind", "animation_group", "animation_time", "started", "sequence_timing", "retirement"}
         if version >= 55: fields.add("inactive")
@@ -2637,6 +2750,42 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_getup_idles"] = [dict(zip(
             ("actor", "base", "idle", "actor_model", "model", "asset_hash"),
             (reader.string() for _ in range(6)))) for _ in range(reader.count())]
+    if version >= 72:
+        def getup_boolean():
+            value = reader.unpack("<B")
+            if value > 1: raise RuntimeStateError("Invalid GetUp graph boolean")
+            return bool(value)
+        def getup_optional():
+            return reader.unpack("<f") if getup_boolean() else None
+        result["native_getup_playback"] = []
+        for _ in range(reader.count()):
+            graph = {"actor": reader.string()}
+            for field in ("next_identity", "cached_sequence", "resident_sequence", "action_sequence"):
+                graph[field] = reader.unpack("<Q")
+            graph["requests"] = []
+            for _ in range(4):
+                request = None
+                if getup_boolean():
+                    request = {field: reader.unpack("<Q") for field in ("id", "resource", "sequence")}
+                    request["status"] = reader.unpack("<I"); request["actor_bound"] = getup_boolean()
+                graph["requests"].append(request)
+            graph["resources"] = []
+            for _ in range(reader.count()):
+                resource = {"id": reader.unpack("<Q")}
+                for field in ("base", "idle", "actor_model", "model", "asset_hash"): resource[field] = reader.string()
+                graph["resources"].append(resource)
+            graph["sequences"] = []
+            for _ in range(reader.count()):
+                sequence = {"id": reader.unpack("<Q"), "resource": reader.unpack("<Q")}
+                for field in ("managed", "started", "inactive"): sequence[field] = getup_boolean()
+                timing = {"easing": getup_boolean()}
+                for field in ("offset", "ease_start", "last_input"): timing[field] = getup_optional()
+                for field in ("ease_end", "weighted_time", "output_time"): timing[field] = reader.unpack("<f")
+                sequence["timing"] = timing; sequence["transition_frame"] = getup_optional()
+                sequence["pose_snapshot"] = read_melee_pose() if getup_boolean() else None
+                sequence["retirement"] = {"duration": reader.unpack("<f"), "start_clock": getup_optional()} if getup_boolean() else None
+                graph["sequences"].append(sequence)
+            result["native_getup_playback"].append(graph)
     if version >= 31:
         result["native_actor_ragdolls"] = []
         for _ in range(reader.count()):
@@ -3372,6 +3521,40 @@ def encode_payload(state: dict[str, Any]) -> bytes:
         for entry in idles:
             for field in ("actor", "base", "idle", "actor_model", "model", "asset_hash"):
                 writer.string(entry[field])
+    if version >= 72:
+        graphs = sorted(state.get("native_getup_playback", []), key=lambda item: item["actor"])
+        writer.pack("<I", len(graphs))
+        def getup_optional(value):
+            writer.pack("<B", value is not None)
+            if value is not None: writer.pack("<f", value)
+        for graph in graphs:
+            writer.string(graph["actor"])
+            for field in ("next_identity", "cached_sequence", "resident_sequence", "action_sequence"): writer.pack("<Q", graph[field])
+            for request in graph["requests"]:
+                writer.pack("<B", request is not None)
+                if request is None: continue
+                for field in ("id", "resource", "sequence"): writer.pack("<Q", request[field])
+                writer.pack("<I", request["status"]); writer.pack("<B", request["actor_bound"])
+            resources = sorted(graph["resources"], key=lambda entry: entry["id"])
+            writer.pack("<I", len(resources))
+            for resource in resources:
+                writer.pack("<Q", resource["id"])
+                for field in ("base", "idle", "actor_model", "model", "asset_hash"): writer.string(resource[field])
+            sequences = sorted(graph["sequences"], key=lambda entry: entry["id"])
+            writer.pack("<I", len(sequences))
+            for sequence in sequences:
+                writer.pack("<Q", sequence["id"]); writer.pack("<Q", sequence["resource"])
+                for field in ("managed", "started", "inactive"): writer.pack("<B", sequence[field])
+                timing = sequence["timing"]; writer.pack("<B", timing["easing"])
+                for field in ("offset", "ease_start", "last_input"): getup_optional(timing[field])
+                for field in ("ease_end", "weighted_time", "output_time"): writer.pack("<f", timing[field])
+                getup_optional(sequence["transition_frame"])
+                writer.pack("<B", sequence["pose_snapshot"] is not None)
+                if sequence["pose_snapshot"] is not None: write_melee_pose(sequence["pose_snapshot"])
+                retirement = sequence["retirement"]
+                writer.pack("<B", retirement is not None)
+                if retirement is not None:
+                    writer.pack("<f", retirement["duration"]); getup_optional(retirement["start_clock"])
     if version >= 31:
         ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
         writer.pack("<I", len(ragdolls))
@@ -3676,6 +3859,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 71 and state.get("native_getup_idles"):
         raise RuntimeStateError("Legacy TES4 save cannot carry selected GetUp IDLE ownership")
     state.setdefault("native_getup_idles", [])
+    if state.get("schema_version", 1) < 72 and state.get("native_getup_playback"):
+        raise RuntimeStateError("Legacy TES4 save cannot carry GetUp playback")
+    state.setdefault("native_getup_playback", [])
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])

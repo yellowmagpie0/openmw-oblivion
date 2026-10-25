@@ -110,6 +110,9 @@ namespace ESM4
     // Original436DA0/51B490: internal name before its first underscore is
     // the gameplay group; the resource basename supplies movement/family.
     // This bounded parser recognizes BlockHit28, Recoil30 and Stagger31.
+    // SpecialIdle2 bypasses filename movement/family bits. Metadata still
+    // requires a matching native text key; this only classifies the name.
+    std::optional<std::uint16_t> nativeGetUpSequenceGroup(std::string_view sequenceName);
     std::optional<std::uint16_t> nativeReactionSequenceGroup(
         std::string_view sequenceName, std::string_view resourceBasename);
     std::optional<std::uint16_t> nativeCounterSequenceGroup(

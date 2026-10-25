@@ -43,7 +43,7 @@ namespace
             + sub(ESM::fourCC("DATA"), bytes(parent) + bytes(0u)) + conditions);
     }
     std::string kf(float translation, std::string_view root = "Bip01", bool duplicate = false,
-        bool trackless = false)
+        bool trackless = false, std::string_view name = "AuthoredGetUpLabel")
     {
         std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
         data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
@@ -54,7 +54,7 @@ namespace
         if (duplicate) data += bytes(std::uint16_t{0});
         data += bytes(0u);
         const auto start = data.size();
-        data += text("AuthoredGetUpLabel") + bytes(trackless ? 0u : 1u) + bytes(1u);
+        data += text(name) + bytes(trackless ? 0u : 1u) + bytes(1u);
         if (!trackless)
         {
             data += bytes(std::int32_t{2}) + bytes(std::int32_t{-1}) + bytes(std::int32_t{3}) + bytes(0u);
@@ -621,4 +621,62 @@ TEST_F(NativeGetUpRequestTest, FrozenOutgoingSimulationRejectsReadyPublicationUn
     ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(prepared->commit());
     EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
     EXPECT_FALSE(prepared->commit());
+}
+
+TEST_F(NativeGetUpRequestTest, SharedPlaybackGraphRestoresAndReadmitsEveryRetainedResource)
+{
+    write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
+    const auto before = snapshot(); auto saved = before;
+    auto& graph = saved.mNativeGetUpPlayback[key()];
+    graph.mNextIdentity = 100;
+    graph.mResources.emplace(2, saved.mNativeGetUpIdles.at(key()));
+    graph.mRequests.mPrimary = ESM4::NativeIdleRequest{4, 2, 3, 2, true};
+    graph.mRequests.mRetired[0] = ESM4::NativeIdleRequest{5, 2, 3, 2, true};
+    graph.mRequests.mRetired[1] = ESM4::NativeIdleRequest{6, 2, 3, 3, true};
+    ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2;
+    graph.mSequences.emplace(3, sequence);
+    graph.mCachedSequence = graph.mResidentSequence = graph.mActionSequence = 3;
+    saved.mNativeAnimationClocks[key()] = 0;
+    ASSERT_NO_THROW(saved.validate());
+    ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    MWMechanics::OblivionCombatService restored;
+    ASSERT_NO_THROW(restored.restore(saved, world.getStore()));
+    EXPECT_EQ(restored.getUpPlayback(key()), graph);
+    auto captured = saved; restored.capture(captured); EXPECT_EQ(captured, saved);
+    EXPECT_FALSE(combat().getUpPlayback(key())); EXPECT_EQ(snapshot(), before);
+    // A resource reachable only from retained requests is still readmitted.
+    graph.mResources.emplace(9, graph.mResources.at(2));
+    graph.mRequests.mRetired[1] = ESM4::NativeIdleRequest{10, 9, 11, 3, true};
+    sequence.mResource = 9; sequence.mManaged = false; sequence.mState.mInactive = true;
+    graph.mSequences.emplace(11, sequence);
+    ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    graph.mResources.at(9).mAssetHash[0] = graph.mResources.at(9).mAssetHash[0] == '0' ? '1' : '0';
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
+    restored.setProcessKnockedState(key(), 3);
+    auto beforeGuard = saved; restored.capture(beforeGuard);
+    const auto seed = restored.combatRandomState();
+    EXPECT_THROW(restored.prepareGetUpIdle(key(), saved.mNativeGetUpIdles.at(key()), {seed, seed, 0}),
+        std::invalid_argument);
+    auto afterGuard = saved; restored.capture(afterGuard);
+    EXPECT_EQ(afterGuard, beforeGuard);
+    restored.clear(); EXPECT_FALSE(restored.getUpPlayback(key()));
+}
+
+TEST_F(NativeGetUpRequestTest, ReadyGraphDoesNotRequirePlayableMetadataButAttachedGraphDoes)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
+    auto saved = snapshot(); auto& graph = saved.mNativeGetUpPlayback[key()];
+    graph.mNextIdentity = 10; graph.mResources.emplace(2, saved.mNativeGetUpIdles.at(key()));
+    graph.mRequests.mPrimary = ESM4::makeNativeIdleRequest(4, 2);
+    ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    graph.mRequests.mPrimary = ESM4::NativeIdleRequest{4, 2, 3, 2, true};
+    ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2; graph.mSequences.emplace(3, sequence);
+    saved.mNativeAnimationClocks[key()] = 0;
+    ASSERT_NO_THROW(saved.validate());
+    // Fixture's AuthoredGetUpLabel is not native SpecialIdle metadata.
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
 }

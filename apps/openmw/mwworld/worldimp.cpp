@@ -181,6 +181,7 @@ namespace MWWorld
     {
         using Resource = std::shared_ptr<const MWRender::Animation::NativeIdleResource>;
         std::map<ESM::FormKey, std::pair<ESM4::RuntimeGetUpIdle, Resource>> mActors;
+        std::map<ESM::FormKey, std::map<std::uint64_t, Resource>> mGraphs;
     };
 
     namespace
@@ -3324,7 +3325,7 @@ namespace MWWorld
     std::shared_ptr<const World::OblivionGetUpResources> World::prepareOblivionGetUpResources(
         const ESM4::RuntimeState& state, const ESMStore* incoming) const
     {
-        if (state.mNativeGetUpIdles.empty()) return {};
+        if (state.mNativeGetUpIdles.empty() && state.mNativeGetUpPlayback.empty()) return {};
         if (!mResourceSystem) throw std::invalid_argument("Saved GetUp has no resource service");
         auto result = std::make_shared<OblivionGetUpResources>();
         const auto index = buildOblivionNativeIdleIndex(mStore);
@@ -3332,8 +3333,7 @@ namespace MWWorld
             if (incoming) if (const auto* record = incoming->search<T>(key)) return record;
             return mStore.search<T>(key);
         };
-        for (const auto& [actor, idle] : state.mNativeGetUpIdles)
-        {
+        const auto acquire = [&](const ESM::FormKey& actor, const ESM4::RuntimeGetUpIdle& idle) {
             idle.validate();
             const auto* record = lookup.template operator()<ESM4::IdleAnimation>(idle.mIdle);
             if (!record || getUpCString(record->mModel.getOriginal()) != idle.mModel)
@@ -3369,7 +3369,27 @@ namespace MWWorld
             const auto resource = MWRender::Animation::acquireNativeIdleResource(*mResourceSystem, idle.mModel);
             if (!resource || getUpResourceHash(resource->fileHash()) != idle.mAssetHash)
                 throw std::invalid_argument("Saved GetUp KF differs from acquired bytes");
-            result->mActors.emplace(actor, std::pair{idle, resource});
+            return resource;
+        };
+        for (const auto& [actor, idle] : state.mNativeGetUpIdles)
+            result->mActors.emplace(actor, std::pair{idle, acquire(actor, idle)});
+        for (const auto& [actor, graph] : state.mNativeGetUpPlayback)
+        {
+            for (const auto& [id, idle] : graph.mResources)
+                result->mGraphs[actor].emplace(id, acquire(actor, idle));
+            for (const auto& [id, sequence] : graph.mSequences)
+            {
+                const auto& metadata = result->mGraphs.at(actor).at(sequence.mResource)->metadata();
+                std::vector<ESM4::MeleeTextKey> keys;
+                for (const auto& [time, text] : metadata.mTextKeys) keys.push_back({time, text});
+                if (ESM4::nativeGetUpSequenceGroup(metadata.mSequenceName) != 2
+                    || !ESM4::reactionKeyTimes(keys).mMatchedCount || metadata.mCycleType != 2
+                    || !std::isfinite(metadata.mFrequency) || metadata.mFrequency <= 0
+                    || !std::isfinite(metadata.mStartTime) || !std::isfinite(metadata.mStopTime)
+                    || metadata.mStopTime < metadata.mStartTime
+                    || !std::isfinite(metadata.mStopTime - metadata.mStartTime))
+                    throw std::invalid_argument("Saved GetUp sequence has unsupported KF metadata");
+            }
         }
         return result;
     }
