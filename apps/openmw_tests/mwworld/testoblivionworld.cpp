@@ -36073,3 +36073,99 @@ TEST(OblivionWorldTest, NativeIdleSubjectlessReferenceUsesOppositeActorWithoutIn
     scripts->capture(after);
     EXPECT_EQ(after, before);
 }
+
+TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstructedCombatGetUp)
+{
+    NativeIdleQueryWindows windows;
+    const auto pack = [](std::uint32_t id, std::uint8_t type) {
+        const ESM4::AIPackage::PKDT data{0, type, {0, 0, 0}};
+        const ESM4::AIPackage::PSDT schedule{-1, -1, 0, -1, 0};
+        return idleQueryRecord(ESM4::REC_PACK, id,
+            idleQuerySub(ESM::fourCC("EDID"), std::string("NativePackageQuery") + '\0')
+            + idleQuerySub(ESM::fourCC("PKDT"), idleQueryBytes(data))
+            + idleQuerySub(ESM::fourCC("PSDT"), idleQueryBytes(schedule)));
+    };
+    const auto records = pack(0xd00, 5) + pack(0xd01, 6)
+        + idleQueryIdle(0xa00, "Dog\\IdleAnims\\Escort.kf", 0, 0, idleQueryCondition(111, 1))
+        + idleQueryIdle(0xa01, "Dog\\IdleAnims\\CombatGetUp.kf", 0, 0xa00,
+            idleQueryCondition(110, 5) + idleQueryCondition(107, 1));
+    NativeWorldFixture fixture(false, false, false, {}, {}, records, 4);
+    fixture.mEnvironment.setWindowManager(windows);
+    auto& world = fixture.mWorld;
+    setupCommonHitPlayer(fixture);
+    prepareNativeCombatCommandPlayer(fixture);
+    setIdleQueryNpcModel(fixture, "Dog\\Skeleton.nif");
+    auto npc = addNativeNpc(fixture, 0x900);
+    npc = npc.getCell()->moveTo(npc, world.getPlayerPtr().getCell());
+    world.getWorldModel().registerPtr(npc);
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    const auto key = npc.getCellRef().getFormKey();
+    auto& ai = *world.getOblivionAiService();
+    const auto evaluate = [&](unsigned function, float expected) {
+        ESM4::PackageCondition condition;
+        condition.mFunction = function;
+        condition.mOperator = ESM4::ConditionOperator::Equal;
+        condition.mComparisonValue = expected;
+        return ai.evaluateNativeIdleConditions(npc, std::span(&condition, 1), {});
+    };
+    EXPECT_EQ(evaluate(110, 0), ESM4::ConditionResult::True);
+    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::True);
+    EXPECT_EQ(evaluate(143, 0), ESM4::ConditionResult::True);
+
+    auto snapshot = world.captureOblivionRuntimeState();
+    ESM4::RuntimeActorAiState authored;
+    authored.mActor = key;
+    authored.mBase = npc.get<ESM4::Npc>()->mBase->mFormKey;
+    authored.mCell = authored.mLastValidCell = ESM::FormKey::content("headless.esm", 1);
+    authored.mSource = ESM4::PackageSource::Base;
+    authored.mPackageType = ESM4::AIPackageType::Wander;
+    authored.mProcedure = ESM4::PackageProcedure::Wander;
+    authored.mPhase = ESM4::PackagePhase::Wait;
+    authored.mPackage = ESM::FormKey::content("headless.esm", 0xd00);
+    snapshot.mActorAi = {authored};
+    ASSERT_NO_THROW(ai.restore(snapshot));
+    EXPECT_EQ(evaluate(110, 13), ESM4::ConditionResult::True); // Raw Wander5 is public13.
+    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::Unsupported);
+    EXPECT_EQ(evaluate(143, 0), ESM4::ConditionResult::Unsupported);
+    authored.mPackage = ESM::FormKey::content("headless.esm", 0xd01);
+    authored.mPackageType = ESM4::AIPackageType::Travel;
+    authored.mProcedure = ESM4::PackageProcedure::Travel;
+    snapshot.mActorAi = {authored};
+    ASSERT_NO_THROW(ai.restore(snapshot));
+    EXPECT_EQ(evaluate(110, 14), ESM4::ConditionResult::True);
+    auto pending = authored;
+    pending.mScriptPackage = pending.mPackage;
+    pending.mPackage = {};
+    pending.mSource = ESM4::PackageSource::None;
+    pending.mPackageType = ESM4::AIPackageType::Unknown;
+    pending.mProcedure = ESM4::PackageProcedure::None;
+    pending.mPhase = ESM4::PackagePhase::Select;
+    snapshot.mActorAi = {pending};
+    ASSERT_NO_THROW(ai.restore(snapshot));
+    EXPECT_EQ(evaluate(110, 0), ESM4::ConditionResult::Unsupported);
+
+    snapshot.mActorAi.clear();
+    ASSERT_NO_THROW(ai.restore(snapshot));
+    ASSERT_TRUE(world.executeOblivionStartCombat(npc, world.getPlayerPtr()));
+    ASSERT_EQ(world.hasOblivionBaseCombatPackage(key), true);
+    auto& combat = *world.getOblivionCombatService();
+    combat.setProcessKnockedState(key, 3);
+    const auto before = world.captureOblivionRuntimeState();
+    EXPECT_EQ(evaluate(110, 5), ESM4::ConditionResult::True);
+    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::True);
+    // Controller existence proves no WAIT, but not a specific current cursor.
+    EXPECT_EQ(evaluate(143, 13), ESM4::ConditionResult::Unsupported);
+    const auto selected = world.prepareOblivionGetUpIdle(npc);
+    EXPECT_EQ(selected.mIdle, ESM::FormKey::content("headless.esm", 0xa01));
+    EXPECT_EQ(selected.mModel, "Dog\\IdleAnims\\CombatGetUp.kf");
+    EXPECT_EQ(selected.mRandomDraws, 0);
+    EXPECT_EQ(world.captureOblivionRuntimeState(), before);
+
+    snapshot = before;
+    snapshot.mActorAi = {authored};
+    ASSERT_NO_THROW(ai.restore(snapshot));
+    // A base controller with another package view does not prove the winner.
+    EXPECT_EQ(evaluate(110, 5), ESM4::ConditionResult::Unsupported);
+    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::Unsupported);
+    EXPECT_THROW(world.prepareOblivionGetUpIdle(npc), std::invalid_argument);
+}

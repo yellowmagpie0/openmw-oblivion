@@ -229,3 +229,68 @@ TEST(ESM4AIConditions, NativeListPreservesDeferredDispositionCallsAndRejectsUnav
     EXPECT_EQ(ESM4::evaluateNativeConditions(std::array{disposition, random}, context), ESM4::ConditionResult::Unsupported);
     EXPECT_EQ(ESM4::evaluateNativeConditions({}, context), ESM4::ConditionResult::True);
 }
+
+TEST(ESM4AIConditions, NativePackageTypesUsePublicMappingAndKnownAbsence)
+{
+    EXPECT_EQ(ESM4::nativeCurrentAiPackage(std::nullopt).mValue, 0);
+    for (const auto& [raw, expected] : std::array<std::pair<std::uint8_t, int>, 8>{
+             {{0, 0}, {2, 2}, {5, 13}, {6, 14}, {12, 5}, {32, 32}, {33, -1}, {255, -1}}})
+    {
+        const auto result = ESM4::nativeCurrentAiPackage(ESM4::NativePackageQueryView{raw, 0, {}, {}});
+        EXPECT_EQ(result.mStatus, ESM4::ConditionValueStatus::Value);
+        EXPECT_EQ(result.mValue, expected);
+    }
+}
+
+TEST(ESM4AIConditions, NativeWaitingUsesPackageArrayFlagAndActualProcedure)
+{
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(std::nullopt).mValue, 0);
+    ESM4::NativePackageQueryView package{1, 0, 6, 0}; // [WAIT, FOLLOW, terminal]
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 1);
+    package.mProcedureCursor = 1;
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 0);
+    package.mProcedureCursor = 2;
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 0);
+    package.mFlags = 0x10000;
+    package.mProcedureCursor.reset();
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 1);
+    package.mProcedureArrayIndex = -1;
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 0); // Gate precedes flag.
+    package.mProcedureArrayIndex.reset();
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+}
+
+TEST(ESM4AIConditions, NativeWaitingCanProveNoWaitWithoutInventingCursor)
+{
+    auto package = ESM4::nativeCombatControllerPackageView();
+    EXPECT_EQ(package.mType, 12);
+    EXPECT_EQ(package.mFlags, 6);
+    EXPECT_EQ(package.mProcedureArrayIndex, 12);
+    EXPECT_FALSE(package.mProcedureCursor);
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mStatus, ESM4::ConditionValueStatus::Value);
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mValue, 0);
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+    package.mProcedureArrayIndex = 6;
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+    package.mProcedureArrayIndex = 40;
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+}
+
+TEST(ESM4AIConditions, NativePublicProcedureMappingRejectsUnprovedOrInvalidProgress)
+{
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(std::nullopt).mValue, 0);
+    auto package = ESM4::nativeCombatControllerPackageView();
+    package.mProcedureCursor = 0;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mValue, 13); // Raw COMBAT9.
+    package.mProcedureCursor = 1;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mValue, 17); // Raw terminal44.
+    package.mProcedureCursor = 2;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+    package.mProcedureArrayIndex = -1;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mStatus, ESM4::ConditionValueStatus::Unsupported);
+    package.mProcedureArrayIndex = 6;
+    package.mProcedureCursor = 0;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mValue, 3); // Raw WAIT13.
+    package.mProcedureCursor = 1;
+    EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mValue, 11); // Raw FOLLOW6.
+}

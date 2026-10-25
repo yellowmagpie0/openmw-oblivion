@@ -106,6 +106,24 @@ namespace ESM4
     ConditionResult evaluateNativeConditions(
         std::span<const PackageCondition> conditions, const NativeConditionEvaluationContext& context);
 
+    // The caller resolves the actual current package. A null package means
+    // known absence; missing array/cursor fields mean unproved progress.
+    struct NativePackageQueryView
+    {
+        std::uint8_t mType = 0;
+        std::uint32_t mFlags = 0;
+        std::optional<std::int32_t> mProcedureArrayIndex;
+        std::optional<std::uint32_t> mProcedureCursor;
+    };
+
+    ConditionValue nativeCurrentAiPackage(const std::optional<NativePackageQueryView>& package);
+    ConditionValue nativePackageIsWaiting(const std::optional<NativePackageQueryView>& package);
+    ConditionValue nativeCurrentAiProcedure(const std::optional<NativePackageQueryView>& package);
+
+    // Fields established by native61BB60 and retained by target-list operations.
+    // The current procedure cursor is deliberately not inferred from existence.
+    NativePackageQueryView nativeCombatControllerPackageView();
+
     std::string_view conditionFunctionName(std::int32_t function);
 }
 

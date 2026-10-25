@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "scope": "Native current-package public mapping, package WAIT/procedure rules and constructed combat GetUp selection",
+  "rules": [
+    "No current package returns0 for public type/procedure and false for waiting. Raw type5 Wander maps13;6 Travel maps14;12 Combat maps5;33..255 map-1.",
+    "IsWaiting first rejects procedureArrayIndex -1; flags0x10000 then proves true; otherwise native procedure code13 means WAIT. Shared PackagePhase enum is not this code.",
+    "Unknown cursor can prove false only if its verified native array contains no WAIT. Combat array12=[9,44] with constructor flags6 therefore cannot wait. Its public procedure can be13 or17; existence alone cannot select one.",
+    "Read a selected authored PACK raw PKDT type instead of projecting a generic package/procedure enum. Unknown owner/progress is Unsupported, not a native false callback."
+  ],
+  "source": {
+    "path": "components/esm4/native_package_queries.inc",
+    "sha256": "ee6e944b392458caf0d7244540deb5eea5530ddb820fa9415cdbaf1a55ba2840"
+  },
+  "original_query_profiles": 32120,
+  "original_raw_procedure_profiles": 256,
+  "golden_profiles": 32200,
+  "abstract_cursor_profiles": 80,
+  "world_regression": "NativePackageQueriesDistinguishAuthoredProgressAndConstructedCombatGetUp",
+  "world_flow": [
+    "Actual loaded PACK/IDLE records; no-package queries0",
+    "Selected authored Wander/Travel return13/14 despite shared Wait phase; waiting/procedure remain unavailable",
+    "Pending script slot rejects unproved current owner",
+    "Actual World StartCombat installs canonical base controller; set native knocked3, select Dog-bank KF after legitimate false waiting root, retain exact selected key/model and unchanged full World/RNG snapshot",
+    "Another authored package view with base controller rejects ambiguous winner and aborts GetUp selection"
+  ],
+  "limits": [
+    "General authored-package procedure-array/cursor production is still unbound; PackagePhase::Wait is not a native WAIT procedure.",
+    "Current package ownership with another AI package and a base controller is ambiguous in the fork. Pending script-only/dynamic/unproved package views reject rather than assume an absent or winning package.",
+    "Combat view fields are fixed by the existing native constructor/target-operation model. Current cursor is not inferred, so native GetCurrentAIProcedure remains Unsupported for the constructed combat view. Broader native decision/flag mutation and upper-package production are not established by constructor fixtures.",
+    "The generic ObScript/dialogue/package backend still has legacy package/procedure mappings; this chunk corrects the separate native IDLE path and supplies shared native rules. General query unification remains required after current-package/progress ownership is resolved.",
+    "Oracle callbacks use supplied actor/process/package fields with actual vtables. No game functions are stubbed in the main query probe; the supplemental raw-procedure switch probe supplies one procedure-table data entry. Neither constructs game actors or proves gameplay.",
+    "Unknown-cursor golden statuses derive from agreement/disagreement across native results at all verified positions. Procedure array -1 is rejected as an unsafe native procedure-query domain; no native output is claimed for that field.",
+    "Full engine sanitizer checks disable leaks. New World regression and golden comparison pass with leaks enabled. The previous full-suite19734-byte/372-allocation leak reproduces without World tests and remains open.",
+    "Natural physical recovery FSM, exact selected KF/slot5 playback, staged RNG publication, restart, directional mastery and full normal-input S4 acceptance remain incomplete. No new normal-input/runtime or installed full-bank course ran."
+  ]
+}

@@ -13766,3 +13766,59 @@ open. No installed full-bank selection or normal-input gameplay course ran in
 this chunk. **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-IDLE-SELECTION-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_selection_cases.json).
+
+
+### Native package queries and combat GetUp admission
+
+The native IDLE evaluator now uses the original public package mapping rather
+than shared package/procedure enum values. Verified absence returns 0. Raw
+Wander type 5 maps to 13, Travel type 6 maps to 14, Combat type 12 maps to 5; unknown signed-byte cases map to -1.
+IsWaiting reads the native procedure-array/flag protocol: array index -1 is
+false before flag 0x10000, otherwise the flag or raw procedure 13 means waiting.
+The implementation retains all 40 native arrays / 119 positions and the full
+public procedure mapping. It rejects unproved/unsafe progress.
+
+An unknown cursor can still prove no WAIT when every possible position agrees.
+The combat controller's array 12 contains COMBAT 9 and terminal 44; constructor
+flags 6 cannot force waiting. This permits GetUp selection in the supported
+constructed combat context without inventing a current cursor. Public current
+procedure remains unsupported there because those positions map to 13 and 17.
+Unknown authored progress, an unselected script slot, dynamic/unbound records
+and ambiguous other-package/base-controller ownership remain unsupported.
+The generic ObScript/dialogue/package query backend still needs unification;
+this chunk corrects the separate native IDLE path and supplies shared rules.
+
+The original executable executes 32,120 actor/process/base/upper profiles in
+189,648 runs under both x87 words, with no game functions stubbed. A further
+256 raw-procedure profiles/512 executions exercise the actual public switch
+with one supplied table entry. Supplied typed objects/fields are fixture
+boundaries. An audit of 148 retained full constructor/install/remove/stop dumps
+confirms array 12, flags 6 and type 12; 20 rejected start rows have no constructed header.
+This does not establish every native decision or upper-package producer.
+Both rebuilt libraries match 32,200 golden profiles, including 80 unknown-cursor
+agreement cases. Unsafe native array-1 procedure lookup is rejected rather
+than assigned a fabricated native result.
+
+The World regression loads actual PACK/IDLE records, verifies raw Wander/Travel
+mapping, preserves unknown progress despite shared Wait phase, then starts
+combat through the production command, enters knocked state 3, selects the Dog-bank
+GetUp KF and checks an unchanged full World/RNG snapshot. A second package view
+with the controller rejects an ambiguous winner. The first builds were stopped
+before engine tests when static inspection caught a root-IDLE fixture in the
+wrong bank. The next engine run passed 1,951/1,952 but rejected the PACK fixture's
+missing required schedule. An isolated exact-case preflight then caught an
+unsigned schedule wildcard and a predicate confusing raw knocked state 3 with public
+GetKnockedState 1. The corrected isolated case passes; production query code did
+not change during those fixture corrections. All stop/failure evidence remains.
+
+Normal checks pass 3,115 component and 1,952 engine tests; ASan/UBSan checks pass
+966 ESM4 and 1,952 engine tests, with exact inventory/XML and no failures/skips.
+The new World test and golden helper pass separately with leaks enabled. Full
+engine/component sanitizer modes disable leaks; the preceding receipt retains
+the full-suite leak reproduced without World tests. Python/schema and loader
+were unchanged, so prior 410 Python/677-IDLE/44-bank installed checks were not
+repeated. **Full M15S4 remains incomplete:** natural physical FSM/GetUp playback,
+exact KF/slot5 publication, RNG consumption, save/restart, directional mastery,
+broader package ownership/progress and full normal-input acceptance remain.
+See the [verification receipt](M15-NATIVE-PACKAGE-QUERY-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_package_query_cases.json).

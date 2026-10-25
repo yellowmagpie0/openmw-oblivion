@@ -250,6 +250,73 @@ namespace ESM4
         return passed && (!inOr || group) ? ConditionResult::True : ConditionResult::False;
     }
 
+    namespace
+    {
+        struct NativeProcedureArray
+        {
+            std::array<std::uint8_t, 5> mCodes;
+            std::uint8_t mCount;
+        };
+
+#include "native_package_queries.inc"
+
+        std::optional<std::span<const std::uint8_t>> nativeProcedures(const NativePackageQueryView& package)
+        {
+            if (!package.mProcedureArrayIndex || *package.mProcedureArrayIndex < 0
+                || static_cast<std::size_t>(*package.mProcedureArrayIndex) >= nativeProcedureArrays.size())
+                return std::nullopt;
+            const auto& array = nativeProcedureArrays[*package.mProcedureArrayIndex];
+            return std::span(array.mCodes.data(), array.mCount);
+        }
+    }
+
+    ConditionValue nativeCurrentAiPackage(const std::optional<NativePackageQueryView>& package)
+    {
+        if (!package) return ConditionValue::value(0);
+        return ConditionValue::value(package->mType < nativePackageTypes.size()
+            ? nativePackageTypes[package->mType] : -1);
+    }
+
+    ConditionValue nativePackageIsWaiting(const std::optional<NativePackageQueryView>& package)
+    {
+        if (!package || package->mProcedureArrayIndex == -1) return ConditionValue::value(0);
+        const auto procedures = nativeProcedures(*package);
+        if (!procedures) return ConditionValue::unsupported();
+        if (package->mFlags & 0x10000) return ConditionValue::value(1);
+        if (package->mProcedureCursor)
+        {
+            if (*package->mProcedureCursor >= procedures->size()) return ConditionValue::unsupported();
+            return ConditionValue::value((*procedures)[*package->mProcedureCursor] == 13);
+        }
+        // An unknown cursor still proves false if no position can be WAIT.
+        // In particular, the combat controller's [COMBAT, terminal] array
+        // never waits; its existence does not prove which cursor is current.
+        for (const auto code : *procedures)
+            if (code == 13) return ConditionValue::unsupported();
+        return ConditionValue::value(0);
+    }
+
+    ConditionValue nativeCurrentAiProcedure(const std::optional<NativePackageQueryView>& package)
+    {
+        if (!package) return ConditionValue::value(0);
+        const auto procedures = nativeProcedures(*package);
+        if (!procedures) return ConditionValue::unsupported();
+        if (package->mProcedureCursor)
+        {
+            if (*package->mProcedureCursor >= procedures->size()) return ConditionValue::unsupported();
+            return ConditionValue::value(nativePublicProcedures[(*procedures)[*package->mProcedureCursor]]);
+        }
+        const auto result = nativePublicProcedures[procedures->front()];
+        for (const auto code : *procedures)
+            if (nativePublicProcedures[code] != result) return ConditionValue::unsupported();
+        return ConditionValue::value(result);
+    }
+
+    NativePackageQueryView nativeCombatControllerPackageView()
+    {
+        return {12, 6, 12, std::nullopt};
+    }
+
     std::string_view conditionFunctionName(std::int32_t function)
     {
         // TES4 functions used by the stock package corpus. Unknown entries are

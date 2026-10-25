@@ -1831,16 +1831,32 @@ namespace MWMechanics
                         const auto* combat = mWorld.getOblivionCombatService();
                         return combat ? value(combat->getDeadCount(key)) : ESM4::ConditionValue::missing();
                     }
+                    case 110:
                     case 111:
+                    case 143:
                     {
-                        // Native5E6BC0 is false with no package-progress
-                        // object. Do not infer its native wait flag/procedure
-                        // from the unrelated shared PackagePhase enum.
                         const auto* current = state(actor);
-                        if ((!current || current->mPackage.isNull())
-                            && !mWorld.hasOblivionBaseCombatPackage(actorKey(actor)).value_or(false))
-                            return value(0);
-                        return ESM4::ConditionValue::unsupported();
+                        const bool controller = mWorld.hasOblivionBaseCombatPackage(actorKey(actor)).value_or(false);
+                        std::optional<ESM4::NativePackageQueryView> selected;
+                        if (current && (!current->mPackage.isNull() || !current->mScriptPackage.isNull()))
+                        {
+                            // A base controller cannot prove which upper
+                            // package wins. Keep that owner distinction, and
+                            // do not turn an unselected script slot into null.
+                            if (controller || current->mPackage.isNull() || current->mPackage.isDynamic())
+                                return ESM4::ConditionValue::unsupported();
+                            const auto* record = package(current->mPackage);
+                            if (!record) return ESM4::ConditionValue::missing();
+                            if (record->mRawPKDT.size() != 4 && record->mRawPKDT.size() != 8)
+                                return ESM4::ConditionValue::unsupported();
+                            selected = ESM4::NativePackageQueryView{record->mData.type, record->mData.flags,
+                                std::nullopt, std::nullopt};
+                        }
+                        else if (controller)
+                            selected = ESM4::nativeCombatControllerPackageView();
+                        if (condition.mFunction == 110) return ESM4::nativeCurrentAiPackage(selected);
+                        if (condition.mFunction == 111) return ESM4::nativePackageIsWaiting(selected);
+                        return ESM4::nativeCurrentAiProcedure(selected);
                     }
                     case 170: return value(ESM4::calendarDayOfWeek(now()));
                     case 171: return value(mWorld.isPlayerInJail());
