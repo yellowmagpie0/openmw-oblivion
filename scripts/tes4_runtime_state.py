@@ -1712,25 +1712,38 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             for field in ("ease_end", "weighted_time", "output_time"): native_float(timing[field])
             for field in ("offset", "ease_start", "last_input"): finite_optional(timing[field])
             transition = sequence["transition_frame"]; finite_optional(transition)
-            capture = transition is not None and timing["easing"] and timing["offset"] is not None and timing["ease_start"] is None and timing["last_input"] is None
-            if ((not capture and ((timing["offset"] is None) != (timing["ease_start"] is None) or (timing["offset"] is None) != (timing["last_input"] is None)))
-                    or (transition is not None and not timing["easing"]) or (sequence["inactive"] and timing["easing"])):
-                raise RuntimeStateError("Partial or inconsistent GetUp sequence timing")
+            retirement = sequence["retirement"]
+            if retirement is not None and (not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}):
+                raise RuntimeStateError("Invalid GetUp retirement shape")
+            optional = [timing[field] for field in ("offset", "ease_start", "last_input")]
+            capture = transition is not None and timing["easing"] and optional[0] is not None and optional[1] is None and optional[2] is None
+            pending_history = retirement is None or (not sequence["inactive"] and retirement["start_clock"] is None)
+            pending_cache = pending_history and ((timing["easing"] and optional[1] is None and (transition is None or optional[0] is not None)) or (not timing["easing"] and optional[0] is None))
+            first_output = retirement is None and not timing["easing"] and optional[0] is not None and optional[1] is None and optional[2] is not None
+            unanchored = retirement is not None and not sequence["inactive"] and retirement["start_clock"] is None and not timing["easing"] and optional[1] is None
+            expired_unupdated = sequence["inactive"] and retirement is not None and retirement["start_clock"] is not None and optional[0] is not None and optional[1] is not None and optional[2] is None
+            cancelled_pose = sequence["inactive"] and retirement is None and not timing["easing"] and optional[0] is not None and optional[1] is None
+            if (not capture and not pending_cache and not first_output and not unanchored and not expired_unupdated and not cancelled_pose
+                    and any(value is None for value in optional) and not all(value is None for value in optional)):
+                raise RuntimeStateError("Partial GetUp sequence timing")
+            if timing["easing"] and native_float(timing["ease_end"]) <= (native_float(timing["ease_start"]) if timing["ease_start"] is not None else 0.):
+                raise RuntimeStateError("Invalid GetUp activation interval")
+            if ((transition is not None and not timing["easing"] and retirement is None)
+                    or (sequence["inactive"] and (timing["easing"] or transition is not None))):
+                raise RuntimeStateError("Invalid GetUp pose or inactive state")
             pose = sequence["pose_snapshot"]
             if (pose is None) != (transition is None):
                 raise RuntimeStateError("GetUp pose transition lacks captured pose")
             if pose is not None:
-                melee_pose(pose, timing)
+                melee_pose(pose, timing, retiring=retirement is not None)
                 if native_float(pose["destination_frame"]) != native_float(transition):
                     raise RuntimeStateError("Mismatched GetUp pose destination")
-            retirement = sequence["retirement"]
             if retirement is not None:
-                if not isinstance(retirement, dict) or set(retirement) != {"duration", "start_clock"}:
-                    raise RuntimeStateError("Invalid GetUp retirement shape")
                 duration = native_float(retirement["duration"]); start = retirement["start_clock"]; finite_optional(start)
-                if duration <= 0 or timing["offset"] is None or timing["easing"] or transition is not None:
+                if duration <= 0 or timing["easing"]:
                     raise RuntimeStateError("Invalid GetUp retirement")
                 if start is not None:
+                    if timing["offset"] is None: raise RuntimeStateError("Anchored GetUp retirement lacks offset")
                     try: stop = struct.unpack("<f", struct.pack("<f", native_float(start) + duration))[0]
                     except (OverflowError, struct.error) as error: raise RuntimeStateError("Invalid GetUp retirement clock") from error
                     if not math.isfinite(stop) or (sequence["inactive"] and native_float(clock) < stop):

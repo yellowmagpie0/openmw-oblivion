@@ -1,4 +1,5 @@
 #include "physicalcombat.hpp"
+#include "nativesequencedeactivation.hpp"
 
 #include <algorithm>
 #include <bit>
@@ -749,6 +750,27 @@ namespace ESM4
         }
         result.mOutputTime = std::clamp(output, begin, end);
         return result;
+    }
+
+    MeleeSequenceTiming deactivateNativeSequenceTiming(const MeleeSequenceTiming& state, float frequency)
+    {
+        finite(frequency);
+        if (frequency <= 0) throw std::invalid_argument("invalid native sequence deactivation frequency");
+        for (float value : {state.mEaseEnd, state.mWeightedTime, state.mOutputTime}) finite(value);
+        for (auto value : {state.mOffset, state.mEaseStart, state.mLastInput}) if (value) finite(*value);
+        auto next = state;
+        if (state.mLastInput)
+        {
+            const float sentinel = -std::numeric_limits<float>::max();
+            const double quotient = double(state.mWeightedTime) / frequency;
+            // PC24 keeps extended exponents between these three operations.
+            const double divided = roundSingle(binaryOperand(quotient), quotient);
+            const float offset = rounded(addSingle(addSingle(divided, -double(*state.mLastInput)),
+                state.mOffset.value_or(sentinel)));
+            if (offset == sentinel) next.mOffset.reset();
+            else next.mOffset = offset;
+        }
+        return next;
     }
 
     template <class Frame, std::size_t Size, class Advance>

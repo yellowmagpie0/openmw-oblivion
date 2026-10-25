@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "runtime_schema": 72,
+  "scope": "External clamp retirement, PC24 deactivation correction and portable native timing masks; no new gameplay caller",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "frame_precision": "x87 control word007F (24-bit significand, extended exponent); other original contexts remain separately recorded",
+  "rules": [
+    {
+      "name": "offset-correction",
+      "entry": "6C9CEF",
+      "operation": "weighted/frequency - lastInput + priorOffset, round at each PC24 register operation and store once; missing lastInput skips correction",
+      "negative_cpp_bits": 3204448246,
+      "expected_native_bits": 3204448256
+    },
+    {
+      "name": "cold-retirement",
+      "entry": "4733A0/470FC0/6C9CB0/6CA950",
+      "expected": "Positive retirement keeps uninitialized timing; first manager update initializes offset and anchors start/end before checking expiry."
+    },
+    {
+      "name": "retained-pose",
+      "entry": "6C9CB0/6CA950",
+      "expected": "NI5 can become NI3 while preserving destination frame and captured sample; keep pose until NI0, then clear it."
+    },
+    {
+      "name": "immediate-cancel",
+      "entry": "6C9CB0",
+      "expected": "Nonpositive duration or C4-forced zero makes NI0 without requiring a first manager update; partial pose initialization remains stored."
+    },
+    {
+      "name": "cached-start",
+      "entry": "475300/477E50/6CA950",
+      "expected": "Cached activation can reset offset/easeStart while retaining lastInput/weighted/output. Do not reject these masks or replace them with zero history."
+    },
+    {
+      "name": "large-first-manager",
+      "entry": "6CA950",
+      "clocks": [
+        100000000.0,
+        3.4028234663852886e+38
+      ],
+      "expected": "A positive duration can round its stop to the first clock. Initialize offset and retirement clocks, then become inactive before updating input/output."
+    }
+  ],
+  "numeric_boundaries": [
+    {
+      "name": "extended-cancellation",
+      "frequency_bits": 1056964608,
+      "weighted_bits": 2139095039,
+      "last_input_bits": 2139095039,
+      "offset_bits": 4286578687,
+      "expected_native_offset_bits": 0,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "extended-finite-result",
+      "frequency_bits": 1056964608,
+      "weighted_bits": 2139095039,
+      "last_input_bits": 2139095039,
+      "offset_bits": 0,
+      "expected_native_offset_bits": 2139095039,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "extended-overflow",
+      "frequency_bits": 1048576000,
+      "weighted_bits": 2139095039,
+      "last_input_bits": 2139095039,
+      "offset_bits": 4286578687,
+      "expected_native_offset_bits": 2139095040,
+      "typed_nonfinite_output_rejected": true
+    },
+    {
+      "name": "subnormal-quotient",
+      "frequency_bits": 2139095039,
+      "weighted_bits": 1,
+      "last_input_bits": 0,
+      "offset_bits": 0,
+      "expected_native_offset_bits": 0,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "huge-quotient",
+      "frequency_bits": 1,
+      "weighted_bits": 2139095039,
+      "last_input_bits": 0,
+      "offset_bits": 0,
+      "expected_native_offset_bits": 2139095040,
+      "typed_nonfinite_output_rejected": true
+    },
+    {
+      "name": "negative-zero-offset",
+      "frequency_bits": 1065353216,
+      "weighted_bits": 0,
+      "last_input_bits": 0,
+      "offset_bits": 2147483648,
+      "expected_native_offset_bits": 0,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "unset-last-input",
+      "frequency_bits": 1056964608,
+      "weighted_bits": 2139095039,
+      "last_input_bits": 4286578687,
+      "offset_bits": 4286578687,
+      "expected_native_offset_bits": 4286578687,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "sentinel-result",
+      "frequency_bits": 1,
+      "weighted_bits": 1,
+      "last_input_bits": 1065353216,
+      "offset_bits": 4286578687,
+      "expected_native_offset_bits": 4286578687,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "negative-extended-cancellation",
+      "frequency_bits": 1056964608,
+      "weighted_bits": 4286578687,
+      "last_input_bits": 4286578686,
+      "offset_bits": 2139095039,
+      "expected_native_offset_bits": 4085252096,
+      "typed_nonfinite_output_rejected": false
+    },
+    {
+      "name": "all-negative-zero",
+      "frequency_bits": 1073741824,
+      "weighted_bits": 2147483648,
+      "last_input_bits": 2147483648,
+      "offset_bits": 2147483648,
+      "expected_native_offset_bits": 0,
+      "typed_nonfinite_output_rejected": false
+    }
+  ],
+  "verification": {
+    "new_actual_constructor_original_profiles": 912,
+    "new_numeric_original_profiles": 10,
+    "selected_cpp_retirements": 336,
+    "selected_cpp_manager_updates": 1680,
+    "reused_original_cached_updates": 12,
+    "reused_frame_regression_profiles": 144,
+    "reused_frame_regression_updates": 39459
+  },
+  "boundaries": [
+    "Original probes supply empty controlled sets and checked heap/refcount/OS boundaries; no physical actor prefix or actual rendered recovery is exercised.",
+    "Clock/identity serialization fixtures validate the fork format; they do not establish a native save-file format.",
+    "Resident logical5 retirement still requires caller-owned all-slot reset and process/request/resource publication."
+  ],
+  "open": [
+    "Combined actual request/resource/renderer transaction and natural graph creation.",
+    "Renderer start/frame/completion/action ownership and restoration.",
+    "Native recovery caller/root/constraint prefixes and actual Player view policy.",
+    "Remaining M15S4 normal-input/device/FPS/audio/mastery/full-save acceptance matrix."
+  ]
+}

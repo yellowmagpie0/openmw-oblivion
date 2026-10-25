@@ -1,3 +1,4 @@
+#include <components/esm4/nativesequencedeactivation.hpp>
 #include "apps/openmw_tests/mwworld/oblivionworldfixture.hpp"
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/esm4npc.hpp"
@@ -679,4 +680,43 @@ TEST_F(NativeGetUpRequestTest, ReadyGraphDoesNotRequirePlayableMetadataButAttach
     ASSERT_NO_THROW(saved.validate());
     // Fixture's AuthoredGetUpLabel is not native SpecialIdle metadata.
     EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+}
+
+TEST_F(NativeGetUpRequestTest, ReadmissionPreservesColdPoseCancellationAndCachedInitialization)
+{
+    write(kf(9, "Bip01", false, true, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+    auto& world = mFixture.mWorld;
+    auto ready = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(ready->commit());
+    const auto before = snapshot();
+    for (int stage = 0; stage < 3; ++stage)
+    {
+        SCOPED_TRACE(stage);
+        auto saved = before; auto& graph = saved.mNativeGetUpPlayback[key()];
+        graph.mNextIdentity = 20; graph.mResources.emplace(2, saved.mNativeGetUpIdles.at(key()));
+        graph.mRequests.mPrimary = ESM4::NativeIdleRequest{4, 2, 3, 2, true};
+        graph.mCachedSequence = graph.mActionSequence = 3;
+        ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2;
+        if (stage == 1)
+        {
+            sequence.mState.mTiming = {false, std::nullopt, std::nullopt, .1f, 0, 0, 0};
+            graph.mResidentSequence = 3;
+        }
+        else
+        {
+            ESM4::NativeClampSequenceState pose;
+            pose.mTiming = {true, 0, std::nullopt, .1f, std::nullopt, 0, 0};
+            sequence.mState = ESM4::retireNativeClampSequence(pose, 1, stage == 0 ? .1f : 0.f, 0);
+            if (stage == 0)
+            {
+                sequence.mTransitionFrame = 0;
+                sequence.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0, {}};
+            }
+        }
+        graph.mSequences.emplace(3, sequence); saved.mNativeAnimationClocks[key()] = .5f;
+        ASSERT_NO_THROW(saved.validate());
+        ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+        MWMechanics::OblivionCombatService restored; ASSERT_NO_THROW(restored.restore(saved, world.getStore()));
+        auto captured = saved; restored.capture(captured);
+        EXPECT_EQ(captured, saved); EXPECT_EQ(snapshot(), before);
+    }
 }

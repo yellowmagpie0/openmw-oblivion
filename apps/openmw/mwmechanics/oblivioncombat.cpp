@@ -14,6 +14,7 @@
 #include <components/esm4/actorclock.hpp>
 #include <components/esm4/fatigueexpenditure.hpp>
 #include <components/esm4/nativeclampsequence.hpp>
+#include <components/esm4/nativesequencedeactivation.hpp>
 #include <components/misc/strings/algorithm.hpp>
 
 #include <algorithm>
@@ -1841,17 +1842,7 @@ namespace MWMechanics
 
         void deactivateHeldBlockTiming(ESM4::MeleeSequenceTiming& timing, float frequency)
         {
-            // Original6C9CEF: one offset store after division/subtraction/add.
-            // All source frequency and history fields were validated earlier.
-            if (timing.mLastInput)
-            {
-                const float sentinel = -std::numeric_limits<float>::max();
-                const float offset = static_cast<float>(double(timing.mWeightedTime) / frequency
-                    - *timing.mLastInput + timing.mOffset.value_or(sentinel));
-                if (!std::isfinite(offset)) throw std::invalid_argument("overflowing held-block deactivation offset");
-                if (offset == sentinel) timing.mOffset.reset();
-                else timing.mOffset = offset;
-            }
+            timing = ESM4::deactivateNativeSequenceTiming(timing, frequency);
         }
     }
 

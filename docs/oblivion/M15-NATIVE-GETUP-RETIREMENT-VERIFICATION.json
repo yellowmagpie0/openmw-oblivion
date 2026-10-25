@@ -1,0 +1,1967 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "runtime_schema": 72,
+  "scope": "Native external clamp retirement, PC24 deactivation correction, cold/pose/cache timing persistence and readmission; no new gameplay caller",
+  "parent": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+  "tested_source": {
+    "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+    "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/nativesequencedeactivation.hpp",
+      "sha256": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_retirement_cases.json",
+      "sha256": "53fc71b8026467e2777f8f87cab93c6f3e8901405998b7be69c3176dafc2563f"
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeclampsequence.cpp",
+      "sha256": "eedb1e13a73bf2b79c553136a7cb5c035b52f41935b1515009dac20b617f17ab"
+    },
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "06825399c28e1efda460c1eabfc238549fa4a6ae2dd64318e83cc1b9eaef8ca9"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "ceb8e109382a5c75c39ec336d029b46e771b4b8bceebf0a8dd29bc4ec9bada5e"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "b6cfda464637f89133d30e3faf7e3c2224c0e4b1117a222536e442bb8c255a0b"
+    },
+    {
+      "path": "components/CMakeLists.txt",
+      "sha256": "3ed772d491502468a30c5c1f2d6a5b6789816d167f23d543d1965680c5e98f28"
+    },
+    {
+      "path": "components/esm4/nativeclampsequence.cpp",
+      "sha256": "61f04c367500c7559b2d2a9a19f85c989f171044845bbd02047cba86b5040a45"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "a87626340079f1b65af23f64a75ba71123578cf77da35489b1bd791429c404f0"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "1d3229c24dc70f5f6391d018518aa213cc1f4dbe6f613e1894cc1a6a03601841"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "3ac68f86e5e6a758cb20525ec721d4d85df16f81d1b6b14ee7af6194bb4431d3"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "98d225ee612708e404615b4fa1790ff97db2c0c1f4704dbb1b5e13eea73f4cd0"
+    }
+  ],
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_profiles": {
+    "actual_constructor_external_retirement": 864,
+    "additional_large_first_clock": 48,
+    "direct_numeric_boundaries": 10,
+    "frame_control_word": "007F: 24-bit significand, extended exponent",
+    "other_contexts": "027F/037F original observations retained separately; C++ comparisons select PC24"
+  },
+  "oracle_scope": "Actual6C7FB0 constructor,474530 activation,4733A0/470FC0/6C9CB0 retirement and6CA950 manager update, empty controlled sets, checked heap/refcount/OS boundaries, supplied manager scheduling. No rendered recovery or physical actor prefix.",
+  "negative_control": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/actual-constructor-double-negative.json",
+      "sha256": "57e04d2934ee8335862b35572586c266a39113bc6f2b5337eefff29dfb09081d"
+    },
+    "old_double_expression_mismatches": 8,
+    "pc24_profiles": 288,
+    "old_cpp_bits": 3204448246,
+    "native_pc24_bits": 3204448256
+  },
+  "native_comparisons": {
+    "external": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-report01.json",
+        "sha256": "0749b7345348a6d7157953afc72e549f12b7eb1de42fe3359a2a6f43702fcd79"
+      },
+      "passed": true,
+      "retirement_profiles": 336,
+      "retirement_manager_updates": 1680,
+      "reused_cached_start_updates": 12,
+      "numeric_boundaries": 10,
+      "runs": [
+        {
+          "mode": "normal",
+          "returncode": 0,
+          "stdout": "336 retirements, 1680 manager updates, 12 cached updates, 10 numeric boundaries matched\n",
+          "stderr": "",
+          "binary_sha256": "081985d683954d24161679779d40ecd8cb84853109ac0376b97ae2d9bd23c02b"
+        },
+        {
+          "mode": "sanitized",
+          "returncode": 0,
+          "stdout": "336 retirements, 1680 manager updates, 12 cached updates, 10 numeric boundaries matched\n",
+          "stderr": "",
+          "binary_sha256": "3a3b748a2c97f88a998957cfa6320bbf518d8a6491e730f58b7b75ff3c429ccd"
+        }
+      ],
+      "sources": {
+        "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01.cpp": "ca001c223681aaaefe9de3ba50d8ba961c5af7706d79b70a0d5cc9cd8c86e7b1",
+        "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01.py": "371464dc4bb20178cd37746e875257f81ed9016625a6bba09ebffd6483738324",
+        "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-corpus01.txt": "7c5e3e6f976a36d41faac61ee954f0b16f649403990d7498aaef62a66abde0c5",
+        "components/esm4/physicalcombat.cpp": "a87626340079f1b65af23f64a75ba71123578cf77da35489b1bd791429c404f0",
+        "components/esm4/nativeclampsequence.cpp": "61f04c367500c7559b2d2a9a19f85c989f171044845bbd02047cba86b5040a45",
+        "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09"
+      }
+    },
+    "reused_frame_regression": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression-report01.json",
+        "sha256": "a2cbaf168281682379ae27ca35912682e07d948520c9ad9437380dd4e6cbb0c3"
+      },
+      "passed": true,
+      "profiles": 144,
+      "frames": 39459,
+      "runs": [
+        {
+          "mode": "normal",
+          "passed": true,
+          "returncode": 0,
+          "stdout": "39459 exact native clamp frames\n",
+          "stderr": "",
+          "binary_sha256": "96d18dc1707808caf877dbb052133d74918fa29cca34f41e4e46144ed96201f9"
+        },
+        {
+          "mode": "sanitized",
+          "passed": true,
+          "returncode": 0,
+          "stdout": "39459 exact native clamp frames\n",
+          "stderr": "",
+          "binary_sha256": "b050e5f48a8f22955b7fc8ef34e4fa4658f4f6d8f8ccc7745179dd49ec0b1386"
+        }
+      ],
+      "source_hashes": {
+        "components/esm4/nativeclampsequence.cpp": "61f04c367500c7559b2d2a9a19f85c989f171044845bbd02047cba86b5040a45",
+        "components/esm4/nativeclampsequence.hpp": "035a356ab61bce2ca31f65734c447e08a923e8523d7711d4f45e6ab5aba24764",
+        "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09",
+        "components/esm4/physicalcombat.cpp": "a87626340079f1b65af23f64a75ba71123578cf77da35489b1bd791429c404f0",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression01.cpp": "09eaa977f1c8d71d8343af917cdf0c7a68d09e4fda65dd541ad2f0c3de36f547",
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression-corpus01.txt": "463dc85a010d868b07785750ce7cd4bb09cb63e32a944d36797615fa357c0838",
+        "build/oblivion-compat/m15/S4/native-getup-sequence-work-01/frame-report03.json": "f7eda68746cf757264b533cab475d25b8c6f74d6a80845fbd18e517e2e6b6339"
+      }
+    }
+  },
+  "checks": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/verification.json",
+        "sha256": "5b08d532281f5e1bcce9c0a147307e64968e764559d41c690094f279d9301008"
+      },
+      "results": {
+        "components": {
+          "executed": 3160,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "48f1976bc5157acde9e8bae0a1d99d576dc638315afc4304a1e378474f6eabe0",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "428a2f004f621e07502f32c4bf5d58c2b1091f16c2b1c66c0a27f3319a6b0e7b",
+          "inventory_sha256": "12108e0b6879a7823d2c83b08a7e6432956f935ecce571ec70333df46c738925",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1978,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "d943dcbcbf27f2532059a071b8377a77b7f5aed33a78740149fe79547a34127f",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d043077f68e341498749b92097eb21234466f796291afd6e1e46a04e505c8924",
+          "inventory_sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 418,
+          "passed": true,
+          "log_sha256": "38795be5e834bc2940498ff035be3e0ea00dc7f2d79be7267bb345824e455439"
+        }
+      },
+      "source_before": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "source_after": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "leak_detection": false
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/verification.json",
+        "sha256": "1bd527b3bf9b911b826053d208ba3a6638727d05d73771a3652facd84c0a1c19"
+      },
+      "results": {
+        "components": {
+          "executed": 3160,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "b7c3fc2d5ace7ea6585ac1836838349961c1626954b1dcc5493c9d5f1fafcae2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "af70651d28802d80911d2e053c7f73b17c6624641d47cd15ba0cb725e2adf121",
+          "inventory_sha256": "07ef82793d60aae28af69a5b4b63d03a5468b92db8318b228ff9051304b87047",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1978,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cc994c338f51e4ccfc53bcd9061719530d79b148b6c946dcc360b8994f1cf5dd",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "59316c9b2bc5c4cc855f3ef06c096c0db767489cc3d44831f25dd59e58a7f0b5",
+          "inventory_sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "source_after": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "leak_detection": false
+    },
+    "leak-components": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/verification.json",
+        "sha256": "51fa523833ce6630f45a52e6d3de52f6ef524149de4f964b4bf0b5de485181c6"
+      },
+      "results": {
+        "components": {
+          "executed": 7,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4NativeClampSequence.DeactivationRoundsPC24*:ESM4NativeClampSequence.ColdExternal*:ESM4NativeClampSequence.ExternalPose*:ESM4NativeClampSequence.ImmediatePose*:ESM4NativeClampSequence.CachedActivation*:ESM4NativeClampSequence.LargeFirst*:ESM4RuntimeState.GetUpGraph72PreservesNativeColdPoseAndCachedTimingMasks",
+          "binary_sha256": "b7c3fc2d5ace7ea6585ac1836838349961c1626954b1dcc5493c9d5f1fafcae2",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "ad28b3aa6cab3da33497ce37a985334bcfb9b5972903a99c6e10c6c957393c64",
+          "inventory_sha256": "a34adf613eb835692556dd4d3836c447f8b420a943a5998732f05f1ce2ca7378",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "source_after": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "leak_detection": true
+    },
+    "leak-engine": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/verification.json",
+        "sha256": "596a0e1d6f376bd8e5d23c35b2f9a8b71990a1d2ccc0258c3406944f3c2121f0"
+      },
+      "results": {
+        "engine": {
+          "executed": 1,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "NativeGetUpRequestTest.ReadmissionPreservesColdPoseCancellationAndCachedInitialization",
+          "binary_sha256": "cc994c338f51e4ccfc53bcd9061719530d79b148b6c946dcc360b8994f1cf5dd",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "06fc8b1f46b3f166eef733e78a1a77f201b0f961cf58d9547e64006c27758466",
+          "inventory_sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "source_after": {
+        "head": "bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61",
+        "source_fingerprint": "8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74"
+      },
+      "leak_detection": true
+    }
+  },
+  "full_sanitizer_leak_detection": false,
+  "full_sanitizer_note": "Full suites use detect_leaks=0 for previously documented unrelated suite leaks; new focused tests and standalone comparison/continuation/payload probes use detect_leaks=1, UBSan halt enabled.",
+  "fresh_process": {
+    "normal": {
+      "cold-pose-retire": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/verified.json",
+          "sha256": "ef623ea25f688f69eb02a60e9bb3ddbd7336ef10fa6dfd32d375b8d3cca00192"
+        },
+        "passed": true,
+        "pids": [
+          2325773,
+          2325784,
+          2325853
+        ],
+        "save_sha256": "dc82784015cfdc83bd9aa128044af769e8f0b091b875738c4ef670d379af5482",
+        "binary_sha256": "76ed535f00d3af7a3de7a3bb649da66b13ef7e63904df93eb1672ee0a0abc5c0"
+      },
+      "cached-restart": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/verified.json",
+          "sha256": "656c16e74943e6f806391114e56214903de9f3e5792e7797712ad8e41c5165a3"
+        },
+        "passed": true,
+        "pids": [
+          2325946,
+          2325948,
+          2325950
+        ],
+        "save_sha256": "32b2444d1b44d251b1648a5221a7db1cdbf186ca44545afd5725550e1cf27fbc",
+        "binary_sha256": "76ed535f00d3af7a3de7a3bb649da66b13ef7e63904df93eb1672ee0a0abc5c0"
+      },
+      "cancelled-pose": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/verified.json",
+          "sha256": "2ce49cfd948cadb080359e0db793b3b711cd613d3d9d3e776d79c48e97b923a8"
+        },
+        "passed": true,
+        "pids": [
+          2325968,
+          2325970,
+          2325972
+        ],
+        "save_sha256": "f277ce419eba6c54e1805ef84f43bd01f15e7a13f135b1642f99250a765bcb5d",
+        "binary_sha256": "76ed535f00d3af7a3de7a3bb649da66b13ef7e63904df93eb1672ee0a0abc5c0"
+      },
+      "first-manager-expiry": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/verified.json",
+          "sha256": "b1bdd93c209552d1182e9469afc27930ff2ea7218e80c85bea6258e74a4de3ce"
+        },
+        "passed": true,
+        "pids": [
+          2325977,
+          2325979,
+          2325981
+        ],
+        "save_sha256": "3d491e5f269cfdcc38a4b70fcb2223c5525533877d85505997522b5d7d9976d6",
+        "binary_sha256": "76ed535f00d3af7a3de7a3bb649da66b13ef7e63904df93eb1672ee0a0abc5c0"
+      },
+      "wire": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/verified.json",
+          "sha256": "b21c08b55e66c1d110ae2b7721bae0a9080303f5695abe6b9086139f0d8ff64f"
+        },
+        "passed": true,
+        "cases": 27,
+        "accepted": 12
+      }
+    },
+    "sanitized": {
+      "cold-pose-retire": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/verified.json",
+          "sha256": "0603732d4d71c8245e37f297559f9b3a2f58d7b188b3fdb4ed7d149baa21e4ee"
+        },
+        "passed": true,
+        "pids": [
+          2326047,
+          2326051,
+          2326055
+        ],
+        "save_sha256": "dc82784015cfdc83bd9aa128044af769e8f0b091b875738c4ef670d379af5482",
+        "binary_sha256": "09aeffbab4e65de1ceda6a4bd175f803a8c99e3352b9bbfaf68dfde9921d2ad3"
+      },
+      "cached-restart": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/verified.json",
+          "sha256": "b9ce53a8f29ef2e201a5ffa650b573088d4e1ba5aec8adb8fa564beb629d0481"
+        },
+        "passed": true,
+        "pids": [
+          2326063,
+          2326067,
+          2326071
+        ],
+        "save_sha256": "32b2444d1b44d251b1648a5221a7db1cdbf186ca44545afd5725550e1cf27fbc",
+        "binary_sha256": "09aeffbab4e65de1ceda6a4bd175f803a8c99e3352b9bbfaf68dfde9921d2ad3"
+      },
+      "cancelled-pose": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/verified.json",
+          "sha256": "7d7dbacc726d1b517ba5a185a636f65e12d4885e84ddc3e691f5945600994280"
+        },
+        "passed": true,
+        "pids": [
+          2326114,
+          2326118,
+          2326122
+        ],
+        "save_sha256": "f277ce419eba6c54e1805ef84f43bd01f15e7a13f135b1642f99250a765bcb5d",
+        "binary_sha256": "09aeffbab4e65de1ceda6a4bd175f803a8c99e3352b9bbfaf68dfde9921d2ad3"
+      },
+      "first-manager-expiry": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/verified.json",
+          "sha256": "0557ecf7ef338a4ad951f815190311e0fffec4bec6751bfd9d8f565bc4f39c98"
+        },
+        "passed": true,
+        "pids": [
+          2326139,
+          2326143,
+          2326147
+        ],
+        "save_sha256": "3d491e5f269cfdcc38a4b70fcb2223c5525533877d85505997522b5d7d9976d6",
+        "binary_sha256": "09aeffbab4e65de1ceda6a4bd175f803a8c99e3352b9bbfaf68dfde9921d2ad3"
+      },
+      "wire": {
+        "receipt": {
+          "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/verified.json",
+          "sha256": "8b67253ee653f9524e2be0d6b67936c991a2e1cf1ac6b3141ddf147621f3787a"
+        },
+        "passed": true,
+        "cases": 27,
+        "accepted": 12
+      }
+    }
+  },
+  "fresh_process_scope": "Injected synthetic graph, standalone headless T4ST fixture, service restore/capture and World resource admission. C++/Python exact DTO and payload reencode, no RNG/condition replay, changed-KF rejection. No canonical shared-save load, renderer reconstruction or normal-input gameplay claim.",
+  "retained_attempts": [
+    "Original retirement03 supplied a null name to the actual constructor and entered the invalid CRT parameter handler; corrected to a nonnull empty C-string in04.",
+    "Numeric01 adjacent-negative-bit fixture accidentally supplied -infinity; numeric02 corrects the bit direction.",
+    "Early retirement01/02 manually zero-initialized sequence history; final04 executes the actual constructor and its sentinels."
+  ],
+  "supported_numeric_boundary": "Two direct original numeric profiles produce infinity; the typed helper explicitly rejects nonfinite final storage. Finite intermediate extended exponents remain supported, including cancellation back to finite output.",
+  "open": [
+    "Actual combined graph/resource/renderer creation and publication.",
+    "Logical5 reset across physical4,0,1,2,3 and cross-owner action references.",
+    "Renderer start/frame/completion/restore and loaded-resource identity reconciliation.",
+    "Natural recovery dispatcher/caller prefixes/Player view policy.",
+    "Remaining S4 normal-input/device/FPS/audio/mastery/full-save acceptance matrix."
+  ],
+  "pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/actual-constructor-double-negative.json",
+      "sha256": "57e04d2934ee8335862b35572586c266a39113bc6f2b5337eefff29dfb09081d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01-normal-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01-sanitized-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01.cpp",
+      "sha256": "ca001c223681aaaefe9de3ba50d8ba961c5af7706d79b70a0d5cc9cd8c86e7b1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/compare01.py",
+      "sha256": "371464dc4bb20178cd37746e875257f81ed9016625a6bba09ebffd6483738324"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-corpus01.txt",
+      "sha256": "7c5e3e6f976a36d41faac61ee954f0b16f649403990d7498aaef62a66abde0c5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-index01.json",
+      "sha256": "8f61929a39689894bc44ba2debff315076fb779644e580b39289d90de3ef203b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-report01.json",
+      "sha256": "0749b7345348a6d7157953afc72e549f12b7eb1de42fe3359a2a6f43702fcd79"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/comparison-run01.log",
+      "sha256": "a20839370495ef3bcda0d813825fe6cb07fc811dc1552f8e2e8cc4f28f6bd56c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/double-correction-negative.json",
+      "sha256": "41c8decb60d8b427c143f8c6c42ed69934e97a37b009bd75290ea756a1cc78a8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-attempt03.json",
+      "sha256": "0905c9cb836d3372407db2e82f67b67b964b8a875b1b468500a294f91f5a3bb3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-corpus01.json",
+      "sha256": "aa32df15445d91b8550c52b6df0b5e4cfaca12d23a328e1cc20fd7d48e5f09b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-corpus02.json",
+      "sha256": "ec46a9a5d8895519895af11d3ec3beb2cc0d58a88e4f1def918d7dcc7fc1fd18"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-corpus04.json",
+      "sha256": "c31ff6ddd8eb91305111d49e4454eaa67fb8b5ecde2fbb58a1958efb27d354b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-corpus05.json",
+      "sha256": "9439ab44662f52f6464dce6c325df49970dece10c68275460b341674b9c9ffcc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-oracle.py",
+      "sha256": "87297c5ff274d5a03ce8c16cd7f735f45f291218cf97929ebc2f4e8bc5212a6a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-oracle02.py",
+      "sha256": "4b9c2669eb58362a63740e5733172fcf2b92e88a695e897453012d4cd1de753a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-oracle03.py",
+      "sha256": "cbbceeaf07687f5c71ec8b9550725bfd78dce75a3f434dead496c6db5c0e8573"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-oracle04.py",
+      "sha256": "784259b289442eba9dd7d56581eb74daf1851e94d21ec32892e9337694f054fa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-oracle05.py",
+      "sha256": "18dd87bff1e456fccc7f3e9b54358ef62ab80a254a3f45c0dc8b1faf09c354cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-report01.json",
+      "sha256": "1adb0ed17f7c5c21a84645756f277d95bf1bb08670e50f6d8c47e40f5843ac0d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-report02.json",
+      "sha256": "1b9cd878c3f3aa8bfad9d5d870e2a660783f99a4cc27a96f530218c94990cee4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-report04.json",
+      "sha256": "5f8343699a156e2e53f56febc8187f3be043e6ace03f74f81799976be3fc653a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-report05.json",
+      "sha256": "21ec136fd4a41ec092d3a8e8004626a3638e93ae4106d5781e927d09976a0fc8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-run01.log",
+      "sha256": "e7c46a1e248c952459f87a3a9abedc66140e60c33fdd2ff1f1445cdddef9ebe3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-run02.log",
+      "sha256": "52963395f85b8a2b5582008494378a33e734d2bbfbd2ad696b2c11f2b71302a1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-run03.log",
+      "sha256": "09d664a4ae17aeb223080681feca0205fa1862909d8ab421b01a53398c5ddcab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-run04.log",
+      "sha256": "e51a6f4cd842d346727c81a662c0ab008e780ceb8f6b28acdec762d68b696dee"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/external-retirement-run05.log",
+      "sha256": "15f1dbe8874f7e50c6dc73d8e2a8b042d7953f5192b409d132b2059e0bf15748"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression-corpus01.txt",
+      "sha256": "463dc85a010d868b07785750ce7cd4bb09cb63e32a944d36797615fa357c0838"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression-report01.json",
+      "sha256": "a2cbaf168281682379ae27ca35912682e07d948520c9ad9437380dd4e6cbb0c3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression-run01.log",
+      "sha256": "a2cbaf168281682379ae27ca35912682e07d948520c9ad9437380dd4e6cbb0c3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression01.cpp",
+      "sha256": "09eaa977f1c8d71d8343af917cdf0c7a68d09e4fda65dd541ad2f0c3de36f547"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/frame-regression01.py",
+      "sha256": "be14df92acb90a82afe13f017aab8a63393c3841fc9d9e8449f4624dfbd7d2db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-corpus01.json",
+      "sha256": "8b34babec5e461b0134f6ff841a513bde7e8c8d756573fbcbf0c9a4adb26966f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-corpus02.json",
+      "sha256": "db8f4589323cdd164af2d567b73e632f369a11bd38d724b99a5c908814773674"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-oracle.py",
+      "sha256": "fdd2ad0a8a08d549f6069f9da6207c592fce4393bcb8984c021185a67316ec70"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-oracle02.py",
+      "sha256": "e748217001a1c97c5021f3c9e8d43b74a7ce154b3d4e3d6f0371887f5db40ce3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-report01.json",
+      "sha256": "d8d4a7c7bf16baccb3466dffe83c83659c13297954d7c79e9c6251ed3a1ca583"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-report02.json",
+      "sha256": "66d5b0543095ddac05b53644e8ef49dc77fb0cfe5fa3ce3fbc1fbe40a5646232"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-run01.log",
+      "sha256": "fb8f30b784c86fac08c32e7080d7331c45cc5331ec930d8ed5e3dcdc28a4dfe6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/offset-boundary-run02.log",
+      "sha256": "8ce504f5232dcc5e615fcd374a9cd84d9ffc20dd6ea6c7be602141b638e5989a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/old-offset-negative.cpp",
+      "sha256": "07e444d7302f38021fe3edf9fd2c990dfa25e2aad6fa5c3e107d2da057ee159b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/old-offset-negative.json",
+      "sha256": "95117b94dffbc54a346a12d48d9c7b6c72434e4a824ccbba63a1e198c4cdc5ab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/old-offset-negative.log",
+      "sha256": "1fe38d8798b169d040f70b5f08382b867fdb00874b10cb6b7ca4feb50a038fe9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-external-retirement-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/components-build.log",
+      "sha256": "b0465860abdaa0d58794dd4c97f4e234ea60fbdecce7b209e63a6bbf2ca253da"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/components-inventory.txt",
+      "sha256": "12108e0b6879a7823d2c83b08a7e6432956f935ecce571ec70333df46c738925"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/components.log",
+      "sha256": "4d5054cbb501635d4c8697b1c4da6aa0deb771aa28ede22f23ac5f7e2ce4ca8d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/components.xml",
+      "sha256": "428a2f004f621e07502f32c4bf5d58c2b1091f16c2b1c66c0a27f3319a6b0e7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/engine-build.log",
+      "sha256": "2aafd549664e999ab9dd36df43d6fdd6c7a7541f06ec6657fd8f4d6c2aa3028e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/engine-inventory.txt",
+      "sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/engine.log",
+      "sha256": "5ec667b12043f79d64ca3d4b26087670ff1e67d1c99d97aa57a82e3472d93b69"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/engine.xml",
+      "sha256": "d043077f68e341498749b92097eb21234466f796291afd6e1e46a04e505c8924"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/python.log",
+      "sha256": "38795be5e834bc2940498ff035be3e0ea00dc7f2d79be7267bb345824e455439"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-normal-01/verification.json",
+      "sha256": "5b08d532281f5e1bcce9c0a147307e64968e764559d41c690094f279d9301008"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/components-build.log",
+      "sha256": "a1af26e016e94c603487abe41e9b0b1f3852d049641ee9cb69e5015695fb166b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/components-inventory.txt",
+      "sha256": "07ef82793d60aae28af69a5b4b63d03a5468b92db8318b228ff9051304b87047"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/components.log",
+      "sha256": "540bec4dd197e0148c2d19e14b33f136e1b204b465c5aae3eabde2464c34cfe3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/components.xml",
+      "sha256": "af70651d28802d80911d2e053c7f73b17c6624641d47cd15ba0cb725e2adf121"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/engine-build.log",
+      "sha256": "10314974b012a2dea467483ea12e58a16b5b1ecbc3c112585cdad7ab8477073a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/engine-inventory.txt",
+      "sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/engine.log",
+      "sha256": "ab5e353f4ca838d3a1f6c1cc8aec8f7ec0c447bdc3f24e753997b005a2bfcc22"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/engine.xml",
+      "sha256": "59316c9b2bc5c4cc855f3ef06c096c0db767489cc3d44831f25dd59e58a7f0b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-sanitized-01/verification.json",
+      "sha256": "1bd527b3bf9b911b826053d208ba3a6638727d05d73771a3652facd84c0a1c19"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/components-build.log",
+      "sha256": "26ce818fed7c82a99644b282f901179d683da788fbd2c59d77a4b62b1fdd012d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/components-inventory.txt",
+      "sha256": "a34adf613eb835692556dd4d3836c447f8b420a943a5998732f05f1ce2ca7378"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/components.log",
+      "sha256": "959a6f936a8ff55e9ae3fda76fe273716e0f8b157693e72fb3ae9eb7f14c8b23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/components.xml",
+      "sha256": "ad28b3aa6cab3da33497ce37a985334bcfb9b5972903a99c6e10c6c957393c64"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-components-01/verification.json",
+      "sha256": "51fa523833ce6630f45a52e6d3de52f6ef524149de4f964b4bf0b5de485181c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/engine-build.log",
+      "sha256": "9c241137dea9f7ef8582a2daa778dcef2889b51dc9a86a76dff3aa646161a5c8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/engine-inventory.txt",
+      "sha256": "b21573daa23d5970eb234ef56be9ab89638aefdfd987ad18b02133f841166ac6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/engine.log",
+      "sha256": "e70b75330986c0f41c82859ee529abc706c97f1a3812dcb37250c42a68d80158"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/engine.xml",
+      "sha256": "06fc8b1f46b3f166eef733e78a1a77f201b0f961cf58d9547e64006c27758466"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-leak-engine-01/verification.json",
+      "sha256": "596a0e1d6f376bd8e5d23c35b2f9a8b71990a1d2ccc0258c3406944f3c2121f0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/consume.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/consume.xml",
+      "sha256": "651c97869af65a072eae50610d676d340162c6c2480b82a8b3acd23f2e71991f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/produce.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/produce.xml",
+      "sha256": "dbcbc296590cf266d8bc4207ec19207bbc0f7024d15dab01c615606a16104fcf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/reject-changed-kf.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/reject-changed-kf.xml",
+      "sha256": "4bfceb5a611e3b0f21d78261ff974a751d562a47a4857fc3e37848c0a5c05ccf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/selected.omwsave",
+      "sha256": "32b2444d1b44d251b1648a5221a7db1cdbf186ca44545afd5725550e1cf27fbc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/selected.omwsave.consumer.json",
+      "sha256": "3278aba8e7eac7631d8fd9bd18369d29ff4b0b0391f70c80b06d9090890577aa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/selected.omwsave.producer.json",
+      "sha256": "3278aba8e7eac7631d8fd9bd18369d29ff4b0b0391f70c80b06d9090890577aa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cached-restart/verified.json",
+      "sha256": "656c16e74943e6f806391114e56214903de9f3e5792e7797712ad8e41c5165a3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/consume.log",
+      "sha256": "bdafd2a2b7dc5bd0d86adddc083c1bdfb7913dea6baf3fa14f4ff01cc1ff09ab"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/consume.xml",
+      "sha256": "4910dce07d04d14bf05db93c693cdb9a5f8cf7f4257f0c896d09e60484f0f0df"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/produce.log",
+      "sha256": "8cfa41d605a0120d9f36a27e1e8cc1d4561443fc1b0937ee769fc12152398cdb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/produce.xml",
+      "sha256": "3df49b16dd367db13977fbc7240edf9e3a4fa159c1d07437c220f0edb90570f8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/reject-changed-kf.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/reject-changed-kf.xml",
+      "sha256": "93da02a07df74e5157777408475b89e0ee940368f4c2c81d6846ed1c967bdba0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/selected.omwsave",
+      "sha256": "f277ce419eba6c54e1805ef84f43bd01f15e7a13f135b1642f99250a765bcb5d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/selected.omwsave.consumer.json",
+      "sha256": "402fa8e794ca380bfae681dfbddb3b484e1533c9a93a2d3693932865c50bc8a0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/selected.omwsave.producer.json",
+      "sha256": "402fa8e794ca380bfae681dfbddb3b484e1533c9a93a2d3693932865c50bc8a0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cancelled-pose/verified.json",
+      "sha256": "2ce49cfd948cadb080359e0db793b3b711cd613d3d9d3e776d79c48e97b923a8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/consume.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/consume.xml",
+      "sha256": "196dfd4a19990793628a3f4486acfa4ad095991b89c0d9699871d820be97238c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/produce.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/produce.xml",
+      "sha256": "98c78c7d5feabea9eee1fefec1331d9533423e4385120fcea3635296a08ca1e7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/reject-changed-kf.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/reject-changed-kf.xml",
+      "sha256": "fb85a4ef38704deeb2240d575f94446380fa7b44172276a4c759963298180e44"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/selected.omwsave",
+      "sha256": "dc82784015cfdc83bd9aa128044af769e8f0b091b875738c4ef670d379af5482"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/selected.omwsave.consumer.json",
+      "sha256": "89fdabe3d7041541366dc2788267ed7c3f809af8b96215f0f1b334fb469b55d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/selected.omwsave.producer.json",
+      "sha256": "89fdabe3d7041541366dc2788267ed7c3f809af8b96215f0f1b334fb469b55d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/cold-pose-retire/verified.json",
+      "sha256": "ef623ea25f688f69eb02a60e9bb3ddbd7336ef10fa6dfd32d375b8d3cca00192"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/consume.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/consume.xml",
+      "sha256": "b9f0b13b0ca56990022d8f95b427fc036e25b13d7eafe9a35eaffb8179261134"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/produce.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/produce.xml",
+      "sha256": "e16e650141f6a02c0a1ca62b56b1c309f16f4ad0badc4cd724712fb6cefae89a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/reject-changed-kf.log",
+      "sha256": "ace399f7e087e1799813af08f2f2f97033e0943db86d07bb8be13adbe9399ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/reject-changed-kf.xml",
+      "sha256": "b9104e1db68c8d97b42e849734376d6a15a82a25d4320d3586c7d277650eb42b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/selected.omwsave",
+      "sha256": "3d491e5f269cfdcc38a4b70fcb2223c5525533877d85505997522b5d7d9976d6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/selected.omwsave.consumer.json",
+      "sha256": "a721d6865334ad8e78638c11e7bfff017226df9872b5c5be9cd560b3396df08e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/selected.omwsave.producer.json",
+      "sha256": "a721d6865334ad8e78638c11e7bfff017226df9872b5c5be9cd560b3396df08e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/first-manager-expiry/verified.json",
+      "sha256": "b1bdd93c209552d1182e9469afc27930ff2ea7218e80c85bea6258e74a4de3ce"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/bound-boolean.bin",
+      "sha256": "9d19730b821cfd16418344eb4d7c0cbf46a0829051fb1c7b49569ac88feeeb53"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/bound-boolean.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/bound-boolean.xml",
+      "sha256": "7723319b3b165eaec1bc90ed478a3e3d9a4dba7c6db133d498f1385b704226ce"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-resource.bin",
+      "sha256": "c5ce85db1bfd001cd76b445d411a796024cb8847776f7df546c3617b10383050"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-resource.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-resource.xml",
+      "sha256": "0106108a2da3198795cad9ea3158c4aed4bb86f825d4db19784ed50509c0e571"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-sequence.bin",
+      "sha256": "3cf2204de73754177ebd7280eb484553c5e928ee0e7cf9d85bd6022475381ce7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-sequence.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/dangling-sequence.xml",
+      "sha256": "a546071c2125718deeca78fe4a2b5d38b8f475d2d6001c17dc8cce773b495340"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/detached.bin",
+      "sha256": "7446dd234160fa250178cd2ece264792cf2be9e06304145e3d8aeff0d4e95998"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/detached.bin.cpp.json",
+      "sha256": "5c57e53f860761d2176dfdcef7ee6b045959cbc4225d99d879df01d14cec83d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/detached.log",
+      "sha256": "2a75a8182f9c5631663aac4b589a5439fc7f2408b8575016cf5f581eb1cd0248"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/detached.xml",
+      "sha256": "d5874e851d174ced50383e831d455eafb26408b3acd415944e108c74d8a28b5e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-owner.bin",
+      "sha256": "9c3cdec8ddc439e3079a585b6cf5f3f53fc67f41ceefec4e32775df19a4fc433"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-owner.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-owner.xml",
+      "sha256": "e583aa5021b33d1ae40033621cf13153dc8357ab6ab4c2494dfc9db1e92c8a28"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-request.bin",
+      "sha256": "904988eb4745ead8d8e0bcdbd0ee4ce867ec14f92449a64e3b6969f1fac56f4a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-request.log",
+      "sha256": "632709b91cc3d9003d4a84209167e1c52108389870267e3b57cdf06d8a30ef76"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-request.xml",
+      "sha256": "b66a25681dc2c729bd153f9bbd5666c5acb1225a222d53252bc6ec2bea4d83ef"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-resource.bin",
+      "sha256": "8be2d1ee8382118e18130777fd83f5481c6bfce4a156ce9e4371ab08ca3b39f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-resource.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/duplicate-resource.xml",
+      "sha256": "8dd9edc4485285651ddfdb74a4cd6849f4089ffb7098dcc6eac470e1e0333b09"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/future-frontier.bin",
+      "sha256": "6ea527ead40ca22c43fcab8189ca7558fd04d30f0c1ab1815b5c1d53984ba0d4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/future-frontier.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/future-frontier.xml",
+      "sha256": "7a3afba4565db83d85e5221b071181a642b3823a618f5f699f74737cfb6e663b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/inventory.txt",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/managed-boolean.bin",
+      "sha256": "a1b3c8155241f27f816cee4fcab64dfc8036c08bc15c8e8face052578699b4b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/managed-boolean.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/managed-boolean.xml",
+      "sha256": "d95f437072228d12f26ccb5e8f1c3a9aa258c364d10f64ffdbd07b46b29d2c5a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cached-history.bin",
+      "sha256": "112b8215200bb958875018839c02ea664a39f91dc40bf610e826bb8dd2f82f81"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cached-history.bin.cpp.json",
+      "sha256": "30ba76952dc26c9225c2ec257d19f3a8c43dad5db1a8a67b6d8af8821a860110"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cached-history.log",
+      "sha256": "2a75a8182f9c5631663aac4b589a5439fc7f2408b8575016cf5f581eb1cd0248"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cached-history.xml",
+      "sha256": "a00395cc59f5407c21c721e3280514615e52a680ab1446192bbc3c40633e41cc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cancelled-pose.bin",
+      "sha256": "c27474216b1ca7768cecadee6f836d485cee0fb48170dbdaf62bfbaefada3ca9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cancelled-pose.bin.cpp.json",
+      "sha256": "3cdfd572624aa11648e6de141b96aacb1a1e70d8ed0b87e50fdd9f699ce9b839"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cancelled-pose.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cancelled-pose.xml",
+      "sha256": "9ce988b734e209b26a2b0ade0ea660901ed19330c642072bf361a04e953b8f5a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cold-retirement.bin",
+      "sha256": "2825ad4548b53d5ae67cf952754191da00255e8f41152a4a93cadd7b581557de"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cold-retirement.bin.cpp.json",
+      "sha256": "ad6947c7f2d4996a7a0d4ba1dde806ca3b06f896a0dfd8cea41179ac856128c9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cold-retirement.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-cold-retirement.xml",
+      "sha256": "b3e523756a2713d37dbff8b518484f67312ffe7dfd8a2d0a42a14bf75f13b2e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expired-before-input.bin",
+      "sha256": "6f8edd3ceb4f28f011632c973e295102af5c733dd9f67a994c75f3bb23831f96"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expired-before-input.bin.cpp.json",
+      "sha256": "823473a518942c9ad83890870e054f5a37fbb504870dfcfa06f27cbdbc6fcf6a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expired-before-input.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expired-before-input.xml",
+      "sha256": "e29029e8abf9a281918ff0b7024799b06dea45d2f4e85c20ec71b152748ff61d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expiry-max.bin",
+      "sha256": "4fd3be4ae7148a99b0b72d64b2c75e137adf46bfe74cc6143672f954069b3b2b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expiry-max.bin.cpp.json",
+      "sha256": "1c7fccb22d48a23a1eada3a98e1ea7aea31133c923a7c5f60be294e2f5fc46c3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expiry-max.log",
+      "sha256": "2a75a8182f9c5631663aac4b589a5439fc7f2408b8575016cf5f581eb1cd0248"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-expiry-max.xml",
+      "sha256": "01046b9d85a5b648d33a39fa0596fed50156033d302caa83cdcdfa0334bb488f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-first-output.bin",
+      "sha256": "94f36f7bcd1a5b2c21db8d23f92fce0c192d149f5586e06c42da5ea920bd4cea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-first-output.bin.cpp.json",
+      "sha256": "a0df5c3d6778c909913c80f87bd05817d1f5b4d5ad8e76553bcdca4daa1f0296"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-first-output.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-first-output.xml",
+      "sha256": "8bbfddb833fef9a49634e053a41dca2595ec8dd56ac19fa763008581170f0a7f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-pose-retirement.bin",
+      "sha256": "3f5cf3d85cf886d8c5efbfa497113138563ebed3c84a5fbafde9facf93faf539"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-pose-retirement.bin.cpp.json",
+      "sha256": "a37900729d58f3ec73c3bb55d87fc2d717321e0c97f31af658c9f2733fc314b7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-pose-retirement.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/native-pose-retirement.xml",
+      "sha256": "ef35f64cd82ab678b0b518555ee27370294b8e51cc90e93931f7211f37bc565a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/nonfinite-output.bin",
+      "sha256": "26ec18b0e0f04217a92c3900d65d01f5a495a5bcd33c44050524cdf6dec93d0f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/nonfinite-output.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/nonfinite-output.xml",
+      "sha256": "04869afa0faa8d3d4b5b9ceddd55cc1efcb2fad48282d7f1728bdf44e4ce6a2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/optional-boolean.bin",
+      "sha256": "d9de652e52e0f8ac953752fc08e507a88bd1fbaec56fbc59933eeccda327fb0f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/optional-boolean.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/optional-boolean.xml",
+      "sha256": "d18197fde2173b27bbae522034376bcc33da3e96adb00a4438b37d3635b08ee1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pending-profile.bin",
+      "sha256": "8bb0312bbee8e2372335352610730bb0cbc566869f0ab44e5bad7f151d075b7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pending-profile.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pending-profile.xml",
+      "sha256": "c6838072c11ec7f612ebecfa9d930953b0e8d45c5eb36f60be5f7f035343dbca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pose.bin",
+      "sha256": "2eb72f159f19992a49bbb4d072531d35752cabda696801a32fce0c6b691bf91c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pose.bin.cpp.json",
+      "sha256": "e9eb48cee100c13586452fc649440aba3fd255f59fc68a98ac51ba6b263972f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pose.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/pose.xml",
+      "sha256": "60e98db1f72f55defad95aa103a5908d0f9103ddce8ba92a2852436cd32f245e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/presence-boolean.bin",
+      "sha256": "5216c4607f1966831750d9d63dd5ec7d52af0875170d6bd748e865d2a2f7fd89"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/presence-boolean.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/presence-boolean.xml",
+      "sha256": "bea0f867f8f29c290373fb4a593a93e335d89f9866cd45d6b59033be96f40ba8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/ready.bin",
+      "sha256": "acc30945c7c374ed02a97b23a3a060e49efb67d083084c19ffdd5abfa4957caa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/ready.bin.cpp.json",
+      "sha256": "785c78dcd9163164fa77abce2330f49c3cd3beb7d97eeede60cc07b53e8a8fb6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/ready.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/ready.xml",
+      "sha256": "1602ca60ab33ab3de6cb0a91592c3e01af68afc5a7cfcec18e60d8781f0d73a9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/retiring.bin",
+      "sha256": "63a8f80951030cc12443a08f0c6e3cbdde3051325059d313d67d4044ae086681"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/retiring.bin.cpp.json",
+      "sha256": "75ebdad9c60bea9638a50a0d6f7ac8646af0c89a52e123044057ce28709def84"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/retiring.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/retiring.xml",
+      "sha256": "e433226f40a764b4a326eb131e11f61ef428cbfc0c492ad115ebe0c8991ff8e0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-future-id.bin",
+      "sha256": "bd5895c9d776612eca3a448bfc965397502cbe9037065614414d8e6897c49834"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-future-id.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-future-id.xml",
+      "sha256": "31bc415171d55436545f4d3ebddcf4a72a444cd12d4566cc592e947ba21313a1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-resource.bin",
+      "sha256": "db039b0a64fd15af97e80180b4b0fe425bda3ae1b589d144eedd0a4439f908dc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-resource.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/sequence-resource.xml",
+      "sha256": "4b804e4cba8087d174d4fea2dedc6d187019eb6df5bc0ec837457509028c0070"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/shared.bin",
+      "sha256": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/shared.bin.cpp.json",
+      "sha256": "e0faa6344c2ae58751783ffdd44fad267b0f3760cf6f8964f5ec04b6019a28c1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/shared.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/shared.xml",
+      "sha256": "60e796027457b46e052c53a47be2daff4e7c2b234d7145a893b9c624eef40341"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/truncated.bin",
+      "sha256": "6aa0b514354c8d48c039082ce130acac8b840d4c9179e31dba673080dfa046eb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/truncated.log",
+      "sha256": "504a168734e9c8f1b76b197d161ebc0910308bfe9d2af3edcd96561d48fb86a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/truncated.xml",
+      "sha256": "31e604f56e303a816099093f24c91fbb7445025bea82b8cf54c4552d69b81583"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-normal-01/wire/verified.json",
+      "sha256": "b21c08b55e66c1d110ae2b7721bae0a9080303f5695abe6b9086139f0d8ff64f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/consume.log",
+      "sha256": "13df8d213ec76e930f9a4b521904dcbee80fea9c468e5ad12712ea3d71b67181"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/consume.xml",
+      "sha256": "255131be6da0c8055ba7bd82775ca1577c8ef21854623a21196b5c8de3886f6d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/produce.log",
+      "sha256": "2d86f713864180aa664b515b23b46083fef2cd6f47d0eae4f2a2297fb36a61d5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/produce.xml",
+      "sha256": "c24dae270603fdbe75633db8e35be9d130a159d168328bb4cf794cf94f33c45f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/reject-changed-kf.log",
+      "sha256": "05a5fe4a78407412d603f93ad092bb8ae256dcf16659e21a256267636548542b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/reject-changed-kf.xml",
+      "sha256": "a52bc365b2b0f917a22fcbbf09ce2238a80c2565938dfa44dcf0b77b5710a828"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/selected.omwsave",
+      "sha256": "32b2444d1b44d251b1648a5221a7db1cdbf186ca44545afd5725550e1cf27fbc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/selected.omwsave.consumer.json",
+      "sha256": "3278aba8e7eac7631d8fd9bd18369d29ff4b0b0391f70c80b06d9090890577aa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/selected.omwsave.producer.json",
+      "sha256": "3278aba8e7eac7631d8fd9bd18369d29ff4b0b0391f70c80b06d9090890577aa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cached-restart/verified.json",
+      "sha256": "b9ce53a8f29ef2e201a5ffa650b573088d4e1ba5aec8adb8fa564beb629d0481"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/consume.log",
+      "sha256": "f9c5c3dd9950caccd532493d86f28d44c7b0a3de0f2667a6a9e88c2489876e1e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/consume.xml",
+      "sha256": "106d8567bde99c0a1aa2df2960254ffe3f97e626ec7e9d62e2ae68c03a9f5f36"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/produce.log",
+      "sha256": "63bda63ed7b6d992fa58519af06b4f4fd7cd4802cae698922428c1566eea397e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/produce.xml",
+      "sha256": "616b23e16339ce35b0f8a0cab40cd81806451935476752bdb927e9583f72af6d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/reject-changed-kf.log",
+      "sha256": "c39af9f033ea54addf9459e6fa590818ca4ff5c6dff8b6b49c7b6ff6d774a0f3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/reject-changed-kf.xml",
+      "sha256": "aa8881d2bfd3cce33174e1dc884085cb8e0fdc1131879af66dd61b09b6f81e25"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/selected.omwsave",
+      "sha256": "f277ce419eba6c54e1805ef84f43bd01f15e7a13f135b1642f99250a765bcb5d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/selected.omwsave.consumer.json",
+      "sha256": "402fa8e794ca380bfae681dfbddb3b484e1533c9a93a2d3693932865c50bc8a0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/selected.omwsave.producer.json",
+      "sha256": "402fa8e794ca380bfae681dfbddb3b484e1533c9a93a2d3693932865c50bc8a0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cancelled-pose/verified.json",
+      "sha256": "7d7dbacc726d1b517ba5a185a636f65e12d4885e84ddc3e691f5945600994280"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/consume.log",
+      "sha256": "f9c5c3dd9950caccd532493d86f28d44c7b0a3de0f2667a6a9e88c2489876e1e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/consume.xml",
+      "sha256": "43ae23ec120411fea522b427182075b3fc928674505b9e2ffcad822c77bf7ce8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/produce.log",
+      "sha256": "35970de165654edc1b18ef59154423466e6b86173f2b6d31c88890f79264d260"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/produce.xml",
+      "sha256": "9f2d2cc5f7ceee936b6253eff65af82bb73ee71bfe2391789e51dc8df1bf7bcb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/reject-changed-kf.log",
+      "sha256": "3f6c3d222af5dd62807c7d2e352f5688832bae678c23a98dfd4c019f7768e1ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/reject-changed-kf.xml",
+      "sha256": "69a5cf305fe570f9f19d7d2abe4af507ba2f0f0870e09f12c2274a5b20a0856b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/selected.omwsave",
+      "sha256": "dc82784015cfdc83bd9aa128044af769e8f0b091b875738c4ef670d379af5482"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/selected.omwsave.consumer.json",
+      "sha256": "89fdabe3d7041541366dc2788267ed7c3f809af8b96215f0f1b334fb469b55d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/selected.omwsave.producer.json",
+      "sha256": "89fdabe3d7041541366dc2788267ed7c3f809af8b96215f0f1b334fb469b55d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/cold-pose-retire/verified.json",
+      "sha256": "0603732d4d71c8245e37f297559f9b3a2f58d7b188b3fdb4ed7d149baa21e4ee"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/consume.log",
+      "sha256": "f820354777f4e29f8617adae825e1f84dd0c528ec60cb934d16b984d37f3b38b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/consume.xml",
+      "sha256": "e0d3611c71bd3034f9e8ac6f5ec4217d3f94f5f08968070dec09f62a399bd84e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/inventory.log",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/produce.log",
+      "sha256": "f820354777f4e29f8617adae825e1f84dd0c528ec60cb934d16b984d37f3b38b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/produce.xml",
+      "sha256": "2de8dd8794028339f62801ddaf61bf90a7e8be77acb6e13c0bc6b4e573aea1cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/reject-changed-kf.log",
+      "sha256": "2cc1e0eec29907f9ed2fe1a8e90bcc54687b2868ab14efc941aead3a02158519"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/reject-changed-kf.xml",
+      "sha256": "810e450542f3122daed327490c859e8ef15aee6012a9dfb429a12b65a677f57f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/selected.omwsave",
+      "sha256": "3d491e5f269cfdcc38a4b70fcb2223c5525533877d85505997522b5d7d9976d6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/selected.omwsave.consumer.json",
+      "sha256": "a721d6865334ad8e78638c11e7bfff017226df9872b5c5be9cd560b3396df08e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/selected.omwsave.producer.json",
+      "sha256": "a721d6865334ad8e78638c11e7bfff017226df9872b5c5be9cd560b3396df08e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/first-manager-expiry/verified.json",
+      "sha256": "0557ecf7ef338a4ad951f815190311e0fffec4bec6751bfd9d8f565bc4f39c98"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/bound-boolean.bin",
+      "sha256": "9d19730b821cfd16418344eb4d7c0cbf46a0829051fb1c7b49569ac88feeeb53"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/bound-boolean.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/bound-boolean.xml",
+      "sha256": "1587b0d7f94db293ec12d68d5a5c43f8a4b6aca6571135928a8154420c26fc64"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-resource.bin",
+      "sha256": "c5ce85db1bfd001cd76b445d411a796024cb8847776f7df546c3617b10383050"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-resource.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-resource.xml",
+      "sha256": "6f02d52b0cc532bbf5ec1f41983fbf8299b60578bde7f1cb54001568c7ed28a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-sequence.bin",
+      "sha256": "3cf2204de73754177ebd7280eb484553c5e928ee0e7cf9d85bd6022475381ce7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-sequence.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/dangling-sequence.xml",
+      "sha256": "032b176df5a559c0a8f802e38673d3741b5ad874d91d6de34469e00afce4906f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/detached.bin",
+      "sha256": "7446dd234160fa250178cd2ece264792cf2be9e06304145e3d8aeff0d4e95998"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/detached.bin.cpp.json",
+      "sha256": "5c57e53f860761d2176dfdcef7ee6b045959cbc4225d99d879df01d14cec83d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/detached.log",
+      "sha256": "fe14e02c7a1ceb6f6a93efaacbea91653750dc6fd9d0b6bba94dc5955df4c6a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/detached.xml",
+      "sha256": "a896e5f4595cbd2509707a97376361e946dab113a7dfb407dd40c6e553ab2442"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-owner.bin",
+      "sha256": "9c3cdec8ddc439e3079a585b6cf5f3f53fc67f41ceefec4e32775df19a4fc433"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-owner.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-owner.xml",
+      "sha256": "5330ddc08bc4c891409365630a119cde8d3edd1b1efd66075c23024f3e876dbe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-request.bin",
+      "sha256": "904988eb4745ead8d8e0bcdbd0ee4ce867ec14f92449a64e3b6969f1fac56f4a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-request.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-request.xml",
+      "sha256": "ccae63b8c8929cd0818527de5ee771b94d24610c802acd7495a497dc357b117d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-resource.bin",
+      "sha256": "8be2d1ee8382118e18130777fd83f5481c6bfce4a156ce9e4371ab08ca3b39f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-resource.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/duplicate-resource.xml",
+      "sha256": "3cad4785a54a051279b6b33ace90db24fe7f174b7f936db9ee2c5550253d8dd2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/future-frontier.bin",
+      "sha256": "6ea527ead40ca22c43fcab8189ca7558fd04d30f0c1ab1815b5c1d53984ba0d4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/future-frontier.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/future-frontier.xml",
+      "sha256": "ed4673edf0b8db1b0435588669aa123813f9f2c27dd9dd4218c60a66884f9beb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/inventory.txt",
+      "sha256": "bc4694199756b564545441a4147768cde2e01cd47f98125744cce73f98c85b5f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/managed-boolean.bin",
+      "sha256": "a1b3c8155241f27f816cee4fcab64dfc8036c08bc15c8e8face052578699b4b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/managed-boolean.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/managed-boolean.xml",
+      "sha256": "cdd779f5d70a6a8f9450682efeb44ba36e69be79cb95607cccfbfea7fff8dbb4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cached-history.bin",
+      "sha256": "112b8215200bb958875018839c02ea664a39f91dc40bf610e826bb8dd2f82f81"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cached-history.bin.cpp.json",
+      "sha256": "30ba76952dc26c9225c2ec257d19f3a8c43dad5db1a8a67b6d8af8821a860110"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cached-history.log",
+      "sha256": "fe14e02c7a1ceb6f6a93efaacbea91653750dc6fd9d0b6bba94dc5955df4c6a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cached-history.xml",
+      "sha256": "563abb7a01b6c590092137f9a24f90195d4a7a4f2b19efb25b8fc8675b80072e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cancelled-pose.bin",
+      "sha256": "c27474216b1ca7768cecadee6f836d485cee0fb48170dbdaf62bfbaefada3ca9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cancelled-pose.bin.cpp.json",
+      "sha256": "3cdfd572624aa11648e6de141b96aacb1a1e70d8ed0b87e50fdd9f699ce9b839"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cancelled-pose.log",
+      "sha256": "6d49902457853df8344bb14fb815fd8276477d6231bc08548e1b092e5b8ff5f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cancelled-pose.xml",
+      "sha256": "a1651d357b9b866a7a64fe07d46ff79347a0f4ce7ad6118b44fb4bcefc1c5c08"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cold-retirement.bin",
+      "sha256": "2825ad4548b53d5ae67cf952754191da00255e8f41152a4a93cadd7b581557de"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cold-retirement.bin.cpp.json",
+      "sha256": "ad6947c7f2d4996a7a0d4ba1dde806ca3b06f896a0dfd8cea41179ac856128c9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cold-retirement.log",
+      "sha256": "6d49902457853df8344bb14fb815fd8276477d6231bc08548e1b092e5b8ff5f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-cold-retirement.xml",
+      "sha256": "9dca9d2df410ae5d556efe0b204ff7d56f9be7d6ffe42dbe571497a79c3c9704"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expired-before-input.bin",
+      "sha256": "6f8edd3ceb4f28f011632c973e295102af5c733dd9f67a994c75f3bb23831f96"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expired-before-input.bin.cpp.json",
+      "sha256": "823473a518942c9ad83890870e054f5a37fbb504870dfcfa06f27cbdbc6fcf6a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expired-before-input.log",
+      "sha256": "ac39f6e6eaa0eee4aca2caafeec498dc4da5ea25e5b878d4781d26901f9805d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expired-before-input.xml",
+      "sha256": "b281dddbccb4e31d06592906cc9758a29a5b7eaadcf68e253300452f1d9c9578"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expiry-max.bin",
+      "sha256": "4fd3be4ae7148a99b0b72d64b2c75e137adf46bfe74cc6143672f954069b3b2b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expiry-max.bin.cpp.json",
+      "sha256": "1c7fccb22d48a23a1eada3a98e1ea7aea31133c923a7c5f60be294e2f5fc46c3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expiry-max.log",
+      "sha256": "ac39f6e6eaa0eee4aca2caafeec498dc4da5ea25e5b878d4781d26901f9805d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-expiry-max.xml",
+      "sha256": "8b13976d8595858b2310999875eb631cb526baa71e9c252b277bc6e0b924d094"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-first-output.bin",
+      "sha256": "94f36f7bcd1a5b2c21db8d23f92fce0c192d149f5586e06c42da5ea920bd4cea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-first-output.bin.cpp.json",
+      "sha256": "a0df5c3d6778c909913c80f87bd05817d1f5b4d5ad8e76553bcdca4daa1f0296"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-first-output.log",
+      "sha256": "ac39f6e6eaa0eee4aca2caafeec498dc4da5ea25e5b878d4781d26901f9805d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-first-output.xml",
+      "sha256": "85d3650ff9b10d66b18c54d271bf5da1019cd08d1ab35d8d6fa8c6857c2d91a6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-pose-retirement.bin",
+      "sha256": "3f5cf3d85cf886d8c5efbfa497113138563ebed3c84a5fbafde9facf93faf539"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-pose-retirement.bin.cpp.json",
+      "sha256": "a37900729d58f3ec73c3bb55d87fc2d717321e0c97f31af658c9f2733fc314b7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-pose-retirement.log",
+      "sha256": "fe14e02c7a1ceb6f6a93efaacbea91653750dc6fd9d0b6bba94dc5955df4c6a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/native-pose-retirement.xml",
+      "sha256": "a4e975f3e83bdee1a6841fdb5e8905bbcf0efc24609fd1ecbe89911750bccff0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/nonfinite-output.bin",
+      "sha256": "26ec18b0e0f04217a92c3900d65d01f5a495a5bcd33c44050524cdf6dec93d0f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/nonfinite-output.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/nonfinite-output.xml",
+      "sha256": "814f0bad0dd2959d09009d1a285a9cff9979e3d529379520a530c2e84f1b943b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/optional-boolean.bin",
+      "sha256": "d9de652e52e0f8ac953752fc08e507a88bd1fbaec56fbc59933eeccda327fb0f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/optional-boolean.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/optional-boolean.xml",
+      "sha256": "df285a536ca3c55474e66214881b8067aa26eb05c7c8920c52f965fa06d787b7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pending-profile.bin",
+      "sha256": "8bb0312bbee8e2372335352610730bb0cbc566869f0ab44e5bad7f151d075b7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pending-profile.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pending-profile.xml",
+      "sha256": "365516616b71c13aa2f5515ca3b88b31d9a86a4f861b121579c576f0e3c3a864"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pose.bin",
+      "sha256": "2eb72f159f19992a49bbb4d072531d35752cabda696801a32fce0c6b691bf91c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pose.bin.cpp.json",
+      "sha256": "e9eb48cee100c13586452fc649440aba3fd255f59fc68a98ac51ba6b263972f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pose.log",
+      "sha256": "ac39f6e6eaa0eee4aca2caafeec498dc4da5ea25e5b878d4781d26901f9805d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/pose.xml",
+      "sha256": "41ca19fea326cc1d1cf8d3269a9ee7f549edc6756ab92d542025ebd2eae5095a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/presence-boolean.bin",
+      "sha256": "5216c4607f1966831750d9d63dd5ec7d52af0875170d6bd748e865d2a2f7fd89"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/presence-boolean.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/presence-boolean.xml",
+      "sha256": "131e451baa13f9f8422c9614ab24487d8c326872950208d4fb6a6d71b17253de"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/ready.bin",
+      "sha256": "acc30945c7c374ed02a97b23a3a060e49efb67d083084c19ffdd5abfa4957caa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/ready.bin.cpp.json",
+      "sha256": "785c78dcd9163164fa77abce2330f49c3cd3beb7d97eeede60cc07b53e8a8fb6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/ready.log",
+      "sha256": "ac39f6e6eaa0eee4aca2caafeec498dc4da5ea25e5b878d4781d26901f9805d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/ready.xml",
+      "sha256": "f7928dd38d0944e14e0f1aa555c8a435d7fd73bb118006cb3f84078d567264b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/retiring.bin",
+      "sha256": "63a8f80951030cc12443a08f0c6e3cbdde3051325059d313d67d4044ae086681"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/retiring.bin.cpp.json",
+      "sha256": "75ebdad9c60bea9638a50a0d6f7ac8646af0c89a52e123044057ce28709def84"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/retiring.log",
+      "sha256": "6d49902457853df8344bb14fb815fd8276477d6231bc08548e1b092e5b8ff5f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/retiring.xml",
+      "sha256": "348c5d933f65bd5bf32458a112f20e09e7d77bb88fdbaa4e3eb62621b00a1add"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-future-id.bin",
+      "sha256": "bd5895c9d776612eca3a448bfc965397502cbe9037065614414d8e6897c49834"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-future-id.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-future-id.xml",
+      "sha256": "0b7ebba7e49e3954eb40caeec09f3fa5079d8c3f113082a11813ada871ea2a24"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-resource.bin",
+      "sha256": "db039b0a64fd15af97e80180b4b0fe425bda3ae1b589d144eedd0a4439f908dc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-resource.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/sequence-resource.xml",
+      "sha256": "eb9148d9999928b7d7f92cb0d9dbeb4f1eb081d1b7051f8494a8678dd061a44d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/shared.bin",
+      "sha256": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/shared.bin.cpp.json",
+      "sha256": "e0faa6344c2ae58751783ffdd44fad267b0f3760cf6f8964f5ec04b6019a28c1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/shared.log",
+      "sha256": "fe14e02c7a1ceb6f6a93efaacbea91653750dc6fd9d0b6bba94dc5955df4c6a5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/shared.xml",
+      "sha256": "e6364ecb0db64d1e85724878bedab84cd19b860f6c61aa35825d5a9a5abb6444"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/truncated.bin",
+      "sha256": "6aa0b514354c8d48c039082ce130acac8b840d4c9179e31dba673080dfa046eb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/truncated.log",
+      "sha256": "3deb3591e7889ac0582cc3d91ffe50cf0d1809a83c8c9e287eb00923cddbb4cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/truncated.xml",
+      "sha256": "055e4f3b4ddb3231bd19ef4a9dfbb04e18219038b216de00affd54753771e3cf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-sanitized-01/wire/verified.json",
+      "sha256": "8b67253ee653f9524e2be0d6b67936c991a2e1cf1ac6b3141ddf147621f3787a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/build-fresh-process-probe.py",
+      "sha256": "3162f8a42f38b5d705be3bb558e1dc2e067377c678a5041b2a2947c5590a75d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/fixture.o.build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/fresh-process-probe.cpp",
+      "sha256": "b049a8d28fcd2da96138534354a48088830370896b0d84bc9e13493c4b9236ec"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/probe-build.json",
+      "sha256": "af3d3473e921130cad24b0603e5f5a9554ba8644411e8c9fada20afb0463cb85"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/probe.link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/probe.o.build.log",
+      "sha256": "f2640e65c4af5cc0562a8d67d0a2d37d0e389f3ab8cdeb9f760be4795bc34c1f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/run-probes.py",
+      "sha256": "c4ce4ef5fefecaec2b838d3ecf6151282e20887b747972ab32d0d4a03e4eb6a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-normal-01/run-wire.py",
+      "sha256": "76aae624374e0bf152792382200e2703d044351caab892c15d516da77706fbb1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/build-fresh-process-probe.py",
+      "sha256": "3162f8a42f38b5d705be3bb558e1dc2e067377c678a5041b2a2947c5590a75d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/fixture.o.build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/fresh-process-probe.cpp",
+      "sha256": "b049a8d28fcd2da96138534354a48088830370896b0d84bc9e13493c4b9236ec"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/probe-build.json",
+      "sha256": "ed70a27de2d0e2cac01faa63dabfd3354be1cc1674da0c0fecf8803779285835"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/probe.link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/probe.o.build.log",
+      "sha256": "ada39958c150e3c3f2acdbaf9098db37f6f29c11d2d09d60e0312d6b2f809d46"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/run-probes.py",
+      "sha256": "c4ce4ef5fefecaec2b838d3ecf6151282e20887b747972ab32d0d4a03e4eb6a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-retirement-process-work-sanitized-01/run-wire.py",
+      "sha256": "76aae624374e0bf152792382200e2703d044351caab892c15d516da77706fbb1"
+    }
+  ]
+}

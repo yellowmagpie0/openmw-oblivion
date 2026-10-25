@@ -2,6 +2,7 @@
 
 #include "ability.hpp"
 #include "nativeidle.hpp"
+#include "nativesequencedeactivation.hpp"
 #include "crimecontractsio.hpp"
 #include "runtimereferences.hpp"
 
@@ -1685,44 +1686,15 @@ namespace ESM4
             const auto& state = sequence.mState;
             // Static supported-profile validation. Do not advance a restored
             // sequence or evaluate keys while admitting its stored timing.
-            const auto finite = [](float value) {
-                if (!std::isfinite(value)) throw std::runtime_error("Nonfinite GetUp sequence timing");
-            };
-            const auto& timing = state.mTiming;
-            for (float value : {timing.mEaseEnd, timing.mWeightedTime, timing.mOutputTime}) finite(value);
-            for (const auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput,
-                     sequence.mTransitionFrame}) if (value) finite(*value);
-            const bool capture = sequence.mTransitionFrame && timing.mEasing && timing.mOffset
-                && !timing.mEaseStart && !timing.mLastInput;
-            if ((!capture && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
-                        || timing.mOffset.has_value() != timing.mLastInput.has_value()))
-                || (sequence.mTransitionFrame && !timing.mEasing)
-                || (state.mInactive && timing.mEasing))
-                throw std::runtime_error("Partial or inconsistent GetUp sequence timing");
+            try { validateNativeClampSequenceState(state, sequence.mTransitionFrame, clock); }
+            catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
             if (sequence.mTransitionFrame.has_value() != sequence.mPoseSnapshot.has_value())
                 throw std::runtime_error("GetUp pose transition lacks its captured pose");
             if (sequence.mPoseSnapshot)
             {
                 sequence.mPoseSnapshot->validate();
-                if (sequence.mPoseSnapshot->mDestinationFrame != *sequence.mTransitionFrame
-                    || timing.mEaseEnd <= timing.mEaseStart.value_or(0))
-                    throw std::runtime_error("Invalid GetUp captured pose transition");
-            }
-            if (state.mRetirement)
-            {
-                const auto& retirement = *state.mRetirement;
-                finite(retirement.mDuration);
-                if (retirement.mDuration <= 0 || !timing.mOffset || timing.mEasing || sequence.mTransitionFrame)
-                    throw std::runtime_error("Invalid GetUp sequence retirement");
-                if (retirement.mStartClock)
-                {
-                    finite(*retirement.mStartClock);
-                    const float stop = static_cast<float>(double(*retirement.mStartClock) + retirement.mDuration);
-                    finite(stop);
-                    if (state.mInactive && *clock < stop)
-                        throw std::runtime_error("Premature inactive GetUp retirement");
-                }
-                else if (state.mInactive) throw std::runtime_error("Unanchored inactive GetUp retirement");
+                if (sequence.mPoseSnapshot->mDestinationFrame != *sequence.mTransitionFrame)
+                    throw std::runtime_error("Invalid GetUp captured pose destination");
             }
             if (!sequence.mManaged && !state.mInactive)
                 throw std::runtime_error("Detached GetUp sequence is still active");

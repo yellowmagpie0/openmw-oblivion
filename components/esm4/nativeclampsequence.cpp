@@ -1,10 +1,86 @@
-#include "nativeclampsequence.hpp"
+#include "nativesequencedeactivation.hpp"
 
 #include <cmath>
 #include <stdexcept>
 
 namespace ESM4
 {
+    void validateNativeClampSequenceState(const NativeClampSequenceState& state,
+        std::optional<float> transitionFrame, std::optional<float> clock)
+    {
+        const auto finite = [](float value) {
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite native clamp sequence state");
+        };
+        const auto& timing = state.mTiming;
+        for (float value : {timing.mEaseEnd, timing.mWeightedTime, timing.mOutputTime}) finite(value);
+        for (auto value : {timing.mOffset, timing.mEaseStart, timing.mLastInput, transitionFrame, clock})
+            if (value) finite(*value);
+        const bool pendingHistory = !state.mRetirement
+            || (!state.mInactive && !state.mRetirement->mStartClock);
+        const bool freshCapture = transitionFrame && timing.mEasing && timing.mOffset
+            && !timing.mEaseStart && !timing.mLastInput;
+        const bool pendingCache = pendingHistory && (timing.mEasing
+            ? !timing.mEaseStart && (!transitionFrame || timing.mOffset) : !timing.mOffset);
+        // State1 aliases easeStart to the previous output, which can still be
+        // the constructor's sentinel after the first manager update.
+        const bool firstOutput = !state.mRetirement && !timing.mEasing && timing.mOffset
+            && !timing.mEaseStart && timing.mLastInput;
+        const bool unanchoredRetirement = state.mRetirement && !state.mInactive
+            && !state.mRetirement->mStartClock && !timing.mEasing && !timing.mEaseStart;
+        const bool expiredUnupdated = state.mInactive && state.mRetirement && state.mRetirement->mStartClock
+            && timing.mOffset && timing.mEaseStart && !timing.mLastInput;
+        const bool cancelledPose = state.mInactive && !state.mRetirement && !timing.mEasing
+            && timing.mOffset && !timing.mEaseStart;
+        if (!freshCapture && !pendingCache && !firstOutput && !unanchoredRetirement && !expiredUnupdated
+            && !cancelledPose && (timing.mOffset.has_value() != timing.mEaseStart.has_value()
+                || timing.mOffset.has_value() != timing.mLastInput.has_value()))
+            throw std::invalid_argument("partial native clamp sequence timing");
+        if (timing.mEasing && timing.mEaseEnd <= timing.mEaseStart.value_or(0.f))
+            throw std::invalid_argument("invalid native clamp activation interval");
+        if ((transitionFrame && !timing.mEasing && !state.mRetirement)
+            || (state.mInactive && (timing.mEasing || transitionFrame)))
+            throw std::invalid_argument("invalid native clamp pose or inactive state");
+        if (state.mRetirement)
+        {
+            const auto& span = *state.mRetirement;
+            finite(span.mDuration);
+            if (span.mDuration <= 0 || timing.mEasing)
+                throw std::invalid_argument("invalid native clamp sequence retirement");
+            if (span.mStartClock)
+            {
+                finite(*span.mStartClock);
+                const float stop = static_cast<float>(double(*span.mStartClock) + span.mDuration);
+                finite(stop);
+                if (!timing.mOffset || (state.mInactive && clock && *clock < stop))
+                    throw std::invalid_argument("invalid native clamp sequence retirement clock");
+            }
+            else if (state.mInactive)
+                throw std::invalid_argument("unanchored inactive native clamp sequence");
+        }
+    }
+
+    NativeClampSequenceState retireNativeClampSequence(const NativeClampSequenceState& state,
+        float frequency, float duration, std::optional<float> transitionFrame)
+    {
+        if (!std::isfinite(duration)) throw std::invalid_argument("nonfinite native clamp retirement duration");
+        validateNativeClampSequenceState(state, transitionFrame);
+        if (!std::isfinite(frequency) || frequency <= 0)
+            throw std::invalid_argument("invalid native clamp retirement frequency");
+        if (state.mInactive) return state;
+        if (state.mRetirement) throw std::invalid_argument("native clamp retirement requires a resident sequence");
+        auto next = state;
+        next.mTiming = deactivateNativeSequenceTiming(next.mTiming, frequency);
+        next.mTiming.mEasing = false;
+        if (duration > 0)
+        {
+            next.mRetirement = MeleeSequenceRetirement{duration, {}};
+            next.mTiming.mEaseStart.reset();
+            next.mTiming.mEaseEnd = duration;
+        }
+        else next.mInactive = true;
+        return next;
+    }
+
     NativeClampSequenceState advanceNativeClampSequence(const NativeClampSequenceState& state,
         float animationClock, float frequency, float begin, float end,
         const std::array<float, 2>& keyTimes, float retirementDuration,
@@ -15,39 +91,7 @@ namespace ESM4
         if (frequency <= 0 || end < begin || !std::isfinite(end - begin))
             throw std::invalid_argument("invalid native clamp sequence bounds or frequency");
         (void)advanceReactionSlot(state.mStarted, 0, 0, keyTimes);
-        // Validate stored values without advancing time: an inactive sequence
-        // or an immediate End can return before any manager arithmetic.
-        for (float value : {state.mTiming.mEaseEnd, state.mTiming.mWeightedTime, state.mTiming.mOutputTime})
-            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite native clamp sequence timing");
-        for (const auto value : {state.mTiming.mOffset, state.mTiming.mEaseStart, state.mTiming.mLastInput})
-            if (value && !std::isfinite(*value))
-                throw std::invalid_argument("nonfinite native clamp sequence timing");
-        if (transitionFrame && (!std::isfinite(*transitionFrame) || !state.mTiming.mEasing))
-            throw std::invalid_argument("invalid native clamp transition frame");
-        const bool capture = transitionFrame && state.mTiming.mEasing && state.mTiming.mOffset
-            && !state.mTiming.mEaseStart && !state.mTiming.mLastInput;
-        if (!capture && (state.mTiming.mOffset.has_value() != state.mTiming.mEaseStart.has_value()
-                || state.mTiming.mOffset.has_value() != state.mTiming.mLastInput.has_value()))
-            throw std::invalid_argument("partial native clamp sequence timing");
-        if (state.mRetirement)
-        {
-            const auto& span = *state.mRetirement;
-            if (!std::isfinite(span.mDuration) || span.mDuration <= 0 || !state.mTiming.mOffset
-                || state.mTiming.mEasing || transitionFrame)
-                throw std::invalid_argument("invalid native clamp sequence retirement");
-            if (span.mStartClock)
-            {
-                const float stop = static_cast<float>(double(*span.mStartClock) + span.mDuration);
-                if (!std::isfinite(*span.mStartClock) || !std::isfinite(stop)
-                    || (state.mInactive && animationClock < stop))
-                    throw std::invalid_argument("invalid native clamp sequence retirement clock");
-            }
-            else if (state.mInactive)
-                throw std::invalid_argument("unanchored inactive native clamp sequence");
-        }
-        if (state.mInactive && (!state.mTiming.mOffset || state.mTiming.mEasing || transitionFrame))
-            throw std::invalid_argument("invalid inactive native clamp sequence");
-
+        validateNativeClampSequenceState(state, transitionFrame, animationClock);
         auto next = state;
         if (next.mInactive) return next;
         if (!next.mRetirement && !freezeSlot && !state.mTiming.mEasing && state.mTiming.mOffset)
@@ -56,25 +100,28 @@ namespace ESM4
                 animationClock, keyTimes);
             next.mStarted = progress.mStarted;
             if (progress.mRetire)
-            {
-                if (retirementDuration > 0)
-                    next.mRetirement = MeleeSequenceRetirement{retirementDuration, {}};
-                else next.mInactive = true;
-            }
+                next = retireNativeClampSequence(next, frequency, retirementDuration, transitionFrame);
         }
         if (next.mInactive) return next;
         if (next.mRetirement)
         {
             auto& span = *next.mRetirement;
+            // Original6CA950 initializes offset before checking state3 expiry.
+            if (!next.mTiming.mOffset) next.mTiming.mOffset = initialMeleeSequenceOffset(animationClock);
             if (!span.mStartClock) span.mStartClock = animationClock;
             const float stop = static_cast<float>(double(*span.mStartClock) + span.mDuration);
             if (!std::isfinite(stop)) throw std::invalid_argument("overflowing native clamp retirement clock");
-            if (animationClock >= stop) { next.mInactive = true; return next; }
+            next.mTiming.mEaseStart = span.mStartClock;
+            next.mTiming.mEaseEnd = stop;
+            if (animationClock >= stop)
+            {
+                next.mTiming = deactivateNativeSequenceTiming(next.mTiming, frequency);
+                next.mInactive = true;
+                return next;
+            }
             auto manager = next.mTiming;
             manager.mEasing = true;
-            manager.mEaseStart = span.mStartClock;
-            manager.mEaseEnd = stop;
-            next.mTiming = updateMeleeSequenceTiming(manager, animationClock, frequency, begin, end);
+            next.mTiming = updateMeleeSequenceTiming(manager, animationClock, frequency, begin, end, transitionFrame);
             next.mTiming.mEasing = false;
         }
         else

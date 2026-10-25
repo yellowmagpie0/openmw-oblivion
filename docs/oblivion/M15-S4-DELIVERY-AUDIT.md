@@ -14306,3 +14306,47 @@ Final component/Python fingerprint including the new case manifest:
 `b6b957f80e255068f31848132f4abafe4e47870f0911b2845ae3603a10f6ae10`.
 Both use parent `be5ee8f32cbbf056371bc7172a49b41f13d4635f`; only the case manifest
 was added after the final engine checks.
+
+### External GetUp retirement and native initialization masks
+
+This is **retirement and persistence support, not M15S4 delivery**. The shared
+clamp planner now handles external retirement before the first manager tick,
+retains a captured pose through positive retirement, and initializes retirement
+clocks before testing expiry. Cache activation may retain old timing history
+while resetting offset and easeStart. Schema72 C++/Python admission preserves
+these native masks, immediate pose cancellation and expiry before first input.
+No wire layout or version changes. The caller still owns logical5 reset across
+physical4,0,1,2,3, pose release on NI0, and live publication.
+
+Executing the actual original constructor exposed its sentinel history. The
+final corpus contains 912 external-retirement profiles and ten direct numeric
+boundaries. PC24 deactivation rounds every register operation with extended
+exponent range. The old double expression disagreed in eight of 288 selected
+profiles; one offset was ten float representations away from native. Both
+normal and sanitized C++ now match 336 retirements, 1,680 manager updates,
+twelve reused cache-start updates and all ten numeric boundary expectations
+(including explicit rejection of two native infinity outputs). The prior
+144-profile/39,459-frame corpus also still matches exactly. These instruction
+probes use empty controlled sets and supplied manager scheduling, not gameplay.
+The null constructor-name and incorrect negative-adjacent-bit fixture attempts
+remain retained with their corrected successors.
+
+Full normal and sanitized runs each pass **3,160 component and 1,978 engine
+tests**; **418 Python tests** pass. Seven focused component cases and one engine
+case pass with leak detection enabled. Full sanitizer suites use the documented
+unrelated suite-leak exception. Every C++ inventory matches its XML, with no
+failures or skips. Twenty-four separate headless continuation processes preserve
+four timing profiles across save/readmission, without condition or RNG replay,
+and reject changed KF bytes. Each build also passes 27 C++/Python payload cases
+(twelve accepted, fifteen rejected). Sanitized standalone probes enable leaks.
+These are injected T4ST graph fixtures, not canonical shared-save loads or
+rendered recovery acceptance.
+
+The combined graph/resource/renderer transaction, actual start/frame/completion,
+renderer restoration and natural recovery dispatcher remain open, together with
+the remaining S4 input/device/FPS/audio/mastery/full-save matrix.
+
+Editable cases: [m15_native_getup_retirement_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_retirement_cases.json).
+Evidence: [M15-NATIVE-GETUP-RETIREMENT-VERIFICATION.json](M15-NATIVE-GETUP-RETIREMENT-VERIFICATION.json).
+Tested source fingerprint: `8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74`
+on parent `bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61`.

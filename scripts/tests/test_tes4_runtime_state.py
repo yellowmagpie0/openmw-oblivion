@@ -240,7 +240,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             lambda g: g["requests"][0].update(id=2), lambda g: g["requests"][0].update(sequence=99),
             lambda g: g["requests"][0].update(actor_bound=False), lambda g: g["requests"][0].update(status=0),
             lambda g: g["sequences"][0].update(resource=99), lambda g: g["sequences"][0].update(managed=False),
-            lambda g: g["sequences"][0]["timing"].update(offset=None),
+            lambda g: g["sequences"][0]["timing"].update(last_input=None),
             lambda g: g["sequences"][0]["timing"].update(output_time=float("inf")),
             lambda g: g["resources"].append(dict(g["resources"][0], id=9)),
             lambda g: g["requests"][2].update(id=4), lambda g: g.update(next_identity=True),
@@ -274,6 +274,36 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         sequence["pose_snapshot"]["destination_frame"] = .75
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         sequence["pose_snapshot"] = None
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_getup_graph72_native_cold_pose_cancelled_and_cached_masks_roundtrip(self):
+        sentinel = -3.4028234663852886e38
+        cases = [
+            dict(timing=dict(easing=False, offset=None, ease_start=None, last_input=None,
+                ease_end=.1, weighted_time=0., output_time=0.), retirement=dict(duration=.1, start_clock=None)),
+            dict(timing=dict(easing=False, offset=0., ease_start=None, last_input=None,
+                ease_end=.1, weighted_time=sentinel, output_time=sentinel), retirement=dict(duration=.1, start_clock=None),
+                transition_frame=0., pose_snapshot=dict(destination_frame=0., tracks=[])),
+            dict(inactive=True, timing=dict(easing=False, offset=0., ease_start=None, last_input=None,
+                ease_end=.1, weighted_time=sentinel, output_time=sentinel)),
+            dict(timing=dict(easing=False, offset=None, ease_start=None, last_input=0.,
+                ease_end=.1, weighted_time=0., output_time=0.)),
+            dict(timing=dict(easing=False, offset=-.5, ease_start=None, last_input=0.,
+                ease_end=sentinel, weighted_time=0., output_time=0.)),
+            dict(inactive=True, timing=dict(easing=False, offset=-1e8, ease_start=1e8, last_input=None,
+                ease_end=1e8, weighted_time=sentinel, output_time=sentinel), retirement=dict(duration=.1, start_clock=1e8)),
+        ]
+        for index, change in enumerate(cases):
+            with self.subTest(index=index):
+                state = self.getup_graph_state(); graph = state["native_getup_playback"][0]
+                sequence = graph["sequences"][0]; sequence.update(change)
+                graph["resident_sequence"] = 0 if sequence["inactive"] or sequence["retirement"] is not None else 3
+                state["native_animation_clocks"][0]["clock"] = 1e8 if index == 5 else .5
+                wire = state_io.encode_payload(state)
+                self.assertEqual(state_io.encode_payload(state_io.decode_payload(wire)), wire)
+        state = self.getup_graph_state(); sequence = state["native_getup_playback"][0]["sequences"][0]
+        sequence.update(cases[0]); sequence["retirement"]["start_clock"] = .5
+        state["native_getup_playback"][0]["resident_sequence"] = 0
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
 
     @staticmethod

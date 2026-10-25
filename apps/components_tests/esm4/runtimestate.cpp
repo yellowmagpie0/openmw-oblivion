@@ -1,3 +1,4 @@
+#include <components/esm4/nativesequencedeactivation.hpp>
 #include "crimefixture.hpp"
 
 #include <components/esm4/loadrefr.hpp>
@@ -5755,7 +5756,7 @@ TEST(ESM4RuntimeState, GetUpGraph72RejectsDanglingOrAliasedIdentitiesAndUnsuppor
     reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mStatus = 0; });
     reject([](auto&, auto& graph) { graph.mRequests.mPrimary->mActorBound = false; });
     reject([](auto& state, auto&) { state.mNativeAnimationClocks.clear(); });
-    reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mTiming.mOffset.reset(); });
+    reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mTiming.mLastInput.reset(); });
     reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mTiming.mOutputTime = std::numeric_limits<float>::infinity(); });
     reject([](auto&, auto& graph) { graph.mSequences.at(3).mManaged = false; });
     reject([](auto&, auto& graph) { graph.mSequences.at(3).mState.mRetirement = ESM4::MeleeSequenceRetirement{1.f, 4.f}; });
@@ -5793,4 +5794,33 @@ TEST(ESM4RuntimeState, GetUpGraph72PoseCaptureRetainsTransformAndRequiresMatchin
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
     sequence.mPoseSnapshot.reset();
     EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, GetUpGraph72PreservesNativeColdPoseAndCachedTimingMasks)
+{
+    const auto baseline = getUpGraphState();
+    const auto check = [&](const ESM4::NativeClampSequenceState& state, bool pose, float clock, bool resident) {
+        auto saved = baseline; auto& graph = saved.mNativeGetUpPlayback.begin()->second;
+        saved.mNativeAnimationClocks.begin()->second = clock;
+        graph.mResidentSequence = resident ? 3 : 0;
+        auto& sequence = graph.mSequences.at(3); sequence.mState = state;
+        if (pose)
+        {
+            sequence.mTransitionFrame = 0;
+            sequence.mPoseSnapshot = ESM4::RuntimeMeleePoseSnapshot{0, {}};
+        }
+        const auto wire = saved.serializeBinary();
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(wire).serializeBinary(), wire);
+    };
+    check(ESM4::retireNativeClampSequence({}, 1, .1f), false, .5f, false);
+    ESM4::NativeClampSequenceState pose;
+    pose.mTiming = {true, 0, std::nullopt, .1f, std::nullopt, 0, 0};
+    check(ESM4::retireNativeClampSequence(pose, 1, .1f, 0), true, .5f, false);
+    check(ESM4::retireNativeClampSequence(pose, 1, 0, 0), false, .5f, false);
+    ESM4::NativeClampSequenceState cached;
+    cached.mTiming = {false, std::nullopt, std::nullopt, .1f, 0, 0, 0};
+    check(cached, false, .5f, true);
+    const auto expired = ESM4::advanceNativeClampSequence(ESM4::retireNativeClampSequence({}, 2, .1f),
+        1e8f, 2, 0, 2, {0, 1}, .1f, true);
+    check(expired, false, 1e8f, false);
 }
