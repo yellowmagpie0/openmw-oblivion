@@ -1,6 +1,7 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionnativeidle.hpp"
 
+#include <components/esm3/loadnpc.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/loadidle.hpp>
@@ -23,10 +24,11 @@ namespace
     {
         return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
     }
-    std::string record(std::uint32_t tag, std::uint32_t id, const std::string& data, bool deleted = false)
+    std::string record(std::uint32_t tag, std::uint32_t id, const std::string& data, bool deleted = false,
+        std::uint32_t extraFlags = 0)
     {
         return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size()))
-            + bytes(deleted ? std::uint32_t(ESM4::Rec_Deleted) : 0u) + bytes(id) + bytes(0u) + data;
+            + bytes((deleted ? std::uint32_t(ESM4::Rec_Deleted) : 0u) | extraFlags) + bytes(id) + bytes(0u) + data;
     }
     std::string idle(std::uint32_t id, const std::string& model, std::uint32_t parent = 0,
         std::uint32_t previous = 0, const std::string& conditions = {})
@@ -99,7 +101,7 @@ TEST(OblivionNativeIdleStore, KeepsIndependentPluginIdentitiesAndResolvedParentL
         (ESM::FormId{0x1001, 3}));
 }
 
-TEST(OblivionNativeIdleStore, RejectsOverrideAndSamePluginDuplicateHistoriesBeforeReconstruction)
+TEST(OblivionNativeIdleStore, CapturesOrdinaryOverridesAndSamePluginDuplicatesInActualLoadOrder)
 {
     for (bool duplicate : {false, true})
     {
@@ -112,7 +114,15 @@ TEST(OblivionNativeIdleStore, RejectsOverrideAndSamePluginDuplicateHistoriesBefo
         const auto key = ESM::FormKey::content("base.esm", 0x1000);
         ASSERT_EQ(f.mStore.getFormKeyIndex().history(key)->size(), 2u);
         const auto before = f.mStore.getFormKeyIndex().serialize();
-        EXPECT_THROW(MWWorld::buildOblivionNativeIdleIndex(f.mStore), std::invalid_argument);
+        const auto& events = f.mStore.getOblivionNativeIdleLoadEvents();
+        ASSERT_EQ(events.size(), 2u);
+        EXPECT_EQ(events[0].mRegistration.mModel, "Dog\\IdleAnims\\Base.kf");
+        EXPECT_EQ(events[1].mRegistration.mModel, "Fox\\IdleAnims\\Changed.kf");
+        const auto index = MWWorld::buildOblivionNativeIdleIndex(f.mStore);
+        ASSERT_EQ(index.mBanks.size(), 2u);
+        EXPECT_TRUE(index.mBanks[0].mRoots.empty());
+        EXPECT_EQ(index.mBanks[1].mRoots, (std::vector<std::size_t>{0}));
+        EXPECT_EQ(index.mNodes[0].mRecord->mModel.getOriginal(), "Fox\\IdleAnims\\Changed.kf");
         EXPECT_EQ(f.mStore.getFormKeyIndex().serialize(), before);
     }
 }
@@ -189,4 +199,87 @@ TEST(OblivionNativeIdleStore, NativeConditionPaddingCannotRedirectRegistrySelect
     ASSERT_NE(selected, nullptr);
     EXPECT_EQ(selected->mId, (ESM::FormId{0x1028, 1}));
     EXPECT_EQ(f.mStore.getFormKeyIndex().serialize(), before);
+}
+
+TEST(OblivionNativeIdleStore, ReplaysOverrideAfterLaterPredecessorInsteadOfFinalWinningIterationOrder)
+{
+    Fixture f;
+    f.load("prefix.esm", {}, {});
+    f.load("base.esm", {}, {idle(0x1000, "Dog\\IdleAnims\\First.kf"),
+        idle(0x1001, "Dog\\IdleAnims\\Second.kf", 0, 0x1000)});
+    f.load("patch.esp", {"base.esm"}, {idle(0x01002000, "Dog\\IdleAnims\\Added.kf", 0, 0x1001),
+        idle(0x1000, "Dog\\IdleAnims\\First.kf", 0, 0x01002000)});
+    const auto& events = f.mStore.getOblivionNativeIdleLoadEvents();
+    ASSERT_EQ(events.size(), 4u);
+    EXPECT_EQ(events[0].mRegistration.mPrevious.mIndex, 0u);
+    EXPECT_EQ(events[3].mRegistration.mPrevious, (ESM::FormId{0x2000, 2}));
+    std::vector<const ESM4::IdleAnimation*> winners;
+    for (const auto& record : f.mStore.get<ESM4::IdleAnimation>()) winners.push_back(&record);
+    EXPECT_THROW(ESM4::registerNativeIdleRecords(winners), std::invalid_argument);
+    const auto before = f.mStore.getFormKeyIndex().serialize();
+    const auto index = MWWorld::buildOblivionNativeIdleIndex(f.mStore);
+    ASSERT_EQ(index.mBanks.size(), 1u);
+    EXPECT_EQ(index.mBanks[0].mRoots, (std::vector<std::size_t>{1, 2, 0}));
+    EXPECT_FALSE(index.mNodes[1].mPrevious);
+    EXPECT_EQ(index.mNodes[0].mPrevious, 2u);
+    EXPECT_EQ(index.mNodes[0].mRecord->mPrevious, (ESM::FormId{0x2000, 2}));
+    EXPECT_EQ(f.mStore.getFormKeyIndex().serialize(), before);
+}
+
+TEST(OblivionNativeIdleStore, FailedRecordReadDoesNotPublishRegistrationOrMetadata)
+{
+    Fixture f;
+    f.load("base.esm", {}, {idle(0x1000, "Dog\\IdleAnims\\Base.kf")});
+    const auto before = f.mStore.getFormKeyIndex().serialize();
+    EXPECT_THROW(f.load("patch.esp", {"base.esm"},
+        {record(ESM4::REC_IDLE, 0x1000, sub(ESM::fourCC("ANAM"), std::string(2, '\0')))}), std::runtime_error);
+    EXPECT_EQ(f.mStore.getFormKeyIndex().serialize(), before);
+    ASSERT_EQ(f.mStore.getOblivionNativeIdleLoadEvents().size(), 1u);
+    const auto index = MWWorld::buildOblivionNativeIdleIndex(f.mStore);
+    ASSERT_EQ(index.mNodes.size(), 1u);
+    EXPECT_EQ(index.mNodes[0].mRecord->mModel.getOriginal(), "Dog\\IdleAnims\\Base.kf");
+}
+
+TEST(OblivionNativeIdleStore, RejectsSpecialFlagsAndSamePluginTypeChangesBeforeReplaying)
+{
+    for (const bool typeChange : {false, true})
+    {
+        Fixture f;
+        if (typeChange)
+            f.load("base.esm", {}, {idle(0x1000, "Dog\\IdleAnims\\Base.kf"),
+                record(ESM4::REC_GLOB, 0x1000, sub(ESM::fourCC("EDID"), std::string("ChangedType") + '\0')
+                    + sub(ESM::fourCC("FNAM"), "f") + sub(ESM::fourCC("FLTV"), bytes(1.f)))});
+        else
+            f.load("base.esm", {}, {record(ESM4::REC_IDLE, 0x1000,
+                sub(ESM::fourCC("MODL"), std::string("Dog\\IdleAnims\\Base.kf") + '\0'), false, 0x4000)});
+        EXPECT_THROW(MWWorld::buildOblivionNativeIdleIndex(f.mStore), std::invalid_argument);
+    }
+}
+
+TEST(OblivionNativeIdleStore, DynamicClearRetainsContentRegistrationHistory)
+{
+    Fixture f;
+    // clearDynamic restores the projected Player after clearing all stores.
+    ESM::NPC player{};
+    player.blank();
+    player.mId = ESM::RefId::stringRefId("Player");
+    f.mStore.insertStatic(player);
+    f.load("base.esm", {}, {idle(0x1000, "Dog\\IdleAnims\\Base.kf")});
+    f.load("patch.esp", {"base.esm"}, {idle(0x1000, "Fox\\IdleAnims\\Changed.kf")});
+    const auto history = f.mStore.getOblivionNativeIdleLoadEvents();
+    const auto key = ESM::FormKey::content("base.esm", 0x1000);
+    auto& records = f.mStore.getWritable<ESM4::IdleAnimation>();
+    records.insert(*records.searchStatic(key), key);
+    EXPECT_THROW(MWWorld::buildOblivionNativeIdleIndex(f.mStore), std::invalid_argument);
+    f.mStore.clearDynamic();
+    const auto& after = f.mStore.getOblivionNativeIdleLoadEvents();
+    ASSERT_EQ(after.size(), history.size());
+    for (std::size_t i = 0; i < after.size(); ++i)
+    {
+        EXPECT_EQ(after[i].mMetadata, history[i].mMetadata);
+        EXPECT_EQ(after[i].mRegistration.mModel, history[i].mRegistration.mModel);
+    }
+    const auto index = MWWorld::buildOblivionNativeIdleIndex(f.mStore);
+    ASSERT_EQ(index.mNodes.size(), 1u);
+    EXPECT_EQ(index.mBanks[1].mRoots, (std::vector<std::size_t>{0}));
 }

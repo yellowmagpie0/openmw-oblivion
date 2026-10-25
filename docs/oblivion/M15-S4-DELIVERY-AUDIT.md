@@ -13610,3 +13610,48 @@ overrides and the serialized Deleted/special-flag lifecycle remain open.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-IDLE-OVERRIDE-LIFECYCLE-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_override_lifecycle_cases.json).
+
+
+### Native IDLE registration-event replay in the production store
+
+The store now retains successful TES4 IDLE load events with full provenance and
+owned historical registration fields. Ordinary same-type overrides remove the
+old root/child slot, repair the next predecessor and reinsert the new definition
+in event order. Winning typed records and authored fields stay separate from
+compiled native links. Failed reads publish no new IDLE event. The adapter checks
+complete event/history agreement and rejects deleted/special flags, type changes,
+dynamic replacements and unindexed or invalid structures. Same-plugin duplicate
+definitions are covered alongside cross-plugin overrides.
+
+Regressions include a new predecessor loaded between the initial definition and
+its override, model-bank moves, child retention/reparenting, dynamic clearing,
+failed reads and **22 literal original-executable removal profiles**. Actual
+production ESMStore loading of **11 pinned official files**, in the original
+process's observed order at shifted indices **1..11**, retains **681 events** and
+**677 winners**. Normal and ASan/UBSan standalone engine-linked comparisons
+exactly match the original main-menu snapshot for all raw models, compiled
+parents/predecessors, ordered children and **44 content-bank root arrays**. Their
+serialized outputs are identical. All 677 winning authored model/flags/DATA
+fields also match the independent raw official-plugin history audit. One extra empty first-person runtime bank in
+the original snapshot remains explicitly outside content replay.
+
+Normal checks pass **3,104 component tests** and **1,947 engine tests**.
+ASan/UBSan checks pass **955 ESM4 tests** and **1,947 engine tests**, with exact
+inventory/XML agreement and no failures or skips. Engine mode builds openmw,
+openmw-tests and esmtool. Component sanitizer mode uses ASAN_OPTIONS=detect_leaks=0
+and UBSAN_OPTIONS=halt_on_error=1; engine/installed checks additionally specify
+ASan halt and UBSan stack traces. Leak detection is disabled. No Python production
+or schema changed; the prior 410-test passing result was not repeated.
+
+This closes ordinary official IDLE override content loading. Serialized deleted
+and special-flag lifecycle, full base/component ownership beyond the four
+observed official leaf overrides, raw actor model/query context, exact selected
+KF/slot5 playback, physical FSM/GetUp/restart, directional mastery and full S4
+normal-input acceptance remain open. No gameplay course ran in this chunk. The first normal attempt failed only
+the new dynamic-clear fixture, which omitted the required projected Player NPC.
+That fixture was corrected; the first sanitizer engine build was stopped before
+the correction. Both initial attempts and the owned-process stop record remain
+in the evidence directories.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-IDLE-EVENT-REPLAY-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_event_replay_cases.json).

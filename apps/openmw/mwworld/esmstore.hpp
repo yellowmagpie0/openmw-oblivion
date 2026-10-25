@@ -163,6 +163,7 @@ namespace ESM4
 namespace MWWorld
 {
     struct ESMStoreImp;
+    struct OblivionNativeIdleLoadEvent;
 
     class ESMStore
     {
@@ -389,6 +390,7 @@ namespace MWWorld
         void loadESM4(ESM4::Reader& esm, Loading::Listener* listener);
 
         const ESM::FormKeyIndex& getFormKeyIndex() const { return mFormKeyIndex; }
+        const std::vector<OblivionNativeIdleLoadEvent>& getOblivionNativeIdleLoadEvents() const;
         const ESM4::DialogueTopicIndex& getOblivionDialogueTopics() const { return mOblivionDialogueTopics; }
         std::optional<ESM::FormKey> findEsm4FormKey(std::string_view editorId) const;
         // Native integer FormIDs count TES4 plugins, excluding Lua/TES3 files.

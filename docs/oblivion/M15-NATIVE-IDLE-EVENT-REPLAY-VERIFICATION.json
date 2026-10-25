@@ -1,0 +1,988 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Production native TES4 ordinary IDLE override registration replay and actual store-load event capture; no GetUp gameplay acceptance",
+  "parent": "266792134a512227d637e8c93c2e0df6a08794f1",
+  "tested_source": {
+    "head": "266792134a512227d637e8c93c2e0df6a08794f1",
+    "source_fingerprint": "2ac72128cc749286a7f3aae34b4aeb7ca9b97c835f8c05e676b3ad943defe784"
+  },
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_native_idle_event_replay_cases.json",
+    "sha256": "1af09ef664021bb653c29102d086df0958b4dd53563c7c6d7e8c8941a37474a2"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/nativeidle.hpp",
+      "sha256": "38931a49bc6954c46e1b85db0236678e51d359bf6a13d2b4fb28bf6bd2e7ef83"
+    },
+    {
+      "path": "components/esm4/nativeidle.cpp",
+      "sha256": "cc33c23cb27e9e1abf9f8fdd19ef29995375dd1fd5028cff9136ab4a97247e7b"
+    },
+    {
+      "path": "apps/openmw/mwworld/esmstore.hpp",
+      "sha256": "102270a19c0c67edc886a59b4da701b9bf0e58e23d2fc9b149995364a792f055"
+    },
+    {
+      "path": "apps/openmw/mwworld/esmstore.cpp",
+      "sha256": "7cbc2b2ad87f55be973ca6ba7fcf888df906dbe87808df54960fe034b912b6ca"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionnativeidle.hpp",
+      "sha256": "e7246f01174b7a5c84dd485407ff6c55d0e19805826468e8bffc0f007ba7b524"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionnativeidle.cpp",
+      "sha256": "1001d4388028b9fcbb3abbb923d66790e5b57d903017525d8cba0cbbf4b3e751"
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeidleregistration.cpp",
+      "sha256": "2ed9282c440c0c0b34c40662a8cd6d87bca1eea2adad0c21ce5bf750863344c9"
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_override_removal_expected.inc",
+      "sha256": "9ee2a97c31911e6225438380067a2a8d5abeedcefa1c7280547026dabb8e0454"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionnativeidle.cpp",
+      "sha256": "f141c4890925525e430f1001e383c5ec824928d35d08dc875cfbb950ec756edb"
+    }
+  ],
+  "retained_attempts": {
+    "normal01": "1946/1947 engine tests passed; new dynamic-clear fixture omitted required Player NPC, corrected in02",
+    "sanitized01": "955 component tests passed; owned engine build group stopped with SIGTERM after normal fixture failure, before source correction"
+  },
+  "original_lifecycle_evidence": {
+    "path": "docs/oblivion/M15-NATIVE-IDLE-OVERRIDE-LIFECYCLE-VERIFICATION.json",
+    "sha256": "466377a8685ea35dfc928eb35d49d57f5b1d26c87c91b54f6066c49d0f4bb366"
+  },
+  "original_removal_corpus": {
+    "path": "build/oblivion-compat/m15/S4/native-getup-registration-static-03/unregister-corpus.json",
+    "sha256": "15901266e3d410acbcf7cabfc8b563b97a3848848ef126474f9db0449fd61fed"
+  },
+  "removal_fixture": {
+    "passed": true,
+    "profiles": 22,
+    "corpus": "build/oblivion-compat/m15/S4/native-getup-registration-static-03/unregister-corpus.json",
+    "corpus_sha256": "15901266e3d410acbcf7cabfc8b563b97a3848848ef126474f9db0449fd61fed",
+    "fixture": "apps/components_tests/esm4/native_idle_override_removal_expected.inc",
+    "fixture_sha256": "9ee2a97c31911e6225438380067a2a8d5abeedcefa1c7280547026dabb8e0454",
+    "verifier_sha256": "22a87c7e698c0d8701134b0645a5814b24c78f28dd6ecf8ba0bd1f35fd5fe984",
+    "scope": "Literal expected rows copied from pinned original executable removal corpus; production C++ not called to derive expected values"
+  },
+  "checks": {
+    "normal": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "components-tests",
+            "-j",
+            "3"
+          ],
+          "log": "components-build.log",
+          "returncode": 0,
+          "seconds": 1.118
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "components-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.115
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/components.xml"
+          ],
+          "log": "components.log",
+          "returncode": 0,
+          "seconds": 14.656
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 29.996
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.165
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 39.812
+        }
+      ],
+      "results": {
+        "components": {
+          "executed": 3104,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a88dfc1f34078bf576f2842b7526a4772705d7d78ca2d5543ee9243ac0bd97b2",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a27a86b617f4c0fb6312f121baa1f80e149613d03adecdf631d0fb12aa0c97c5",
+          "inventory_sha256": "ffd6d519ac6281aa7fbb92125457cac60a35c6699f876ff7a5e3976d3b4d8842",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1947,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "3983ba134bcbadf239a2f5e2daf39ef924ddf70b818d2fda09cf8d3d2a2d5d35",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ad50557b86d9cd5aa32b684dd8093962872d03347c716b0d78d209b69f22c8a1",
+          "inventory_sha256": "72924a039edcc6cca762487353b05ee2398af3d84303f4f806562db3d3ca51be",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "266792134a512227d637e8c93c2e0df6a08794f1",
+        "source_fingerprint": "2ac72128cc749286a7f3aae34b4aeb7ca9b97c835f8c05e676b3ad943defe784"
+      },
+      "source_after": {
+        "head": "266792134a512227d637e8c93c2e0df6a08794f1",
+        "source_fingerprint": "2ac72128cc749286a7f3aae34b4aeb7ca9b97c835f8c05e676b3ad943defe784"
+      }
+    },
+    "sanitized": {
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "components-tests",
+            "-j",
+            "3"
+          ],
+          "log": "sanitize-build.log",
+          "returncode": 0,
+          "seconds": 1.218
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "sanitize-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.617
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+            "--gtest_filter=ESM4*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/sanitize.xml"
+          ],
+          "log": "sanitize.log",
+          "returncode": 0,
+          "seconds": 37.467
+        },
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw",
+            "openmw-tests",
+            "esmtool",
+            "-j",
+            "3"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 783.613
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 0.667
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 219.088
+        }
+      ],
+      "results": {
+        "sanitize": {
+          "executed": 955,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "85b799eec900552226a606d918bb4aa4f0c2384791a1531beb06a67ef8a43ff1",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "e5fe3d6d06d354cc4ea56076699c5744c5c8523f43560c4afd1db37e02c2e463",
+          "inventory_sha256": "70beaefc7a11881d2dd4fd7783e5a4631b8073ee208daa9f8b1889e4f370f7e2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1947,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "85aad8a222d794ec9e0bab58cd48344d6181156eededff23d8eca731bbd311c8",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "f9c87533fbd9f77031460c167a2f25a4c60466edf433377b3522ab2e286ab1ce",
+          "inventory_sha256": "72924a039edcc6cca762487353b05ee2398af3d84303f4f806562db3d3ca51be",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "266792134a512227d637e8c93c2e0df6a08794f1",
+        "source_fingerprint": "2ac72128cc749286a7f3aae34b4aeb7ca9b97c835f8c05e676b3ad943defe784"
+      },
+      "source_after": {
+        "head": "266792134a512227d637e8c93c2e0df6a08794f1",
+        "source_fingerprint": "2ac72128cc749286a7f3aae34b4aeb7ca9b97c835f8c05e676b3ad943defe784"
+      }
+    }
+  },
+  "installed": {
+    "normal": {
+      "passed": true,
+      "mode": "normal",
+      "environment": {},
+      "content_sha256": {
+        "Oblivion.esm": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "DLCShiveringIsles.esp": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+        "DLCBattlehornCastle.esp": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+        "DLCFrostcrag.esp": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+        "DLCHorseArmor.esp": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+        "DLCMehrunesRazor.esp": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+        "DLCOrrery.esp": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+        "DLCSpellTomes.esp": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+        "DLCThievesDen.esp": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+        "DLCVileLair.esp": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+        "Knights.esp": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+      },
+      "commands": [
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-DBOOST_CONTAINER_DYN_LINK",
+            "-DBOOST_CONTAINER_NO_LIB",
+            "-DBOOST_IOSTREAMS_DYN_LINK",
+            "-DBOOST_IOSTREAMS_NO_LIB",
+            "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+            "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+            "-DBOOST_RANDOM_DYN_LINK",
+            "-DBOOST_RANDOM_NO_LIB",
+            "-DBOOST_REGEX_DYN_LINK",
+            "-DBOOST_REGEX_NO_LIB",
+            "-DBT_USE_DOUBLE_PRECISION",
+            "-DMYGUI_DONT_USE_OBSOLETE=ON",
+            "-DOPENMW_DATA_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests/data\"",
+            "-DOPENMW_PROJECT_SOURCE_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion\"",
+            "-DRC_DISABLE_ASSERTS",
+            "-D__STDC_CONSTANT_MACROS",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/.",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DebugUtils/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Recast/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Detour/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DetourTileCache/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/extern/Base64/.",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol_config",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol3",
+            "-isystem",
+            "/usr/include/luajit-2.1",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+            "-isystem",
+            "/usr/include/AL",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3/MyGUIEngine/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock",
+            "-isystem",
+            "/usr/include/SDL2",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/osg-ffmpeg-videoplayer/include",
+            "-isystem",
+            "/usr/include/ffmpeg",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/tinyxml",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/smhasher/include",
+            "-O2",
+            "-g",
+            "-DNDEBUG",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wundef",
+            "-Wextra-semi",
+            "-Wno-unused-parameter",
+            "-pedantic",
+            "-Wno-long-long",
+            "-Wnon-virtual-dtor",
+            "-Wunused",
+            "-Wshadow",
+            "-Wno-unused-but-set-parameter",
+            "-Wduplicated-branches",
+            "-Wduplicated-cond",
+            "-Wlogical-op",
+            "-Wno-array-bounds",
+            "-c",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/compare-installed.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/compare.o"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "compile.log",
+          "returncode": 0,
+          "seconds": 3.324436774943024
+        },
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-O2",
+            "-g",
+            "-DNDEBUG",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/compare.o",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/compare",
+            "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletDynamics:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/BulletCollision:/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/bullet-build/src/LinearMath",
+            "../../lib/libgtest.a",
+            "../../lib/libgmock.a",
+            "../openmw/libopenmw-lib.a",
+            "../../lib/libgtest.a",
+            "/usr/lib64/libopenal.so",
+            "../../extern/osg-ffmpeg-videoplayer/libosg-ffmpeg-videoplayer.a",
+            "/usr/lib64/libavcodec.so",
+            "/usr/lib64/libavformat.so",
+            "/usr/lib64/libavutil.so",
+            "/usr/lib64/libswscale.so",
+            "/usr/lib64/libswresample.so",
+            "../../extern/oics/liboics.a",
+            "../../extern/oics/liblocal_tinyxml.a",
+            "../../components/libcomponents.a",
+            "/usr/lib64/libosgParticle.so",
+            "/usr/lib64/libosgViewer.so",
+            "/usr/lib64/libosgShadow.so",
+            "/usr/lib64/libboost_program_options.so.1.90.0",
+            "/usr/lib64/libboost_container.so.1.90.0",
+            "../../_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3",
+            "-ldl",
+            "/usr/lib64/libfreetype.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libSDL2-2.0.so.0.3200.74",
+            "/usr/lib64/libosgAnimation.so",
+            "/usr/lib64/libosgGA.so",
+            "/usr/lib64/libosgText.so",
+            "/usr/lib64/libosgDB.so",
+            "/usr/lib64/libosgUtil.so",
+            "/usr/lib64/libosgSim.so",
+            "/usr/lib64/libosg.so",
+            "/usr/lib64/libOpenThreads.so",
+            "/usr/lib64/libboost_iostreams.so.1.90.0",
+            "/usr/lib64/libboost_random.so.1.90.0",
+            "/usr/lib64/libboost_regex.so.1.90.0",
+            "/usr/lib64/libGL.so",
+            "/usr/lib64/libluajit-5.1.so",
+            "/usr/lib64/liblz4.so",
+            "../../_deps/recastnavigation-build/DebugUtils/libDebugUtils.a",
+            "../../_deps/recastnavigation-build/DetourTileCache/libDetourTileCache.a",
+            "../../_deps/recastnavigation-build/Detour/libDetour.a",
+            "../../_deps/recastnavigation-build/Recast/libRecast.a",
+            "/usr/lib64/libsqlite3.so",
+            "../../extern/smhasher/libsmhasher.a",
+            "/usr/lib64/libicuuc.so",
+            "/usr/lib64/libicui18n.so",
+            "/usr/lib64/libicudata.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libyaml-cpp.so.0.8.0",
+            "../../_deps/bullet-build/src/BulletDynamics/libBulletDynamics.so.3.17",
+            "../../_deps/bullet-build/src/BulletCollision/libBulletCollision.so.3.17",
+            "../../_deps/bullet-build/src/LinearMath/libLinearMath.so.3.17"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion/build/apps/openmw_tests",
+          "log": "link.log",
+          "returncode": 0,
+          "seconds": 8.08778987498954
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/compare",
+            "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "Oblivion.esm",
+            "DLCShiveringIsles.esp",
+            "Knights.esp",
+            "DLCBattlehornCastle.esp",
+            "DLCFrostcrag.esp",
+            "DLCMehrunesRazor.esp",
+            "DLCSpellTomes.esp",
+            "DLCThievesDen.esp",
+            "DLCVileLair.esp",
+            "DLCHorseArmor.esp",
+            "DLCOrrery.esp"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "run.log",
+          "returncode": 0,
+          "seconds": 13.002638685982674
+        }
+      ],
+      "records": 677,
+      "authored_winners": 677,
+      "raw_history_sha256": "68f8203ba0ecd50f877ff10639b134b48148e66da8f90f14594fe6b767796da7",
+      "events": 681,
+      "banks": 44,
+      "native_snapshot_sha256": "498e9d356805996dcc3b0bc22fc352dfa8f92e6447d6e8a172075713e8c4a00a",
+      "actual_sha256": "ff0e4432c9a8c3ac5e497afd0bd2b31880ac5252435aea1f797ef489845b25a4",
+      "binary_sha256": "d0e19056d2ebb619150c7db0c6fb8bf6bbed8347016126bf01647a7ce767cd0d",
+      "source_sha256": "4ce64537d738b08489af2cce21e3ba6bd9b822c8194a19c2cab5de112de62e97",
+      "runner_sha256": "8b4e14e036905c44f23b60d95d908fa7724892c9486238de61ed4ed2d1c28cee",
+      "extra_native_runtime_banks": {
+        "characters\\_1stperson\\idleanims": []
+      },
+      "scope": "Actual production ESMStore load of all11 official files in observed original order at shifted indices1..11, retained681 events,677 winners, native registration adapter/factory. Complete raw model and compiled parent/previous/children plus44 content banks match original main-menu memory snapshot. Extra empty firstperson runtime bank creation is outside content replay. No actor selection, animation/physics, input, saves or gameplay."
+    },
+    "sanitized": {
+      "passed": true,
+      "mode": "sanitized",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "content_sha256": {
+        "Oblivion.esm": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "DLCShiveringIsles.esp": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+        "DLCBattlehornCastle.esp": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+        "DLCFrostcrag.esp": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+        "DLCHorseArmor.esp": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+        "DLCMehrunesRazor.esp": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+        "DLCOrrery.esp": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+        "DLCSpellTomes.esp": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+        "DLCThievesDen.esp": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+        "DLCVileLair.esp": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+        "Knights.esp": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b"
+      },
+      "commands": [
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-DBOOST_CONTAINER_DYN_LINK",
+            "-DBOOST_CONTAINER_NO_LIB",
+            "-DBOOST_IOSTREAMS_DYN_LINK",
+            "-DBOOST_IOSTREAMS_NO_LIB",
+            "-DBOOST_PROGRAM_OPTIONS_DYN_LINK",
+            "-DBOOST_PROGRAM_OPTIONS_NO_LIB",
+            "-DBOOST_RANDOM_DYN_LINK",
+            "-DBOOST_RANDOM_NO_LIB",
+            "-DBOOST_REGEX_DYN_LINK",
+            "-DBOOST_REGEX_NO_LIB",
+            "-DBT_USE_DOUBLE_PRECISION",
+            "-DMYGUI_DONT_USE_OBSOLETE=ON",
+            "-DOPENMW_DATA_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/apps/openmw_tests/data\"",
+            "-DOPENMW_PROJECT_SOURCE_DIR=u8\"/home/maciek/openmw-oblivion/openmw-oblivion\"",
+            "-D__STDC_CONSTANT_MACROS",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/.",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DebugUtils/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Recast/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/Detour/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/recastnavigation/DetourTileCache/Include",
+            "-I/home/maciek/openmw-oblivion/openmw-oblivion/extern/Base64/.",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol_config",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/sol3",
+            "-isystem",
+            "/usr/include/luajit-2.1",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/bullet/src",
+            "-isystem",
+            "/usr/include/AL",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S3/mygui-runtime-source-01/mygui-MyGUI3.4.3/MyGUIEngine/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googletest",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/extern/fetched/googletest/googlemock",
+            "-isystem",
+            "/usr/include/SDL2",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/osg-ffmpeg-videoplayer/include",
+            "-isystem",
+            "/usr/include/ffmpeg",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/include",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/oics/tinyxml",
+            "-isystem",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/extern/smhasher/include",
+            "-fsanitize=address,undefined",
+            "-fno-omit-frame-pointer",
+            "-O1",
+            "-g",
+            "-std=c++20",
+            "-Wall",
+            "-Wextra",
+            "-Wundef",
+            "-Wextra-semi",
+            "-Wno-unused-parameter",
+            "-pedantic",
+            "-Wno-long-long",
+            "-Wnon-virtual-dtor",
+            "-Wunused",
+            "-Wshadow",
+            "-Wno-unused-but-set-parameter",
+            "-Wduplicated-branches",
+            "-Wduplicated-cond",
+            "-Wlogical-op",
+            "-Wno-array-bounds",
+            "-Wno-duplicated-branches",
+            "-Wno-duplicated-cond",
+            "-c",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/compare-installed.cpp",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/compare.o"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "compile.log",
+          "returncode": 0,
+          "seconds": 4.272846229956485
+        },
+        {
+          "argv": [
+            "/usr/bin/c++",
+            "-fsanitize=address,undefined",
+            "-fno-omit-frame-pointer",
+            "-O1",
+            "-g",
+            "-fsanitize=address,undefined",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/compare.o",
+            "-o",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/compare",
+            "-Wl,-rpath,/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64",
+            "../../lib/libgtest.a",
+            "../../lib/libgmock.a",
+            "../openmw/libopenmw-lib.a",
+            "../../lib/libgtest.a",
+            "/usr/lib64/libopenal.so",
+            "../../extern/osg-ffmpeg-videoplayer/libosg-ffmpeg-videoplayer.a",
+            "/usr/lib64/libavcodec.so",
+            "/usr/lib64/libavformat.so",
+            "/usr/lib64/libavutil.so",
+            "/usr/lib64/libswscale.so",
+            "/usr/lib64/libswresample.so",
+            "../../extern/oics/liboics.a",
+            "../../extern/oics/liblocal_tinyxml.a",
+            "../../components/libcomponents.a",
+            "/usr/lib64/libosgParticle.so",
+            "/usr/lib64/libosgViewer.so",
+            "/usr/lib64/libosgShadow.so",
+            "/usr/lib64/libboost_program_options.so.1.90.0",
+            "/usr/lib64/libboost_container.so.1.90.0",
+            "../../_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3",
+            "-ldl",
+            "/usr/lib64/libfreetype.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libSDL2-2.0.so.0.3200.74",
+            "/usr/lib64/libosgAnimation.so",
+            "/usr/lib64/libosgGA.so",
+            "/usr/lib64/libosgText.so",
+            "/usr/lib64/libosgDB.so",
+            "/usr/lib64/libosgUtil.so",
+            "/usr/lib64/libosgSim.so",
+            "/usr/lib64/libosg.so",
+            "/usr/lib64/libOpenThreads.so",
+            "/usr/lib64/libboost_iostreams.so.1.90.0",
+            "/usr/lib64/libboost_random.so.1.90.0",
+            "/usr/lib64/libboost_regex.so.1.90.0",
+            "/usr/lib64/libGL.so",
+            "/usr/lib64/libluajit-5.1.so",
+            "/usr/lib64/liblz4.so",
+            "../../_deps/recastnavigation-build/DebugUtils/libDebugUtils-d.a",
+            "../../_deps/recastnavigation-build/DetourTileCache/libDetourTileCache-d.a",
+            "../../_deps/recastnavigation-build/Detour/libDetour-d.a",
+            "../../_deps/recastnavigation-build/Recast/libRecast-d.a",
+            "/usr/lib64/libsqlite3.so",
+            "../../extern/smhasher/libsmhasher.a",
+            "/usr/lib64/libicuuc.so",
+            "/usr/lib64/libicui18n.so",
+            "/usr/lib64/libicudata.so",
+            "/usr/lib64/libz.so",
+            "/usr/lib64/libyaml-cpp.so.0.8.0",
+            "../../_deps/bullet-build/src/BulletDynamics/libBulletDynamics.a",
+            "../../_deps/bullet-build/src/BulletCollision/libBulletCollision.a",
+            "../../_deps/bullet-build/src/LinearMath/libLinearMath.a"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/apps/openmw_tests",
+          "log": "link.log",
+          "returncode": 0,
+          "seconds": 17.262142554973252
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/compare",
+            "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data",
+            "Oblivion.esm",
+            "DLCShiveringIsles.esp",
+            "Knights.esp",
+            "DLCBattlehornCastle.esp",
+            "DLCFrostcrag.esp",
+            "DLCMehrunesRazor.esp",
+            "DLCSpellTomes.esp",
+            "DLCThievesDen.esp",
+            "DLCVileLair.esp",
+            "DLCHorseArmor.esp",
+            "DLCOrrery.esp"
+          ],
+          "cwd": "/home/maciek/openmw-oblivion/openmw-oblivion",
+          "log": "run.log",
+          "returncode": 0,
+          "seconds": 73.33896262897179
+        }
+      ],
+      "records": 677,
+      "authored_winners": 677,
+      "raw_history_sha256": "68f8203ba0ecd50f877ff10639b134b48148e66da8f90f14594fe6b767796da7",
+      "events": 681,
+      "banks": 44,
+      "native_snapshot_sha256": "498e9d356805996dcc3b0bc22fc352dfa8f92e6447d6e8a172075713e8c4a00a",
+      "actual_sha256": "ff0e4432c9a8c3ac5e497afd0bd2b31880ac5252435aea1f797ef489845b25a4",
+      "binary_sha256": "3b59045f574f8a4138ae03b8f893ab0f115cf87e68d615b66530df1eba0b270d",
+      "source_sha256": "4ce64537d738b08489af2cce21e3ba6bd9b822c8194a19c2cab5de112de62e97",
+      "runner_sha256": "8b4e14e036905c44f23b60d95d908fa7724892c9486238de61ed4ed2d1c28cee",
+      "extra_native_runtime_banks": {
+        "characters\\_1stperson\\idleanims": []
+      },
+      "scope": "Actual production ESMStore load of all11 official files in observed original order at shifted indices1..11, retained681 events,677 winners, native registration adapter/factory. Complete raw model and compiled parent/previous/children plus44 content banks match original main-menu memory snapshot. Extra empty firstperson runtime bank creation is outside content replay. No actor selection, animation/physics, input, saves or gameplay."
+    }
+  },
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/components-build.log",
+      "sha256": "deb38676170404e2eb493a5403675fd863f496e56f633b73c81bb433876720f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/components-inventory.txt",
+      "sha256": "ffd6d519ac6281aa7fbb92125457cac60a35c6699f876ff7a5e3976d3b4d8842"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/components.log",
+      "sha256": "1fbf871f8cf2a7de11b83ffff499aa5e7d23274f0719968a0502188cad72e9c1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/components.xml",
+      "sha256": "a27a86b617f4c0fb6312f121baa1f80e149613d03adecdf631d0fb12aa0c97c5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/engine-build.log",
+      "sha256": "27ade599423b49604733c5351c0758628b61df8ef4df7e8ab23ad19967d4474d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/engine-inventory.txt",
+      "sha256": "72924a039edcc6cca762487353b05ee2398af3d84303f4f806562db3d3ca51be"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/engine.log",
+      "sha256": "5e248e63797d68ff7b29445a12a1571d37d60d9f888a423a9dbd330fd4f71c54"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/engine.xml",
+      "sha256": "ad50557b86d9cd5aa32b684dd8093962872d03347c716b0d78d209b69f22c8a1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-02/verification.json",
+      "sha256": "866c8d24ebaf3c1f3835d699cac75a1b63494e6915b36e9aa95fec28898af6be"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/verification.json",
+      "sha256": "ee6f3f18175b1d4ccc39bc9949c238d729f7660d6c35c2928dd0d7e31fed6969"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/index.json",
+      "sha256": "ff0e4432c9a8c3ac5e497afd0bd2b31880ac5252435aea1f797ef489845b25a4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-normal-01/run.log",
+      "sha256": "9762f3b82391325f2723efe3361bfe533f03774a0790ca677b8c3ddc839cf7e8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/sanitize-build.log",
+      "sha256": "90f9e70dd30e97e529e602a575604129953ba0fc2a5c2d91ecb33bb8318a8011"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/sanitize-inventory.txt",
+      "sha256": "70beaefc7a11881d2dd4fd7783e5a4631b8073ee208daa9f8b1889e4f370f7e2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/sanitize.log",
+      "sha256": "eb7759008c3f2c18f74a79026dd577b70952d6f71c404f88bd28cc5dfde1488f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/sanitize.xml",
+      "sha256": "e5fe3d6d06d354cc4ea56076699c5744c5c8523f43560c4afd1db37e02c2e463"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/engine-build.log",
+      "sha256": "872cc4b6ce7affdd2b44b09be6b42f704546bcc92a1b2a078f5b78c9cde5fc10"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/engine-inventory.txt",
+      "sha256": "72924a039edcc6cca762487353b05ee2398af3d84303f4f806562db3d3ca51be"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/engine.log",
+      "sha256": "e9ec31b1f101a72cc253fa82d47bcdac391947619df8eed41a147cbedb66fb23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/engine.xml",
+      "sha256": "f9c87533fbd9f77031460c167a2f25a4c60466edf433377b3522ab2e286ab1ce"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-02/verification.json",
+      "sha256": "576027fd69f146c17afae596bf0960992ac6d826cf54c152922e0c667d3f71a2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/verification.json",
+      "sha256": "9bdd371e34bd35b1bd05ebab5b52b1fc9179984bc044114c5e7a8dba6f7cc20b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/index.json",
+      "sha256": "ff0e4432c9a8c3ac5e497afd0bd2b31880ac5252435aea1f797ef489845b25a4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-installed-sanitized-01/run.log",
+      "sha256": "9762f3b82391325f2723efe3361bfe533f03774a0790ca677b8c3ddc839cf7e8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/components-build.log",
+      "sha256": "fd5f4d51ad543c8a916726c14c0d573d1d3aff22bb2da273c520d750e1892763"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/components-inventory.txt",
+      "sha256": "0449eeaed3d43027ffddb13faa736c6836e7d0ccccc7225bdf7137a9a7caf95a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/components.log",
+      "sha256": "ce184dc3c5cf9db769f40ac7dc5c80357cf3eac37b9493cf05eb86f74db42276"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/components.xml",
+      "sha256": "fce5c76c548106468d500eb8a79c59c22b8cb45960f72097c2b79694f39795c2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/engine-build.log",
+      "sha256": "7f84bd152a1814d97db8ba56ba889ab41999abf71f96275d40161e3023816cdc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/engine-inventory.txt",
+      "sha256": "72924a039edcc6cca762487353b05ee2398af3d84303f4f806562db3d3ca51be"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/engine.log",
+      "sha256": "11fd2be0a4f68723c859c0cd609a1d6098b50679c55cd1defd7045505e7bad3b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/engine.xml",
+      "sha256": "bca9b5de754da69f1f2fd1efe526f170f9b28f01d20b96caa4b1636cf985b033"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-normal-01/verification.json",
+      "sha256": "b6fcbdac13a0e84e2c0b44b155c95a53b2afa1d63bbe82b48def6f5ebfaaa5f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/sanitize-build.log",
+      "sha256": "b2a5a7193ee96c6497690b7f7618131733743e274dfbe894fb2b1751221daf7b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/sanitize-inventory.txt",
+      "sha256": "f2d90abd0699b6f890f29bd000be4f4d0e0d6939a4a8bb7ca5c329e758c55123"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/sanitize.log",
+      "sha256": "3e0428694ba527eaddbf92970ff56e536f0a0fea18b24f3e4ae4d1e1fff08e38"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/sanitize.xml",
+      "sha256": "35fd13f916d2686d671a7a4e9a0ca9f6f3fc1aebf392f93a2995a4c9a089219b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/engine-build.log",
+      "sha256": "6fae9f4549c8146633a97be1237822404b6f949ff03deaaa19d9cb729825f5a6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-checks-sanitized-01/verification.json",
+      "sha256": "bc0229decfc1c5587e260946f28e0519dd3ce164b9ab3dcd7f17551712fdb4c0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/compare-installed.cpp",
+      "sha256": "4ce64537d738b08489af2cce21e3ba6bd9b822c8194a19c2cab5de112de62e97"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/run-installed.py",
+      "sha256": "8b4e14e036905c44f23b60d95d908fa7724892c9486238de61ed4ed2d1c28cee"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/publish.py",
+      "sha256": "6135823c2df6c3441d209d878ef73616864be1f8a80178b6bdccf99e7caf2994"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/verify-removal-fixture.py",
+      "sha256": "22a87c7e698c0d8701134b0645a5814b24c78f28dd6ecf8ba0bd1f35fd5fe984"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/removal-fixture-verification.json",
+      "sha256": "fe6061f629524f48044a09c8996605769bc46ad5b65d9f0d6ac49b615a3779e9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/coordinate-installed.py",
+      "sha256": "1e2901f7c14109eaead9b0676c124b45c3253d4910d89803c824707ba76b0b77"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/installed-coordinator-result.json",
+      "sha256": "6391f7d587d1285334bd40024d19950c7eb4b8873f1e87be4ee7f0a7e2b652f8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/coordinate-installed-01.py",
+      "sha256": "d5e2d073357f68a48ca757610e6e94da42e23d25222c9f6d01d0b756f7e548e4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/installed-coordinator-result-01.json",
+      "sha256": "ac00dc029df81aabd99cdee1cd8abd6d3caf7fdef5a6b3649602c8a679d68b2c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/sanitized-01-stop.json",
+      "sha256": "2a473464205b31875751add6260b9fe0207e5032f7906be2245a7282cd9f7064"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-event-replay-work-01/build-warning-review.json",
+      "sha256": "77c4328e5af498b357115b3bb3f65ca50ea82c350b1a47d714b5efc0d4c5c4ea"
+    }
+  ],
+  "sanitizer_environment": {
+    "component": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "engine_and_installed": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "leak_coverage": false
+  },
+  "unchanged_python": "No Python production/schema changes; prior410 passing Python tests from b7e1a610 retained, not rerun",
+  "limits": [
+    "Serialized deleted/0x4000 lifecycle is outside this ordinary-override profile",
+    "Original dispatcher base/component initialization ownership remains a declared boundary beyond the four observed official leaf overrides",
+    "Extra empty first-person runtime bank creation is outside authored registration replay",
+    "Actor query/model context, selected KF/slot5, physical FSM/GetUp/restart, directional mastery and full normal-input S4 acceptance remain open"
+  ],
+  "full_M15S4_complete": false
+}

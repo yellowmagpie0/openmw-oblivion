@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_ESM4_NATIVEIDLE_H
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <map>
 #include <optional>
@@ -9,6 +10,8 @@
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include <components/esm/formid.hpp>
 
 namespace ESM4
 {
@@ -40,6 +43,27 @@ namespace ESM4
         std::vector<NativeIdleNode> mNodes;
         std::vector<NativeIdleModelBank> mBanks;
     };
+
+    // Authored registration inputs at one successful content read. These
+    // values must survive later overrides of the borrowed winning record.
+    struct NativeIdleRegistrationEvent
+    {
+        ESM::FormId mId;
+        ESM::FormId mParent;
+        ESM::FormId mPrevious;
+        std::string mModel;
+        std::uint32_t mFlags = 0;
+    };
+
+    NativeIdleRegistrationEvent nativeIdleRegistrationEvent(const IdleAnimation& record);
+
+    // Ordinary same-type overrides remove the previous registration before
+    // initializing links and inserting the new definition. Records are final
+    // winners; events are actual load order. Parent/predecessor identities
+    // must already have been defined. Deleted/0x4000 overrides are outside
+    // this verified profile. The result borrows records and owns its links.
+    NativeIdleRegistrationIndex replayNativeIdleRegistration(std::span<const IdleAnimation* const> records,
+        std::span<const NativeIdleRegistrationEvent> events);
 
     // Replay one definition per typed identity in registration order. This
     // supported profile requires parent/predecessor identities to be earlier

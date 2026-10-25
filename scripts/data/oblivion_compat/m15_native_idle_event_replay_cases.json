@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "scope": "Ordinary native TES4 IDLE registration-event replay over actual successful ESMStore reads",
+  "rules": [
+    "Keep winning typed record pointers separate from owned historical ID/model/parent/predecessor/flags events",
+    "Replay successful events in content order; ordinary overrides remove their old slot and repair the successor predecessor before reinsertion",
+    "Keep authored DATA/model fields unchanged; publish compiled native links separately",
+    "Require complete live same-type provenance and matching retained load-event history",
+    "Reject deleted/special-flag histories, dynamic replacements, missing/type-changing/unindexed records and invalid finite forests"
+  ],
+  "component_cases": [
+    "Later predecessor defined between initial form and ordinary override",
+    "Root model-bank move, owned child retention and later child reparenting; empty old bank retained",
+    "Missing history, deleted/special override and descendant cycle rejection",
+    "22 literal original-executable root/child removal profiles, followed by ordinary reinsertion into another model bank"
+  ],
+  "engine_cases": [
+    "Different-plugin and same-plugin duplicate overrides retain historical model inputs",
+    "New predecessor before override at shifted content indices",
+    "Failed typed read publishes no new IDLE event or provenance",
+    "Special flags and same-plugin type change rejected",
+    "Dynamic shadow rejected; clearDynamic restores static registration without losing content events"
+  ],
+  "installed_case": {
+    "files": 11,
+    "order": "Observed original live registry order, not canonical M14 order",
+    "content_indices": "1..11 with unused prefix index0",
+    "events": 681,
+    "winners": 677,
+    "compared_fields": [
+      "raw model",
+      "compiled parent",
+      "compiled predecessor",
+      "ordered children",
+      "44 ordered content-bank roots"
+    ],
+    "extra_native_runtime_bank": {
+      "characters\\_1stperson\\idleanims": []
+    },
+    "scope": "Content load/index comparison against original main-menu memory; no GetUp or combat gameplay"
+  },
+  "limits": [
+    "Serialized deleted/0x4000 lifecycle is outside this ordinary-override profile",
+    "Original dispatcher base/component initialization ownership remains a declared boundary beyond the four observed official leaf overrides",
+    "Extra empty first-person runtime bank creation is outside authored registration replay",
+    "Actor query/model context, selected KF/slot5, physical FSM/GetUp/restart, directional mastery and full normal-input S4 acceptance remain open"
+  ]
+}

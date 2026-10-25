@@ -1,6 +1,7 @@
 #include <components/esm4/records.hpp>
 
 #include "esmstore.hpp"
+#include "oblivionnativeidle.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -252,6 +253,7 @@ namespace MWWorld
         IDMap mStaticIds;
         std::uint64_t mDynamicPublicationGeneration = 0;
         std::vector<std::uint32_t> mEsm4ContentIndices;
+        std::vector<OblivionNativeIdleLoadEvent> mNativeIdleLoadEvents;
 
         template <typename T>
         static void assignStoreToIndex(ESMStore& stores, Store<T>& store)
@@ -358,6 +360,19 @@ namespace MWWorld
                             store.eraseStatic(key);
                         else
                             store.insertStatic(value, key);
+                        if constexpr (std::is_same_v<T, ESM4::IdleAnimation>)
+                        {
+                            // Capture only after the typed load succeeded.
+                            // Later overrides replace value in the store;
+                            // registration must still replay these old DATA
+                            // and model inputs in their original order.
+                            auto registration = ESM4::nativeIdleRegistrationEvent(value);
+                            registration.mFlags = reader.hdr().record.flags;
+                            stores.mStoreImp->mNativeIdleLoadEvents.push_back({
+                                stores.mFormKeyIndex.history(key)->back(), std::move(registration),
+                                !reader.hasFormVersion()
+                                    && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f)});
+                        }
                         return true;
                     }
                 }
@@ -1279,6 +1294,11 @@ namespace MWWorld
             return result;
         };
         ESM4::ReaderUtils::readAll(reader, visitorRec, [](ESM4::Reader&) {});
+    }
+
+    const std::vector<OblivionNativeIdleLoadEvent>& ESMStore::getOblivionNativeIdleLoadEvents() const
+    {
+        return mStoreImp->mNativeIdleLoadEvents;
     }
 
     std::optional<ESM::FormId> ESMStore::resolveEsm4RuntimeFormId(std::uint32_t value) const
