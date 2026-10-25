@@ -11,6 +11,7 @@
 #include "../mwphysics/oblivionragdoll.hpp"
 
 #include <array>
+#include <bit>
 #include <charconv>
 #include <cmath>
 #include <fstream>
@@ -2941,12 +2942,12 @@ namespace MWWorld
         return ESM4::nativeScriptKnockedState(mOblivionCombat->getProcessKnockedState(key)) ? 1.0 : 0.0;
     }
 
-    double World::getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,
-        const Nif::NiTransform& placement) const
+    double World::oblivionActorSpineUp(const Ptr& actor, const MWRender::Animation& animation,
+        const Nif::NiTransform& placement, bool facing) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || actor.isEmpty() || animation.getPtr() != actor
             || (actor != getPlayerConstPtr() && nativeActorBase(actor).isNull()))
-            throw std::invalid_argument("native IsLeftUp requires its actor renderer");
+            throw std::invalid_argument("native Spine query requires its actor renderer");
         const bool horse = actor.getType() == ESM::REC_CREA4
             && actor.get<ESM4::Creature>()->mBase->mData.creatureType == 4;
         auto spine = horse ? std::optional<Nif::NiTransform>{}
@@ -2954,10 +2955,13 @@ namespace MWWorld
         if (!spine) spine = animation.captureNativeNodeWorldPose("Bip02 Spine", placement);
         // Original8975C0 directly compares NiWorld rotation+84, without a
         // process/state gate. Missing Spine is true; both signed zeros are false.
+        if (facing)
+            return ESM4::nativeIsFacingUp(spine ? std::optional(spine->mRotation.mValues[2][1]) : std::nullopt)
+                ? 1.0 : 0.0;
         return !spine || spine->mRotation.mValues[2][2] > 0 ? 1.0 : 0.0;
     }
 
-    std::optional<double> World::getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const
+    std::optional<Ptr> World::oblivionActorQuerySubject(const ESM::FormKey& actor) const
     {
         if (mGameProfile != ESM::GameProfile::Oblivion) return std::nullopt;
         const auto key = ESM4::runtimeReferenceKey(actor);
@@ -2984,6 +2988,17 @@ namespace MWWorld
             }
         }
         if (!actorClass) return std::nullopt;
+        return resident;
+    }
+
+    std::optional<double> World::oblivionScriptSpineUp(const ESM::FormKey& actor, bool facing) const
+    {
+        const auto subject = oblivionActorQuerySubject(actor);
+        if (!subject) return std::nullopt;
+        const auto& resident = *subject;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto* values = mOblivionCombat ? mOblivionCombat->findActorValues(key) : nullptr;
+        const bool player = key == ESM::FormKey::dynamic("player", 1);
         // An actor with no resident scene has no matching Spine, as in native.
         const auto* animation = resident.isEmpty() ? nullptr : getAnimation(ConstPtr(resident));
         if (!animation) return 1.0;
@@ -2998,7 +3013,7 @@ namespace MWWorld
             const auto* base = mStore.search<ESM4::Npc>(values ? values->mBase
                 : ESM::FormKey::content("Oblivion.esm", 7));
             if (!base || !base->mIsTES4)
-                throw std::invalid_argument("native Player IsLeftUp requires its NPC base");
+                throw std::invalid_argument("native Player Spine query requires its NPC base");
             const auto* race = mStore.get<ESM4::Race>().search(base->mRace);
             const bool female = base->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female;
             std::optional<ESM4::NpcPlacementMorphology> morphology;
@@ -3016,10 +3031,73 @@ namespace MWWorld
                     mResourceSystem->getVFS());
             const auto source = animation->captureNativePhysicalSource(model);
             if (!source || !animation->isCurrentNativePhysicalSource(*source))
-                throw std::invalid_argument("native Player IsLeftUp requires the canonical full actor root");
+                throw std::invalid_argument("native Player Spine query requires the canonical full actor root");
         }
-        if (!placement) throw std::invalid_argument("native IsLeftUp has no admitted actor placement");
-        return getOblivionActorIsLeftUp(resident, *animation, *placement);
+        if (!placement) throw std::invalid_argument("native Spine query has no admitted actor placement");
+        return oblivionActorSpineUp(resident, *animation, *placement, facing);
+    }
+
+    double World::getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,
+        const Nif::NiTransform& placement) const
+    {
+        return oblivionActorSpineUp(actor, animation, placement, false);
+    }
+
+    double World::getOblivionActorIsFacingUp(const Ptr& actor, const MWRender::Animation& animation,
+        const Nif::NiTransform& placement) const
+    {
+        return oblivionActorSpineUp(actor, animation, placement, true);
+    }
+
+    std::optional<double> World::getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const
+    {
+        return oblivionScriptSpineUp(actor, false);
+    }
+
+    std::optional<double> World::getOblivionScriptIsFacingUp(const ESM::FormKey& actor) const
+    {
+        return oblivionScriptSpineUp(actor, true);
+    }
+
+    std::optional<double> World::getOblivionScriptIsWeaponOut(const ESM::FormKey& actor) const
+    {
+        const auto subject = oblivionActorQuerySubject(actor);
+        if (!subject) return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto* values = mOblivionCombat ? mOblivionCombat->findActorValues(key) : nullptr;
+        if (!values || values->mProcess == ESM4::ActorValueProcess::Low) return 0.0;
+        // An active process's draw view is the same one used by controller
+        // input, contact reactions and persistence. Never construct it here.
+        if (subject->isEmpty() || !subject->getRefData().getCustomData())
+            throw std::invalid_argument("native weapon query requires its active actor draw view");
+        const auto draw = subject->getClass().getCreatureStats(*subject).getDrawState();
+        return ESM4::nativeIsWeaponOut(true, draw == MWMechanics::DrawState::Weapon) ? 1.0 : 0.0;
+    }
+
+    std::optional<double> World::getOblivionScriptWeaponAnimationType(const ESM::FormKey& actor) const
+    {
+        const auto subject = oblivionActorQuerySubject(actor);
+        if (!subject) return std::nullopt;
+        const auto key = ESM4::runtimeReferenceKey(actor);
+        const auto* values = mOblivionCombat ? mOblivionCombat->findActorValues(key) : nullptr;
+        if (!values || values->mProcess == ESM4::ActorValueProcess::Low) return 0.0;
+        if (subject->isEmpty() || !subject->getRefData().getCustomData())
+            throw std::invalid_argument("native weapon query requires its active actor inventory view");
+        const auto& inventory = subject->getClass().getInventoryStore(*subject);
+        const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
+        if (right == inventory.end() || right->getType() != ESM::REC_WEAP
+            || right->getCellRef().getCount() <= 0) return 0.0;
+        const auto id = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
+        const auto generated = OblivionInventory::sharedKey(id);
+        const auto* form = id.getIf<ESM::FormId>();
+        const auto* weapon = generated ? mStore.search<ESM4::Weapon>(*generated)
+            : form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
+        if (!weapon || weapon->mData.type > 255)
+            throw std::invalid_argument("native weapon query requires its winning byte-sized weapon type");
+        // The equipped entry qualifies even while sheathed. Projected TES3
+        // skill/type fields cannot substitute for the native WEAP category.
+        return ESM4::nativeWeaponAnimationType(true, true,
+            std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(weapon->mData.type)));
     }
 
     bool World::initializeOblivionNonPlayerActor(const Ptr& actor, ESM4::ActorValueProcess process, bool activate)

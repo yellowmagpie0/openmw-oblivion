@@ -463,9 +463,14 @@ namespace MWWorld
             const ESM::FormKey& actor, const ESM::FormKey& target, float delta);
         bool setOblivionIgnoreFriendlyHits(const ESM::FormKey& reference, std::int32_t value);
         std::optional<double> getOblivionScriptIsLeftUp(const ESM::FormKey& actor) const;
+        std::optional<double> getOblivionScriptIsFacingUp(const ESM::FormKey& actor) const;
+        std::optional<double> getOblivionScriptIsWeaponOut(const ESM::FormKey& actor) const;
+        std::optional<double> getOblivionScriptWeaponAnimationType(const ESM::FormKey& actor) const;
         // Borrow the current actor renderer with an already resolved native
         // reference placement. No process/knocked-state predicate participates.
         double getOblivionActorIsLeftUp(const Ptr& actor, const MWRender::Animation& animation,
+            const Nif::NiTransform& placement) const;
+        double getOblivionActorIsFacingUp(const Ptr& actor, const MWRender::Animation& animation,
             const Nif::NiTransform& placement) const;
         bool setOblivionPlayerCrimeLevel(int amount) override;
         bool requestOblivionReputation(const Ptr& actor, int amount) override;
@@ -1114,6 +1119,11 @@ namespace MWWorld
 
         void setActorActive(const MWWorld::Ptr& ptr, bool value) override;
     private:
+        // Engaged empty Ptr means a known actor without a resident scene.
+        std::optional<Ptr> oblivionActorQuerySubject(const ESM::FormKey& actor) const;
+        std::optional<double> oblivionScriptSpineUp(const ESM::FormKey& actor, bool facing) const;
+        double oblivionActorSpineUp(const Ptr& actor, const MWRender::Animation& animation,
+            const Nif::NiTransform& placement, bool facing) const;
         void validateOblivionContactDisarms(const MWMechanics::OblivionPhysicalContactDeltas& deltas) const;
         bool prepareOblivionCounterStrike(const Ptr& actor, MWMechanics::OblivionPhysicalContactDeltas& deltas);
         bool prepareOblivionContactReaction(std::uint64_t id, const Ptr& actor,

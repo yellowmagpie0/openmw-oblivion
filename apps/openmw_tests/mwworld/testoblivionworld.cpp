@@ -52,6 +52,7 @@
 #include <components/esm3/cellstate.hpp>
 #include <components/esm3/fogstate.hpp>
 #include <bit>
+#include <tuple>
 #include <cstddef>
 #include <cstring>
 #include <new>
@@ -24237,6 +24238,7 @@ TEST(OblivionWorldTest, NativeIsLeftUpReadsPhysicalSpineAndScopedHorseFallback)
     const auto placement = Nif::NiTransform::getIdentity();
     EXPECT_THROW(world.getOblivionActorIsLeftUp(creature, animation, placement), std::invalid_argument);
     EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 1);
+    EXPECT_EQ(world.getOblivionActorIsFacingUp(npc, animation, placement), 0);
     const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model));
     ASSERT_TRUE(source);
     auto poses = animation.beginPhysicalPose(
@@ -24248,8 +24250,24 @@ TEST(OblivionWorldTest, NativeIsLeftUpReadsPhysicalSpineAndScopedHorseFallback)
     poses[0].mPose = flip;
     animation.applyPhysicalPose(poses, placement);
     EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 0);
+    // Non-symmetric rotations distinguish native R21 (+80) from R12 and
+    // R22 (+84). The query reads the physical pose, then the animated pose.
+    auto quarter = osg::Matrixf::identity();
+    quarter(1, 1) = quarter(2, 2) = 0;
+    quarter(1, 2) = 1;
+    quarter(2, 1) = -1;
+    quarter.setTrans(poses[0].mPose.getTrans());
+    poses[0].mPose = quarter;
+    animation.applyPhysicalPose(poses, placement);
+    EXPECT_EQ(world.getOblivionActorIsFacingUp(npc, animation, placement), 1);
+    EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 0);
+    poses[0].mPose(1, 2) = -1;
+    poses[0].mPose(2, 1) = 1;
+    animation.applyPhysicalPose(poses, placement);
+    EXPECT_EQ(world.getOblivionActorIsFacingUp(npc, animation, placement), 0);
     animation.endPhysicalPose();
     EXPECT_EQ(world.getOblivionActorIsLeftUp(npc, animation, placement), 1);
+    EXPECT_EQ(world.getOblivionActorIsFacingUp(npc, animation, placement), 0);
     auto* spine = const_cast<NifOsg::MatrixTransform*>(
         dynamic_cast<const NifOsg::MatrixTransform*>(creatureAnimation.getNode("Bip01 Spine")));
     ASSERT_NE(spine, nullptr);
@@ -24272,6 +24290,7 @@ TEST(OblivionWorldTest, NativeIsLeftUpReadsPhysicalSpineAndScopedHorseFallback)
     EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1); // Exact-case fallback.
     second->setName("Other");
     EXPECT_EQ(world.getOblivionActorIsLeftUp(creature, creatureAnimation, placement), 1); // Missing both.
+    EXPECT_EQ(world.getOblivionActorIsFacingUp(creature, creatureAnimation, placement), 1);
     ESM4::RuntimeState after;
     world.getOblivionCombatService()->capture(after);
     EXPECT_EQ(after, before);
@@ -35694,4 +35713,149 @@ TEST(OblivionWorldTest, DefaultParalysisContinuationUsesWornArmorAndRetriesAfter
     EXPECT_EQ(service.getPlayerValue(10), fatigue);
     EXPECT_EQ(service.getPlayerIntegerValue(48), 0);
     EXPECT_EQ(service.combatRandomState(), rng);
+}
+
+
+TEST(OblivionWorldTest, NativeRecoveryQueriesShareDrawEquipmentAndScriptConditionAuthority)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& store = world.getStore();
+    MWClass::Npc::registerSelf();
+    MWClass::Weapon::registerSelf();
+    world.setupPlayer();
+    ESM4::Npc playerBase{};
+    playerBase.mId = {7, 1};
+    playerBase.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+    playerBase.mIsTES4 = true;
+    playerBase.mData.health = 100;
+    store.getWritable<ESM4::Npc>().insertStatic(playerBase, playerBase.mFormKey);
+    ASSERT_TRUE(world.initializeOblivionPlayerActor());
+    const auto player = world.getPlayerPtr();
+    const auto npc = addNativeNpc(fixture, 0x801);
+    const auto low = addNativeNpc(fixture, 0x802);
+    const auto creature = addEquipmentCreature(fixture);
+    world.getWorldModel().registerPtr(npc);
+    world.getWorldModel().registerPtr(low);
+    auto& combat = *world.getOblivionCombatService();
+    auto* scripts = world.getOblivionScriptManager();
+    auto* ai = world.getOblivionAiService();
+    ASSERT_NE(scripts, nullptr);
+    ASSERT_NE(ai, nullptr);
+    ESM4::RuntimeState before, after;
+    combat.capture(before);
+    for (const auto& actor : {npc, low, creature})
+    {
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* custom = actor.getRefData().getCustomData();
+        EXPECT_EQ(world.getOblivionScriptIsFacingUp(key), 1.0);
+        EXPECT_EQ(world.getOblivionScriptIsWeaponOut(key), 0.0);
+        EXPECT_EQ(world.getOblivionScriptWeaponAnimationType(key), 0.0);
+        EXPECT_EQ(actor.getRefData().getCustomData(), custom);
+        EXPECT_FALSE(combat.findActorValues(key));
+    }
+    ESM4::ActorCharacter unloaded{};
+    unloaded.mId = {0x880, 0};
+    unloaded.mFormKey = ESM::FormKey::content("headless.esm", 0x880);
+    unloaded.mBaseObj = npc.get<ESM4::Npc>()->mBase->mId;
+    unloaded.mBaseKey = npc.get<ESM4::Npc>()->mBase->mFormKey;
+    store.getWritable<ESM4::ActorCharacter>().insertStatic(unloaded, unloaded.mFormKey);
+    EXPECT_EQ(world.getOblivionScriptIsFacingUp(unloaded.mFormKey), 1.0);
+    EXPECT_EQ(world.getOblivionScriptIsWeaponOut(unloaded.mFormKey), 0.0);
+    EXPECT_EQ(world.getOblivionScriptWeaponAnimationType(unloaded.mFormKey), 0.0);
+    EXPECT_TRUE(world.getWorldModel().getPtr(unloaded.mId).isEmpty());
+    EXPECT_FALSE(combat.findActorValues(unloaded.mFormKey));
+    combat.capture(after);
+    EXPECT_EQ(after, before);
+    const auto missing = ESM::FormKey::content("headless.esm", 0xabcdef);
+    EXPECT_FALSE(world.getOblivionScriptIsFacingUp(missing));
+    EXPECT_FALSE(world.getOblivionScriptIsWeaponOut(missing));
+    EXPECT_FALSE(world.getOblivionScriptWeaponAnimationType(missing));
+    ASSERT_TRUE(world.activateOblivionActor(npc));
+    ASSERT_TRUE(world.activateOblivionActor(creature));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(low, ESM4::ActorValueProcess::Low));
+    for (unsigned type = 0; type < 6; ++type)
+    {
+        ESM4::Weapon native{};
+        native.mId = {0x980 + type, 0};
+        native.mData.type = type;
+        native.mData.health = 100;
+        store.getWritable<ESM4::Weapon>().insertStatic(native,
+            ESM::FormKey::content("headless.esm", 0x980 + type));
+        ESM::Weapon projected;
+        projected.blank();
+        projected.mId = ESM::RefId(native.mId);
+        projected.mData.mType = ESM::Weapon::MarksmanBow; // Deliberately wrong native family.
+        projected.mData.mHealth = 100;
+        store.insertStatic(projected);
+    }
+    const unsigned categories[] = {1, 2, 1, 2, 0, 3}; // Original4F7750 outputs.
+    for (const auto& actor : {player, npc, creature, low})
+    {
+        const auto key = actor == player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        SCOPED_TRACE(key.serialize());
+        for (unsigned type = 0; type <= 6; ++type)
+        {
+            std::vector<ESM4::RuntimeInventoryItem> items;
+            if (type < 6)
+            {
+                ESM4::RuntimeInventoryItem item;
+                item.mBase = ESM::FormKey::content("headless.esm", 0x980 + type);
+                item.mCount = 1;
+                item.mCondition = 100;
+                item.mEquippedSlots = ESM4::InventorySlotWeapon;
+                items.push_back(item);
+            }
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(
+                MWWorld::OblivionProfileServices::prepareActorInventory(
+                    store, ESM::FormKeyResolver({"headless.esm"}), items));
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            inventory.swapPreparedContents(*staged);
+            for (const auto draw : {MWMechanics::DrawState::Nothing, MWMechanics::DrawState::Weapon,
+                     MWMechanics::DrawState::Spell})
+            {
+                actor.getClass().getCreatureStats(actor).setDrawState(draw);
+                const auto inventoryBefore = world.captureOblivionActorInventory(actor);
+                combat.capture(before);
+                const double out = actor != low && draw == MWMechanics::DrawState::Weapon ? 1.0 : 0.0;
+                const double family = actor != low && type < 6 ? categories[type] : 0;
+                EXPECT_EQ(world.getOblivionScriptIsWeaponOut(key), out);
+                EXPECT_EQ(world.getOblivionScriptWeaponAnimationType(key), family);
+                EXPECT_EQ(world.getOblivionScriptIsFacingUp(key), 1.0); // No scene, independent of process/draw.
+                for (const auto& [name, function, expected] : {
+                         std::tuple{"IsWeaponOut", 101, out}, {"GetWeaponAnimType", 108, family},
+                         {"IsFacingUp", 106, 1.0}})
+                {
+                    ObScript::RuntimeContext context;
+                    context.mSelf = key;
+                    const ObScript::Value reference = ObScript::ReferenceValue{key, {}};
+                    EXPECT_EQ(ObScript::asNumber(scripts->call(name, reference, {}, context, {})), expected);
+                    ESM4::PackageCondition condition;
+                    condition.mFunction = function;
+                    condition.mOperator = ESM4::ConditionOperator::Equal;
+                    condition.mComparisonValue = expected;
+                    // Player is exercised as the opposite run-on subject.
+                    condition.mRunOnTarget = actor == player;
+                    const auto speaker = actor == player ? npc : actor;
+                    const auto target = actor == player ? player : MWWorld::Ptr{};
+                    EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)),
+                        ESM4::ConditionResult::True) << key.serialize() << ',' << type << ',' << name;
+                    condition.mComparisonValue = expected + 1;
+                    EXPECT_EQ(ai->evaluateDialogueConditions(speaker, target, std::span(&condition, 1)),
+                        ESM4::ConditionResult::False);
+                }
+                EXPECT_EQ(world.captureOblivionActorInventory(actor), inventoryBefore);
+                combat.capture(after);
+                EXPECT_EQ(after, before);
+            }
+            if (type < 6)
+            {
+                // Retaining an ordinary inventory stack is insufficient:
+                // the cached weapon entry must still be worn.
+                inventory.unequipSlot(MWWorld::InventoryStore::Slot_CarriedRight, false);
+                EXPECT_EQ(world.getOblivionScriptWeaponAnimationType(key), 0.0);
+                EXPECT_FALSE(world.captureOblivionActorInventory(actor).empty());
+            }
+        }
+    }
 }

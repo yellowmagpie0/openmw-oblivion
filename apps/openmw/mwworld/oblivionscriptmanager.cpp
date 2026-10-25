@@ -2051,6 +2051,12 @@ namespace MWWorld
             return std::int64_t(mWorld.getOblivionScriptKnockedState(objectKey()).value_or(0.0));
         if (name == "isleftup")
             return std::int64_t(mWorld.getOblivionScriptIsLeftUp(objectKey()).value_or(0.0));
+        if (name == "isfacingup")
+            return std::int64_t(mWorld.getOblivionScriptIsFacingUp(objectKey()).value_or(0.0));
+        if (name == "isweaponout")
+            return std::int64_t(mWorld.getOblivionScriptIsWeaponOut(objectKey()).value_or(0.0));
+        if (name == "getweaponanimtype")
+            return std::int64_t(mWorld.getOblivionScriptWeaponAnimationType(objectKey()).value_or(0.0));
         if (name == "getdead")
         {
             if (const auto* combat = mWorld.getOblivionCombatService())

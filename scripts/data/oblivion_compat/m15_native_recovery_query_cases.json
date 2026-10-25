@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "Native recovery pose and weapon queries through actual World, ObScript and package/dialogue condition services",
+  "rules": [
+    "IsFacingUp: eligible actor missing Spine returns1; native NiWorld R21 at+0x80 must be strictlypositive. Signedzeros andNaNsfalse. IsLeftUp remains R22 at+0x84.",
+    "IsWeaponOut: missing/Low process0, active process uses existing controller draw view; nonzero native byte115 istrue.",
+    "GetWeaponAnimType: independent of draw state, active worn nativeWEAP type0/2 ->1,1/3 ->2,5 ->3; staff4/other ->0. No wornentry or missing/Low process ->0.",
+    "Use existing native class/process, equipped-slot and winning WEAP identity. Never use projected TES3 damage/skill category or construct cold actor authority during a query."
+  ],
+  "component_fixture": {
+    "source": {
+      "path": "apps/components_tests/esm4/native_recovery_query_expected.inc",
+      "sha256": "f2a51eef8890bf7264453296d506a3e2e2866b30369059e6ce2a568c39b3586a"
+    },
+    "generator": {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/generate-fixture.py",
+      "sha256": "ad3c7c2f231dda0aa2ab3ae8fc6897d13beaf1a701daf50b398539e15ed3db44"
+    },
+    "literal_original_outputs": {
+      "draw_byte_rows": 512,
+      "weapon_type_rows": 1024,
+      "spine_rows": 18
+    }
+  },
+  "world_regressions": [
+    "Player/NPC/Creature plus Low actor, all six native weapon types, sheathed/weapon/spell draw states and empty/unworn inventory",
+    "Deliberately wrong projected TES3 weapon categories cannot change native animation family",
+    "Direct query, ObScript and dialogue CTDA agreement, including run-on-target Player and both true/false comparisons",
+    "Cold resident and unloaded actors: no custom-data/value-state creation or process promotion; unchanged combat/inventory snapshots after queries",
+    "Actual renderer physical-pose quarter rotations distinguish R21 from R12/R22, then restored animated pose; existing scoped horse fallback/LeftUp regressions retained"
+  ],
+  "limits": [
+    "Native oracle supplies typed actor/process/inventory fixtures; it does not prove original process promotion or inventory producer construction",
+    "Current fork process authority represents High/Low. Active weapon views must already be resident; unavailable active view is Unsupported in conditions, not a guessed weapon category",
+    "Winning native weapon type must fit one byte; unavailable native typed definitions (including unsupported generated definitions) are rejected",
+    "Renderer pose bridge retains its rigid/finite admission gate; NaN comparison semantics are covered by pure original-derived query fixtures",
+    "Raw actor model and nullable native CTDA dispatch, exact KF/slot5 playback, physical FSM/GetUp/restart, directional mastery and full normal-input S4 acceptance remain open"
+  ]
+}

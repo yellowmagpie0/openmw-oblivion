@@ -6341,3 +6341,37 @@ TEST(ESM4PhysicalCombat, RandomDistanceCountsCallbacksAcrossTheWholeNativePeriod
     for (const auto& row : rows)
         EXPECT_EQ(ESM4::combatRandomDistance(row.begin, row.end), row.distance);
 }
+
+namespace
+{
+#include "native_recovery_query_expected.inc"
+}
+
+TEST(ESM4PhysicalCombat, NativeWeaponOutMatchesOriginalProcessAndEveryDrawByte)
+{
+    for (unsigned active = 0; active < 2; ++active)
+        for (unsigned byte = 0; byte < 256; ++byte)
+            EXPECT_EQ(ESM4::nativeIsWeaponOut(active, static_cast<std::uint8_t>(byte)),
+                weaponOutExpected[active][byte]) << active << ',' << byte;
+}
+
+TEST(ESM4PhysicalCombat, NativeWeaponAnimationTypeMatchesOriginalWornEntryAndSignedByte)
+{
+    for (unsigned active = 0; active < 2; ++active)
+        for (unsigned worn = 0; worn < 2; ++worn)
+        {
+            EXPECT_EQ(ESM4::nativeWeaponAnimationType(active, worn, std::nullopt), 0u);
+            for (unsigned byte = 0; byte < 256; ++byte)
+                EXPECT_EQ(ESM4::nativeWeaponAnimationType(active, worn,
+                    std::bit_cast<std::int8_t>(static_cast<std::uint8_t>(byte))),
+                    weaponTypeExpected[active][worn][byte]) << active << ',' << worn << ',' << byte;
+        }
+}
+
+TEST(ESM4PhysicalCombat, NativeFacingUpMatchesOriginalMissingSpineSignedZerosAndNonfiniteComparisons)
+{
+    for (const auto& row : facingExpected)
+        EXPECT_EQ(ESM4::nativeIsFacingUp(row.mSpine
+                ? std::optional(std::bit_cast<float>(row.mBits)) : std::nullopt), row.mExpected)
+            << row.mSpine << ',' << row.mBits;
+}

@@ -1,0 +1,456 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Native recovery pose and weapon queries through actual World, ObScript and package/dialogue condition services",
+  "parent": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+  "tested_source": {
+    "head": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+    "source_fingerprint": "3c56f5e356119d01902b409d86aec6f0013e62013de9d0cbb57e7d79e0229fcf"
+  },
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_native_recovery_query_cases.json",
+    "sha256": "1a8d210ca2a917c6d97633e9e668e9167b3f9a9b58d364b1858dc635fe37a646"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/physicalcombat.hpp",
+      "sha256": "0109b2e8f89906704fc097a99e27d7707ece722ef94e130465197bf3fd33b586"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "3be0a3f987898fb8c26f5dd937e2078e24128c7a90a38a35e1262d4074acd402"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "0e797a7d1f2e6ab7d09423132d3e53a590276c869379439354d58dadecf5e315"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "a8f61a80610b9efad835120d3ebe6ed805ac188d919879cd768765aa485635b2"
+    },
+    {
+      "path": "apps/openmw/mwworld/oblivionscriptmanager.cpp",
+      "sha256": "3bcaad9dd75515a9dc6a0eaf7d780ee0287b24a13e13b5d9be55ae2b6093a36a"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivionai.cpp",
+      "sha256": "b4744fefed40e2df97f401e462e2ab429046b055742186e216e7fd00aec28d86"
+    },
+    {
+      "path": "apps/components_tests/esm4/physicalcombat.cpp",
+      "sha256": "1bcf7ab399cdde31e96598c3035a5b1187e1a83a685336f4c80f248d49abb5c1"
+    },
+    {
+      "path": "apps/components_tests/esm4/native_recovery_query_expected.inc",
+      "sha256": "f2a51eef8890bf7264453296d506a3e2e2866b30369059e6ce2a568c39b3586a"
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "4af6310a83a54b0b24c90c4e6aab385059ae758529603c66f4d590544a91f42b"
+    }
+  ],
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_weapon_queries": {
+    "passed": true,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "weapon_out": {
+      "profiles": 5120,
+      "executions": 10240,
+      "corpus_sha256": "462cd2566431615700d5e9f85e37fc652c49c37c37f52d0b1c7da71c1257e7b0"
+    },
+    "weapon_anim_type": {
+      "profiles": 30820,
+      "executions": 61640,
+      "corpus_sha256": "ef1ced75ef2fafded24d195c16067bc1a8f92eb514cf7d5a7a5c5cb91dd8543d"
+    },
+    "x87_control_words": [
+      "0x27f",
+      "0x37f"
+    ],
+    "actual_instructions": [
+      "full4F50C0 IsWeaponOut callback and5E0DA0",
+      "full4F7750 GetWeaponAnimType callback and mapping",
+      "actual Player/Character/Creature actor virtual+190",
+      "actual Low/MiddleLow/MiddleHigh/High process virtual+304 and+EC",
+      "full64B240,484E80,41DF10 worn entry/list checks"
+    ],
+    "boundaries": [
+      "No game functions stubbed",
+      "Typed actor/process objects and inventory entry/ExtraData/weapon fields are supplied fixtures",
+      "Console diagnostic byteB361AC is0",
+      "No process-tier promotion, inventory construction, input producer or gameplay executed"
+    ],
+    "findings": [
+      "IsWeaponOut isfalse without process or at Low/MiddleLow; MiddleHigh/High reads process+115 byte as nonzero",
+      "GetWeaponAnimType requires MiddleHigh/High entry+E4 with worn bit08or10 in at least one ExtraData list node",
+      "TESObjectWEAP type tag21 and signed type byte90:0/2->1,1/3->2,5->3,4/other->0",
+      "Weapon animation category is one-hand/two-hand/bow, not blade/blunt damage category"
+    ],
+    "scope": "Original recovery condition query semantics, not production binding or gameplay acceptance"
+  },
+  "original_facing_query": {
+    "passed": true,
+    "profiles": 108,
+    "executions": 216,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "corpus_sha256": "663f991d421b359d28e8c3b0520679cc972d8fcc9db6bdc9749e008c71f0bee9",
+    "actual_instructions": [
+      "full4F8970 IsFacingUp condition callback",
+      "full897580 node matrix predicate with second argument0"
+    ],
+    "boundaries": [
+      "actor virtual+190 supplies typed actor eligibility",
+      "4D96F0 supplies declared Spine lookup result; absent scene never supplies Spine",
+      "No node child lookup requested because actual callback passes second argument0",
+      "Console diagnostic byteB361AC is0"
+    ],
+    "findings": [
+      "Null or ineligible subject produces0 with callback success1",
+      "Missing Spine produces1 for eligible actor",
+      "Present Spine uses strictly positive float at NiWorld rotation offset80; either zero, negative or NaN isfalse"
+    ],
+    "scope": "Original IsFacingUp query boundaries only; no fork implementation, scene hierarchy lookup, rendered-body pose or gameplay acceptance"
+  },
+  "native_artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/query-oracle.py",
+      "sha256": "1fc2171bb3288485309e1ec3e5b680a68221ed5f9156b7c59ba977be0cc35f99"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/virtuals.json",
+      "sha256": "88b6c5a5321242de88661cb8a33d0dceb7695e78d5c7e64b5075236351f21fbe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/report.json",
+      "sha256": "25ac785141ca9e1cfcfb3c6f3bcaddc9214158b092c971f0d6a4fbf26f3dd4b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/run.log",
+      "sha256": "e700d679b66cad1d09f9325e334471e78cbecdf41496ce66cf89ae7f1062853c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/weapon-out-corpus.json",
+      "sha256": "462cd2566431615700d5e9f85e37fc652c49c37c37f52d0b1c7da71c1257e7b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-weapon-query-work-01/weapon-anim-type-corpus.json",
+      "sha256": "ef1ced75ef2fafded24d195c16067bc1a8f92eb514cf7d5a7a5c5cb91dd8543d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-condition-context-work-01/facing-up-oracle.py",
+      "sha256": "50cb7479b537ae0000669c51129b6ebb9680635870fe3de0655f09be1c0ba51a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-condition-context-work-01/facing-up-report.json",
+      "sha256": "889b1b4f21a04cd2acbaf51c773f6d9686b2e93e0a644794e2132e01ae7839b1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-condition-context-work-01/facing-up-corpus.json",
+      "sha256": "663f991d421b359d28e8c3b0520679cc972d8fcc9db6bdc9749e008c71f0bee9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/oracle-emulator/detection.py",
+      "sha256": "771924a2a52376a9bf0bf401c1cd653ff234e79cf950c50206672b60166be62b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S2/sources-01/original-exe.json",
+      "sha256": "62918736c74e739e6b3c4832a8b2fc1edef5917089151285479fda9289f0c8fc"
+    }
+  ],
+  "checks": {
+    "normal": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/verification.json",
+        "sha256": "3602da71f77eb48580ddb92eebd3b1bb2207e72c8e07f05296342fe90e7007ed"
+      },
+      "source_before": {
+        "head": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+        "source_fingerprint": "3c56f5e356119d01902b409d86aec6f0013e62013de9d0cbb57e7d79e0229fcf"
+      },
+      "source_after": {
+        "head": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+        "source_fingerprint": "3c56f5e356119d01902b409d86aec6f0013e62013de9d0cbb57e7d79e0229fcf"
+      },
+      "results": {
+        "components": {
+          "executed": 3107,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "1fd2469435b397b18f985b96bf0af1454ee4accba8ac6c127c964f8899542d14",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "dfde80d58e10f33a50426e50eff016515b81ab214788bea9b55d50efd978ef65",
+          "inventory_sha256": "e95636632698e334817a5d10279c2425bb11099f6588c17d34d6a333d7f13a35",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1948,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "a92b8e047ead611fa11900a85471787047c63eb6e31def9c6ea4109653cf5ffe",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "7c413aa8158120b8b3221429c8594e6b1a32c84e13b0d4669198302bc05f8a76",
+          "inventory_sha256": "9c263cf88de3b6713ac9b8236c4fdab9d447fa159c2429c015561f831c42ab83",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "verification": {
+        "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/verification.json",
+        "sha256": "121ad1fb12b82cad431d7b8f355c2e0d4418fff3955e4be48e9b3b826c814447"
+      },
+      "source_before": {
+        "head": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+        "source_fingerprint": "3c56f5e356119d01902b409d86aec6f0013e62013de9d0cbb57e7d79e0229fcf"
+      },
+      "source_after": {
+        "head": "de847d5e15c832f2ca35ab7e5cd24378b96c11d2",
+        "source_fingerprint": "3c56f5e356119d01902b409d86aec6f0013e62013de9d0cbb57e7d79e0229fcf"
+      },
+      "results": {
+        "sanitize": {
+          "executed": 958,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "6488995fbb3f10779b5e6abf932706022fa39fec8322669bbb4b46e6cc72393f",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "98008f34ea46f817548c9bee235e564e66c1c202a5e76aec149b42107ebd2d62",
+          "inventory_sha256": "8701787d51ba6319f182217180325bd729f296d6f30ddf7f6ea84bc8aeca1537",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1948,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "0ca063d332c3d6887502e70e0a22c73bbd941b6d922e6703c551e030749111da",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "384fc3c4d96396fc0bbcbb081da93984131b3948ff831d251df3627a71a3e94f",
+          "inventory_sha256": "9c263cf88de3b6713ac9b8236c4fdab9d447fa159c2429c015561f831c42ab83",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "artifacts": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/components-build.log",
+      "sha256": "0ae99bc55bca4af58cdadf68e06fc374917f7f73ab61926e4ddadb2672eaf5a1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/components-inventory.txt",
+      "sha256": "fa0ba1f5dba7f57230ab64af6244902da4a4d1ecefe565c372dad803489e3975"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/components.log",
+      "sha256": "85205bedb785dda3fd9c438b6838015ca11532b6676b1d342302203f81f6fdca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/components.xml",
+      "sha256": "3305b327d322c0a7758f46a7440592262e8f07f610a5624f0d18bce8735654fd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/engine-build.log",
+      "sha256": "f80eb889acba4d144e97500b5cd847a09a26830871b243217c28732d432507e9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/engine-inventory.txt",
+      "sha256": "9c263cf88de3b6713ac9b8236c4fdab9d447fa159c2429c015561f831c42ab83"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/engine.log",
+      "sha256": "0d9425add8146bc7e1eba5448d89533d2289e23250c292a930db0da68464ac6c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/engine.xml",
+      "sha256": "cb03ce3fad7a9d129e71ae14838036cec2a63fd6c128e6d104e1357fa209244a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-01/verification.json",
+      "sha256": "5fe4b1cde3de7e337d7f7f8e00001030bb50689fa718617db671a05fa88c7600"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/sanitize-build.log",
+      "sha256": "3d78f1bef8618196b73b9f2459fccf33f8490ac31c095bbda5276a0197246ab2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/sanitize-inventory.txt",
+      "sha256": "ca545e8f007a34298d6981f9da02e5e5dd937c4c9f82821a50321f9e029f1f20"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/sanitize.log",
+      "sha256": "d7f945b95196a6df0be46923e8a5ae94bad442a493c98e2fb41911ea894c0602"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/sanitize.xml",
+      "sha256": "5e3fd8723c93c0e5be6afc57568f4fac42f4a944aaecdbf0a91da496f8845641"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/engine-build.log",
+      "sha256": "8d9f7ec66578d2f16ccb32ef67787c3792b83c649dcc7f06f7a53a910cb803c0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-01/verification.json",
+      "sha256": "315508aba788b7aeb6ad176dd4522ab8235b93bbb02d3c257e6412d4dbbc8f58"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/sanitized-01-stop.json",
+      "sha256": "c68c84ccedf65bf740f9605108a82ee4b841fe9005cd7e8137b4eb2821dfce23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/components-build.log",
+      "sha256": "c6e78c5ddc7a2818e974a48cf507f9b4dc8e9aaf25b77d653b81924f9fff9ac3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/components-inventory.txt",
+      "sha256": "e95636632698e334817a5d10279c2425bb11099f6588c17d34d6a333d7f13a35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/components.log",
+      "sha256": "7c6f80a0b65f7c53f2176a07cbdd4683507340f7cad5580d7a8270e20ba674f8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/components.xml",
+      "sha256": "dfde80d58e10f33a50426e50eff016515b81ab214788bea9b55d50efd978ef65"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/engine-build.log",
+      "sha256": "c1103afd255076ded902e779f625896d0b2f9650ac7bcded17580aca619aa7dd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/engine-inventory.txt",
+      "sha256": "9c263cf88de3b6713ac9b8236c4fdab9d447fa159c2429c015561f831c42ab83"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/engine.log",
+      "sha256": "c02a11801f8df443102731ec54d71ce442448b3ddb353ed734b69f0d9b4fd186"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/engine.xml",
+      "sha256": "7c413aa8158120b8b3221429c8594e6b1a32c84e13b0d4669198302bc05f8a76"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-normal-02/verification.json",
+      "sha256": "3602da71f77eb48580ddb92eebd3b1bb2207e72c8e07f05296342fe90e7007ed"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/sanitize-build.log",
+      "sha256": "352fc4509db2452f8d650f2af9b96099ea421321c072a22c9c4ac74675d606c8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/sanitize-inventory.txt",
+      "sha256": "8701787d51ba6319f182217180325bd729f296d6f30ddf7f6ea84bc8aeca1537"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/sanitize.log",
+      "sha256": "a9f6c5e3ed129ddf039ad245f1439835d583d78e985c348a28650e40da170046"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/sanitize.xml",
+      "sha256": "98008f34ea46f817548c9bee235e564e66c1c202a5e76aec149b42107ebd2d62"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/engine-build.log",
+      "sha256": "2675550925298ee2b24b13a7b6f7896a86a55e3dbb49da0f6791f70cb2505af9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/engine-inventory.txt",
+      "sha256": "9c263cf88de3b6713ac9b8236c4fdab9d447fa159c2429c015561f831c42ab83"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/engine.log",
+      "sha256": "abeecce1930651158c1308ebb0291536c8cc7b8b11647108ee6356c2fd0deb3c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/engine.xml",
+      "sha256": "384fc3c4d96396fc0bbcbb081da93984131b3948ff831d251df3627a71a3e94f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-checks-sanitized-02/verification.json",
+      "sha256": "121ad1fb12b82cad431d7b8f355c2e0d4418fff3955e4be48e9b3b826c814447"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/generate-fixture.py",
+      "sha256": "ad3c7c2f231dda0aa2ab3ae8fc6897d13beaf1a701daf50b398539e15ed3db44"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/syntax.py",
+      "sha256": "8b604519174c54b76f7a59cbcb5b3394d56e43f2b2e4da9aefbef612d7e38786"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/syntax-engine.json",
+      "sha256": "c2bde68dc95353cf6fbacb527b8217136dd32ca35fe5e10ceaf33490f4b037db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/syntax-tests.json",
+      "sha256": "41091f08fc43030f68ce7c90906eae1059bb3324ccd49dd6fb0a563493e652ed"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/publish.py",
+      "sha256": "f1330a26ac5f19b03e883e1052529eee2020219f130f2f9d138b75be40a853bb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/review-warnings.py",
+      "sha256": "71a02b7cc79b28401d2c4c98694f795b70629d0f0e7a5275b947d90dfaf77bf2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-recovery-query-work-01/warning-review.json",
+      "sha256": "6f821c7b167289d3c73bd72b4665ef7081cf523a30ae2f3bbf89dc8cecf420d3"
+    }
+  ],
+  "sanitizer_environment": {
+    "component": {
+      "ASAN_OPTIONS": "detect_leaks=0",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "engine": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "leak_coverage": false
+  },
+  "unchanged_checks": "No Python production/schema or IDLE loader/index changes; prior410Python and677record/44bank installed normal/SAN comparisons were not repeated",
+  "retained_attempts": {
+    "normal01": "1947/1948 engine tests passed. New fixture omitted WorldModel registration of draft NPCs, so active view guard correctly rejected lookup. Fixed by registering fixture NPCs in actual WorldModel.",
+    "sanitized01": "958 ESM4 tests passed; verified owned engine build group was stopped with SIGTERM before fixture correction. Preserved all evidence."
+  },
+  "limits": [
+    "Native oracle supplies typed actor/process/inventory fixtures; it does not prove original process promotion or inventory producer construction",
+    "Current fork process authority represents High/Low. Active weapon views must already be resident; unavailable active view is Unsupported in conditions, not a guessed weapon category",
+    "Winning native weapon type must fit one byte; unavailable native typed definitions (including unsupported generated definitions) are rejected",
+    "Renderer pose bridge retains its rigid/finite admission gate; NaN comparison semantics are covered by pure original-derived query fixtures",
+    "Raw actor model and nullable native CTDA dispatch, exact KF/slot5 playback, physical FSM/GetUp/restart, directional mastery and full normal-input S4 acceptance remain open"
+  ],
+  "full_M15S4_complete": false
+}

@@ -13655,3 +13655,53 @@ in the evidence directories.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-IDLE-EVENT-REPLAY-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_event_replay_cases.json).
+
+
+### Native recovery pose and weapon queries share live authority
+
+World now supplies `IsFacingUp`, `IsWeaponOut` and `GetWeaponAnimType` to ObScript
+and both package/dialogue condition services. IsFacingUp reads native Spine
+R21 (`+0x80`) through the existing placement/physical-pose bridge; IsLeftUp keeps
+R22 (`+0x84`). Eligible missing Spine is true without a process/knocked-state
+gate. Weapon queries return zero for missing/Low process. Active queries read
+the controller draw view and the worn right-hand entry's winning native WEAP
+type. Animation family remains independent of draw state and projected TES3
+type: 0/2 one-hand, 1/3 two-hand, 5 bow, staff/other unarmed.
+
+Independent original evidence executes **5,120 IsWeaponOut profiles** and
+**30,820 GetWeaponAnimType profiles**, each under both x87 precision words, with
+no game functions stubbed. Typed actor/process/entry/ExtraData/weapon objects
+are supplied fixtures; original producer construction is outside that evidence.
+IsFacingUp's **108 profiles / 216 executions** use actual callback/matrix code
+with supplied actor eligibility and Spine lookup. The component tests retain
+**1,554 literal original outputs**, including every draw/type byte, missing
+Spine, signed zeros and NaNs.
+
+World integration covers Player/NPC/Creature and Low actors, all six native
+weapon categories, three draw states, empty and unworn inventory, script/CTDA
+agreement and opposite-context Player. Wrong projected weapon types cannot
+change results. Cold/unloaded reads create no actor authority; combat/inventory
+state stays unchanged. Physical quarter rotations distinguish native R21 from
+R12/R22 and read the actual physical pose before animation restoration.
+
+Normal checks pass **3,107 component tests** and **1,948 engine tests**.
+ASan/UBSan checks pass **958 ESM4 tests** and **1,948 engine tests**, with exact
+inventory/XML agreement, no failures/skips and leak detection disabled. Engine
+mode builds openmw, openmw-tests and esmtool. No Python/schema or IDLE loader
+changed; the prior 410 Python tests and complete 677-IDLE/44-bank installed
+comparisons were not repeated.
+
+Unavailable active actor views and native weapon definitions are rejected.
+The current process model remains High/Low; malformed native weapon types
+outside one byte are outside this query binding. Renderer pose admission stays
+rigid/finite, while pure comparison fixtures cover NaN behavior. Raw actor
+model/nullable native condition dispatch, exact selected KF/slot5, physical
+FSM/GetUp/restart, directional mastery and full S4 runtime acceptance remain
+open. No normal-input gameplay course ran in this chunk. The initial normal
+engine attempt failed only because draft NPCs in the new fixture were absent
+from the resident WorldModel registry. The fixture now registers them. The
+initial sanitizer engine build was stopped before this correction; both first
+attempts and the verified owned-process stop record remain in the evidence.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-RECOVERY-QUERY-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_recovery_query_cases.json).

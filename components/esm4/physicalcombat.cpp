@@ -1919,6 +1919,28 @@ namespace ESM4
         return processState == 3 || processState == 4;
     }
 
+    bool nativeIsFacingUp(std::optional<float> spineRotation80) noexcept
+    {
+        return !spineRotation80 || *spineRotation80 > 0;
+    }
+
+    bool nativeIsWeaponOut(bool activeProcess, std::uint8_t drawn115) noexcept
+    {
+        return activeProcess && drawn115 != 0;
+    }
+
+    unsigned nativeWeaponAnimationType(bool activeProcess, bool worn, std::optional<std::int8_t> type90) noexcept
+    {
+        if (!activeProcess || !worn || !type90) return 0;
+        switch (*type90)
+        {
+            case 0: case 2: return 1;
+            case 1: case 3: return 2;
+            case 5: return 3;
+            default: return 0;
+        }
+    }
+
     BlockContactDisposition blockContactDisposition(const BlockContactInput& input)
     {
         switch (input.mEquipment)

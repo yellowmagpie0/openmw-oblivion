@@ -849,6 +849,14 @@ namespace ESM4
     // GetKnockedState command/CTDA4F76B0 translates only raw3/4 to1.
     // This is distinct from the signed process byte used by contact rules.
     bool nativeScriptKnockedState(std::int8_t processState) noexcept;
+    // Original4F8970/897580: an eligible actor without Spine returns true;
+    // otherwise compare native NiWorld rotation+0x80 strictly above zero.
+    bool nativeIsFacingUp(std::optional<float> spineRotation80) noexcept;
+    // Original4F50C0/5E0DA0 and4F7750: Low/missing processes expose neither
+    // drawn byte115 nor a worn weapon entry. Weapon family is independent
+    // of draw state: 0/2 one-hand, 1/3 two-hand, 5 bow, all others unarmed.
+    bool nativeIsWeaponOut(bool activeProcess, std::uint8_t drawn115) noexcept;
+    unsigned nativeWeaponAnimationType(bool activeProcess, bool worn, std::optional<std::int8_t> type90) noexcept;
 
     enum class BlockEquipment { Shield, Weapon, Unarmed };
     struct BlockContactInput
