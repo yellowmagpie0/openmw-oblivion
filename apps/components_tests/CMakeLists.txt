@@ -100,6 +100,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/firstpersonview.cpp
     esm4/physicalcombat.cpp
     esm4/nativeclampsequence.cpp
+    esm4/nativeidlerequest.cpp
     esm4/animationblend.cpp
     esm4/physicalregistration.cpp
     esm4/actorstats.cpp

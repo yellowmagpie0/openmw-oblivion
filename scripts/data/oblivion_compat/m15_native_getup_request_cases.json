@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "scope": "Policy1 logical-slot5 noncontact request transition plans; no runtime owner or wire change",
+  "runtime_schema": 71,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "rules": [
+    {
+      "entry": "474C50",
+      "expect": "Loaded resource produces ready status1 with no sequence or actor binding; pending callback supplies a resource without playback."
+    },
+    {
+      "entry": "475300/475440",
+      "expect": "Retire matching resident sequence once; fill first empty fixed D4/D8 request slot; destroy outgoing request when both full. Secondary promotion is explicit."
+    },
+    {
+      "entry": "476380/477E50",
+      "expect": "Only successful real registration and sequence selection attach status2 and action11. Failed status1 start writes status3 and requires caller cleanup."
+    },
+    {
+      "entry": "477AD0",
+      "expect": "Status2 completes on null sequence or actual NIstate0, retaining request/sequence. Bound action11 clears without testing process sequence identity."
+    },
+    {
+      "entry": "472ED0/4729F0",
+      "expect": "Destruction detaches sequence from manager; matching cache identity or null request sequence erases group. Bound action11 clears only if process sequence matches. Duplicate native erasure is idempotent."
+    },
+    {
+      "entry": "4711F0/472EA0",
+      "expect": "Ready means primary status1. Done requires no secondary and either no primary or primary nonnull sequence/status3; retired slots do not block done."
+    },
+    {
+      "entry": "436DA0/51B490",
+      "expect": "SpecialIdle key classifies group2 independently of filename movement/weapon prefix; group metadata requires a matching frame key. Unknown key names do not gain metadata from filename."
+    },
+    {
+      "entry": "475300/477E50/474070/6C5760",
+      "expect": "Three same-loaded-KF starts share a sequence across primary/D4/D8. Fourth destroys outgoing primary, detaches that shared sequence and evicts cache; next start clones a new sequence. Distinct resources retain distinct tails."
+    }
+  ],
+  "original_profiles": {
+    "new_slot_transitions": 2592,
+    "new_destruction": 3888,
+    "new_ready_done": 192,
+    "reused_constructor_callback_start_completion": 386,
+    "classification": 27,
+    "coupled_courses": 3,
+    "coupled_starts": 12
+  },
+  "cpp_comparison_profiles": 7058,
+  "focused_tests": 9,
+  "fixture_erratum": "Older classification probes passed sequence+0x5c to 49F4D0, which expects sequence itself. Their null root was fixture initialization failure, not native clearing. Corrected probes assert Bip01 survives source rename and clone.",
+  "open": [
+    "Persist shared request/resource/sequence reference graph with guarded readmission.",
+    "Integrate World and renderer start/frame/cleanup/action ownership.",
+    "Trace natural recovery caller and physical prefixes.",
+    "Complete S4 normal-input, view/device/FPS and canonical fresh-save acceptance."
+  ]
+}

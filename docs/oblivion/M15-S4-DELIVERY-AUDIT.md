@@ -14182,3 +14182,61 @@ Editable cases: [m15_native_getup_sequence_cases.json](../../scripts/data/oblivi
 Evidence: [M15-NATIVE-GETUP-SEQUENCE-VERIFICATION.json](M15-NATIVE-GETUP-SEQUENCE-VERIFICATION.json).
 
 Final tested source fingerprint: `9be23bf1f80d985afeaeb3234cfe2a4cc91cf974f749a76ef3df3479d1644786` on parent `d21bb7c3561bdf2de0084bb05b4d6a28b8d38e66`.
+
+### Native GetUp request transitions and shared sequence ownership
+
+This is an intermediate rule implementation; **M15S4 remains incomplete**.
+`nativeidlerequest` supplies immutable policy1/logical-slot5 construction,
+callback, replacement, clear/promotion, start, completion, destruction and query
+plans. Resource acquisition, NI playback, reference ownership and publication
+remain the caller's responsibility. Runtime schema remains 71; the service and
+World do not yet call these plans.
+
+Original executable branches establish fixed retained positions D4/D8: a full
+pair destroys the outgoing primary rather than shifting the earlier requests.
+Completion retains the request and sequence. Failed status3 with a null sequence
+is not itself the done predicate; native failure cleanup matters. Destructor
+clearing of action11 additionally tests the process sequence, unlike completion.
+The helper preserves ordered retire/destroy effects and normalizes repeated
+native cache erasure to its idempotent resulting mutation.
+
+The new original-instruction corpus has 2,592 slot, 3,888 destruction and 192
+ready/done profiles. With 386 previously established constructor/callback/start/
+completion profiles, production C++ matches **7,058 transitions** in both normal
+and leak-enabled ASan/UBSan comparisons. All **3,148 component tests** pass in
+each full build; inventories/XML match with zero skips/failures. Nine focused
+new tests also pass with leak detection enabled. Full sanitizer suite coverage
+has leak detection disabled as previously documented. Build logs contain no
+warnings. This component-only change does not repeat unchanged engine/Python or
+runtime courses, and claims no new gameplay acceptance.
+
+Twenty-seven classification profiles execute actual metadata creation. SpecialIdle
+classifies as group2 independently of filename movement/weapon prefix; metadata
+is created only upon a matching frame key. Loaded-but-unclassified resources
+therefore require the actual registration failure path. Three coupled courses
+execute twelve full original create/register/clone/start transitions. Repeated
+requests for the same loaded KF share one NI sequence across primary/D4/D8. On
+the fourth request, destroying the outgoing primary detaches that shared sequence
+and evicts its cache entry even though older request references remain. Distinct
+resources retain distinct NI retirement tails. Persisting independent per-request
+clocks or a single playing flag would lose these relationships. Empty controlled
+blocks and supplied loader/heap/action boundaries limit this evidence; it is not
+a rendered game or normal-input recovery test.
+
+**Probe fixture erratum:** older classification probes called `49F4D0` with
+sequence+5C, although it expects the whole sequence. Their null root observation
+was a fixture initialization error, not native clearing of the authored accum-root
+name. Corrected classification and coupled courses explicitly assert that Bip01
+survives source renaming and cloning. Earlier pinned receipts remain historical;
+this supersedes their root-clearing observation. Classification group results
+retain their stated empty-controlled-block scope. Failed/superseded CRT, resource
+reference and duplicate-erasure comparison attempts remain in ignored evidence.
+
+Next work is the persisted shared request/resource/sequence graph, guarded World
+readmission, actual renderer/action start and frame completion, then the natural
+recovery dispatcher and remaining S4 normal-input/restart matrix.
+
+Editable cases: [m15_native_getup_request_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_request_cases.json).
+Evidence: [M15-NATIVE-GETUP-REQUEST-VERIFICATION.json](M15-NATIVE-GETUP-REQUEST-VERIFICATION.json).
+Tested source fingerprint: `730b933a2382f84d986a8e2b2002c1867bd7a4821c078ca4831a7abf828b3c1e`
+on parent `6561a57376dfdd2b95fa943a40fb247b9036ff45`.
