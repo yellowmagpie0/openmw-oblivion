@@ -52,6 +52,7 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     struct RagdollBoneWorldPose;
     struct RagdollNativeBlendPublication;
+    struct RagdollGetUpPlan;
 }
 
 namespace SceneUtil
@@ -682,6 +683,10 @@ namespace MWRender
         // The sequence-selected reaction root stays distinct from file root0.
         std::optional<NativePhysicalSource> captureNativePhysicalSource(VFS::Path::NormalizedView model) const;
         bool isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept;
+        // GetUp uses the actor's full scene root, independently of the KF
+        // accumulator root. Validate the current rendered source child order
+        // against its NIF; separate equipment assets are outside this tree.
+        NifBullet::RagdollGetUpPlan captureNativeGetUpPlan(const NativePhysicalSource& source) const;
 
         class PreparedPhysicalPose
         {

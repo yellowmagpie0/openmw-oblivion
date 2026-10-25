@@ -36169,3 +36169,163 @@ TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstr
     EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::Unsupported);
     EXPECT_THROW(world.prepareOblivionGetUpIdle(npc), std::invalid_argument);
 }
+
+namespace
+{
+    std::string nativeGetUpActorNif()
+    {
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto string = [&](std::string_view value) {
+            return bytes(std::uint32_t(value.size())) + std::string(value);
+        };
+        std::string data = "Gamebryo File Format, Version 20.0.0.5\n";
+        data += bytes(std::uint32_t{0x14000005}) + bytes(std::uint8_t{1}) + bytes(std::uint32_t{10})
+            + bytes(std::uint32_t{9}) + bytes(std::uint32_t{0}) + std::string(3, '\0');
+        data += bytes(std::uint16_t{6});
+        for (const auto type : {"NiNode", "bhkBlendCollisionObject", "bhkRigidBody", "bhkSphereShape", "BSXFlags", "bhkBlendController"})
+            data += string(type);
+        for (const std::uint16_t type : {0,0,0,1,2,3,4,5,0}) data += bytes(type);
+        data += bytes(std::uint32_t{0});
+        const auto node = [&](std::string_view name, int record, const std::vector<int>& children) {
+            std::string result = string(name) + bytes(std::uint32_t(record == 0 ? 1 : 0));
+            if (record == 0) result += bytes(std::int32_t{6});
+            result += bytes(std::int32_t(record == 2 ? 7 : -1)) + bytes(std::uint16_t{14});
+            for (const float value : {0.f,0.f,0.f, 1.f,0.f,0.f,0.f,1.f,0.f,0.f,0.f,1.f, 1.f}) result += bytes(value);
+            result += bytes(std::uint32_t{0}) + bytes(std::int32_t(record == 2 ? 3 : -1));
+            result += bytes(std::uint32_t(children.size()));
+            for (const int child : children) result += bytes(std::int32_t(child));
+            return result + bytes(std::uint32_t{0});
+        };
+        data += node("ActorRoot", 0, {1,8}) + node("Bip01", 1, {2}) + node("NonAccum", 2, {});
+        data += bytes(std::int32_t{2}) + bytes(std::uint16_t{8}) + bytes(std::int32_t{4})
+            + bytes(1.f) + bytes(1.f) + std::string(8, '\0');
+        const auto filter = bytes(std::uint8_t{13}) + bytes(std::uint8_t{1}) + bytes(std::uint16_t{0});
+        data += bytes(std::int32_t{5}) + filter + std::string(20, '\0')
+            + std::string(8, '\0') + filter + std::string(12, '\0');
+        for (const float value : {0.f,0.f,0.f,0.f, 0.f,0.f,0.f,1.f,
+                 0.f,0.f,0.f,0.f, 0.f,0.f,0.f,0.f,
+                 1.f,0.f,0.f,0.f, 0.f,1.f,0.f,0.f, 0.f,0.f,1.f,0.f,
+                 0.f,0.f,0.f,0.f, 2.f,0.f,0.f,.5f,.1f,100.f,50.f,.01f}) data += bytes(value);
+        data += bytes(std::uint8_t{1}) + std::string(3, '\0') + std::string(12, '\0')
+            + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0});
+        data += bytes(std::uint32_t{0}) + bytes(.5f);
+        data += string("BSX") + bytes(std::uint32_t{2});
+        data += bytes(std::int32_t{-1}) + bytes(std::uint16_t{0xd})
+            + bytes(1.f) + bytes(0.f) + bytes(0.f) + bytes(1.f) + bytes(std::int32_t{2})
+            + bytes(std::uint32_t{2}) + bytes(0.f) + bytes(1.f) + bytes(1.f) + bytes(1.f) + bytes(1.f) + bytes(1.f);
+        data += node("Helper", 8, {});
+        return data + bytes(std::uint32_t{1}) + bytes(std::int32_t{0});
+    }
+}
+
+TEST(OblivionWorldTest, GetUpPublishesActualSceneRootSetupAndSavedOwnerTogether)
+{
+    class SourceAnimation : public MWRender::Animation
+    {
+    public:
+        SourceAnimation(const MWWorld::Ptr& actor, osg::Group* parent, Resource::ResourceSystem* resources,
+            const std::string& model) : Animation(actor, parent, resources)
+        {
+            setObjectRoot(model, true, false, false);
+            SceneUtil::ControllerSequenceMetadata sequence; sequence.mAccumRootName = "Bip01";
+            bindNativeReactionRoot(std::span(&sequence, 1));
+        }
+    };
+    struct RestoreThreads
+    {
+        int mPrevious = Settings::physics().mAsyncNumThreads;
+        ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+    } restoreThreads;
+    for (const int threads : {0, 2})
+    {
+        SCOPED_TRACE(threads); Settings::physics().mAsyncNumThreads.set(threads);
+        NativeWorldFixture fixture; auto& world = fixture.mWorld;
+        const auto actor = addNativeNpc(fixture, 0x900); const auto other = addNativeNpc(fixture, 0x901);
+        const std::string model = "meshes/m15-getup-actor.nif";
+        auto npc = *actor.get<ESM4::Npc>()->mBase; npc.mModel = "m15-getup-actor.nif";
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        std::filesystem::create_directories(fixture.mDirectory / "meshes");
+        {
+            std::ofstream file(fixture.mDirectory / model, std::ios::binary);
+            const auto bytes = nativeGetUpActorNif(); file.write(bytes.data(), bytes.size()); ASSERT_TRUE(file);
+        }
+        fixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(fixture.mDirectory)); fixture.mVfs.buildIndex();
+        fixture.mResources.getSceneManager()->setShaderPath(std::filesystem::path(OPENMW_PROJECT_SOURCE_DIR) / "files/shaders");
+        osg::ref_ptr<osg::Group> parent = new osg::Group;
+        SourceAnimation animation(actor, parent, &fixture.mResources, model);
+        const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(model)); ASSERT_TRUE(source);
+        EXPECT_EQ(source->reactionRootRecord(), 1u);
+        ASSERT_EQ(source->definition()->mBodies.size(), 1u);
+        EXPECT_EQ(source->definition()->mBodies[0].mInfoFilter.mLayer, 13u);
+        EXPECT_EQ(source->definition()->mBodies[0].mInfoFilter.mFlags, 1u);
+        const auto plan = animation.captureNativeGetUpPlan(*source);
+        ASSERT_EQ(plan.mNodes.size(), 4u); EXPECT_EQ(plan.mNodes.front().mNodeRecord, 0u);
+        EXPECT_EQ(plan.mVelocityResetBody, 4u);
+        auto& physics = world.initializePhysics(new osg::Group); physics.addActor(actor, VFS::Path::toNormalized(model));
+        ESM4::PhysicalBlendProfilesValues inputs; inputs.mHit.mGetUpTime = "0.25"; inputs.mDefaultGains[0] = "0.25,0.75";
+        world.loadOblivionPhysicalBlendConfiguration(14, inputs);
+        NifBullet::RagdollInternalCollisionFilter masks; masks.mSystemGroup = 10;
+        const std::array<std::uint32_t, 1> words{0xa010d};
+        world.beginOblivionActorPhysicalPose(animation, actor, Nif::NiTransform::getIdentity(), words,
+            MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_World, &masks);
+        const auto key = actor.getCellRef().getFormKey(); const auto base = actor.get<ESM4::Npc>()->mBase->mFormKey;
+        auto& combat = *world.getOblivionCombatService(); combat.setProcessKnockedState(key, 3);
+        auto moving = physics.captureActorRagdollSnapshot(actor, base, model);
+        moving.mBodies[0].mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{{1,2,3,99},{4,5,6,-99}};
+        physics.restoreActorRagdollSnapshot(actor, moving, base, model);
+        const auto original = physics.captureActorRagdollSnapshot(actor, base, model);
+        const auto cache = combat.actorRagdoll(key); const auto random = combat.combatRandomState();
+        const auto clock = physics.captureNativeBlendTimeCache();
+        EXPECT_THROW(physics.setupActorRagdollGetUpSnapshot(actor, base, model, plan,
+            world.getOblivionPhysicalBlendConfiguration().mDurations,
+            world.getOblivionPhysicalBlendConfiguration().mPostLink, 1,
+            [](const auto&) { throw std::runtime_error("cache rejected"); }), std::runtime_error);
+        EXPECT_EQ(physics.captureActorRagdollSnapshot(actor, base, model), original);
+        EXPECT_EQ(combat.actorRagdoll(key), cache);
+        EXPECT_THROW(world.setupOblivionActorGetUp(animation, other, 1), std::invalid_argument);
+        const auto result = world.setupOblivionActorGetUp(animation, actor, 1);
+        ASSERT_EQ(result.size(), 1u); EXPECT_EQ(result[0].mDisposition, NifBullet::RagdollNativeGetUpBlendDisposition::Started);
+        const auto current = physics.captureActorRagdollSnapshot(actor, base, model);
+        ASSERT_EQ(combat.actorRagdoll(key), current);
+        EXPECT_EQ(current.mBodies[0].mPosition, original.mBodies[0].mPosition);
+        EXPECT_EQ(current.mBodies[0].mNativePackedVelocity, ESM4::PhysicalWorldSceneVelocities{});
+        EXPECT_EQ(current.mBodies[0].mNativeMotion, ESM4::RuntimeRagdollMotion::Keyframed);
+        ASSERT_TRUE(current.mInternalFilters); EXPECT_EQ(current.mInternalFilters->front().mPackedFilter, 0xa0108u);
+        const auto& controller = current.mNativeControllers->mBlends[0].mState;
+        EXPECT_EQ(controller.mTiming.mStartKey, 1.f); EXPECT_EQ(controller.mTiming.mStopKey, .25f);
+        EXPECT_EQ(controller.mKeys[1].mGains, (ESM4::PhysicalBlendGains{.25f, .75f}));
+        EXPECT_EQ(combat.combatRandomState(), random); EXPECT_EQ(combat.getProcessKnockedState(key), 3);
+        EXPECT_EQ(physics.captureNativeBlendTimeCache(), clock);
+        EXPECT_FALSE(physics.getActor(actor)->isCollisionSuspended());
+        // Reordering nonphysical siblings does not invalidate pose binding,
+        // but does change native literal-slot selection and must reject GetUp.
+        struct FindRoot : osg::NodeVisitor
+        {
+            NifOsg::MatrixTransform* mNode = nullptr;
+            FindRoot() : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+            void apply(osg::Node& node) override
+            {
+                unsigned record;
+                if (node.getUserValue("recordIndex", record) && record == 0) mNode = dynamic_cast<NifOsg::MatrixTransform*>(&node);
+                traverse(node);
+            }
+        } find;
+        animation.getObjectRoot()->accept(find); ASSERT_NE(find.mNode, nullptr);
+        ASSERT_EQ(find.mNode->getNumChildren(), 2u);
+        osg::ref_ptr<osg::Node> first = find.mNode->getChild(0), second = find.mNode->getChild(1);
+        find.mNode->removeChildren(0, 2); find.mNode->addChild(second); find.mNode->addChild(first);
+        EXPECT_TRUE(animation.isCurrentNativePhysicalSource(*source));
+        EXPECT_THROW(world.setupOblivionActorGetUp(animation, actor, 0), std::invalid_argument);
+        EXPECT_EQ(physics.captureActorRagdollSnapshot(actor, base, model), current);
+        EXPECT_EQ(combat.actorRagdoll(key), current);
+        find.mNode->removeChildren(0, 2); find.mNode->addChild(first); find.mNode->addChild(second);
+        auto moved = actor; moved.mCell = nullptr; animation.updatePtr(moved);
+        EXPECT_FALSE(animation.isCurrentNativePhysicalSource(*source));
+        EXPECT_THROW(world.setupOblivionActorGetUp(animation, actor, 0), std::invalid_argument);
+        animation.updatePtr(actor);
+        world.endOblivionActorPhysicalPose(animation, actor);
+    }
+}

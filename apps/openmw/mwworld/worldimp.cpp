@@ -1748,6 +1748,47 @@ namespace MWWorld
         }
     }
 
+    std::vector<NifBullet::RagdollNativeGetUpNodeResult> World::setupOblivionActorGetUp(
+        MWRender::Animation& animation, const Ptr& actor, float startKey)
+    {
+        const auto& configuration = getOblivionPhysicalBlendConfiguration();
+        if (!mPhysics || !mOblivionCombat || actor.isEmpty() || animation.getPtr() != actor
+            || animation.getPtr().mCell != actor.mCell || !animation.hasPhysicalPose())
+            throw std::invalid_argument("native GetUp requires its live physical actor and renderer");
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        auto* combat = mOblivionCombat.get();
+        const auto* values = combat->findActorValues(key);
+        const auto* life = combat->findActorLife(key);
+        const auto base = player && values ? values->mBase : nativeActorBase(actor);
+        const auto previous = combat->actorRagdoll(key);
+        if (!values || !life || base.isNull() || values->mBase != base || life->mBase != base || !previous
+            || previous->mBase != base)
+            throw std::invalid_argument("native GetUp requires matching physical and actor/base authority");
+        auto model = actor.getClass().getCorrectedModel(actor);
+        if (player && actor.getType() == ESM::REC_NPC_ && !actor.get<ESM::NPC>()->mBase->mModel.empty())
+            model = Misc::ResourceHelpers::correctActorModelPath(
+                Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                mResourceSystem->getVFS());
+        if (previous->mModel != model.value())
+            throw std::invalid_argument("native GetUp cached model differs from the current actor");
+        const auto source = animation.captureNativePhysicalSource(model);
+        if (!source) throw std::invalid_argument("native GetUp cannot bind the rendered actor NIF");
+        const auto plan = animation.captureNativeGetUpPlan(*source);
+        return mPhysics->setupActorRagdollGetUpSnapshot(actor, base, model.value(), plan,
+            configuration.mDurations, configuration.mPostLink, startKey,
+            [&](const ESM4::RuntimeActorRagdoll& next) {
+                if (mOblivionCombat.get() != combat || !animation.isCurrentNativePhysicalSource(*source)
+                    || next.mAssetHash != previous->mAssetHash)
+                    throw std::invalid_argument("native GetUp lost its renderer or cached asset binding");
+                auto cache = combat->prepareActorRagdollUpdate(key, previous, next);
+                if (!cache || !cache->isValid() || !cache->commit())
+                    throw std::invalid_argument("native GetUp cache changed before physical publication");
+                // This nonthrowing cache swap is the last caller operation.
+                // Physical setup has staged all validation and allocation.
+            });
+    }
+
     void World::endOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor)
     {
         if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics || !mOblivionCombat

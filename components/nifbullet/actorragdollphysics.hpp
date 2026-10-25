@@ -298,6 +298,14 @@ namespace NifBullet
         RagdollNativeGetUpBlendDisposition mDisposition;
     };
 
+    struct RagdollNativeGetUpPublication
+    {
+        std::span<const RagdollNativeBlendControllerState> mBlendControllers;
+        std::span<const RagdollInternalBodyFilter> mFilters;
+        std::span<const RagdollNativeMotionRequest> mMotions;
+        std::optional<std::uint32_t> mVelocityResetBody;
+    };
+
     struct RagdollNativeHitBlendSetupRequest
     {
         std::uint32_t mNodeRecord;
@@ -594,11 +602,16 @@ namespace NifBullet
         // durations/gains from current owned packed filters, not authored words.
         // Stage every curve/filter/motion request before sparse publication.
         // Requires configured native internal masks and the exclusive World
-        // barrier; preserves unselected forces, poses, activation and velocities.
+        // barrier; preserves poses/forces and unselected velocities. Reset
+        // writes retain normal activation-group wake behavior.
         // Bodyless authored controllers are outside this owner's admission.
+        // Optional atomic caller hook runs after staging, before any writes.
+        // A throwing hook preserves this owner. Read-only captures are allowed;
+        // owner mutation, stepping, reentrant setup and retained spans are not.
         std::vector<RagdollNativeGetUpNodeResult> setupNativeGetUp(const RagdollGetUpPlan& plan,
             const ESM4::PhysicalBlendDurationTables& durations,
-            const ESM4::PhysicalBlendGainTable& gains, float startKey);
+            const ESM4::PhysicalBlendGainTable& gains, float startKey,
+            const std::function<void(const RagdollNativeGetUpPublication&)>& beforePublish = {});
         // Atomic owned setup for already admitted body nodes and Down durations.
         // Read current damping and archived dynamic mass, create at the head or
         // retain existing target/list position. No body force, wake or pose write.

@@ -93,6 +93,10 @@ namespace SceneUtil
 
         // Actual live child-slot preorder, independent of body/record order.
         std::vector<std::uint32_t> bodyNodeOrder() const;
+        // The single native scene root above the owned physical hierarchy.
+        // Renderer-only wrappers have no record identity. Reject ambiguous
+        // roots; this is independent of a KF's accumulator/root selection.
+        std::uint32_t sceneRootRecord() const;
         // One settled native actor frame after animation callbacks. Missing
         // scene targets keep animated locals; bit0 gates physical reads and
         // bit8 alone authorizes local writeback. Pending0x40 needs its separate

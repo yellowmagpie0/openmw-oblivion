@@ -2866,7 +2866,8 @@ namespace NifBullet
     }
 
     std::vector<RagdollNativeGetUpNodeResult> ActorRagdollPhysics::setupNativeGetUp(const RagdollGetUpPlan& plan,
-        const ESM4::PhysicalBlendDurationTables& durations, const ESM4::PhysicalBlendGainTable& gains, float startKey)
+        const ESM4::PhysicalBlendDurationTables& durations, const ESM4::PhysicalBlendGainTable& gains, float startKey,
+        const std::function<void(const RagdollNativeGetUpPublication&)>& beforePublish)
     {
         require(plan.mSourceHash == mImpl->mSourceHash, "GetUp source identity mismatch");
         require(mImpl->worldAlive() && mImpl->mPendingRegistration.expired(), "unavailable GetUp World");
@@ -2929,6 +2930,15 @@ namespace NifBullet
         auto nextFilters = changedFilters ? prepareInternalCollisionFilters(filters) : nullptr;
         if (nextFilters)
             require(validateInternalCollisionFilters(*nextFilters), "GetUp filters changed before publication");
+        std::vector<RagdollNativeMotionRequest> motions;
+        if (beforePublish)
+        {
+            motions.reserve(keyframed.size() + bool(reset));
+            if (reset) motions.push_back({mImpl->mBodies[*reset].mRecord, RagdollNativeMotion::Keyframed});
+            for (const auto index : keyframed)
+                if (index != reset) motions.push_back({mImpl->mBodies[index].mRecord, RagdollNativeMotion::Keyframed});
+            beforePublish({prepared.first, filters, motions, plan.mVelocityResetBody});
+        }
         // No allocating/validating work remains. This sparse publication avoids
         // restore's unrelated pose, force-clear and activation side effects.
         if (reset)

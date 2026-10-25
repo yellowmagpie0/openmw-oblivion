@@ -295,6 +295,40 @@ namespace MWPhysics
         return result;
     }
 
+    ESM4::RuntimeActorRagdoll captureNativeActorRagdollGetUpSnapshot(
+        const NifBullet::ActorRagdollPhysics& physics, const ESM::FormKey& base,
+        std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
+        const NifBullet::RagdollNativeGetUpPublication& publication)
+    {
+        auto result = captureNativeActorRagdollSnapshot(physics, base, model, definition);
+        auto& controllers = result.mNativeControllers->mBlends;
+        controllers.clear(); controllers.reserve(publication.mBlendControllers.size());
+        for (const auto& controller : publication.mBlendControllers)
+            controllers.push_back({controller.mRecord, controller.mAttachedNode, controller.mTargetNode, controller.mState});
+        std::sort(controllers.begin(), controllers.end(), [](const auto& a, const auto& b) { return a.mRecord < b.mRecord; });
+        if (!publication.mFilters.empty())
+        {
+            result.mInternalFilters.emplace();
+            for (const auto& filter : publication.mFilters)
+                result.mInternalFilters->push_back({filter.mRecord, filter.mPackedFilter});
+            std::sort(result.mInternalFilters->begin(), result.mInternalFilters->end(),
+                [](const auto& a, const auto& b) { return a.mBodyRecord < b.mBodyRecord; });
+        }
+        for (auto& body : result.mBodies)
+        {
+            for (const auto& motion : publication.mMotions)
+                if (motion.mRecord == body.mRecord)
+                    body.mNativeMotion = static_cast<ESM4::RuntimeRagdollMotion>(motion.mMotion);
+            if (publication.mVelocityResetBody == body.mRecord)
+            {
+                body.mLinearVelocity = body.mAngularVelocity = {};
+                body.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{};
+            }
+        }
+        result.validate();
+        return result;
+    }
+
     std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepareNativeActorRagdollSnapshot(
         const NifBullet::ActorRagdollPhysics& physics,
         const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base,

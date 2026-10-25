@@ -399,6 +399,20 @@ namespace SceneUtil
 
     ActorRagdollPoseBinding::~ActorRagdollPoseBinding() = default;
 
+    std::uint32_t ActorRagdollPoseBinding::sceneRootRecord() const
+    {
+        mImpl->validateHierarchy();
+        std::optional<std::uint32_t> root;
+        for (const auto& node : mImpl->mNodes)
+            if (!node.mParent)
+            {
+                require(!root, "ambiguous native actor scene root");
+                root = node.mNodeRecord;
+            }
+        require(root.has_value(), "missing native actor scene root");
+        return *root;
+    }
+
     std::vector<std::uint32_t> ActorRagdollPoseBinding::bodyNodeOrder() const
     {
         mImpl->validateHierarchy();

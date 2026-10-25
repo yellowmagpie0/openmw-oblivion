@@ -1925,6 +1925,22 @@ namespace MWPhysics
             updates, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
     }
 
+    std::vector<NifBullet::RagdollNativeGetUpNodeResult> PhysicsTaskScheduler::setupActorRagdollGetUpSnapshot(const MWWorld::Ptr& ptr,
+        const ESM::FormKey& base, std::string_view model, const NifBullet::RagdollGetUpPlan& plan,
+        const ESM4::PhysicalBlendDurationTables& durations, const ESM4::PhysicalBlendGainTable& gains,
+        float startKey, const std::function<void(const ESM4::RuntimeActorRagdoll&)>& beforePublish)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto& owned = actorRagdoll(ptr);
+        return owned.mPhysics.setupNativeGetUp(plan, durations, gains, startKey,
+            [&](const NifBullet::RagdollNativeGetUpPublication& publication) {
+                const auto snapshot = captureNativeActorRagdollGetUpSnapshot(
+                    owned.mPhysics, base, model, owned.mDefinition, publication);
+                if (beforePublish) beforePublish(snapshot);
+            });
+    }
+
     std::vector<NifBullet::RagdollNativeGetUpNodeResult> PhysicsTaskScheduler::setupActorRagdollGetUp(const MWWorld::Ptr& ptr,
         const NifBullet::RagdollGetUpPlan& plan, const ESM4::PhysicalBlendDurationTables& durations,
         const ESM4::PhysicalBlendGainTable& gains, float startKey)

@@ -6888,3 +6888,43 @@ namespace
         EXPECT_TRUE(actor.setupNativeGetUp(plan, durations, gains, 0).empty());
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, GetUpPublicationHookSeesStagedStateAndRejectsWithoutPhysicalWrites)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, 1.f, {{0.f, 1.f, 1.f}}};
+        const auto masks = permissiveInternalFilter();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1, nullptr, &masks);
+        auto packed = actor.captureNativePackedVelocities(); packed[0].mVelocities = {{1,2,3,99},{4,5,6,-99}};
+        actor.restoreNativePackedVelocities(packed);
+        const auto original = actor.captureNativeBlendControllers()[0].mState;
+        const auto filters = actor.captureInternalCollisionFilters();
+        const NifBullet::RagdollGetUpPlan plan{mGraph.mSourceHash, 12, {
+            {8, NifBullet::RagdollGetUpCollision::Blend, 12, 78}}};
+        const auto durations = ESM4::InitialPhysicalBlendDurationTables;
+        const auto gains = ESM4::InitialPhysicalBlendGainTable;
+        unsigned callbacks = 0;
+        EXPECT_THROW(actor.setupNativeGetUp(plan, durations, gains, 1,
+            [&](const NifBullet::RagdollNativeGetUpPublication& next) {
+                ++callbacks;
+                EXPECT_EQ(next.mBlendControllers[0].mState.mSetupState, 2u);
+                EXPECT_EQ(next.mBlendControllers[0].mState.mTiming.mStartKey, 1.f);
+                EXPECT_EQ(next.mFilters[0].mPackedFilter & 63, 8u);
+                EXPECT_EQ(next.mMotions[0].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+                EXPECT_EQ(next.mVelocityResetBody, 12u);
+                EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, original);
+                EXPECT_EQ(actor.captureInternalCollisionFilters(), filters);
+                throw std::runtime_error("caller rejected GetUp");
+            }), std::runtime_error);
+        EXPECT_EQ(callbacks, 1u);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, original);
+        EXPECT_EQ(actor.captureInternalCollisionFilters(), filters);
+        EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(actor.captureNativePackedVelocities()[0].mVelocities, packed[0].mVelocities);
+        EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
+    }
+}

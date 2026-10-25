@@ -428,6 +428,13 @@ namespace MWPhysics
         // Owned controller state and publication share the movement-worker barrier.
         // Selected-controller curve setup after the movement-worker barrier;
         // duration/filter and whole reaction lifecycle remain caller-owned.
+        // Stage a current native save projection and invoke the caller's
+        // atomic cache hook under the same worker barrier as physical setup.
+        // Hook must not reenter physics or mutate the physical owner.
+        std::vector<NifBullet::RagdollNativeGetUpNodeResult> setupActorRagdollGetUpSnapshot(const MWWorld::Ptr& ptr,
+            const ESM::FormKey& base, std::string_view model, const NifBullet::RagdollGetUpPlan& plan,
+            const ESM4::PhysicalBlendDurationTables& durations, const ESM4::PhysicalBlendGainTable& gains,
+            float startKey, const std::function<void(const ESM4::RuntimeActorRagdoll&)>& beforePublish);
         std::vector<NifBullet::RagdollNativeGetUpNodeResult> setupActorRagdollGetUp(const MWWorld::Ptr& ptr,
             const NifBullet::RagdollGetUpPlan& plan, const ESM4::PhysicalBlendDurationTables& durations,
             const ESM4::PhysicalBlendGainTable& gains, float startKey);

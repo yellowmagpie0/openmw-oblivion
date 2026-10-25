@@ -1016,3 +1016,18 @@ namespace
         EXPECT_EQ(mPelvis->getTraversalMatrix().getMatrix(), nullptr);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPoseTest, SceneRootIsTheFullNativeAncestorAndRejectsAmbiguousPhysicalRoots)
+    {
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot);
+        EXPECT_EQ(binding.sceneRootRecord(), 8u);
+        mConnector->removeChild(mHand); mRoot->addChild(mHand);
+        EXPECT_THROW(binding.sceneRootRecord(), std::invalid_argument);
+        SceneUtil::ActorRagdollPoseBinding split(mGraph, *mRoot);
+        EXPECT_THROW(split.sceneRootRecord(), std::invalid_argument);
+        mRoot->removeChild(mHand); mConnector->addChild(mHand);
+        EXPECT_EQ(binding.sceneRootRecord(), 8u);
+    }
+}

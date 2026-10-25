@@ -19,6 +19,7 @@ namespace NifBullet
     struct ActorRagdollDefinition;
     class ActorRagdollPhysics;
     struct RagdollInternalCollisionFilter;
+    struct RagdollNativeGetUpNodeResult;
 }
 
 namespace MWWorld

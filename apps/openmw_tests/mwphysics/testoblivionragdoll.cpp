@@ -717,3 +717,45 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(NativeRagdollSnapshotTest, GetUpSaveProjectionEqualsSparseCommittedOwnerAndSurvivesCodec)
+    {
+        btDefaultCollisionConfiguration config; btCollisionDispatcher dispatcher{&config}; btDbvtBroadphase broadphase;
+        btSequentialImpulseConstraintSolver solver; btDiscreteDynamicsWorld world{&dispatcher, &broadphase, &solver, &config};
+        auto& source = mGraph.mBodies[0];
+        source.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        source.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 20, 0xd, 1.f, 0.f, 0.f, 1.f, {{0.f, 1.f, 1.f}}};
+        NifBullet::RagdollInternalCollisionFilter filter;
+        filter.mSystemGroup = 1;
+        filter.mMasks.mLayerMasks.fill(0xffffffffu); filter.mMasks.mBoneMasks.fill(0xffffffffu);
+        const std::array<btTransform, 2> poses{mBodies[0].mPose, mBodies[1].mPose};
+        NifBullet::ActorRagdollPhysics owner(mGraph, world, 1, poses, 1, -1, nullptr, &filter);
+        auto packed = owner.captureNativePackedVelocities();
+        for (auto& state : packed) state.mVelocities = {{1,2,3,99},{4,5,6,-99}};
+        owner.restoreNativePackedVelocities(packed);
+        auto words = owner.captureInternalCollisionFilters(); words[1].mPackedFilter = 0x1160d;
+        auto filters = owner.prepareInternalCollisionFilters(words); ASSERT_TRUE(owner.commitInternalCollisionFilters(*filters));
+        const NifBullet::RagdollGetUpPlan plan{mGraph.mSourceHash, source.mRecord, {
+            {source.mNodeRecord, NifBullet::RagdollGetUpCollision::Blend, source.mRecord, 78},
+            {mGraph.mBodies[1].mNodeRecord, NifBullet::RagdollGetUpCollision::Ordinary, mGraph.mBodies[1].mRecord, {}}}};
+        const auto durations = ESM4::InitialPhysicalBlendDurationTables;
+        const auto gains = ESM4::InitialPhysicalBlendGainTable;
+        std::optional<ESM4::RuntimeActorRagdoll> projected;
+        const auto original = MWPhysics::captureNativeActorRagdollSnapshot(owner, mBase, mModel, mGraph);
+        const auto stage = [&](const auto& next) {
+            projected = MWPhysics::captureNativeActorRagdollGetUpSnapshot(owner, mBase, mModel, mGraph, next);
+            EXPECT_EQ(MWPhysics::captureNativeActorRagdollSnapshot(owner, mBase, mModel, mGraph), original);
+        };
+        EXPECT_THROW(owner.setupNativeGetUp(plan, durations, gains, 1,
+            [&](const auto& next) { stage(next); throw std::runtime_error("cache rejected"); }), std::runtime_error);
+        EXPECT_EQ(MWPhysics::captureNativeActorRagdollSnapshot(owner, mBase, mModel, mGraph), original);
+        owner.setupNativeGetUp(plan, durations, gains, 1, stage);
+        ASSERT_TRUE(projected);
+        EXPECT_EQ(MWPhysics::captureNativeActorRagdollSnapshot(owner, mBase, mModel, mGraph), *projected);
+        const auto state = save(*projected);
+        EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).canonicalJson(), state.canonicalJson());
+    }
+}

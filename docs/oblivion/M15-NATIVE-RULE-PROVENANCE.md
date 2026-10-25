@@ -19393,3 +19393,72 @@ open. See the [verification receipt](M15-NATIVE-GETUP-ROOT-VERIFICATION.json) an
 [editable cases](../../scripts/data/oblivion_compat/m15_native_getup_root_cases.json).
 
 Tested source fingerprint: `1ca97295c469915af8d1963dc2f35be2e2a267467cbd2dec496c64226cf09a72` on parent `f7f62a4b2e80f0a6337a040a8cfb99da04fa4892`.
+
+### World GetUp scene-root binding and physical/cache publication
+
+`World::setupOblivionActorGetUp` now binds the actual rendered actor scene root
+and resolved World blend configuration to owned GetUp setup. GetUp's native
+`Actor+3C` root is distinct from the first KF accumulator root. The renderer
+binding resolves the one native ancestor above the owned bodies, validates its
+parsed file root/hash and current NIF child order, and rejects stale roots,
+foreign renderers, cell changes and ambiguous topology. Renderer-only wrappers
+and separately loaded equipment assets do not become native child slots.
+
+The scheduler prepares the proposed complete physical save projection under its
+worker barrier before publishing any GetUp body/controller/filter state. The
+World stages and validates its existing saved-owner cache update there, then
+commits the cache immediately before the nonthrowing sparse physical writes.
+A throwing caller hook leaves physical state unchanged. The snapshot projection
+includes proposed controller curves, live filters, modes and all eight reset
+velocity lanes, while retaining poses, forces, targets, generated controllers
+and World registration. Read-only captures are allowed in the hook; mutation,
+stepping, reentrant setup and retained spans are not. Setup consumes no RNG,
+advances no knocked byte and changes no shared physical clock. Those operations
+belong to the recovery dispatcher.
+
+A serialized actor fixture has scene root 0, KF root 1, prepass body 4 and
+controller 7. The real headless World path verifies DEFAULT Head gain/duration
+selection, cache/physical equality, rejection before writes and stale child-slot
+and cell guards with zero and two physics worker threads. A separate test proves
+that the staged snapshot equals the sparse committed owner and survives binary
+encoding. Retained stock humanoid and Dog skeletons also bind successfully:
+71 nodes/18 bodies and 46 nodes/26 bodies respectively. Both complete stock owners
+pass World GetUp/cache publication in a headless scene host. These probes do not
+establish native species morphology, natural frame dispatch or gameplay.
+
+Both final configurations pass 3,131 component and 1,962 engine cases with exact
+inventories/XML, no failures and no skips. Leak-enabled focused checks pass 48
+component and 2 engine cases; both rebuilt libraries also retain all 7,776 native
+root selections and 5,184 admitted physical golden profiles. The full sanitizer
+suites retain the previously documented unrelated full-suite leak exception.
+No warning originates on a changed line. Python/save formats and native timing
+rules are unchanged; the runtime save version remains 70.
+
+The focused extracted World test caught an incorrectly authored body-filter
+field: the fixture put its intended bone ID into entity-info bytes, so production
+correctly used live ID 0 and DEFAULT gains 1. Both sibling builds were stopped and
+verified terminal before correcting the fixture. The corrected source explicitly
+asserts parsed layer 13/flags 1, passes the focused World test, then passes both
+full configurations. The retained attempts include that failure, a missing local
+include path in the first extracted-test wrapper, and a corrected fixture-only
+receipt description. Production semantics did not change for those corrections.
+
+Further original-instruction research executes 960 supplied request-state
+profiles in 1,920 raw5/raw6 dispatcher suffix runs and 2,880 query calls without
+game/OS stubs. Ready raw5 paths stop explicitly before body transition; every
+nonready raw5 and raw6 path executes through return. Native request readiness
+is status 1, separately from slot 0 sequence state 1. Native completion requires no
+secondary request and either no primary request, or a primary request with a
+nonnull sequence and status 3. These are branch audits of supplied fields, not
+constructor/async-producer or natural frame-order acceptance, and are not yet
+production dispatcher rules.
+
+**Full M15S4 remains incomplete:** this chunk closes World scene-root binding
+and physical/save-cache publication. Natural initial/Down/GetUp lifecycle,
+selected-IDLE request producer/slot5 clock/RNG/state publication and persistence,
+remaining native caller-prefix behavior, directional mastery, generic package
+ownership unification and the full view/device/FPS normal-input/fresh-process
+courses remain open. See the [verification receipt](M15-NATIVE-GETUP-WORLD-VERIFICATION.json)
+and [editable cases](../../scripts/data/oblivion_compat/m15_native_getup_world_cases.json).
+
+Tested source fingerprint: `c10940580b2471a88598e1dcfbefada455cbc9f43b91b5082fdc87974ee15801` on parent `572514671a45a7af38aff1055a7c009dd37079ac`.

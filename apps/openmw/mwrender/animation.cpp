@@ -4,6 +4,8 @@
 #include <components/esm4/runtimestate.hpp>
 #include <components/esm4/nativeidle.hpp>
 #include <components/nif/nativetransform.hpp>
+#include <components/nif/node.hpp>
+#include <components/misc/osguservalues.hpp>
 
 #include <exception>
 
@@ -2493,9 +2495,77 @@ namespace MWRender
     {
         const auto owner = source.mOwner.lock();
         return owner && owner == mNativePhysicalSourceIdentity && source.mRoot == mObjectRoot
-            && source.mActor == mPtr
+            && source.mActor == mPtr && source.mActor.mCell == mPtr.mCell
             && source.mDefinition && source.mBinding && source.mBinding->isValid()
             && source.mReactionRootRecord == mNativeReactionRootRecord;
+    }
+
+    NifBullet::RagdollGetUpPlan Animation::captureNativeGetUpPlan(const NativePhysicalSource& source) const
+    {
+        if (!isCurrentNativePhysicalSource(source) || !mResourceSystem)
+            throw std::invalid_argument("native GetUp requires its current physical source");
+        const auto file = mResourceSystem->getNifFileManager()->get(source.mModel);
+        const auto root = source.mBinding->sceneRootRecord();
+        if (file->mHash != source.mDefinition->mSourceHash || file->mRoots.size() != 1
+            || !file->mRoots[0] || file->mRoots[0]->mRecordIndex != root)
+            throw std::invalid_argument("native GetUp scene root does not match its parsed actor asset");
+        const auto plan = NifBullet::loadActorRagdollGetUpPlan(*file, root);
+        const osg::Group* assetRoot = mObjectRoot;
+        std::string assetHash;
+        if (!assetRoot->getUserValue(Misc::OsgUserValues::sFileHash, assetHash))
+        {
+            if (assetRoot->getNumChildren() != 1 || !assetRoot->getChild(0)->asGroup())
+                throw std::invalid_argument("unidentified native GetUp renderer asset root");
+            assetRoot = assetRoot->getChild(0)->asGroup();
+        }
+        std::unordered_map<std::uint32_t, const NifOsg::MatrixTransform*> records;
+        std::unordered_set<const osg::Node*> visited;
+        const auto walk = [&](auto&& self, const osg::Node& node) -> void {
+            std::string hash;
+            if (&node != assetRoot && node.getUserValue(Misc::OsgUserValues::sFileHash, hash))
+                return;
+            if (node.asDrawable()) return;
+            if (!visited.insert(&node).second)
+                throw std::invalid_argument("cyclic or shared native GetUp renderer tree");
+            if (const auto* transform = dynamic_cast<const NifOsg::MatrixTransform*>(&node))
+            {
+                std::uint32_t record;
+                if (!node.getUserValue("recordIndex", record) || !records.emplace(record, transform).second)
+                    throw std::invalid_argument("ambiguous native GetUp renderer record");
+            }
+            if (const auto* group = node.asGroup())
+                for (unsigned i = 0; i < group->getNumChildren(); ++i) self(self, *group->getChild(i));
+        };
+        walk(walk, *assetRoot);
+        for (const auto& selected : plan.mNodes)
+        {
+            const auto live = records.find(selected.mNodeRecord);
+            if (live == records.end())
+                throw std::invalid_argument("missing native GetUp renderer node");
+            const auto* node = dynamic_cast<const Nif::NiNode*>(file->mRecords[selected.mNodeRecord].get());
+            if (!node) continue;
+            std::vector<std::uint32_t> expected, current;
+            for (const auto& child : node->mChildren)
+                if (!child.empty()) expected.push_back(child->mRecordIndex);
+            const auto children = [&](auto&& self, const osg::Node& child) -> void {
+                std::string hash;
+                if (child.getUserValue(Misc::OsgUserValues::sFileHash, hash)) return;
+                if (dynamic_cast<const NifOsg::MatrixTransform*>(&child))
+                {
+                    std::uint32_t record;
+                    if (!child.getUserValue("recordIndex", record))
+                        throw std::invalid_argument("unidentified native GetUp renderer child");
+                    current.push_back(record);
+                }
+                else if (const auto* group = child.asGroup())
+                    for (unsigned i = 0; i < group->getNumChildren(); ++i) self(self, *group->getChild(i));
+            };
+            for (unsigned i = 0; i < live->second->getNumChildren(); ++i)
+                children(children, *live->second->getChild(i));
+            if (current != expected)
+                throw std::invalid_argument("native GetUp renderer child slots changed");
+        }
+        return plan;
     }
 
     struct Animation::NativeSceneState

@@ -428,6 +428,11 @@ namespace MWWorld
         // Explicit discard releases saved ownership too; this does not select
         // native recovery policy. Scene unloading retains its physical snapshot.
         void endOblivionActorPhysicalPose(MWRender::Animation& animation, const Ptr& actor);
+        // Apply GetUp to the actual rendered actor scene root, and publish its
+        // physical save projection under the worker barrier. Selection, slot5,
+        // RNG and knocked-state progression belong to the recovery dispatcher.
+        std::vector<NifBullet::RagdollNativeGetUpNodeResult> setupOblivionActorGetUp(
+            MWRender::Animation& animation, const Ptr& actor, float startKey);
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareOblivionActorKnockdownControllers(
             const Ptr& actor, std::span<const OblivionPhysicalDownRequest> requests);
         std::vector<NifBullet::RagdollNativeHitBlendDisposition> prepareOblivionActorHitBlendControllers(

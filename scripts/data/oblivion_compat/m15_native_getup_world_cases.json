@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "scope": "World GetUp scene-root binding and atomic owned physical/save-cache publication",
+  "parent": "572514671a45a7af38aff1055a7c009dd37079ac",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_caller_binding": {
+    "selected_idle": "654ADD reads Actor+3C;654BF5 passes that root to8AB8A0",
+    "reset": "654CA6 reads Actor+3C;654CBA passes that root to8AB8A0",
+    "live_observation": "physical-recovery-original-live-07/observed-01-sample.json retains full Dog BSFadeNode > Bip01 > NonAccum; KF reaction root is Bip01"
+  },
+  "cases": [
+    {
+      "name": "actual-root",
+      "nif_nodes": [
+        "ActorRoot",
+        "Bip01",
+        "NonAccum",
+        "Helper"
+      ],
+      "kf_root_record": 1,
+      "getup_root_record": 0,
+      "velocity_reset_body_record": 4,
+      "controller_record": 7,
+      "threads": [
+        0,
+        2
+      ],
+      "start_key": 1,
+      "duration": 0.25,
+      "configured_gains": [
+        0.25,
+        0.75
+      ],
+      "expected": "World saved cache equals committed physical snapshot; all8 selected velocity lanes zero; no RNG/knocked-byte/shared-clock change"
+    },
+    {
+      "name": "caller-hook-reject",
+      "expected": "Full staging and save projection happen before body/controller/filter writes; throwing cache hook preserves physical state and existing saved owner"
+    },
+    {
+      "name": "source-topology",
+      "expected": "Reordered literal child slots reject despite an otherwise-valid pose binding; foreign renderer, cell change, missing/expired source or parser hash drift reject"
+    },
+    {
+      "name": "physical-continuation",
+      "expected": "Projected native modes, controllers, filters and packed velocities exactly equal sparse committed owner; binary codec retains the state"
+    }
+  ],
+  "limits": [
+    "The World setup operation is a physical/save-cache primitive for the recovery dispatcher. Natural CharacterController recovery, selected-IDLE slot5 lifecycle/RNG commit and normal-input restart acceptance remain incomplete.",
+    "No new native formula/branch is inferred from production outputs. Existing full-root policy goldens are reused against the changed library.",
+    "Renderer admission validates one parsed actor root and its live NIF child order, omitting renderer-only wrappers and separate equipment assets.",
+    "No new save fields/version; no gameplay, fresh-process selected-IDLE recovery or runtime timing acceptance is claimed."
+  ]
+}
