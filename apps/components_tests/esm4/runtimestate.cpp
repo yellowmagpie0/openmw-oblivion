@@ -2856,7 +2856,7 @@ TEST(ESM4RuntimeState, NativeControllersRejectMalformedVersionIdentityTimingAndW
             case 6: blend.mState.mClock.mElapsed = std::numeric_limits<float>::quiet_NaN(); break;
             case 7: blend.mState.mCachedGains.mHierarchy = std::numeric_limits<float>::infinity(); break;
             case 8: blend.mState.mKeys = {{2, {0, 0}}, {1, {0, 0}}}; blend.mState.mCursor = 0; break;
-            case 9: blend.mState.mKeys = {{0, {0, 0}}, {1, {0, 0}}}; blend.mState.mCursor = 1; break;
+            case 9: blend.mState.mKeys = {{0, {0, 0}}, {1, {0, 0}}}; blend.mState.mCursor = 2; break;
             case 10: velocity.mTargetNode = 99; break;
             case 11: velocity.mState.mTiming.mStartKey = 5; break;
             case 12: velocity.mState.mFrameDelta = -1; break;
@@ -5603,4 +5603,20 @@ TEST(ESM4RuntimeState, MeleeParalysis70RejectsInvalidLifecycleAndUncommittedIden
         bad.mNativeActorValues.front().mMeleeParalysis[1].mState = effect;
         EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
     }
+}
+
+TEST(ESM4RuntimeState, GetUpTerminalCursorAndReversedBoundsRoundTrip)
+{
+    auto state = controllerRagdollState();
+    auto& blend = state.mNativeActorRagdolls.begin()->second.mNativeControllers->mBlends.front().mState;
+    blend.mTiming = {0xcd, 1, 0, 1, .25f};
+    blend.mKeys = {{0, {0, 0}}, {.25f, {.25f, .75f}}};
+    blend.mCursor = 1; blend.mSetupState = 2;
+    const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mNativeActorRagdolls, state.mNativeActorRagdolls);
+    EXPECT_EQ(restored.serializeBinary(), bytes);
+    EXPECT_NE(restored.canonicalJson().find("\"cursor\":1"), std::string::npos);
+    blend.mCursor = 2;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
 }

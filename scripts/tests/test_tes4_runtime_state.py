@@ -3036,6 +3036,21 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             invalid = copy.deepcopy(state); invalid["native_actor_ragdolls"][0]["native_controllers"] = value
             with self.subTest(value=value), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
 
+    def test_getup_terminal_cursor_and_reversed_bounds_roundtrip(self):
+        state = self.controller_ragdoll_state()
+        blend = state["native_actor_ragdolls"][0]["native_controllers"]["blends"][0]["state"]
+        blend["timing"] = {"flags": 0xcd, "frequency": 1., "phase": 0., "start_key": 1., "stop_key": .25}
+        blend["keys"] = [{"time": 0., "hierarchy_gain": 0., "velocity_gain": 0.},
+                         {"time": .25, "hierarchy_gain": .25, "velocity_gain": .75}]
+        blend["cursor"] = 1
+        payload = state_io.encode_payload(state)
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["native_actor_ragdolls"], state["native_actor_ragdolls"])
+        self.assertEqual(state_io.encode_payload(restored), payload)
+        blend["cursor"] = 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+
     def test_native_physical_cache_v36_golden_and_legacy_absence(self):
         old = self.controller_ragdoll_state(); legacy = state_io.encode_payload(old)
         prefix = bytearray(legacy); struct.pack_into("<I", prefix, len(b"OMW4STATE"), 36)

@@ -1539,7 +1539,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     raise RuntimeStateError("Invalid TES4 authored controller cached gains")
                 native_float(cached["hierarchy"]); native_float(cached["velocity"])
                 keys = check_collection(value["keys"], "native authored controller keys")
-                if len(keys) >= 2 and value["cursor"] >= len(keys) - 1:
+                if len(keys) >= 2 and value["cursor"] >= len(keys):
                     raise RuntimeStateError("Invalid TES4 authored controller cursor")
                 previous_key = None
                 for key in keys:

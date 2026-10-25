@@ -2807,6 +2807,53 @@ namespace NifBullet
         return controllers;
     }
 
+    std::vector<RagdollNativeGetUpBlendDisposition> ActorRagdollPhysics::prepareNativeGetUpBlends(
+        std::span<const RagdollNativeGetUpBlendRequest> requests)
+    {
+        auto controllers = mImpl->mBlendControllers;
+        std::vector<RagdollNativeGetUpBlendDisposition> result;
+        result.reserve(requests.size());
+        std::unordered_set<std::uint32_t> nodes;
+        for (const auto& request : requests)
+        {
+            require(nodes.insert(request.mNodeRecord).second, "duplicate native GetUp setup node");
+            require(std::count_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                        [&](const auto& body) { return body.mNodeRecord == request.mNodeRecord; }) == 1,
+                "unknown or ambiguous native GetUp setup node");
+            if (std::none_of(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+                    [&](const auto& target) { return target.mNode == request.mNodeRecord; }))
+            {
+                result.push_back(RagdollNativeGetUpBlendDisposition::MissingBlend);
+                continue;
+            }
+            const auto controller = std::find_if(controllers.begin(), controllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == request.mNodeRecord; });
+            if (controller == controllers.end())
+            {
+                result.push_back(RagdollNativeGetUpBlendDisposition::MissingController);
+                continue;
+            }
+            require(std::isfinite(request.mDuration), "nonfinite native GetUp setup duration");
+            if (request.mDuration < 0.f)
+            {
+                result.push_back(RagdollNativeGetUpBlendDisposition::Disabled);
+                continue;
+            }
+            auto& state = controller->mState;
+            const auto setup = ESM4::preparePhysicalGetUpBlend(request.mConfiguredGains,
+                request.mDuration, request.mStartKey, state.mTiming.mFlags, state.mClock);
+            state.mKeys.assign(setup.mKeys.begin(), setup.mKeys.end());
+            state.mTiming = {setup.mControllerFlags, 1.f, 0.f, setup.mStartKey, setup.mStopKey};
+            state.mClock = setup.mClock;
+            state.mCursor = 0;
+            state.mCachedGains = {-1.f, -1.f};
+            state.mSetupState = 2;
+            result.push_back(RagdollNativeGetUpBlendDisposition::Started);
+        }
+        mImpl->mBlendControllers.swap(controllers);
+        return result;
+    }
+
     std::vector<RagdollNativeVelocityControllerState> ActorRagdollPhysics::captureNativeVelocityControllers() const
     {
         return mImpl->mVelocityControllers;
@@ -2878,7 +2925,7 @@ namespace NifBullet
                     && std::isfinite(state.mCachedGains.mHierarchy) && std::isfinite(state.mCachedGains.mVelocity),
                 "invalid native authored controller clock or cached gains");
             require(state.mKeys.size() <= std::numeric_limits<std::uint32_t>::max()
-                    && (state.mKeys.size() < 2 || state.mCursor < state.mKeys.size() - 1),
+                    && (state.mKeys.size() < 2 || state.mCursor < state.mKeys.size()),
                 "invalid native authored controller key count or cursor");
             for (std::size_t i = 0; i < state.mKeys.size(); ++i)
             {

@@ -1235,6 +1235,20 @@ namespace ESM4
         return !hasRoot || hierarchyGain.value_or(1.f) <= 0.f;
     }
 
+    static PhysicalBlendGains interpolatePhysicalBlend(
+        const PhysicalBlendKey& first, const PhysicalBlendKey& last, float time)
+    {
+        const float interval = rounded(double(last.mTime) - first.mTime);
+        if (interval == 0.f)
+            return first.mGains;
+        const float fraction = rounded((double(time) - first.mTime) / interval);
+        const auto interpolate = [fraction](float from, float to) {
+            return rounded((1.0 - fraction) * from + double(fraction) * to);
+        };
+        return {interpolate(first.mGains.mHierarchy, last.mGains.mHierarchy),
+            interpolate(first.mGains.mVelocity, last.mGains.mVelocity)};
+    }
+
     std::optional<PhysicalBlendGains> evaluatePhysicalBlend(
         std::span<const PhysicalBlendKey> keys, float time)
     {
@@ -1257,15 +1271,7 @@ namespace ESM4
             throw std::invalid_argument("invalid native physical blend key interval");
         // Original8AAB0F stores the key interval, not the numerator. Even the
         // first endpoint follows interpolation (including signed-zero sums).
-        const float interval = rounded(double(last.mTime) - first.mTime);
-        if (interval == 0.f)
-            return first.mGains;
-        const float fraction = rounded((double(time) - first.mTime) / interval);
-        const auto interpolate = [fraction](float from, float to) {
-            return rounded((1.0 - fraction) * from + double(fraction) * to);
-        };
-        return PhysicalBlendGains{interpolate(first.mGains.mHierarchy, last.mGains.mHierarchy),
-            interpolate(first.mGains.mVelocity, last.mGains.mVelocity)};
+        return interpolatePhysicalBlend(first, last, time);
     }
 
     PhysicalBlendEvaluation evaluatePhysicalBlendKeys(
@@ -1283,7 +1289,7 @@ namespace ESM4
         if (keys.size() == 1)
             return {keys.front().mGains, cursor};
         finite(time);
-        if (keys.size() > std::numeric_limits<std::uint32_t>::max() || cursor >= keys.size() - 1)
+        if (keys.size() > std::numeric_limits<std::uint32_t>::max() || cursor >= keys.size())
             throw std::invalid_argument("invalid native physical blend cursor");
         for (std::size_t i = 0; i < keys.size(); ++i)
         {
@@ -1291,14 +1297,14 @@ namespace ESM4
             if (i != 0 && keys[i - 1].mTime > keys[i].mTime)
                 throw std::invalid_argument("invalid native physical blend key order");
         }
-        if (time < keys.front().mTime || time > keys.back().mTime)
-            throw std::invalid_argument("invalid native physical blend key interval");
         if (keys[cursor].mTime > time)
             cursor = 0;
         // Equality retains the cached segment, including duplicate key times.
-        while (cursor + 1 < keys.size() - 1 && keys[cursor + 1].mTime < time)
+        while (cursor + 1 < keys.size() && keys[cursor + 1].mTime < time)
             ++cursor;
-        return {evaluatePhysicalBlend(keys.subspan(cursor, 2), time), cursor};
+        if (cursor == keys.size() - 1)
+            return {keys.back().mGains, cursor};
+        return {interpolatePhysicalBlend(keys[cursor], keys[cursor + 1], time), cursor};
     }
 
     float advancePhysicalBlendClock(PhysicalBlendClock& clock, float absoluteTime, float duration)
@@ -1336,8 +1342,6 @@ namespace ESM4
         for (float value : {inputTime, timing.mFrequency, timing.mPhase, timing.mStartKey, timing.mStopKey,
                  clock.mStartTime, clock.mPreviousTime, clock.mElapsed})
             finite(value);
-        if (timing.mStartKey > timing.mStopKey)
-            throw std::invalid_argument("invalid native physical blend clock bounds");
         if (cache.mCycle != 0xffffffffu)
         {
             if (cache.mCycle > 3)
@@ -1394,7 +1398,12 @@ namespace ESM4
                         + timing.mStartKey);
                 }
             }
-            result = std::clamp(result, timing.mStartKey, timing.mStopKey);
+            // Original7157B1 tests Stop first and only then Start. Recovery's
+            // startKey=1 can exceed a configured duration; retain that order.
+            if (result > timing.mStopKey)
+                result = timing.mStopKey;
+            else if (result < timing.mStartKey)
+                result = timing.mStartKey;
             if (timing.mFlags & 0x10)
                 result = rounded(double(timing.mStopKey) - (double(result) - timing.mStartKey));
             nextCache = {cycle, timing.mStopKey, timing.mStartKey, keyTime, result};

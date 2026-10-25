@@ -241,7 +241,7 @@ namespace ESM4
         const PhysicalBlendProfilesConfiguration& previous, std::uint32_t version,
         const PhysicalBlendProfilesValues& processedValues);
 
-    struct PhysicalKnockdownBlend
+    struct PhysicalTransitionBlend
     {
         std::array<PhysicalBlendKey, 2> mKeys;
         float mStartKey;
@@ -249,12 +249,19 @@ namespace ESM4
         std::uint16_t mControllerFlags;
         PhysicalBlendClock mClock;
     };
+    using PhysicalKnockdownBlend = PhysicalTransitionBlend;
 
     // Original8AB440 selected-controller setup. The caller resolves the node,
     // controller and body filter and handles missing/disabled/immediate paths.
     // Retain both keys at zero duration and reset Start's time sentinels without
     // clearing stored elapsed time. No attachment, velocity or body mutation.
     PhysicalKnockdownBlend preparePhysicalKnockdownBlend(PhysicalBlendGains current,
+        float duration, float startKey, std::uint16_t controllerFlags, PhysicalBlendClock previousClock);
+
+    // Original8AB240 selected-controller continuation. GetUp starts at zero
+    // gains and approaches the configured DEFAULT gains. startKey is the raw
+    // inherited bound (normally 0, or 1 for no-IDLE recovery), not a multiplier.
+    PhysicalTransitionBlend preparePhysicalGetUpBlend(PhysicalBlendGains configured,
         float duration, float startKey, std::uint16_t controllerFlags, PhysicalBlendClock previousClock);
 
     struct PhysicalBlendKeyBounds

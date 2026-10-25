@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "scope": "Selected GetUp blend setup, native reversed clock bounds, terminal key cursor and retained controller continuation",
+  "cases": [
+    {
+      "name": "getup-setup",
+      "duration": 0.25,
+      "start_key": 1,
+      "configured_gains": [
+        0.25,
+        0.75
+      ],
+      "expected_keys": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.25,
+          0.25,
+          0.75
+        ]
+      ],
+      "flags_input": 0,
+      "expected_flags": 205,
+      "expected_clock": "Start/previous reset to -FLT_MAX; elapsed retained"
+    },
+    {
+      "name": "fallback-frames",
+      "input_times": [
+        100,
+        100.5
+      ],
+      "key_times": [
+        1,
+        0.25
+      ],
+      "expected_cursors": [
+        1,
+        1
+      ],
+      "expected_gains": [
+        [
+          0.25,
+          0.75
+        ],
+        [
+          0.25,
+          0.75
+        ]
+      ],
+      "expected_finish": "Second frame clears keys, stops blend and removes generated velocity controller through production node-controller phase"
+    },
+    {
+      "name": "raw-key-boundary",
+      "keys": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0.25,
+          0.25,
+          0.75
+        ]
+      ],
+      "time": -0.5,
+      "initial_cursor": 1,
+      "expected_cursor": 0,
+      "expected_gains": [
+        -0.5,
+        -1.5
+      ]
+    },
+    {
+      "name": "terminal-save",
+      "version": 35,
+      "start_key": 1,
+      "stop_key": 0.25,
+      "key_count": 2,
+      "valid_cursor": 1,
+      "invalid_cursor": 2,
+      "expected": "C++ binary and Python encode/decode preserve terminal cursor and raw bounds without new fields or version"
+    },
+    {
+      "name": "owned-setup",
+      "expected": "Missing blend/controller and disabled duration skip unused fields; redirected target stays bound; unknown/duplicate/nonfinite used request rejects whole batch before publication; setup preserves body state and existing generated velocity"
+    }
+  ],
+  "original_profiles": {
+    "getup-blend": 768,
+    "clock-evaluation": 4608,
+    "evaluation-boundary": 1890,
+    "reset": 8712,
+    "null-getup": 1152
+  },
+  "golden_profiles_per_build": 7266,
+  "facegen_cache": {
+    "actual_getter": "5E12B0 -> process virtualE8/64B350, cache+15C",
+    "lookup": "actor scene virtual154; actor134 selects BSFaceGenNiNodeSkinned; node9C/55CEF0 reads FaceGen data+DC",
+    "actual_data_vtable": "A6424C BSFaceGenAnimationData; virtual9C549590 takes two booleans",
+    "distinction": "This is not process+118 movement/character-proxy ownership; recovery calls(false,false) must not be mapped to a physics velocity reset"
+  },
+  "limits": [
+    "No natural World physical FSM, selected-IDLE slot5 clock/RNG publication or selected-IDLE save/restart is implemented by this chunk",
+    "Owned setup implements selected-controller continuation only; recursive root/filter/motion policy and FaceGen presentation remain caller work",
+    "Original null-IDLE probe supplies AV inputs and a diagnostic sink; reset probe supplies AV inputs; original constructors and nonnull body root are outside those fixtures",
+    "No normal-input gameplay or fresh-process acceptance claimed"
+  ]
+}

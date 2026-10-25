@@ -444,8 +444,9 @@ namespace ESM4
 
     // Original8AA990 general authored-key evaluation with an explicit cached
     // lower segment cursor. Return the next cursor without mutating input.
-    // Empty/single-key paths ignore unused time/cursor fields; multi-key input
-    // requires finite ordered times, finite gains and caller-clamped time.
+    // Empty/single-key paths ignore unused time/cursor fields. Ordered multi-key
+    // input extrapolates before the first key and retains a terminal last-key
+    // cursor after the final key. Used times and gains must remain finite.
     PhysicalBlendEvaluation evaluatePhysicalBlendKeys(
         std::span<const PhysicalBlendKey> keys, float time, std::uint32_t cursor);
 
@@ -480,7 +481,8 @@ namespace ESM4
         friend bool operator==(const PhysicalBlendTimeCache&, const PhysicalBlendTimeCache&) = default;
     };
 
-    // General finite ordered-bound controller clock. Stage clock/cache writes
+    // General finite-bound controller clock, including reversed raw bounds.
+    // Clamp tests Stop before Start. Stage clock/cache writes
     // together; malformed inputs or arithmetic overflow leave both unchanged.
     // Controller active/attachment/update eligibility belongs to the caller.
     float advancePhysicalBlendClock(PhysicalBlendClock& clock, PhysicalBlendTimeCache& cache,

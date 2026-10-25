@@ -279,6 +279,19 @@ namespace NifBullet
         Started, MissingBlend, MissingController, Disabled,
     };
 
+    struct RagdollNativeGetUpBlendRequest
+    {
+        std::uint32_t mNodeRecord;
+        float mDuration;
+        float mStartKey;
+        ESM4::PhysicalBlendGains mConfiguredGains;
+    };
+
+    enum class RagdollNativeGetUpBlendDisposition
+    {
+        Started, MissingBlend, MissingController, Disabled,
+    };
+
     struct RagdollNativeHitBlendSetupRequest
     {
         std::uint32_t mNodeRecord;
@@ -565,6 +578,12 @@ namespace NifBullet
         // shared frame clocks remain separate.
         std::vector<RagdollNativeKnockdownBlendDisposition> prepareNativeKnockdownBlends(
             std::span<const RagdollNativeKnockdownBlendRequest> requests);
+        // Original8AB240 selected-controller continuation. Stage all curves
+        // before publication; preserve attachments, body state and velocities.
+        // Caller owns recursive selection, packed-filter changes and recovery
+        // mode. startKey=1 is retained even when it exceeds the duration.
+        std::vector<RagdollNativeGetUpBlendDisposition> prepareNativeGetUpBlends(
+            std::span<const RagdollNativeGetUpBlendRequest> requests);
         // Atomic owned setup for already admitted body nodes and Down durations.
         // Read current damping and archived dynamic mass, create at the head or
         // retain existing target/list position. No body force, wake or pose write.

@@ -19272,3 +19272,69 @@ full normal-input matrix remain open. These are headless production integration
 checks with manual sampling, not the final gameplay gate. See the
 [verification receipt](M15-NATIVE-IDLE-RESOURCE-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_resource_cases.json).
+
+
+### GetUp blend setup, native clock bounds and terminal cursor continuation
+
+Selected GetUp blend setup now stages a complete owned controller batch. Curves
+start with zero hierarchy/velocity gains and approach the caller-resolved DEFAULT
+gains. Start receives the raw inherited start key, normally 0 or 1 for no-IDLE
+recovery; it is not a weight multiplier. Setup retains two keys even at zero
+duration, resets Start/previous sentinels while preserving elapsed time, and
+preserves attachments, redirected targets, physical state and generated velocity
+controllers. Missing/disabled inputs skip unused fields; malformed used inputs or
+late unknown/duplicate identities reject before publishing any controller.
+Recursive root selection and packed-filter/motion changes remain caller work.
+
+The original permits start key 1 above a configured GetUp duration. General timing
+now follows Stop-before-Start clamping for finite reversed bounds. Authored-key
+evaluation extrapolates before the first key and retains the last-key cursor
+beyond the last key, including that cursor's subsequent equality/backward paths.
+C++ and Python snapshot admission preserve the native terminal index. The save
+layout/version is unchanged. Actual node-controller tests retain a generated
+velocity controller during setup, snapshot/restore a terminal-cursor frame,
+compare continuation with an uninterrupted owner, and remove velocity at native
+completion. The old blend-only update interface deliberately does not own that
+removal; the regression uses the production node-controller phase.
+
+Original-instruction evidence uses executable SHA256
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+The selected8AB240 continuation executes768 profiles with actual clear/insert/
+bounds/Start helpers and no game stubs; a capacity-two fixture avoids allocation.
+Full7155A0/8AA990 execute 4,608 sequential clock/evaluator profiles, supplying only
+Windows critical-section imports. Another 1,890 evaluator profiles cover 2 through 8 keys,
+all valid initial cursors, shifted/duplicate keys and times outside the key range,
+with no stubs. Both rebuilt libraries match all 7,266 exact profiles independently.
+Controller/node/filter lookup and actual gameplay are outside those probes.
+
+A separate 8,712-case full process virtual2F8/reset654C70 probe confirms active
+reset behavior and Low/MiddleLow no-op dispatch. The 1,152-case raw3 suffix runs
+actual521450 empty-model/empty-bank selection and actual reset through return.
+Only AV input methods and the raw3 diagnostic print sink are supplied; roots are
+null and actor construction/earlier admission/non-null bodies remain outside the
+fixtures. The original recovery cache at process+15C is FaceGen animation data:
+5E12B0/64B350 resolve BSFaceGenNiNodeSkinned; node virtual9C/55CEF0 returns+DC,
+and BSFaceGenAnimationData virtual9C is549590. Its(false,false) call must not be
+mapped to a movement velocity reset. Movement-controller+118 is separate.
+
+Normal checks pass 3,122 component/1,960 engine/411 Python cases; ASan/UBSan checks
+pass 970 ESM4/1,960 engine cases. Initial 25 focused component cases pass normally
+and with leaks enabled; the final four owned/restore cases and both native golden
+helpers also pass with leaks enabled. All inventories/XML match with no failures
+or skips. Full sanitizer suites disable leaks. No warning originates on a changed
+line; existing warnings remain in retained build logs. The retained attempts
+include an unmapped FS0 oracle fixture, a nonexistent test-only restore adapter,
+warning-driven stops before engine rebuilding, and one velocity-removal assertion
+using the wrong blend-only test adapter. Production logic did not change for
+those fixture corrections.
+
+**Full M15S4 remains incomplete:** the natural World physical FSM, recursive
+GetUp root/filter policy, selected-IDLE slot5 clock and joint renderer/RNG/state
+publication, selected-IDLE persistence/restart, directional mastery, generic
+package-query ownership unification, and the full view/device/FPS normal-input
+matrix remain open. These checks establish selected owned-controller behavior,
+not the final gameplay or fresh-process gate. See the
+[verification receipt](M15-NATIVE-GETUP-TRANSITION-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_getup_transition_cases.json).
+
+Tested source fingerprint: `bf77ad44a4bc7dfba3b05d43b7cbf67f4fd71b1ab08de0b5a264e56863335fba` on parent `4591ad0c28116b3cd6a173d1b2a5570e2c7ae07b`.

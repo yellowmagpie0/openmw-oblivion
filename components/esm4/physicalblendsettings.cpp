@@ -412,6 +412,16 @@ namespace ESM4
             static_cast<std::uint16_t>((controllerFlags & 0xfef5u) | 0xcdu), previousClock};
     }
 
+    PhysicalTransitionBlend preparePhysicalGetUpBlend(PhysicalBlendGains configured,
+        float duration, float startKey, std::uint16_t controllerFlags, PhysicalBlendClock previousClock)
+    {
+        validate(configured.mHierarchy);
+        validate(configured.mVelocity);
+        auto result = preparePhysicalKnockdownBlend({0.f, 0.f}, duration, startKey, controllerFlags, previousClock);
+        result.mKeys[1].mGains = configured;
+        return result;
+    }
+
     PhysicalBlendKeyBounds resolvePhysicalBlendKeyBounds(
         PhysicalBlendKeyBounds previous, std::span<const PhysicalBlendKey> keys)
     {

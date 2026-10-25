@@ -1157,7 +1157,7 @@ namespace ESM4
                 common(state.mTiming, state.mClock);
                 if (!std::isfinite(state.mCachedGains.mHierarchy) || !std::isfinite(state.mCachedGains.mVelocity)
                     || state.mKeys.size() > sMaximumCollectionSize
-                    || (state.mKeys.size() >= 2 && state.mCursor >= state.mKeys.size() - 1))
+                    || (state.mKeys.size() >= 2 && state.mCursor >= state.mKeys.size()))
                     throw std::runtime_error("Invalid TES4 authored controller cache or cursor");
                 for (std::size_t i = 0; i < state.mKeys.size(); ++i)
                 {

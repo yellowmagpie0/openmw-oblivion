@@ -3856,13 +3856,11 @@ TEST(ESM4PhysicalCombat, AuthoredBlendCacheContinuesForwardAndBackwardSequence)
     }
 }
 
-TEST(ESM4PhysicalCombat, AuthoredBlendRejectsMalformedUsedKeysIntervalsAndCursors)
+TEST(ESM4PhysicalCombat, AuthoredBlendRejectsMalformedUsedKeysAndCursors)
 {
     std::array<ESM4::PhysicalBlendKey, 2> keys{{{0, {1, 1}}, {1, {0, 0}}}};
-    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 1), std::invalid_argument);
+    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 2), std::invalid_argument);
     EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, .5f, 0xffffffffu), std::invalid_argument);
-    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, -1, 0), std::invalid_argument);
-    EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, 2, 0), std::invalid_argument);
     const float bad = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::evaluatePhysicalBlendKeys(keys, bad, 0), std::invalid_argument);
     keys[1].mTime = -1;
@@ -3926,10 +3924,10 @@ TEST(ESM4PhysicalCombat, GeneralBlendClockRejectsMalformedInputAtomically)
 {
     const auto nan = std::numeric_limits<float>::quiet_NaN();
     const auto max = std::numeric_limits<float>::max();
-    const std::array<ESM4::PhysicalBlendTiming, 6> cases{{
+    const std::array<ESM4::PhysicalBlendTiming, 5> cases{{
         {0xc5, nan, 0.f, 0.f, 1.f}, {0xc5, 1.f, nan, 0.f, 1.f},
         {0xc5, 1.f, 0.f, nan, 1.f}, {0xc5, 1.f, 0.f, 0.f, nan},
-        {0xc5, 1.f, 0.f, 2.f, 1.f}, {0xc5, max, 0.f, 0.f, 1.f}}};
+        {0xc5, max, 0.f, 0.f, 1.f}}};
     for (const auto& timing : cases)
     {
         ESM4::PhysicalBlendClock clock{1.f, 1.f, 3.f};
@@ -6374,4 +6372,63 @@ TEST(ESM4PhysicalCombat, NativeFacingUpMatchesOriginalMissingSpineSignedZerosAnd
         EXPECT_EQ(ESM4::nativeIsFacingUp(row.mSpine
                 ? std::optional(std::bit_cast<float>(row.mBits)) : std::nullopt), row.mExpected)
             << row.mSpine << ',' << row.mBits;
+}
+
+TEST(ESM4PhysicalBlendSetup, GetUpStartsAtZeroAndRetainsConfiguredGainsAndRawStart)
+{
+    // Original8AB2C7 continuation: current target gains are never read here.
+    for (float duration : {0.f, .25f, 1.f, 2.f})
+        for (float start : {0.f, 1.f, 2.f})
+        {
+            const auto setup = ESM4::preparePhysicalGetUpBlend({.25f, .75f}, duration, start,
+                0xffff, {3.f, 4.f, 6.f});
+            EXPECT_EQ(setup.mKeys[0], (ESM4::PhysicalBlendKey{0.f, {0.f, 0.f}}));
+            EXPECT_EQ(setup.mKeys[1], (ESM4::PhysicalBlendKey{duration, {.25f, .75f}}));
+            EXPECT_EQ(setup.mStartKey, start); EXPECT_EQ(setup.mStopKey, duration);
+            EXPECT_EQ(setup.mControllerFlags, 0xfefd);
+            EXPECT_EQ(setup.mClock, (ESM4::PhysicalBlendClock{
+                -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), 6.f}));
+        }
+    const auto bad = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::preparePhysicalGetUpBlend({bad, 1}, 1, 0, 0, {}), std::invalid_argument);
+    EXPECT_THROW(ESM4::preparePhysicalGetUpBlend({1, bad}, 1, 0, 0, {}), std::invalid_argument);
+    EXPECT_THROW(ESM4::preparePhysicalGetUpBlend({1, 1}, -1, 0, 0, {}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalBlendSetup, GetUpFallbackKeepsReversedBoundsAndFinishesAfterTerminalCursor)
+{
+    const auto setup = ESM4::preparePhysicalGetUpBlend({.25f, .75f}, .25f, 1.f, 0, {});
+    ESM4::PhysicalBlendControllerState state;
+    state.mTiming = {setup.mControllerFlags, 1, 0, setup.mStartKey, setup.mStopKey};
+    state.mClock = setup.mClock; state.mKeys.assign(setup.mKeys.begin(), setup.mKeys.end());
+    state.mSetupState = 2;
+    const auto first = ESM4::advancePhysicalBlendController(state, {}, true,
+        ESM4::PhysicalBlendGains{.8f, .6f}, true, 100.f);
+    EXPECT_EQ(first.mTimeCache.mResult, 1.f);
+    EXPECT_EQ(first.mTargetGains, (ESM4::PhysicalBlendGains{.25f, .75f}));
+    EXPECT_EQ(first.mController.mCursor, 1u);
+    EXPECT_EQ(first.mController.mKeys.size(), 2u);
+    EXPECT_FALSE(first.mRemoveVelocityController);
+    const auto done = ESM4::advancePhysicalBlendController(first.mController, first.mTimeCache,
+        true, first.mTargetGains, true, 100.5f);
+    EXPECT_EQ(done.mTimeCache.mResult, .25f);
+    EXPECT_EQ(done.mTargetGains, first.mTargetGains);
+    EXPECT_TRUE(done.mController.mKeys.empty());
+    EXPECT_EQ(done.mController.mCursor, 1u);
+    EXPECT_EQ(done.mController.mSetupState, 0u);
+    EXPECT_FALSE(done.mController.mTiming.mFlags & 8);
+    EXPECT_TRUE(done.mRemoveVelocityController);
+}
+
+TEST(ESM4PhysicalCombat, AuthoredBlendRetainsTerminalCursorAndExtrapolatesBeforeFirstKey)
+{
+    const std::array<ESM4::PhysicalBlendKey, 2> keys{{{0, {0, 0}}, {.25f, {.25f, .75f}}}};
+    const auto past = ESM4::evaluatePhysicalBlendKeys(keys, 1, 0);
+    EXPECT_EQ(past.mCursor, 1u);
+    EXPECT_EQ(past.mGains, (ESM4::PhysicalBlendGains{.25f, .75f}));
+    const auto end = ESM4::evaluatePhysicalBlendKeys(keys, .25f, past.mCursor);
+    EXPECT_EQ(end.mCursor, 1u); EXPECT_EQ(end.mGains, past.mGains);
+    const auto before = ESM4::evaluatePhysicalBlendKeys(keys, -.5f, end.mCursor);
+    EXPECT_EQ(before.mCursor, 0u);
+    EXPECT_EQ(before.mGains, (ESM4::PhysicalBlendGains{-.5f, -1.5f}));
 }
