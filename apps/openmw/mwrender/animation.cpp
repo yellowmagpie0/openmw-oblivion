@@ -1021,6 +1021,30 @@ namespace MWRender
         }
     }
 
+    Animation::NativeIdleResource::NativeIdleResource(VFS::Path::Normalized model,
+        osg::ref_ptr<const SceneUtil::KeyframeHolder> frames)
+        : mModel(std::move(model)), mFrames(std::move(frames)) {}
+    Animation::NativeIdleResource::~NativeIdleResource() = default;
+    const VFS::Path::Normalized& Animation::NativeIdleResource::model() const { return mModel; }
+    const std::string& Animation::NativeIdleResource::fileHash() const { return mFrames->mFileHash; }
+    const SceneUtil::ControllerSequenceMetadata& Animation::NativeIdleResource::metadata() const
+    { return mFrames->mControllerSequences.front(); }
+
+    std::shared_ptr<const Animation::NativeIdleResource> Animation::acquireNativeIdleResource(
+        std::string_view model) const
+    {
+        if (!mResourceSystem || !ESM4::nativeIdleHasFile(model)) return nullptr;
+        model = model.substr(0, model.find('\0'));
+        const auto path = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
+        if (!mResourceSystem->getVFS()->exists(path)) return nullptr;
+        const auto frames = mResourceSystem->getKeyframeManager()->get(path);
+        // A filename-stem alias cannot disambiguate multiplexed sequences.
+        // A trackless native sequence still carries a valid clock/resource.
+        if (!frames || frames->mControllerSequences.size() != 1 || frames->mFileHash.size() != 16)
+            return nullptr;
+        return std::shared_ptr<const NativeIdleResource>(new NativeIdleResource(path, frames));
+    }
+
     struct Animation::PreparedNativeIdleSource::Data
     {
         Animation* mOwner;
@@ -1083,16 +1107,17 @@ namespace MWRender
 
     std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(std::string_view model)
     {
-        if (!mObjectRoot || !mResourceSystem || mPtr.isEmpty() || !ESM4::nativeIdleHasFile(model)) return nullptr;
-        model = model.substr(0, model.find('\0'));
-        const auto path = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
-        if (!mResourceSystem->getVFS()->exists(path)) return nullptr;
-        const auto frames = mResourceSystem->getKeyframeManager()->get(path);
-        // A filename-stem alias cannot disambiguate multiplexed sequences.
-        // Leave unsupported resources unregistered rather than borrowing a
-        // different file or sequence. A trackless native sequence is valid.
-        if (!frames || frames->mControllerSequences.size() != 1 || frames->mFileHash.size() != 16)
-            return nullptr;
+        if (!mObjectRoot || mPtr.isEmpty()) return nullptr;
+        const auto resource = acquireNativeIdleResource(model);
+        return resource ? prepareNativeIdleSource(*resource) : nullptr;
+    }
+
+    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(
+        const NativeIdleResource& resource)
+    {
+        if (!mObjectRoot || !mResourceSystem || mPtr.isEmpty()) return nullptr;
+        const auto& path = resource.mModel;
+        const auto& frames = resource.mFrames;
         const auto hex = [](std::string_view value) {
             constexpr char digits[] = "0123456789abcdef";
             std::string out;

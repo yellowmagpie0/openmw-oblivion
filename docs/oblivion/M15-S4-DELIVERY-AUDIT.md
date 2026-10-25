@@ -14060,3 +14060,37 @@ courses remain open. See the [verification receipt](M15-NATIVE-GETUP-WORLD-VERIF
 and [editable cases](../../scripts/data/oblivion_compat/m15_native_getup_world_cases.json).
 
 Tested source fingerprint: `c10940580b2471a88598e1dcfbefada455cbc9f43b91b5082fdc87974ee15801` on parent `572514671a45a7af38aff1055a7c009dd37079ac`.
+
+### Retained selected-IDLE resource ownership checkpoint
+
+Loaded KF ownership is now separate from scene binding: an immutable acquired
+resource can survive cache eviction, changed/removed file bytes and originating
+Animation destruction. Fresh prepared bindings use that retained file over the
+current source list while preserving stale scene guards and competing sources.
+The existing path-based entry composes acquisition and binding. Actual World
+selection still changes no captured combat state/RNG during acquisition/sampling.
+
+Original-instruction research adds 386 constructor/resource-callback/start/frame-
+completion profiles with explicit boundary fixtures. Successful acquisition is
+synchronously ready; null acquisition can later become ready through its callback.
+Start attaches the sequence before requesting process action 11. Completion clears
+that action only if still 11 and retains the policy-1 request/sequence pointer.
+A corrected ABI trace establishes logical slot 5 as the second activation argument.
+These observations are not yet production request/clock/FSM behavior.
+
+Final normal and ASan/UBSan engine runs each pass 1,965 tests; 14 focused cases
+also pass with leak detection enabled. Inventories/XML agree with no failures or
+skips. Full sanitizer coverage retains the documented unrelated suite-leak
+exception. Reviewed fixture corrections, stopped builds/tests and the failed
+initial protocol harness remain pinned. No changed-line compiler warning exists.
+
+**M15S4 remains incomplete:** natural recovery dispatch, persistent selected-IDLE
+request ownership and slot5 timing/RNG/knocked-state publication are next.
+Initial/Down/GetUp prefixes, directional mastery, generic package ownership and
+the complete normal-input/fresh-process view/device/FPS matrix remain open. No new
+save schema or runtime acceptance is claimed. See the
+[receipt](M15-NATIVE-IDLE-OWNERSHIP-VERIFICATION.json) and
+[cases](../../scripts/data/oblivion_compat/m15_native_idle_ownership_cases.json).
+
+Tested source fingerprint: `0d562a2ac25bb32b97ed1212360a2eb44bf9e98c14134108b462e0e421400ebd`
+on parent `77e487d97316e10b713ad06bb42b9d2bb259aec3`.

@@ -228,6 +228,77 @@ TEST_F(NativeIdleResourceTest, ChangedBytesAtSamePathKeepPublishedSourcesDistinc
     a->sample(oldGroup); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
 }
 
+TEST_F(NativeIdleResourceTest, AcquisitionOwnsParsedBytesWithoutRegisteringOrBindingTheScene)
+{
+    auto a = animation(); a->directory();
+    const auto count = a->sources(); const auto root = a->reactionRoot();
+    const auto* callbacks = a->mBone->getUpdateCallback();
+    auto resource = a->acquireNativeIdleResource(std::string("ONE\\SAME.KF\0ignored.kf", 22));
+    ASSERT_TRUE(resource);
+    EXPECT_EQ(resource->model().value(), "meshes/one/same.kf");
+    EXPECT_EQ(resource->fileHash().size(), 16);
+    EXPECT_EQ(resource->metadata().mSequenceName, "AuthoredGetUpLabel");
+    EXPECT_EQ(resource->metadata().mStartTime, 10);
+    EXPECT_EQ(a->sources(), count); EXPECT_EQ(a->reactionRoot(), root);
+    EXPECT_EQ(a->mBone->getUpdateCallback(), callbacks);
+    EXPECT_FALSE(a->acquireNativeIdleResource("absent/same.kf"));
+    EXPECT_FALSE(a->acquireNativeIdleResource("duplicate.kf"));
+    EXPECT_FALSE(a->acquireNativeIdleResource("same.nif"));
+    EXPECT_FALSE(a->acquireNativeIdleResource(""));
+    EXPECT_THROW(a->acquireNativeIdleResource(std::string(260, 'x') + ".kf"), std::invalid_argument);
+    const auto trackless = a->acquireNativeIdleResource("empty.kf"); ASSERT_TRUE(trackless);
+    EXPECT_EQ(trackless->metadata().mStopTime, 12);
+    EXPECT_EQ(a->sources(), count); EXPECT_EQ(a->reactionRoot(), root);
+}
+
+TEST_F(NativeIdleResourceTest, RetainedResourceRebasesAfterCompetingSourceAndCacheReplacement)
+{
+    auto a = animation();
+    auto resource = a->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(resource);
+    const auto oldHash = resource->fileHash(); const auto original = resource->metadata();
+    auto stale = a->prepareNativeIdleSource(*resource); ASSERT_TRUE(stale);
+    const auto oldGroup = stale->group();
+    auto competing = a->prepareNativeIdleSource("two/same.kf"); ASSERT_TRUE(competing);
+    const auto competingGroup = competing->group(); ASSERT_TRUE(competing->commit());
+    EXPECT_FALSE(stale->commit()); EXPECT_FALSE(a->hasAnimation(oldGroup));
+    stale.reset();
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    auto replacement = a->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(replacement);
+    EXPECT_NE(replacement->fileHash(), oldHash);
+    auto rebased = a->prepareNativeIdleSource(*resource); ASSERT_TRUE(rebased);
+    EXPECT_EQ(rebased->fileHash(), oldHash); EXPECT_EQ(rebased->group(), oldGroup);
+    EXPECT_EQ(rebased->metadata().mTextKeys, original.mTextKeys);
+    EXPECT_EQ(a->sources(), 1); EXPECT_FALSE(a->hasAnimation(oldGroup));
+    resource.reset(); ASSERT_TRUE(rebased->commit());
+    EXPECT_EQ(a->sources(), 2); EXPECT_FALSE(a->isPlaying(oldGroup));
+    a->sample(oldGroup); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+    a->sample(competingGroup); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 17);
+    auto current = a->prepareNativeIdleSource(*replacement); ASSERT_TRUE(current);
+    const auto newGroup = current->group(); EXPECT_NE(newGroup, oldGroup); ASSERT_TRUE(current->commit());
+    a->sample(newGroup); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 27);
+}
+
+TEST_F(NativeIdleResourceTest, RetainedResourceSurvivesAnimationDestructionAndMissingFile)
+{
+    auto a = animation(); auto resource = a->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(resource);
+    const auto hash = resource->fileHash();
+    auto old = a->prepareNativeIdleSource(*resource); ASSERT_TRUE(old);
+    a = nullptr; EXPECT_FALSE(old->isValid());
+    old.reset();
+    ASSERT_TRUE(std::filesystem::remove(mFixture.mDirectory / "meshes/one/same.kf"));
+    mFixture.mResources.clearCache();
+    auto b = animation(); b->source("meshes/two/same.kf");
+    auto bound = b->prepareNativeIdleSource(*resource); ASSERT_TRUE(bound);
+    EXPECT_EQ(bound->fileHash(), hash); const auto group = bound->group();
+    resource.reset(); ASSERT_TRUE(bound->commit());
+    EXPECT_EQ(b->sources(), 2); b->sample(group);
+    EXPECT_FLOAT_EQ(b->mBone->getControllerTransform().mTranslation.x(), 9);
+    b->clear();
+    // A published source and candidate are the remaining owners after release
+    // of the acquisition handle; neither depends on its originating Animation.
+    EXPECT_EQ(bound->fileHash(), hash);
+}
+
 TEST(NativeIdleWorldResourceTest, WorldSelectedOutsideKfKeepsItsExactIdentityThroughSampling)
 {
     TestingOpenMW::NativeWorldFixture fixture(false, false, false, {}, {},
@@ -261,8 +332,11 @@ TEST(NativeIdleWorldResourceTest, WorldSelectedOutsideKfKeepsItsExactIdentityThr
     const auto selected = world.prepareOblivionGetUpIdle(actor);
     ASSERT_EQ(selected.mIdle, ESM::FormKey::content("headless.esm", 0xa01));
     ASSERT_EQ(selected.mModel, "Outside\\same.kf");
-    auto resource = animation->prepareNativeIdleSource(selected.mModel); ASSERT_TRUE(resource);
-    EXPECT_EQ(resource->model().value(), "meshes/outside/same.kf");
+    const auto root = animation->reactionRoot();
+    const auto acquired = animation->acquireNativeIdleResource(selected.mModel); ASSERT_TRUE(acquired);
+    EXPECT_EQ(acquired->model().value(), "meshes/outside/same.kf");
+    EXPECT_EQ(animation->reactionRoot(), root);
+    auto resource = animation->prepareNativeIdleSource(*acquired); ASSERT_TRUE(resource);
     const auto group = resource->group(); ASSERT_TRUE(resource->commit()); animation->sample(group);
     EXPECT_FLOAT_EQ(animation->mBone->getControllerTransform().mTranslation.x(), 9);
     combat.capture(after); EXPECT_EQ(after, before);

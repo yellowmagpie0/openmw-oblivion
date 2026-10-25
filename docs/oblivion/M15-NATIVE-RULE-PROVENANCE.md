@@ -19462,3 +19462,64 @@ courses remain open. See the [verification receipt](M15-NATIVE-GETUP-WORLD-VERIF
 and [editable cases](../../scripts/data/oblivion_compat/m15_native_getup_world_cases.json).
 
 Tested source fingerprint: `c10940580b2471a88598e1dcfbefada455cbc9f43b91b5082fdc87974ee15801` on parent `572514671a45a7af38aff1055a7c009dd37079ac`.
+
+### Loaded GetUp IDLE resources before scene binding
+
+`Animation::NativeIdleResource` now retains the exact parsed native KF, normalized
+path, opaque 16-byte hash and original sequence metadata independently of an
+actor's scene/source list. Acquisition publishes no alias, root binding, playback,
+process action, knocked byte or RNG. A separate prepared binding uses that retained
+resource over the current scene/source generation. It preserves competing sources
+and retains the existing stale actor/cell/root/generation guards. The existing
+path-based preparation composes these two steps. A changed or removed file cannot
+silently replace a resource already owned by a pending request.
+
+Three new renderer cases verify acquisition without publication, rebinding after
+competing source registration and file/cache replacement, and ownership across
+originating Animation destruction and physical file removal. Stale candidates are
+released before cache eviction, leaving the acquisition handle as the sole file
+owner. Actual parsed tracks distinguish original sample 9, competing sample 17
+and replaced-file sample 27. The existing World selection case now acquires the
+selected outside-directory KF explicitly before binding/sampling and verifies
+unchanged captured combat state/RNG and previous root binding.
+
+The pinned original executable additionally passes 386 protocol profiles through
+original returns: two `474C50` constructors, four `477C40` resource callbacks,
+20 `477E50`/`476380` starts and 360 `477AD0` completion suffixes. Successful
+constructor acquisition sets request status 1 synchronously and retains the
+resource; null acquisition stays at 0 and can later become ready through the
+callback. Policy 1 does not automatically start there. Start requires ready
+status, retains the selected sequence, sets status 2, binds its actor and requests
+process action 11. Completion changes status 2 to 3 only for an absent/inactive
+sequence, clears action 11 only if still current, and retains the policy-1 request
+and sequence pointer. Registration/activation failures set status 3 without a
+sequence; this alone does not satisfy the separately verified done query.
+
+The probe corrected an ABI interpretation: `51AC70` takes no stack arguments and
+reads component byte +8. The logical slot 5 pushed by its caller remains the
+second argument to `476260`; it is not a supplied zero argument. The failed harness
+is retained. Auxiliary resources, path/resource/OS boundaries, registration,
+activation and actor-action accessors are explicit typed fixtures. Sequence states
+are supplied; the probe does not establish clock production, callback scheduling,
+full caller prefixes or natural gameplay.
+
+Both final engine suites pass all 1,965 cases with exact inventory/XML agreement,
+no failures and no skips. Fourteen selected renderer/World GetUp cases also pass
+with ASan leak detection enabled. Full sanitizer coverage retains the previously
+documented unrelated full-suite leak exception. No warning originates on a changed
+line. Both initial build groups were stopped before tests for a reviewed fixture
+expectation; a subsequent normal pass and stopped sanitizer test run preceded the
+test-only sole-owner strengthening. All groups were drained before edits. The
+final production and test sources pass fresh full runs. Python/component rules and
+save formats are unchanged; runtime version remains 70.
+
+**Full M15S4 remains incomplete.** This chunk supplies resource ownership needed
+by a selected-IDLE request. It adds no production request state or natural recovery
+dispatcher. Request persistence, slot5 timing, joint RNG/knocked-state publication,
+initial/Down/GetUp caller behavior, directional mastery, generic package ownership
+and the full normal-input view/device/FPS/fresh-process matrix remain open. See the
+[receipt](M15-NATIVE-IDLE-OWNERSHIP-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_ownership_cases.json).
+
+Tested source fingerprint: `0d562a2ac25bb32b97ed1212360a2eb44bf9e98c14134108b462e0e421400ebd`
+on parent `77e487d97316e10b713ad06bb42b9d2bb259aec3`.

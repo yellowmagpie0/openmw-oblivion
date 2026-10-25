@@ -601,6 +601,24 @@ namespace MWRender
         // and directory; ambiguous loose/overlay order is rejected.
         const std::vector<NativeReactionResources>& getNativeReactionCatalog();
         const std::vector<NativeReactionResources>& getNativeCounterCatalog();
+        // Loaded resource ownership is independent of a scene's source list.
+        // Native request construction acquires the file before sequence start.
+        class NativeIdleResource
+        {
+            VFS::Path::Normalized mModel;
+            osg::ref_ptr<const SceneUtil::KeyframeHolder> mFrames;
+            NativeIdleResource(VFS::Path::Normalized model,
+                osg::ref_ptr<const SceneUtil::KeyframeHolder> frames);
+            friend class Animation;
+        public:
+            ~NativeIdleResource();
+            NativeIdleResource(const NativeIdleResource&) = delete;
+            NativeIdleResource& operator=(const NativeIdleResource&) = delete;
+            const VFS::Path::Normalized& model() const;
+            const std::string& fileHash() const;
+            const SceneUtil::ControllerSequenceMetadata& metadata() const;
+        };
+        std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(std::string_view model) const;
         class PreparedNativeIdleSource
         {
             struct Data;
@@ -622,6 +640,10 @@ namespace MWRender
         // aliases. Preparation changes no live source, playback or callbacks.
         // Commit registers a resource alias; the physical owner owns slot5/time.
         std::unique_ptr<PreparedNativeIdleSource> prepareNativeIdleSource(std::string_view model);
+        // Bind an already acquired resource over the current scene/source list.
+        // No KF lookup: cache eviction or replacement at the same path cannot
+        // change the file owned by a pending request. The result has fresh guards.
+        std::unique_ptr<PreparedNativeIdleSource> prepareNativeIdleSource(const NativeIdleResource& resource);
         // Actual currently selected group for a renderer body mask; no loading.
         std::string_view getActiveAnimationGroup(BoneGroup group) const;
 

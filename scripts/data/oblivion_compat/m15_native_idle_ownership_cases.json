@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "scope": "Loaded native IDLE resource ownership separated from scene binding; request protocol observations remain independent research, not a production request FSM.",
+  "resource_cases": [
+    {
+      "id": "idle-resource-acquire",
+      "test": "NativeIdleResourceTest.AcquisitionOwnsParsedBytesWithoutRegisteringOrBindingTheScene",
+      "expected": [
+        "Exact normalized C-string KF path and opaque16-byte parsed hash; original sequence metadata retained.",
+        "No source registration, root binding or callback publication. Missing/ambiguous/legacy-only files rejected; trackless native sequence accepted."
+      ]
+    },
+    {
+      "id": "idle-resource-rebase",
+      "test": "NativeIdleResourceTest.RetainedResourceRebasesAfterCompetingSourceAndCacheReplacement",
+      "expected": [
+        "Competing source commit invalidates old prepared scene binding.",
+        "Fresh binding from retained resource preserves the originally loaded hash and samples9 after the same file is replaced by samples27.",
+        "Competing sample17 remains available. Newly acquired replacement has a distinct hash/group and samples27."
+      ]
+    },
+    {
+      "id": "idle-resource-lifetime",
+      "test": "NativeIdleResourceTest.RetainedResourceSurvivesAnimationDestructionAndMissingFile",
+      "expected": [
+        "Retained file survives originating Animation destruction, source-cache clearing and physical file removal.",
+        "New actor scene binding samples the originally loaded9; candidate owns bytes after acquisition handle release and scene sources clear."
+      ]
+    },
+    {
+      "id": "idle-resource-world",
+      "test": "NativeIdleWorldResourceTest.WorldSelectedOutsideKfKeepsItsExactIdentityThroughSampling",
+      "expected": [
+        "Actual World selection chooses Outside/same.kf over ordinary same-stem file.",
+        "Acquisition preserves existing root binding; source commit/sampling changes no captured combat service state or RNG."
+      ]
+    }
+  ],
+  "original_protocol": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "logical_slot": 5,
+    "policy": 1,
+    "profiles": 386,
+    "cases": [
+      {
+        "id": "idle-request-construction",
+        "entry": "00474C50",
+        "runs": 2,
+        "expected": "Returned request has policy1/slot5/null sequence. Nonnull resource sets status1 synchronously and increments its reference; null sets status0."
+      },
+      {
+        "id": "idle-request-resource-callback",
+        "entry": "00477C40",
+        "runs": 4,
+        "expected": "From status0, supplied nonnull resource sets1 and retains it; null remains0. Policy1 does not automatically start a sequence. Missing acquisition is not established to be terminal failure."
+      },
+      {
+        "id": "idle-request-start",
+        "entry": "00477E50",
+        "runs": 20,
+        "expected": "With no secondary request, only primary status1 attempts registration/activation. Registration or activation failure sets3 without sequence. Success retains sequence, sets2, binds actor, then requests action11. Actual51AC70 reads component+8 without consuming arguments;476260 receives logicalslot5 as its second argument."
+      },
+      {
+        "id": "idle-request-completion",
+        "entry": "00477AD0",
+        "runs": 360,
+        "expected": "Frame suffix changes status2 to3 only for null sequence or sequence state0. Bound actor action11 clears to-1; other actions survive. Policy1 retains primary request and sequence pointer."
+      }
+    ],
+    "limitations": [
+      "Auxiliary resources supplied null. Resource manager, path/heap/OS boundaries and registration/activation/action boundaries are explicit fixtures.",
+      "Native sequence states are supplied; activation, timing, recovery caller order, resource-thread scheduling and gameplay are not established.",
+      "No production request state, RNG commit, knocked-byte transition, slot5 playback or save schema is added by this resource-only chunk."
+    ]
+  }
+}
