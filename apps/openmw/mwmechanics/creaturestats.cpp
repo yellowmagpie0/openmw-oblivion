@@ -254,6 +254,8 @@ namespace MWMechanics
 
     bool CreatureStats::isParalyzed() const
     {
+        if (mNativeParalyzed.has_value())
+            return *mNativeParalyzed;
         MWBase::World* world = MWBase::Environment::get().getWorld();
         const MWWorld::Ptr player = world->getPlayerPtr();
         if (world->getGodModeState() && this == &player.getClass().getCreatureStats(player))

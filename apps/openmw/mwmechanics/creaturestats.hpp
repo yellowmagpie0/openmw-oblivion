@@ -69,6 +69,9 @@ namespace MWMechanics
         // retains the historical TES3 behavior; only the native publisher writes.
         std::optional<bool> mNativeDead;
         bool mNativeEssentialUnconscious = false;
+        // Derived current integer AV48, published with native actor values.
+        // Absence retains the legacy magic-effect predicate.
+        std::optional<bool> mNativeParalyzed;
         bool mDeathAnimationFinished = false;
         bool mDied = false; // flag for OnDeath script function
         bool mMurdered = false;

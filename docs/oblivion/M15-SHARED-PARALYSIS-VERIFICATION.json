@@ -1,0 +1,1348 @@
+{
+  "schema_version": 1,
+  "id": "m15_shared_paralysis",
+  "status": "Shared predicate integrated; full M15S4 remains incomplete.",
+  "tested_source": {
+    "head": "252a0946274c245936e0ac65f71c8be65981fccb",
+    "source_fingerprint": "67e692710d92ec36d65f98fc81f65eaa60e801d1ce0eedc76a831022e7717839"
+  },
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/creaturestats.cpp",
+      "sha256": "5c0bdd438e2f0012bebf1fe062ea3589286e8447cc3376f226d29f9961ae7fa9",
+      "bytes": 25909
+    },
+    {
+      "path": "apps/openmw/mwmechanics/creaturestats.hpp",
+      "sha256": "a84087444e0897cd04563767f5466b5ff64a44a60f522356423017aed4133b63",
+      "bytes": 10816
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "af5691511cb9181b1d2616778baaacea06edd32a57966af417726dc4784b37ae",
+      "bytes": 373078
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "f305a3c7fa191b142c50f0810ff2bce6203e8d372e02127e37dda53c024840ab",
+      "bytes": 68366
+    },
+    {
+      "path": "apps/openmw_tests/CMakeLists.txt",
+      "sha256": "3237df66fe9ede2ffa51186e102804733cb8fda6b498029f3a278abc23843549",
+      "bytes": 3680
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "fa01cce4a466c13d40ce8dd28d7fe59cd0fc77aa92691c94992d921e5787b33f",
+      "bytes": 2124386
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/oblivionworldfixture.cpp",
+      "sha256": "b7bf529e8fd976e51cf12ea2eb2ec97ee122da644f14c72c4ecf8846a103dc85",
+      "bytes": 4787
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/oblivionworldfixture.hpp",
+      "sha256": "3d8f4f2b4454c587a360b08c746495def9a9e5b0e667cbc7a5169fc5d836167c",
+      "bytes": 1587
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionparalysis.cpp",
+      "sha256": "1d12bf0c242ce7f5411118a23fa9bc397764a4207da609a7e46b80cd55cad3dd",
+      "bytes": 15177
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/paralysis_expected.inc",
+      "sha256": "a2b3da512a67eeb9e6e6cc0417534cb970a78f3886e02d3c5f13bad7911a37ff",
+      "bytes": 19457
+    }
+  ],
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_shared_paralysis_cases.json",
+    "sha256": "2de997f2b2624a4d6cd450d21879d0055252c674e17b1d51831a757dd8efc91e",
+    "bytes": 4523
+  },
+  "manifest": {
+    "path": "scripts/data/oblivion_compat/oblivion_m15_shared_paralysis_movement.json",
+    "sha256": "117a716f32f9333ecdabdd2006947d2d621a0a4baa8d80fb6c4ead0c7f19ffed",
+    "bytes": 22018
+  },
+  "checks": [
+    {
+      "name": "normal-02",
+      "source": {
+        "head": "252a0946274c245936e0ac65f71c8be65981fccb",
+        "source_fingerprint": "67e692710d92ec36d65f98fc81f65eaa60e801d1ce0eedc76a831022e7717839"
+      },
+      "result": {
+        "executed": 1937,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1fdcb45f169b8996935790824f875508c2d3362a47275eb2a22f0fb2c032e35c",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "d8c8356306d46a61be20d6858969069cb367fa3f0aeb5c9d9266f6c1e2dbd55b",
+        "inventory_sha256": "d17808936aa09385982b028e4bfb23f3e9154255c9e93c4be6553d6d85a548c9",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-02/verification.json",
+          "sha256": "61ff30de4eba98e15959ec36361d52d3dfcbe09e743ed4b46b30d64121579c71",
+          "bytes": 2148
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-02/engine-build.log",
+          "sha256": "d59d16c7c4facb0172bac4344a9385cd0f29f9913d957a13bd1a0e1538568749",
+          "bytes": 30680
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-02/engine-inventory.txt",
+          "sha256": "d17808936aa09385982b028e4bfb23f3e9154255c9e93c4be6553d6d85a548c9",
+          "bytes": 136942
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-02/engine.log",
+          "sha256": "21b4169e3688feb50ba84990aad91363ab5e11c97f135f17f8e330131deea13c",
+          "bytes": 2396820
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-02/engine.xml",
+          "sha256": "d8c8356306d46a61be20d6858969069cb367fa3f0aeb5c9d9266f6c1e2dbd55b",
+          "bytes": 637514
+        }
+      ]
+    },
+    {
+      "name": "sanitized-01",
+      "source": {
+        "head": "252a0946274c245936e0ac65f71c8be65981fccb",
+        "source_fingerprint": "67e692710d92ec36d65f98fc81f65eaa60e801d1ce0eedc76a831022e7717839"
+      },
+      "result": {
+        "executed": 1937,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "b61acefb2110d63721e75123d81d479defa3af6effc8fd51ed0ff10ab813ada7",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "d1fff647e70fad9f1f18e429197344703565de55f6a4f47f2d6ca485cf2d14c5",
+        "inventory_sha256": "d17808936aa09385982b028e4bfb23f3e9154255c9e93c4be6553d6d85a548c9",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-sanitized-01/verification.json",
+          "sha256": "6b9ca6019efac3ee4fe5a4e2bde9144579e7421cebb87f3ad746e9240e292205",
+          "bytes": 2238
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-sanitized-01/engine-build.log",
+          "sha256": "8937c1671fd1004ceb43e74b0d1f1c8e626b59b05c3bc8a265d5e4f255212d1e",
+          "bytes": 46562
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-sanitized-01/engine-inventory.txt",
+          "sha256": "d17808936aa09385982b028e4bfb23f3e9154255c9e93c4be6553d6d85a548c9",
+          "bytes": 136942
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-sanitized-01/engine.log",
+          "sha256": "87f670bfdb09b5a521e2a72af307966ce16c17536385ed4e2db18544db49f3a9",
+          "bytes": 2397456
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-sanitized-01/engine.xml",
+          "sha256": "d1fff647e70fad9f1f18e429197344703565de55f6a4f47f2d6ca485cf2d14c5",
+          "bytes": 639308
+        }
+      ]
+    }
+  ],
+  "sanitizer": "ASan/UBSan halt on errors; detect_leaks=0, no leak coverage.",
+  "native_query": {
+    "report": {
+      "passed": true,
+      "profiles": 1000,
+      "cases": 18000,
+      "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "4a1f807e85acbb8ba09fa8ab4e3a7be1565de4facb0cf436fa66a024653f88e1",
+      "common_integer_reads": 3000,
+      "scope": "God flag0/1 with Player singleton identity set for Player getters and common predicate; exact outputs unchanged across god modes. Original Low643340/Middle658790/High628940/Player65E030 AV48 integer queries, High6289F0 float cache miss and common5E17E0 integer!=0 predicate; 1000 god/base/modifier profiles, three x87 CWs. Base integer/Player base presence and sparse modifier lookups supplied at existing boundaries, actual composition/9828C0 conversion/cache store/predicate executed. Common actor integer read supplied from independently executed High result. No C++ implementation used. Arbitrary warm/stale process cache, spell application, input/render and gameplay not covered."
+    },
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-query-oracle-01/report.json",
+        "sha256": "04c464e27f438ca10338467a40917433b4ea341581ba0a2529a4c2fcd71e6403",
+        "bytes": 961
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-query-oracle-01/corpus.json",
+        "sha256": "4a1f807e85acbb8ba09fa8ab4e3a7be1565de4facb0cf436fa66a024653f88e1",
+        "bytes": 148573
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-query-oracle-01/probe.py",
+        "sha256": "36c26ff38349b8a03c4f462b296e6cb8dcbecf9115026e2f36bac359f2537020",
+        "bytes": 4606
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-query-oracle-01/paralysis_expected.inc",
+        "sha256": "39b4330bdd5c81c5454680fe9af89d945da4c42d42b1fad7f4d554e29e69b396",
+        "bytes": 38834
+      }
+    ],
+    "agreement": {
+      "passed": true,
+      "independent_profiles": 1000,
+      "checked_in_rows": 500,
+      "base_zero_rows": 125,
+      "corpus_sha256": "4a1f807e85acbb8ba09fa8ab4e3a7be1565de4facb0cf436fa66a024653f88e1",
+      "checked_in_sha256": "a2b3da512a67eeb9e6e6cc0417534cb970a78f3886e02d3c5f13bad7911a37ff",
+      "scope": "All 1000 god-mode profiles agree with the pre-existing checked-in 500 native expected rows; production C++ is not used. Engine integration selects125 zero-base rows across3 actor kinds,2 process tiers,2 god modes."
+    },
+    "agreement_file": {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/corpus-agreement.json",
+      "sha256": "72c370a97767fa9125381822ed3d56a0b32f7f0078309fecd0178ef5829de189",
+      "bytes": 510
+    }
+  },
+  "fixture_extraction": {
+    "report": {
+      "passed": true,
+      "parent": "252a0946274c245936e0ac65f71c8be65981fccb",
+      "scope": "Constructor body preserved exactly after removing one indentation level. Field initializers and default-argument declaration copied byte-for-byte; namespace and out-of-line constructor/destructor/test registration change.",
+      "constructor_body_sha256": "025fbd985621fe7ba5837b18978faa9c7504e4f953a9231df1128f15d26d7599",
+      "field_initializers_sha256": "9e385234c8b317b08bfaecad3e75b1922f1ec3b1aa08b7326223c0d468f12b3a",
+      "default_declaration_sha256": "c4dfd9446454d6a51cfd285b3a15106aca39ca9b2bf70dbbad0120569f87ef8b",
+      "original_block_sha256": "192fc6b2d9c6ab8be3d2a7e5b226be02c92c15786a6e1520e8832a8f4a70a99c"
+    },
+    "proof_files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/fixture-extraction.json",
+        "sha256": "e99c51bea8bf1dd0a7d1b996b4d7ccade1f5186eacfa037337a5a4784b74c085",
+        "bytes": 704
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/fixture-extraction-recheck.json",
+        "sha256": "e99c51bea8bf1dd0a7d1b996b4d7ccade1f5186eacfa037337a5a4784b74c085",
+        "bytes": 704
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/verify-fixture-extraction.py",
+        "sha256": "e189560b50a79d7fb90e8ad923415d3f405796efd4fe33881ab4a2abaa621f2d",
+        "bytes": 1792
+      }
+    ]
+  },
+  "runtime": [
+    {
+      "mode": "normal",
+      "verification": {
+        "passed": true,
+        "scope": "Owned PARA generic movement, not natural mastery admission or ragdoll",
+        "phases": [
+          {
+            "phase": "first",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              672.6431884765625,
+              -58.92329406738281,
+              -108.99594116210938,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 18.93422165754453,
+            "duration": 5.0,
+            "elapsed_during": 0.996002197265625,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2073497,
+              "start_ticks": 63259526,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e"
+            },
+            "binary_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e",
+            "live_binary_agreement": true
+          },
+          {
+            "phase": "second",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              672.6431884765625,
+              -58.92329406738281,
+              -108.99594116210938,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 18.93422165754453,
+            "duration": 5.0,
+            "elapsed_during": 1.8260040283203125,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2073881,
+              "start_ticks": 63274661,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e"
+            },
+            "binary_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e",
+            "live_binary_agreement": true
+          }
+        ]
+      },
+      "visual": {
+        "reviewed": true,
+        "scope": "Direct inspection of four captures across two processes: standing named Valen Dreth, first-person fists, dungeon and HUD. After-expiry views show increased distance. No prone pose, physical paralysis, GetUp or natural mastery claim. Legacy after-expiry-hit filename is retained; this course sends movement only.",
+        "files": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/during-owned-paralysis.png",
+            "sha256": "77c2be189c79a944f7c50b2d8b1978a950b364de59947d8a838acf9b1c58feb1"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/after-expiry-hit.png",
+            "sha256": "d1d469aa99f99fcdab39868153073e545bad5661138d0c2223f4399deaaec4ef"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/during-owned-paralysis.png",
+            "sha256": "984e43d61ef528dc450a3aeeb169609ccf6fe566089f9b31baac2539f1abb2ff"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/after-expiry-hit.png",
+            "sha256": "b83fcb95682aebc19dfe61fbda29beb63c798b1f11909ccd56413b9e6f6851b7"
+          }
+        ]
+      },
+      "binary": {
+        "path": "build/openmw",
+        "sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e",
+        "bytes": 1407178320
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/recipe.json",
+          "sha256": "210f4abd1ae6829d0f0024debfc9d1526f566e213401a49e2dd165e4107e207f",
+          "bytes": 1013
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/manifest.json",
+          "sha256": "107feb22744634cb5038d526b36b6ccbfe200d5e8958292e14a86a6c5c3552dc",
+          "bytes": 22034
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/continuation.json",
+          "sha256": "107feb22744634cb5038d526b36b6ccbfe200d5e8958292e14a86a6c5c3552dc",
+          "bytes": 22034
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/staged-input.omwsave",
+          "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+          "bytes": 12125298
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/launcher.py",
+          "sha256": "64db0b0c2fc756da96cbd9085ddb060fcfb15befcdf66fc9c79a659065e1fe93",
+          "bytes": 1794
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/monitor.py",
+          "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+          "bytes": 3118
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/movement-verification-05.json",
+          "sha256": "ef9ef17b12332cd32b8aaaf12eaa940d3bb9f38cfb434aed116b8f228464ceda",
+          "bytes": 3303
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/visual-review.json",
+          "sha256": "789ca2d4d0d07159262147145b1288b0059cff65359302fc17829170afa06a13",
+          "bytes": 1228
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/launcher.json",
+          "sha256": "3f120cc3e8ebeb9cf05c4e6080a4aacb8eaf2e508a281ea68b4c762133b90bd6",
+          "bytes": 970
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/process-epoch.json",
+          "sha256": "ddef15a020a7e369ec8142a488fbbcb219af90d8eeee8f45bea9abc00a68bff3",
+          "bytes": 692
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/loaded-libraries.json",
+          "sha256": "72eec214d7271c28145215f9cfa49963db7941dd7cf0c5ea02f79454881af909",
+          "bytes": 353
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/actual-engine-environment.json",
+          "sha256": "0ef3e8c62efdf9073d2a2c47721c812a42c1af90cf2a7bc0b56022ff3af8a265",
+          "bytes": 320
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/events.jsonl",
+          "sha256": "8376c83684be4f61127830ba328287d02082bcea0d283f6646dfa0df5f03a5fb",
+          "bytes": 2298
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/snapshot-index.json",
+          "sha256": "510c88030f1cb8b6762e07c3fedf43a4f1c110b69d508abf4d52a40e21bd9375",
+          "bytes": 2184
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/scenario.json",
+          "sha256": "6ead5b9d64bdf59f8da67bd7924dc0013f2020612ff03c1cb6611f299c5ad8ab",
+          "bytes": 6903
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/sdl-input.txt",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/sdl-input.txt.delivered",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/sdl-input-provenance.json",
+          "sha256": "8b072c51b2b204b1f24889f79f27067151f5303b0f63298fb5121bfdde980e74",
+          "bytes": 1245
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/monitor.log",
+          "sha256": "2e9d74586f0755cc369b3de1132bb4ad88cd19f46a6a556dc8e297fc6e2b1396",
+          "bytes": 789
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/input-pristine.omwsave",
+          "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+          "bytes": 12125298
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/live-1-2.json",
+          "sha256": "4f45185bef7c2dd9d68dc7e835a76cb3d67c86369c034e92fd2978ab51dbf36f",
+          "bytes": 28840112
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/harness.log",
+          "sha256": "6ead5b9d64bdf59f8da67bd7924dc0013f2020612ff03c1cb6611f299c5ad8ab",
+          "bytes": 6903
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/process.log",
+          "sha256": "3533691f0d6948e39b4f320a68db2e7d621792102625b2ba6d3e5a2c349a319e",
+          "bytes": 577627
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/during-owned-paralysis.png",
+          "sha256": "77c2be189c79a944f7c50b2d8b1978a950b364de59947d8a838acf9b1c58feb1",
+          "bytes": 1124211
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/after-expiry-hit.png",
+          "sha256": "d1d469aa99f99fcdab39868153073e545bad5661138d0c2223f4399deaaec4ef",
+          "bytes": 1154416
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/snapshots/save-3.omwsave",
+          "sha256": "9fb849f97f8f8e888fad2eae74f5b2e5daf6fcb5bf03ae2e2a5312153567a742",
+          "bytes": 12238415
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/live-1-3.json",
+          "sha256": "ba2307270e613b2cb6a716257105963305cc83a012cadea153cc8144e447ccec",
+          "bytes": 29125214
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/snapshots/save-4.omwsave",
+          "sha256": "45da3d7d211104e9fc8c0d35d5ab887d65f86ea18abde5008b42d5c860b7a213",
+          "bytes": 12580416
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/first/live-1-4.json",
+          "sha256": "ba0acfdcb22cf0fc62941867c4be4be8c8a99a642959d9f5191c2d28befafc61",
+          "bytes": 29936244
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/launcher.json",
+          "sha256": "2234ce3e59bbd3ba9f8429f286030275c3823beaa389477614750a1e4dbfafef",
+          "bytes": 975
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/process-epoch.json",
+          "sha256": "f415ff6a1fba61666922665896cdaede60a4807ae80ea39dfd6f242587800ca0",
+          "bytes": 694
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/loaded-libraries.json",
+          "sha256": "b49e9b665809bf08c5f5bc602fbf79388d9e3c8d2029c46054ca54731a55d042",
+          "bytes": 353
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/actual-engine-environment.json",
+          "sha256": "024bfea4155a1a9f2d70375b79dc76b6457b9760c1d56d47948963db11fc864e",
+          "bytes": 321
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/events.jsonl",
+          "sha256": "94055bcd208199413d8204b7f21c6ec4ec287f4b0ecb8404804e4d521821b25f",
+          "bytes": 2301
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/snapshot-index.json",
+          "sha256": "08c9b9a2d6832b67b6dad8aabb76ccf2206d98c4742cfbc661ca75f0b6ee15c8",
+          "bytes": 2188
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/scenario.json",
+          "sha256": "7f58ea214df1b921acb2b692262b134bed6a0be7bbbe556445f0088799fac305",
+          "bytes": 6917
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/sdl-input.txt",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/sdl-input.txt.delivered",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/sdl-input-provenance.json",
+          "sha256": "b25322039a75c6223098ff7031a56c4239ef600f778cf872c76914b83c4ac003",
+          "bytes": 1248
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/monitor.log",
+          "sha256": "035f9aa639a5decf0ced87a3a2da63cd5a7f4c267b28780e4462ff65152061a7",
+          "bytes": 791
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/input-pristine.omwsave",
+          "sha256": "9fb849f97f8f8e888fad2eae74f5b2e5daf6fcb5bf03ae2e2a5312153567a742",
+          "bytes": 12238415
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/live-1-2.json",
+          "sha256": "ba2307270e613b2cb6a716257105963305cc83a012cadea153cc8144e447ccec",
+          "bytes": 29125214
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/harness.log",
+          "sha256": "7f58ea214df1b921acb2b692262b134bed6a0be7bbbe556445f0088799fac305",
+          "bytes": 6917
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/process.log",
+          "sha256": "1a259356b66ee07b64356eab2fb44217a293fa96b326655b45d9ae5507b4a06f",
+          "bytes": 562061
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/during-owned-paralysis.png",
+          "sha256": "984e43d61ef528dc450a3aeeb169609ccf6fe566089f9b31baac2539f1abb2ff",
+          "bytes": 1150749
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/after-expiry-hit.png",
+          "sha256": "b83fcb95682aebc19dfe61fbda29beb63c798b1f11909ccd56413b9e6f6851b7",
+          "bytes": 1159462
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/snapshots/save-3.omwsave",
+          "sha256": "4590ed1dcfee05e9e1c9200b6daedc3725bfba1f386091ce2ed204f49e4e1a94",
+          "bytes": 12325087
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/live-1-3.json",
+          "sha256": "27c2c302781ed8c2ace263d41e5f7a8dd5893728c7274478d9f20ccb97c4a422",
+          "bytes": 29341015
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/snapshots/save-4.omwsave",
+          "sha256": "36c67fceb37cedba23b21d2b162fe18a01cfb5038db0e3d8dbd44b864f4f3bbb",
+          "bytes": 12583425
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-02/second/live-1-4.json",
+          "sha256": "4e9801b93f0de1065f641ebd5cea09d8845ec9c2357d3b17563a5d8562012552",
+          "bytes": 29936205
+        }
+      ]
+    },
+    {
+      "mode": "sanitized",
+      "verification": {
+        "passed": true,
+        "scope": "Owned PARA generic movement, not natural mastery admission or ragdoll",
+        "phases": [
+          {
+            "phase": "first",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              672.6431884765625,
+              -58.92329406738281,
+              -108.99594116210938,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 18.93422165754453,
+            "duration": 5.0,
+            "elapsed_during": 0.8300018310546875,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2077526,
+              "start_ticks": 63290557,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767"
+            },
+            "binary_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767",
+            "live_binary_agreement": true
+          },
+          {
+            "phase": "second",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              672.6431884765625,
+              -58.92329406738281,
+              -108.99594116210938,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 18.93422165754453,
+            "duration": 5.0,
+            "elapsed_during": 1.4940032958984375,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2077993,
+              "start_ticks": 63330558,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767"
+            },
+            "binary_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767",
+            "live_binary_agreement": true
+          }
+        ]
+      },
+      "visual": {
+        "reviewed": true,
+        "scope": "Direct inspection of four captures across two processes: standing named Valen Dreth, first-person fists, dungeon and HUD. After-expiry views show increased distance. No prone pose, physical paralysis, GetUp or natural mastery claim. Legacy after-expiry-hit filename is retained; this course sends movement only.",
+        "files": [
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/during-owned-paralysis.png",
+            "sha256": "0b57412af5fd287ed3c2aacfccfe86e0b68278044afe3f4d7eb189e38dc9c5cd"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/after-expiry-hit.png",
+            "sha256": "ffcadc276a8e6fb149faf61a01e766e53f97f13b4cbda30bac84c8d980d12ace"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/during-owned-paralysis.png",
+            "sha256": "13c6c7146fda6edd82efc4dcfd19a17d144ca34777a0e567f9931324be9d80b4"
+          },
+          {
+            "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/after-expiry-hit.png",
+            "sha256": "87fd13dc8c89650641e21986fd66e472077cefcc13de77a8cef11a8195d7b3c6"
+          }
+        ]
+      },
+      "binary": {
+        "path": "build/m15-sanitize/openmw",
+        "sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767",
+        "bytes": 2606763656
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/recipe.json",
+          "sha256": "017e24a6b0308e3a1dad009aa65c0f694a25ed3f56107d7da98eefb848b96583",
+          "bytes": 1019
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/manifest.json",
+          "sha256": "9bf4e8e80e495c9169d6d0d75b5350e64a5fd3f78c3e6bf100755877eecef9bc",
+          "bytes": 22198
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/continuation.json",
+          "sha256": "9bf4e8e80e495c9169d6d0d75b5350e64a5fd3f78c3e6bf100755877eecef9bc",
+          "bytes": 22198
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/staged-input.omwsave",
+          "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+          "bytes": 12125298
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/launcher.py",
+          "sha256": "3a28a43882d871ba31c6e51f684a036891dccd0acfba07c1593c992cbc2c681a",
+          "bytes": 1807
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/monitor.py",
+          "sha256": "355e622ca61fac8cd7e814b29df43f7ee95b8e1cc477009c3d2be1afe482e2b3",
+          "bytes": 3118
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/movement-verification-05.json",
+          "sha256": "dca01d6d64a07bbd298c6932328ad46207aa466af5b79ad2c693657985f94151",
+          "bytes": 3342
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/visual-review.json",
+          "sha256": "4b448a874a34b1d5c5cc7fdda7956872820b94b4c51b029c10443b50a5ad5933",
+          "bytes": 1240
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/launcher.json",
+          "sha256": "75c15a3a3012ff6964d8c1e952ad65f257eb73ea097b0458cfb6e3dfbdad25f0",
+          "bytes": 989
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/process-epoch.json",
+          "sha256": "86a4b5c1aa3b290d946a4da3a684515f480551ef293ad5bd04e76ba9433b96d4",
+          "bytes": 711
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/loaded-libraries.json",
+          "sha256": "98ec34af0834945e62403a13c93aab7963dc7e2558f85a5be44970fcf4837ee1",
+          "bytes": 369
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/actual-engine-environment.json",
+          "sha256": "ef394ddef1770c7b0aaf6c747ab5da622740ac907caefe500d4b90de1869c67f",
+          "bytes": 459
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/events.jsonl",
+          "sha256": "9785f7947237c9e5aad857171cb0802bb607c2166045caf0494240bca2cb357f",
+          "bytes": 2322
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/snapshot-index.json",
+          "sha256": "940a9d8053b6612767992f69fbce6000545715d2d0ce4081dff478485f432b14",
+          "bytes": 2202
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/scenario.json",
+          "sha256": "f54fd44048fbb21ab9251ffca129fba75862736f97b8291217b5acf67f58c534",
+          "bytes": 6993
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/sdl-input.txt",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/sdl-input.txt.delivered",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/sdl-input-provenance.json",
+          "sha256": "5e3b4e1d05f60f91307c4ee21a827e3a2107f229ec93e8160f61f22d3693a739",
+          "bytes": 1278
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/monitor.log",
+          "sha256": "13de67e4e02f0dc464b7b096da2d57d15d0531b28cc8fafe28a1a16932251d03",
+          "bytes": 808
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/input-pristine.omwsave",
+          "sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+          "bytes": 12125298
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/live-1-2.json",
+          "sha256": "4f45185bef7c2dd9d68dc7e835a76cb3d67c86369c034e92fd2978ab51dbf36f",
+          "bytes": 28840112
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/harness.log",
+          "sha256": "f54fd44048fbb21ab9251ffca129fba75862736f97b8291217b5acf67f58c534",
+          "bytes": 6993
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/process.log",
+          "sha256": "cfcb9b3c12eb9167d5c84f338a7c8545ad4b9319a189bdf5f4bc02b412f245fa",
+          "bytes": 577975
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/during-owned-paralysis.png",
+          "sha256": "0b57412af5fd287ed3c2aacfccfe86e0b68278044afe3f4d7eb189e38dc9c5cd",
+          "bytes": 1138147
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/after-expiry-hit.png",
+          "sha256": "ffcadc276a8e6fb149faf61a01e766e53f97f13b4cbda30bac84c8d980d12ace",
+          "bytes": 1144166
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/snapshots/save-3.omwsave",
+          "sha256": "2b2f201e30d42c63ee63450087c0acd19a8ca852a204f1bfd4ff2aa33edf2cd0",
+          "bytes": 12165572
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/live-1-3.json",
+          "sha256": "8a8e7288228358364cfae0f90f9fc35e92cc4b1897ac1a24ca59dd1f221b4c8b",
+          "bytes": 28948386
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/snapshots/save-4.omwsave",
+          "sha256": "d6b6630b7c5c6b0bc1de014f6f984348cd6569b7a62415514604ef45ac9b7bad",
+          "bytes": 12581122
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/first/live-1-4.json",
+          "sha256": "ba0acfdcb22cf0fc62941867c4be4be8c8a99a642959d9f5191c2d28befafc61",
+          "bytes": 29936244
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/launcher.json",
+          "sha256": "8af486116496e625666836f34ac9803ee4cfa4b2627089053b76e7ac3f227064",
+          "bytes": 994
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/process-epoch.json",
+          "sha256": "619699c7089bf1234ba6261ce1b13638c07474b92f84b38c99ed098f09ff281d",
+          "bytes": 713
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/loaded-libraries.json",
+          "sha256": "71b84297b691863960310e5bdf543dd7676e6b3f468f5bf7d6226663303a137e",
+          "bytes": 369
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/actual-engine-environment.json",
+          "sha256": "7fef4e5a1b928534f8d3e4676993b4c3e115dfcdb1d44a908044edee431089d2",
+          "bytes": 460
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/events.jsonl",
+          "sha256": "95633d89273bdb49e1215a6c722a33e083882aadc2c62ddb2e2c10acc12077d4",
+          "bytes": 2325
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/snapshot-index.json",
+          "sha256": "778cd5232b7c266866bedf3c7c957a07afadd20135677036488107313317a4bd",
+          "bytes": 2206
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/scenario.json",
+          "sha256": "c86c026985b98837dc099148b2e88f77cd1c94dc0cc80842ae0e59a08ccd1dc8",
+          "bytes": 7006
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/sdl-input.txt",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/sdl-input.txt.delivered",
+          "sha256": "979948d79d58ef6f3697dd51aca61348c9daa63d585674129b0d254f9f4e3101",
+          "bytes": 128
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/sdl-input-provenance.json",
+          "sha256": "da75e3a6bea76b21623fcd9aaae5b288d93bb198aeacb8bfb3312a2e83cb5432",
+          "bytes": 1281
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/monitor.log",
+          "sha256": "5d27f787130bec70e594eb431fd400a3fc962bf703a3fd6e9252ddc5705ba621",
+          "bytes": 810
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/input-pristine.omwsave",
+          "sha256": "2b2f201e30d42c63ee63450087c0acd19a8ca852a204f1bfd4ff2aa33edf2cd0",
+          "bytes": 12165572
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/live-1-2.json",
+          "sha256": "8a8e7288228358364cfae0f90f9fc35e92cc4b1897ac1a24ca59dd1f221b4c8b",
+          "bytes": 28948386
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/harness.log",
+          "sha256": "c86c026985b98837dc099148b2e88f77cd1c94dc0cc80842ae0e59a08ccd1dc8",
+          "bytes": 7006
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/process.log",
+          "sha256": "b866976ae0eb275e52a001b90fbe4c7a0fef8dc0f4bf380e1c31ae251d2aa3d2",
+          "bytes": 565974
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/during-owned-paralysis.png",
+          "sha256": "13c6c7146fda6edd82efc4dcfd19a17d144ca34777a0e567f9931324be9d80b4",
+          "bytes": 1140163
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/after-expiry-hit.png",
+          "sha256": "87fd13dc8c89650641e21986fd66e472077cefcc13de77a8cef11a8195d7b3c6",
+          "bytes": 1154896
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/snapshots/save-3.omwsave",
+          "sha256": "c828c1ef9b52bb3c037673deb739103ce74b9867ec88a9de3be5fbee3a99c824",
+          "bytes": 12253321
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/live-1-3.json",
+          "sha256": "d24c9096131b8c75e0e53eca871b5effa94c08986337eb0087511a6f865c07bd",
+          "bytes": 29163916
+        },
+        {
+          "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/snapshots/save-4.omwsave",
+          "sha256": "8b4d6d8d3e55ddfcf563d5d8b03836cd75a8d9c28aba523deb84b0c6ca71d9e2",
+          "bytes": 12579653
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-02/second/live-1-4.json",
+          "sha256": "dc2c609318952f3c9b912daa09a11b16a2e7e594c478130c41576bae60c6d5ed",
+          "bytes": 29936183
+        }
+      ]
+    }
+  ],
+  "runtime_helpers": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/prepare-movement.py",
+      "sha256": "4ee79db4f924b80fdc84b53cb8797791c299ef67a3ac154cb3cd5e53c5a4a388",
+      "bytes": 3284
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/verify-movement.py",
+      "sha256": "673d60553687d0045afa56751ac9a7976962b5b16a485e75ec5bc884fdadb5f1",
+      "bytes": 4179
+    }
+  ],
+  "reused_components": {
+    "receipt": {
+      "path": "docs/oblivion/M15-MELEE-PARALYSIS-PROFILE-VERIFICATION.json",
+      "sha256": "0144d0ac6388e0475d3843c0fdd5dc74dabd0f52aa0dee2c8dc1212d300e1827",
+      "bytes": 22378
+    },
+    "counts": "3087 full normal components,938 ESM4 sanitizer tests; unchanged component/Python/schema implementations not rerun.",
+    "matching_source_files": [
+      {
+        "path": "apps/components_tests/CMakeLists.txt",
+        "sha256": "cfe7fa38c95be9ac2d1ffa3eadf4bd240d558571539e88a990d4ce05b4aa6798",
+        "bytes": 5689
+      },
+      {
+        "path": "apps/components_tests/esm4/combatmagicprofile.cpp",
+        "sha256": "746c3a6b17811555b698e2eb20c4484051c554c0b2b57573e2a19cba04bfe48b",
+        "bytes": 4903
+      },
+      {
+        "path": "components/CMakeLists.txt",
+        "sha256": "ad01662aa41a4af239344280528a23a091c2aa68e7dfccb97c218c702414b1a9",
+        "bytes": 21927
+      },
+      {
+        "path": "components/esm4/combatmagicprofile.cpp",
+        "sha256": "d45150d5590cd6028a25b675daa30dc59a6c0bfdb4d204b31d6ed1abaf420862",
+        "bytes": 1819
+      },
+      {
+        "path": "components/esm4/combatmagicprofile.hpp",
+        "sha256": "ab185adad3d966b55e790f3be7ac38dd802553fdf1a2e599404cd419c9e78d52",
+        "bytes": 574
+      }
+    ]
+  },
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-01",
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-01/verification.json",
+          "sha256": "76c9a371ae340543dd05c78fd9d2e214ebf2061beb8ae93489b6986e4a9caaec",
+          "bytes": 1276
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-01/engine.xml",
+          "sha256": "849a40f9e22d53c0a1f9825c46fadf5dc898821dfbabcdcf696f055734fa103a",
+          "bytes": 639499
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-checks-normal-01/engine.log",
+          "sha256": "f56114739c7bd25d50a499fa85d405ab0014f68b361b0fb1369931bcef4e2801",
+          "bytes": 2396421
+        }
+      ],
+      "reason": "1936 tests run; new exception-type assertion used out_of_range instead of invalid_argument (3 actor branches). Existing malformed-AV48 test expected deferred query failure; derived publication now rejects at restore preflight. Corrected final tests assert atomic earlier rejection."
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01",
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01/recipe.json",
+          "sha256": "fb7990440764eb4ea10f777de8059a01da2ecc023acaadf436920f1cd8523e44",
+          "bytes": 867
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01/manifest.json",
+          "sha256": "0ffb9aec233eff9391f3831adcbc8add294c7aab526d220f51548a8c7d92a253",
+          "bytes": 21692
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01/movement-verification.json",
+          "sha256": "402bbaa1c423d5de86391508815d9d066ba27487c5429e559f40e1cf7fd7d2c7",
+          "bytes": 823
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01/movement-verification-02.json",
+          "sha256": "57df981e32e6251cf2ba2acaf3765781623f23340432b904fe2572ee1deacdce",
+          "bytes": 526
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-baseline-sanitized-01/movement-verification-03.json",
+          "sha256": "b3515647d550156a83b4d77187770b8c308c8d67f0cdb43603f822990faea734",
+          "bytes": 2190
+        }
+      ],
+      "reason": "Prior binary already suspends Player motion through native Lua query. Verifier01 supplied str instead of Path to load_save;02 assumed an explicit empty optional effect list. Corrected03 verifies full live/binary agreement and zero motion during, but1.2-second after-expiry hold produces only4.737 units, below declared10. Retained failure; final course lengthens only S hold to8 seconds, unchanged bounds."
+    }
+  ],
+  "intermediate_time_based_courses": {
+    "normal": {
+      "directory": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01",
+      "verification": {
+        "passed": true,
+        "scope": "Owned PARA generic movement, not natural mastery admission or ragdoll",
+        "phases": [
+          {
+            "phase": "first",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              675.1407470703125,
+              -59.309288024902344,
+              -108.9818115234375,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 19.563049255888348,
+            "duration": 5.0,
+            "elapsed_during": 0.996002197265625,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2067817,
+              "start_ticks": 63129476,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e"
+            },
+            "binary_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e",
+            "live_binary_agreement": true
+          },
+          {
+            "phase": "second",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              675.76513671875,
+              -59.405792236328125,
+              -108.978271484375,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 19.76767631337615,
+            "duration": 5.0,
+            "elapsed_during": 1.8260040283203125,
+            "during_suspended": true,
+            "after_released": true,
+            "epoch": {
+              "pid": 2068048,
+              "start_ticks": 63141478,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01/second/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01/second/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e"
+            },
+            "binary_sha256": "7ea4d4b6b01f7e2623622752336f30a545b80696cd969f6fc84e7932a2cbf89e",
+            "live_binary_agreement": true
+          }
+        ]
+      },
+      "file": {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-normal-01/movement-verification-04.json",
+        "sha256": "68c1b3379716f09762c937cca568a0f94aba80bf141913529c68fbd5d195eb7a",
+        "bytes": 3301
+      }
+    },
+    "sanitized": {
+      "directory": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-01",
+      "verification": {
+        "passed": false,
+        "scope": "Owned PARA generic movement, not natural mastery admission or ragdoll",
+        "phases": [
+          {
+            "phase": "first",
+            "loaded_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_position": [
+              672.0,
+              -40.0,
+              -109.68915557861328,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "after_position": [
+              672.0,
+              -49.47410583496094,
+              -109.34209442138672,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "during_displacement": 0.0,
+            "after_displacement": 9.474105834960938,
+            "duration": 5.0,
+            "elapsed_during": 0.8300018310546875,
+            "during_suspended": true,
+            "after_released": false,
+            "epoch": {
+              "pid": 2073102,
+              "start_ticks": 63211876,
+              "clock_ticks_per_second": 100,
+              "boot_id": "0a3e2fa2-1a1d-4902-b250-808ced4138b5",
+              "command": [
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw",
+                "--replace=config",
+                "--config",
+                "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-01/first/config",
+                "--no-grab",
+                "--load-savegame=/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-01/first/userdata/saves/M15Review/Quicksave.omwsave"
+              ],
+              "executable_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767"
+            },
+            "binary_sha256": "cc07b96509d2b459c181ebac9f9d93a85b1afb349a2c24d7fc10538aea589767",
+            "live_binary_agreement": true
+          }
+        ],
+        "error": "ordinary movement did not resume after expiry",
+        "traceback": "Traceback (most recent call last):\n  File \"/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/verify-movement-before-frame-gate.py\", line 45, in <module>\n    assert result['after_released'],'ordinary movement did not resume after expiry'\n           ~~~~~~^^^^^^^^^^^^^^^^^^\nAssertionError: ordinary movement did not resume after expiry\n"
+      },
+      "file": {
+        "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-movement-sanitized-01/movement-verification-04.json",
+        "sha256": "23cd9aeb0293fc5f6d7d07868fb9555f66f41a83f9bd14e9c1daabbbb922afd9",
+        "bytes": 2198
+      },
+      "reason": "First after-expiry displacement9.474<10 with8-second wall hold; retain failure and change course to observed-frame hold, unchanged final bound."
+    }
+  },
+  "warnings": "Existing giant World/actor-stats test compiler warnings are retained in build logs; no warning-free build claim.",
+  "validation_layers": {
+    "structural_binary_live": true,
+    "compiler_world_shared_views": true,
+    "independent_native_integer_queries": true,
+    "ordinary_player_movement_and_fresh_process_regression": true,
+    "natural_mastery_admission": false,
+    "physical_paralysis_ragdoll_getup": false,
+    "full_M15S4": false
+  },
+  "manifest_equivalence": {
+    "report": {
+      "passed": true,
+      "published_to_normal_differences": [
+        "name",
+        "environment.OPENMW_M15_RUN_ID"
+      ],
+      "sanitizer_overlay": [
+        "name",
+        "environment.OPENMW_M15_RUN_ID",
+        "environment.ASAN_OPTIONS",
+        "environment.UBSAN_OPTIONS",
+        "environment.LD_PRELOAD"
+      ],
+      "identical_first_continuation_manifest": true,
+      "scope": "All content and action fields are identical after exactly the declared name/run-ID and sanitizer environment normalization."
+    },
+    "file": {
+      "path": "build/oblivion-compat/m15/S4/native-shared-paralysis-work-01/manifest-agreement.json",
+      "sha256": "78e9455285597dc2bdd361e8e599e55da4ac405c0c5c936859c68eed2d9f073f",
+      "bytes": 473
+    }
+  }
+}

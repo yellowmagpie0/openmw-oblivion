@@ -149,102 +149,11 @@
 #include "apps/openmw/mwworld/timestamp.hpp"
 #include "apps/openmw/mwstate/saveadmission.hpp"
 
+#include "oblivionworldfixture.hpp"
+
 namespace
 {
-    // A real native content-load path with no renderer, input, physics or audio
-    // device. Registration tests exercise actual Actors admission without an
-    // animation/controller; this remains a headless integration fixture.
-    struct NativeWorldFixture
-    {
-        const std::filesystem::path mDirectory = TestingOpenMW::currentTestDirPath();
-        MWBase::Environment mEnvironment;
-        VFS::Manager mVfs;
-        Resource::ResourceSystem mResources{&mVfs, 0., nullptr};
-        MWWorld::World mWorld{&mResources, -1, "", mDirectory, ESM::GameProfile::Oblivion};
-        std::unique_ptr<MWLua::LuaManager> mLuaManager;
-        std::unique_ptr<MWSound::SoundManager> mSoundManager;
-
-        explicit NativeWorldFixture(bool scriptsFirst = false, bool extraNative = false, bool activationScript = false,
-            const std::string& scriptSource = {}, const std::filesystem::path& luaLibs = {},
-            const std::string& extraRecords = {}, std::uint32_t extraRecordCount = 0)
-        {
-            mEnvironment.setResourceSystem(mResources);
-            mEnvironment.setWorld(mWorld);
-            mEnvironment.setWorldModel(mWorld.getWorldModel());
-            mEnvironment.setESMStore(mWorld.getStore());
-            mLuaManager = std::make_unique<MWLua::LuaManager>(&mVfs, luaLibs);
-            mEnvironment.setLuaManager(*mLuaManager);
-            mSoundManager = std::make_unique<MWSound::SoundManager>(&mVfs, false);
-            mEnvironment.setSoundManager(*mSoundManager);
-
-            const auto bytes = [](const auto& value) {
-                return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
-            };
-            const auto subrecord = [&](std::uint32_t tag, const std::string& data) {
-                return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
-            };
-            const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
-                return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size()))
-                    + bytes(std::uint32_t{0}) + bytes(id) + bytes(std::uint32_t{0}) + data;
-            };
-            ESM4::ACBS_TES4 config{};
-            config.baseSpell = 20;
-            config.fatigue = 40;
-            config.levelOrOffset = config.calcMin = config.calcMax = 1;
-            std::array<std::uint8_t, 21> skills;
-            skills.fill(5);
-            std::array<std::uint8_t, 8> attributes;
-            attributes.fill(40);
-            const auto header = record(ESM4::REC_TES4, 0,
-                subrecord(ESM::fourCC("HEDR"), bytes(1.f)
-                    + bytes(std::uint32_t{(activationScript ? 2u : 1u) + extraRecordCount})
-                    + bytes(std::uint32_t{extraRecords.empty() ? (activationScript ? 0x881u : 0x801u) : 0x1000u})));
-            const auto npc = record(ESM4::REC_NPC_, 0x800,
-                subrecord(ESM::fourCC("EDID"), std::string("Player\0", 7))
-                + subrecord(ESM::fourCC("ACBS"), bytes(config).substr(0, 16))
-                + subrecord(ESM::fourCC("DATA"), bytes(skills) + bytes(std::uint32_t{100}) + bytes(attributes))
-                + (activationScript ? subrecord(ESM::fourCC("SCRI"), bytes(std::uint32_t{0x880})) : std::string{}));
-            {
-                std::ofstream stream(mDirectory / "headless.esm", std::ios::binary);
-                stream << header << npc << extraRecords;
-                if (activationScript)
-                {
-                    const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
-                    stream << record(ESM4::REC_SCPT, 0x880,
-                        subrecord(ESM::fourCC("EDID"), std::string("ActivationReceiver\0", 19))
-                        + subrecord(ESM::fourCC("SLSD"), bytes(local))
-                        + subrecord(ESM::fourCC("SCVR"), std::string("calls\0", 6))
-                        + subrecord(ESM::fourCC("SCTX"), scriptSource.empty()
-                            ? "scn ActivationReceiver\nshort calls\nBegin OnActivate\nset calls to calls + 1\nEnd\n"
-                            : scriptSource));
-                }
-                if (!stream)
-                    throw std::runtime_error("failed to write native world fixture");
-            }
-            Files::Collections files(Files::PathContainer{mDirectory});
-            Loading::Listener listener;
-            if (scriptsFirst)
-            {
-                std::ofstream scripts(mDirectory / "prefix.omwscripts");
-                scripts << "# Empty script configuration shifts the resolved content index.\n";
-            }
-            std::vector<std::string> content;
-            if (scriptsFirst)
-                content.push_back("prefix.omwscripts");
-            content.push_back("headless.esm");
-            if (extraNative)
-            {
-                std::ofstream second(mDirectory / "second.esm", std::ios::binary);
-                second << record(ESM4::REC_TES4, 0, subrecord(ESM::fourCC("HEDR"),
-                    bytes(1.f) + bytes(std::uint32_t{0}) + bytes(std::uint32_t{0x800})));
-                second.close();
-                if (!second)
-                    throw std::runtime_error("failed to write second native content fixture");
-                content.push_back("second.esm");
-            }
-            mWorld.loadData(files, content, {}, nullptr, &listener);
-        }
-    };
+    using TestingOpenMW::NativeWorldFixture;
 
     struct InspectableScripts : MWLua::LocalScripts
     {
@@ -5977,10 +5886,12 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionParalyzed(world, {}), std::invalid_argument);
         MWWorld::World foreign(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
         EXPECT_THROW(MWMechanics::oblivionParalyzed(foreign, actor), std::invalid_argument);
-        state.mNativeActorValues[0].mValues[48].mBase = 3e38f;
-        service.restore(state, world.getStore());
         const auto before = captureNativeActorState(fixture, actor).serializeBinary();
-        EXPECT_THROW(MWMechanics::oblivionParalyzed(world, actor), std::invalid_argument);
+        state.mNativeActorValues[0].mValues[48].mBase = 3e38f;
+        // Every shared projection now consumes integer AV48. Reject an
+        // unsupported integer during restore preflight, before publication.
+        EXPECT_THROW(service.restore(state, world.getStore()), std::invalid_argument);
+        EXPECT_TRUE(MWMechanics::oblivionParalyzed(world, actor));
         EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
     }
 

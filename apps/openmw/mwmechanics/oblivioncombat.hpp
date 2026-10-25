@@ -174,6 +174,9 @@ namespace MWMechanics
         std::optional<float> mBounty;
         bool mOwnsReputation = false;
         std::optional<int> mReputation;
+        // Derived native current-integer predicate, not effect ownership.
+        // Partial projections leave the existing view unchanged.
+        std::optional<bool> mParalyzed;
     };
 
     // A synchronous transaction: the target must outlive this object. Prepare
@@ -189,6 +192,7 @@ namespace MWMechanics
         std::array<DynamicStat<float>, 3> mDynamic;
         std::optional<std::array<Stat<int>, 4>> mAiSettings;
         std::optional<ESM4::ActorLifePhase> mLife;
+        std::optional<bool> mParalyzed;
         NpcStats* mNpcTarget = nullptr;
         bool mOwnsBounty = false;
         std::optional<int> mBounty;

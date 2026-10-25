@@ -13343,3 +13343,57 @@ production, physical paralysis/recovery, presentation and remaining S4 runtime
 and restart gates remain open. **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-MELEE-PARALYSIS-WORLD-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_world_cases.json).
+
+
+## Shared native paralysis view and movement/restart regression
+
+`CreatureStats::isParalyzed()` now reads the derived current integer AV48 predicate
+for native actors. Every full native projection publishes it with actor values;
+partial absence preserves the existing view. Native false overrides stale TES3
+MagicEffects, negative integers remain paralyzed, fractional integer zero does
+not, and Player god mode does not mask an existing native value. Legacy behavior
+is retained until native publication. There is no new timer, effect owner or
+save wire field. Out-of-domain integer AV48 now rejects during publication and
+restore preflight before authority/view changes.
+
+The headless World fixture moves unchanged into an out-of-line shared utility;
+the constructor body matches after indentation removal, and fields/defaults
+match byte-for-byte. Six integration tests cover 1,500 native-table predicate comparisons,
+incapacitated class speed/jump, stale legacy effects, failed/partial/discarded
+publication, owner application/expiry/skipped presentation, legacy god mode and
+binary restore prepare/abandon/commit/clear. The first full run retains two failed
+tests: a wrong new exception type and an old deferred-overflow expectation.
+Final assertions require the existing invalid_argument and earlier atomic rejection.
+
+Pinned original queries pass 18,000 checks over 1,000 god/base/modifier profiles and
+three x87 controls; all 500 pre-existing expected rows agree. Base/sparse lookups
+remain supplied boundaries. This proves integer composition/predicate behavior,
+not original application, physical reactions or gameplay.
+
+At parent `252a0946274c245936e0ac65f71c8be65981fccb` and tested dirty source fingerprint
+`67e692710d92ec36d65f98fc81f65eaa60e801d1ce0eedc76a831022e7717839`, full normal and ASan/UBSan engine
+checks each pass **1,937 tests**, exact inventories with no failures/skips.
+Leak detection is disabled. Unchanged component/Python/schema code is not rerun;
+prior full normal component evidence (3,087 tests) and sanitized ESM4 evidence
+(938 tests) are retained with source pins.
+
+Normal and instrumented SDL movement courses each use two fresh processes and
+four saves. W during the seeded owned effect preserves planar position within
+0.01 units. After expiry, S remains held until an onFrame observer sees more
+than 12 planar units; the saved state independently requires more than 10 units.
+All eight native T4ST payloads agree fully with live state. Cause 2, duration 5
+and elapsed continuity survive restart without
+replay or AV48 base/Script/Damage mutation. Eight captures were directly reviewed:
+standing Valen Dreth, first-person fists and dungeon/HUD render. No prone/GetUp
+claim. The prior binary already blocks Player input through native Lua. Its
+baseline course retains verifier setup errors and an insufficient 1.2-second
+release sample (4.737<10). An 8-second instrumented attempt also moves only
+9.474 units. Final courses hold S until the observer sees more than 12 planar units, without lowering the saved
+10-unit bound. These are movement/owner regressions, not natural mastery admission.
+
+Normal-input mastery production, physical reaction/FSM/GetUp, native review of
+direct swimming/floating/flying predicates and remaining S4 gates stay open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-SHARED-PARALYSIS-VERIFICATION.json),
+[editable cases](../../scripts/data/oblivion_compat/m15_shared_paralysis_cases.json)
+and [movement manifest](../../scripts/data/oblivion_compat/oblivion_m15_shared_paralysis_movement.json).

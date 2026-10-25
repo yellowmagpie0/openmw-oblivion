@@ -225,6 +225,16 @@ namespace MWMechanics
                 throw std::invalid_argument("native player scalar query excludes inventory Encumbrance");
         }
 
+        std::int32_t composeParalysisInteger(const ESM4::RuntimeActorValues& values,
+            const ESM4::RuntimeActorBaseOverride* base)
+        {
+            if (values.mOwner != ESM4::ActorValueOwner::Player)
+                return composeNonPlayerInteger(values, 48, base);
+            const auto& state = values.mValues[48];
+            return ESM4::composeIntegerActorValue(ESM4::combatBaseValue(state.mBase),
+                state.mModifiers, values.mOwner, values.mProcess);
+        }
+
         float fatigueRestoration(const ESM4::RuntimeActorValues& values, float duration,
             const ESM4::FatigueRegenerationSettings& settings)
         {
@@ -400,6 +410,7 @@ namespace MWMechanics
             }
             input.mOwner = values.mOwner;
             input.mProcess = values.mProcess;
+            input.mParalyzed = composeParalysisInteger(values, base) != 0;
             input.mOwnsBounty = true;
             input.mOwnsReputation = true;
             if (values.mOwner == ESM4::ActorValueOwner::NonPlayer)
@@ -531,6 +542,7 @@ namespace MWMechanics
         CreatureStats& target, NpcStats* npc, const OblivionActorProjectionInput& input)
         : mTarget(target)
         , mLife(input.mLife)
+        , mParalyzed(input.mParalyzed)
         , mNpcTarget(npc)
         , mOwnsBounty(input.mOwnsBounty)
         , mOwnsReputation(input.mOwnsReputation)
@@ -596,6 +608,8 @@ namespace MWMechanics
         if (mAiSettings)
             for (std::size_t i = 0; i < mAiSettings->size(); ++i)
                 mTarget.mAiSettings[i] = (*mAiSettings)[i];
+        if (mParalyzed.has_value())
+            mTarget.mNativeParalyzed = *mParalyzed;
         if (mLife)
         {
             const bool dead = *mLife == ESM4::ActorLifePhase::Dead;
@@ -5366,8 +5380,8 @@ namespace MWMechanics
         // The High cache's fresh result is the same integer composition as
         // Middle; authoritative channels invalidate derived results on writes.
         if (values->mOwner == ESM4::ActorValueOwner::Player)
-            return getPlayerIntegerValue(48);
-        return composeNonPlayerInteger(*values, 48, findActorBase(values->mBase));
+            return composeParalysisInteger(playerValues(), nullptr);
+        return composeParalysisInteger(*values, findActorBase(values->mBase));
     }
 
     void OblivionCombatService::setProcessAction(const ESM::FormKey& actor, std::int16_t action)

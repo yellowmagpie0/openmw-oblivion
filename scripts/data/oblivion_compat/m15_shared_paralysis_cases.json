@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "id": "m15_shared_paralysis",
+  "entry": "CreatureStats::isParalyzed",
+  "authority": "Current native integer AV48 !=0, published transactionally with actor values. Partial projection absence preserves the derived view. No additional effect owner, timer or save field.",
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "oracle": {
+    "profiles": 1000,
+    "checks": 18000,
+    "base": [
+      -1,
+      0,
+      1,
+      17
+    ],
+    "modifiers": [
+      -1.25,
+      -0.75,
+      0,
+      0.75,
+      1.25
+    ],
+    "god_mode": [
+      false,
+      true
+    ],
+    "x87_control": [
+      127,
+      639,
+      895
+    ],
+    "scope": "God flag0/1 with Player singleton identity set for Player getters and common predicate; exact outputs unchanged across god modes. Original Low643340/Middle658790/High628940/Player65E030 AV48 integer queries, High6289F0 float cache miss and common5E17E0 integer!=0 predicate; 1000 god/base/modifier profiles, three x87 CWs. Base integer/Player base presence and sparse modifier lookups supplied at existing boundaries, actual composition/9828C0 conversion/cache store/predicate executed. Common actor integer read supplied from independently executed High result. No C++ implementation used. Arbitrary warm/stale process cache, spell application, input/render and gameplay not covered."
+  },
+  "integration": {
+    "actor_kinds": [
+      "Player",
+      "NPC",
+      "Creature"
+    ],
+    "process": [
+      "Low",
+      "Active"
+    ],
+    "form_AV48_base": 0,
+    "native_rows": 125,
+    "god_mode": [
+      false,
+      true
+    ],
+    "predicate_comparisons": 1500,
+    "consumers": [
+      "shared predicate",
+      "native service process query",
+      "class maximum speed and jump for incapacitated rows"
+    ],
+    "other_cases": [
+      "Publication overflow rejects atomically",
+      "Discarded and partial projections preserve existing derived view",
+      "Positive owner application/expiry and missing presentation",
+      "Legacy Player MagicEffects/god-mode behavior",
+      "Binary restore preparation, abandon, commit and clear; no fabricated ownership"
+    ],
+    "restore_domain": "Unrepresentable integer AV48 now rejects in projection/restore preflight, before replacing native authority."
+  },
+  "runtime": {
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_shared_paralysis_movement.json",
+    "input_source": "build/oblivion-compat/m15/S4/native-melee-paralysis-admission-matched-normal-01/staged-input.omwsave",
+    "input_sha256": "02cef48da46d6e7b3b691ac1293d03fd3847bfd881890a81a042d8a71b19a267",
+    "seed": "Owned pending self-PARA cause2 duration5 on Player; reuse prior admitted schema70 fixture. No natural mastery proc is injected through ordinary input.",
+    "actions": [
+      "Load isolated copy",
+      "Wait for native Actor.isParalyzed true",
+      "Hold W1.2 wall seconds",
+      "F5 and capture during active owner",
+      "Wait for expiry",
+      "Hold S until onFrame observer reports >12 planar units",
+      "F5 and capture",
+      "Quit",
+      "Fresh process loads the during-effect save and repeats the same manifest"
+    ],
+    "during_planar_tolerance": 0.01,
+    "after_minimum_planar_displacement": 10,
+    "normalization": "Published manifest differs from actual normal course only by name and run ID. Same content/action scenario for continuation. Sanitized overlay additionally sets ASAN_OPTIONS detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS halt_on_error=1:print_stacktrace=1 and platform ASan preload. Actual manifests/environments are pinned in receipt.",
+    "assertions": [
+      "Four distinct PID/epoch pairs total",
+      "Eight actual saves; all native T4ST payloads agree fully with live state",
+      "No movement while AV48 maximum1/applied owner",
+      "Movement >10 units after expiry/max0",
+      "Cause/duration unchanged and elapsed advances after restart",
+      "No action-ledger replay or AV48 base/Script/Damage mutation"
+    ],
+    "visual_limit": "Standing named target and first-person fists/HUD; no ragdoll/GetUp or natural mastery claim. Legacy screenshot filename after-expiry-hit is retained although no attack is sent."
+  },
+  "remaining": [
+    "Normal-input directional mastery producer",
+    "Physical reaction/FSM/GetUp admission and recovery",
+    "Direct legacy swimming/floating/flying predicates need native review",
+    "Other remaining S4 gameplay/input/view/FPS/interruption/restart gates"
+  ]
+}

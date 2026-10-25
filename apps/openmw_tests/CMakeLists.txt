@@ -15,6 +15,8 @@ file(GLOB UNITTEST_SRC_FILES
     mwworld/testduration.cpp
     mwworld/testoblivionactorstats.cpp
     mwworld/testoblivionworld.cpp
+    mwworld/oblivionworldfixture.cpp
+    mwworld/testoblivionparalysis.cpp
     mwworld/testoblivionlooseweapon.cpp
     mwworld/testoblivioncombatdata.cpp
     mwworld/testoblivionmagicrecords.cpp
