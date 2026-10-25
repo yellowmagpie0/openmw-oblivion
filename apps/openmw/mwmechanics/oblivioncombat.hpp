@@ -742,6 +742,9 @@ namespace MWMechanics
             // for dialogue conditions. Other AVs and disabled raw-form queries
             // remain unchanged. Stale/committed/missing participants return none.
             std::optional<float> resourceActorValue(const MWWorld::Ptr& actor, std::uint8_t value) const;
+            // Read the committed contact's shared continuation capability
+            // before resolving World resources. Does not reserve or consume it.
+            bool continuationAvailable() const noexcept;
             // Continue this accepted contact after synchronous script callbacks.
             // Requeries the live participants; never reapplies resource damage,
             // wear or an existing knockback, and never reopens the attack action.

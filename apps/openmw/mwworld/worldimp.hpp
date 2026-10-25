@@ -498,6 +498,13 @@ namespace MWWorld
             std::unique_ptr<PreparedOblivionPhysicalContact> prepareContinuation(
                 const MWMechanics::OblivionPhysicalContactDeltas& deltas,
                 bool blockHit = false, bool attackerRecoil = false);
+            // Resolve the default self-PARA profile and current caster power
+            // after damage/callbacks, joining this same once-only tail. Caller
+            // owns mastery selection; unavailable/unsupported inputs publish
+            // nothing and do not consume the continuation capability.
+            std::unique_ptr<PreparedOblivionPhysicalContact> prepareDefaultParalysisContinuation(
+                const MWMechanics::OblivionPhysicalContactDeltas& deltas,
+                bool blockHit = false, bool attackerRecoil = false);
             // Scene admission may throw before any contact resources publish.
             bool commit();
         };

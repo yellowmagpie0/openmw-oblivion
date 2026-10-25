@@ -2847,15 +2847,20 @@ namespace MWMechanics
             : nonPlayerFloat(*values, value, mImpl->mOwner->findActorBase(values->mBase));
     }
 
+    bool OblivionCombatService::PreparedPhysicalContact::continuationAvailable() const noexcept
+    {
+        return mImpl && mImpl->mCommitted && mImpl->mCanContinue && !*mImpl->mContinuation
+            && !mImpl->mIdentity.expired() && !mImpl->mFrameIdentity.expired()
+            && !mImpl->mAttacker.mIdentity.expired()
+            && mImpl->mVictim && !mImpl->mVictim->mIdentity.expired();
+    }
+
     std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
     OblivionCombatService::PreparedPhysicalContact::prepareContinuation(
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
         const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
     {
-        if (!mImpl || !mImpl->mCommitted || !mImpl->mCanContinue || *mImpl->mContinuation
-            || mImpl->mIdentity.expired() || mImpl->mFrameIdentity.expired()
-            || mImpl->mAttacker.mIdentity.expired()
-            || !mImpl->mVictim || mImpl->mVictim->mIdentity.expired()) return nullptr;
+        if (!continuationAvailable()) return nullptr;
         // This is a capability carried by the committed contact, not a general
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0

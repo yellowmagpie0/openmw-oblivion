@@ -1,0 +1,336 @@
+{
+  "schema_version": 1,
+  "id": "m15_melee_paralysis_world",
+  "status": "Implemented World profile/caster-resolved owned continuation; full M15S4 remains open.",
+  "tested_source": {
+    "head": "0061221283371c7e53157e30e98c739b1618f98f",
+    "source_fingerprint": "663e06093bfcf92e7a97f0e7066c429bab780d363c1d2e9228b22d95d89dd9bd"
+  },
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "6b5fddefa0657a798614b2155155e6825383ff139744a3fdfd1b137830d790b0",
+      "bytes": 372360
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "23d8c2cf99c67f4153de25630ce9f2a9802c70b97c6b571b79c97d64aa580db9",
+      "bytes": 68145
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "db3775130e69263756b08d67f10ed021540dc45e7d2ace5c352d6ee3185d1371",
+      "bytes": 496985
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "cdcb6dbf8cd86c9610ebfdfabe8eab249a86afcfd46582fb4f0abfce0184ca72",
+      "bytes": 57618
+    },
+    {
+      "path": "apps/openmw_tests/mwworld/testoblivionworld.cpp",
+      "sha256": "9cca83e3f2dd86fb79d316ebb6700730cd4564de21f17644a1caa865b95de18b",
+      "bytes": 2129506
+    }
+  ],
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_melee_paralysis_world_cases.json",
+    "sha256": "c66a9c9e032aeab26dd59100f0010efbebda34178d86821a3ffb05494edc1d81",
+    "bytes": 3492
+  },
+  "checks": [
+    {
+      "name": "normal-03",
+      "source": {
+        "head": "0061221283371c7e53157e30e98c739b1618f98f",
+        "source_fingerprint": "663e06093bfcf92e7a97f0e7066c429bab780d363c1d2e9228b22d95d89dd9bd"
+      },
+      "result": {
+        "executed": 1931,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "5c62b8070fbe3cb7f9a7642fe34d944b4d71129a26a210a911abf26ddd5a783c",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "ba5ab4354d433a3ace095d0ebceca0a1196abdad1bb255cc0bd4b39909440e0d",
+        "inventory_sha256": "f5a847d56607a48a2075a25fe3bc982265ef0007f52486be14a29707bcd68198",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-03/engine-build.log",
+          "sha256": "b9e467aef13411065833ebeffc199e3d869987b6f7ebc4290db70a46c1434ae5",
+          "bytes": 1752
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-03/engine-inventory.txt",
+          "sha256": "f5a847d56607a48a2075a25fe3bc982265ef0007f52486be14a29707bcd68198",
+          "bytes": 136533
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-03/engine.log",
+          "sha256": "1fd39b839b181c3c9806066a624d3d03b5c6417d383d930d9996c7c49baf6df2",
+          "bytes": 2386987
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-03/engine.xml",
+          "sha256": "ba5ab4354d433a3ace095d0ebceca0a1196abdad1bb255cc0bd4b39909440e0d",
+          "bytes": 635488
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-03/verification.json",
+          "sha256": "e5a9bb2539728923e4e3c7483afb9b75e97cceeb38268b5c32a76f6b9b7aefd9",
+          "bytes": 2153
+        }
+      ]
+    },
+    {
+      "name": "sanitized-01",
+      "source": {
+        "head": "0061221283371c7e53157e30e98c739b1618f98f",
+        "source_fingerprint": "663e06093bfcf92e7a97f0e7066c429bab780d363c1d2e9228b22d95d89dd9bd"
+      },
+      "result": {
+        "executed": 1931,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "506f37b20c87b1b686c3c19e30a74c843ef10624240aa55d5b3a7ea7d346eb07",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "6f932deb1808f25ec462525e46f87dc41f9bbacbf44eac4dd588dc5b14ede3cb",
+        "inventory_sha256": "f5a847d56607a48a2075a25fe3bc982265ef0007f52486be14a29707bcd68198",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-sanitized-01/engine-build.log",
+          "sha256": "5938d3c808a3355c2c710e1f341540b3f25f6d35d2bbb90604e7145746a27173",
+          "bytes": 33853
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-sanitized-01/engine-inventory.txt",
+          "sha256": "f5a847d56607a48a2075a25fe3bc982265ef0007f52486be14a29707bcd68198",
+          "bytes": 136533
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-sanitized-01/engine.log",
+          "sha256": "514c4fe8303baea89996c377a8f2a4746cb17fa2f1334ca9fb47c991fd797691",
+          "bytes": 2387566
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-sanitized-01/engine.xml",
+          "sha256": "6f932deb1808f25ec462525e46f87dc41f9bbacbf44eac4dd588dc5b14ede3cb",
+          "bytes": 637230
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-sanitized-01/verification.json",
+          "sha256": "9bce8f957172c6536ef16906e0d9d71724f38401bd488f78f17038d695208788",
+          "bytes": 2244
+        }
+      ]
+    }
+  ],
+  "native_player_cast": {
+    "report": {
+      "passed": true,
+      "cases": 36,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "e3397f31dd1804c9b19accb21947b493af50336525026d1aa559965b0ed3399b",
+      "scope": "Actual post-damage600355..6003A4 and full Player caster/self-Spell admission with current integer Fatigue80/base160. Compiled fatigue0/.25 and no armor yields duration1.25; winning1/0 and light coverage40/skill0 yields8.5; naked winning1/0 yields10. Player self-range bypasses both declared resistances100. Previous selection0/nonzero, god false/true and three x87 controls. Original caster548B30/548DC0, cast/admission/clone scaling execute. Integer/base Fatigue, coverage, Journeyman threshold and prior constructor/RTTI/target-list/allocator boundaries explicit. No original physical damage prefix, actual equipment mapping, effect tick, World controller or gameplay acceptance."
+    },
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-03/bootstrap.py",
+        "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+        "bytes": 1738
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-03/corpus.json",
+        "sha256": "e3397f31dd1804c9b19accb21947b493af50336525026d1aa559965b0ed3399b",
+        "bytes": 32587
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-03/probe.py",
+        "sha256": "9d8862173bf51e52a56ee795c8647857316515dbf586330727c405f485a46de5",
+        "bytes": 6131
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-03/verification.json",
+        "sha256": "3744e4fa9a8079a943d02139b135e580a8091348e91ec0fa4bbd0b8495117a8e",
+        "bytes": 919
+      }
+    ]
+  },
+  "retained_native_failure": {
+    "reason": "Attempt01 intercepted every5F1910 base query as Fatigue. Full casting also queries other base AVs. Attempt02 intercepts only AV10; other native base-form paths retain prior declared boundaries.",
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-01/failure.json",
+        "sha256": "94571efdd17ee659ce6de3dd3473605fbf07835411bc33aed562f5afdb262a0c",
+        "bytes": 9887
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-01/probe.py",
+        "sha256": "d02af7a784ed92427baa4ef2f61c51a4740c8d99dd2aee585111519ae4533efe",
+        "bytes": 6004
+      }
+    ]
+  },
+  "retained_engine_attempts": [
+    {
+      "name": "normal-01",
+      "reason": "Four World tests pass; family matrix uses unsupported scalar AV48 getter. Corrected to the existing process paralysis query.",
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-01/engine-build.log",
+          "sha256": "a66eac1b3d775b7d563d586d7120c440c277c25787319ef25f9d9ec719f3a547",
+          "bytes": 37710
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-01/engine-inventory.txt",
+          "sha256": "2874d2d0cb34446b46c05b7d833fcc133dabb0dada6fbc52b6cb781a10b3fbe5",
+          "bytes": 136533
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-01/engine.log",
+          "sha256": "634603594b177661db95dd50891df489f23f248da50b458ff1e48f503dd00c66",
+          "bytes": 4449
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-01/engine.xml",
+          "sha256": "88d0dea512803a7b292bf8a2993eb0a816ff24f3379a22ed770d15bb10980e3f",
+          "bytes": 2366
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-01/verification.json",
+          "sha256": "f0ebb4324107082ab15bcff8314ee8b6d702028ad0ac48ed122ad60a09a522c8",
+          "bytes": 1326
+        }
+      ]
+    },
+    {
+      "name": "normal-02",
+      "reason": "The corrected36-profile family matrix and three other cases pass. Strengthened god-mode test fails exactly at unsupported-profile rejection. Final source moves profile validation before eligibility gates without changing that assertion.",
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-02/engine-build.log",
+          "sha256": "7f8b4435a1447218c72fa6ba412dea1842808893034187101e52e5ce9b2f015e",
+          "bytes": 30571
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-02/engine-inventory.txt",
+          "sha256": "f5a847d56607a48a2075a25fe3bc982265ef0007f52486be14a29707bcd68198",
+          "bytes": 136533
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-02/engine.log",
+          "sha256": "f3d9823ef762d5583dd3d2d4d9e24c785f900df42bdc29230870e36537a9ffea",
+          "bytes": 22027
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-02/engine.xml",
+          "sha256": "7c34727390680dc2cf5d4dc09b406997bbad24fa02f03a9de4f87b24dd1d1ca1",
+          "bytes": 2437
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-checks-normal-02/verification.json",
+          "sha256": "ba7ca12a9be9b227a7acefdb3871e95faa6a0e18a84f57e7c894f8dbabf6a837",
+          "bytes": 1325
+        }
+      ]
+    }
+  ],
+  "work_files": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-work-01/probe-player-cast.py",
+      "sha256": "9d8862173bf51e52a56ee795c8647857316515dbf586330727c405f485a46de5",
+      "bytes": 6131
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-work-01/world-before-profile-contract.cpp",
+      "sha256": "fbe29574a8fb7b184b4e2a208dd4845abf1a7aa53bce34dafe8265325fcc7194",
+      "bytes": 496990
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-work-01/unchanged-profile-component-sources.json",
+      "sha256": "0a906a9dac2a6de59e8371a0c6afa39d9ca181b14a6c6bfc1bbd47f4e2694b99",
+      "bytes": 2068
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-work-01/publish-evidence.py",
+      "sha256": "0b14fa967661c2a2c3b62e3e0a930a3025cf2641fe455007541c6f13d2058640",
+      "bytes": 11527
+    }
+  ],
+  "unchanged_components": {
+    "proof": {
+      "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-work-01/unchanged-profile-component-sources.json",
+      "sha256": "0a906a9dac2a6de59e8371a0c6afa39d9ca181b14a6c6bfc1bbd47f4e2694b99",
+      "bytes": 2068
+    },
+    "prior_receipt": {
+      "path": "docs/oblivion/M15-MELEE-PARALYSIS-PROFILE-VERIFICATION.json",
+      "sha256": "0144d0ac6388e0475d3843c0fdd5dc74dabd0f52aa0dee2c8dc1212d300e1827",
+      "bytes": 22378
+    },
+    "normal_components": 3087,
+    "sanitized_esm4_components": 938,
+    "rerun": false,
+    "reason": "Only engine service/World headers, implementations and World tests changed; every prior component/profile-store source pin matches."
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "leak_coverage": false
+  },
+  "layers": {
+    "structural": "Existing World and service capability API extended; no save schema or editable content changed.",
+    "compiler_and_world": "Full normal/instrumented engine inventories verified; five new actual World action/preparation tests include36 NPC/Creature profiles.",
+    "semantic": "Full original Player caster and self-cast path independently confirms1.25/8.5/10 duration composition, selection restoration, god rejection and self resistance bypass at declared typed boundaries.",
+    "runtime": "No new normal-input mastery or physical/restart course. New wrapper is available to production controller integration, which remains guarded."
+  },
+  "open": [
+    "World action/preparation tests are headless integration, not normal SDL/controller contact admission.",
+    "All new effects remain pending until the existing positive owner update applies their modifier. No second timer or owner is introduced.",
+    "Normal-input mastery production, physical paralysis/recovery, presentation and remaining full S4 runtime gates stay open."
+  ],
+  "retained_native_scope_correction": {
+    "reason": "Oracle02 report incorrectly said both resistances100: its actual specific resistance was0. Oracle03 changes that input to100, asserts both inputs for every row and passes the unchanged36 expectations.",
+    "files": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-02/bootstrap.py",
+        "sha256": "459a01bfd21e4e912cde450fce2be2cbe8a1b97fda35937b7308e941210335f8",
+        "bytes": 1738
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-02/corpus.json",
+        "sha256": "f22fec778fb03f47c829a7c0ab1f2b10e9652d48d66a5a139947eae0b342e0dd",
+        "bytes": 32515
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-02/probe.py",
+        "sha256": "9b7bb149f5fc54952e1ca42cd163232f625cbf838fffcc5c98a4fafd871d4157",
+        "bytes": 6021
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-melee-paralysis-world-caster-oracle-02/verification.json",
+        "sha256": "bb0f90bb701d9a23fa95b0d65dde8a66d3f407ba2b9f6b030a8491758fdcab54",
+        "bytes": 919
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "id": "m15_melee_paralysis_world",
+  "entry": "World::PreparedOblivionPhysicalContact::prepareDefaultParalysisContinuation",
+  "ownership": "Committed resource prefix and a shared once-only continuation capability; no resource or wear replay.",
+  "profile": "Require supported winning default self-PARA profile in every actor state. Life/process/god eligibility can bypass caster-power reads, never the profile contract.",
+  "native_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "native_player_cases": [
+    {
+      "current_fatigue": 80,
+      "base_fatigue": 160,
+      "fatigue_settings": [
+        0,
+        0.25
+      ],
+      "coverage": [
+        0,
+        0
+      ],
+      "duration": 1.25
+    },
+    {
+      "current_fatigue": 80,
+      "base_fatigue": 160,
+      "fatigue_settings": [
+        1,
+        0
+      ],
+      "coverage": [
+        40,
+        0
+      ],
+      "duration": 8.5
+    },
+    {
+      "current_fatigue": 80,
+      "base_fatigue": 160,
+      "fatigue_settings": [
+        1,
+        0
+      ],
+      "coverage": [
+        0,
+        0
+      ],
+      "duration": 10
+    }
+  ],
+  "native_variations": {
+    "previous_selection": [
+      0,
+      "nonzero"
+    ],
+    "god_mode": [
+      false,
+      true
+    ],
+    "control_words": [
+      127,
+      639,
+      895
+    ],
+    "player_general_and_specific_resistance": [
+      100,
+      100
+    ],
+    "cases": 36
+  },
+  "world_cases": [
+    {
+      "name": "NPC/Creature family matrix",
+      "axes": {
+        "kind": [
+          "NPC",
+          "Creature"
+        ],
+        "process": [
+          "Low",
+          "Active"
+        ],
+        "general_resistance": [
+          0,
+          50,
+          100
+        ],
+        "life": [
+          "Alive",
+          "Dead",
+          "EssentialUnconscious"
+        ]
+      },
+      "profiles": 36,
+      "expectation": "Only living Active receivers below100 resistance admit; duration10/5. Rejected requests still consume the tail exactly once after commit."
+    },
+    {
+      "name": "Unsupported/stale retry",
+      "expectation": "Missing profile, caller-supplied power and repeated damage reject without spending the capability; AV changes invalidate a prepared tail; fresh preparation uses resistance50. Missing victims cannot create a continuation."
+    },
+    {
+      "name": "Player post-damage caster",
+      "expectation": "Fatigue92 minus12 becomes80 before power query; base160/compiled0/.25 yields duration1.25, despite both self resistances100."
+    },
+    {
+      "name": "God-mode profile contract",
+      "expectation": "Missing profile stays unsupported. With a supported profile, god mode skips malformed caster settings and commits an empty effect tail once."
+    },
+    {
+      "name": "Worn armor and stale equipment",
+      "expectation": "Broken light upper/lower armor40 with skill0 yields duration8.5 under winning1/0. Removing gear invalidates a candidate; fresh naked retry admits10 and cannot replay resources/RNG or revive an old candidate."
+    }
+  ],
+  "limits": [
+    "World action/preparation tests are headless integration, not normal SDL/controller contact admission.",
+    "All new effects remain pending until the existing positive owner update applies their modifier. No second timer or owner is introduced.",
+    "Normal-input mastery production, physical paralysis/recovery, presentation and remaining full S4 runtime gates stay open."
+  ]
+}

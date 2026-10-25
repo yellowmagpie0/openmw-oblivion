@@ -13289,3 +13289,57 @@ physical paralysis/recovery, presentation and remaining S4 runtime gates remain
 open. **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-MELEE-PARALYSIS-PROFILE-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_profile_cases.json).
+
+
+## World-resolved default paralysis contact continuations
+
+A committed World contact can now prepare default self-PARA in its existing
+once-only tail. The wrapper resolves the supported winning profile and current
+World caster power after damage/callbacks, then uses the service's owned effect
+admission. It can join other permitted tail consequences; it never replays
+resource damage, condition wear or an old knockback. Availability is queried
+through the same service capability predicate used by ordinary continuations.
+Competing preparations share one publication right, including resisted and
+life/process/god-mode rejection. No effect applies until the existing positive
+owner update; no second timer or effect owner is created.
+
+The profile contract remains required in every actor state. Review identified
+that eligibility must not authorize an unsupported authored spell. The
+strengthened god-mode case fails exactly at that rejection against the earlier
+wrapper; final code moves profile validation ahead of the eligibility gates.
+A known rejected cast then skips unreachable caster inputs, including malformed
+Player fatigue settings in god mode. Negative finite casting power remains
+outside this fixed owner's supported duration domain.
+
+Five new World tests cover 36 NPC/Creature process/resistance/life profiles,
+unsupported/stale retries, once-only publication, post-damage Player Fatigue,
+self resistance bypass and worn armor changes. The first focused run retains
+an assertion-API mistake (scalar AV48 instead of the process query); its other
+four cases pass. Corrected family coverage and the god-mode regression remain
+unchanged in the final checks. Removing worn armor invalidates a prepared
+candidate; fresh preparation reads the new power, without resource/RNG replay
+or reviving the old candidate.
+
+Original post-damage cast and complete Player caster/admission execute 36 cases.
+Current/base Fatigue 80/160 with compiled 0/0.25 yields duration 1.25; light coverage 40
+and skill 0 under winning 1/0 yields 8.5; naked winning 1/0 yields 10. Both declared
+Player resistances 100 are bypassed for self range. Previous selection 0/nonzero,
+god mode and three x87 controls vary. Integer/base/coverage/threshold and prior
+constructor/target boundaries remain explicit. Attempt 01's too-broad base-query
+hook failure is retained; 02 intercepts only Fatigue and passes, but its report
+incorrectly labels specific resistance 0 as 100. Corrected 03 asserts both actual
+resistances 100 for every row and passes the unchanged 36 expectations. This is
+not an original physical damage/equipment or gameplay probe.
+
+At tested parent `0061221283371c7e53157e30e98c739b1618f98f` and dirty source fingerprint
+`663e06093bfcf92e7a97f0e7066c429bab780d363c1d2e9228b22d95d89dd9bd`, full normal and ASan/UBSan engine checks each
+pass **1,931 tests**, exact inventories with no failures/skips.
+Leak checks are disabled. All 10 source pins in the prior component/profile-store
+receipt remain byte-identical; unchanged 3,087 normal/938 sanitized ESM4 component
+results are reused. Component/Python/schema sources did not change.
+
+The World API now consumes the profile/caster adapters, but normal-input mastery
+production, physical paralysis/recovery, presentation and remaining S4 runtime
+and restart gates remain open. **Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-PARALYSIS-WORLD-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_world_cases.json).

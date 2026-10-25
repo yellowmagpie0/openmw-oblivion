@@ -120,6 +120,8 @@
 #include "../mwmechanics/combat.hpp"
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/oblivionmelee.hpp"
+#include "../mwmechanics/oblivionmagiccaster.hpp"
+#include "oblivioncombatmagic.hpp"
 #include "oblivionactorstats.hpp"
 #include "../mwmechanics/levelledlist.hpp"
 #include "../mwmechanics/npcstats.hpp"
@@ -4069,6 +4071,42 @@ namespace MWWorld
             return nullptr;
         return world.prepareOblivionPhysicalContactImpl(mData->mId, mData->mAttacker, mData->mVictim,
             deltas, blockHit, attackerRecoil, this);
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact>
+    World::PreparedOblivionPhysicalContact::prepareDefaultParalysisContinuation(
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
+    {
+        if (!mData || !mData->mCommitted || !mData->mCanContinue || mData->mIdentity.expired()
+            || !mData->mContact->continuationAvailable()) return nullptr;
+        auto& world = *mData->mWorld;
+        if (world.mOblivionClearGeneration != mData->mGeneration
+            || world.mOblivionCombat.get() != mData->mCombat || world.mPlayer.get() != mData->mPlayer
+            || world.mPhysics.get() != mData->mPhysics || world.mWorldScene.get() != mData->mScene)
+            return nullptr;
+        if (deltas.mVictimDefaultParalysisPower)
+            throw std::invalid_argument("World default paralysis resolves its own caster power");
+        const auto& victim = mData->mVictim;
+        const bool player = victim == world.getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
+        const auto* values = mData->mCombat->findActorValues(key);
+        const auto* life = mData->mCombat->findActorLife(key);
+        if (!values || !life) return nullptr;
+        if (!player) (void)mData->mCombat->getNonPlayerValue(victim, 8);
+        if (!supportsOblivionDefaultCombatParalysis(world.mStore)) return nullptr;
+        float power = 1.f;
+        if (life->mPhase == ESM4::ActorLifePhase::Alive
+            && (player || values->mProcess == ESM4::ActorValueProcess::Active)
+            && !(player && world.getGodModeState()))
+        {
+            power = MWMechanics::oblivionCombatSpellPower(world, victim);
+            if (power < 0.f) return nullptr; // Outside the fixed owner's supported duration domain.
+        }
+        // Known life/process/god-mode rejection still consumes the same tail
+        // once on commit, without consulting unreachable caster-power inputs.
+        auto resolved = deltas;
+        resolved.mVictimDefaultParalysisPower = power;
+        return prepareContinuation(resolved, blockHit, attackerRecoil);
     }
 
     bool World::PreparedOblivionPhysicalContact::commit()
