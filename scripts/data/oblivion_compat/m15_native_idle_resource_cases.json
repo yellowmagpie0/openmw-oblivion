@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": "Exact IDLE-selected KF resource staging and parsed-controller sampling",
+  "expectations": [
+    {
+      "case": "exact-path",
+      "given": "Root, one and two directories contain same.kf with translations 1, 9 and 17",
+      "expected": "Selecting ONE\\SAME.KF normalizes to meshes/one/same.kf, retains its 16-byte parsed file hash and samples translation 9; ordinary same winner remains unchanged"
+    },
+    {
+      "case": "staging",
+      "expected": "Preparation publishes no source, supported group, callback or playback; first commit succeeds and second fails; reuse adds no source"
+    },
+    {
+      "case": "invalid-resource",
+      "expected": "Missing nested KF cannot fall back to root same.kf; duplicate sequences and non-KF reject without publication; oversized native path throws"
+    },
+    {
+      "case": "stale-candidate",
+      "expected": "Competing source publication, clear, root replacement and owner destruction reject pending candidates"
+    },
+    {
+      "case": "first-root",
+      "expected": "Missing first sequence root stays absent after later valid source; first valid root record 4 remains after later missing source"
+    },
+    {
+      "case": "trackless",
+      "expected": "A single trackless native sequence retains file identity and advances its playback clock by .5"
+    },
+    {
+      "case": "alias-collision",
+      "expected": "Later ordinary alias winner cannot impersonate cached exact resource; ordinary source publication invalidates staged source"
+    },
+    {
+      "case": "world-to-renderer",
+      "expected": "Actual IDLE World selection Outside\\same.kf prepares meshes/outside/same.kf and samples translation 9 while full combat/RNG capture remains unchanged"
+    },
+    {
+      "case": "hash-copy",
+      "expected": "Existing ESM4NativeAnimationMetadata.OriginalSequenceCoordinatesAndCopies checks loader hash and shallow holder-copy preservation"
+    },
+    {
+      "case": "changed-resource",
+      "expected": "After replacing same-path KF bytes and clearing resource caches, new preparation has a distinct parsed hash/group; new and old groups independently sample translations 27 and 9"
+    }
+  ],
+  "boundaries": [
+    "Headless real World/resource/parser/renderer tests, not normal-input gameplay acceptance",
+    "Resource commit registers a source only; physical slot5 clock, live RNG publication and save/restart integration remain open",
+    "No fresh executable oracle; existing original selector and first-sequence root evidence is reused",
+    "Resources with multiple native sequences or no native sequence metadata are unsupported by this API"
+  ]
+}

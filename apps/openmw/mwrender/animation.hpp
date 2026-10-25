@@ -253,6 +253,8 @@ namespace MWRender
 
         typedef std::vector<std::shared_ptr<AnimSource>> AnimSourceList;
         AnimSourceList mAnimSources;
+        std::map<std::string, std::shared_ptr<AnimSource>, std::less<>> mNativeIdleSources;
+        std::uint64_t mNativeIdleSourceGeneration = 0;
         std::shared_ptr<AnimSource> nativeSequenceSource(std::string_view group);
         std::vector<NativeSequenceLayer> mNativeSequenceLayers;
         std::vector<std::shared_ptr<AnimSource>> mNativeSequenceSources;
@@ -372,6 +374,16 @@ namespace MWRender
 
         // Empty input prepares the native model palette without registering a sequence.
         void bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences);
+        struct NativeReactionBinding
+        {
+            std::unordered_map<std::string, std::uint32_t> mRecords;
+            std::string mModelRootName;
+            std::optional<std::uint32_t> mRootRecord;
+            bool mFirstSequenceLoaded = false;
+        };
+        std::optional<NativeReactionBinding> prepareNativeReactionBinding(
+            std::span<const SceneUtil::ControllerSequenceMetadata> sequences) const;
+        void applyNativeReactionBinding(NativeReactionBinding& binding) noexcept;
 
         /* Sets the appropriate animations on the bone groups based on priority by finding
          * the highest priority AnimationStates and linking the appropriate controllers stored
@@ -419,6 +431,9 @@ namespace MWRender
         void addAnimSource(std::string_view model, const std::string& baseModel);
         std::shared_ptr<AnimSource> addSingleAnimSource(VFS::Path::NormalizedView kfname, const std::string& baseModel,
             std::string_view groupAlias = {}, bool warnMissingBones = true);
+        std::shared_ptr<AnimSource> buildAnimSource(VFS::Path::NormalizedView kfname, const std::string& baseModel,
+            std::string_view groupAlias, bool warnMissingBones,
+            osg::ref_ptr<const SceneUtil::KeyframeHolder> keyframes, bool requireControllers);
 
         /** Register every KF below a directory without eagerly cloning its controllers.
          *
@@ -585,6 +600,27 @@ namespace MWRender
         // and directory; ambiguous loose/overlay order is rejected.
         const std::vector<NativeReactionResources>& getNativeReactionCatalog();
         const std::vector<NativeReactionResources>& getNativeCounterCatalog();
+        class PreparedNativeIdleSource
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedNativeIdleSource(std::unique_ptr<Data> data);
+            friend class Animation;
+        public:
+            ~PreparedNativeIdleSource();
+            PreparedNativeIdleSource(const PreparedNativeIdleSource&) = delete;
+            PreparedNativeIdleSource& operator=(const PreparedNativeIdleSource&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+            const std::string& group() const;
+            const VFS::Path::Normalized& model() const;
+            const std::string& fileHash() const;
+            const SceneUtil::ControllerSequenceMetadata& metadata() const;
+        };
+        // Resolve the authored IDLE model path relative to meshes, independently of filename-stem
+        // aliases. Preparation changes no live source, playback or callbacks.
+        // Commit registers a resource alias; the physical owner owns slot5/time.
+        std::unique_ptr<PreparedNativeIdleSource> prepareNativeIdleSource(std::string_view model);
         // Actual currently selected group for a renderer body mask; no loading.
         std::string_view getActiveAnimationGroup(BoneGroup group) const;
 

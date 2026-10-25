@@ -45,6 +45,7 @@ file(GLOB UNITTEST_SRC_FILES
 
     mwrender/testtes4facegen.cpp
     mwrender/testphysicalpose.cpp
+    mwrender/testnativeidle.cpp
     mwrender/testoblivionarrowgeometry.cpp
     mwrender/testobliviondropplacement.cpp
     mwrender/testoblivionattachment.cpp

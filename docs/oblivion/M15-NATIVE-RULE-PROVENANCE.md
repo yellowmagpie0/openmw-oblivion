@@ -19224,3 +19224,51 @@ exact KF/slot5 publication, RNG consumption, save/restart, directional mastery,
 broader package ownership/progress and full normal-input acceptance remain.
 See the [verification receipt](M15-NATIVE-PACKAGE-QUERY-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_package_query_cases.json).
+
+
+### Exact IDLE-selected KF resource staging
+
+The renderer can now prepare the exact authored IDLE KF independently of the
+recursive filename-stem directory winner. It carries the parser's opaque
+16-byte file hash into the keyframe holder and its per-actor alias copy. The
+alias encodes the normalized full VFS path and hash. Shared cached metadata and
+ordinary aliases retain their identity. A changed file loaded after cache clear
+gets another alias; the published old source keeps its original parsed tracks.
+
+Preparation builds cloned controllers, source/support containers and any first
+sequence root binding without publishing sources, playback or scene callbacks.
+Commit swaps prepared containers without allocation. Competing publication,
+clear, root replacement, actor/cell replacement or owner expiry invalidates a
+candidate. Reuse must still name the winning exact source; an ordinary alias
+collision rejects. Existing first-sequence root behavior, including an absent
+first root and retained nonnull root, follows the previous original-instruction
+proof. Missing paths never borrow another same-name file. Multiple-sequence or
+legacy resources without native metadata are currently unsupported; a single
+trackless native sequence remains valid.
+
+Eight focused engine cases pass normally and under ASan/UBSan with leaks enabled.
+They exercise three same-name files, staged publication, stale/expired owners,
+root binding, trackless clocks, alias collision and changed resource bytes. The
+World case loads IDLE records, selects an outside-directory KF, commits the exact
+resource and samples its parsed bone translation while preserving the complete
+combat/RNG snapshot. The existing ESM4 native metadata component case now also
+checks loaded and copied file hashes. Both first attempts retained a 6/7 result:
+the reuse fixture incorrectly passed a meshes-prefixed VFS path where an authored
+model path relative to meshes was required. That fixture is corrected; no
+production rule changed in response.
+
+Full normal checks pass 3,115 component and 1,960 engine tests; ASan/UBSan checks
+pass 966 ESM4 and 1,960 engine tests. Exact inventories/XML contain no failures or
+skips. Full suites disable leak checks; the eight focused cases enable them.
+Existing warnings in unchanged animation-queue/test code remain in build logs;
+no warning is emitted from a changed source. Python/schema and IDLE selection
+rules are unchanged, so their prior checks were not repeated.
+
+**Full M15S4 remains incomplete.** Resource commit registers a source; it does
+not start native recovery, publish the physical slot5 clock or consume live
+selection RNG. Natural physical FSM and joint publication, selected-IDLE/clock
+save and restart, directional mastery, package-owner/query unification and the
+full normal-input matrix remain open. These are headless production integration
+checks with manual sampling, not the final gameplay gate. See the
+[verification receipt](M15-NATIVE-IDLE-RESOURCE-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_resource_cases.json).

@@ -96,6 +96,7 @@ namespace SceneUtil
             : mTextKeys(copy.mTextKeys)
             , mKeyframeControllers(copy.mKeyframeControllers)
             , mControllerSequences(copy.mControllerSequences)
+            , mFileHash(copy.mFileHash)
         {
         }
 
@@ -107,6 +108,8 @@ namespace SceneUtil
         typedef std::map<std::string, osg::ref_ptr<const KeyframeController>> KeyframeControllerMap;
         KeyframeControllerMap mKeyframeControllers;
         std::vector<ControllerSequenceMetadata> mControllerSequences;
+        // Opaque hash of the exact parsed NIF/KF bytes. Empty for non-NIF sources.
+        std::string mFileHash;
     };
 
 }

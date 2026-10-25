@@ -2,6 +2,7 @@
 
 #include <components/sceneutil/postphysicsupdatevisitor.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/nativeidle.hpp>
 #include <components/nif/nativetransform.hpp>
 
 #include <exception>
@@ -721,6 +722,7 @@ namespace MWRender
 
     void Animation::addAnimDirectory(VFS::Path::NormalizedView directory)
     {
+        ++mNativeIdleSourceGeneration;
         mNativeReactionCatalog.reset();
         mNativeCounterCatalog.reset();
         constexpr VFS::Path::ExtensionView kf("kf");
@@ -810,14 +812,57 @@ namespace MWRender
         VFS::Path::NormalizedView kfname, const std::string& baseModel, std::string_view groupAlias,
         bool warnMissingBones)
     {
-        if (!mResourceSystem->getVFS()->exists(kfname))
-            return nullptr;
+        if (!mResourceSystem->getVFS()->exists(kfname)) return nullptr;
+        auto animsrc = buildAnimSource(kfname, baseModel, groupAlias, warnMissingBones,
+            mResourceSystem->getKeyframeManager()->get(kfname), true);
+        if (!animsrc) return nullptr;
+        const auto& controllerMap = animsrc->mKeyframes->mKeyframeControllers;
+        const auto& nodeMap = getNodeMap();
+        ++mNativeIdleSourceGeneration;
+        mAnimSources.push_back(animsrc);
+        bindNativeReactionRoot(animsrc->mKeyframes->mControllerSequences);
 
-        osg::ref_ptr<const SceneUtil::KeyframeHolder> keyframes = mResourceSystem->getKeyframeManager()->get(kfname);
+        mSupportedDirections.clear();
+        for (const std::string& group : mAnimSources.back()->getTextKeys().getGroups())
+            mSupportedAnimations.insert(group);
 
-        if (keyframes == nullptr || keyframes->mTextKeys.empty() || keyframes->mKeyframeControllers.empty())
-            return nullptr;
+        SceneUtil::AssignControllerSourcesVisitor assignVisitor(mAnimationTimePtr[0]);
+        mObjectRoot->accept(assignVisitor);
 
+        // Determine the movement accumulation bone if necessary
+        if (!mAccumRoot)
+        {
+            // Priority matters! bip01 is preferred.
+            static const std::initializer_list<std::string_view> accumRootNames = { "bip01", "root bone" };
+            NodeMap::const_iterator found = nodeMap.end();
+            for (const std::string_view& name : accumRootNames)
+            {
+                found = nodeMap.find(name);
+                if (found == nodeMap.end())
+                    continue;
+                for (SceneUtil::KeyframeHolder::KeyframeControllerMap::const_iterator it = controllerMap.begin();
+                     it != controllerMap.end(); ++it)
+                {
+                    if (Misc::StringUtils::ciEqual(it->first, name))
+                    {
+                        mAccumRoot = found->second;
+                        break;
+                    }
+                }
+                if (mAccumRoot)
+                    break;
+            }
+        }
+
+        return animsrc;
+    }
+
+    std::shared_ptr<Animation::AnimSource> Animation::buildAnimSource(VFS::Path::NormalizedView kfname,
+        const std::string& baseModel, std::string_view groupAlias, bool warnMissingBones,
+        osg::ref_ptr<const SceneUtil::KeyframeHolder> keyframes, bool requireControllers)
+    {
+        if (!mObjectRoot || !keyframes || keyframes->mTextKeys.empty()
+            || (requireControllers && keyframes->mKeyframeControllers.empty())) return nullptr;
         if (!groupAlias.empty())
         {
             osg::ref_ptr<SceneUtil::KeyframeHolder> renamed
@@ -870,41 +915,6 @@ namespace MWRender
             animsrc->mControllerMap[blendMask].insert(std::make_pair(bonename, cloned));
         }
 
-        mAnimSources.push_back(animsrc);
-        bindNativeReactionRoot(animsrc->mKeyframes->mControllerSequences);
-
-        mSupportedDirections.clear();
-        for (const std::string& group : mAnimSources.back()->getTextKeys().getGroups())
-            mSupportedAnimations.insert(group);
-
-        SceneUtil::AssignControllerSourcesVisitor assignVisitor(mAnimationTimePtr[0]);
-        mObjectRoot->accept(assignVisitor);
-
-        // Determine the movement accumulation bone if necessary
-        if (!mAccumRoot)
-        {
-            // Priority matters! bip01 is preferred.
-            static const std::initializer_list<std::string_view> accumRootNames = { "bip01", "root bone" };
-            NodeMap::const_iterator found = nodeMap.end();
-            for (const std::string_view& name : accumRootNames)
-            {
-                found = nodeMap.find(name);
-                if (found == nodeMap.end())
-                    continue;
-                for (SceneUtil::KeyframeHolder::KeyframeControllerMap::const_iterator it = controllerMap.begin();
-                     it != controllerMap.end(); ++it)
-                {
-                    if (Misc::StringUtils::ciEqual(it->first, name))
-                    {
-                        mAccumRoot = found->second;
-                        break;
-                    }
-                }
-                if (mAccumRoot)
-                    break;
-            }
-        }
-
         // Get the blending rules
         if (Settings::game().mSmoothAnimTransitions)
         {
@@ -939,10 +949,13 @@ namespace MWRender
         return animsrc;
     }
 
-    void Animation::bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
+    std::optional<Animation::NativeReactionBinding> Animation::prepareNativeReactionBinding(std::span<const SceneUtil::ControllerSequenceMetadata> sequences) const
     {
-        if (!mObjectRoot || mNativeReactionRootRecord)
-            return;
+        if (!mObjectRoot || mNativeReactionRootRecord
+            || (mNativeReactionPaletteInitialized && (sequences.empty() || mNativeReactionFirstSequenceLoaded)))
+            return std::nullopt;
+        NativeReactionBinding result{mNativeReactionNodeRecords, mNativeReactionModelRootName,
+            mNativeReactionRootRecord, mNativeReactionFirstSequenceLoaded};
         if (!mNativeReactionPaletteInitialized)
         {
             struct NativePalette : osg::NodeVisitor
@@ -973,24 +986,174 @@ namespace MWRender
                 }
             } palette;
             mObjectRoot->accept(palette);
-            mNativeReactionNodeRecords.swap(palette.mRecords);
-            mNativeReactionModelRootName.swap(palette.mModelRootName);
-            mNativeReactionPaletteInitialized = true;
+            result.mRecords.swap(palette.mRecords);
+            result.mModelRootName.swap(palette.mModelRootName);
         }
-        if (sequences.empty() || mNativeReactionFirstSequenceLoaded)
-            return;
+        if (sequences.empty() || result.mFirstSequenceLoaded) return result;
         // Native manager query471600 returns the first nonnull sequence's root,
         // even when that root is null. It does not search subsequent sequences.
         const auto& authoredName = sequences.front().mAccumRootName;
-        const auto& name = authoredName.empty() ? mNativeReactionModelRootName : authoredName;
-        const auto found = mNativeReactionNodeRecords.find(name);
-        if (found != mNativeReactionNodeRecords.end())
-            mNativeReactionRootRecord = found->second;
-        mNativeReactionFirstSequenceLoaded = true;
+        const auto& name = authoredName.empty() ? result.mModelRootName : authoredName;
+        const auto found = result.mRecords.find(name);
+        if (found != result.mRecords.end())
+            result.mRootRecord = found->second;
+        result.mFirstSequenceLoaded = true;
+        return result;
+    }
+
+    void Animation::applyNativeReactionBinding(NativeReactionBinding& binding) noexcept
+    {
+        mNativeReactionNodeRecords.swap(binding.mRecords);
+        mNativeReactionModelRootName.swap(binding.mModelRootName);
+        mNativeReactionRootRecord.swap(binding.mRootRecord);
+        mNativeReactionPaletteInitialized = true;
+        mNativeReactionFirstSequenceLoaded = binding.mFirstSequenceLoaded;
+    }
+
+    void Animation::bindNativeReactionRoot(std::span<const SceneUtil::ControllerSequenceMetadata> sequences)
+    {
+        if (auto binding = prepareNativeReactionBinding(sequences))
+        {
+            applyNativeReactionBinding(*binding);
+            ++mNativeIdleSourceGeneration;
+        }
+    }
+
+    struct Animation::PreparedNativeIdleSource::Data
+    {
+        Animation* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        osg::ref_ptr<osg::Group> mRoot;
+        MWWorld::Ptr mActor;
+        std::uint64_t mGeneration;
+        VFS::Path::Normalized mModel;
+        std::string mGroup;
+        std::shared_ptr<AnimSource> mSource;
+        AnimSourceList mSources;
+        std::unordered_set<std::string> mSupported;
+        std::map<std::string, std::shared_ptr<AnimSource>, std::less<>> mIdleSources;
+        std::optional<NativeReactionBinding> mReactionBinding;
+        osg::ref_ptr<osg::Node> mAccumRoot;
+        bool mReuse = false;
+        bool mConsumed = false;
+    };
+
+    Animation::PreparedNativeIdleSource::PreparedNativeIdleSource(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Animation::PreparedNativeIdleSource::~PreparedNativeIdleSource() = default;
+
+    bool Animation::PreparedNativeIdleSource::isValid() const noexcept
+    {
+        const auto* data = mData.get();
+        if (!data || data->mConsumed || data->mIdentity.expired()) return false;
+        const auto& owner = *data->mOwner;
+        return owner.mObjectRoot == data->mRoot && owner.mPtr == data->mActor
+            && owner.mPtr.isInCell() == data->mActor.isInCell()
+            && (!owner.mPtr.isInCell() || owner.mPtr.getCell() == data->mActor.getCell())
+            && owner.mNativeIdleSourceGeneration == data->mGeneration;
+    }
+
+    bool Animation::PreparedNativeIdleSource::commit() noexcept
+    {
+        if (!isValid()) return false;
+        auto& data = *mData;
+        auto& owner = *data.mOwner;
+        if (!data.mReuse)
+        {
+            owner.mAnimSources.swap(data.mSources);
+            owner.mSupportedAnimations.swap(data.mSupported);
+            owner.mNativeIdleSources.swap(data.mIdleSources);
+            if (data.mReactionBinding) owner.applyNativeReactionBinding(*data.mReactionBinding);
+            owner.mAccumRoot = data.mAccumRoot;
+            owner.mSupportedDirections.clear();
+            ++owner.mNativeIdleSourceGeneration;
+        }
+        data.mConsumed = true;
+        return true;
+    }
+
+    const std::string& Animation::PreparedNativeIdleSource::group() const { return mData->mGroup; }
+    const VFS::Path::Normalized& Animation::PreparedNativeIdleSource::model() const { return mData->mModel; }
+    const std::string& Animation::PreparedNativeIdleSource::fileHash() const
+    { return mData->mSource->mKeyframes->mFileHash; }
+    const SceneUtil::ControllerSequenceMetadata& Animation::PreparedNativeIdleSource::metadata() const
+    { return mData->mSource->mKeyframes->mControllerSequences.front(); }
+
+    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(std::string_view model)
+    {
+        if (!mObjectRoot || !mResourceSystem || mPtr.isEmpty() || !ESM4::nativeIdleHasFile(model)) return nullptr;
+        model = model.substr(0, model.find('\0'));
+        const auto path = Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model));
+        if (!mResourceSystem->getVFS()->exists(path)) return nullptr;
+        const auto frames = mResourceSystem->getKeyframeManager()->get(path);
+        // A filename-stem alias cannot disambiguate multiplexed sequences.
+        // Leave unsupported resources unregistered rather than borrowing a
+        // different file or sequence. A trackless native sequence is valid.
+        if (!frames || frames->mControllerSequences.size() != 1 || frames->mFileHash.size() != 16)
+            return nullptr;
+        const auto hex = [](std::string_view value) {
+            constexpr char digits[] = "0123456789abcdef";
+            std::string out;
+            out.reserve(value.size() * 2);
+            for (unsigned char c : value)
+            {
+                out.push_back(digits[c >> 4]);
+                out.push_back(digits[c & 15]);
+            }
+            return out;
+        };
+        const std::string group = "native_idle_" + hex(path.value()) + "_" + hex(frames->mFileHash);
+        if (mLazyAnimSources.contains(group)) return nullptr;
+        auto data = std::make_unique<PreparedNativeIdleSource::Data>();
+        data->mOwner = this;
+        data->mIdentity = mNativePhysicalSourceIdentity;
+        data->mRoot = mObjectRoot;
+        data->mActor = mPtr;
+        data->mGeneration = mNativeIdleSourceGeneration;
+        data->mModel = path;
+        data->mGroup = group;
+        if (const auto found = mNativeIdleSources.find(group); found != mNativeIdleSources.end())
+        {
+            const auto winner = std::find_if(mAnimSources.rbegin(), mAnimSources.rend(), [&](const auto& source) {
+                return source->getTextKeys().findGroupStart(group) != source->getTextKeys().end();
+            });
+            if (winner == mAnimSources.rend() || *winner != found->second) return nullptr;
+            data->mSource = found->second;
+            data->mReuse = true;
+        }
+        else
+        {
+            if (mSupportedAnimations.contains(group)) return nullptr;
+            data->mSource = buildAnimSource(path, mObjectRoot->getName(), group, false, frames, false);
+            if (!data->mSource) return nullptr;
+            data->mSources = mAnimSources;
+            data->mSources.push_back(data->mSource);
+            data->mSupported = mSupportedAnimations;
+            data->mSupported.insert(group);
+            data->mIdleSources = mNativeIdleSources;
+            data->mIdleSources.emplace(group, data->mSource);
+            data->mReactionBinding = prepareNativeReactionBinding(data->mSource->mKeyframes->mControllerSequences);
+            data->mAccumRoot = mAccumRoot;
+            if (!data->mAccumRoot)
+                for (const auto name : {"bip01", "root bone"})
+                {
+                    const auto bone = getNodeMap().find(name);
+                    if (bone != getNodeMap().end()
+                        && std::any_of(frames->mKeyframeControllers.begin(), frames->mKeyframeControllers.end(),
+                            [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.first, name); }))
+                    {
+                        data->mAccumRoot = bone->second;
+                        break;
+                    }
+                }
+        }
+        return std::unique_ptr<PreparedNativeIdleSource>(new PreparedNativeIdleSource(std::move(data)));
     }
 
     void Animation::clearAnimSources()
     {
+        ++mNativeIdleSourceGeneration;
+        mNativeIdleSources.clear();
         if (!mNativeSequenceLayers.empty()) setNativeSequenceLayers({});
         mStates.clear();
 

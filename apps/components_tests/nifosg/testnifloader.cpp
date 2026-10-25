@@ -1016,8 +1016,10 @@ namespace
         file.mRecords.push_back(std::move(keys));
         file.mRecords.push_back(std::move(transform));
         file.mRecords.push_back(std::move(unsupported));
+        file.mHash = std::string(16, 'h');
         osg::ref_ptr<SceneUtil::KeyframeHolder> holder = new SceneUtil::KeyframeHolder;
         NifOsg::Loader::loadKf(file, *holder);
+        EXPECT_EQ(holder->mFileHash, std::string(16, 'h'));
         ASSERT_EQ(holder->mControllerSequences.size(), 1);
         const auto& original = holder->mControllerSequences.front();
         EXPECT_EQ(original.mGroup, "handtohandattackleft");
@@ -1044,6 +1046,7 @@ namespace
         osg::ref_ptr<SceneUtil::KeyframeHolder> copied
             = new SceneUtil::KeyframeHolder(*holder, osg::CopyOp::SHALLOW_COPY);
         EXPECT_EQ(copied->mControllerSequences, holder->mControllerSequences);
+        EXPECT_EQ(copied->mFileHash, holder->mFileHash);
         copied->mControllerSequences[0].mSequenceName = "Recoil_01";
         EXPECT_EQ(original.mSequenceName, "AttackLeft_Hook");
         copied->mControllerSequences[0].mAccumRootName = "OtherRoot";

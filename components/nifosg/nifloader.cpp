@@ -3767,6 +3767,7 @@ namespace NifOsg
     {
         LoaderImpl impl(kf.getFilename(), kf.getVersion(), kf.getUserVersion(), kf.getBethVersion());
         impl.loadKf(kf, target);
+        target.mFileHash = kf.getHash();
     }
 
 }
