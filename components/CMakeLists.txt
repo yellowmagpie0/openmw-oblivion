@@ -275,6 +275,7 @@ add_component_dir (esm4
     actionledger
     projectilerules
     masteryrules
+    nativeidle
     stealthrules
     crimerules
     crimecontracts

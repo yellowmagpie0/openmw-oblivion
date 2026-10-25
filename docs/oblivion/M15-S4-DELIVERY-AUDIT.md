@@ -13397,3 +13397,51 @@ direct swimming/floating/flying predicates and remaining S4 gates stay open.
 [verification receipt](M15-SHARED-PARALYSIS-VERIFICATION.json),
 [editable cases](../../scripts/data/oblivion_compat/m15_shared_paralysis_cases.json)
 and [movement manifest](../../scripts/data/oblivion_compat/oblivion_m15_shared_paralysis_movement.json).
+
+
+## Native IDLE selection rules for physical recovery
+
+`NativeIdleSelector` implements original 521450/5206B0 selection over an explicitly
+ordered model bank and finite forest. It preserves raw separators, uses the
+case-sensitive IdleAnims key rule and ASCII case-insensitive bank equality,
+prunes Deleted/false parents, visits children before parent fallback and ignores
+ANAM's low seven bits. Its .kf predicate is a filename test, not a VFS lookup or
+skeleton-directory restriction. Optional no-file selection stops later roots
+before the outer check returns null. Structure is owned, records are borrowed;
+invalid identity/link/cycle/root/key inputs reject before selection.
+
+Nine tests include comparisons against **7,211 native rows**: 237 path, 3,584 file/ANAM, 2,048 subtree,
+1,280 full-bank, 26 long/NUL boundary and 36 read-consumption cases. A fresh native
+probe confirms that 259-byte input can produce 268-byte bank keys, and that bytes
+after the first NUL remain unconsumed. Initial length checks incorrectly applied
+the model bound to derived keys; final code keeps their domains separate.
+The first full green run did not prove file-read timing. Original instructions
+show only optional selections repeat the outer filename query. A new synthetic
+condition-boundary mutation probe exposed five exact counterexamples to the
+unconditional repeat. The retained focused run fails those five, then final
+code passes the unchanged expectations. No ordinary CTDA mutation is claimed.
+Malformed-input, unused-field consumption/retry and 10,000-node iterative traversal
+are engineering checks, not original deep-tree gameplay observations.
+
+At parent `fd5e04ded2559312937840923b30c101a94dac58` and tested dirty fingerprint
+`b5703dc64afbed4a1f8c04d349c767bbb5f617975097c802efa4ff657e3d5404`, final normal component checks pass
+**3,096 tests**, and ASan/UBSan ESM4 checks pass **947 tests**, exact inventories,
+no failures/skips. Final incremental build logs contain no warnings; earlier test
+enum warnings are retained. Leak detection is disabled. Engine/Python/schema and
+runtime are unchanged and not rerun; this new core has no production caller yet.
+
+The pinned installed master independently contains 650 IDLEs: 208 roots, 442
+children, 44 model banks and 83 GetUp records, with no duplicates, Deleted records,
+forward/missing links or foreign predecessors. Native registration dispatch,
+root/child insertion and link repair execute the complete 650-record sequence;
+a separate 288-case child registration matrix covers synthetic ordering branches.
+Already-resolved forms/model banks, preallocated unique dense arrays, typed RTTI
+and compaction bookkeeping remain boundaries. These observations establish
+inputs for the upcoming registry adapter, not generic plugin override/deletion
+loader behavior or production selection order reconstructed from winning records.
+
+World registry construction, native recovery condition/model binding, actual KF
+playback, physical owner/controller/FSM/GetUp/restart and normal-input directional
+mastery remain open. **Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-IDLE-SELECTOR-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_selector_cases.json).

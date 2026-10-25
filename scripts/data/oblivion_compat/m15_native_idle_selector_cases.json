@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "m15_native_idle_selector",
+  "scope": "Immutable original GetUp/IDLE selection rules over caller-supplied ordered model banks and a finite forest. Not a winning-record link reconstruction or a running recovery owner.",
+  "authority": "Original executable SHA256 a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "rules": [
+    "Model key uses first exact case-sensitive IdleAnims substring anywhere, otherwise last backslash directory plus IdleAnims; forward slashes remain distinct. ASCII C-string models shorter than260 bytes; bytes after first NUL are unconsumed.",
+    "Bank equality folds ASCII case while retaining separators. Derived bank keys can exceed259 bytes; original259-byte input produces268-byte key.",
+    "Filename predicate tests only final extension .kf case-insensitively, including an empty basename; no VFS/resource existence check or skeleton-directory filter. ANAM low7 bits do not filter selection.",
+    "Prune Deleted records before conditions, then false parents before children. Optional flag bypasses initial filename predicate. Descendants precede parent fallback in declared child order.",
+    "First optional no-file fallback stops later roots; outer postcheck repeats filename query only if selected record currently has optional bit. Nonoptional fallback does not re-read filename.",
+    "Validate unique typed record IDs, child indices, finite acyclic single-parent forest, root indices and unique case-folded bank keys. Records are borrowed and must remain alive/current."
+  ],
+  "native_matrix": {
+    "model_keys": 237,
+    "file_ANAM_profiles": 3584,
+    "subtree_outputs_and_condition_order": 2048,
+    "complete_model_bank_outputs_and_condition_order": 1280,
+    "path_NUL_long_boundary_profiles": 26,
+    "synthetic_fallback_read_consumption_profiles": 36,
+    "total_checked_rows": 7211
+  },
+  "engineering_cases": [
+    "Malformed graph/bank rejection",
+    "Consumed model ASCII/length validation",
+    "Deleted/false/optional branch suppression of unused invalid filenames",
+    "Retry after failed condition adapter without changing index",
+    "Iterative10000-node traversal; this is adapter robustness, not original10000-node gameplay evidence"
+  ],
+  "read_consumption_probe": "Child-condition boundary optionally changes parent filename/optional flag; original instructions determine query timing. No claim that ordinary CTDA mutates these fields in gameplay.",
+  "next_integration_evidence": {
+    "installed_master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "installed_IDLE_records": 650,
+    "roots": 208,
+    "children": 442,
+    "banks": 44,
+    "getup_records": 83,
+    "duplicates_deleted_forward_missing_foreign_links": 0,
+    "native_registration_sequence": 650,
+    "additional_child_registration_cases": 288,
+    "limits": "Native registration dispatch/insertion executes with declared already-resolved form identities/model banks, preallocated dense arrays and RTTI/bookkeeping boundaries. Current C++ selector does not construct those banks or implement load/override/deletion lifecycle."
+  },
+  "remaining": [
+    "Build native ordered registry from actual loader events with verified override/deletion policy",
+    "World recovery condition/model binding and exact KF playback",
+    "Automatic physical admission, controller/FSM/GetUp and restart ownership",
+    "Normal-input directional mastery production and all remaining M15S4 gates"
+  ]
+}

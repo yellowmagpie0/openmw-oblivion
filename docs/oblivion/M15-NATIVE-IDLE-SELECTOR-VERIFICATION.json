@@ -1,0 +1,808 @@
+{
+  "schema_version": 1,
+  "id": "m15_native_idle_selector",
+  "status": "Native selection core verified; World registry/physical recovery and full M15S4 remain incomplete.",
+  "tested_source": {
+    "head": "fd5e04ded2559312937840923b30c101a94dac58",
+    "source_fingerprint": "b5703dc64afbed4a1f8c04d349c767bbb5f617975097c802efa4ff657e3d5404"
+  },
+  "source_files": [
+    {
+      "path": "components/CMakeLists.txt",
+      "sha256": "d11e07d6850522cfcbe485c3fe135f32d819c7f0bdd17b5d7b0b66b5d449ddbe",
+      "bytes": 21942
+    },
+    {
+      "path": "components/esm4/nativeidle.hpp",
+      "sha256": "cd6b25ec2511e66d6974d06f6980f09cdf3ae03469034f53bb286cfdf87bbef9",
+      "bytes": 2022
+    },
+    {
+      "path": "components/esm4/nativeidle.cpp",
+      "sha256": "8523aba38434c079406faaed98390dbd7dd626d5809cfdb4d81a788f4035ba65",
+      "bytes": 5439
+    },
+    {
+      "path": "apps/components_tests/CMakeLists.txt",
+      "sha256": "15d38f660859bc15ff836e8c6d1ae17d4d9c2f2f2ee84fa71382d1b779895cf9",
+      "bytes": 5713
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeidle.cpp",
+      "sha256": "54be28b7b961ae4863ed1207e6e2e7bb9c21f8a29f77191e98d072d75f04fd64",
+      "bytes": 12553
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_boundaries_expected.inc",
+      "sha256": "00950bb88bed4b5c46f2c0b12424f6b7a7d0c5b5e8655c645faa3140303c26a2",
+      "bytes": 6235
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_fallback_expected.inc",
+      "sha256": "15d1206bff33ed29d72ea996a4052f2d8c3a550f8bdde793546a18a9bc74eda9",
+      "bytes": 1109
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_file_expected.inc",
+      "sha256": "d714d5ec7e94eeb15e2f627aa9adee8b260b6274fd2bba08ac6c28eabcb62b97",
+      "bytes": 333
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_path_expected.inc",
+      "sha256": "cb9794c2752fde8e6e028bd7fe22e18a1d71482ae9b74eb0b0d46203b08ab748",
+      "bytes": 8557
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_selector_expected.inc",
+      "sha256": "f272a2f8baf525c0722dabdddb2e070259f03a42ff92e626186728e6b79ee3b4",
+      "bytes": 139779
+    },
+    {
+      "path": "apps/components_tests/esm4/native_idle_tree_expected.inc",
+      "sha256": "d637919d5d7c2908310584670659d58558667dd0e969b71860e9952fc87f5f98",
+      "bytes": 92175
+    }
+  ],
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_native_idle_selector_cases.json",
+    "sha256": "8af4ff7297e1771b42d30d6fd42a50b4a1e038fbffda670ff3a374418dbe9a66",
+    "bytes": 3504
+  },
+  "checks": [
+    {
+      "mode": "components",
+      "result": {
+        "executed": 3096,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "1e3d33d2e9950d365c6a7191cd56e90f12a23c591e6c1de0de4b7da8e2245b46",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "ac6f39c1d1de4b4de78da58e28e17e7dc5e97777a0f9405eb789bd2f3948d8e0",
+        "inventory_sha256": "eab0444059efcc182d43e7eb569cf9aea51c26ff03979521fa6c5190a1d95771",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/components-build.log",
+          "sha256": "66d201d14790156f706c2ed2e9d31849e42e05ea627b306a67d1ed5d969d2cdc",
+          "bytes": 650
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/components-inventory.txt",
+          "sha256": "eab0444059efcc182d43e7eb569cf9aea51c26ff03979521fa6c5190a1d95771",
+          "bytes": 197070
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/components.log",
+          "sha256": "cfd4d3c9d4b1dc7632799cebd80dc2552cb92380d7982465dced969770e8d0f4",
+          "bytes": 616338
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/components.xml",
+          "sha256": "ac6f39c1d1de4b4de78da58e28e17e7dc5e97777a0f9405eb789bd2f3948d8e0",
+          "bytes": 2365067
+        }
+      ]
+    },
+    {
+      "mode": "sanitize",
+      "result": {
+        "executed": 947,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4*",
+        "binary_sha256": "c2a9267abddc4e63a2ad95671064d696a7dc4aea0355440448daa2d8fa0c1f44",
+        "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+        "xml_sha256": "632e10a7e1edecad0724db4c77c78caf19aca850e3c494b5c34bc8d1d545dd0f",
+        "inventory_sha256": "71d47324a6d4e28465170d617bce4877f182a9fc2d8b925177d56bf634438a3b",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "Debug",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+          "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/sanitize-build.log",
+          "sha256": "150479c3ea8d1718410355166ba7a17895327b1332fbe11c073852b6f2b6b166",
+          "bytes": 753
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/sanitize-inventory.txt",
+          "sha256": "71d47324a6d4e28465170d617bce4877f182a9fc2d8b925177d56bf634438a3b",
+          "bytes": 197070
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/sanitize.log",
+          "sha256": "d126280b973729017e894eeee3b92c55021c26ef862fcb0744d15cdaba7ea307",
+          "bytes": 176524
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/sanitize.xml",
+          "sha256": "632e10a7e1edecad0724db4c77c78caf19aca850e3c494b5c34bc8d1d545dd0f",
+          "bytes": 1640825
+        }
+      ]
+    }
+  ],
+  "runner_verification": {
+    "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-04/verification.json",
+    "sha256": "3c7335211012a0b0b6e8e7f5831769efb07d3a3cafec7e0d39eb92494eda4a0b",
+    "bytes": 3931
+  },
+  "native_selection": [
+    {
+      "report": {
+        "passed": true,
+        "profiles": 237,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "8d2a49568497520dabe9b3e647c6a9d1a0f9070dfe66afd47295444f54cbecbc",
+        "actual_path": "full521370, actual9840E0 case-sensitive substring search, actual983FD0 reverse character search",
+        "boundaries": [
+          "BSString assignment/append materializes actual supplied byte strings; heap free and security cookie helper return without allocator/TLS machinery"
+        ],
+        "rule": "first exact case-sensitive IdleAnims substring truncates after9 bytes anywhere; otherwise last backslash directory plus IdleAnims; null/empty/no backslash returns empty. No slash normalization in521370. ASCII paths shorter than260 bytes only."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/path-key-report.json",
+          "sha256": "f4345ec110e8eb8c226243ed19a887f7a125f38253c2ee9bb2d371e390c64a6f",
+          "bytes": 754
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/path-key-probe.py",
+          "sha256": "dec2bfe0625944b053185fcc9f183263da18abfea8984ec62a98488428848384",
+          "bytes": 3588
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/path-key-corpus.json",
+          "sha256": "8d2a49568497520dabe9b3e647c6a9d1a0f9070dfe66afd47295444f54cbecbc",
+          "bytes": 33209
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "file_predicate": {
+          "profiles": 3584,
+          "corpus_sha256": "33c13d99fbfc440163ad9e652a66ac5cd810a5423db6bfaf81a9f8ed95c62876"
+        },
+        "tree_profiles": 2048,
+        "tree_corpus_sha256": "3150ca9e6f42881e52a2d4d44e612262c74b52fcc655103dd81583af0e8ffa44",
+        "actual_path": [
+          "full5206B0 ordered recursive selection",
+          "full520220 HasFile with actual983FD0 and98262D/982525 ASCII comparison",
+          "actual494ED0 child array lookup"
+        ],
+        "boundaries": [
+          "model-path virtual supplies declared string",
+          "CTDA56A950 returns declared boolean with owner, actor and argument0 asserted",
+          "RTTI9832E6 validates/returns supplied IDLE child"
+        ],
+        "scope": "Subtree selection and .kf predicate only. No outer521450 model-index lookup or optional-no-file postcheck execution, no animation or physics."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/tree-report.json",
+          "sha256": "7d5303038c2e9a0d234bcaff30156d6b8ede8695e88fd59496dca8e583925371",
+          "bytes": 910
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/tree-probe.py",
+          "sha256": "adab03daa32fd1545173418f9ea98668c90a1b5f5abfdbb5b3f1471d436b1458",
+          "bytes": 4791
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/tree-corpus.json",
+          "sha256": "3150ca9e6f42881e52a2d4d44e612262c74b52fcc655103dd81583af0e8ffa44",
+          "bytes": 780848
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/file-predicate-corpus.json",
+          "sha256": "33c13d99fbfc440163ad9e652a66ac5cd810a5423db6bfaf81a9f8ed95c62876",
+          "bytes": 148734
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "profiles": 1280,
+        "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "11cad480d7f2bc72d1cb27ab81cc7de54b15733ccc69b1930699eb5c43433f5e",
+        "actual_paths": [
+          "full521450 outer selection +521370 path key",
+          "full55E000 bank lookup using actual manager vtable A53920",
+          "full4A80A0 case-folded33-hash/mod37 +584D10/98262D ASCII equality",
+          "full5206B0 subtree,494ED0 ordered root array,520210 optional flag and520220 file predicate"
+        ],
+        "boundaries": [
+          "actor-base and base-model getters return declared fixture identities/path",
+          "BSString assignment/append/free and stack-cookie helper bypass allocator/security machinery",
+          "CRT tolower supplies declared ASCII C-locale mapping; actual hash/comparison executes",
+          "CTDA supplies condition booleans; IDLE RTTI supplies typed child (flat roots here)"
+        ],
+        "findings": [
+          "bank equality ignores ASCII case, retains slash/backslash distinctions",
+          "eligible selected leaf can have a file outside the actor skeleton directory",
+          "first optional-no-file root stops later roots then outer postcheck returnsnull",
+          "ANAM low7 does not filter GetUp selection"
+        ],
+        "scope": "Supplied already-built ordered model bank; plugin load/root registration and native animation playback still separate. ASCII path length below260."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/selector-report.json",
+          "sha256": "eca7945cd578a479b83bd6f3968ce4b08c92245857336cdf968e3d85cae1f014",
+          "bytes": 1381
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/selector-probe.py",
+          "sha256": "30f660c73ecdb8344881d0ec4f4bdc5353698649cf929e8da38eb55e5bb9174d",
+          "bytes": 5536
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selection-static-02/selector-corpus.json",
+          "sha256": "11cad480d7f2bc72d1cb27ab81cc7de54b15733ccc69b1930699eb5c43433f5e",
+          "bytes": 313943
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "cases": 26,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "74bbba1a969c3af1001475916efa61bb23ebcd7c3f2e3855705d52c1f77fe8ca",
+        "maximum_input_c_string_length": 259,
+        "maximum_model_key_length": 268,
+        "scope": "Original521370,520220 and full521450/model-bank lookup. Existing string allocator/security cookie, base/model, ASCII lowercase, CTDA and IDLE RTTI boundaries retained. Declared bytes after NUL are not consumed, including non-ASCII tail. No production implementation or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-path-boundaries-oracle-02/report.json",
+          "sha256": "9bcaca4488421bcff56de623ad8ee3b6f114d94a9d25e5ccd8abfb0a08bba8f9",
+          "bytes": 575
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-path-boundaries-oracle-02/probe.py",
+          "sha256": "b8d2561f05175237da25441d86e30e04765d1281a3adc1f57a24aa2da459e37f",
+          "bytes": 4656
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-path-boundaries-oracle-02/corpus.json",
+          "sha256": "74bbba1a969c3af1001475916efa61bb23ebcd7c3f2e3855705d52c1f77fe8ca",
+          "bytes": 11698
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "cases": 36,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "9933e96cd0874b20b8a0a355154b7154e8d573cb02f940dae93be831d1a7a790",
+        "rule": "5206B0 tests optional before its file query, then visits children. Full521450 repeats file query only when selected record currently has optional bit. Nonoptional fallback is not rechecked.",
+        "scope": "Original full521450/5206B0/520210/520220 and actual string comparisons. Existing model/base/string allocator/CTDA/RTTI boundaries retained; supplied child-condition boundary optionally changes parent file/optional bytes to distinguish read timing. This is a synthetic read-consumption experiment, not evidence that ordinary CTDA mutates those fields in gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-fallback-query-oracle-01/report.json",
+          "sha256": "4afb9e28bdb1001cc3feeea6383c05024d53dcb22d9feaf7199d467c589b534c",
+          "bytes": 787
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-fallback-query-oracle-01/probe.py",
+          "sha256": "cd5af6a17d3e951b4c13169a22127465317c2de1bed576cf8f2996ecc287b5f0",
+          "bytes": 4615
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-fallback-query-oracle-01/corpus.json",
+          "sha256": "9933e96cd0874b20b8a0a355154b7154e8d573cb02f940dae93be831d1a7a790",
+          "bytes": 5190
+        }
+      ]
+    }
+  ],
+  "additional_registration_and_content_evidence_not_implemented": [
+    {
+      "report": {
+        "passed": true,
+        "profiles": 288,
+        "load_prefix_cases": 128,
+        "full_insert_cases": 160,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "corpus_sha256": "0d0067a02af83f3a5548ace16bc11e1f46d61d049611e1c8177910e29f6bb031",
+        "actual_paths": [
+          "520B2F..520B6D child DATA registration prefix",
+          "full520780 child insertion and actual52F3C0 insertion/memmove",
+          "actual494E90 search and494ED0 indexed lookup"
+        ],
+        "boundaries": [
+          "Parent/previous/record pointers already resolved; no TES reader or actual override/deleted loader execution",
+          "Existing dense unique array with capacity16;5A56F0 sharing/compaction bookkeeping returns at boundary",
+          "Prior supplied typed IDLE RTTI at9832E6; actual index/search/insertion/link writes execute"
+        ],
+        "boundary_calls": {
+          "dense_bookkeeping": 208
+        },
+        "findings": [
+          "Null predecessor live child inserts front; Deleted child with null predecessor appends",
+          "Found predecessor inserts after it; missing predecessor appends",
+          "Full child insertion clamps unsigned index to current count",
+          "Insertion writes child parent/predecessor and repairs successor predecessor; null child leaves storage and links unchanged"
+        ],
+        "scope": "Native child registration/insertion ordering only, not full plugin root-bank lifecycle, selection, animation, physical reaction or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/report.json",
+          "sha256": "28429e2f920f1d51eded7d7f422a6a8a5190de29192eea0ead968b9ad1859906",
+          "bytes": 1402
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/probe.py",
+          "sha256": "0790451fb6a402af41d4d2949f8497bc3518eb0f8916825886912d51eba558f6",
+          "bytes": 5026
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-child-registration-oracle-01/corpus.json",
+          "sha256": "0d0067a02af83f3a5548ace16bc11e1f46d61d049611e1c8177910e29f6bb031",
+          "bytes": 44427
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "cases": 650,
+        "root_insertions": 208,
+        "child_insertions": 442,
+        "model_banks": 44,
+        "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+        "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "audit_records_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "corpus_sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+        "boundary_calls": {
+          "bank_resolutions": 208,
+          "dense_bookkeeping": 650
+        },
+        "actual_paths": [
+          "520B2F..520B6D registration dispatch and520BAF..520C42 root insertion",
+          "full520780 child insertion",
+          "actual494E90/494ED0 array search/index and52F3C0 insertion/memmove"
+        ],
+        "boundaries": [
+          "650 typed form identities/parent/previous/flags decoded independently from pinned master; not full native form construction or TES reader",
+          "5216A0 receives declared raw-model bank selected with reviewed native key formula; bank constructor/hash not executed here",
+          "All child/bank arrays preallocated unique dense capacity650;5A56F0 sharing/compaction bookkeeping bypassed",
+          "IDLE RTTI at9832E6 supplied typed objects; actual insertion and parent/predecessor repair executes"
+        ],
+        "scope": "Complete installed-master IDLE registration sequence normalized as ordered model banks and child lists. No duplicate/deleted/forward-linked records occur in this master. This does not establish plugin overrides/Deleted loader lifecycle, World integration, GetUp playback or gameplay."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/report.json",
+          "sha256": "4c363922300e42475a4693e6b0b345059ba1a9002db6fc6de01bec6f72cf9943",
+          "bytes": 1572
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/probe.py",
+          "sha256": "0c326f6590f8d703e249d3675a892c546ffee1ffa003ddf0f269c780b5b8c594",
+          "bytes": 6267
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-registration-vanilla-oracle-01/corpus.json",
+          "sha256": "2c6fd5e390730980634c5ea13270e2966d716d0ec0a2acac323c855e94bd52f5",
+          "bytes": 75255
+        }
+      ]
+    },
+    {
+      "report": {
+        "passed": true,
+        "source": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+        "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+        "records": 650,
+        "roots": 208,
+        "children": 442,
+        "deleted": 0,
+        "duplicates": [],
+        "forward_or_missing_parent": [],
+        "forward_or_missing_previous": [],
+        "final_missing_parent": [],
+        "final_missing_previous": [],
+        "foreign_previous": [],
+        "root_model_banks": 44,
+        "empty_root_model_keys": 0,
+        "getup_records": 83,
+        "records_sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+        "scope": "Independent raw installed-master decode in physical record order. Model-bank classification uses reviewed native path formula in Python, not running game or production C++. Does not establish original loader override/Deleted behavior."
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/report.json",
+          "sha256": "e29b7e2d5d9707164d8c73a6701ff27bd27b6bed6297f5bdff53b07f6b6afe17",
+          "bytes": 857
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/probe.py",
+          "sha256": "e14869f0c866a426e27363ce4eb632831150bdd01d8e59c79e65fa08bb4cad66",
+          "bytes": 3734
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-installed-idle-audit-01/records.json",
+          "sha256": "2415e25811c3c2ff886310b390c0118013b094b54162e37de0fde43bfbfb2d3d",
+          "bytes": 111151
+        }
+      ]
+    }
+  ],
+  "expected_generation": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-selector-work-01/generate-expected.py",
+      "sha256": "d979f32eba09f175f2ddbe05bce3f97737f862caf7571393bbf108b6e1733981",
+      "bytes": 2725
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-selector-work-01/expected-generation.json",
+      "sha256": "711f260b719f9b723d10b9e67d40ecfbbb0733604ec52a3470c55fe67df27d37",
+      "bytes": 1107
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-selector-work-01/boundary-generation.json",
+      "sha256": "a3b0a077eaddfad9b4181803e3a3a931ac23a9c256f34f087697fa3f635b5c6c",
+      "bytes": 384
+    }
+  ],
+  "retained_attempts": [
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-01",
+      "reason": "Focused5-test outcome pass with two enum/non-enum test warnings, subsequently corrected.",
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 25.694
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=ESM4NativeIdleSelector.*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-01/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 0.065
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 5,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4NativeIdleSelector.*",
+            "binary_sha256": "9e20d90ba838f945ee7799890d53eaa1f457bb5d2c951167b15282a4a650e8c9",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "5521e0fd626923c7626febae0b812b22d84a1c8b75bcef54302df2201a626ac9",
+            "inventory_sha256": "055d2bcc1c7992c1d2243680552694bfa8f3e474a863bd41b4b073e00963f4b9",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "fd5e04ded2559312937840923b30c101a94dac58",
+          "source_fingerprint": "c92937a5e6fab71ff78ba690944bd904f886364f7d3ba50ab09268b16f4b8c58"
+        },
+        "source_after": {
+          "head": "fd5e04ded2559312937840923b30c101a94dac58",
+          "source_fingerprint": "c92937a5e6fab71ff78ba690944bd904f886364f7d3ba50ab09268b16f4b8c58"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-01/verification.json",
+          "sha256": "c742e52e5464827f8afca38a3101b6af1469dcd7dc617cd51d2465e7f1fa3c59",
+          "bytes": 2182
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-01/components.log",
+          "sha256": "aa3b2237329a0f8d1ad90d5c93a3f5fa650b9ea6c82bb5acc84872dc18a56e9a",
+          "bytes": 1423
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-01/components.xml",
+          "sha256": "5521e0fd626923c7626febae0b812b22d84a1c8b75bcef54302df2201a626ac9",
+          "bytes": 1836
+        }
+      ]
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02",
+      "reason": "Full3095 normal/946 ESM4 sanitizer pass before read-consumption regression; retained as limited earlier coverage.",
+      "verification": {
+        "schema_version": 1,
+        "passed": true,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 16.415
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 0,
+            "seconds": 13.606
+          },
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "sanitize-build.log",
+            "returncode": 0,
+            "seconds": 35.064
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "sanitize-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.266
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/components-tests",
+              "--gtest_filter=ESM4*",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02/sanitize.xml"
+            ],
+            "log": "sanitize.log",
+            "returncode": 0,
+            "seconds": 33.821
+          }
+        ],
+        "results": {
+          "components": {
+            "executed": 3095,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "*",
+            "binary_sha256": "1e380eb248adfbad55ffe1518551b13650916655a5f981b0618d311a56b5af95",
+            "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+            "xml_sha256": "b14cf7cb7e7c5862ba0e59783afff8b86f5d588ede9d3cb10e12d62136687b20",
+            "inventory_sha256": "0897b03211fe5ee7262dba0f886a9229682a63141d4e8ddb86d27326ae5ec559",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "",
+              "CMAKE_CXX_FLAGS_DEBUG": "-g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          },
+          "sanitize": {
+            "executed": 946,
+            "inventory_matches": true,
+            "failed": 0,
+            "skipped": 0,
+            "filter": "ESM4*",
+            "binary_sha256": "664864e23b1723a54fc54c092a75c867c5f21737e086ba0ce5f68f5847b4594b",
+            "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+            "xml_sha256": "5fb6fdf9ac9e7aa584024c309a40a9cc07403a55a2ebd2467d621638a2d97ace",
+            "inventory_sha256": "2f3bb9a03f042e38e4b3f3ee1f39fafdb0d322c9db66b3cbd56853214a8c20de",
+            "configuration": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+              "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+              "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+              "OPENMW_USE_SYSTEM_BULLET": "OFF"
+            }
+          }
+        },
+        "source_before": {
+          "head": "fd5e04ded2559312937840923b30c101a94dac58",
+          "source_fingerprint": "c7cf66f8071c84693b96d2584db1e3aea1621d32fc7caa8b306251d32369ae30"
+        },
+        "source_after": {
+          "head": "fd5e04ded2559312937840923b30c101a94dac58",
+          "source_fingerprint": "c7cf66f8071c84693b96d2584db1e3aea1621d32fc7caa8b306251d32369ae30"
+        }
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02/verification.json",
+          "sha256": "9f19de6f94cf5931fd0e8456119d24f283f8fdd88c9b1d2eba121165ffa2d196",
+          "bytes": 3931
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02/components.log",
+          "sha256": "bc758c1570e6b81edc5bd309231a374a9c822620ac2d9577aae7d1279f5bdf73",
+          "bytes": 616139
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-02/components.xml",
+          "sha256": "b14cf7cb7e7c5862ba0e59783afff8b86f5d588ede9d3cb10e12d62136687b20",
+          "bytes": 2364793
+        }
+      ]
+    },
+    {
+      "directory": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-03",
+      "reason": "Focused native read-consumption regression fails exactly5 supplied mutation profiles against unconditional outer file postcheck; corrected final implementation skips the nonoptional repeat.",
+      "verification": {
+        "schema_version": 1,
+        "passed": false,
+        "commands": [
+          {
+            "argv": [
+              "cmake",
+              "--build",
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build",
+              "--target",
+              "components-tests",
+              "-j",
+              "4"
+            ],
+            "log": "components-build.log",
+            "returncode": 0,
+            "seconds": 11.449
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_list_tests"
+            ],
+            "log": "components-inventory.txt",
+            "returncode": 0,
+            "seconds": 0.065
+          },
+          {
+            "argv": [
+              "/home/maciek/openmw-oblivion/openmw-oblivion/build/components-tests",
+              "--gtest_filter=ESM4NativeIdleSelector.OptionalOnlyPostcheckMatches36OriginalReadConsumptionProfiles",
+              "--gtest_repeat=1",
+              "--gtest_shuffle=0",
+              "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-03/components.xml"
+            ],
+            "log": "components.log",
+            "returncode": 1,
+            "seconds": 0.065
+          }
+        ],
+        "results": {},
+        "source_before": {
+          "head": "fd5e04ded2559312937840923b30c101a94dac58",
+          "source_fingerprint": "ee07d0fbc2c882ccd037441f4b1e6671a8561a07624d9dd39c4b695b6e419188"
+        },
+        "error": "components.log: command exited 1"
+      },
+      "files": [
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-03/verification.json",
+          "sha256": "237dd559f0f8b0cea81ba38ab59b4e1057c91c0e68bf21d3aaca9fed72ab4b0e",
+          "bytes": 1350
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-03/components.log",
+          "sha256": "a8309e9275a7039717913065ab024beb61cd96c3b9b3e7c1db6f3898508282c4",
+          "bytes": 2621
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/native-getup-selector-checks-normal-03/components.xml",
+          "sha256": "46e6d9e2cac4da4843d3877783e7a9cb511c846c4b86566a3822c88dabb704fd",
+          "bytes": 4532
+        }
+      ]
+    }
+  ],
+  "sanitizer": "ASan/UBSan halt on errors; leak detection disabled. No leak coverage.",
+  "not_rerun": [
+    "Engine/esmtool: no app/store/record implementations changed; new component has no production caller yet.",
+    "Python/schema/runtime: unchanged. No new normal-input or fresh-process recovery course claimed."
+  ],
+  "validation_layers": {
+    "component_rules_and_independent_original_outputs": true,
+    "finite_index_validation": true,
+    "installed_master_raw_audit": true,
+    "original_registration_sequence_at_declared_boundaries": true,
+    "production_registry_or_World_recovery": false,
+    "actual_KF_or_physical_GetUp": false,
+    "full_M15S4": false
+  }
+}

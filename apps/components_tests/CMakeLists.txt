@@ -107,6 +107,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/actionledger.cpp
     esm4/projectilerules.cpp
     esm4/masteryrules.cpp
+    esm4/nativeidle.cpp
     esm4/referenceflags.cpp
     esm4/stealthrules.cpp
     esm4/crimerules.cpp
