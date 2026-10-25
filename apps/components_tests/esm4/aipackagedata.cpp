@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <components/esm4/aipackagedata.hpp>
+#include <components/esm4/aiconditions.hpp>
 
 namespace
 {
@@ -158,12 +159,12 @@ TEST(ESM4AIPackageData, DecodesCTDAAndCTDTParameterTypes)
     EXPECT_TRUE(value.mParameter1.mIsFormId);
     EXPECT_TRUE(value.mParameter2.mIsFormId);
     EXPECT_EQ(value.mUnknownTail, 0xfeedbeef);
-    EXPECT_EQ(value.mRunOn, ESM4::ConditionRunOn::Unknown);
+    EXPECT_EQ(value.mRunOn, ESM4::ConditionRunOn::Subject);
     EXPECT_EQ(value.mRunOnReferenceKey, ESM::FormKey());
 
-    putU32(ctda, 20, 2); // run on explicit reference
+    putU32(ctda, 20, 2); // opaque tail, not an explicit-reference selector
     const ESM4::PackageCondition referenceValue = ESM4::decodePackageCondition(ctda, resolver);
-    EXPECT_EQ(referenceValue.mRunOn, ESM4::ConditionRunOn::Reference);
+    EXPECT_EQ(referenceValue.mRunOn, ESM4::ConditionRunOn::Subject);
 
     std::vector<std::uint8_t> ctdt(20);
     ctdt[8] = 14; // GetActorValue: numeric parameters
@@ -174,6 +175,37 @@ TEST(ESM4AIPackageData, DecodesCTDAAndCTDTParameterTypes)
     EXPECT_FALSE(shortValue.mParameter1.mIsFormId);
     EXPECT_EQ(shortValue.mParameter1.mNumber, 17);
     EXPECT_EQ(shortValue.mRunOn, ESM4::ConditionRunOn::Subject);
+}
+
+TEST(ESM4AIPackageData, NativeConditionFunctionPaddingAndTailDoNotSelectTheSubject)
+{
+    // Original56A970/56AC50 padding oracle: the present-target subset of
+    // 168 native load/evaluate profiles. Callback values are supplied here,
+    // as at the declared native query boundary; no actor state is inferred.
+    for (const std::uint32_t tail : {0u, 1u, 2u, 3u, 4u, 0xffu, 0xfeedbeefu})
+        for (const std::uint32_t padding : {0u, 1u, 0xffffu})
+            for (const bool target : {false, true})
+                for (const bool callbackValue : {false, true})
+                {
+                    std::vector<std::uint8_t> data(24);
+                    data[0] = target ? 2 : 0;
+                    const float comparison = 1.f;
+                    std::memcpy(data.data() + 4, &comparison, sizeof(comparison));
+                    putU32(data, 8, 107 | (padding << 16));
+                    putU32(data, 20, tail);
+                    const auto decoded = ESM4::decodePackageCondition(data, [](auto) { return ESM::FormKey{}; });
+                    EXPECT_EQ(decoded.mFunction, 107);
+                    EXPECT_EQ(decoded.mUnknownTail, tail);
+                    EXPECT_EQ(decoded.mRunOn, ESM4::ConditionRunOn::Subject);
+                    ESM4::ConditionEvaluationContext context;
+                    context.mHasTarget = true;
+                    context.mResolve = [&](const auto&, ESM4::ConditionSubject subject) {
+                        EXPECT_EQ(subject, target ? ESM4::ConditionSubject::Target : ESM4::ConditionSubject::Self);
+                        return ESM4::ConditionValue::value(callbackValue ? 1. : 0.);
+                    };
+                    EXPECT_EQ(ESM4::evaluateCondition(decoded, context),
+                        callbackValue ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+                }
 }
 
 TEST(ESM4AIPackageData, ComparisonRejectsUnknownOperatorsAndNonFiniteValues)

@@ -487,7 +487,7 @@ TEST(ESM4LoadPackage, DecodesAllNativeFieldsAndBothConditionLayouts)
     EXPECT_EQ(package.mTargetData.mReferenceKey, ESM::FormKey::content("memory.esm", 0x1234));
     ASSERT_EQ(package.mCanonicalConditions.size(), 2u);
     EXPECT_EQ(package.mCanonicalConditions[0].mEncodedSize, 24u);
-    EXPECT_EQ(package.mCanonicalConditions[0].mRunOn, ESM4::ConditionRunOn::Reference);
+    EXPECT_EQ(package.mCanonicalConditions[0].mRunOn, ESM4::ConditionRunOn::Subject);
     EXPECT_EQ(package.mCanonicalConditions[1].mEncodedSize, 20u);
     EXPECT_EQ(package.mCanonicalConditions[1].mRunOn, ESM4::ConditionRunOn::Subject);
     ASSERT_EQ(package.mSkippedSubrecords.size(), 1u);

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "M15S4 recovery IDLE condition prerequisites; not gameplay acceptance",
+  "native_context_profiles": 17712,
+  "native_context_executions": 35424,
+  "x87_control_words": [
+    "0x27f",
+    "0x37f"
+  ],
+  "native_padding_profiles": 168,
+  "production_component_comparisons": 84,
+  "engine_loader_profiles": 42,
+  "function": 107,
+  "function_padding_words": [
+    0,
+    1,
+    65535
+  ],
+  "opaque_tail_values": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    255,
+    4276993775
+  ],
+  "target_selection": "Only flag bit 1 (mask 0x02), independent of function padding and opaque tail",
+  "function_selection": "unsigned WORD at offset8",
+  "native_load_boundary": "Reader supplies a declared 24-byte CTDA payload; original56A970 assigns the internal kind byte at offset +0x14",
+  "native_context_boundaries": "Declared condition callbacks supply success/value; ordinary second-reference normalization only",
+  "native_facing_up_profiles": 108,
+  "native_facing_up_executions": 216,
+  "facing_up_rule": "Eligible actor with no Spine returns true; a present Spine compares the float at native NiWorld byte offset +0x80 strictly above zero; null/ineligible actor returns 0",
+  "facing_up_production_status": "not implemented by this chunk",
+  "content": {
+    "IDLE_records": 650,
+    "IDLE_conditions": 1630,
+    "run_on_target": 13,
+    "nonzero_opaque_tail": 11,
+    "GetUp_filename_records": 83,
+    "GetUp_and_ancestor_records": 86,
+    "GetUp_and_ancestor_conditions": 164,
+    "GetUp_and_ancestor_functions": [
+      101,
+      106,
+      107,
+      108,
+      285
+    ],
+    "scope": "Pinned Oblivion.esm only; official load order audited separately"
+  },
+  "open": [
+    "Native IDLE override loader lifecycle: official plugins have 4 repeated keys, including both Knights Bear GetUp overrides; current adapter rejects this profile",
+    "Native null-subject/callback rejection semantics in service context",
+    "Raw actor model resolution and native GetUp caller",
+    "IsFacingUp/IsWeaponOut/GetWeaponAnimType service queries",
+    "Exact KF/slot5 playback, physical owner/FSM and restart",
+    "Directional mastery and full M15S4 acceptance"
+  ],
+  "official_load_order_idle_history": {
+    "definitions": 681,
+    "unique_keys": 677,
+    "repeated_keys": 4,
+    "deleted_definitions": 0,
+    "current_registry_profile_admitted": false
+  }
+}

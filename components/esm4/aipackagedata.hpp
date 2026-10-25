@@ -227,9 +227,8 @@ namespace ESM4
     ConditionOperator conditionOperator(std::uint8_t flags);
     std::string_view conditionOperatorName(ConditionOperator value);
 
-    // CTDA's final DWORD is the native run-on selector.  Keep the raw value
-    // in PackageCondition as well: values not defined by TES4 must remain
-    // observable and must never be evaluated against the actor itself.
+    // Explicit runtime/extended-layout contexts. Native TES4 CTDA and CTDT
+    // select the second reference with flag bit1, not a trailing DWORD.
     enum class ConditionRunOn : std::uint8_t
     {
         Subject = 0,
@@ -271,8 +270,8 @@ namespace ESM4
         ESM::FormKey mRunOnReferenceKey;
         ConditionRunOn mRunOn = ConditionRunOn::Subject;
         // Retain the encoded DWORD losslessly for diagnostics and future
-        // extended layouts.  In a native 24-byte CTDA this is the run-on
-        // selector; 20-byte CTDT has no such field and stays at Subject.
+        // extended layouts. Native56A970 overwrites its low byte with an
+        // internal layout marker; 56AC50 does not use it to select a subject.
         std::uint32_t mUnknownTail = 0;
         std::uint8_t mEncodedSize = 0;
 

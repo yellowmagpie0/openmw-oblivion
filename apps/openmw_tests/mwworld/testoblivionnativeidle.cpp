@@ -4,6 +4,7 @@
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
 #include <components/esm4/loadidle.hpp>
+#include <components/esm4/aiconditions.hpp>
 #include <components/loadinglistener/loadinglistener.hpp>
 
 #include <gtest/gtest.h>
@@ -27,11 +28,12 @@ namespace
         return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size()))
             + bytes(deleted ? std::uint32_t(ESM4::Rec_Deleted) : 0u) + bytes(id) + bytes(0u) + data;
     }
-    std::string idle(std::uint32_t id, const std::string& model, std::uint32_t parent = 0, std::uint32_t previous = 0)
+    std::string idle(std::uint32_t id, const std::string& model, std::uint32_t parent = 0,
+        std::uint32_t previous = 0, const std::string& conditions = {})
     {
         return record(ESM4::REC_IDLE, id, sub(ESM::fourCC("MODL"), model + '\0')
             + sub(ESM::fourCC("ANAM"), std::string(1, '\5'))
-            + sub(ESM::fourCC("DATA"), bytes(parent) + bytes(previous)));
+            + sub(ESM::fourCC("DATA"), bytes(parent) + bytes(previous)) + conditions);
     }
     struct Fixture
     {
@@ -144,4 +146,47 @@ TEST(OblivionNativeIdleStore, EmptyRegistryIsValidButUnindexedStaticRecordsAreNo
     authored.mModel = "Dog\\IdleAnims\\Unindexed.kf";
     f.mStore.getWritable<ESM4::IdleAnimation>().insertStatic(authored);
     EXPECT_THROW(MWWorld::buildOblivionNativeIdleIndex(f.mStore), std::invalid_argument);
+}
+
+TEST(OblivionNativeIdleStore, NativeConditionPaddingCannotRedirectRegistrySelection)
+{
+    Fixture f;
+    std::vector<std::string> definitions;
+    std::vector<std::uint32_t> tails;
+    for (const std::uint32_t tail : {0u, 1u, 2u, 3u, 4u, 0xffu, 0xfeedbeefu})
+        for (const std::uint32_t padding : {0u, 1u, 0xffffu})
+            for (const bool target : {false, true})
+            {
+                const auto ctda = bytes(target ? 2u : 0u) + bytes(1.f) + bytes(107u | (padding << 16))
+                    + bytes(0u) + bytes(0u) + bytes(tail);
+                definitions.push_back(idle(0x1000u + static_cast<std::uint32_t>(definitions.size()), "Dog\\IdleAnims\\GetUp.kf",
+                    0, 0, sub(ESM::fourCC("CTDA"), ctda)));
+                tails.push_back(tail);
+            }
+    f.load("base.esm", {}, definitions);
+    const auto before = f.mStore.getFormKeyIndex().serialize();
+    auto index = MWWorld::buildOblivionNativeIdleIndex(f.mStore);
+    ASSERT_EQ(index.mNodes.size(), 42u);
+    ESM4::ConditionEvaluationContext context;
+    context.mHasTarget = true;
+    context.mResolve = [](const auto& condition, ESM4::ConditionSubject subject) {
+        EXPECT_EQ(condition.mFunction, 107);
+        return ESM4::ConditionValue::value(subject == ESM4::ConditionSubject::Self ? 1. : 0.);
+    };
+    for (std::size_t i = 0; i < index.mNodes.size(); ++i)
+    {
+        const auto& record = *index.mNodes[i].mRecord;
+        ASSERT_EQ(record.mConditions.size(), 1u);
+        EXPECT_EQ(record.mConditions[0].mUnknownTail, tails[i]);
+        EXPECT_EQ(record.mConditions[0].mRunOn, ESM4::ConditionRunOn::Subject);
+        EXPECT_EQ(ESM4::evaluateConditions(record.mConditions, context),
+            i % 2 == 0 ? ESM4::ConditionResult::True : ESM4::ConditionResult::False);
+    }
+    ESM4::NativeIdleSelector selector(std::move(index.mNodes), index.mBanks);
+    const auto* selected = selector.select("Dog\\Skeleton.nif", [&](const auto& record) {
+        return ESM4::evaluateConditions(record.mConditions, context) == ESM4::ConditionResult::True;
+    });
+    ASSERT_NE(selected, nullptr);
+    EXPECT_EQ(selected->mId, (ESM::FormId{0x1028, 1}));
+    EXPECT_EQ(f.mStore.getFormKeyIndex().serialize(), before);
 }

@@ -13493,3 +13493,69 @@ binding, exact KF/slot5 playback, physical owner/controller/FSM/GetUp/restart an
 normal-input directional mastery remain open. **Full M15S4 remains incomplete.**
 See the [verification receipt](M15-NATIVE-IDLE-REGISTRY-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_registry_cases.json).
+
+
+### Native IDLE condition decoding and recovery context prerequisites
+
+At tested parent `ff73089e20db0d7fd3936bbfb7332846798b305c` and frozen source fingerprint
+`5908cfc18bbd1b7388a3e6136956511e50db5d89f8c5cbb607ed66a124c9b546`, the native condition decoder now
+reads the function index as a WORD and retains CTDA's final DWORD as opaque data.
+Only flag bit 1 (`0x02`) chooses the second reference. Explicit runtime/extended run-on
+contexts remain separate. This fixes 11 installed IDLE conditions whose tail value 1
+previously redirected the fork to Target. Upper function padding no longer
+changes dispatch or parameter classification. The shared PACK decoder and
+independent Python audit use the same reviewed native encoding.
+
+Original `56A970`/`56AC50` load/evaluate instructions pass **168 padding profiles**.
+The reader supplies a declared 24-byte payload and the actual loader overwrites
+its low tail byte with internal kind 0; the evaluator ignores the remaining tail
+and function high word. A component case compares the 84 present-target profiles;
+a real ESMStore case loads 42 definitions and composes them with registry selection.
+Existing tests that expected a reference/unknown context from a tail were corrected.
+
+The complete original `56A950`/`56A510`/`56AC50` context path passes **17,712 profiles**,
+35,424 executions across two x87 control words and all 369 function-table rows.
+It swaps self/opposite reference for flag bit 1 (`0x02`), fills an omitted reference/actor
+parameter from the opposite context, and rejects a required null subject before
+calling/comparing. Subjectless callbacks can still run. Callback success/value
+and ordinary reference base getters are declared boundaries; this does not
+verify their actor queries, special-reference normalization or multi-row OR lists.
+Recovery selection `521450` supplies actor and a null second reference. The fork service's
+null-context behavior still needs integration; these probes do not close it.
+
+An independent raw audit finds 650 installed IDLE records, 1,630 conditions,
+13 flag-target rows and 11 nonzero tails. The 83 GetUp filenames plus ancestors
+cover 86 records and 164 conditions using 101/106/107/108/285, with no target/global
+flags or nonzero tails. This closure is an inventory, not full selector visitation.
+Normal and instrumented actual ESMStore checkers compare all 1,630 loaded
+conditions against the raw decoder: function, flags, size, comparison, two raw
+parameters, opaque tail, flag-target and neutral explicit run-on agree.
+The official package audit passes its reviewed lock: 6,588 Subject and 242 Target
+conditions; only that distribution and the package fingerprint change. Official
+content identities and every other count-lock field remain identical.
+
+A separate raw audit of the pinned official plugin load order finds 681 IDLE
+definitions over 677 keys, including four overrides and no deleted definitions
+or forward/unknown links. Knights.esp overrides both Bear GetUp records.
+The current registry adapter rejects this history. Native loader reset/override
+lifecycle must be verified and implemented before claiming this load order is
+supported; the raw audit does not establish that lifecycle.
+
+Original `IsFacingUp` at `4F8970`/`897580` additionally passes 108 profiles, 216 executions:
+null/ineligible actor gives 0; eligible missing Spine gives 1; present Spine uses
+the float at native NiWorld byte offset `+0x80` strictly above zero (signed zeros and NaN give 0). Actor eligibility
+and Spine lookup are supplied boundaries. This query is still missing in the fork
+condition service and needs an actual renderer binding alongside IsLeftUp.
+
+Final normal checks pass **3,100 component tests**,
+**1,943 engine tests** and **410 Python tests**.
+ASan/UBSan checks pass **951 ESM4 tests** and
+**1,943 engine tests**.
+Inventories/XML match with no failures/skips; ASan/UBSan halt on errors and leak
+checks are disabled. Engine mode builds openmw, openmw-tests and esmtool. Compiler warnings in unchanged
+source files remain in retained logs. No runtime/gameplay course was run.
+Raw actor model/context binding, query completion, exact KF/slot5 playback,
+physical FSM/GetUp/restart, directional mastery and full S4 acceptance remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-IDLE-CONDITION-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_condition_cases.json).

@@ -472,7 +472,7 @@ def _parse_pack(record: dict[str, Any], subrecords: list[dict[str, Any]], master
         if len(condition["payload"]) != expected:
             raise _error(plugin, "PACK", condition["offset"], f"{condition['name']} has the wrong size")
         payload = condition["payload"]
-        function = _i32(payload, 8)
+        function = _u32(payload, 8) & 0xffff
         comparison_is_global = bool(_u8(payload, 0) & 4)
         comparison_value = None if comparison_is_global else _f32(payload, 4)
         if comparison_value is not None and not math.isfinite(comparison_value):
@@ -486,10 +486,9 @@ def _parse_pack(record: dict[str, Any], subrecords: list[dict[str, Any]], master
             "comparison_value": comparison_value,
             "comparison_global_key": _stable_key(plugin, _u32(payload, 4), masters)
                 if comparison_is_global else "null",
-            "run_on_raw": _u32(payload, 20) if condition["name"] == "CTDA" else 0,
-            "run_on": CONDITION_RUN_ON.get(
-                _u32(payload, 20) if condition["name"] == "CTDA" else 0, "Unknown"
-            ),
+            "unknown_tail": _u32(payload, 20) if condition["name"] == "CTDA" else 0,
+            "run_on_raw": 1 if _u8(payload, 0) & 2 else 0,
+            "run_on": "Target" if _u8(payload, 0) & 2 else "Subject",
             "parameter1": _u32(payload, 12),
             "parameter2": _u32(payload, 16),
             "parameter1_key": _stable_key(plugin, _u32(payload, 12), masters),

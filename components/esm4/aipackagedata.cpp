@@ -523,7 +523,9 @@ namespace ESM4
         result.mRunOnTarget = (result.mFlags & 0x02) != 0;
         result.mUseGlobal = (result.mFlags & 0x04) != 0;
         result.mComparisonValue = readFloat(data, 4);
-        result.mFunction = static_cast<std::int32_t>(readU32(data, 8));
+        // Original56AC50 reads a WORD. The following two bytes are padding,
+        // rather than part of the function index.
+        result.mFunction = static_cast<std::int32_t>(readU32(data, 8) & 0xffff);
 
         if (result.mUseGlobal)
         {
@@ -537,7 +539,6 @@ namespace ESM4
         if (data.size() == 24)
         {
             result.mUnknownTail = readU32(data, 20);
-            result.mRunOn = conditionRunOnFromRaw(result.mUnknownTail);
         }
         return result;
     }
