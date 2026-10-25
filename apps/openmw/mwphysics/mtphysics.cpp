@@ -1925,6 +1925,15 @@ namespace MWPhysics
             updates, preparedFrameSeconds, rawUpdateSelector, NifBullet::RagdollNativeDefaultGravityZ);
     }
 
+    std::vector<NifBullet::RagdollNativeGetUpNodeResult> PhysicsTaskScheduler::setupActorRagdollGetUp(const MWWorld::Ptr& ptr,
+        const NifBullet::RagdollGetUpPlan& plan, const ESM4::PhysicalBlendDurationTables& durations,
+        const ESM4::PhysicalBlendGainTable& gains, float startKey)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return actorRagdoll(ptr).mPhysics.setupNativeGetUp(plan, durations, gains, startKey);
+    }
+
     std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> PhysicsTaskScheduler::prepareActorRagdollKnockdownBlends(
         const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests)
     {

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "scope": "Native8AB8A0 root prepass and8AB240 recursive GetUp selection/filter/curve policy",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_points": [
+    "0x8ab8a0",
+    "0x8ab240"
+  ],
+  "native_shapes": [
+    "NiNode root; child0 has child0",
+    "null root child0",
+    "null first child child0",
+    "empty root children",
+    "NiTriShape root",
+    "NiTriShape first child",
+    "BSFadeNode root",
+    "null root",
+    "BSFadeNode first child"
+  ],
+  "collisions": [
+    "none",
+    "ordinary",
+    "blend",
+    "mixed none/ordinary/blend/blend"
+  ],
+  "controller_present": [
+    false,
+    true
+  ],
+  "body_indices": [
+    0,
+    22,
+    31
+  ],
+  "filter_low_bytes": [
+    0,
+    13,
+    255
+  ],
+  "durations": [
+    -1,
+    0,
+    0.25
+  ],
+  "start_keys": [
+    0,
+    1
+  ],
+  "x87_control_words": [
+    "0x027f",
+    "0x037f"
+  ],
+  "expected_native_profiles": 7776,
+  "native_boundaries": [
+    "Original wrapper, recursive helper, NiRTTI initializers, filter refresh, motion request and linear/angular setters execute through return without game/OS stubs.",
+    "Current physical motion supplied as keyframed mode6; dynamic-to-keyframed conversion, physical constructors, World/broadphase and gameplay are outside this fixture."
+  ],
+  "production_boundaries": [
+    "Owned physical setup admits rigid bodies/controllers from the same source identity, a nonshared acyclic scene hierarchy and configured native internal masks.",
+    "Native low-byte255 profiles remain root-selection evidence; initial layers32..63 are outside the existing owned filter admission.",
+    "Bodyless attached blend controllers reject before physical publication.",
+    "Worker barrier is exposed; CharacterController natural recovery, IDLE/RNG/clock commit and normal-input save/restart acceptance remain open."
+  ],
+  "unit_focus": [
+    "ActorRootBlendTest.GetUp*",
+    "ActorRagdollPhysicsTest.GetUp*"
+  ]
+}

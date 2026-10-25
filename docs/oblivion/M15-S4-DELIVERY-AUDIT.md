@@ -13936,3 +13936,58 @@ not the final gameplay or fresh-process gate. See the
 [editable cases](../../scripts/data/oblivion_compat/m15_native_getup_transition_cases.json).
 
 Tested source fingerprint: `bf77ad44a4bc7dfba3b05d43b7cbf67f4fd71b1ab08de0b5a264e56863335fba` on parent `4591ad0c28116b3cd6a173d1b2a5570e2c7ae07b`.
+
+### GetUp recursive root policy and atomic owned setup
+
+GetUp now has an owned NIF root plan and an atomic physical setup exposed through
+PhysicsSystem's worker barrier. The plan follows actual NiNode child slots in
+preorder, treats geometry as a leaf, accepts a null root as a no-op, and retains
+the first attached blend controller independently of its target. Native caller
+reinspection confirms that selected-IDLE and reset paths pass `Actor+3C`, the actor
+scene root, rather than the first KF accumulator root. The wrapper's
+prepass examines literal `child0/child0`, requests keyframed motion and clears all
+eight velocity lanes on that body. `BA7A40` is the supplied zero Vector4, not a
+controller identity; the wrapper does not remove generated velocity controllers.
+
+Recursive blend bodies change their live packed filter to `(word & 0xffffffc8)|8`
+even when a controller is missing or the selected duration is disabled. Ordinary
+body ID22 requests keyframed motion. Curve duration and DEFAULT gains come from
+bits8..12 of the current owned word, independently of authored filters. Setup
+stages every identity, controller curve and internal collision-mask publication
+before changing physical state. It uses sparse mode/velocity writes, preserving
+poses, forces, torque, requested-motion metadata, controller targets and generated
+velocity controllers; velocity writes retain normal activation-group wake behavior.
+Malformed or stale source/body/controller identities reject before publication.
+The existing owner rejects bodyless authored controllers, shared/cyclic scene
+nodes and collision layers outside its admitted mask domain explicitly.
+
+The hash-identified original 1.2.0416 executes the full `8AB8A0`/`8AB240` paths for
+7,776 profiles with actual NiNode/NiTriShape/BSFadeNode RTTI, body/controller
+vtables, filter refresh and key helpers. The final probe has no game/OS stubs:
+actual requested-motion and linear/angular setters execute with an already
+keyframed motion and a null World. Construction, dynamic conversion, real World
+activation, broadphase, dynamics and gameplay remain outside that fixture.
+Both rebuilt libraries match all 7,776 root-selection profiles and all 5,184
+physical filter/controller/packed-velocity profiles within the owner's admitted
+initial-layer domain. Profiles starting at layer63 remain root-selection evidence.
+A retained earlier failure incorrectly omitted recursive null-slot calls; the
+corrected native expectation includes those no-op calls.
+
+Normal and ASan/UBSan checks each pass 3,129 component and 1,960 engine cases,
+with exact inventories/XML and no failures/skips. Leak-enabled focused coverage
+passes 16 root/GetUp cases and 247 owned-physics/loader cases; both golden adapters
+also enable leaks. The full sanitizer suites use the previously documented
+unrelated full-suite leak exception. No warning originates on a changed line.
+The first syntax preflight caught a misplaced internal source-hash field before
+build/test; corrected sources pass every recorded check. Python/save formats,
+IDLE selection/resources and the native clock helpers are unchanged.
+
+**Full M15S4 remains incomplete:** this chunk supplies owned GetUp root policy
+and the worker-barrier entry point. The natural CharacterController/World
+physical FSM, selected-IDLE slot5 clock and joint renderer/RNG/state publication,
+selected-IDLE persistence/restart, directional mastery, generic package-query
+ownership unification, and full normal-input view/device/FPS acceptance remain
+open. See the [verification receipt](M15-NATIVE-GETUP-ROOT-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_getup_root_cases.json).
+
+Tested source fingerprint: `1ca97295c469915af8d1963dc2f35be2e2a267467cbd2dec496c64226cf09a72` on parent `f7f62a4b2e80f0a6337a040a8cfb99da04fa4892`.

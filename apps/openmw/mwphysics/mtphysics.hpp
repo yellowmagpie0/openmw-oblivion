@@ -53,6 +53,8 @@ namespace NifBullet
     struct RagdollNativeHitBlendSetupRequest;
     enum class RagdollNativeHitBlendDisposition;
     struct RagdollNativeKnockdownControllerSetupRequest;
+    struct RagdollGetUpPlan;
+    struct RagdollNativeGetUpNodeResult;
     struct RagdollNativePassOutSettings;
     enum class RagdollNativeKnockdownBlendDisposition;
     struct RagdollNativeBlendControllerTarget;
@@ -266,6 +268,9 @@ namespace MWPhysics
             float preparedFrameSeconds, std::uint32_t rawUpdateSelector);
         // Selected-controller curve setup after the movement-worker barrier;
         // duration/filter and whole reaction lifecycle remain caller-owned.
+        std::vector<NifBullet::RagdollNativeGetUpNodeResult> setupActorRagdollGetUp(const MWWorld::Ptr& ptr,
+            const NifBullet::RagdollGetUpPlan& plan, const ESM4::PhysicalBlendDurationTables& durations,
+            const ESM4::PhysicalBlendGainTable& gains, float startKey);
         std::vector<NifBullet::RagdollNativeKnockdownBlendDisposition> prepareActorRagdollKnockdownBlends(
             const MWWorld::Ptr& ptr, std::span<const NifBullet::RagdollNativeKnockdownBlendRequest> requests);
         // Atomic normal Down setup; caller resolves configuration and motion synchronization.

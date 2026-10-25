@@ -84,6 +84,26 @@ namespace NifBullet
     std::optional<RagdollRootBlendDefinition> loadActorRagdollRootBlend(
         Nif::FileView file, std::optional<std::uint32_t> rootRecord);
 
+    enum class RagdollGetUpCollision { None, Ordinary, Blend };
+    struct RagdollGetUpNode
+    {
+        std::uint32_t mNodeRecord;
+        RagdollGetUpCollision mCollision;
+        std::optional<std::uint32_t> mBodyRecord, mControllerRecord;
+    };
+    struct RagdollGetUpPlan
+    {
+        std::string mSourceHash;
+        std::optional<std::uint32_t> mVelocityResetBody;
+        // Native preorder, retaining geometry leaves and omitting null no-ops.
+        std::vector<RagdollGetUpNode> mNodes;
+    };
+    // Original8AB8A0/8AB240 selection from an explicit scene root. The
+    // prepass examines literal child0/child0; recursive traversal visits every
+    // NiNode child slot. Own identities only, independent of NIF lifetime.
+    RagdollGetUpPlan loadActorRagdollGetUpPlan(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord);
+
     struct RagdollBlendControllerKey
     {
         float mTime, mHierarchyGain, mVelocityGain;

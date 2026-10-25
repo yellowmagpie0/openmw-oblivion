@@ -364,6 +364,7 @@ namespace NifBullet
         std::vector<BlendTarget> mBlendTargets;
         btDynamicsWorld& mWorld;
         float mLengthScale;
+        std::string mSourceHash;
         // Bodies are destroyed before shapes; neither owns the other's storage.
         std::vector<std::unique_ptr<btCollisionShape>> mShapes;
         std::vector<Body> mBodies;
@@ -1138,6 +1139,7 @@ namespace NifBullet
         require(publication == Publication::Immediate || native,
             "deferred graph publication requires native World lifetime ownership");
         mImpl->mOwner = this;
+        mImpl->mSourceHash = definition.mSourceHash;
         mImpl->mCollisionGroup = collisionGroup;
         mImpl->mCollisionMask = collisionMask;
         mImpl->mDisableLinkedCollisions = internalFilter == nullptr;
@@ -2810,6 +2812,16 @@ namespace NifBullet
     std::vector<RagdollNativeGetUpBlendDisposition> ActorRagdollPhysics::prepareNativeGetUpBlends(
         std::span<const RagdollNativeGetUpBlendRequest> requests)
     {
+        auto prepared = prepareNativeGetUpBlendsImpl(requests);
+        auto result = std::move(prepared.second);
+        mImpl->mBlendControllers.swap(prepared.first);
+        return result;
+    }
+
+    std::pair<std::vector<RagdollNativeBlendControllerState>, std::vector<RagdollNativeGetUpBlendDisposition>>
+    ActorRagdollPhysics::prepareNativeGetUpBlendsImpl(
+        std::span<const RagdollNativeGetUpBlendRequest> requests) const
+    {
         auto controllers = mImpl->mBlendControllers;
         std::vector<RagdollNativeGetUpBlendDisposition> result;
         result.reserve(requests.size());
@@ -2850,7 +2862,90 @@ namespace NifBullet
             state.mSetupState = 2;
             result.push_back(RagdollNativeGetUpBlendDisposition::Started);
         }
-        mImpl->mBlendControllers.swap(controllers);
+        return {std::move(controllers), std::move(result)};
+    }
+
+    std::vector<RagdollNativeGetUpNodeResult> ActorRagdollPhysics::setupNativeGetUp(const RagdollGetUpPlan& plan,
+        const ESM4::PhysicalBlendDurationTables& durations, const ESM4::PhysicalBlendGainTable& gains, float startKey)
+    {
+        require(plan.mSourceHash == mImpl->mSourceHash, "GetUp source identity mismatch");
+        require(mImpl->worldAlive() && mImpl->mPendingRegistration.expired(), "unavailable GetUp World");
+        std::vector<RagdollNativeGetUpBlendRequest> requests;
+        std::vector<RagdollNativeGetUpNodeResult> result;
+        std::vector<std::size_t> keyframed;
+        std::optional<std::size_t> reset;
+        std::unordered_set<std::uint32_t> nodes, bodies;
+        const bool hasBodies = std::any_of(plan.mNodes.begin(), plan.mNodes.end(),
+            [](const auto& node) { return node.mBodyRecord.has_value(); });
+        auto filters = hasBodies ? captureInternalCollisionFilters() : std::vector<RagdollInternalBodyFilter>{};
+        bool changedFilters = false;
+        for (const auto& node : plan.mNodes)
+        {
+            require(nodes.insert(node.mNodeRecord).second, "duplicate GetUp scene node");
+            require(node.mCollision == RagdollGetUpCollision::None || node.mCollision == RagdollGetUpCollision::Ordinary
+                || node.mCollision == RagdollGetUpCollision::Blend, "invalid GetUp collision kind");
+            if (!node.mBodyRecord)
+            {
+                require(!node.mControllerRecord, "GetUp controller without an owned body");
+                if (node.mCollision == RagdollGetUpCollision::Blend)
+                    result.push_back({node.mNodeRecord, RagdollNativeGetUpBlendDisposition::MissingController});
+                continue;
+            }
+            require(node.mCollision != RagdollGetUpCollision::None && bodies.insert(*node.mBodyRecord).second,
+                "missing or shared GetUp collision body");
+            const auto owned = std::find_if(mImpl->mBodies.begin(), mImpl->mBodies.end(),
+                [&](const auto& body) { return body.mRecord == *node.mBodyRecord && body.mNodeRecord == node.mNodeRecord; });
+            require(owned != mImpl->mBodies.end(), "GetUp body/attachment identity mismatch");
+            const std::size_t index = std::size_t(owned - mImpl->mBodies.begin());
+            if (node.mBodyRecord == plan.mVelocityResetBody) reset = index;
+            const bool blend = std::any_of(mImpl->mBlendTargets.begin(), mImpl->mBlendTargets.end(),
+                [&](const auto& target) { return target.mNode == node.mNodeRecord; });
+            require(blend == (node.mCollision == RagdollGetUpCollision::Blend), "GetUp collision identity mismatch");
+            const auto controller = std::find_if(mImpl->mBlendControllers.begin(), mImpl->mBlendControllers.end(),
+                [&](const auto& value) { return value.mAttachedNode == node.mNodeRecord; });
+            const auto controllerRecord = controller == mImpl->mBlendControllers.end() ? std::nullopt
+                : std::optional<std::uint32_t>{controller->mRecord};
+            require(!blend || controllerRecord == node.mControllerRecord, "GetUp controller identity mismatch");
+            auto& word = filters[index].mPackedFilter;
+            const auto bodyIndex = (word >> 8) & 31;
+            if (blend)
+            {
+                // Original refresh precedes controller/duration gates. Bits6/7
+                // and all upper bits survive the layer8 rewrite.
+                word = (word & 0xffffffc8u) | 8u;
+                changedFilters = true;
+                requests.push_back({node.mNodeRecord, durations.mGetUp[bodyIndex], startKey, gains[bodyIndex]});
+                result.push_back({node.mNodeRecord, RagdollNativeGetUpBlendDisposition::MissingController});
+            }
+            else if (bodyIndex == 22)
+                keyframed.push_back(index);
+        }
+        require(!plan.mVelocityResetBody || reset, "GetUp reset body outside selected scene");
+        auto prepared = prepareNativeGetUpBlendsImpl(requests);
+        std::size_t request = 0;
+        for (auto& node : result)
+            if (request < requests.size() && node.mNodeRecord == requests[request].mNodeRecord)
+                node.mDisposition = prepared.second[request++];
+        auto nextFilters = changedFilters ? prepareInternalCollisionFilters(filters) : nullptr;
+        if (nextFilters)
+            require(validateInternalCollisionFilters(*nextFilters), "GetUp filters changed before publication");
+        // No allocating/validating work remains. This sparse publication avoids
+        // restore's unrelated pose, force-clear and activation side effects.
+        if (reset)
+        {
+            auto& owned = mImpl->mBodies[*reset];
+            if (owned.mMotion != RagdollNativeMotion::Keyframed)
+                mImpl->setMotion(owned, RagdollNativeMotion::Keyframed);
+            owned.mBody->setLinearVelocity(btVector3(0, 0, 0));
+            owned.mBody->setAngularVelocity(btVector3(0, 0, 0));
+            owned.mNativeLinearW = owned.mNativeAngularW = 0.f;
+            mImpl->activateGroup(owned.mActivationGroup);
+        }
+        for (const auto index : keyframed)
+            if (mImpl->mBodies[index].mMotion != RagdollNativeMotion::Keyframed)
+                mImpl->setMotion(mImpl->mBodies[index], RagdollNativeMotion::Keyframed);
+        if (nextFilters) publishInternalCollisionFilters(*nextFilters);
+        mImpl->mBlendControllers.swap(prepared.first);
         return result;
     }
 

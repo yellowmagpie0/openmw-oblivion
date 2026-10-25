@@ -1458,3 +1458,80 @@ namespace
         EXPECT_EQ(source.mReferenceCollisionSource->mNodeRecord, 1u);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRootBlendTest, GetUpUsesLiteralPrepassAndRecursiveChildOrder)
+    {
+        blend(2); blend(8);
+        auto plan = NifBullet::loadActorRagdollGetUpPlan(mFile, 0);
+        EXPECT_EQ(plan.mSourceHash, mFile.mHash);
+        ASSERT_TRUE(plan.mVelocityResetBody);
+        EXPECT_EQ(*plan.mVelocityResetBody,
+            static_cast<Nif::bhkCollisionObject*>(mNodes[2]->mCollision.getPtr())->mBody->mRecordIndex);
+        std::vector<unsigned> order;
+        for (const auto& node : plan.mNodes) order.push_back(node.mNodeRecord);
+        EXPECT_EQ(order, (std::vector<unsigned>{0, 1, 2, 4, 5, 3, 6, 8, 7}));
+        EXPECT_EQ(plan.mNodes[2].mCollision, NifBullet::RagdollGetUpCollision::Blend);
+        mNodes[1]->mChildren[0] = Nif::NiAVObjectPtr(nullptr);
+        plan = NifBullet::loadActorRagdollGetUpPlan(mFile, 0);
+        EXPECT_FALSE(plan.mVelocityResetBody);
+        order.clear(); for (const auto& node : plan.mNodes) order.push_back(node.mNodeRecord);
+        EXPECT_EQ(order, (std::vector<unsigned>{0, 1, 3, 6, 8, 7}));
+        // The plan owns identities after every source pointer is destroyed.
+        mFile.mRecords.clear();
+        EXPECT_EQ(plan.mNodes.back().mNodeRecord, 7u);
+    }
+
+    TEST_F(ActorRootBlendTest, GetUpTreatsGeometryAsLeafAndNullRootAsNoOp)
+    {
+        auto geometry = std::make_unique<Nif::NiTriShape>(); Nif::Testing::init(*geometry);
+        geometry->mRecordIndex = 0;
+        geometry->mCollision = mNodes[0]->mCollision;
+        mFile.mRoots.clear(); mFile.mRecords[0] = std::move(geometry);
+        auto plan = NifBullet::loadActorRagdollGetUpPlan(mFile, 0);
+        ASSERT_EQ(plan.mNodes.size(), 1u); EXPECT_FALSE(plan.mVelocityResetBody);
+        EXPECT_EQ(plan.mNodes[0].mCollision, NifBullet::RagdollGetUpCollision::Ordinary);
+        plan = NifBullet::loadActorRagdollGetUpPlan(mFile, std::nullopt);
+        EXPECT_TRUE(plan.mNodes.empty()); EXPECT_FALSE(plan.mVelocityResetBody);
+    }
+
+    TEST_F(ActorRootBlendTest, GetUpSelectsFirstAttachedBlendControllerIndependentlyOfTarget)
+    {
+        blend(2);
+        auto& ignored = add<Nif::NiKeyframeController>(); Nif::Testing::init(ignored);
+        auto& first = add<Nif::bhkBlendController>(); Nif::Testing::init(first);
+        auto& second = add<Nif::bhkBlendController>(); Nif::Testing::init(second);
+        ignored.mNext = Nif::NiTimeControllerPtr(&first);
+        first.mNext = Nif::NiTimeControllerPtr(&second);
+        first.mTarget = Nif::NiObjectNETPtr(mNodes[8]);
+        mNodes[2]->mController = Nif::NiTimeControllerPtr(&ignored);
+        const auto plan = NifBullet::loadActorRagdollGetUpPlan(mFile, 0);
+        EXPECT_EQ(plan.mNodes[2].mControllerRecord, first.mRecordIndex);
+        // Missing body retains controller selection; physical admission decides
+        // whether that continuation can be represented by an owned graph.
+        static_cast<Nif::bhkCollisionObject*>(mNodes[2]->mCollision.getPtr())->mBody = Nif::bhkWorldObjectPtr(nullptr);
+        const auto bodyless = NifBullet::loadActorRagdollGetUpPlan(mFile, 0);
+        EXPECT_FALSE(bodyless.mNodes[2].mBodyRecord);
+        EXPECT_EQ(bodyless.mNodes[2].mControllerRecord, first.mRecordIndex);
+    }
+
+    TEST_F(ActorRootBlendTest, GetUpRejectsForeignReferencesCyclesAndAliasedSceneNodes)
+    {
+        mNodes[8]->mChildren = {Nif::NiAVObjectPtr(mNodes[0])};
+        EXPECT_THROW(NifBullet::loadActorRagdollGetUpPlan(mFile, 0), std::runtime_error);
+        mNodes[8]->mChildren.clear();
+        mNodes[7]->mChildren = {Nif::NiAVObjectPtr(mNodes[8])};
+        EXPECT_THROW(NifBullet::loadActorRagdollGetUpPlan(mFile, 0), std::runtime_error);
+        mNodes[7]->mChildren.clear();
+        Nif::NiNode foreign; Nif::Testing::init(foreign); foreign.mRecordIndex = 0;
+        mNodes[1]->mChildren[0] = Nif::NiAVObjectPtr(&foreign);
+        EXPECT_THROW(NifBullet::loadActorRagdollGetUpPlan(mFile, 0), std::runtime_error);
+        mNodes[1]->mChildren[0] = Nif::NiAVObjectPtr(mNodes[2]);
+        blend(2);
+        auto& controller = add<Nif::NiKeyframeController>(); Nif::Testing::init(controller);
+        controller.mNext = Nif::NiTimeControllerPtr(&controller);
+        mNodes[2]->mController = Nif::NiTimeControllerPtr(&controller);
+        EXPECT_THROW(NifBullet::loadActorRagdollGetUpPlan(mFile, 0), std::runtime_error);
+    }
+}

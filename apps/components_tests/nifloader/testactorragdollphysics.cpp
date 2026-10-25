@@ -6763,3 +6763,128 @@ namespace
         EXPECT_FLOAT_EQ(actor.captureNativeBlendStates()[1].mGains.mHierarchy, .7f);
     }
 }
+
+namespace
+{
+    TEST_F(ActorRagdollPhysicsTest, GetUpRootPublishesLiveFilterPolicyAndOnlySelectedVelocityReset)
+    {
+        mGraph.mSourceHash = "GetUp source";
+        const auto source = mGraph.mBodies.front();
+        mGraph.mBodies.clear(); mPoses.clear();
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            auto body = source; body.mRecord = 12 + i; body.mNodeRecord = 20 + i;
+            body.mBone = "body" + std::to_string(i);
+            body.mInfoFilter = {13, 0, 0};
+            if (i < 2) body.mBlend = NifBullet::RagdollBlendDefinition{30 + i, 8, .9f, .8f};
+            if (i == 0) body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+                78, 20, 0xd, 1.f, 0.f, 0.f, 1.f, {{0.f, 1.f, 1.f}}};
+            mGraph.mBodies.push_back(body);
+            mPoses.emplace_back(btQuaternion::getIdentity(), btVector3(i * 5, 0, 2));
+        }
+        const auto masks = permissiveInternalFilter();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1, nullptr, &masks);
+        auto words = actor.captureInternalCollisionFilters();
+        words[0].mPackedFilter = 0xa5c01fcd; // Live ID31, not authored ID0.
+        words[1].mPackedFilter = 0xa5c001cd;
+        words[2].mPackedFilter = 0xa5c016cd;
+        words[3].mPackedFilter = 0xa5c001cd;
+        auto filters = actor.prepareInternalCollisionFilters(words);
+        ASSERT_TRUE(actor.commitInternalCollisionFilters(*filters));
+        auto velocities = actor.captureNativePackedVelocities();
+        for (auto& state : velocities) state.mVelocities = {{1,2,3,99}, {-1,4,5,-99}};
+        actor.restoreNativePackedVelocities(velocities);
+        const std::array<NifBullet::RagdollNativeVelocitySetupRequest, 1> request{{{20, {1,2,3,4}, 1}}};
+        actor.prepareNativeVelocityControllers(request);
+        const auto generated = actor.captureNativeVelocityControllers();
+        for (auto* object : actor.collisionObjects())
+        {
+            auto* body = btRigidBody::upcast(object);
+            body->applyCentralForce(btVector3(2,3,4)); body->applyTorque(btVector3(5,6,7));
+            body->forceActivationState(ISLAND_SLEEPING);
+        }
+        NifBullet::RagdollGetUpPlan plan{mGraph.mSourceHash, 13, {
+            {20, NifBullet::RagdollGetUpCollision::Blend, 12, 78},
+            {21, NifBullet::RagdollGetUpCollision::Blend, 13, {}},
+            {22, NifBullet::RagdollGetUpCollision::Ordinary, 14, {}}}};
+        const auto controller = actor.captureNativeBlendControllers()[0].mState;
+        auto durations = ESM4::InitialPhysicalBlendDurationTables;
+        auto gains = ESM4::InitialPhysicalBlendGainTable; gains[31] = {.25f, .75f};
+        const auto result = actor.setupNativeGetUp(plan, durations, gains, 1.f);
+        ASSERT_EQ(result.size(), 2u);
+        EXPECT_EQ(result[0].mDisposition, NifBullet::RagdollNativeGetUpBlendDisposition::Disabled);
+        EXPECT_EQ(result[1].mDisposition, NifBullet::RagdollNativeGetUpBlendDisposition::MissingController);
+        const auto changed = actor.captureInternalCollisionFilters();
+        EXPECT_EQ(changed[0].mPackedFilter, 0xa5c01fc8u);
+        EXPECT_EQ(changed[1].mPackedFilter, 0xa5c001c8u);
+        EXPECT_EQ(changed[2], words[2]); EXPECT_EQ(changed[3], words[3]);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, controller);
+        EXPECT_EQ(actor.captureNativeVelocityControllers()[0].mState, generated[0].mState);
+        const auto modes = actor.captureNativeMotionModes();
+        EXPECT_EQ(modes[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        EXPECT_EQ(modes[1].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(modes[2].mMotion, NifBullet::RagdollNativeMotion::Keyframed);
+        EXPECT_EQ(modes[3].mMotion, NifBullet::RagdollNativeMotion::Dynamic);
+        const auto after = actor.captureNativePackedVelocities();
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            auto* body = btRigidBody::upcast(actor.collisionObjects()[i]);
+            EXPECT_EQ(after[i].mVelocities, i == 1 ? ESM4::PhysicalWorldSceneVelocities{} : velocities[i].mVelocities);
+            EXPECT_EQ(actor.capture()[i].mPose, mPoses[i]);
+            EXPECT_EQ(body->getTotalForce(), btVector3(2,3,4)); EXPECT_EQ(body->getTotalTorque(), btVector3(5,6,7));
+        }
+        EXPECT_EQ(actor.collisionObjects()[3]->getActivationState(), ISLAND_SLEEPING);
+        durations.mGetUp[31] = .25f;
+        ASSERT_EQ(actor.setupNativeGetUp(plan, durations, gains, 1.f)[0].mDisposition,
+            NifBullet::RagdollNativeGetUpBlendDisposition::Started);
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mKeys[1].mGains,
+            (ESM4::PhysicalBlendGains{.25f, .75f}));
+        EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState.mTiming.mStartKey, 1.f);
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, GetUpRootRejectsWholeMalformedSetupBeforeAnyPublication)
+    {
+        auto& body = mGraph.mBodies.front(); body.mNodeRecord = 8;
+        body.mBlend = NifBullet::RagdollBlendDefinition{30, 8, .9f, .8f};
+        body.mBlendController = NifBullet::RagdollBlendControllerDefinition{
+            78, 8, 0xd, 1.f, 0.f, 0.f, 1.f, {{0.f, 1.f, 1.f}}};
+        const auto masks = permissiveInternalFilter();
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1, nullptr, &masks);
+        const NifBullet::RagdollGetUpPlan valid{mGraph.mSourceHash, 12, {
+            {8, NifBullet::RagdollGetUpCollision::Blend, 12, 78}}};
+        const auto before = actor.captureNativeBlendControllers()[0].mState;
+        const auto words = actor.captureInternalCollisionFilters();
+        for (unsigned fault = 0; fault < 9; ++fault)
+        {
+            auto plan = valid; auto durations = ESM4::InitialPhysicalBlendDurationTables;
+            auto gains = ESM4::InitialPhysicalBlendGainTable; float start = 0;
+            switch (fault)
+            {
+                case 0: plan.mSourceHash = "foreign"; break;
+                case 1: plan.mNodes.push_back(plan.mNodes.front()); break;
+                case 2: plan.mNodes.front().mBodyRecord = 999; break;
+                case 3: plan.mNodes.front().mControllerRecord = 999; break;
+                case 4: plan.mNodes.front().mCollision = NifBullet::RagdollGetUpCollision::Ordinary; break;
+                case 5: plan.mVelocityResetBody = 999; break;
+                case 6: plan.mNodes.front().mBodyRecord.reset(); break;
+                case 7: durations.mGetUp[0] = std::numeric_limits<float>::infinity(); break;
+                case 8: start = std::numeric_limits<float>::infinity(); break;
+            }
+            EXPECT_THROW(actor.setupNativeGetUp(plan, durations, gains, start), std::invalid_argument) << fault;
+            EXPECT_EQ(actor.captureNativeBlendControllers()[0].mState, before) << fault;
+            EXPECT_EQ(actor.captureInternalCollisionFilters(), words) << fault;
+            EXPECT_EQ(actor.captureNativeMotionModes()[0].mMotion, NifBullet::RagdollNativeMotion::Dynamic) << fault;
+        }
+    }
+
+    TEST_F(ActorRagdollPhysicsTest, GetUpNullAndCollisionlessPlansNeedNoFilterPolicy)
+    {
+        NifBullet::ActorRagdollPhysics actor(mGraph, mWorld, 1.f, mPoses, 1, -1);
+        NifBullet::RagdollGetUpPlan plan{mGraph.mSourceHash, {}, {}};
+        const auto durations = ESM4::InitialPhysicalBlendDurationTables;
+        const auto gains = ESM4::InitialPhysicalBlendGainTable;
+        EXPECT_TRUE(actor.setupNativeGetUp(plan, durations, gains, 0).empty());
+        plan.mNodes.push_back({8, NifBullet::RagdollGetUpCollision::None, {}, {}});
+        EXPECT_TRUE(actor.setupNativeGetUp(plan, durations, gains, 0).empty());
+    }
+}

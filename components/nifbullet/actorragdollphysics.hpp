@@ -292,6 +292,12 @@ namespace NifBullet
         Started, MissingBlend, MissingController, Disabled,
     };
 
+    struct RagdollNativeGetUpNodeResult
+    {
+        std::uint32_t mNodeRecord;
+        RagdollNativeGetUpBlendDisposition mDisposition;
+    };
+
     struct RagdollNativeHitBlendSetupRequest
     {
         std::uint32_t mNodeRecord;
@@ -584,6 +590,15 @@ namespace NifBullet
         // mode. startKey=1 is retained even when it exceeds the duration.
         std::vector<RagdollNativeGetUpBlendDisposition> prepareNativeGetUpBlends(
             std::span<const RagdollNativeGetUpBlendRequest> requests);
+        // Full root policy for admitted body/controller identities. Resolve
+        // durations/gains from current owned packed filters, not authored words.
+        // Stage every curve/filter/motion request before sparse publication.
+        // Requires configured native internal masks and the exclusive World
+        // barrier; preserves unselected forces, poses, activation and velocities.
+        // Bodyless authored controllers are outside this owner's admission.
+        std::vector<RagdollNativeGetUpNodeResult> setupNativeGetUp(const RagdollGetUpPlan& plan,
+            const ESM4::PhysicalBlendDurationTables& durations,
+            const ESM4::PhysicalBlendGainTable& gains, float startKey);
         // Atomic owned setup for already admitted body nodes and Down durations.
         // Read current damping and archived dynamic mass, create at the head or
         // retain existing target/list position. No body force, wake or pose write.
@@ -768,6 +783,8 @@ namespace NifBullet
         void applyNativeForcesImpl(std::span<const RagdollNativeForceRequest> requests, bool allowRepeatedBodies);
         std::pair<std::vector<RagdollNativeBlendControllerState>, std::vector<RagdollNativeHitBlendDisposition>>
             prepareNativeHitBlendsImpl(std::span<const RagdollNativeHitBlendSetupRequest> requests) const;
+        std::pair<std::vector<RagdollNativeBlendControllerState>, std::vector<RagdollNativeGetUpBlendDisposition>>
+            prepareNativeGetUpBlendsImpl(std::span<const RagdollNativeGetUpBlendRequest> requests) const;
         std::vector<RagdollNativeVelocityControllerState> prepareNativeHitVelocityControllersImpl(
             std::span<const RagdollNativeHitVelocitySetupRequest> requests) const;
         struct Impl;

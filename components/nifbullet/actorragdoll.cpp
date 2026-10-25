@@ -383,6 +383,81 @@ namespace NifBullet
         return std::nullopt;
     }
 
+    RagdollGetUpPlan loadActorRagdollGetUpPlan(
+        Nif::FileView file, std::optional<std::uint32_t> rootRecord)
+    {
+        require((file.getVersion() == 0x14000004 || file.getVersion() == Nif::NIFFile::VER_OB)
+            && file.getBethVersion() <= 16, "unsupported NIF version");
+        RagdollGetUpPlan result{file.getHash(), std::nullopt, {}};
+        if (!rootRecord) return result;
+        require(*rootRecord < file.numRecords(), "GetUp root outside source file");
+        const auto member = [&](const Nif::Record* record) {
+            require(record && record->mRecordIndex < file.numRecords()
+                && file.getRecord(record->mRecordIndex) == record, "GetUp reference outside source file");
+        };
+        const auto firstChild = [&](const Nif::NiAVObject* object) -> const Nif::NiAVObject* {
+            member(object);
+            const auto* node = dynamic_cast<const Nif::NiNode*>(object);
+            if (!node) return nullptr;
+            require(node->mChildren.size() <= 0xffff, "GetUp child array exceeds native extent");
+            if (node->mChildren.empty() || node->mChildren.front().empty()) return nullptr;
+            member(node->mChildren.front().getPtr());
+            return node->mChildren.front().getPtr();
+        };
+        const auto* root = dynamic_cast<const Nif::NiAVObject*>(file.getRecord(*rootRecord));
+        member(root);
+        const Nif::NiAVObject* resetNode = nullptr;
+        if (const auto* first = firstChild(root)) resetNode = firstChild(first);
+        std::vector<const Nif::NiAVObject*> pending{root};
+        std::unordered_set<const Nif::NiAVObject*> visited;
+        while (!pending.empty())
+        {
+            const auto* node = pending.back(); pending.pop_back();
+            member(node);
+            require(visited.insert(node).second, "cyclic or shared GetUp scene node");
+            RagdollGetUpNode selected{node->mRecordIndex, RagdollGetUpCollision::None, {}, {}};
+            if (!node->mCollision.empty())
+            {
+                member(node->mCollision.getPtr());
+                if (const auto* collision = dynamic_cast<const Nif::bhkCollisionObject*>(node->mCollision.getPtr()))
+                {
+                    selected.mCollision = dynamic_cast<const Nif::bhkBlendCollisionObject*>(collision)
+                        ? RagdollGetUpCollision::Blend : RagdollGetUpCollision::Ordinary;
+                    if (!collision->mBody.empty())
+                    {
+                        member(collision->mBody.getPtr());
+                        require(dynamic_cast<const Nif::bhkRigidBody*>(collision->mBody.getPtr()),
+                            "GetUp collision body is not an admitted rigid body");
+                        selected.mBodyRecord = collision->mBody->mRecordIndex;
+                        if (node == resetNode) result.mVelocityResetBody = selected.mBodyRecord;
+                    }
+                    if (selected.mCollision == RagdollGetUpCollision::Blend)
+                    {
+                        std::unordered_set<const Nif::NiTimeController*> chain;
+                        for (auto controller = node->mController; !controller.empty(); controller = controller->mNext)
+                        {
+                            member(controller.getPtr());
+                            require(chain.insert(controller.getPtr()).second, "cyclic GetUp controller chain");
+                            if (dynamic_cast<const Nif::bhkBlendController*>(controller.getPtr()))
+                            {
+                                selected.mControllerRecord = controller->mRecordIndex;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            result.mNodes.push_back(selected);
+            if (const auto* branch = dynamic_cast<const Nif::NiNode*>(node))
+            {
+                require(branch->mChildren.size() <= 0xffff, "GetUp child array exceeds native extent");
+                for (auto it = branch->mChildren.rbegin(); it != branch->mChildren.rend(); ++it)
+                    if (!it->empty()) pending.push_back(it->getPtr());
+            }
+        }
+        return result;
+    }
+
     std::optional<std::uint32_t> findWeaponScabbard(
         Nif::FileView file, std::optional<std::uint32_t> rootRecord)
     {
