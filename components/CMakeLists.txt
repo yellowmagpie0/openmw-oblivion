@@ -256,6 +256,7 @@ add_component_dir (esm4
     loadfact
     ability
     magiccaster
+    combatmagicprofile
     combatstylepolicy
     combatsettings
     fatigueexpenditure

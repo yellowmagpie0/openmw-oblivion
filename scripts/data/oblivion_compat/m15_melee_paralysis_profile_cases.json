@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "m15_melee_paralysis_profile",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "compiled_paralysis": {
+    "code": "PARA",
+    "school": 3,
+    "base_cost": 0.0,
+    "data": 48,
+    "flags": 16777587,
+    "resistance": 66,
+    "counters": [
+      1095783747,
+      1280332612
+    ]
+  },
+  "compiled_source": {
+    "path": "build/oblivion-compat/m15/S3/authority-draft/compiled-effect-default-arguments-01/report.json",
+    "sha256": "74e29aba76f4901ada4cdd2e2957eea6c2e44b23f71be53eb1400df16088aae7",
+    "bytes": 30296
+  },
+  "loaded_profile": {
+    "flags": "01000d73",
+    "school": 3,
+    "static_actor_value": 48,
+    "resistance_actor_value": 66
+  },
+  "supported_spell": {
+    "type": 0,
+    "cost": 0,
+    "level": 0,
+    "flags": 1,
+    "effects": [
+      {
+        "code": "PARA",
+        "range": 0,
+        "area": 0,
+        "duration": 10,
+        "magnitude": "Ignored by native NoMagnitude: effective1",
+        "actor_value": "Ignored by compiled static ActorValue: effective48",
+        "script_effect": false
+      }
+    ]
+  },
+  "selection": {
+    "key": "content:oblivion.esm:000137",
+    "missing_spell": "Compiled fallback constructor shape",
+    "existing_spell": "Require supported typed shape",
+    "other_form_type": "Original SpellItem RTTI fails and selects fallback",
+    "deleted_spell": "Fork loader tombstone has no winning Spell, so fallback; original deleted-record loader is not exercised here",
+    "effect": "Require exactly one winning typed PARA definition with DATA; missing/deleted/ambiguous definitions remain unsupported"
+  },
+  "cases": [
+    "Compiled01000173 and loaded01000D73 self-cast matrices match completely in2700 cases after removing declared flag input.",
+    "Nine original initializer prefix cases: absent, non-Spell and actual constructed SpellItem across three x87 controls.",
+    "Original171-case fallback constructor and768-case native loader-merge evidence are reused.",
+    "Component guard validates supported Spell shape, native-suppressed quantities, prepared flags/data and explicit unsupported-domain variants.",
+    "Five actual ESMStore loader cases cover shifted resolved base index, unrelated plugin-local IDs, existing-key overrides, deletion, winning effect properties, ambiguous codes and other default form types."
+  ],
+  "limits": [
+    "Unsupported means outside this fork owner contract; it does not imply that original Oblivion rejects those authored spells or flags.",
+    "This preflight does not construct or publish a native form, select a caster spell, own an effect or alter RNG.",
+    "Authored Spell lookup uses existing canonical keys. This chunk does not change the fork index-zero header convention or verify original plugin-header interpretation.",
+    "No new normal-input, physical reaction, presentation or fresh-process gameplay acceptance is claimed."
+  ]
+}

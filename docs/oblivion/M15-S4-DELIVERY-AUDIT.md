@@ -13241,3 +13241,51 @@ paralysis/recovery, presentation and the remaining S4 runtime gates remain open.
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-MELEE-CASTER-POWER-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_melee_caster_power_cases.json).
+
+
+## Default melee paralysis profile and winning-store preflight
+
+The narrow self-PARA owner now has a profile guard and winning-store preflight.
+It requires a single winning typed PARA definition, applies the verified native
+loaded-flag merge to compiled flags `0x01000173`/static AV48, and accepts the
+verified compiled or vanilla loaded `0x01000D73` profile with school 3 and
+resistance AV66. Missing, deleted, ambiguous or unsupported definitions remain
+guarded. No authored record, form, selected spell, actor state or RNG is changed.
+
+Default `content:oblivion.esm:000137` absence selects the original fallback shape.
+An existing winning Spell must match type 0, cost 0, level 0, flag 1 and one self
+PARA effect with area 0/duration 10 and no script effect. Native NoMagnitude and
+static ActorValue suppress authored magnitude/AV fields. Other authored spell
+or flag behavior remains unsupported by this owner; this does not mean that
+original Oblivion rejects those variants. Existing canonical-key overrides are
+covered; index-zero header conventions are unchanged.
+
+Original initializer `0x0041C7FC` executes actual `0x009832E6` RTTI and branch
+selection in nine cases: absent, non-Spell and constructed SpellItem, under
+three x87 controls. The selected SpellItem remains unchanged; null/non-Spell
+reaches the fallback call. Attempt 01's unprepared registration/synchronization
+fixture failure is retained. Final 02 deliberately stops at that fallback call,
+combining this prefix evidence with the existing 171-case original constructor
+and explicit 137 ID operand audit. It does not establish original registry or
+deleted-record loading behavior.
+
+The full original self-cast matrix under compiled flags passes **2,700 cases**.
+After removing only its declared extra flag input, the entire corpus is
+byte-identical to the retained winning-flag matrix, including duration,
+selection, requests and events. Compiled input arguments and loaded merge come
+from the retained 161-case initializer capture and 768-case original merge probe.
+
+At tested parent `339dec10fea33cd2b81bf24cb60317bd31e7ff92` and dirty source fingerprint
+`c467a69711bf04482a6ab90222c36a38adb1f8d1863e299f3935a4efe1bd36e2`, checks pass **3,087 full normal component tests**,
+**938 ESM4 sanitizer tests**, and **1,926 full engine tests in each build**.
+All inventories match XML with no failures or skips. ASan/UBSan halt on errors;
+leak checks are disabled. Four new component tests cover the profile contract;
+five actual-loader cases cover overrides, tombstones, shifted resolved indices,
+unrelated IDs, winning properties and ambiguous codes. Fork tombstone handling
+is a World/store result, not an original-game loader probe.
+
+Production mastery contact admission using this preflight/casting power,
+physical paralysis/recovery, presentation and remaining S4 runtime gates remain
+open. **Full M15S4 remains incomplete.** See the
+[verification receipt](M15-MELEE-PARALYSIS-PROFILE-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_melee_paralysis_profile_cases.json).
