@@ -162,6 +162,103 @@ TEST_F(NativeIdleResourceTest, ExactPathsDoNotBorrowStemWinnerAndSampleRealParse
     EXPECT_EQ(a->sources(), count);
 }
 
+TEST_F(NativeIdleResourceTest, BatchPublishesDistinctAndRepeatedAliasesTogetherWithoutPlayback)
+{
+    auto a = animation();
+    auto one = a->acquireNativeIdleResource("one/same.kf");
+    auto two = a->acquireNativeIdleResource("two/same.kf");
+    ASSERT_TRUE(one); ASSERT_TRUE(two);
+    const auto original = one->metadata();
+    const MWRender::Animation::NativeIdleResource* resources[] = {one.get(), two.get(), one.get()};
+    auto pending = a->prepareNativeIdleSources(resources); ASSERT_TRUE(pending);
+    ASSERT_EQ(pending->size(), 3);
+    EXPECT_NE(pending->group(0), pending->group(1));
+    EXPECT_EQ(pending->group(0), pending->group(2));
+    EXPECT_EQ(pending->model(1).value(), "meshes/two/same.kf");
+    EXPECT_EQ(pending->fileHash(0), one->fileHash());
+    auto boundMetadata = original;
+    boundMetadata.mGroup = pending->group(0);
+    EXPECT_EQ(pending->metadata(0), boundMetadata);
+    EXPECT_THROW(pending->group(3), std::out_of_range);
+    EXPECT_EQ(a->sources(), 0); EXPECT_FALSE(a->reactionRoot());
+    EXPECT_FALSE(a->hasAnimation(pending->group(0)));
+    EXPECT_FALSE(a->hasAnimation(pending->group(1)));
+    const auto* callbacks = a->mBone->getUpdateCallback();
+    ASSERT_TRUE(pending->commit());
+    EXPECT_FALSE(pending->isValid()); EXPECT_FALSE(pending->commit());
+    EXPECT_EQ(a->sources(), 2); EXPECT_EQ(a->reactionRoot(), 4);
+    EXPECT_EQ(a->mBone->getUpdateCallback(), callbacks);
+    EXPECT_FALSE(a->isPlaying(pending->group(0))); EXPECT_FALSE(a->isPlaying(pending->group(1)));
+    a->sample(pending->group(0)); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+    a->sample(pending->group(1)); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 17);
+    auto reused = a->prepareNativeIdleSources(resources); ASSERT_TRUE(reused);
+    auto independent = a->prepareNativeIdleSource(*one); ASSERT_TRUE(independent);
+    ASSERT_TRUE(reused->commit()); EXPECT_EQ(a->sources(), 2);
+    EXPECT_TRUE(independent->isValid()); EXPECT_TRUE(independent->commit());
+    EXPECT_EQ(one->metadata(), original);
+}
+
+TEST_F(NativeIdleResourceTest, BatchKeepsFirstRootIncludingNullAndExistingBinding)
+{
+    auto a = animation();
+    auto missing = a->acquireNativeIdleResource("missingroot.kf");
+    auto one = a->acquireNativeIdleResource("one/same.kf");
+    auto trackless = a->acquireNativeIdleResource("empty.kf");
+    ASSERT_TRUE(missing); ASSERT_TRUE(one); ASSERT_TRUE(trackless);
+    const MWRender::Animation::NativeIdleResource* nullFirst[] = {missing.get(), one.get()};
+    auto unbound = a->prepareNativeIdleSources(nullFirst); ASSERT_TRUE(unbound); ASSERT_TRUE(unbound->commit());
+    EXPECT_FALSE(a->reactionRoot());
+    const MWRender::Animation::NativeIdleResource* rootFirst[] = {trackless.get(), missing.get(), one.get()};
+    auto b = animation(); auto bound = b->prepareNativeIdleSources(rootFirst);
+    ASSERT_TRUE(bound); ASSERT_TRUE(bound->commit()); EXPECT_EQ(b->reactionRoot(), 4);
+    auto stillNull = a->prepareNativeIdleSources(rootFirst); ASSERT_TRUE(stillNull); ASSERT_TRUE(stillNull->commit());
+    EXPECT_FALSE(a->reactionRoot());
+}
+
+TEST_F(NativeIdleResourceTest, FailedOrStaleBatchCannotPublishEarlierEntries)
+{
+    auto a = animation();
+    auto one = a->acquireNativeIdleResource("one/same.kf");
+    auto two = a->acquireNativeIdleResource("two/same.kf");
+    ASSERT_TRUE(one); ASSERT_TRUE(two);
+    const MWRender::Animation::NativeIdleResource* invalid[] = {one.get(), nullptr};
+    EXPECT_FALSE(a->prepareNativeIdleSources(invalid));
+    EXPECT_EQ(a->sources(), 0); EXPECT_FALSE(a->reactionRoot());
+    const MWRender::Animation::NativeIdleResource* resources[] = {one.get(), two.get()};
+    auto pending = a->prepareNativeIdleSources(resources); ASSERT_TRUE(pending);
+    const auto oneGroup = pending->group(0); const auto twoGroup = pending->group(1);
+    a->source("meshes/same.kf", twoGroup);
+    const auto competitorRoot = a->reactionRoot();
+    ASSERT_EQ(competitorRoot, 4);
+    EXPECT_FALSE(pending->commit()); EXPECT_FALSE(a->prepareNativeIdleSources(resources));
+    EXPECT_FALSE(a->hasAnimation(oneGroup)); EXPECT_EQ(a->sources(), 1); EXPECT_EQ(a->reactionRoot(), competitorRoot);
+    auto b = animation(); auto cleared = b->prepareNativeIdleSources(resources); ASSERT_TRUE(cleared);
+    b->clear(); EXPECT_FALSE(cleared->commit()); EXPECT_EQ(b->sources(), 0);
+    auto replaced = b->prepareNativeIdleSources(resources); ASSERT_TRUE(replaced);
+    b->replaceRoot(); EXPECT_FALSE(replaced->commit()); EXPECT_EQ(b->sources(), 0);
+    auto c = animation(); auto expired = c->prepareNativeIdleSources(resources); ASSERT_TRUE(expired);
+    c = nullptr; EXPECT_FALSE(expired->isValid()); EXPECT_FALSE(expired->commit());
+}
+
+TEST_F(NativeIdleResourceTest, BatchUsesBothRetainedVersionsWithoutLookingUpReplacedFile)
+{
+    auto a = animation(); auto old = a->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(old);
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    auto current = a->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(current);
+    EXPECT_NE(old->fileHash(), current->fileHash());
+    std::filesystem::remove(mFixture.mDirectory / "meshes/one/same.kf");
+    mFixture.mResources.clearCache();
+    const MWRender::Animation::NativeIdleResource* resources[] = {old.get(), current.get()};
+    auto pending = a->prepareNativeIdleSources(resources); ASSERT_TRUE(pending);
+    EXPECT_EQ(pending->model(0), pending->model(1));
+    EXPECT_NE(pending->group(0), pending->group(1));
+    EXPECT_NE(pending->fileHash(0), pending->fileHash(1));
+    old.reset(); current.reset();
+    ASSERT_TRUE(pending->commit()); EXPECT_EQ(a->sources(), 2);
+    a->sample(pending->group(0)); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+    a->sample(pending->group(1)); EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 27);
+}
+
 TEST_F(NativeIdleResourceTest, MissingAndAmbiguousFilesCannotFallBackOrPublish)
 {
     auto a = animation(); a->directory(); ASSERT_TRUE(a->getControllerSequenceMetadata("same"));

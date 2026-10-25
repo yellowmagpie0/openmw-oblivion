@@ -14350,3 +14350,39 @@ Editable cases: [m15_native_getup_retirement_cases.json](../../scripts/data/obli
 Evidence: [M15-NATIVE-GETUP-RETIREMENT-VERIFICATION.json](M15-NATIVE-GETUP-RETIREMENT-VERIFICATION.json).
 Tested source fingerprint: `8c884af22bd85c374127d1528704fef26f989b89a0f48d0948f9b100c8124d74`
 on parent `bbb80a0a90d72333a3d44bb3e80ef6bd4f035e61`.
+
+### Guarded batch preparation of retained GetUp sources
+
+Renderer preparation can now stage several retained KF sources against one
+scene/actor/source-generation snapshot and publish their aliases in one commit.
+Previously, committing the first of several independent preparations invalidated
+the others. The existing single-source interface delegates to the same batch
+implementation. Preparation changes no live aliases, root binding or callbacks;
+commit registers sources without starting playback, advancing clocks or emitting
+process actions. Caller order determines the first new sequence root, including
+a null root. Duplicate aliases can share adapter sources without merging native
+request/resource/sequence identities or clocks.
+
+Four new tests cover ordered multi-source publication and duplicate reuse,
+first/null/existing root binding, rollback for invalid or stale batches, and two
+retained versions of one path after replacement and file removal. Real parsed KF
+tracks sample the expected distinct transforms through headless OSG callbacks.
+Acquired metadata remains unchanged; bound metadata carries its renderer alias.
+The initial normal/sanitized selections each passed 26 of 28 tests and exposed two
+incorrect new fixture assertions about alias rewriting and the competing source's
+own root binding. Those failed runs remain retained; only the assertions changed.
+
+Final normal and sanitized runs each pass **1,982 engine tests**, with matching
+inventories/XML and no failures or skips. All **28** native idle/GetUp tests also
+pass with ASan leak detection enabled and UBSan halting. Full sanitizer coverage
+uses the documented unrelated suite-leak exception. Final incremental builds
+report no warnings. Component and Python sources are unchanged in this chunk.
+
+This closes source-batch preparation only. Combined graph/resource/source/layer
+publication, actual GetUp start/frame/completion, renderer restoration and natural
+recovery remain open. It is not canonical shared-save or normal-input acceptance,
+and **M15S4 is not delivered**.
+
+Evidence: [M15-NATIVE-GETUP-SOURCE-BATCH-VERIFICATION.json](M15-NATIVE-GETUP-SOURCE-BATCH-VERIFICATION.json).
+Tested source fingerprint: `7ec8c8f44373a70d7d018383507e93be902f2779f3c17560fe4ac18e79d07303`
+on parent `da8643790b783dbb28574abc5894220f98415fc1`.

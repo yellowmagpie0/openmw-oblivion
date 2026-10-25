@@ -621,6 +621,30 @@ namespace MWRender
         std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(std::string_view model) const;
         static std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(
             Resource::ResourceSystem& resources, std::string_view model);
+        class PreparedNativeIdleSources
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedNativeIdleSources(std::unique_ptr<Data> data);
+            friend class Animation;
+        public:
+            ~PreparedNativeIdleSources();
+            PreparedNativeIdleSources(const PreparedNativeIdleSources&) = delete;
+            PreparedNativeIdleSources& operator=(const PreparedNativeIdleSources&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+            std::size_t size() const noexcept;
+            const std::string& group(std::size_t index) const;
+            const VFS::Path::Normalized& model(std::size_t index) const;
+            const std::string& fileHash(std::size_t index) const;
+            const SceneUtil::ControllerSequenceMetadata& metadata(std::size_t index) const;
+        };
+        // Stage retained resources in caller order over one source snapshot.
+        // One guarded commit publishes every alias and the first sequence root.
+        // Duplicate aliases may share renderer sources; this does not merge
+        // caller-owned request/resource/sequence identities or clocks.
+        std::unique_ptr<PreparedNativeIdleSources> prepareNativeIdleSources(
+            std::span<const NativeIdleResource* const> resources);
         class PreparedNativeIdleSource
         {
             struct Data;

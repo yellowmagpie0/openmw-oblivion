@@ -1051,30 +1051,34 @@ namespace MWRender
         return std::shared_ptr<const NativeIdleResource>(new NativeIdleResource(path, frames));
     }
 
-    struct Animation::PreparedNativeIdleSource::Data
+    struct Animation::PreparedNativeIdleSources::Data
     {
+        struct Entry
+        {
+            VFS::Path::Normalized mModel;
+            std::string mGroup;
+            std::shared_ptr<AnimSource> mSource;
+        };
         Animation* mOwner;
         std::weak_ptr<const char> mIdentity;
         osg::ref_ptr<osg::Group> mRoot;
         MWWorld::Ptr mActor;
         std::uint64_t mGeneration;
-        VFS::Path::Normalized mModel;
-        std::string mGroup;
-        std::shared_ptr<AnimSource> mSource;
+        std::vector<Entry> mEntries;
         AnimSourceList mSources;
         std::unordered_set<std::string> mSupported;
         std::map<std::string, std::shared_ptr<AnimSource>, std::less<>> mIdleSources;
         std::optional<NativeReactionBinding> mReactionBinding;
         osg::ref_ptr<osg::Node> mAccumRoot;
-        bool mReuse = false;
+        bool mChanged = false;
         bool mConsumed = false;
     };
 
-    Animation::PreparedNativeIdleSource::PreparedNativeIdleSource(std::unique_ptr<Data> data)
+    Animation::PreparedNativeIdleSources::PreparedNativeIdleSources(std::unique_ptr<Data> data)
         : mData(std::move(data)) {}
-    Animation::PreparedNativeIdleSource::~PreparedNativeIdleSource() = default;
+    Animation::PreparedNativeIdleSources::~PreparedNativeIdleSources() = default;
 
-    bool Animation::PreparedNativeIdleSource::isValid() const noexcept
+    bool Animation::PreparedNativeIdleSources::isValid() const noexcept
     {
         const auto* data = mData.get();
         if (!data || data->mConsumed || data->mIdentity.expired()) return false;
@@ -1085,12 +1089,12 @@ namespace MWRender
             && owner.mNativeIdleSourceGeneration == data->mGeneration;
     }
 
-    bool Animation::PreparedNativeIdleSource::commit() noexcept
+    bool Animation::PreparedNativeIdleSources::commit() noexcept
     {
         if (!isValid()) return false;
         auto& data = *mData;
         auto& owner = *data.mOwner;
-        if (!data.mReuse)
+        if (data.mChanged)
         {
             owner.mAnimSources.swap(data.mSources);
             owner.mSupportedAnimations.swap(data.mSupported);
@@ -1104,26 +1108,31 @@ namespace MWRender
         return true;
     }
 
-    const std::string& Animation::PreparedNativeIdleSource::group() const { return mData->mGroup; }
-    const VFS::Path::Normalized& Animation::PreparedNativeIdleSource::model() const { return mData->mModel; }
-    const std::string& Animation::PreparedNativeIdleSource::fileHash() const
-    { return mData->mSource->mKeyframes->mFileHash; }
-    const SceneUtil::ControllerSequenceMetadata& Animation::PreparedNativeIdleSource::metadata() const
-    { return mData->mSource->mKeyframes->mControllerSequences.front(); }
+    std::size_t Animation::PreparedNativeIdleSources::size() const noexcept { return mData->mEntries.size(); }
+    const std::string& Animation::PreparedNativeIdleSources::group(std::size_t index) const
+    { return mData->mEntries.at(index).mGroup; }
+    const VFS::Path::Normalized& Animation::PreparedNativeIdleSources::model(std::size_t index) const
+    { return mData->mEntries.at(index).mModel; }
+    const std::string& Animation::PreparedNativeIdleSources::fileHash(std::size_t index) const
+    { return mData->mEntries.at(index).mSource->mKeyframes->mFileHash; }
+    const SceneUtil::ControllerSequenceMetadata& Animation::PreparedNativeIdleSources::metadata(std::size_t index) const
+    { return mData->mEntries.at(index).mSource->mKeyframes->mControllerSequences.front(); }
 
-    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(std::string_view model)
-    {
-        if (!mObjectRoot || mPtr.isEmpty()) return nullptr;
-        const auto resource = acquireNativeIdleResource(model);
-        return resource ? prepareNativeIdleSource(*resource) : nullptr;
-    }
-
-    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(
-        const NativeIdleResource& resource)
+    std::unique_ptr<Animation::PreparedNativeIdleSources> Animation::prepareNativeIdleSources(
+        std::span<const NativeIdleResource* const> resources)
     {
         if (!mObjectRoot || !mResourceSystem || mPtr.isEmpty()) return nullptr;
-        const auto& path = resource.mModel;
-        const auto& frames = resource.mFrames;
+        auto data = std::make_unique<PreparedNativeIdleSources::Data>();
+        data->mOwner = this;
+        data->mIdentity = mNativePhysicalSourceIdentity;
+        data->mRoot = mObjectRoot;
+        data->mActor = mPtr;
+        data->mGeneration = mNativeIdleSourceGeneration;
+        data->mSources = mAnimSources;
+        data->mSupported = mSupportedAnimations;
+        data->mIdleSources = mNativeIdleSources;
+        data->mAccumRoot = mAccumRoot;
+        data->mEntries.reserve(resources.size());
         const auto hex = [](std::string_view value) {
             constexpr char digits[] = "0123456789abcdef";
             std::string out;
@@ -1135,51 +1144,85 @@ namespace MWRender
             }
             return out;
         };
-        const std::string group = "native_idle_" + hex(path.value()) + "_" + hex(frames->mFileHash);
-        if (mLazyAnimSources.contains(group)) return nullptr;
-        auto data = std::make_unique<PreparedNativeIdleSource::Data>();
-        data->mOwner = this;
-        data->mIdentity = mNativePhysicalSourceIdentity;
-        data->mRoot = mObjectRoot;
-        data->mActor = mPtr;
-        data->mGeneration = mNativeIdleSourceGeneration;
-        data->mModel = path;
-        data->mGroup = group;
-        if (const auto found = mNativeIdleSources.find(group); found != mNativeIdleSources.end())
+        for (const auto* resource : resources)
         {
-            const auto winner = std::find_if(mAnimSources.rbegin(), mAnimSources.rend(), [&](const auto& source) {
-                return source->getTextKeys().findGroupStart(group) != source->getTextKeys().end();
-            });
-            if (winner == mAnimSources.rend() || *winner != found->second) return nullptr;
-            data->mSource = found->second;
-            data->mReuse = true;
-        }
-        else
-        {
-            if (mSupportedAnimations.contains(group)) return nullptr;
-            data->mSource = buildAnimSource(path, mObjectRoot->getName(), group, false, frames, false);
-            if (!data->mSource) return nullptr;
-            data->mSources = mAnimSources;
-            data->mSources.push_back(data->mSource);
-            data->mSupported = mSupportedAnimations;
-            data->mSupported.insert(group);
-            data->mIdleSources = mNativeIdleSources;
-            data->mIdleSources.emplace(group, data->mSource);
-            data->mReactionBinding = prepareNativeReactionBinding(data->mSource->mKeyframes->mControllerSequences);
-            data->mAccumRoot = mAccumRoot;
-            if (!data->mAccumRoot)
-                for (const auto name : {"bip01", "root bone"})
-                {
-                    const auto bone = getNodeMap().find(name);
-                    if (bone != getNodeMap().end()
-                        && std::any_of(frames->mKeyframeControllers.begin(), frames->mKeyframeControllers.end(),
-                            [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.first, name); }))
+            if (!resource) return nullptr;
+            const auto& path = resource->mModel;
+            const auto& frames = resource->mFrames;
+            const std::string group = "native_idle_" + hex(path.value()) + "_" + hex(frames->mFileHash);
+            if (mLazyAnimSources.contains(group)) return nullptr;
+            std::shared_ptr<AnimSource> source;
+            if (const auto found = data->mIdleSources.find(group); found != data->mIdleSources.end())
+            {
+                const auto winner = std::find_if(data->mSources.rbegin(), data->mSources.rend(), [&](const auto& entry) {
+                    return entry->getTextKeys().findGroupStart(group) != entry->getTextKeys().end();
+                });
+                if (winner == data->mSources.rend() || *winner != found->second) return nullptr;
+                source = found->second;
+            }
+            else
+            {
+                if (data->mSupported.contains(group)) return nullptr;
+                source = buildAnimSource(path, mObjectRoot->getName(), group, false, frames, false);
+                if (!source) return nullptr;
+                data->mSources.push_back(source);
+                data->mSupported.insert(group);
+                data->mIdleSources.emplace(group, source);
+                // Preserve the first newly registered sequence's root even
+                // when it resolves to null. Later entries cannot replace it.
+                if (!data->mReactionBinding)
+                    data->mReactionBinding = prepareNativeReactionBinding(source->mKeyframes->mControllerSequences);
+                if (!data->mAccumRoot)
+                    for (const auto name : {"bip01", "root bone"})
                     {
-                        data->mAccumRoot = bone->second;
-                        break;
+                        const auto bone = getNodeMap().find(name);
+                        if (bone != getNodeMap().end()
+                            && std::any_of(frames->mKeyframeControllers.begin(), frames->mKeyframeControllers.end(),
+                                [&](const auto& entry) { return Misc::StringUtils::ciEqual(entry.first, name); }))
+                        {
+                            data->mAccumRoot = bone->second;
+                            break;
+                        }
                     }
-                }
+                data->mChanged = true;
+            }
+            data->mEntries.push_back({path, group, std::move(source)});
         }
+        return std::unique_ptr<PreparedNativeIdleSources>(new PreparedNativeIdleSources(std::move(data)));
+    }
+
+    struct Animation::PreparedNativeIdleSource::Data
+    {
+        std::unique_ptr<PreparedNativeIdleSources> mBatch;
+    };
+    Animation::PreparedNativeIdleSource::PreparedNativeIdleSource(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Animation::PreparedNativeIdleSource::~PreparedNativeIdleSource() = default;
+    bool Animation::PreparedNativeIdleSource::isValid() const noexcept
+    { return mData && mData->mBatch->isValid(); }
+    bool Animation::PreparedNativeIdleSource::commit() noexcept
+    { return mData && mData->mBatch->commit(); }
+    const std::string& Animation::PreparedNativeIdleSource::group() const { return mData->mBatch->group(0); }
+    const VFS::Path::Normalized& Animation::PreparedNativeIdleSource::model() const { return mData->mBatch->model(0); }
+    const std::string& Animation::PreparedNativeIdleSource::fileHash() const { return mData->mBatch->fileHash(0); }
+    const SceneUtil::ControllerSequenceMetadata& Animation::PreparedNativeIdleSource::metadata() const
+    { return mData->mBatch->metadata(0); }
+
+    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(std::string_view model)
+    {
+        if (!mObjectRoot || mPtr.isEmpty()) return nullptr;
+        const auto resource = acquireNativeIdleResource(model);
+        return resource ? prepareNativeIdleSource(*resource) : nullptr;
+    }
+
+    std::unique_ptr<Animation::PreparedNativeIdleSource> Animation::prepareNativeIdleSource(
+        const NativeIdleResource& resource)
+    {
+        const NativeIdleResource* resources[] = {&resource};
+        auto batch = prepareNativeIdleSources(resources);
+        if (!batch) return nullptr;
+        auto data = std::make_unique<PreparedNativeIdleSource::Data>();
+        data->mBatch = std::move(batch);
         return std::unique_ptr<PreparedNativeIdleSource>(new PreparedNativeIdleSource(std::move(data)));
     }
 
