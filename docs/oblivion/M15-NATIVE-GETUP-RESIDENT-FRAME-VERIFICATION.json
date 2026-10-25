@@ -1,0 +1,728 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Resident native clamp pre-query/key/manager composition and corrected positive-retirement offset branch; no new live GetUp dispatcher",
+  "parent": "c496f96a9eb8c940b5c52dc46c1a0c9794f9842d",
+  "tested_source": {
+    "head": "c496f96a9eb8c940b5c52dc46c1a0c9794f9842d",
+    "source_fingerprint": "05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2"
+  },
+  "source_files": [
+    {
+      "path": "components/esm4/nativeclampframe.hpp",
+      "sha256": "20e00ed026a7cf24808b4d76ea2e7ee680c97328a35dd10e3c762c0cbfa8d8bb"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_resident_frame_cases.json",
+      "sha256": "b055ff71947b35429ea85c3ac9b7c0dbf6d16ea9da918cab746032f676c860ca"
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeclampsequence.cpp",
+      "sha256": "378b16a948b7bec9b3d9c04446ad04476dca1726c67f68296e7db7b3b4f3104d"
+    },
+    {
+      "path": "components/CMakeLists.txt",
+      "sha256": "80919c9c7343ec1bf8534eadf160eb7a7ce5debc207512afaf5f5ce753914918"
+    },
+    {
+      "path": "components/esm4/nativeclampsequence.cpp",
+      "sha256": "5e23f0ec4ae3cf52539e8305209ad3a71fe97601b852b4f0e7c448a39d19acb3"
+    },
+    {
+      "path": "components/esm4/physicalcombat.cpp",
+      "sha256": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051"
+    }
+  ],
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_full_frame": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame04-report05.json",
+      "sha256": "2efa3c36e0782bf18f82594e7bd1634735f4151e4bbbf8d8e8462dcf928364a8"
+    },
+    "profiles": 36,
+    "requests": 144,
+    "selected_current_sequence_frames": 4419,
+    "path": "476D10 through actual47C990 scene and NI manager/6CA950 to477AD0 completion suffix",
+    "frequency": [
+      0.7,
+      1,
+      2
+    ],
+    "updates_between_requests": [
+      0,
+      1,
+      3,
+      80
+    ],
+    "x87_control_word": "007F",
+    "ni_states_in_selected_comparison": [
+      1,
+      3,
+      0
+    ],
+    "scope": "Actual constructors/classification/request/cache/clone/scene/manager/completion instructions; empty controlled sets. Supplied valid constructed parent/child topology, retained resource identities, actor non-locomotion+scale, action get/write effects and heap/OS boundaries. No asset IO, physical recovery or game process."
+  },
+  "positive_branch": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/retirement-branch01-report02.json",
+      "sha256": "e8c54321ca4080ff9997ab3e547035800ec6a44e1e6a60354b4e96310190e9f9"
+    },
+    "profiles": 2,
+    "old_offset_bits": 3229334446,
+    "positive_offset_bits": 3229334446,
+    "immediate_offset_bits": 3229334444,
+    "rule": "Positive6C9CCD retains offset. Immediate6C9CEF and state3 expiry correct weighted/frequency-lastInput+offset."
+  },
+  "supplemental_view_prefix": {
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/view-prefix-report01.json",
+      "sha256": "8827e97f5bed7bf2f7a630684115b459462b026917ecaf5ad7561a36625c0631"
+    },
+    "profiles": 288,
+    "scope": "Actual6545E0 entry to654613 or early return with real actor vtables/Player selector; no downstream recovery or full outer caller execution.",
+    "finding": "Selected Player AnimData equal to5CC skips, including null equality;5DC override takes precedence. This does not establish natural full Player view policy."
+  },
+  "native_comparisons": {
+    "resident": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-comparison02.json",
+        "sha256": "73ead20ce1e120844bea0623402077c26bafc72aa5e1625f7e4e11785b1070cb"
+      },
+      "result": {
+        "passed": true,
+        "frames": 4419,
+        "original_profiles": 36,
+        "requests": 144,
+        "scope": "Current primary sequence NI state, six timing bit fields and resident Start progress. Retired primary uses manager kernel. Full native graph/GC/action effects are observed by oracle but not compared by this per-sequence driver.",
+        "sources_before": {
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare02.cpp": "f7f46610106489ab419ea5db98bbbcdff50a5f997612524ceaf40501ee6b1ae0",
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-corpus02.txt": "edad7b380c8468cc3ad6cf55b39fedd75907553157a815048961d51c13570919",
+          "components/esm4/physicalcombat.cpp": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051",
+          "components/esm4/nativeclampsequence.cpp": "5e23f0ec4ae3cf52539e8305209ad3a71fe97601b852b4f0e7c448a39d19acb3",
+          "components/esm4/nativeclampframe.hpp": "20e00ed026a7cf24808b4d76ea2e7ee680c97328a35dd10e3c762c0cbfa8d8bb",
+          "components/esm4/nativeclampsequence.hpp": "035a356ab61bce2ca31f65734c447e08a923e8523d7711d4f45e6ab5aba24764",
+          "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09"
+        },
+        "runs": [
+          {
+            "mode": "normal",
+            "returncode": 0,
+            "stdout": "4419 frames, 0 mismatches\n",
+            "stderr": "",
+            "binary_sha256": "9365fdc8ebabe46bba44322a7321dbe458570d0b236953f0a3f839b798a3b3da"
+          },
+          {
+            "mode": "sanitized",
+            "returncode": 0,
+            "stdout": "4419 frames, 0 mismatches\n",
+            "stderr": "",
+            "binary_sha256": "3cd401454094bdb5f51739557ee073284f858770a0feb0c15a7d8a962e09d4db"
+          }
+        ],
+        "sources_after": {
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare02.cpp": "f7f46610106489ab419ea5db98bbbcdff50a5f997612524ceaf40501ee6b1ae0",
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-corpus02.txt": "edad7b380c8468cc3ad6cf55b39fedd75907553157a815048961d51c13570919",
+          "components/esm4/physicalcombat.cpp": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051",
+          "components/esm4/nativeclampsequence.cpp": "5e23f0ec4ae3cf52539e8305209ad3a71fe97601b852b4f0e7c448a39d19acb3",
+          "components/esm4/nativeclampframe.hpp": "20e00ed026a7cf24808b4d76ea2e7ee680c97328a35dd10e3c762c0cbfa8d8bb",
+          "components/esm4/nativeclampsequence.hpp": "035a356ab61bce2ca31f65734c447e08a923e8523d7711d4f45e6ab5aba24764",
+          "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09"
+        }
+      }
+    },
+    "legacy_retirement": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-report01.json",
+        "sha256": "af6f246acf5a2e6114b02d34d0709dcd07638c951e9978e0fd0292e0efb9de26"
+      },
+      "result": {
+        "passed": true,
+        "retirement_profiles": 336,
+        "retirement_manager_updates": 1680,
+        "reused_cached_start_updates": 12,
+        "numeric_boundaries": 10,
+        "runs": [
+          {
+            "mode": "normal",
+            "returncode": 0,
+            "stdout": "336 retirements, 1680 manager updates, 12 cached updates, 10 numeric boundaries matched\n",
+            "stderr": "",
+            "binary_sha256": "76c384ad42b5670d7fca64eb556cc736d084b2052264e375781c436014b58e53"
+          },
+          {
+            "mode": "sanitized",
+            "returncode": 0,
+            "stdout": "336 retirements, 1680 manager updates, 12 cached updates, 10 numeric boundaries matched\n",
+            "stderr": "",
+            "binary_sha256": "fcefd99e2f34917cbb6899602396f8fa31ac2cad93c094334eca53f790e4e116"
+          }
+        ],
+        "sources": {
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01.cpp": "ca001c223681aaaefe9de3ba50d8ba961c5af7706d79b70a0d5cc9cd8c86e7b1",
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01.py": "371464dc4bb20178cd37746e875257f81ed9016625a6bba09ebffd6483738324",
+          "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-corpus01.txt": "7c5e3e6f976a36d41faac61ee954f0b16f649403990d7498aaef62a66abde0c5",
+          "components/esm4/physicalcombat.cpp": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051",
+          "components/esm4/nativeclampsequence.cpp": "5e23f0ec4ae3cf52539e8305209ad3a71fe97601b852b4f0e7c448a39d19acb3",
+          "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09"
+        }
+      }
+    },
+    "legacy_frame": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression-report01.json",
+        "sha256": "3ac2b273b0464d44bcdac7e04fca1f51cc22dc52fb4d3b604be26b464776d5f6"
+      },
+      "result": {
+        "passed": true,
+        "profiles": 144,
+        "frames": 39459,
+        "runs": [
+          {
+            "mode": "normal",
+            "passed": true,
+            "returncode": 0,
+            "stdout": "39459 exact native clamp frames\n",
+            "stderr": "",
+            "binary_sha256": "8c86aa34c530105af524c875606da08faeabf4ff5e35f61e4672c96f023bae96"
+          },
+          {
+            "mode": "sanitized",
+            "passed": true,
+            "returncode": 0,
+            "stdout": "39459 exact native clamp frames\n",
+            "stderr": "",
+            "binary_sha256": "1a476e9a8d86082af9469d54e5f2d23f2fb0f819edffe028e35f47e6c87b4ea5"
+          }
+        ],
+        "source_hashes": {
+          "components/esm4/nativeclampsequence.cpp": "5e23f0ec4ae3cf52539e8305209ad3a71fe97601b852b4f0e7c448a39d19acb3",
+          "components/esm4/nativeclampsequence.hpp": "035a356ab61bce2ca31f65734c447e08a923e8523d7711d4f45e6ab5aba24764",
+          "components/esm4/nativesequencedeactivation.hpp": "3981ea46ab3224c0cbd61ff2000956dd88e195efeb425a070f6b92fe6bc83b09",
+          "components/esm4/physicalcombat.cpp": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression01.cpp": "09eaa977f1c8d71d8343af917cdf0c7a68d09e4fda65dd541ad2f0c3de36f547",
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression-corpus01.txt": "463dc85a010d868b07785750ce7cd4bb09cb63e32a944d36797615fa357c0838",
+          "build/oblivion-compat/m15/S4/native-getup-sequence-work-01/frame-report03.json": "f7eda68746cf757264b533cab475d25b8c6f74d6a80845fbd18e517e2e6b6339"
+        }
+      }
+    }
+  },
+  "checks": {
+    "normal": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/verification.json",
+        "sha256": "906af4818a973234a5ba952f83a644c3d7ea9d8a8380eba34b5c9fa0d770a582"
+      },
+      "source": {
+        "head": "c496f96a9eb8c940b5c52dc46c1a0c9794f9842d",
+        "source_fingerprint": "05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2"
+      },
+      "results": {
+        "components": {
+          "executed": 3163,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "79a05f0696e0a061018b0386dea8be2a6994c5a276b88975d430507f7bfd6d72",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "b2089979ed1a8b443c350f5c9337055a03bc2c04bdeceeffb0b3364584326153",
+          "inventory_sha256": "84b5a1377e31292fb17af579b0280f9241a6ddcac6a24da65e85c79a42f8d47f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1982,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "8b1a4284033066d39c04631522c0fe4d145a550ffbf3ada04db6922e8d3ff7c7",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "83cfb160c2561ec4ad0fada4f634f5abc350469e13699b500a3096bd38288e9b",
+          "inventory_sha256": "7e1737ea5f623e83e2958fcd97be8755c08febc0777c408e43a491b6d569f3c6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/verification.json",
+        "sha256": "3fc262bb70d34e98f422f042d88dd63820be8e1812ff65dca7274cf225b080e9"
+      },
+      "source": {
+        "head": "c496f96a9eb8c940b5c52dc46c1a0c9794f9842d",
+        "source_fingerprint": "05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2"
+      },
+      "results": {
+        "components": {
+          "executed": 3163,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "6203430a5a89bb87a4bc57631ec4110c1bf88d261b0bc15091d51a8df1ba6b86",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "1d1e3d6b032342841fa4cc2049ddaca0c2d476dd4529441e165c905409c5ed73",
+          "inventory_sha256": "d7fbdfaadeeee6a5ff72c29d74f8e6e7f62d5424956cea4781cfdb9e584697c2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 1982,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "91da21e7d7bde69690790fa05c7977f654f1186d722c4b9b5c7c7ba6b5bdb6c5",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "68009108fa1765b5c5811a1a47d26b0a4172fe683bcb0ecf25b364a25412b390",
+          "inventory_sha256": "7e1737ea5f623e83e2958fcd97be8755c08febc0777c408e43a491b6d569f3c6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused_leak": {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-leak-01/verified.json",
+        "sha256": "ec9ffb4b8a8583b30b3e8027274f0ac12487d79aac7dfdc0bec77db303c230b6"
+      },
+      "result": {
+        "executed": 3,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "ESM4NativeClampSequence.ResidentQueryPrimesConstructorHistoryBeforeManagerWithoutPublishingInfinity:ESM4NativeClampSequence.ResidentQueryReplacesCachedHistoryBeforeFirstManagerUpdate:ESM4NativeClampSequence.PositiveRetirementKeepsOffsetUntilImmediateDeactivation"
+      },
+      "source": {
+        "head": "c496f96a9eb8c940b5c52dc46c1a0c9794f9842d",
+        "source_fingerprint": "05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2"
+      },
+      "binary_sha256": "6203430a5a89bb87a4bc57631ec4110c1bf88d261b0bc15091d51a8df1ba6b86",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "full_sanitizer_leak_detection": false,
+  "full_sanitizer_note": "Full suites retain documented unrelated suite-leak exception (detect_leaks=0), UBSan halts. New focused3 tests and every standalone numerical comparison enable detect_leaks=1.",
+  "negative_controls": [
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-negative01.json",
+        "sha256": "57ddf049f2c2e557adfebc839e32a929ad114d804ac07e16f1b8cc159c9b41e8"
+      },
+      "frames": 1473,
+      "mismatches": 37,
+      "cause": "Applying narrower manager/key kernel as a whole resident frame omits49F4A0 pre-query; easeStart differs. No live GetUp caller used that omitted composition."
+    },
+    {
+      "receipt": {
+        "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-negative01.json",
+        "sha256": "6ce73fce9f277bafe784b3d31536fc940b7cd1787a830a8041d30884cc22481d"
+      },
+      "frames": 4419,
+      "mismatches": 3,
+      "cause": "Prior retirement planner corrected offset even for positive duration. Drift-bearing.7-frequency End frames expose this; corrected only immediate/expiry branch performs arithmetic."
+    }
+  ],
+  "retained_fixture_failure": "full-frame01 gave the accum-root node no parent; actual47C990 requires the declared valid parent relationship. full-frame02 and successors use actual constructed parent/child nodes with supplied valid links. No native game defect inferred.",
+  "transient_numeric_scope": "A cold frequency2 resident pre-query stores negative infinity in weighted time, clamps output to0, then the manager discards that history via its sentinel last-input branch. The combined planner preserves the clamped output and publishes finite final state. Non-discarded nonfinite results remain unsupported and are rejected.",
+  "validation_layers": {
+    "pure_timing_and_branches": true,
+    "full_native_scene_order_with_empty_controls": true,
+    "cpp_native_current_sequence_timing_and_resident_start_comparison": true,
+    "full_native_graph_or_action_publication_compared_to_cpp": false,
+    "live_engine_getup_creation_start_frame_restore": false,
+    "normal_input_and_canonical_save_restart_acceptance": false
+  },
+  "source_note": "No Python implementation or tests changed; this chunk does not claim a new Python run. Runtime schema remains72.",
+  "open": [
+    "Combined graph/resource/source/layer transaction, replacement/destruction and logical5 reset across physical4,0,1,2,3.",
+    "Actual GetUp start/frame/completion/action authority and renderer restoration.",
+    "Loaded-resource identity reconciliation and pending IO profile.",
+    "Natural recovery caller/root/FaceGen/constraint and Player view policy.",
+    "Remaining S4 input/device/FPS/audio/mastery/full-save acceptance matrix."
+  ],
+  "pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/before-positive-fix-nativeclampsequence.cpp",
+      "sha256": "61f04c367500c7559b2d2a9a19f85c989f171044845bbd02047cba86b5040a45"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/before-positive-fix-physicalcombat.cpp",
+      "sha256": "ba563ee1887c391536e18df5995fb1da3514f653d3e2cde3ab6a9fbf37924051"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/direct-callers01.json",
+      "sha256": "c710c4e8e7dc78a86e73e05fe8e9ce38f2cd529c8c590de0978d4dcdbce0dab2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/frame-direct-callers01.json",
+      "sha256": "65d5159a4484fe8079b787d915a51d43c36cdeda72011b73ecddb91eeba50513"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-corpus01.txt",
+      "sha256": "ca23646c08e5f22f2ec121010ce37e2abd8a65239d8740e795b7fa6a943ff84c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-index01.json",
+      "sha256": "8e9fe719a7e7901d1217eb23b77a2d0476964931eb95c97b4b105d7825218bfd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-negative01.cpp",
+      "sha256": "fc531a2c562186c270bfbb86f48113be5e37ca3b0310850f998513bfd3317d8a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-negative01.json",
+      "sha256": "57ddf049f2c2e557adfebc839e32a929ad114d804ac07e16f1b8cc159c9b41e8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame-baseline-negative01.log",
+      "sha256": "0c6610122aa6c1cbb06b5cdcac6549c607a4ddd304e1f42519dc33ccb65c831a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame01-attempt05.json",
+      "sha256": "7fcc28bccf3736eac74eacfec9e9773a215fa223626a94c57f0b53375a93c3bd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame01-run.log",
+      "sha256": "5996f955187e0566ff5609f64d1e2b61dae94ba63eda4950283497b0c24e0bb6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame01.py",
+      "sha256": "183057e00c5d136208d673633e5ee7dd34eaec144792840435f2f4b3fc426446"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame02-corpus05.json",
+      "sha256": "24925cd9785e69a4f127697c1d03fa505b1f6d63d45ea6f0288a86fccc7d8508"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame02-report05.json",
+      "sha256": "6a51e7421f657f1eebc515f8a9bfc359a847c6f26895257d250586ee592e7e1e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame02-run.log",
+      "sha256": "cff63ee86f3392ff0141594693f7c3e90c9232f6e06315a45bed1e0a89008089"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame02.py",
+      "sha256": "acca17b938fd4752e4e71158240898f48ec10bf129738b2c6b30a909e2f50a21"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame03-corpus05.json",
+      "sha256": "6e01dede6a2de50b4ed3b2c81c2c0d64d7494f076bd1381298e7a746249f0e65"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame03-report05.json",
+      "sha256": "947f3cef057a734059558149173b95da435600998ce7cdd8bf82132a1d6621b8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame03-run.log",
+      "sha256": "2253e223a86ca27efdc94795f178857f76cf13e5e357691afec4c57f9984b5b0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame03.py",
+      "sha256": "bf351cc700de8da3a8c2905f4f1a0f367c9d588998b6ac20945203e4aad0342a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame04-corpus05.json",
+      "sha256": "787e3aafd40402cc0bc9c21580fdfd424c6cbe34498e4cdb2d060117cb379e8c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame04-report05.json",
+      "sha256": "2efa3c36e0782bf18f82594e7bd1634735f4151e4bbbf8d8e8462dcf928364a8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame04-run.log",
+      "sha256": "e1f5d26e02c075f6f33ca137318f255d98fda41d91654370e20dc3f9c372a4fa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/full-frame04.py",
+      "sha256": "39097f81c889c8fb1907c92b152d8911f788e92654c3134762a76e5c0ec13434"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01-normal-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01-sanitized-build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01.cpp",
+      "sha256": "ca001c223681aaaefe9de3ba50d8ba961c5af7706d79b70a0d5cc9cd8c86e7b1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/compare01.py",
+      "sha256": "371464dc4bb20178cd37746e875257f81ed9016625a6bba09ebffd6483738324"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-corpus01.txt",
+      "sha256": "7c5e3e6f976a36d41faac61ee954f0b16f649403990d7498aaef62a66abde0c5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-index01.json",
+      "sha256": "8f61929a39689894bc44ba2debff315076fb779644e580b39289d90de3ef203b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-report01.json",
+      "sha256": "af6f246acf5a2e6114b02d34d0709dcd07638c951e9978e0fd0292e0efb9de26"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/comparison-run01.log",
+      "sha256": "82883cfe9e52cf7dcf2d7c9463b05ecb7e9772ca5a0e12c3e59caad98ea87cdb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/external-retirement-corpus04.json",
+      "sha256": "c31ff6ddd8eb91305111d49e4454eaa67fb8b5ecde2fbb58a1958efb27d354b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/external-retirement-corpus05.json",
+      "sha256": "9439ab44662f52f6464dce6c325df49970dece10c68275460b341674b9c9ffcc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression-corpus01.txt",
+      "sha256": "463dc85a010d868b07785750ce7cd4bb09cb63e32a944d36797615fa357c0838"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression-report01.json",
+      "sha256": "3ac2b273b0464d44bcdac7e04fca1f51cc22dc52fb4d3b604be26b464776d5f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression-run01.log",
+      "sha256": "3ac2b273b0464d44bcdac7e04fca1f51cc22dc52fb4d3b604be26b464776d5f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression01.cpp",
+      "sha256": "09eaa977f1c8d71d8343af917cdf0c7a68d09e4fda65dd541ad2f0c3de36f547"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/frame-regression01.py",
+      "sha256": "be14df92acb90a82afe13f017aab8a63393c3841fc9d9e8449f4624dfbd7d2db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/legacy-retirement-01/offset-boundary-corpus02.json",
+      "sha256": "db8f4589323cdd164af2d567b73e632f369a11bd38d724b99a5c908814773674"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/next-owner-notes.txt",
+      "sha256": "56cb7edb317d192f4f08103093940b413c2b434c85c6e8d90149bbf0c731343f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/pointer-references01.json",
+      "sha256": "d62898349aae4dd4fd6132398135a93f55471533f8f847007e7a976f15118412"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-build02-normal.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-build02-sanitized.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare01.cpp",
+      "sha256": "ff35771bf2ddb6d482fa815be2be8dd9ab8f329fe4adaae12dcf39fd327fb308"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare01.log",
+      "sha256": "80444c6760ddbccebe956b8f99c3d7defddae14c7b3917bba23c34fbd18bf51b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare02.cpp",
+      "sha256": "f7f46610106489ab419ea5db98bbbcdff50a5f997612524ceaf40501ee6b1ae0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-compare02.log",
+      "sha256": "f9b1097ddad79f6b784b3ae15789253363cfe8dc6f1e7ddb07154b79992d0817"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-comparison02.json",
+      "sha256": "73ead20ce1e120844bea0623402077c26bafc72aa5e1625f7e4e11785b1070cb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-corpus01.txt",
+      "sha256": "81b75804b81839d63a0ab1f3dec7d0e6ffc1cd4f59e908fa1242219f2e0387c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-corpus02.txt",
+      "sha256": "edad7b380c8468cc3ad6cf55b39fedd75907553157a815048961d51c13570919"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-index01.json",
+      "sha256": "ba621a434806aa245d2c137add1c7a7d0dddb5fa6fe7646e479e7a436f84aa7a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-negative01.json",
+      "sha256": "6ce73fce9f277bafe784b3d31536fc940b7cd1787a830a8041d30884cc22481d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-run02-normal.log",
+      "sha256": "f9b1097ddad79f6b784b3ae15789253363cfe8dc6f1e7ddb07154b79992d0817"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/resident-frame-run02-sanitized.log",
+      "sha256": "f9b1097ddad79f6b784b3ae15789253363cfe8dc6f1e7ddb07154b79992d0817"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/retirement-branch01-corpus02.json",
+      "sha256": "564b43d803c6d49bc93d427c9152abf8b2e81313feb035a60e7af7e11a128c18"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/retirement-branch01-report02.json",
+      "sha256": "e8c54321ca4080ff9997ab3e547035800ec6a44e1e6a60354b4e96310190e9f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/retirement-branch01-run.log",
+      "sha256": "91b26fc56233f37ece374d517931d7c61515d48ec0851527531a3dc3f690138c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/retirement-branch01.py",
+      "sha256": "4816f1bb95688857ae640aee58fcb7d46c1b690988ae3e246e3832b684cf474c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/verify-leak01.log",
+      "sha256": "589befa5898847df607272bb5c2df99512b59277cf74fd7f0b985a37c12eb564"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/verify-leak01.py",
+      "sha256": "c4823a65bde8dddabd8f6754a22954a78cf93b4d2c47f15e6f586c10fc8bc93f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/verify-resident02.log",
+      "sha256": "708976e23ec0eeb9bdf90faaf2216a3a771d3799cce92dbdfe1fb1be427596ae"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/verify-resident02.py",
+      "sha256": "7a81432d136b7032607a1f4493b3803cdd22228120dd869e7fd3f2896c6501cd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/view-prefix-corpus01.json",
+      "sha256": "da30e7186ebcdfd6d556127473f80acfb7a4e4b6eac319b587426b2baab4cc5c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/view-prefix-report01.json",
+      "sha256": "8827e97f5bed7bf2f7a630684115b459462b026917ecaf5ad7561a36625c0631"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-caller-view-work-01/view-prefix01.py",
+      "sha256": "55985668d0882397c15b7a76911758c3ab82049c811ff2730734ac5df27eacc2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/components-build.log",
+      "sha256": "f65f328425550b559c245224a85237ddedf553f434a447d120627314bb1d3816"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/components-inventory.txt",
+      "sha256": "84b5a1377e31292fb17af579b0280f9241a6ddcac6a24da65e85c79a42f8d47f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/components.log",
+      "sha256": "727f4703c8c93fd00a41efd93159d5d4c50f5ad3c8cf053165e770f05d31039e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/components.xml",
+      "sha256": "b2089979ed1a8b443c350f5c9337055a03bc2c04bdeceeffb0b3364584326153"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/engine-build.log",
+      "sha256": "7bb63d5d4e774df8f95de7e470784a53f66d613d4b381e8851e04cdee1f90233"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/engine-inventory.txt",
+      "sha256": "7e1737ea5f623e83e2958fcd97be8755c08febc0777c408e43a491b6d569f3c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/engine.log",
+      "sha256": "4d9601efde0a0d404d6b3433a23cc7b94a37c45f8388a3d5b1f3c6055b05b53b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/engine.xml",
+      "sha256": "83cfb160c2561ec4ad0fada4f634f5abc350469e13699b500a3096bd38288e9b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-normal-01/verification.json",
+      "sha256": "906af4818a973234a5ba952f83a644c3d7ea9d8a8380eba34b5c9fa0d770a582"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/components-build.log",
+      "sha256": "cc41d831d88915c4939e752d0f9d4384efcf59eed26fc98cf69ef6dcbbad1723"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/components-inventory.txt",
+      "sha256": "d7fbdfaadeeee6a5ff72c29d74f8e6e7f62d5424956cea4781cfdb9e584697c2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/components.log",
+      "sha256": "59759124aeea0f3826ad571a411e8b99f7cc7cf3a9e9295d39de05c72b141ecc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/components.xml",
+      "sha256": "1d1e3d6b032342841fa4cc2049ddaca0c2d476dd4529441e165c905409c5ed73"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/engine-build.log",
+      "sha256": "0c1af121078782639d992d6b3c814979a8b7838918c395d1ec5d16e0e69eae25"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/engine-inventory.txt",
+      "sha256": "7e1737ea5f623e83e2958fcd97be8755c08febc0777c408e43a491b6d569f3c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/engine.log",
+      "sha256": "a73202a527ce1c5b38f8141b18321c22475c26d272529ab0fcdcc4b3f3fe0468"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/engine.xml",
+      "sha256": "68009108fa1765b5c5811a1a47d26b0a4172fe683bcb0ecf25b364a25412b390"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-sanitized-01/verification.json",
+      "sha256": "3fc262bb70d34e98f422f042d88dd63820be8e1812ff65dca7274cf225b080e9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-leak-01/components.xml",
+      "sha256": "8fdeb3cb5a3a4b3dd5f9e8d10451c18918d342e58db6b052bfd3da6f69384fed"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-leak-01/inventory.log",
+      "sha256": "e96829c018ba956ee4572687d653b14d8bf494e9022179146e6ba19c790435f2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-leak-01/tests.log",
+      "sha256": "5414a171c9a336668f3ad1f202b6a356ee489a2debb780fe22a11e1121993a05"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resident-frame-leak-01/verified.json",
+      "sha256": "ec9ffb4b8a8583b30b3e8027274f0ac12487d79aac7dfdc0bec77db303c230b6"
+    }
+  ]
+}

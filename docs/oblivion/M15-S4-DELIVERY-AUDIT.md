@@ -14386,3 +14386,64 @@ and **M15S4 is not delivered**.
 Evidence: [M15-NATIVE-GETUP-SOURCE-BATCH-VERIFICATION.json](M15-NATIVE-GETUP-SOURCE-BATCH-VERIFICATION.json).
 Tested source fingerprint: `7ec8c8f44373a70d7d018383507e93be902f2779f3c17560fe4ac18e79d07303`
 on parent `da8643790b783dbb28574abc5894220f98415fc1`.
+
+### Resident GetUp query order and positive-retirement correction
+
+The resident timing planner now includes original `49F4A0/6C5FC0` at the old
+actor clock before key dispatch and the manager update at the new clock. The
+caller supplies both clocks and advances the shared actor clock once. First and
+cached resident queries can restore the last-input sentinel and replace the
+output that state1 aliases into easeStart. A frequency2 cold query temporarily
+stores negative infinity in weighted time; the subsequent manager first-input
+branch discards it. The combined planner retains the clamped query output and
+publishes finite final state. NI5 skips the query. Detached retirement tails
+continue through the existing manager/key kernel.
+
+This chunk also corrects the retirement planner introduced in `da8643790b`:
+positive `6C9CCD` retains offset; only immediate `6C9CEF` and eventual state3
+expiry perform the history/frequency correction. The earlier selected corpus
+did not expose the difference. Three drift-bearing frequency 0.7 End cases in
+the full frame corpus did. Direct original probes independently confirm the
+same input offset bits `3229334446` remain unchanged for positive duration and
+become `3229334444` for immediate deactivation. The held-block service already
+guards that operation to immediate/expiry paths and needs no corresponding edit.
+
+Thirty-six coupled original courses execute actual constructors, classification,
+request replacement/cache/clone/start, full `476D10`, real `47C990` scene/manager
+traversal and the completion suffix. They cover 144 requests for the same,
+alternating or distinct resources, frequencies 0.7/1/2 and zero/one/three/eighty
+updates between requests. Normal and leak-enabled sanitized C++ comparisons
+match **4,419** current-sequence frames: NI state, all six timing bit fields and
+resident Start progress. The original request cleanup and action effects are
+observed but are not implemented by this per-sequence planner. Resource-hit,
+actor-query/action and OS/heap boundaries remain supplied; scene links are valid
+constructed fixtures with empty controlled sets. This is not asset IO, physical
+recovery, a game process or normal-input acceptance.
+
+The retained negative controls expose 37 of 1,473 easeStart mismatches when the
+manager/key kernel is used without the resident query, and three of 4,419 frames
+with the overbroad positive-retirement correction. The first full-scene fixture
+had an invalid missing parent for its accum root; corrected successors retain a
+valid constructed parent/child topology. These failures remain in ignored
+evidence. A separate 288-profile original entry probe confirms that Player's
+selected AnimData equality with +5CC can skip recovery and that +5DC override
+takes precedence. It does not establish the full outer Player view policy.
+
+Final normal and sanitized runs each pass **3,163 component and 1,982 engine
+tests**, with exact inventories/XML, no failures and no skips. Three new focused
+component cases pass with leak detection enabled against the same freshly built
+sanitizer binary. Full suites retain the documented unrelated suite-leak
+exception. Reused original corpora still match in both builds: 336 retirements,
+1,680 manager updates, twelve cache-start updates, ten numeric boundaries and
+the prior 144-profile/39,459-frame regression. No Python implementation or tests
+changed, and runtime schema remains 72.
+
+No live GetUp caller is added. Combined ownership/source/layer publication,
+all-slot reset, natural start/frame/completion, renderer restoration and the
+remaining S4 input/device/FPS/audio/mastery/full-save matrix remain open.
+**M15S4 is not delivered.**
+
+Editable cases: [m15_native_getup_resident_frame_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_resident_frame_cases.json).
+Evidence: [M15-NATIVE-GETUP-RESIDENT-FRAME-VERIFICATION.json](M15-NATIVE-GETUP-RESIDENT-FRAME-VERIFICATION.json).
+Tested source fingerprint: `05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2`
+on parent `c496f96a9eb8c940b5c52dc46c1a0c9794f9842d`.

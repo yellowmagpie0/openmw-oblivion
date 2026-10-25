@@ -69,15 +69,20 @@ namespace ESM4
         if (state.mInactive) return state;
         if (state.mRetirement) throw std::invalid_argument("native clamp retirement requires a resident sequence");
         auto next = state;
-        next.mTiming = deactivateNativeSequenceTiming(next.mTiming, frequency);
         next.mTiming.mEasing = false;
+        // Positive6C9CCD retains offset. Only immediate6C9CEF and eventual
+        // state3 expiry perform the history/frequency correction.
         if (duration > 0)
         {
             next.mRetirement = MeleeSequenceRetirement{duration, {}};
             next.mTiming.mEaseStart.reset();
             next.mTiming.mEaseEnd = duration;
         }
-        else next.mInactive = true;
+        else
+        {
+            next.mTiming = deactivateNativeSequenceTiming(next.mTiming, frequency);
+            next.mInactive = true;
+        }
         return next;
     }
 

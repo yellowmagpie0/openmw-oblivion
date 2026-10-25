@@ -1,4 +1,5 @@
 #include "physicalcombat.hpp"
+#include "nativeclampframe.hpp"
 #include "nativesequencedeactivation.hpp"
 
 #include <algorithm>
@@ -750,6 +751,56 @@ namespace ESM4
         }
         result.mOutputTime = std::clamp(output, begin, end);
         return result;
+    }
+
+    NativeClampSequenceState advanceNativeResidentClampSequence(const NativeClampSequenceState& state,
+        float previousAnimationClock, float animationClock, float frequency, float begin, float end,
+        const std::array<float, 2>& keyTimes, float retirementDuration,
+        bool freezeSlot, std::optional<float> transitionFrame)
+    {
+        for (float value : {previousAnimationClock, animationClock, frequency, begin, end}) finite(value);
+        if (previousAnimationClock < 0 || animationClock < previousAnimationClock || frequency <= 0
+            || end < begin || !std::isfinite(end - begin) || state.mInactive || state.mRetirement)
+            throw std::invalid_argument("invalid native resident clamp frame");
+        auto next = state;
+        const float sentinel = -std::numeric_limits<float>::max();
+        for (auto* field : {&next.mTiming.mOffset, &next.mTiming.mEaseStart, &next.mTiming.mLastInput})
+            if (*field && **field == sentinel) field->reset();
+        validateNativeClampSequenceState(next, transitionFrame, previousAnimationClock);
+        if (!transitionFrame)
+        {
+            auto& timing = next.mTiming;
+            const float input = rounded(addSingle(previousAnimationClock, timing.mOffset.value_or(sentinel)));
+            // Original6C5FC0 stores delta, then keeps the PC24 product's
+            // extended exponent through FADD before storing weighted time.
+            const auto store = [](double value) {
+                if (std::abs(value) > std::numeric_limits<float>::max())
+                    return std::signbit(value) ? -std::numeric_limits<float>::infinity()
+                                               : std::numeric_limits<float>::infinity();
+                return static_cast<float>(value);
+            };
+            const float delta = timing.mLastInput ? store(addSingle(input, -double(*timing.mLastInput))) : input;
+            const float previous = timing.mLastInput ? timing.mWeightedTime : 0.f;
+            const float weighted = store(std::isfinite(delta)
+                ? addSingle(multiplySingle(frequency, delta), previous) : double(delta));
+            timing.mOutputTime = std::clamp(weighted, begin, end);
+            if (input == sentinel)
+            {
+                timing.mLastInput.reset();
+                // The manager's first-input branch discards this weighted
+                // value, even when the query temporarily stored infinity.
+                // Preserve its clamped output for the state1 alias below.
+                timing.mWeightedTime = 0;
+            }
+            else
+            {
+                finite(weighted);
+                timing.mLastInput = input;
+                timing.mWeightedTime = weighted;
+            }
+        }
+        return advanceNativeClampSequence(next, animationClock, frequency, begin, end,
+            keyTimes, retirementDuration, freezeSlot, transitionFrame);
     }
 
     MeleeSequenceTiming deactivateNativeSequenceTiming(const MeleeSequenceTiming& state, float frequency)

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "scope": "Resident clamp query/key/manager composition and positive-retirement correction; no new live dispatcher",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "precision": "x87 control word007F, PC24 significand with extended exponent",
+  "original_full_frame": {
+    "entry": "476D10",
+    "scene_update": "47C990",
+    "manager_update": "6CA950",
+    "completion_suffix": "477AD0",
+    "courses": [
+      "same resource four times",
+      "alternating two resources",
+      "four distinct resources"
+    ],
+    "updates_between_requests": [
+      0,
+      1,
+      3,
+      80
+    ],
+    "frequency": [
+      0.7,
+      1.0,
+      2.0
+    ],
+    "clock_start": 0.5,
+    "frame_duration": "binary32(1/60)",
+    "profiles": 36,
+    "requests": 144,
+    "selected_current_sequence_frames": 4419
+  },
+  "cases": [
+    {
+      "name": "constructor resident query",
+      "before": "all timing history at native sentinel",
+      "expected": "49F4A0/6C5FC0 runs at old clock, clamped output becomes0; manager state1 aliases easeStart to0. It must not retain sentinel easeStart."
+    },
+    {
+      "name": "cached resident query",
+      "before": "reset offset with retained last/weighted/output",
+      "expected": "Pre-query can restore the last-input sentinel, so manager first-input branch resets accumulation. Keep its queried output for easeStart."
+    },
+    {
+      "name": "transient query infinity",
+      "frequency": 2,
+      "query_weighted_bits": 4286578688,
+      "expected": "Original pre-query temporarily stores -infinity, clamps output to0, and the manager discards that weighted history. Supported final state remains finite; do not publish the intermediate."
+    },
+    {
+      "name": "positive retirement",
+      "input_offset_bits": 3229334446,
+      "frequency_bits": 1060320051,
+      "weighted_bits": 1060124467,
+      "last_input_bits": 1065073800,
+      "duration": 0.1,
+      "expected_offset_bits": 3229334446,
+      "expected_state": 3
+    },
+    {
+      "name": "immediate deactivation",
+      "input_offset_bits": 3229334446,
+      "frequency_bits": 1060320051,
+      "weighted_bits": 1060124467,
+      "last_input_bits": 1065073800,
+      "duration": 0,
+      "expected_offset_bits": 3229334444,
+      "expected_state": 0
+    }
+  ],
+  "retained_negative_controls": [
+    {
+      "name": "kernel used without resident query",
+      "frames": 1473,
+      "mismatches": 37,
+      "field": "easeStart"
+    },
+    {
+      "name": "resident query plus unconditional retirement correction",
+      "frames": 4419,
+      "mismatches": 3,
+      "corrected_rule": "Positive duration skips offset correction; immediate/expiry performs it."
+    }
+  ],
+  "boundaries": [
+    "Actual constructor/classification/request/cache/scene/manager/completion instructions execute with empty controlled blocks.",
+    "Valid scene parent/child links and retained references are supplied; no asset loading, physical recovery, input or rendered game process.",
+    "Resource4383B0 returns declared held resource identities; this does not establish loader or cache-hit ownership.",
+    "Actor non-locomotion branch, scale1, action get/write effects and OS/heap boundaries are supplied.",
+    "Full graph garbage collection and process publication are observed natively but not implemented by this per-resident planner.",
+    "Retired manager tails use the existing kernel; caller advances the shared actor clock once."
+  ],
+  "open": [
+    "Combined graph/resource/renderer lifecycle and all-slot publication.",
+    "Native recovery caller/root/constraint/Player view policy.",
+    "Natural start/frame/completion/restore and normal-input/full-save S4 acceptance."
+  ]
+}

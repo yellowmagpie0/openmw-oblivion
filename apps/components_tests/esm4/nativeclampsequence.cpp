@@ -1,5 +1,6 @@
 #include <components/esm4/nativesequencedeactivation.hpp>
 #include <components/esm4/nativeclampsequence.hpp>
+#include <components/esm4/nativeclampframe.hpp>
 
 #include <gtest/gtest.h>
 
@@ -222,4 +223,67 @@ TEST(ESM4NativeClampSequence, LargeFirstRetirementClockExpiresBeforeInputUpdate)
         EXPECT_EQ(state.mTiming.mEaseEnd, clock);
         EXPECT_NO_THROW(ESM4::validateNativeClampSequenceState(state, std::nullopt, clock));
     }
+}
+
+TEST(ESM4NativeClampSequence, ResidentQueryPrimesConstructorHistoryBeforeManagerWithoutPublishingInfinity)
+{
+    const float sentinel = -std::numeric_limits<float>::max();
+    for (float frequency : {.7f, 1.f, 2.f})
+        for (bool literalSentinels : {false, true})
+        {
+            ESM4::NativeClampSequenceState state;
+            state.mTiming.mEaseEnd = state.mTiming.mWeightedTime = state.mTiming.mOutputTime = sentinel;
+            if (literalSentinels)
+                state.mTiming.mOffset = state.mTiming.mEaseStart = state.mTiming.mLastInput = sentinel;
+            const auto old = state;
+            const float clock = std::bit_cast<float>(std::uint32_t{1057244228});
+            const auto frame = ESM4::advanceNativeResidentClampSequence(state, .5f, clock,
+                frequency, 0, 2, {0, 1}, .1f);
+            EXPECT_FALSE(frame.mStarted); EXPECT_FALSE(frame.mInactive); EXPECT_FALSE(frame.mRetirement);
+            EXPECT_EQ(std::bit_cast<std::uint32_t>(*frame.mTiming.mOffset), 3204727876u);
+            EXPECT_EQ(frame.mTiming.mEaseStart, 0.f);
+            EXPECT_EQ(frame.mTiming.mLastInput, 0.f);
+            EXPECT_EQ(frame.mTiming.mWeightedTime, 0.f);
+            EXPECT_EQ(frame.mTiming.mOutputTime, 0.f);
+            EXPECT_EQ(frame.mTiming.mEaseEnd, sentinel);
+            EXPECT_EQ(state, old);
+        }
+}
+
+TEST(ESM4NativeClampSequence, ResidentQueryReplacesCachedHistoryBeforeFirstManagerUpdate)
+{
+    // Original full-frame04: same-resource request1, three prior frames, frequency.7.
+    const auto value = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+    ESM4::NativeClampSequenceState state;
+    state.mTiming = {false, std::nullopt, std::nullopt, .1f,
+        value(1023969408), value(1019159936), value(1019159936)};
+    const auto frame = ESM4::advanceNativeResidentClampSequence(state, value(1057803468),
+        value(1058083088), .7f, 0, 2, {0, 1}, .1f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*frame.mTiming.mOffset), 3205566736u);
+    EXPECT_EQ(frame.mTiming.mEaseStart, 0.f);
+    EXPECT_EQ(frame.mTiming.mLastInput, 0.f);
+    EXPECT_EQ(frame.mTiming.mWeightedTime, 0.f);
+    EXPECT_EQ(frame.mTiming.mOutputTime, 0.f);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(frame.mTiming.mEaseEnd), 1059760810u);
+}
+
+TEST(ESM4NativeClampSequence, PositiveRetirementKeepsOffsetUntilImmediateDeactivation)
+{
+    const auto value = [](std::uint32_t bits) { return std::bit_cast<float>(bits); };
+    ESM4::NativeClampSequenceState state;
+    state.mTiming = {false, value(3229334446), value(1059928730), -std::numeric_limits<float>::max(),
+        value(1065073800), value(1060124467), value(1060124467)};
+    const auto old = state;
+    const auto positive = ESM4::retireNativeClampSequence(state, .7f, .1f);
+    EXPECT_FALSE(positive.mInactive); ASSERT_TRUE(positive.mRetirement);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*positive.mTiming.mOffset), 3229334446u);
+    EXPECT_FALSE(positive.mTiming.mEaseStart);
+    const auto immediate = ESM4::retireNativeClampSequence(state, .7f, 0);
+    EXPECT_TRUE(immediate.mInactive);
+    EXPECT_EQ(std::bit_cast<std::uint32_t>(*immediate.mTiming.mOffset), 3229334444u);
+    EXPECT_EQ(state, old);
+    EXPECT_THROW(ESM4::advanceNativeResidentClampSequence(positive, 5, 6, .7f, 0, 2, {0, 1}, .1f),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceNativeResidentClampSequence(immediate, 5, 6, .7f, 0, 2, {0, 1}, .1f),
+        std::invalid_argument);
 }

@@ -262,6 +262,7 @@ add_component_dir (esm4
     fatigueexpenditure
     physicalcombat
     nativeclampsequence
+    nativeclampframe
     nativesequencedeactivation
     nativeidlerequest
     animationblend
