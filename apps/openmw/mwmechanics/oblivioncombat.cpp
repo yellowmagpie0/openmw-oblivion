@@ -13,6 +13,7 @@
 #include <components/esm4/runtimereferences.hpp>
 #include <components/esm4/actorclock.hpp>
 #include <components/esm4/fatigueexpenditure.hpp>
+#include <components/esm4/nativeclampsequence.hpp>
 #include <components/misc/strings/algorithm.hpp>
 
 #include <algorithm>
@@ -2161,28 +2162,19 @@ namespace MWMechanics
                 throw std::invalid_argument("mismatched native melee reaction action");
             const auto& source = sourceFor(reaction.mAnimationGroup, firstPerson);
             if (!source.mReactionKeys) throw std::invalid_argument("native reaction has no Start/End keys");
-            auto& timing = reaction.mSequenceTiming;
-            if (!reaction.mRetirement && !freezeClock && !timing.mEasing && timing.mOffset)
+            const auto nextSequence = ESM4::advanceNativeClampSequence(
+                {reaction.mStarted, reaction.mSequenceTiming, reaction.mRetirement, reaction.mInactive},
+                viewClock, source.mFrequency, source.mBegin, source.mEnd, *source.mReactionKeys,
+                source.mRetirementDuration, freezeClock,
+                reaction.mPoseSnapshot ? std::optional(reaction.mPoseSnapshot->mDestinationFrame) : std::nullopt);
+            reaction.mStarted = nextSequence.mStarted;
+            reaction.mSequenceTiming = nextSequence.mTiming;
+            reaction.mRetirement = nextSequence.mRetirement;
+            reaction.mInactive = nextSequence.mInactive;
+            if (!reaction.mInactive)
             {
-                const auto progress = ESM4::advanceReactionSlot(
-                    reaction.mStarted, *timing.mOffset, viewClock, *source.mReactionKeys);
-                reaction.mStarted = progress.mStarted;
-                if (progress.mRetire)
-                {
-                    if (source.mRetirementDuration > 0)
-                        reaction.mRetirement = ESM4::RuntimeReactionRetirement{source.mRetirementDuration, {}};
-                    else reaction.mInactive = true;
-                }
-            }
-            if (!reaction.mInactive && reaction.mRetirement)
-                reaction.mInactive = !updateRetirement(timing, reaction.mAnimationTime,
-                    *reaction.mRetirement, source, viewClock);
-            else if (!reaction.mInactive)
-            {
-                timing = ESM4::updateMeleeSequenceTiming(timing, viewClock, source.mFrequency, source.mBegin, source.mEnd,
-                    reaction.mPoseSnapshot ? std::optional(reaction.mPoseSnapshot->mDestinationFrame) : std::nullopt);
-                if (!timing.mEasing) reaction.mPoseSnapshot.reset();
-                const float target = source.rendererTime(timing.mOutputTime);
+                if (!reaction.mSequenceTiming.mEasing) reaction.mPoseSnapshot.reset();
+                const float target = source.rendererTime(reaction.mSequenceTiming.mOutputTime);
                 if (target < reaction.mAnimationTime) throw std::invalid_argument("native reaction renderer rewind");
                 reaction.mAnimationTime = target;
             }

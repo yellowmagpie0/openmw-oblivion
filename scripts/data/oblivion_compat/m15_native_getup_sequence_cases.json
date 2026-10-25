@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "scope": "Native clamp sequence End detachment, retained retirement and request-completion evidence for GetUp integration",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "runtime_schema": 71,
+  "activation": {
+    "profiles": 864,
+    "views": [
+      "npc",
+      "fp",
+      "tp",
+      "menu_tp"
+    ],
+    "prior_slot_states": [
+      null,
+      1,
+      2
+    ],
+    "incoming_states": [
+      0,
+      1,
+      3
+    ],
+    "cycles": [
+      0,
+      2
+    ],
+    "blend_bytes": [
+      0,
+      3
+    ],
+    "freeze_C4": [
+      false,
+      true
+    ],
+    "x87_words": [
+      127,
+      639,
+      895
+    ],
+    "expected_fresh_slots": [
+      "selected-sequence",
+      null,
+      null,
+      null,
+      null
+    ],
+    "reset_order": [
+      4,
+      0,
+      1,
+      2,
+      3
+    ],
+    "exceptions": "An already-active cycle0 target can return before slot resets; the original instruction corpus retains these branches. Only resident slots are reset; already-detached manager tails are not a global cancellation."
+  },
+  "frame_courses": {
+    "profiles": 432,
+    "frame_updates": 118377,
+    "views": [
+      "npc",
+      "fp",
+      "tp",
+      "menu_tp"
+    ],
+    "frequencies": [
+      0.5,
+      1,
+      2
+    ],
+    "blend_bytes": [
+      0,
+      3,
+      128,
+      255
+    ],
+    "fps": [
+      30,
+      60,
+      144
+    ],
+    "x87_words": [
+      127,
+      639,
+      895
+    ],
+    "keys": {
+      "start": 0,
+      "end": 1
+    },
+    "kf_stop": 2,
+    "policy": 1,
+    "logical_slot": 5,
+    "secondary_request": false,
+    "expected_completion": {
+      "request_status": 3,
+      "request_retained": true,
+      "sequence_retained": true,
+      "process_action": -1,
+      "done": true
+    },
+    "duration_semantics": "Activation uses unsigned blend byte; retirement uses signed byte. End key detaches the slot before a positive retirement interval reaches inactivity. Clamped KF output alone is not request completion."
+  },
+  "cpp_comparison": {
+    "profiles": 144,
+    "frames_per_build": 39459,
+    "precision": "PC24/0x007f",
+    "fields": [
+      "native sequence state",
+      "offset",
+      "ease start",
+      "ease end",
+      "last input",
+      "weighted time",
+      "output time"
+    ],
+    "builds": [
+      "normal",
+      "ASan/UBSan with leak detection"
+    ]
+  },
+  "tests": {
+    "component_suite": "ESM4NativeClampSequence.*",
+    "focused_engine_cases": [
+      "OblivionWorldTest.ReactionFramesRetainOutgoingFadeAndRecoverActionOnlyOnFollowingPrefix",
+      "OblivionWorldTest.PlayerReactionFramesMatchOriginalIndependentViewClockSamples",
+      "OblivionWorldTest.FirstPersonReactionRetiresAfterBodyRecoveryWithoutOwningProcessOrInput",
+      "OblivionWorldTest.PlayerCapturedReactionRestartsAfterEitherViewFinishesIndependently",
+      "OblivionWorldTest.FreshNpcCapturedContactRetainsRequestedOffsetUntilManagerAnchors"
+    ],
+    "component_count": 6
+  },
+  "query_correction": "578F60 is MenuMode via InterfaceManager, not camera mode. 660110(true) reads Player+5D0 first-person root; false executes612220 reading Actor+3C. Final03 uses the actual query instructions and explicit root/menu fixtures. Earlier01/02 labels body/first were misleading and are superseded.",
+  "limitations": [
+    "No natural CharacterController GetUp dispatcher or new GetUp playback publication: the shared update is integrated into existing contact reactions; schema71 remains selected resource ownership only.",
+    "Primary/secondary GetUp request persistence, cache/group registration474070, renderer start/pose ownership, action11 start/completion and caller cleanup remain runtime integration work.",
+    "Native probes use typed loaded group2 fixtures, null auxiliary and secondary requests, empty controlled blocks, synthetic cache/heap and supplied resource registration/action accessors; they do not prove arbitrary KF group resolution, nonempty pose transforms or resource/OS loader acceptance.",
+    "Specific menu/camera predicates45A500,5790E0 and47F7B0 remain supplied false, and Player+5D8 alternate duration comparison is nonmatching. Actual578F60/582160 and660110/612220 execute in final03 probes.",
+    "No new normal-input, rendered, audible or canonical openmw fresh-process save/restart acceptance. Initial/Down/GetUp physical caller prefixes, no-IDLE root reset/RNG, directional power/mastery and the remaining S4 course/matrix remain open."
+  ],
+  "inactive_early_return": {
+    "original_profiles": 2,
+    "clock_bits": [
+      2139095039,
+      4286578687
+    ],
+    "frequency": 2,
+    "expected": "Inactive sequence bytes unchanged; validate stored values without calculating manager time. Immediate nonpositive End retirement also returns before manager advancement.",
+    "regression": "ESM4NativeClampSequence.InactiveAndImmediateEndDoNotAdvanceOverflowingManagerTime"
+  }
+}

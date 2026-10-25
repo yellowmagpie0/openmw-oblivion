@@ -14127,3 +14127,58 @@ view/device/FPS/normal-input/restart matrix remain open. See the
 Final engine source fingerprint:
 `9a8a4340f3d8f6440ebebf6f0af66c95853a21ad31f9343796ec7ceadb86286a`
 on parent `bc9f07bad65ad92513f2fddd0f1f31da009a5f2d`.
+
+
+### Native GetUp sequence retirement and shared reaction advancement
+
+This is **progress, not S4 delivery**. `NativeClampSequenceState` now owns the
+shared clamp-cycle Start/End, manager timing and retained retirement update.
+The combat service uses it for existing body/first-person contact reactions.
+It separates End-key slot detachment from the later inactive sequence that
+GetUp's request completion requires; clamped KF output is insufficient.
+It preserves pose-transition offsets, signed nonpositive retirement, and
+manager/retirement updates while key dispatch is frozen. Caller-owned clocks,
+request attachment and actor actions remain separate. Runtime schema stays 71.
+
+The hash-identified original executable passed 864 activation profiles and 432
+selected slot 5 start/frame/completion instruction profiles (118,377 frame updates).
+The final probes execute the actual menu and Player-root queries: `578F60` is
+MenuMode, not a camera predicate; `660110(true)` selects Player+5D0, while false
+executes `612220` over Actor+3C. This corrects misleading old probe labels.
+Logical slot 5 recursively resets resident physical slots 4,0,1,2,3 before fresh
+activation; it does not cancel every already-detached manager tail. Existing
+active/cycle0 reuse remains a distinct native branch. Activation reads blend
+bytes as unsigned; retirement reads them as signed.
+
+The production rule matched 144 PC24 profiles / 39,459 exact state-and-six-float
+frame updates in each normal and leak-enabled ASan/UBSan comparison. Normal
+and sanitized full runs each passed 3,139 component and 1,975 engine tests with
+exact inventory/XML agreement, zero failures/skips and an unchanged source
+fingerprint. Leak-enabled focused runs passed 6 new component and 5 affected
+engine reaction-frame cases. Full sanitizer runs retain the documented unrelated
+suite-leak exception; they are not leak coverage. The only build warning is
+the preexisting shadowed `retained` local in unchanged service code, once per
+build. No warning was suppressed.
+
+Final boundary review exposed a new-validator defect: speculative manager
+arithmetic could reject an already-inactive sequence at a finite extreme
+clock. The original inactive `6CA950` path preserves all sequence bytes at both
+finite float extremes. Stored-value validation now performs no manager update
+for inactive or immediate-End paths; a sixth regression covers both cases.
+The failing intermediate probe and exact pre-fix source are retained. All final
+full normal/sanitized and focused leak runs were repeated after the fix.
+
+The first frame probe's two-second horizon failed for unsigned blend 128 after 162
+profiles; the corrected twelve-second horizon completes every profile. Failed
+and superseded probes are retained. Resource registration `474070`, specific
+menu/camera inputs, synthetic heap/action boundaries and empty controlled blocks
+remain explicit limits. This is instruction/rule/engine-library regression
+evidence, with no new normal-input/rendered/audio or canonical save/restart
+acceptance. Natural initial/Down/GetUp dispatch, full noncontact request/clock
+persistence, actual start/renderer publication, root/constraint prefixes and
+the remaining S4 gameplay matrix are still open.
+
+Editable cases: [m15_native_getup_sequence_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_sequence_cases.json).
+Evidence: [M15-NATIVE-GETUP-SEQUENCE-VERIFICATION.json](M15-NATIVE-GETUP-SEQUENCE-VERIFICATION.json).
+
+Final tested source fingerprint: `9be23bf1f80d985afeaeb3234cfe2a4cc91cf974f749a76ef3df3479d1644786` on parent `d21bb7c3561bdf2de0084bb05b4d6a28b8d38e66`.
