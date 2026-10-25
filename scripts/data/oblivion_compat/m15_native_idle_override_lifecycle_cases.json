@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "scope": "Native IDLE override lifecycle prerequisites; no fork implementation or GetUp gameplay acceptance",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "dispatcher": {
+    "entry": "44DCF0",
+    "IDLE_type": 60,
+    "profiles": 4096,
+    "incoming_flags": "low byte0..255, with/without0x4000",
+    "root_or_child": [
+      true,
+      false
+    ],
+    "data_handler_cleanup_suppression": [
+      false,
+      true
+    ],
+    "record_read_result": [
+      false,
+      true
+    ],
+    "ordinary_override_policy": "If neither incoming0x20 nor0x4000 is set, invoke reset then IDLE initialization before record read",
+    "initialization_scope": "IDLE-specific writes clear parent/predecessor and restore ANAM4. Child-array preservation is observed with declared no-op base initialization; full base/component ownership is not established by that boundary.",
+    "boundaries": [
+      "4511C0 supplies IDLE type60 and55E000 supplies existing same-type form from global registry",
+      "Base clear46C2F0, condition clear56A750 and base initialization46C2E0 supply reviewed no-op boundaries; not full resource clearing",
+      "521730 supplies already bound model bank;5A56F0 supplies stable dense compaction; RTTI validates supplied nodes",
+      "520970 IDLE read supplies declared success/failure and records its entry state; actual TES reader/new record construction not executed",
+      "DataHandler+CD4 is supplied0/1; establishing normal owning load context remains required"
+    ]
+  },
+  "live_original": {
+    "requested_plugin_count": 11,
+    "definitions": 681,
+    "unique_forms": 677,
+    "content_model_banks": 44,
+    "runtime_model_banks": 45,
+    "additional_empty_bank": "characters\\_1stperson\\idleanims",
+    "cleanup_suppression_observed_after_load": 0,
+    "ordinary_override_keys": [
+      "content:oblivion.esm:014f36",
+      "content:oblivion.esm:07178c",
+      "content:oblivion.esm:09db0c",
+      "content:oblivion.esm:09db0d"
+    ],
+    "overridden_forms_have_children_in_this_profile": false,
+    "actual_plugin_order": [
+      "oblivion.esm",
+      "dlcshiveringisles.esp",
+      "knights.esp",
+      "dlcbattlehorncastle.esp",
+      "dlcfrostcrag.esp",
+      "dlcmehrunesrazor.esp",
+      "dlcspelltomes.esp",
+      "dlcthievesden.esp",
+      "dlcvilelair.esp",
+      "dlchorsearmor.esp",
+      "dlcorrery.esp"
+    ],
+    "replay": "Remove previous ordinary registration, retain typed identity, and reinsert new DATA in actual plugin/record event order",
+    "comparison_fields": [
+      "raw model",
+      "compiled parent",
+      "compiled predecessor",
+      "ordered child arrays",
+      "ordered roots for all44 content banks"
+    ],
+    "counterexample": "Using final-winning DATA at original first-definition positions violates the earlier-predecessor requirement for MS48PrisonerIdle, whose new predecessor is Knights.esp:002d43",
+    "extra_empty_bank_limit": "The first-person runtime bank has no roots; its creation is not explained by content event replay. It is retained as an explicit discrepancy from the initial assumption that all45 banks came from file registrations."
+  },
+  "open": [
+    "Implement component registration-event replay and capture actual store load events; current adapter still rejects official overrides",
+    "Verify any additional parent-override/component-ownership semantics needed beyond the four live leaf overrides",
+    "Serialized Deleted and0x4000 special loader lifecycle remains outside this ordinary official profile",
+    "Finish raw actor model/native conditions, exact KF/slot5 playback, physical FSM/GetUp/restart and directional mastery acceptance"
+  ]
+}

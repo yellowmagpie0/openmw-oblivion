@@ -13559,3 +13559,54 @@ physical FSM/GetUp/restart, directional mastery and full S4 acceptance remain op
 **Full M15S4 remains incomplete.** See the
 [verification receipt](M15-NATIVE-IDLE-CONDITION-VERIFICATION.json) and
 [editable cases](../../scripts/data/oblivion_compat/m15_native_idle_condition_cases.json).
+
+
+### Native IDLE override dispatcher and original loaded-registry verification
+
+The original `44DCF0` same-type IDLE dispatcher now has **4,096 executed
+profiles**. Through its real IDLE vtable, ordinary incoming flags call
+`520620` reset and `5201E0` initialization before the record reader. Either
+incoming `0x20` or `0x4000` skips those calls. With supplied cleanup suppression
+zero, actual root/child removal repairs the next predecessor before loading.
+IDLE-specific initialization clears parent/predecessor and restores ANAM4;
+base/condition clearing, base initialization, record read, registry lookup and
+container compaction remain declared boundaries. Retained child-array state
+under those boundaries does not establish full base/component ownership.
+The generic IDLE branch returns 1 even when the supplied reader returns 0; this
+is a dispatcher observation, not a reason to accept a failed fork record load.
+
+A fresh, isolated original-game process loaded the **11 pinned official
+plugins** and reached its main menu. Read-only GDB inspection verified native
+code bytes, process epoch and the actual Wine prefix. Steam rewrites
+`STEAM_COMPAT_DATA_PATH` inside the game; an initial assertion using that
+variable was corrected to validate the authoritative `WINEPREFIX`. The same
+owned process continued without a restart.
+
+The live registry contains **677 unique IDLE forms**, **44 content model
+banks**, and one additional empty `Characters\_1stPerson\IdleAnims` bank.
+All 677 raw model paths, compiled parents/predecessors and ordered child arrays,
+and every ordered content-bank root array, exactly match independent replay
+of **681 authored registration events**, removing the old registration for each
+of the four ordinary overrides before reinsertion. Actual plugin order was
+read from the process; installed plugin timestamps were not changed. Cleanup
+suppression at DataHandler `+0xCD4` was zero in the after-load snapshot. This
+was not an instruction-by-instruction trace of that flag during loading.
+
+The initial comparison incorrectly assumed that all 45 live banks came from
+content registrations. That failed comparison is retained: every record and
+content bank matched, but the extra first-person bank was empty. Its creation
+remains unexplained by file replay. A final-winner reconstruction at original
+first-definition positions also violates the earlier-predecessor requirement:
+MS48PrisonerIdle's new predecessor is a later Knights.esp definition. The next
+store integration must preserve ordered registration events.
+
+The original game and its owned Steam client exited 0. The cloned prefix's
+inputs were restored; the source prefix, pristine quicksave, official plugin
+bytes and file timestamps stayed unchanged. This verifies the original loaded
+registry, not fork selection, GetUp playback or melee gameplay. No fork production code
+changed and no unchanged build suite was repeated. The current store adapter
+still rejects overrides. Full base/component ownership beyond these four leaf
+overrides and the serialized Deleted/special-flag lifecycle remain open.
+**Full M15S4 remains incomplete.** See the
+[verification receipt](M15-NATIVE-IDLE-OVERRIDE-LIFECYCLE-VERIFICATION.json) and
+[editable cases](../../scripts/data/oblivion_compat/m15_native_idle_override_lifecycle_cases.json).

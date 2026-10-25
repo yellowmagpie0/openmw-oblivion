@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "scope": "Native IDLE override lifecycle prerequisites; no fork implementation or GetUp gameplay acceptance",
+  "parent": "b7e1a610a7a39a9948cd915571445fe888792cee",
+  "cases": {
+    "path": "scripts/data/oblivion_compat/m15_native_idle_override_lifecycle_cases.json",
+    "sha256": "71ec17ba109c60aae485c66c480b3482a759babd26717d92b3e50de6e7ee37e0"
+  },
+  "dispatcher": {
+    "result": {
+      "passed": true,
+      "profiles": 4096,
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "corpus_sha256": "2cdebb3c4950de791f7de9ae3b3c94c234c5b17d4048f14f69f5e7387653c71b",
+      "actual_instructions": [
+        "full44DCF0 existing IDLE type60 form dispatcher through real virtual tableA53774",
+        "full520620 hierarchy deregistration with actual5204F0/5304C0 removal and successor-link writes",
+        "full5201E0 IDLE initialization fields",
+        "full447050 load wrapper and native flag setters",
+        "actual44E6DC/44E6A0 type dispatch tables"
+      ],
+      "boundaries": [
+        "4511C0 supplies IDLE type60 and55E000 supplies existing same-type form from global registry",
+        "Base clear46C2F0, condition clear56A750 and base initialization46C2E0 supply reviewed no-op boundaries; not full resource clearing",
+        "521730 supplies already bound model bank;5A56F0 supplies stable dense compaction; RTTI validates supplied nodes",
+        "520970 IDLE read supplies declared success/failure and records its entry state; actual TES reader/new record construction not executed",
+        "DataHandler+CD4 is supplied0/1; establishing normal owning load context remains required"
+      ],
+      "findings": [
+        "Existing incoming flags with neither0x20 nor0x4000 call reset then initialization before loading",
+        "Either incoming0x20 or0x4000 skips reset and initialization",
+        "With reset and CD4=0 the previous root/child slot is removed and next sibling predecessor repaired before loading",
+        "Initialization clears current parent/previous and restores ANAM4 but preserves owned children array",
+        "Generic IDLE path returns1 even when supplied record read returns0",
+        "The dispatcher itself preserves DataHandler+CD4"
+      ],
+      "scope": "Existing same-type IDLE dispatcher reset/load policy; not actual full plugin loader lifecycle, winning registry, or gameplay acceptance"
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/dispatcher-oracle.py",
+        "sha256": "e0e87eb63d759ad1a0a67b15f46397783e7f2e12004ab6e69075696b8d4e0f94"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/dispatcher-corpus.json",
+        "sha256": "2cdebb3c4950de791f7de9ae3b3c94c234c5b17d4048f14f69f5e7387653c71b"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/dispatcher-report.json",
+        "sha256": "658f849ab3221f71bf8379b63d832dfe219b9c137bcacaf98eb14434caf66f0c"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/dispatcher-run.log",
+        "sha256": "1264776951463877a4703d5dbdf351e5c278d1249de3d55f1e21feabd711243b"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/generic-reset-load.txt",
+        "sha256": "962aaa38d86f9561f22b2037cdbcd0e1747ae4bde97d6fe7fe88f922e95dd061"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/form-load.txt",
+        "sha256": "514df4031feffd93a894b1429e27283701a4a8db783a2edfdf50b6fdba7e899a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/idle-dispatch.txt",
+        "sha256": "1aec3a6155d50e4d0474489601bfb323c9ce12407ebea835a28570c40b4c47e8"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/initialize.txt",
+        "sha256": "5b3a020b79291794836f19808b1d7c42275e09902b74607adb3e42881f11986d"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/base-initialize.txt",
+        "sha256": "bac21cb53f995e393d524070940b85ff8767bf09c41772b41770693a2d852b89"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/load-wrapper-post.txt",
+        "sha256": "ee138714a082a741ed41d053e9641bc3391d2ea01c12408f4506fb61dfc87807"
+      }
+    ]
+  },
+  "original_live": {
+    "comparison": {
+      "passed": true,
+      "live_registry_sha256": "498e9d356805996dcc3b0bc22fc352dfa8f92e6447d6e8a172075713e8c4a00a",
+      "raw_history_sha256": "68f8203ba0ecd50f877ff10639b134b48148e66da8f90f14594fe6b767796da7",
+      "definitions": 681,
+      "unique_forms": 677,
+      "content_model_banks": 44,
+      "observed_runtime_model_banks": 45,
+      "additional_runtime_empty_banks": {
+        "characters\\_1stperson\\idleanims": []
+      },
+      "cleanup_suppression": 0,
+      "actual_plugin_order": [
+        "oblivion.esm",
+        "dlcshiveringisles.esp",
+        "knights.esp",
+        "dlcbattlehorncastle.esp",
+        "dlcfrostcrag.esp",
+        "dlcmehrunesrazor.esp",
+        "dlcspelltomes.esp",
+        "dlcthievesden.esp",
+        "dlcvilelair.esp",
+        "dlchorsearmor.esp",
+        "dlcorrery.esp"
+      ],
+      "registration_event_replay_content_topology_exact": true,
+      "final_winner_first_definition_reconstruction": {
+        "rejected": "final winning predecessor can name a record defined after the original first-definition position"
+      },
+      "scope": "All677 original live IDLE model/compiled-parent/predecessor/child records and44 content root banks match independent replay of681 raw load events, removing old registration before each of4 ordinary overrides. One additional empty first-person runtime bank is observed but its creation is not established by this file replay. Not fork implementation, selected IDLE evaluation, animation, physics or gameplay."
+    },
+    "cleanup": {
+      "passed": true,
+      "game_exit": 0,
+      "steam_exit": 0,
+      "source_prefix_unchanged": true,
+      "owned_clone_inputs_restored": {
+        "ini": "0059920a024af6790fb7454024a74c8fc19d4bf929d5a1a5a55c3447cd58de46",
+        "plugins": "11d00249102c3ab93115b568c716e0e857ac786b910948255f3fc603f8259234",
+        "quicksave": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66",
+        "autosave": "1f48c4fdedf9462ffcf1d283f88689eddaf9a993330e0389f6ca52e2d3d39922"
+      },
+      "official_plugin_bytes_and_timestamps_unchanged": true,
+      "pristine_quicksave_unchanged": true
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/prepare.py",
+        "sha256": "735fbac5efb59de51b4c73953928377aac1f01bc393c588d4d321a9b54e55b42"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/display-driver.py",
+        "sha256": "178e024f4bc0e0cd1016942cb06f8a86e93fab256960aa98fc24dacdf5f55cad"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/inputs.json",
+        "sha256": "6bb9ec07222e0861ad82c845efcdf056ab31e0f8fb6e3536cb37219261c0e100"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/staged-inputs.json",
+        "sha256": "5160ce94e705d04306268b8abb5b3aa04f18adf45e3f4b2bb0c194ae4b8ebbf9"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/game-process-epoch.json",
+        "sha256": "a83119e29a0b69303ceea4106dc7325675c4c56df27a24fbfe320ac0945b90cd"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/steam-process-epoch.json",
+        "sha256": "b5559a8270a44708c5db6982763d3b6fb65f3869c4105f9f69dd62237fe9c27d"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/initial-memory.json",
+        "sha256": "4f5d35f304694287cdad0aaa8ad960ce914bdc6596417855929dbe33770cd916"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/read-initial.py",
+        "sha256": "c4f32437b7a69b882b8cbd779c4ac2fea3b269561cd7b54598861603c59241ae"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/initial-gdb-command.json",
+        "sha256": "71e26edba85e763625af3752e6176e62a61cd3b5fad6281a23e4a7878787bbfa"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/initial-gdb.log",
+        "sha256": "7c639b992e82278a09f7a5513e52a46424add85e7311f0fdb02d9c9fcb53f51b"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/read-registry.py",
+        "sha256": "cdba244a3dc15611ac46850e707942987ff75e14fa49ef585de01301f9b1462d"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/registry.json",
+        "sha256": "498e9d356805996dcc3b0bc22fc352dfa8f92e6447d6e8a172075713e8c4a00a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/registry-gdb-command.json",
+        "sha256": "47afc7afde4e1c657757c579dd40731dd64b9621dc2a5c4fb5b7b9ab6140a233"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/registry-gdb.log",
+        "sha256": "5188453788a142896239469aef2f863ede8742764aa46b4e003e8962a9449fd1"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/startup.png",
+        "sha256": "5297374ab18ff424a73f74534e73cac891700c17fc202f60eb2c8a3012328037"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/exit-prompt.png",
+        "sha256": "489c3226d53787291e628ce5a832591acfffd03f54e430e69e1e27b486199dd4"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/exit-input.json",
+        "sha256": "157ef235434482986487aaf0c412211caeac63d416d161a0229bc7cf90013889"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/exit-confirm-input.json",
+        "sha256": "8eed1a402ecdb35f4fc8d4eee3bab6f0d33fb48b5079d5a7962cba5177fddca4"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/game-command.json",
+        "sha256": "abb16831ea665b1c785fbd9a1aeae9612fdddec9dacfc0547414defa37586f2f"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/game-wrapper.json",
+        "sha256": "dd8a351e188aa643cc689f8f9b39ad415ad6cc71f69508fe3aa62feccc85c95a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/game-exit.json",
+        "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/steam-command.json",
+        "sha256": "da8d18156263484634ce8dc2fb935bf3584a5c0d902107a5b8b1dbfcf61693d4"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/steam-wrapper.json",
+        "sha256": "6803cdb02eb5ca2e6d04037c32891ba35a613d632c3aae2bbc3ddcadab481ca5"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/steam-shutdown.json",
+        "sha256": "db5fa85922aed3d50b73544ce8f162b5cc7c4b21d0723e286a4e26e714ee1eed"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/steam-exit.json",
+        "sha256": "3c428e5243c0204d43e459c60941a1f70059b39087ec6e0a385bb6780caa0c8a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/cleanup.json",
+        "sha256": "96e1585a6afce437a769397728695598af8ce61820d65085b6d9ed80fbb70507"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/initial-prefix-assertion-correction.json",
+        "sha256": "1bfec4ffbd53fe511a73fbb7e33e8ec7e87293199a1bb51d3545b5c0546304ce"
+      }
+    ]
+  },
+  "independent_replay": {
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/compare-live.py",
+        "sha256": "b04f907c315d9de26c96e8910c8b7d907b27c5328743890ecab1be337812f3df"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/live-comparison.json",
+        "sha256": "a442882819ec11e2742515b03a06cce10ad0a0aca8c2de606dad9478fe4ce650"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/compare-live-failed-01.py",
+        "sha256": "ba9a7705bc55ffabe97b4ef4a8c17325ee4d404a9f01fe1a0ebed4d4525e813e"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/live-replay-counterexample-01.json",
+        "sha256": "fea1a68279a12acbc773a095b6ea42a11c9d361207fd1aceb61b9a20e0927c17"
+      }
+    ],
+    "retained_failure": "Initial replay comparison assumed all45 live banks originated from authored registrations. All677 record fields and44 content banks matched; one additional empty first-person bank was observed. Corrected comparison declares this extra bank explicitly rather than treating it as explained by file replay."
+  },
+  "raw_official_inputs": {
+    "report": {
+      "passed": true,
+      "sources": [
+        {
+          "name": "Oblivion.esm",
+          "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "size": 277504985,
+          "IDLE_definitions": 650
+        },
+        {
+          "name": "DLCShiveringIsles.esp",
+          "sha256": "7725fc1cf14f60b258aeb089a112b518ab904acb3c3f549487d6e554fb873bcb",
+          "size": 85,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCBattlehornCastle.esp",
+          "sha256": "f8bd2baa13f17f8994c0e737146097bc320f28c0d9821a00516bcec53fc6e28d",
+          "size": 676894,
+          "IDLE_definitions": 1
+        },
+        {
+          "name": "DLCFrostcrag.esp",
+          "sha256": "ade51332829033c95f9ba73fbbb3ee31f44dd62f12fbf8e0066dd6384a65b6c0",
+          "size": 191358,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCHorseArmor.esp",
+          "sha256": "d20d968a3492a73aa3f6c7ba033604f32b3aee7ea4e7447ae90881a25267b305",
+          "size": 97179,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCMehrunesRazor.esp",
+          "sha256": "8d52b80c7ceb9f18aae3f48815a5b0468b8479992eb69fa3cbf910f8b66b7971",
+          "size": 728780,
+          "IDLE_definitions": 1
+        },
+        {
+          "name": "DLCOrrery.esp",
+          "sha256": "b1533ce31acdeb0c0385ab15c898b1c59c730e1d9b05848c8b4b76f2aaf3ad7d",
+          "size": 47424,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCSpellTomes.esp",
+          "sha256": "3146d1f3936606410f75a54d385276e364f8a346437b919c398d8bd7d66e339e",
+          "size": 625246,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCThievesDen.esp",
+          "sha256": "bade981f2c6665a934afb3ece481c4bba358d8114389a7f811403534e506407d",
+          "size": 233735,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "DLCVileLair.esp",
+          "sha256": "fa174924ff2b44e69d1d27dc2a4c99e757d90c7b34109138d2b1ed9f430d5002",
+          "size": 257153,
+          "IDLE_definitions": 0
+        },
+        {
+          "name": "Knights.esp",
+          "sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
+          "size": 2211935,
+          "IDLE_definitions": 29
+        }
+      ],
+      "definitions": 681,
+      "unique_keys": 677,
+      "repeated_keys": 4,
+      "histories": {
+        "content:oblivion.esm:014f36": [
+          {
+            "plugin": "Oblivion.esm",
+            "deleted": false
+          },
+          {
+            "plugin": "DLCMehrunesRazor.esp",
+            "deleted": false
+          }
+        ],
+        "content:oblivion.esm:07178c": [
+          {
+            "plugin": "Oblivion.esm",
+            "deleted": false
+          },
+          {
+            "plugin": "Knights.esp",
+            "deleted": false
+          }
+        ],
+        "content:oblivion.esm:09db0c": [
+          {
+            "plugin": "Oblivion.esm",
+            "deleted": false
+          },
+          {
+            "plugin": "Knights.esp",
+            "deleted": false
+          }
+        ],
+        "content:oblivion.esm:09db0d": [
+          {
+            "plugin": "Oblivion.esm",
+            "deleted": false
+          },
+          {
+            "plugin": "Knights.esp",
+            "deleted": false
+          }
+        ]
+      },
+      "deleted_definitions": 0,
+      "forward_or_unknown_links": [],
+      "current_registry_profile_admitted": false,
+      "records_sha256": "68f8203ba0ecd50f877ff10639b134b48148e66da8f90f14594fe6b767796da7",
+      "scope": "Independent raw official-plugin IDLE load-order/history audit with pinned bytes. Does not execute native loader registration/override/deletion, fork ESMStore, condition selection, animation, physics or gameplay."
+    },
+    "artifacts": [
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-official-idle-history-audit-01/probe.py",
+        "sha256": "f0f8be5e426834485cf99582195f9475da580ef3709f636b8481034e3d1ac718"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-official-idle-history-audit-01/records.json",
+        "sha256": "68f8203ba0ecd50f877ff10639b134b48148e66da8f90f14594fe6b767796da7"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-official-idle-history-audit-01/report.json",
+        "sha256": "ec90d1d123a7592bba960ecdbafe4d7aadc1d027597acfcb2f4401c6bcc4f69a"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/native-getup-official-idle-history-audit-01/run.log",
+        "sha256": "22f573f90b15906b4afbe92e623e9cb5acc9ddccbcdab340bf3b6d62bf552407"
+      }
+    ]
+  },
+  "executable_metadata": {
+    "path": "build/oblivion-compat/m15/S2/sources-01/original-exe.json",
+    "sha256": "62918736c74e739e6b3c4832a8b2fc1edef5917089151285479fda9289f0c8fc"
+  },
+  "static_search_interruption": {
+    "path": "build/oblivion-compat/m15/S4/native-idle-loader-context-work-01/output-loop-interruption.json",
+    "sha256": "a3f516b900c4a38349da0d4838425d784e9f6d71624c2dff6fcd40bf6c392ad9"
+  },
+  "build_tests": "No C++ or Python production source changed; previously passing checks were not repeated. New JSON and all evidence pins verified separately.",
+  "limits": [
+    "Implement component registration-event replay and capture actual store load events; current adapter still rejects official overrides",
+    "Verify any additional parent-override/component-ownership semantics needed beyond the four live leaf overrides",
+    "Serialized Deleted and0x4000 special loader lifecycle remains outside this ordinary official profile",
+    "Finish raw actor model/native conditions, exact KF/slot5 playback, physical FSM/GetUp/restart and directional mastery acceptance",
+    "Observed CD4=0 is an after-load live snapshot, not an assertion that the flag was traced at every instruction during loading",
+    "Reader/global-form lookup, base/component clearing, model-bank binding and compaction are declared dispatcher boundaries",
+    "Original main menu confirms loaded registry structure; it does not exercise selection, animation, combat input, physical simulation or saves in the fork",
+    "Owned original game and Steam exited0; prefix inputs restored; source prefix, pristine save and official plugin bytes/timestamps unchanged"
+  ],
+  "no_production_code_changes": true,
+  "original_executable": {
+    "path": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Oblivion.exe",
+    "sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6"
+  }
+}
