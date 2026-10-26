@@ -1,9 +1,8 @@
 {
   "schema_version": 1,
-  "status": "verified_core_course_configuration",
+  "status": "core_course_and_matched_recovery_verified_matrix_incomplete",
   "full_M15S4_acceptance": false,
-  "scope": "First-person keyboard/mouse core course: production opponent blocked with positive mitigation, actual Player Stagger and natural recovery, nonlethal named-target return attack, distinct clear-LOS range miss and in-reach stock-partition wall miss, then settled endpoint. Matched in-flight restart and complete required matrix remain open.",
-  "implementation_commit": "430d3a4b45",
+  "scope": "One first-person keyboard/mouse course: equipped production block, actual Player Stagger and natural recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Matched actual Stagger-save fresh-process continuation passes in normal and sanitizer builds. Windup/blocking continuations and the complete S4 matrix remain open.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
@@ -56,14 +55,17 @@
     "movement": "HoldD untilx>=708 to clear the table while retaining a clear target sightline. HoldS untily<=-125, then mouse aim-40 after two zero-delta events. Require distance>200/facing<10 and both world/door rays clear before range miss4.",
     "mouse": "Prime two zero-delta events before deliberate relative motion after F5. Range aim-40, primed reset+40, then primed wall aim-400; actual final yaw-1.5625. These events drive normal mouse input.",
     "range": "In this stock-shortsword/normal-scale course, require distance>200 scene units, facing<10degrees and clear world/door rays100/125 above both roots, then a native miss. This threshold is specific to this course, not a generic reach formula.",
-    "endpoint": "Wait for each miss4/5 to finish naturally with process action-1 before its settled save.",
+    "endpoint": "After misses4/5 retire naturally, a read-only observer waits for the three real Player action Fatigue debits and natural restoration to maximum140 before the final F5. No resource setters or regeneration overrides.",
     "fps": "Configured cap15; measured FPS acceptance matrix remains open.",
-    "wall": "After range miss settles, prime/reset yaw, moveD untilx>=788 and W untily>=65; face target and require distance<137/facing<10 plus both rays hitting stock partition24e74. Miss5 must finish before final save."
+    "wall": "After range miss settles, prime/reset yaw, moveD untilx>=788 and W untily>=65; face target and require distance<137/facing<10 plus both rays hitting stock partition24e74. Miss5 must finish before final save.",
+    "restart": "Capture actual held block at save4, active Stagger at save6 and pending/contact-false Player windup at save7 in each reference. The fresh recovery process loads that same reference save6 without actor/resource/RNG mutation. Early normal B input preserves held intent; no activation or old contact2 is replayed."
   },
   "reused_regression": {
     "receipt": "docs/oblivion/M15-NATURAL-RECOVERY-VERIFICATION.json",
-    "reason": "C++ implementation, SDL/Python harness and linked dependencies unchanged; game/test binary identities retained. No redundant engine/component rebuilds. Original fixture bytes also remain unchanged in version1.",
-    "coverage": "2037 full engine tests each normal and sanitizer/LSan;3179 normal components and1117 selected sanitizer components with original provenance. Python evidence superseded by the432-test receipt above."
+    "coverage": "3179 normal components and1117 selected sanitizer components with original provenance; component implementation, tests and linked dependencies unchanged. New full engine gates above supersede the earlier2037 engine inventories.",
+    "python_receipt": "build/oblivion-compat/m15/S4/combined-wall-python-01/verification.json",
+    "python_source_fingerprint": "0279545c9b15a552d90356d4f8bef5a80cecbe2d6da107b341d859917097ef40",
+    "python_coverage": "432 full Python tests, including6 stationary-fixture cases. Python/harness/builder/test implementation and fixture inputs unchanged. Later course-manifest edits are exercised through the unchanged harness in four actual processes."
   },
   "retained_attempts": {
     "history": "Earlier partial-course receipts and failures remain linked at commit7a4f7865b1.",
@@ -73,94 +75,134 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "Save/quit/fresh-process continuations during windup, blocking and recovery, matched against uninterrupted gameplay.",
+    "Matched fresh-process continuations during windup and held blocking, using the captured current-course sources.",
     "All remaining S4 actor/weapon/directional/mastery/effect, command/query, safe-interruption and view/device/FPS/sound requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Use actual current Stagger saves to complete matched fresh-process recovery continuation, then windup/blocking continuation and the remaining matrix.",
+  "next_bounded_task": "Use current reference save4 (held block) and save7 (pending Player windup) to close the remaining in-flight restart gates with the same fixture/observer/monitor. Choose subsequent work by the missing behavior blocking the required gameplay course.",
   "audio_assay": {
-    "tool": "scripts/tes4_m15_block_audio.py",
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
-    "threshold": 0.75,
-    "conversion": "ffmpeg -i mixed-output.wav -ar48000 -ac2 -c:a pcm_s16le rendered-audio.wav; no gain adjustment. Input/output hashes retained by evidence files/assay.",
-    "scope": "One audible stock block cluster per process; coincident voice count and every simultaneous SFX are not established."
+    "minimum_correlation": 0.75,
+    "conversion": "ffmpeg -v error -i <mixed-output.wav> -c:a pcm_s16le -ar 48000 -ac 2 <mixed-output-pcm16.wav>; no gain adjustment",
+    "reports": {
+      "normal_reference": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-stable-normal-02/block-audio.json",
+        "sha256": "78bea533bfc869a5df9c8993d2cf44d5631bc763ed8d3c8f8f8a8869d2f3b5ed",
+        "clusters": 1,
+        "peak_correlation": 0.9108441280888956,
+        "raw_wave_sha256": "f5ebe6bc39474eb872ffed3d0b98bb62af34473c893914734b7c23f16f7c8570",
+        "pcm16_sha256": "4aeae216f5942abcefb067a3b3a668190518562f4bcdad05998f1762dd415290"
+      },
+      "normal_continuation": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-recovery-normal-03/block-audio.json",
+        "sha256": "be994042d98516712990dfe47bd585e53a6d9c9c35f15324a9908062a07b81d0",
+        "clusters": 0,
+        "peak_correlation": null,
+        "raw_wave_sha256": "4b54ed4f517a1c6222db1ad5de6186750273ce1744f02f6058f71363191a75a9",
+        "pcm16_sha256": "7239156d4df23c6d46548d88a81fd9a1e4e9ea8679a12ca58a3676e675a2489d"
+      },
+      "sanitize_reference": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-stable-sanitize-02/block-audio.json",
+        "sha256": "7c1046d1f356ed65861e18b9bad0da7a51bc61e17b3c7996e959df429071c309",
+        "clusters": 1,
+        "peak_correlation": 0.898941983157219,
+        "raw_wave_sha256": "bac0afec50b606e0cfcc77a6bbb3e9f0f93416eefb8f2cebc6928b881406cac7",
+        "pcm16_sha256": "72f3987b3be7359aff203db4a5662c513f5e688145738cb236801eaa059d2f81"
+      },
+      "sanitize_continuation": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-recovery-sanitize-03/block-audio.json",
+        "sha256": "223fb883fe45ef05e4f6fb44fbf3053fa1107b000da0eb6542ddad54252fef2b",
+        "clusters": 0,
+        "peak_correlation": null,
+        "raw_wave_sha256": "34fd4d303327bb93e9e1cdfadc71d4d1d2c1e5108da33c0dcef1cae9545eb956",
+        "pcm16_sha256": "5d0e9be15e092fd28da1ff162ea67c574895b17d459d06eb164b5e192f07ac57"
+      }
+    }
   },
-  "sanitizer_scope": "Rendered runtime ASAN_OPTIONS=detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1; ASan first in LD_PRELOAD. No rendered-process leak coverage. Same gameplay actions; overlay changes run id, sanitizer environment and timeouts only.",
-  "post_verification_edits": "This receipt/recipe and short delivery-audit summary only; executed course manifest, Python builder/tests/partition source and C++ implementation remain as verified.",
+  "sanitizer_scope": "Full2038 engine tests run with ASan/UBSan and leak detection enabled using the recovery receipt X11/Mesa environment. Rendered reference/recovery use leak detection disabled, UBSan halt/stacktrace and ASan first before the SDL hook; no rendered leak-coverage claim.",
+  "post_verification_edits": "This receipt and the concise current delivery-audit/handoff update only. C++ implementation/tests, executed manifests and Python harness/fixture inputs remain as tested.",
   "verifier": {
-    "path": "build/oblivion-compat/m15/S4/combined-wall-work-01/verify-course.py",
-    "sha256": "b8c81d3bd2ee17f98f65987bace48b0af05b773e7c4fa02f6ac102f3d5f9dad7",
-    "overlay_equivalence": "Normal/SAN file contents and gameplay actions compared; overlay changes only declared run id, sanitizer environment and timeouts."
+    "path": "build/oblivion-compat/m15/S4/combined-restart-work-01/verify-recovery-pair.py",
+    "sha256": "d9d79d72179bf7134ca4af58f3eea692b5c59a6959968f4d45129a5d146fa904",
+    "orchestration": "build/oblivion-compat/m15/S4/combined-restart-work-01/run-current.py",
+    "orchestration_sha256": "3ebdea44c7b1484b879224ee9aca8c4cfefc6921db52b5bca73464933f803c98",
+    "reuse": "Existing scenario harness and native-start-empty-tail-melee-runtime-01/monitor.py; no new runtime fixture framework. Normal/SAN source files/actions identical except run id, declared sanitizer environment and timeouts."
   },
   "prior_combined_checkpoint": {
-    "commit": "7a4f7865b1",
-    "recipe": "scripts/data/oblivion_compat/m15_combined_melee_course.json at that commit",
-    "normal": "build/oblivion-compat/m15/S4/combined-melee-normal-02/semantic-verification.json",
-    "sanitize": "build/oblivion-compat/m15/S4/combined-melee-sanitize-02/semantic-verification.json"
+    "commit": "bff99f7018199f52ab44245ef65a27109ca70a00",
+    "recipe": "This recipe at that commit; its earlier provenance links remain historical evidence.",
+    "normal": "build/oblivion-compat/m15/S4/combined-wall-normal-02/semantic-verification.json",
+    "sanitize": "build/oblivion-compat/m15/S4/combined-wall-sanitize-02/semantic-verification.json"
   },
-  "tested_manifest_sha256": "0fd54a513eed3cb87c196be13c0578d1dda384b6d20f97b65ae4b24f3d2aa76f",
+  "tested_manifest_sha256": {
+    "reference": "c9832709a048376ce76179012545ca5d6238c604a61d7cb90dd7a9f74070ce95",
+    "continuation": "5423fdee57b6e9b93d349428bae8ed324d6fee58d2cd1a72335a512cb6301f0e"
+  },
   "validation_layers": {
     "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
     "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
     "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
-    "runtime": "Accepted joined normal/SAN processes each contain seven exact binary/live pairs, two hits and two distinct misses, reviewed captures and one verified stock block-audio cluster."
+    "runtime": "Four terminal actual gameplay epochs, normal/SAN reference and fresh recovery. Each reference has9 and continuation5 exact binary/live pairs (28 total), no contact2 replay, one Player hit3 and distinct misses4/5, invariant miss resources, matched native endpoint values/active ownership/combat RNG, and block audio1/reference,0/restart. All original saved references survive; additional distant reference residency is recorded separately."
   },
   "verification": {
     "normal": {
-      "directory": "build/oblivion-compat/m15/S4/combined-wall-normal-02",
-      "semantic_sha256": "a83976e179376ddac81e23efe30945485da1ca7358f833affe5a7ce1dc5173fc",
-      "actual_pid": 2556987,
-      "game_sha256": "ecb8d9d552ac26af55dc90104ac7589e6d62825258162a68e2c9e6ef1f9346be",
-      "loaded_libraries": {
-        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
-      },
-      "snapshots": 7,
-      "contacts": [
-        2,
-        3
-      ],
-      "misses": [
-        4,
+      "receipt": "build/oblivion-compat/m15/S4/combined-restart-work-01/recovery-pair-normal-verification.json",
+      "sha256": "9812174a7678c62f9b1d1fe161afe80ea78609979c294553c043c8f1f87fa823",
+      "reference": "build/oblivion-compat/m15/S4/combined-stable-normal-02",
+      "continuation": "build/oblivion-compat/m15/S4/combined-recovery-normal-03",
+      "game_sha256": "005c13f85074b91aafc8e536b0390ae07e6e0abd74d78cb25cfca4da00056875",
+      "exact_save_live_pairs": [
+        9,
         5
       ],
-      "all_binary_saves_equal_live": true,
-      "final_ledger_empty_both_actions_minus1": true,
-      "no_target_inventory_player_health_or_rng_writes_on_misses": true,
-      "block_fraction": 0.125,
-      "block_audio_clusters": 1,
-      "block_audio_peak_correlation": 0.9313206543612492,
-      "duration_seconds": 59.559867
+      "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/combined-stable-normal-02/snapshots/save-6.omwsave",
+      "source_sha256": "fdf3abe2a20a6fcde2e56e4747673072855943c67e29e05dfd233d2530c054a9",
+      "shared_reference_inventories_equal": 45966,
+      "additional_endpoint_residency": {
+        "reference_only": 0,
+        "continuation_only": 0
+      },
+      "next_restart_sources": {
+        "block_sequence": 4,
+        "block_action": 6,
+        "windup_sequence": 7,
+        "windup_action": 2,
+        "windup_pending": 3,
+        "windup_contact_committed": false
+      }
     },
     "sanitize": {
-      "directory": "build/oblivion-compat/m15/S4/combined-wall-sanitize-02",
-      "semantic_sha256": "715add3b9a29ee7a0da92019f227a48552b83d673420df04f0643953eca48791",
-      "actual_pid": 2557010,
-      "game_sha256": "aed9835cc6907a04bd5859135505985936f138f95cf29515f152afe96ef7b4cb",
-      "loaded_libraries": {
-        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
-      },
-      "snapshots": 7,
-      "contacts": [
-        2,
-        3
-      ],
-      "misses": [
-        4,
+      "receipt": "build/oblivion-compat/m15/S4/combined-restart-work-01/recovery-pair-sanitize-verification.json",
+      "sha256": "aa4999633e799e71700985122a40aa0666aa53f31808cccadab3c1a1411bcc8d",
+      "reference": "build/oblivion-compat/m15/S4/combined-stable-sanitize-02",
+      "continuation": "build/oblivion-compat/m15/S4/combined-recovery-sanitize-03",
+      "game_sha256": "f974a2db218853ed6e04e5648892d5e507b6adc6b828bb45ba7859f5d66cb7d9",
+      "exact_save_live_pairs": [
+        9,
         5
       ],
-      "all_binary_saves_equal_live": true,
-      "final_ledger_empty_both_actions_minus1": true,
-      "no_target_inventory_player_health_or_rng_writes_on_misses": true,
-      "block_fraction": 0.125,
-      "block_audio_clusters": 1,
-      "block_audio_peak_correlation": 0.8566004012879201,
-      "duration_seconds": 332.749599
+      "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/combined-stable-sanitize-02/snapshots/save-6.omwsave",
+      "source_sha256": "1da1da1a99254ec31d98bd3bdc98ee07872db74600cfcc11343692298b848eaa",
+      "shared_reference_inventories_equal": 46444,
+      "additional_endpoint_residency": {
+        "reference_only": 369,
+        "continuation_only": 0
+      },
+      "next_restart_sources": {
+        "block_sequence": 4,
+        "block_action": 6,
+        "windup_sequence": 7,
+        "windup_action": 2,
+        "windup_pending": 3,
+        "windup_contact_committed": false
+      }
     }
   },
   "wall_control": {
     "receipt": "build/oblivion-compat/m15/S4/combined-wall-work-01/wall-control-verification.json",
     "sha256": "afaadc444af4cff9e45c77cb9e752445d096d29645e29fbcc3834ce596d97871",
     "scope": "Normal control02 changes only the partition enabled flag tofalse in the actual wall-facing save. Two binary/live pairs, same actor pose within0.05 scene units and identical pre-hit Health; normal contact4 hits, leaving the target alive. Enabled-partition course misses at a nearer pose.",
-    "manifest": "build/oblivion-compat/m15/S4/combined-wall-work-01/unobstructed-control-02.json"
+    "manifest": "build/oblivion-compat/m15/S4/combined-wall-work-01/unobstructed-control-02.json",
+    "reuse_provenance": "Original bff99f7018 control remains applicable: unchanged acquisition/collision code, weapon/target scale and fixture/content/dependencies. Its normal hit is at distance132.398604; the farthest new wall-facing pose is131.982690, with the same vertical relation/yaw and facing within1.7 degrees. Both rays in every new wall course hit stock24e74. This is reuse of the earlier same-pose control, not a claim that the new runs repeated that control."
   },
   "python": {
     "receipt": "build/oblivion-compat/m15/S4/combined-wall-python-01/verification.json",
@@ -172,5 +214,55 @@
     "focused": "Six stationary fixture cases pass; three added cases cover unchanged master placement/combat records and invalid identities/transforms/content.",
     "unchanged_source_pins": "build/oblivion-compat/m15/S4/combined-wall-work-01/source-pins.json"
   },
-  "visual_review": "Normal and sanitizer Stagger/recovery, range, wall and endpoint captures inspected; SAN actual save5 thumbnail confirms displaced reaction view. Control02 shows unobstructed opponent at the same pose. Stock partition renders bright; this proves actual geometry/occlusion rather than general furniture material fidelity."
+  "visual_review": {
+    "directories": [
+      "combined-stable-normal-02",
+      "combined-recovery-normal-03",
+      "combined-stable-sanitize-02",
+      "combined-recovery-sanitize-03"
+    ],
+    "reviewed": "Stagger/recovered, nonlethal target Health HUD, clear range, partition-facing and settled captures; original control capture/provenance retained. Known partition material issue remains deferred."
+  },
+  "implementation_parent_commit": "430d3a4b45",
+  "tested_source_fingerprint": "ef0f3960cd486c823f5e7093514667f5ff5c17f5fd7a6de7d2b38581b12e4fb8",
+  "cpp_verification": {
+    "focused": {
+      "receipt": "build/oblivion-compat/m15/S4/cold-script-inventory-focused-02/verification.json",
+      "sha256": "056dd385bf42255efb9436ea6eb560de7dfaa51f2cbc32bb976654a4b0464b1d",
+      "executed": 8,
+      "filter": "OblivionWorldTest.NativeScriptColdReferencePreservesInventoryBeforePublishingSavedState:OblivionWorldTest.LazyNative*Inventory*:OblivionWorldTest.NativeSavedInventoryAbsenceDoesNotConstructClassOrAuthority",
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0
+    },
+    "normal": {
+      "receipt": "build/oblivion-compat/m15/S4/cold-script-inventory-integration-normal-01/verification.json",
+      "sha256": "6a300fb99e40e86e167658f1877b8db0f0de4700b8fc3a4664b27a267cc03b37",
+      "executed": 2038,
+      "filter": "*",
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0
+    },
+    "sanitize": {
+      "receipt": "build/oblivion-compat/m15/S4/cold-script-inventory-integration-sanitize-01/verification.json",
+      "sha256": "889adc130b56c604fdd9afbdcb394bd9f041782473a071efa876cf6a8039bacd",
+      "executed": 2038,
+      "filter": "*",
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "inventory_ownership_fix": "A newly encountered static script actor now captures its actual inventory before publishing RuntimeReferenceState. Previously a default-empty placeholder could suppress lazy stock inventory after restart. Existing saved empties remain authoritative. The regression uses the existing native World fixture, a real StopLook command, stock and modified inventories, and no actor-value/life authority birth.",
+  "recovery_development": {
+    "evidence": "build/oblivion-compat/m15/S4/combined-restart-work-01",
+    "retained_attempts": "Earlier recovery01/02 and stable01 courses exposed timing-dependent Fatigue endpoints and two distant inventory losses. Full-Fatigue observation and the script-reference inventory fix resolve them. cold-script-inventory-red-01/02 and focused-01 are retained fixture failures (group structure, staged-not-applied save, duplicate manual/authored actor); corrected focused02 passes8 cases.",
+    "deferred_observations": [
+      "Existing bright/pale partition material remains outside this combat chunk.",
+      "Runtime retains an unknown-type inventory projection warning for FormId:0x103e4c9. No projection/record support was added; investigate when a required equipment case depends on it."
+    ]
+  },
+  "recovery_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee_recovery_resume.json",
+  "endpoint_comparison": "Source load is wholly exact. Endpoints compare all native actor values including naturally full Fatigue140, active ownership, pending ledger, combat RNG and every shared reference inventory. Only elapsed/world-scheduling/position samples, inactive first-person block samples and last released-input duration with no owned/queued action are excluded; the linked receipts enumerate them. Both misses preserve target values/inventory, Player Health/inventory and combat RNG."
 }

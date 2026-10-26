@@ -1479,6 +1479,87 @@ namespace
             }
     }
 
+    TEST(OblivionWorldTest, NativeScriptColdReferencePreservesInventoryBeforePublishingSavedState)
+    {
+        const auto bytes = [](const auto& value) {
+            return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+        };
+        const auto sub = [&](std::uint32_t tag, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+        };
+        const auto record = [&](std::uint32_t tag, std::uint32_t id, const std::string& data) {
+            return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(0u)
+                + bytes(id) + bytes(0u) + data;
+        };
+        const auto cell = record(ESM4::REC_CELL, 1,
+            sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})));
+        const auto placed = record(ESM4::REC_ACHR, 0x900,
+            sub(ESM::fourCC("NAME"), bytes(0x800u)));
+        const auto group = bytes(ESM::fourCC("GRUP")) + bytes(static_cast<std::uint32_t>(20 + placed.size()))
+            + bytes(1u) + bytes(6u) + bytes(0u) + placed;
+        const auto cells = bytes(ESM::fourCC("GRUP"))
+            + bytes(static_cast<std::uint32_t>(20 + cell.size() + group.size()))
+            + bytes(ESM4::REC_CELL) + bytes(0u) + bytes(0u) + cell + group;
+        for (const bool materialized : {false, true})
+        {
+            SCOPED_TRACE(materialized);
+            NativeWorldFixture fixture(false, false, false, {}, {}, cells, 2);
+            auto& world = fixture.mWorld;
+            auto& store = world.getStore();
+            ESM4::Race race{};
+            race.mId = {0x810, 0};
+            race.mAttribMale = {40, 40, 40, 40, 40, 40, 40, 40};
+            race.mAttribFemale = race.mAttribMale;
+            store.getWritable<ESM4::Race>().insertStatic(race, ESM::FormKey::content("headless.esm", 0x810));
+            MWClass::ESM4Npc::registerSelf();
+            const auto weapon = addEquipmentWeapon(fixture);
+            auto base = *store.search<ESM4::Npc>(ESM::FormKey::content("headless.esm", 0x800));
+            base.mRace = race.mId;
+            base.mInventory.push_back({0x940, 3});
+            store.getWritable<ESM4::Npc>().insertStatic(base, base.mFormKey);
+            const auto actor = world.getWorldModel().getCell(ESM::RefId(ESM::FormId{1, 0}))
+                .getPtr(ESM::RefId(ESM::FormId{0x800, 0}));
+            ASSERT_FALSE(actor.isEmpty());
+            auto saved = captureNativeActorState(fixture, actor);
+            saved.mReferences.clear(); // Actor was not resident at the saved boundary.
+            acceptNativeSnapshot(fixture, saved);
+            actor.getRefData().setCustomData(nullptr);
+            if (materialized)
+            {
+                ESM4::RuntimeInventoryItem item;
+                item.mBase = weapon; item.mCount = 2; item.mCondition = 43.125f;
+                item.mOwner = base.mFormKey;
+                installEquipmentInventory(fixture, actor, {item});
+            }
+            else
+                ASSERT_EQ(actor.getRefData().getCustomData(), nullptr);
+            MWWorld::OblivionScriptManager host(world, world.getStore(), {"headless.esm"});
+            ObScript::RuntimeContext context;
+            context.mSelf = actor.getCellRef().getFormKey();
+            const auto* metadata = world.getStore().getFormKeyIndex().resolve(context.mSelf);
+            ASSERT_NE(metadata, nullptr);
+            ASSERT_TRUE(metadata->mParent);
+            // This script command persists a newly encountered reference, without
+            // explicitly reading or editing its inventory.
+            ASSERT_NO_THROW(host.call("StopLook", {}, {}, context, {}));
+            const auto inventory = world.captureOblivionActorInventory(actor);
+            ASSERT_EQ(inventory.size(), 1u);
+            EXPECT_EQ(inventory.front().mBase, weapon);
+            EXPECT_EQ(inventory.front().mCount, materialized ? 2 : 3);
+            if (materialized)
+            {
+                EXPECT_EQ(inventory.front().mCondition, 43.125f);
+                EXPECT_EQ(inventory.front().mOwner, base.mFormKey);
+            }
+            auto staged = world.prepareOblivionSavedActorInventory(actor);
+            ASSERT_NE(staged, nullptr);
+            actor.getRefData().setCustomData(nullptr);
+            EXPECT_EQ(world.captureOblivionActorInventory(actor), inventory);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorValues(context.mSelf), nullptr);
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(context.mSelf), nullptr);
+        }
+    }
+
     TEST(OblivionWorldTest, NativeScriptAddItemZeroCountDoesNotConstructInventoryOrAuthority)
     {
         NativeWorldFixture fixture;

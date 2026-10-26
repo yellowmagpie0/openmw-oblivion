@@ -1244,6 +1244,11 @@ namespace MWWorld
                 state.mEnabled = ptr.getRefData().isEnabled();
                 state.mDeleted = ptr.mRef->isDeleted();
                 state.mPosition = ptr.getRefData().getPosition();
+                // Publish a complete actor inventory, before the reference can
+                // be mistaken for an authoritative saved empty inventory by
+                // lazy class construction. Existing saved empties stay intact.
+                if (ptr.getType() == ESM::REC_NPC_4 || ptr.getType() == ESM::REC_CREA4)
+                    state.mInventory = mWorld.captureOblivionActorInventory(ptr);
                 try
                 {
                     state.mLockLevel = ptr.getCellRef().getLockLevel();

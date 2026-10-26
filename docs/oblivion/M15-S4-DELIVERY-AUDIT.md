@@ -6,19 +6,19 @@ scope is [S4 in the implementation plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION
 including its tests and gate. Historical pure-rule, isolated body and service
 checkpoints in the milestone ledger do not establish complete live gameplay.
 
-The latest [bounded natural recovery checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
-takes a normal unarmed contact against unchanged stock Bailey through physical
-Down, coherent GetUp and upright return, including actual Down-save fresh-process
-restarts in normal and sanitizer runs. The combined course and complete S4 matrix
-remain open.
+Current acceptance checklist (2026-10-26):
 
-The [combined core-course checkpoint](../../scripts/data/oblivion_compat/m15_combined_melee_course.json)
-now joins equipped block, actual Player Stagger/recovery, a nonlethal return
-attack, a clear range miss and an in-reach stock-partition wall miss in normal
-and sanitizer processes. Each has seven exact save/live comparisons, settled
-ownership and verified block audio; a same-pose disabled-partition control hits.
-This is one first-person keyboard/mouse configuration. Matched in-flight
-restarts and the complete required S4 matrix remain open.
+- **Demonstrated:** the [combined core course and matched Stagger restart](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass normally and under ASan/UBSan: block, natural recovery, nonlethal return attack, clear range miss and in-reach wall miss. Four fresh process epochs provide 28 exact save/live pairs, matched resources/ownership and no contact or block-audio replay. New static script references preserve cold actor inventories; genuine saved empties remain authoritative. Full engine inventories pass **2,038 tests each**, plus eight focused ownership checks. Unchanged component/Python evidence is linked with its original provenance.
+- **Incomplete:** matched held-block and windup continuations, then the required actor/weapon/directional/mastery/effect, command/query, interruption and view/device/FPS/sound matrix below. Current gameplay evidence is one first-person keyboard/mouse configuration with cap15; measured FPS acceptance remains open.
+- **Blocked:** none.
+
+The recovery chunk is complete. Next, reuse the reference saves already captured
+at held block (save4) and pending windup (save7) to close the remaining in-flight
+restart gates. The earlier [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
+and the recipe at `bff99f7018` retain their historical provenance.
+Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: choose work by
+the missing gameplay behavior, use focused checks before batched integration
+gates, reuse applicable evidence, and keep unrelated discoveries deferred.
 
 ## Required implementation
 
