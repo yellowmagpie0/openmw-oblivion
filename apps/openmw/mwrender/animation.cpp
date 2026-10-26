@@ -1058,6 +1058,11 @@ namespace MWRender
     const SceneUtil::ControllerSequenceMetadata& Animation::NativeIdleResource::metadata() const
     { return mFrames->mControllerSequences.front(); }
 
+    std::shared_ptr<const Animation::NativeIdleResource> Animation::NativeIdleResource::retainSourceArtifact() const
+    {
+        return std::shared_ptr<const NativeIdleResource>(new NativeIdleResource(mModel, mFrames));
+    }
+
     std::shared_ptr<const Animation::NativeIdleResource> Animation::acquireNativeIdleResource(
         std::string_view model) const
     {

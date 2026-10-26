@@ -630,6 +630,9 @@ namespace MWRender
             const VFS::Path::Normalized& model() const;
             const std::string& fileHash() const;
             const SceneUtil::ControllerSequenceMetadata& metadata() const;
+            // Keep the exact parsed KF for an NI source without extending the
+            // native loaded-info cache entry's lifetime. No backend lookup.
+            std::shared_ptr<const NativeIdleResource> retainSourceArtifact() const;
         };
         std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(std::string_view model) const;
         static std::shared_ptr<const NativeIdleResource> acquireNativeIdleResource(

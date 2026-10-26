@@ -1,0 +1,547 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Atomic service publication of resolved GetUp request graphs with an optional transferred melee frame; exact source-artifact retention independent of native loaded-info ownership",
+  "runtime_schema": 73,
+  "parent": "5bdae92de4cb5ce6e65e22d096f2de477e36afde",
+  "tested_source": {
+    "head": "5bdae92de4cb5ce6e65e22d096f2de477e36afde",
+    "source_fingerprint": "d194e025c4c8eb04ec73d30d3c74f95091fcd727199015f1d4bcf2994d5535d8"
+  },
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_publication_cases.json",
+  "implementation": [
+    "Prepare validates actor/base authority, supported graph/process/clock inputs, CRT transition, identity frontier and immutable retained request/resource/NI bindings before any authority write.",
+    "An optional prepared melee frame transfers to the same transaction. Its service, actor and next clock must match. Clock advancement with an existing melee owner requires that companion. Owned body strike/reaction action conflicts and actor-clock rewinds reject.",
+    "Commit revalidates current owner identity, actor values/life, graph, selected resource, melee state, clock and RNG, then publishes staged map nodes/swaps and process fields together. No contact allocation/consumption, resource loading, key traversal or renderer callbacks occur here.",
+    "Cleared graphs retain their issued-identity frontier. Low-process cleanup accepts no new active-process authority. No save-format migration.",
+    "retainSourceArtifact clones the exact parsed KF holder without a native info lease or backend lookup; an NI source may survive final info release and coexist with a new info loaded from replacement bytes."
+  ],
+  "checks": {
+    "normal": {
+      "executed": 2015,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "951ba7e04c84cfc26f3d2d98c3a4c9528cff73c45d8103e8db1efd618a3ec36a",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "49fe658dd22cb03e460e2e30c2806aadd1e442badf64e743881815171c0b34d0",
+      "inventory_sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitized": {
+      "executed": 2015,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "4897fc4835ee73e35e5fde6c944b7cd6d3090035e87b5d7c9be806c833dfd48c",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "6300889343e621d4002aaadcd678de47a3931006d0575fda57501b9d990116cc",
+      "inventory_sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    "focused_leak": {
+      "executed": 9,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "NativeGetUpPlaybackTest.*:NativeIdleResourceTest.SourceArtifactRetainsExactBytesWithoutOwningLoadedInfo",
+      "binary_sha256": "4897fc4835ee73e35e5fde6c944b7cd6d3090035e87b5d7c9be806c833dfd48c",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "8e6f13a5d1f7cf91109063de1363b494cfbb8384b879085f796d48b36ed04671",
+      "inventory_sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    "allocation_probe": {
+      "passed": true,
+      "scope": "Standalone normal engine-library host, glibc malloc/calloc/realloc failure injection; not normal-input gameplay",
+      "commands": [
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/probe",
+            "--gtest_list_tests"
+          ],
+          "returncode": 0
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/probe",
+            "--gtest_filter=NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/allocation.xml"
+          ],
+          "returncode": 0
+        }
+      ],
+      "preload_sha256": "7d39925491ef6fada1cb24189c4292a9bc747357ff1033605f24ef1b4e0af02d",
+      "gtest": {
+        "executed": 1,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe"
+      },
+      "counts": {
+        "preparation_attempts": 30,
+        "rejected_preparation_cases": 29,
+        "bad_alloc_cases": 24,
+        "other_exception_cases": 5,
+        "publication_profiles": 6,
+        "denied_publication_allocations": 0,
+        "negative_control_denied": 1
+      }
+    },
+    "standalone_focused": {
+      "passed": true,
+      "scope": "Standalone updated normal engine-library host, nine new tests; canonical full-engine checks remain separate",
+      "gtest": {
+        "executed": 9,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "NativeGetUpPlaybackTest.*:NativeIdleResourceTest.SourceArtifactRetainsExactBytesWithoutOwningLoadedInfo-NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe"
+      },
+      "probe_sha256": "46b125e8968f6c38dcd116c17d886273d62c75e0e59de40b703962c03f1229f8"
+    }
+  },
+  "binaries": {
+    "normal_openmw_sha256": "012cd1f4c05d8fb82ebecc562caddcedc5937467fa4301e5ef7e30a4fb887e46",
+    "sanitized_openmw_sha256": "624d4a1dc3ce3271ba1b58806e479379dbb9a472bc793538fa576dff7299d49e",
+    "standalone_probe_sha256": "46b125e8968f6c38dcd116c17d886273d62c75e0e59de40b703962c03f1229f8",
+    "normal_engine_library_sha256": "c7a44a7ff0223d65df83c198c722076d0297fe8edb13850fd9a582eadbb768f3"
+  },
+  "original_evidence": {
+    "passed": true,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Reinspection of existing independently executed original-instruction corpus; no new oracle execution or game process",
+    "corpus": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/request-cache-native01-corpus05.json",
+    "corpus_sha256": "500d108c14ad4bff0271cdc62e9f0571df458e0ea95ce8bcec0c05b0243e60de",
+    "courses": 3,
+    "requests": 12,
+    "profiles": [
+      {
+        "course": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "requests": [
+          {
+            "pointer": 34632592,
+            "info": 33599488,
+            "sequence": 34632704,
+            "status": 2
+          },
+          {
+            "pointer": 34634272,
+            "info": 33599488,
+            "sequence": 34632704,
+            "status": 2
+          },
+          {
+            "pointer": 34634368,
+            "info": 33599488,
+            "sequence": 34632704,
+            "status": 2
+          },
+          {
+            "pointer": 34634464,
+            "info": 33599488,
+            "sequence": 34634576,
+            "status": 2
+          }
+        ],
+        "distinct_sequences": 2
+      },
+      {
+        "course": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "requests": [
+          {
+            "pointer": 34632656,
+            "info": 33599488,
+            "sequence": 34632768,
+            "status": 2
+          },
+          {
+            "pointer": 34634336,
+            "info": 33599552,
+            "sequence": 34634432,
+            "status": 2
+          },
+          {
+            "pointer": 34635952,
+            "info": 33599488,
+            "sequence": 34636048,
+            "status": 2
+          },
+          {
+            "pointer": 34637568,
+            "info": 33599552,
+            "sequence": 34637680,
+            "status": 2
+          }
+        ],
+        "distinct_sequences": 4
+      },
+      {
+        "course": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "requests": [
+          {
+            "pointer": 34633168,
+            "info": 33599488,
+            "sequence": 34633280,
+            "status": 2
+          },
+          {
+            "pointer": 34634848,
+            "info": 33599552,
+            "sequence": 34634944,
+            "status": 2
+          },
+          {
+            "pointer": 34636464,
+            "info": 33599616,
+            "sequence": 34636560,
+            "status": 2
+          },
+          {
+            "pointer": 34638080,
+            "info": 33599680,
+            "sequence": 34638192,
+            "status": 2
+          }
+        ],
+        "distinct_sequences": 4
+      }
+    ],
+    "finding": "Each retained NI pointer in these courses has one loaded-info pointer. Same-resource first three requests share one NI; after outgoing-request destruction the fourth has a new NI. Alternating and distinct-resource courses use distinct NIs."
+  },
+  "retained_verification_history": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-focused-01/verification.json",
+      "status": "preliminary five-test pass; superseded source"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-focused-02/verification.json",
+      "status": "manually interrupted before action-conflict correction"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-01/verification.json",
+      "status": "manually interrupted before action-conflict correction"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-01/verified.json",
+      "status": "probe assumed every allocation failure throws bad_alloc; FormKey translates some to validation exceptions"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-02/verified.json",
+      "status": "preliminary allocation pass before action-conflict correction"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-01/verification.json",
+      "status": "nine target cases passed; broad filter also selected allocator-only probe without required preload and failed its control"
+    }
+  ],
+  "source_files": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "f5cca71e93f45996deea0db270c05b3901da7908e1bcf86d739203719b480419"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "3272486f633af58fb75b4e79612b205224dcf718d3056658a611253872330378"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "889f40063aa2df2cc3ffbee7fafd502907dce068697d8c24e910c0cda9b91093"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "0e5069316fadca2e687ab1fe760b25b90de3edb6c97944772f6b990c2ad676ff"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "89a3a3a28bfc4281a3fe26b600e62633bc2833ea95f7bede62397b0195a85431"
+    }
+  ],
+  "artifact_pins": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "f5cca71e93f45996deea0db270c05b3901da7908e1bcf86d739203719b480419"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "3272486f633af58fb75b4e79612b205224dcf718d3056658a611253872330378"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "889f40063aa2df2cc3ffbee7fafd502907dce068697d8c24e910c0cda9b91093"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "0e5069316fadca2e687ab1fe760b25b90de3edb6c97944772f6b990c2ad676ff"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "89a3a3a28bfc4281a3fe26b600e62633bc2833ea95f7bede62397b0195a85431"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_publication_cases.json",
+      "sha256": "e9548fdd560969a0ce3802275b270c601a4fc6f2afe65578d40074076683f6ff"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-normal-01/engine-build.log",
+      "sha256": "85a0b513dcca47c6d4825ab32a46575a03c20e52730580b6cbffbc8dab79e651"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-normal-01/engine-inventory.txt",
+      "sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-normal-01/engine.log",
+      "sha256": "4e84581a750670ae2339a23602f9e5a8fa1eb5a431046a3cd72863c6dbbe25f4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-normal-01/engine.xml",
+      "sha256": "49fe658dd22cb03e460e2e30c2806aadd1e442badf64e743881815171c0b34d0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-normal-01/verification.json",
+      "sha256": "5b487654596257390a282b0b03cfe505d0a5627bacc8a853b6b0c8a644f93193"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-02/engine-build.log",
+      "sha256": "5b8546cfd1f18951003cfc4c591afdfc9dc83c229507279b1f4c96e560f02d62"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-02/engine-inventory.txt",
+      "sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-02/engine.log",
+      "sha256": "bd504d5ef58c954514622cfa8fcd5257844a250c418bede9b64a31759fa21a58"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-02/engine.xml",
+      "sha256": "6300889343e621d4002aaadcd678de47a3931006d0575fda57501b9d990116cc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-02/verification.json",
+      "sha256": "b35eb34c61d35e78c24e942c40ccdf2c0011f47260c919cb9b4a797197de9435"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-leak-01/engine-build.log",
+      "sha256": "3d59ab5c2f16bf9b27172cea17a6327b5f0d1f6b1a25c05fc72ea017e465e990"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-leak-01/engine-inventory.txt",
+      "sha256": "0c981da9085f62385a0452300e1936f2a45f74dd89e405d289c8bdaf095439f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-leak-01/engine.log",
+      "sha256": "ac6379af8a816de5264744f9fc8f99d791e6f25d37c778c95b8e609023520c98"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-leak-01/engine.xml",
+      "sha256": "8e6f13a5d1f7cf91109063de1363b494cfbb8384b879085f796d48b36ed04671"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-leak-01/verification.json",
+      "sha256": "5f168d74f2f3898cd7d73aaa7b126477bec56051d5d874a2b92b0ff4fcf812aa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/allocation.log",
+      "sha256": "6a60036c5b9db59b66c49a8f4402deda0e2cac979dbc759c7ca380bb026be36a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/allocation.xml",
+      "sha256": "a3de74404d2e0886779ca1b864e091824894f5f3e77e9964b325eddbe02297dd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/allocation-counts.json",
+      "sha256": "3ac7769a3d286167f82a72e409b90449309cfb0f02695ea4a30fe7ffdbaa8e23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/inventory.log",
+      "sha256": "85eb0cae38d0b7c1490e812827c9b2ab78f16034ee343381e1e648bd7716b8dd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-03/verified.json",
+      "sha256": "4a674ea0e6415367c4470ded07f3f397088442e2171cefb5e3fc4d0086f07c0b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/fresh-process-probe.cpp",
+      "sha256": "e718a9034dd10a2e62832f46ff07116608e9500807683ac709864fe0819a8da6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/allocation-guard.c",
+      "sha256": "afa548192c770a1b4477f20fbd0adda2cd30e69724e7d930b17339e2f6e3285d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/allocation-guard.so",
+      "sha256": "7d39925491ef6fada1cb24189c4292a9bc747357ff1033605f24ef1b4e0af02d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/build-fresh-process-probe.py",
+      "sha256": "3162f8a42f38b5d705be3bb558e1dc2e067377c678a5041b2a2947c5590a75d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/run-probe.py",
+      "sha256": "4d42e9ac2e7059b0b2c0fc018bd4260aff5f8924c170055a0bfde9d8a9239c9e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-03/probe-build.json",
+      "sha256": "0624e8348ffb76c633071a6bc4304d2982c9b016af00db2ce8a429a45c2598de"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-02/inventory.log",
+      "sha256": "85eb0cae38d0b7c1490e812827c9b2ab78f16034ee343381e1e648bd7716b8dd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-02/tests.log",
+      "sha256": "aad5aa75d8d1143d70a444bf3e9ec3588be0388cfcb9a9ed639d828e0ddde0da"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-02/tests.xml",
+      "sha256": "6d6ee539887923fa4a5a5d90176452745039dca3ea89a58f6c4867af5c0d8103"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-02/verification.json",
+      "sha256": "ed7f320c091c77f24c8673042fe227d643cda8901501c878542e1b4399e24334"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/request-cache-native01.py",
+      "sha256": "a7b1fa217668d4581ee288403f64cc595da5f2977a0c1d0c36a8ee1f9deb8694"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/request-cache-native01-report05.json",
+      "sha256": "e2017f8201ddc65e874cc92c779d58c7d6080dbad137fb15712690a1d4bfb4db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/request-cache-native01-corpus05.json",
+      "sha256": "500d108c14ad4bff0271cdc62e9f0571df458e0ea95ce8bcec0c05b0243e60de"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-publication-work-01/review-resource-bindings.py",
+      "sha256": "898d0c0ce195d66ff3768d29d208ad209ca2ceb6a23f7553ea476c1e5aa68430"
+    },
+    {
+      "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-publication-work-01/resource-binding-review.json",
+      "sha256": "0f904ae06cc1e651f10093feef8082ddeb1887e3e4ee032af092248732072157"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-focused-01/verification.json",
+      "sha256": "3447e91e958f05011552fb3d03c51691a4da1dccdf970f8c6ee605d37b261ca7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-focused-02/verification.json",
+      "sha256": "bb4c0ca4dfbc68ee2ff38ae27b5fadf878342c47c3c7fc96598597aa1c0b5d9b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-01/verification.json",
+      "sha256": "de982ca3da123b9a66bf34e8c13742084acda58d7a971430e42400f8a24d25b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-01/verified.json",
+      "sha256": "2ac49a617adbdc5f0658863c9658b21388ea505cbe47a9a97c434af236325be4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-normal-02/verified.json",
+      "sha256": "cf67f7092f61e6a1acf7174431aacc2c9a0c3df34efa31a279d712904f96acb9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-standalone-focused-01/verification.json",
+      "sha256": "fb37f0970c8899e20242d24c40f2adfe149c26eabf916e2ec2183479d748fffb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-focused-02/interruption.json",
+      "sha256": "1d65f55d21643604adae522f724dbf96b455f0f740e8b9e8871f75ed3814be29"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-sanitized-01/interruption.json",
+      "sha256": "1d65f55d21643604adae522f724dbf96b455f0f740e8b9e8871f75ed3814be29"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-01/fresh-process-probe.cpp",
+      "sha256": "c87e960f039b0886e576a01abf78fc7ecee9d355da17d1e704d7b4231faf7307"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-01/probe-build.json",
+      "sha256": "2defbb2ee43b377f1587ad38e9598666d6cb46dabfe6b23fa1c2802f6d346184"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-02/fresh-process-probe.cpp",
+      "sha256": "e718a9034dd10a2e62832f46ff07116608e9500807683ac709864fe0819a8da6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-publication-allocation-work-02/probe-build.json",
+      "sha256": "65a033b7aca662993ac8f3b2efca0ed517630d7da822862645d55bf4164e4e19"
+    }
+  ],
+  "warnings": [
+    "Existing GCC warnings in unchanged animation/melee-frame/test code remain; no warning-free build claim.",
+    "Standalone probe compilation includes anonymous-namespace fixtures and emits subobject-linkage warnings.",
+    "Full sanitizer suite uses detect_leaks=0; leak-enabled coverage is the separate nine-test run."
+  ],
+  "not_run": [
+    "Unchanged component/Python suites were not rerun for this engine-only chunk.",
+    "No new original-executable experiment or native game process; the binding review reinspects an existing independently executed corpus.",
+    "No rendered or normal-input end-to-end gameplay acceptance for this publication boundary."
+  ],
+  "verification_layers": {
+    "structural_write": "C++ service/renderer API and tests; no generated plugin or content-authoring write.",
+    "compiler_and_world_validation": "Full normal and ASan/UBSan engine inventories match XML; nine focused cases also run with leak detection enabled.",
+    "semantic_reinspection": "Full service snapshots, graph/process/RNG continuity, exact old/new KF sampling and independent allocation injection. Existing original corpus reviewed for binding continuity.",
+    "actual_runtime_acceptance": "Not established by these headless checks; live factory/dispatcher and plan runtime gates remain open."
+  },
+  "remaining": [
+    "Live request/NI graph factory and dispatcher",
+    "Native manager slot/order/root authority and renderer restoration",
+    "Physical/Player entry prefixes and pending IO ownership/restoration",
+    "Normal-input gameplay, view/device/FPS, audio/visual and fresh-process continuation gates"
+  ]
+}

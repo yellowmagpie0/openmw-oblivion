@@ -6284,6 +6284,203 @@ namespace MWMechanics
         return true;
     }
 
+    struct OblivionCombatService::PreparedGetUpPlayback::Data
+    {
+        OblivionCombatService* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        ESM::FormKey mActor;
+        ESM4::RuntimeActorValues mValues;
+        ESM4::RuntimeActorLife mLife;
+        std::optional<ESM4::RuntimeGetUpIdle> mExpectedIdle;
+        std::optional<ESM4::RuntimeGetUpPlayback> mExpectedGraph;
+        std::optional<ESM4::RuntimeMeleeState> mExpectedMelee;
+        std::optional<float> mExpectedClock;
+        GetUpPlaybackUpdate mUpdate;
+        std::map<ESM::FormKey, ESM4::RuntimeGetUpPlayback> mGraph;
+        std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mIdle;
+        std::map<ESM::FormKey, float> mClock;
+        std::unique_ptr<PreparedMeleeReactionFrame> mMelee;
+        bool mCommitted = false;
+    };
+
+    OblivionCombatService::PreparedGetUpPlayback::PreparedGetUpPlayback(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    OblivionCombatService::PreparedGetUpPlayback::~PreparedGetUpPlayback() = default;
+
+    bool OblivionCombatService::PreparedGetUpPlayback::isValid() const noexcept
+    {
+        if (!mData || mData->mCommitted || mData->mIdentity.expired()) return false;
+        const auto& data = *mData;
+        const auto& owner = *data.mOwner;
+        if (data.mIdentity.lock() != owner.mPreparedGetUpIdentity.mValue
+            || owner.mCombatRngState != data.mUpdate.mRandom.mExpectedState) return false;
+        const auto* values = owner.findActorValues(data.mActor);
+        const auto* life = owner.findActorLife(data.mActor);
+        if (!values || !life || *values != data.mValues || *life != data.mLife) return false;
+        const auto matches = [&](const auto& map, const auto& expected) {
+            const auto found = map.find(data.mActor);
+            return expected ? found != map.end() && found->second == *expected : found == map.end();
+        };
+        if (!matches(owner.mGetUpIdles, data.mExpectedIdle)
+            || !matches(owner.mGetUpPlayback, data.mExpectedGraph)
+            || !matches(owner.mMeleeStates, data.mExpectedMelee)) return false;
+        const auto clock = owner.mAnimationClocks.find(data.mActor);
+        if (data.mExpectedClock ? clock == owner.mAnimationClocks.end()
+                || std::bit_cast<std::uint32_t>(clock->second)
+                    != std::bit_cast<std::uint32_t>(*data.mExpectedClock)
+                               : clock != owner.mAnimationClocks.end()) return false;
+        return !data.mMelee || data.mMelee->isValid();
+    }
+
+    const ESM4::RuntimeGetUpPlayback& OblivionCombatService::PreparedGetUpPlayback::state() const
+    {
+        if (!isValid()) throw std::invalid_argument("stale GetUp playback candidate");
+        return mData->mGraph.begin()->second;
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedGetUpPlayback> OblivionCombatService::prepareGetUpPlayback(
+        const ESM::FormKey& actor, GetUpPlaybackUpdate update, std::unique_ptr<PreparedMeleeReactionFrame> melee)
+    {
+        const auto* values = findActorValues(actor);
+        const auto* life = findActorLife(actor);
+        if (!values || !life || values->mBase != life->mBase
+            || ESM4::runtimeReferenceKey(actor) != actor
+            || ESM::FormKey::deserialize(actor.serialize()) != actor)
+            throw std::invalid_argument("GetUp playback requires native actor authority");
+        if ((update.mKnockedState && (*update.mKnockedState < 0 || *update.mKnockedState > 6))
+            || (update.mClock && (!std::isfinite(*update.mClock) || *update.mClock < 0 || *update.mClock > 100000)))
+            throw std::invalid_argument("invalid GetUp playback process byte or clock");
+        update.mPlayback.validate(update.mClock);
+        if (values->mProcess == ESM4::ActorValueProcess::Low
+            ? update.mKnockedState || update.mAction || update.mIdle
+                || !update.mPlayback.mResources.empty() || !update.mPlayback.mSequences.empty()
+            : !update.mKnockedState || !update.mAction)
+            throw std::invalid_argument("GetUp playback has incompatible native process ownership");
+        auto nextValues = *values;
+        nextValues.mProcessKnockedState = update.mKnockedState;
+        nextValues.mProcessAction = update.mAction;
+        nextValues.validate();
+        for (const auto& [id, resource] : update.mPlayback.mResources)
+            if (resource.mBase != values->mBase)
+                throw std::invalid_argument("GetUp playback resource belongs to another actor base");
+        if (update.mIdle)
+        {
+            update.mIdle->validate();
+            if (update.mIdle->mBase != values->mBase)
+                throw std::invalid_argument("GetUp playback selection belongs to another actor base");
+        }
+        if (update.mRandom.mExpectedState != mCombatRngState) return {};
+        auto random = update.mRandom.mExpectedState;
+        for (unsigned i = 0; i < update.mRandom.mDraws; ++i) random = ESM4::combatRandomDraw(random).mNextState;
+        if (random != update.mRandom.mNextState)
+            throw std::invalid_argument("GetUp playback CRT transition differs from its draw count");
+        auto data = std::make_unique<PreparedGetUpPlayback::Data>();
+        data->mOwner = this; data->mActor = actor; data->mValues = *values; data->mLife = *life;
+        data->mExpectedIdle = getUpIdle(actor); data->mExpectedGraph = getUpPlayback(actor);
+        if (const auto* state = findMeleeState(actor)) data->mExpectedMelee = *state;
+        if (const auto clock = mAnimationClocks.find(actor); clock != mAnimationClocks.end())
+            data->mExpectedClock = clock->second;
+        if (data->mExpectedClock && update.mClock && *update.mClock < *data->mExpectedClock)
+            throw std::invalid_argument("GetUp playback cannot rewind the actor clock");
+        if (data->mExpectedGraph)
+        {
+            const auto& old = *data->mExpectedGraph;
+            if (update.mPlayback.mNextIdentity < old.mNextIdentity)
+                throw std::invalid_argument("GetUp playback allocation frontier moved backwards");
+            const auto identities = [](const auto& graph) {
+                std::map<std::uint64_t, unsigned> result;
+                for (const auto& [id, resource] : graph.mResources) result.emplace(id, 0);
+                for (const auto& [id, sequence] : graph.mSequences) result.emplace(id, 1);
+                for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                         &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+                    if (*slot) result.emplace((*slot)->mIdentity, 2);
+                return result;
+            };
+            const auto previous = identities(old);
+            for (const auto& [id, kind] : identities(update.mPlayback))
+            {
+                const auto found = previous.find(id);
+                if (found == previous.end() ? id < old.mNextIdentity : found->second != kind)
+                    throw std::invalid_argument("GetUp playback reused an issued identity");
+            }
+            for (const auto& [id, resource] : update.mPlayback.mResources)
+                if (const auto found = old.mResources.find(id); found != old.mResources.end()
+                    && resource != found->second)
+                    throw std::invalid_argument("GetUp playback changed retained resource provenance");
+            for (const auto& [id, sequence] : update.mPlayback.mSequences)
+                if (const auto found = old.mSequences.find(id); found != old.mSequences.end()
+                    && sequence.mResource != found->second.mResource)
+                    throw std::invalid_argument("GetUp playback retargeted an existing NI identity");
+            for (const auto* slot : {&update.mPlayback.mRequests.mPrimary, &update.mPlayback.mRequests.mSecondary,
+                     &update.mPlayback.mRequests.mRetired[0], &update.mPlayback.mRequests.mRetired[1]})
+                if (*slot)
+                    for (const auto* previousSlot : {&old.mRequests.mPrimary, &old.mRequests.mSecondary,
+                             &old.mRequests.mRetired[0], &old.mRequests.mRetired[1]})
+                        if (*previousSlot && (*previousSlot)->mIdentity == (*slot)->mIdentity
+                            && ((*previousSlot)->mResource != (*slot)->mResource
+                                || old.requestSelection((*slot)->mIdentity)
+                                    != update.mPlayback.requestSelection((*slot)->mIdentity)))
+                            throw std::invalid_argument("GetUp playback changed an existing request selection");
+        }
+        const auto sameClock = [](auto a, auto b) {
+            return a.has_value() == b.has_value() && (!a || std::bit_cast<std::uint32_t>(*a)
+                == std::bit_cast<std::uint32_t>(*b));
+        };
+        if (melee)
+        {
+            if (!melee->isValid() || melee->mData->mOwner != this || melee->mData->mActor != actor
+                || !sameClock(update.mClock, std::optional(melee->mData->mNextClock)))
+                throw std::invalid_argument("GetUp playback requires its matching prepared melee frame");
+        }
+        else if (data->mExpectedMelee && !sameClock(update.mClock, data->mExpectedClock))
+            throw std::invalid_argument("GetUp playback cannot advance another owner's clock alone");
+        const auto* nextMelee = melee ? &melee->mData->mNext
+            : data->mExpectedMelee ? &*data->mExpectedMelee : nullptr;
+        if (nextMelee && ((nextMelee->mReaction && update.mAction != nextMelee->mReaction->processAction())
+                || (nextMelee->mStrike && update.mAction != nextMelee->mStrike->processAction())))
+            throw std::invalid_argument("GetUp playback conflicts with an owned melee action");
+        data->mMelee = std::move(melee);
+        data->mUpdate = std::move(update);
+        data->mGraph.emplace(actor, std::move(data->mUpdate.mPlayback));
+        if (data->mUpdate.mIdle) data->mIdle.emplace(actor, *data->mUpdate.mIdle);
+        if (data->mUpdate.mClock) data->mClock.emplace(actor, *data->mUpdate.mClock);
+        if (!mPreparedGetUpIdentity.mValue) mPreparedGetUpIdentity.mValue = std::make_shared<const char>();
+        data->mIdentity = mPreparedGetUpIdentity.mValue;
+        return std::unique_ptr<PreparedGetUpPlayback>(new PreparedGetUpPlayback(std::move(data)));
+    }
+
+    bool OblivionCombatService::PreparedGetUpPlayback::commit() noexcept
+    {
+        if (!isValid()) return false;
+        auto& data = *mData;
+        auto& owner = *data.mOwner;
+        const auto publish = [&](auto& target, auto& staged) {
+            const auto found = target.find(data.mActor);
+            if (staged.empty()) { if (found != target.end()) target.erase(found); }
+            else if (found == target.end()) target.insert(staged.extract(staged.begin()));
+            else std::swap(found->second, staged.begin()->second);
+        };
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpPlayback>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpIdle>);
+        static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeMeleeState>);
+        if (data.mMelee)
+        {
+            auto& frame = *data.mMelee->mData;
+            std::swap(owner.mMeleeStates.find(data.mActor)->second, frame.mNext);
+            frame.mCommitted = true;
+        }
+        publish(owner.mGetUpPlayback, data.mGraph);
+        publish(owner.mGetUpIdles, data.mIdle);
+        publish(owner.mAnimationClocks, data.mClock);
+        auto& values = owner.mActorValues.find(data.mActor)->second;
+        values.mProcessKnockedState = data.mUpdate.mKnockedState;
+        values.mProcessAction = data.mUpdate.mAction;
+        owner.mCombatRngState = data.mUpdate.mRandom.mNextState;
+        data.mCommitted = true;
+        owner.mPreparedGetUpIdentity.mValue.reset();
+        return true;
+    }
+
     std::optional<ESM4::TimedKnockbackState> OblivionCombatService::actorKnockback(const ESM::FormKey& actor) const
     {
         const auto found = mActorKnockback.find(actor);

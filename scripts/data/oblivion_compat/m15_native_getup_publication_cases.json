@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "runtime_schema": 73,
+  "scope": "Prepared service publication for resolved GetUp graphs and an optional companion melee frame; exact detached source-artifact retention",
+  "cases": [
+    {
+      "id": "atomic-ready-publication",
+      "test": "NativeGetUpPlaybackTest.PublishesRequestGraphProcessFieldsClockAndRandomTogether",
+      "expected": "Preparation changes no authority; commit publishes graph, selected resource, clock, raw byte, action and one verified CRT transition together. A competing or consumed token cannot publish. Contact action identity remains independently pending."
+    },
+    {
+      "id": "resolved-lifecycle",
+      "test": "NativeGetUpPlaybackTest.ResolvedStartCompletionAndClearRetainIdentityFrontier",
+      "expected": "Already resolved ready/start/complete/destruct candidates publish graph references and process action consistently. Completed requests retain cache/NI references; cleanup retains allocation frontier and roundtrips schema73."
+    },
+    {
+      "id": "identity-continuity",
+      "test": "NativeGetUpPlaybackTest.RejectsReusedIdentitiesAndChangedRetainedBindings",
+      "expected": "Retained request/resource/NI bindings cannot be retargeted; removed identities cannot be reused; allocation frontier cannot rewind."
+    },
+    {
+      "id": "stale-authority",
+      "test": "NativeGetUpPlaybackTest.RejectsStaleRandomClockProcessAndServiceBeforeAnyWrite",
+      "expected": "RNG mutation, raw-byte ABA, clock advance, restore and service replacement invalidate the transaction before any write."
+    },
+    {
+      "id": "shared-melee-frame",
+      "test": "NativeGetUpPlaybackTest.PublishesCompanionMeleeFrameAndClockOnceWithoutConsumingContact",
+      "expected": "A matching transferred melee frame and GetUp graph publish at one actor clock; standalone competing frame becomes stale. Missing, foreign, stale and mismatched-clock frames fail without partial publication."
+    },
+    {
+      "id": "action-and-clock-conflicts",
+      "test": "NativeGetUpPlaybackTest.RejectsReactionActionConflictAndActorClockRewind",
+      "expected": "An owned body reaction or strike must retain its process action in the resolved candidate; actor clock cannot rewind. This boundary does not itself retire or cancel owners."
+    },
+    {
+      "id": "low-process-cleanup",
+      "test": "NativeGetUpPlaybackTest.LowProcessAllowsOnlyOwnershipCleanup",
+      "expected": "Low-process cleanup permits an empty graph/frontier with absent process byte/action/resource. It rejects newly claimed active-process authority."
+    },
+    {
+      "id": "malformed-candidate",
+      "test": "NativeGetUpPlaybackTest.MalformedCandidatesLeaveAllAuthorityUntouched",
+      "expected": "Malformed or stale CRT transitions, unsupported byte, nonfinite clock, foreign actor resource and pending IO state reject without writes."
+    },
+    {
+      "id": "source-artifact-lifetime",
+      "test": "NativeIdleResourceTest.SourceArtifactRetainsExactBytesWithoutOwningLoadedInfo",
+      "expected": "A detached source clones the exact retained KF holder without a backend lookup or cache lease. After last info release, a new acquisition gets replacement bytes while the old source still samples the old pose."
+    }
+  ],
+  "allocation_probe": {
+    "test": "NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe",
+    "expected": "All reached single-allocation failures during candidate preparation leave the full service snapshot unchanged; insert, replace, erase, companion publication and stale/consumed rejection perform no allocations. A malloc denial control verifies interposition.",
+    "boundary": "Standalone normal engine-library host, glibc malloc/calloc/realloc injection, headless fixtures. Some FormKey allocation failures become validation exceptions."
+  },
+  "remaining": [
+    "Live request/NI graph factory and dispatcher",
+    "Native manager slot/order/root authority and renderer restoration",
+    "Physical/Player entry prefixes and pending IO ownership/restoration",
+    "Normal-input gameplay, view/device/FPS, audio/visual and fresh-process continuation gates"
+  ]
+}

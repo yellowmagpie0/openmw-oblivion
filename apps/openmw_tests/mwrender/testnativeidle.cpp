@@ -174,6 +174,32 @@ TEST_F(NativeIdleResourceTest, NativeCacheRetainsInfoUntilLastOwnerButRendererAl
     EXPECT_FLOAT_EQ(b->mBone->getControllerTransform().mTranslation.x(), 27);
 }
 
+TEST_F(NativeIdleResourceTest, SourceArtifactRetainsExactBytesWithoutOwningLoadedInfo)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    auto info = cache.acquire("one\\same.kf"); ASSERT_TRUE(info);
+    const auto hash = info->fileHash();
+    const std::weak_ptr<const MWRender::Animation::NativeIdleResource> identity = info;
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    // Clone after backend eviction/replacement. The source must retain the
+    // resident's exact frames, without acquiring a new native info lease.
+    auto source = info->retainSourceArtifact(); ASSERT_TRUE(source);
+    EXPECT_NE(source, info); EXPECT_EQ(source->model(), info->model());
+    EXPECT_EQ(source->fileHash(), hash); EXPECT_EQ(cache.find("one\\same.kf"), info);
+    info.reset(); EXPECT_TRUE(identity.expired()); EXPECT_EQ(cache.size(), 0);
+    auto replacement = cache.acquire("one\\same.kf"); ASSERT_TRUE(replacement);
+    EXPECT_NE(replacement->fileHash(), hash);
+    auto oldActor = animation(); auto oldBinding = oldActor->prepareNativeIdleSource(*source);
+    ASSERT_TRUE(oldBinding); ASSERT_TRUE(oldBinding->commit()); source.reset();
+    oldActor->sample(oldBinding->group());
+    EXPECT_FLOAT_EQ(oldActor->mBone->getControllerTransform().mTranslation.x(), 9);
+    auto newActor = animation(); auto newBinding = newActor->prepareNativeIdleSource(*replacement);
+    ASSERT_TRUE(newBinding); ASSERT_TRUE(newBinding->commit());
+    replacement.reset(); EXPECT_EQ(cache.size(), 0);
+    newActor->sample(newBinding->group());
+    EXPECT_FLOAT_EQ(newActor->mBone->getControllerTransform().mTranslation.x(), 27);
+}
+
 TEST_F(NativeIdleResourceTest, NativeCacheColdJobPublicationUsesFirstResidentEvenWhenLoadedBytesDiffer)
 {
     MWRender::NativeIdleResourceCache cache(mFixture.mResources);
@@ -692,6 +718,240 @@ namespace
             return saved;
         }
     };
+
+    struct NativeGetUpPlaybackTest : NativeGetUpRequestTest
+    {
+        NativeGetUpPlaybackTest()
+        {
+            write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+            auto ready = mFixture.mWorld.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+            if (!ready->commit()) throw std::runtime_error("playback fixture resource acquisition failed");
+            combat().setProcessKnockedState(key(), 3);
+        }
+        MWMechanics::OblivionCombatService::GetUpPlaybackUpdate update()
+        {
+            MWMechanics::OblivionCombatService::GetUpPlaybackUpdate next;
+            next.mIdle = combat().getUpIdle(key()); next.mClock = 0;
+            next.mPlayback.mNextIdentity = 3;
+            next.mPlayback.mResources.emplace(2, *next.mIdle);
+            next.mPlayback.mRequests.mPrimary = ESM4::makeNativeIdleRequest(1, 2);
+            next.mKnockedState = 5; next.mAction = -1;
+            const auto seed = combat().combatRandomState(); next.mRandom = {seed, seed, 0};
+            return next;
+        }
+    };
+}
+
+TEST_F(NativeGetUpPlaybackTest, PublishesRequestGraphProcessFieldsClockAndRandomTogether)
+{
+    const auto contact = combat().allocateAction(key());
+    const auto before = snapshot(); auto next = update();
+    next.mRandom.mDraws = 1;
+    next.mRandom.mNextState = next.mRandom.mExpectedState * 214013u + 2531011u;
+    const auto expectedGraph = next.mPlayback; const auto random = next.mRandom;
+    auto prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->isValid());
+    auto competing = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(competing->isValid());
+    EXPECT_EQ(prepared->state(), expectedGraph); EXPECT_EQ(snapshot(), before);
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(competing->commit());
+    auto expected = before;
+    expected.mNativeGetUpPlayback.emplace(key(), expectedGraph); expected.mNativeAnimationClocks.emplace(key(), 0);
+    expected.mNativeActorValues.front().mProcessKnockedState = 5;
+    expected.mNativeActorValues.front().mProcessAction = -1;
+    expected.mCombatRngState = random.mNextState;
+    EXPECT_EQ(snapshot(), expected);
+    EXPECT_TRUE(combat().isActionPending(contact, key()));
+    EXPECT_THROW(prepared->state(), std::invalid_argument);
+}
+
+TEST_F(NativeGetUpPlaybackTest, ResolvedStartCompletionAndClearRetainIdentityFrontier)
+{
+    auto next = update(); auto ready = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(ready->commit());
+    ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2;
+    next.mPlayback.mSequences.emplace(3, sequence); next.mPlayback.mNextIdentity = 4;
+    const auto started = ESM4::startNativeIdleRequest(*next.mPlayback.mRequests.mPrimary, true, 3, -1, 0);
+    next.mPlayback.mRequests.mPrimary = started.mRequest;
+    next.mPlayback.mCachedSequence = next.mPlayback.mResidentSequence = next.mPlayback.mActionSequence = 3;
+    next.mAction = started.mAction; next.mClock = .25f;
+    auto start = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(start->commit());
+    EXPECT_EQ(combat().findActorValues(key())->mProcessAction, 11);
+    const auto completed = ESM4::completeNativeIdleRequest(*next.mPlayback.mRequests.mPrimary, 0, 11);
+    next.mPlayback.mRequests.mPrimary = completed.mRequest;
+    next.mPlayback.mSequences.at(3).mState.mInactive = true;
+    next.mPlayback.mResidentSequence = next.mPlayback.mActionSequence = 0;
+    next.mAction = completed.mAction; next.mClock = .5f;
+    auto completion = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(completion->commit());
+    EXPECT_EQ(combat().getUpPlayback(key())->mRequests.mPrimary->mStatus, 3);
+    EXPECT_EQ(combat().getUpPlayback(key())->mCachedSequence, 3);
+    const auto destruction = ESM4::destroyNativeIdleRequest(*next.mPlayback.mRequests.mPrimary, 2, 3, -1, 0);
+    ASSERT_EQ(destruction.mDetachSequence, 3); ASSERT_TRUE(destruction.mEraseCacheGroup);
+    next.mPlayback = {}; next.mPlayback.mNextIdentity = 4;
+    next.mIdle.reset(); next.mKnockedState = 0;
+    auto clear = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(clear->commit());
+    EXPECT_FALSE(combat().getUpIdle(key()));
+    EXPECT_EQ(combat().getUpPlayback(key())->mNextIdentity, 4);
+    EXPECT_TRUE(combat().getUpPlayback(key())->mResources.empty());
+    EXPECT_EQ(combat().findActorValues(key())->mProcessAction, -1);
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 0);
+    const auto wire = snapshot().serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(wire), snapshot());
+}
+
+TEST_F(NativeGetUpPlaybackTest, RejectsReusedIdentitiesAndChangedRetainedBindings)
+{
+    auto next = update(); auto first = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(first->commit());
+    const auto before = snapshot();
+    auto bad = next; bad.mPlayback.mResources.at(2).mModel = "OUTSIDE\\SAME.KF";
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), bad), std::exception);
+    bad = next; auto selection = *next.mIdle; selection.mModel = "OUTSIDE\\SAME.KF";
+    bad.mPlayback.mRequestSelections.emplace(1, selection);
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), bad), std::exception);
+    bad = next; bad.mPlayback.mResources.clear(); bad.mPlayback.mResources.emplace(4, *next.mIdle);
+    bad.mPlayback.mRequests.mPrimary = ESM4::makeNativeIdleRequest(2, 4); bad.mPlayback.mNextIdentity = 5;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), bad), std::exception);
+    next.mPlayback = {}; next.mPlayback.mNextIdentity = 3;
+    auto clear = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(clear->commit());
+    auto reuse = update(); reuse.mPlayback.mNextIdentity = 5;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), reuse), std::exception);
+    reuse.mPlayback = {}; reuse.mPlayback.mNextIdentity = 2;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), reuse), std::exception);
+    EXPECT_EQ(combat().getUpPlayback(key()), next.mPlayback);
+    EXPECT_EQ(combat().combatRandomState(), before.mCombatRngState);
+}
+
+TEST_F(NativeGetUpPlaybackTest, RejectsStaleRandomClockProcessAndServiceBeforeAnyWrite)
+{
+    auto prepared = combat().prepareGetUpPlayback(key(), update()); ASSERT_TRUE(prepared->isValid());
+    combat().drawNativeRandom(); const auto afterDraw = snapshot();
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), afterDraw);
+    prepared = combat().prepareGetUpPlayback(key(), update());
+    combat().setProcessKnockedState(key(), 0); combat().setProcessKnockedState(key(), 3);
+    EXPECT_FALSE(prepared->commit());
+    prepared = combat().prepareGetUpPlayback(key(), update());
+    combat().advanceAnimationClock(key(), .25f); const auto afterClock = snapshot();
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), afterClock);
+    auto next = update(); next.mClock = .25f;
+    prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared->isValid());
+    const auto saved = snapshot(); combat().restore(saved, mFixture.mWorld.getStore());
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), saved);
+    prepared = combat().prepareGetUpPlayback(key(), next);
+    auto replacement = combat(); combat() = std::move(replacement);
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), saved);
+}
+
+TEST_F(NativeGetUpPlaybackTest, PublishesCompanionMeleeFrameAndClockOnceWithoutConsumingContact)
+{
+    combat().setProcessKnockedState(key(), 0);
+    const auto contact = combat().beginMeleeStrike(key(), ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+    ASSERT_NE(contact, 0); combat().setProcessKnockedState(key(), 3);
+    MWMechanics::OblivionMeleeSequenceMetadata source{"handtohandblockattack", 1, 0, 1, 0, 1};
+    source.mPowerKeys = {0, .5f, 1};
+    const auto metadata = std::span(&source, 1);
+    auto frame = combat().prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(frame);
+    auto competing = combat().prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(competing);
+    auto next = update(); next.mClock = frame->clock(); next.mAction = combat().getProcessAction(key());
+    const auto before = snapshot(); auto expected = before;
+    expected.mNativeGetUpPlayback.emplace(key(), next.mPlayback);
+    expected.mNativeAnimationClocks[key()] = *next.mClock;
+    expected.mNativeMeleeStates.at(key()) = frame->state();
+    expected.mNativeActorValues.front().mProcessKnockedState = 5;
+    auto prepared = combat().prepareGetUpPlayback(key(), next, std::move(frame)); ASSERT_TRUE(prepared);
+    EXPECT_EQ(snapshot(), before); ASSERT_TRUE(prepared->isValid());
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+    EXPECT_EQ(snapshot(), expected); EXPECT_FLOAT_EQ(combat().animationClock(key()), .125f);
+    EXPECT_TRUE(combat().isActionPending(contact, key()));
+    EXPECT_FALSE(combat().commitMeleeReactionFrame(*competing));
+    // A second frame must transfer with exactly the same actor clock. Omitting
+    // it, mixing service owners or publishing a stale frame cannot write.
+    auto conflict = next; conflict.mAction = 11;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), conflict), std::invalid_argument);
+    frame = combat().prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(frame);
+    conflict.mClock = frame->clock();
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), conflict, std::move(frame)), std::invalid_argument);
+    EXPECT_EQ(snapshot(), expected);
+    next.mClock = .25f;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    frame = combat().prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(frame);
+    auto mismatched = next; mismatched.mClock = .5f;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), mismatched, std::move(frame)), std::invalid_argument);
+    auto foreign = combat(); frame = foreign.prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(frame);
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next, std::move(frame)), std::invalid_argument);
+    frame = combat().prepareMeleeReactionFrame(key(), .125f, metadata); ASSERT_TRUE(frame);
+    prepared = combat().prepareGetUpPlayback(key(), next, std::move(frame)); ASSERT_TRUE(prepared->isValid());
+    competing = combat().prepareMeleeReactionFrame(key(), .125f, metadata);
+    ASSERT_TRUE(combat().commitMeleeReactionFrame(*competing)); const auto advanced = snapshot();
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), advanced);
+}
+
+TEST_F(NativeGetUpPlaybackTest, RejectsReactionActionConflictAndActorClockRewind)
+{
+    const auto contact = combat().allocateAction(key()); ASSERT_TRUE(combat().consumeAction(contact, key()));
+    auto saved = snapshot();
+    ESM4::RuntimeMeleeReaction reaction{contact, ESM4::MeleeReactionKind::Stagger, "handtohandstagger"};
+    saved.mNativeMeleeStates[key()].mReaction = reaction;
+    saved.mNativeActorValues.front().mProcessAction = reaction.processAction();
+    saved.mNativeAnimationClocks[key()] = .5f; saved.validate();
+    combat().restore(saved, mFixture.mWorld.getStore());
+    auto next = update(); next.mClock = .5f; next.mAction = reaction.processAction();
+    const auto before = snapshot();
+    auto conflict = next; conflict.mAction = 11;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), conflict), std::invalid_argument);
+    MWMechanics::OblivionMeleeSequenceMetadata source{"handtohandstagger", 1, 0, 1, 0, 1};
+    source.mReactionKeys = {0, 1};
+    auto frame = combat().prepareMeleeReactionFrame(key(), .125f, std::span(&source, 1)); ASSERT_TRUE(frame);
+    conflict.mClock = frame->clock();
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), conflict, std::move(frame)), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
+    auto prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared->isValid());
+    ASSERT_TRUE(prepared->commit());
+    const auto after = snapshot();
+    auto rewind = next; rewind.mClock = .25f;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), rewind), std::invalid_argument);
+    EXPECT_EQ(snapshot(), after);
+}
+
+TEST_F(NativeGetUpPlaybackTest, LowProcessAllowsOnlyOwnershipCleanup)
+{
+    auto next = update(); const auto idle = next.mIdle;
+    auto saved = snapshot(); auto& values = saved.mNativeActorValues.front();
+    values.mProcess = ESM4::ActorValueProcess::Low;
+    values.mProcessKnockedState.reset(); values.mProcessAction.reset();
+    saved.mNativeGetUpIdles.clear(); saved.validate();
+    combat().restore(saved, mFixture.mWorld.getStore());
+    const auto before = snapshot();
+    next.mPlayback = {}; next.mPlayback.mNextIdentity = 7;
+    next.mKnockedState.reset(); next.mAction.reset(); next.mIdle.reset(); next.mClock.reset();
+    auto prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared->isValid());
+    EXPECT_EQ(snapshot(), before); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(combat().getUpPlayback(key()), next.mPlayback);
+    EXPECT_FALSE(combat().getUpIdle(key())); EXPECT_FALSE(combat().getProcessKnockedState(key()));
+    const auto cleared = snapshot();
+    for (unsigned field = 0; field < 3; ++field)
+    {
+        auto bad = next;
+        if (field == 0) bad.mKnockedState = 0;
+        else if (field == 1) bad.mAction = -1;
+        else bad.mIdle = idle;
+        EXPECT_THROW(combat().prepareGetUpPlayback(key(), bad), std::invalid_argument);
+    }
+    EXPECT_EQ(snapshot(), cleared);
+}
+
+TEST_F(NativeGetUpPlaybackTest, MalformedCandidatesLeaveAllAuthorityUntouched)
+{
+    const auto before = snapshot(); auto next = update();
+    next.mRandom.mNextState ^= 1;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    next = update(); ++next.mRandom.mExpectedState;
+    EXPECT_FALSE(combat().prepareGetUpPlayback(key(), next));
+    next = update(); next.mKnockedState = 7;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    next = update(); next.mClock = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    next = update(); next.mPlayback.mResources.at(2).mBase = ESM::FormKey::content("headless.esm", 0x810);
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    next = update(); next.mPlayback.mRequests.mPrimary->mStatus = 0;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::exception);
+    EXPECT_EQ(snapshot(), before);
 }
 
 TEST_F(NativeGetUpRequestTest, PublishesSelectedResourceRawByteAndRngTogetherWithoutStartingPlayback)

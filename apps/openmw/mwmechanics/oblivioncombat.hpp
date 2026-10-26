@@ -526,6 +526,38 @@ namespace MWMechanics
             const ESM4::RuntimeGetUpIdle& idle, const OblivionCombatRandomTransition& random);
         bool validateGetUpIdle(const PreparedGetUpIdle& update) const noexcept;
         bool commitGetUpIdle(PreparedGetUpIdle& update) noexcept;
+        class PreparedMeleeReactionFrame;
+        struct GetUpPlaybackUpdate
+        {
+            ESM4::RuntimeGetUpPlayback mPlayback;
+            std::optional<ESM4::RuntimeGetUpIdle> mIdle;
+            std::optional<float> mClock;
+            std::optional<std::int8_t> mKnockedState = 0;
+            std::optional<std::int16_t> mAction;
+            OblivionCombatRandomTransition mRandom;
+        };
+        class PreparedGetUpPlayback
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedGetUpPlayback(std::unique_ptr<Data> data);
+            friend class OblivionCombatService;
+        public:
+            ~PreparedGetUpPlayback();
+            PreparedGetUpPlayback(const PreparedGetUpPlayback&) = delete;
+            PreparedGetUpPlayback& operator=(const PreparedGetUpPlayback&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+            const ESM4::RuntimeGetUpPlayback& state() const;
+        };
+        // Publish a fully resolved ownership candidate. The caller resolves
+        // request/cache/NI/physical-slot effects and prepares matching renderer
+        // and resource plans before committing. No loading or key traversal.
+        // An optional melee frame transfers into this transaction so the actor
+        // clock and both ownership domains publish once, without stale guards
+        // between separate commits. Cleared graphs retain their ID frontier.
+        std::unique_ptr<PreparedGetUpPlayback> prepareGetUpPlayback(const ESM::FormKey& actor,
+            GetUpPlaybackUpdate update, std::unique_ptr<PreparedMeleeReactionFrame> melee = {});
         std::optional<ESM4::TimedKnockbackState> actorKnockback(const ESM::FormKey& actor) const;
         // Physics snapshots state on the main thread. A newer hit prevents an
         // older asynchronous simulation from overwriting its pulse on sync.
