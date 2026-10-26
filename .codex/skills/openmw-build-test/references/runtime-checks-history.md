@@ -1,0 +1,785 @@
+# Historical runtime and migration recipes
+
+These are retained evidence and troubleshooting examples, not current default
+invocations. Some fixtures and schema assumptions are obsolete. Start with
+[runtime-checks.md](runtime-checks.md) and search this file only for the specific
+migration or failure under investigation. Follow current AGENTS.md fidelity
+guidance rather than historical exact numeric comparisons.
+
+# Native runtime/restart evidence
+
+Read the current M15 implementation plan and case inventory before selecting
+cases. S1 established the observation harness, not combat acceptance. Existing
+entrypoints include `scripts/oblivion_compat.py m15-restart`; inspect `--help`
+and its manifest schema when changing a scenario.
+
+Proven S1 invocation, from repo root (use a fresh output directory):
+
+```bash
+python3 scripts/oblivion_compat.py m15-restart \
+  scripts/data/oblivion_compat/oblivion_m15_observation.json \
+  scripts/data/oblivion_compat/oblivion_m15_continuation.json \
+  --output build/oblivion-compat/m15/S1/NEW-RUN \
+  --variable openmw="$PWD/build/openmw" \
+  --variable resources="$PWD/build/resources" \
+  --variable fixture_data="$PWD/build/oblivion-compat/m15/S1/observation-03/fixture" \
+  --variable 'oblivion_data=/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data'
+```
+
+Check fixture availability rather than reconstructing from this example's
+path. Keep editable manifests as source and generated plugins/captures under
+ignored evidence paths. Read `docs/DEVELOPMENT-HANDBOOK.md` before changes to
+content-authoring support/MCP. The imported MCP server targets TES3, not TES4.
+
+Verify PID/process epochs, simulation ticks, pause state and action
+acknowledgements. Save -> quit -> a fresh process loading -> resave must be
+real; a second in-process load is not restart evidence. Assert semantics and
+case coverage, not generic startup logs, file existence or telemetry-only state.
+The existing harness has negative tests for corrupt evidence and wrong action
+acknowledgements; extend rather than bypass those checks.
+
+A prior loading crash required stopping rendering threads around the outer
+LoadingScreen via SingleThreaded. If this reappears, inspect that implementation
+and the preserved evidence before inventing an unrelated workaround.
+
+## Legacy native action-service migration
+
+Current compatibility evidence is summarized in
+`docs/oblivion/M15-S3-ACCEPTANCE.md`. The historical S1-only recipe below no
+longer supplies the winning native Player form required for actual actor
+construction. Adding Oblivion.esm to that synthetic fixture also produces
+ambiguous native GMSTs. Preserve those inputs as historical evidence; do not
+describe that recipe as a current passing runtime check. For a real-content
+legacy input use the untouched schema-21 save at
+`S4/native-process-construction-legacy-offscreen-01/first/input-pristine.omwsave`.
+The final normal/instrumented recipes and independent comparisons are retained
+in `S3/completion-audit-legacy-{normal,sanitized}-03` and
+`S3/completion-audit-01/verify_legacy.py`. They wait for five actual Player frames,
+save schema46 and verify the original Player/reference inventories plus selected
+contracts. All supported schema versions, including7, additionally have automated
+admission and migration coverage. Do not confuse content validation failure with
+unsupported wire format.
+
+The v8 action-service change has a reusable scenario:
+`scripts/data/oblivion_compat/oblivion_m15_legacy_action_service.json`.
+It expects an existing S1 M15Observation fixture save copied to
+`OUTPUT/userdata/saves/M15Legacy/Quicksave.omwsave`. Create a fresh output
+folder yourself, preserve a second `OUTPUT/input-pristine.omwsave` copy, and
+record the source SHA-256 before starting. Never point `--load-savegame` at
+historical evidence: a subsequent F5 may overwrite that slot.
+
+A proven v7 input is
+`build/oblivion-compat/m15/S1/ticks-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `ceccf09c066272636aa4e8a49e0d34f2825202cf0dd258622ca2685a4af0b439`).
+Use the same fixture_data, oblivion_data, resources and openmw variables as
+above, but invoke `scenario` with this manifest and the prepared output folder.
+The manifest requires actual load/apply/save log boundaries and a native save.
+After completion, independently decode the resulting save with
+`scripts.tes4_runtime_state.load_save`. Require:
+
+- The scenario report passed with no unreviewed errors.
+- The resaved schema equals `tes4_runtime_state.CURRENT_VERSION`; file presence
+  alone could merely identify the pre-copied input.
+- `physical_actions` equals `{"next": 1, "pending": []}` for a pre-v8 input.
+- Original source and pristine copy still match the input hash.
+
+Record these assertions and input/output/binary hashes in a migration report.
+This is idle-service migration coverage, not in-flight hit/projectile recovery.
+The ordinary v8 save/quit/fresh-load/resave case still uses `m15-restart` above;
+its independent live JSON and Python-decoded binary comparison checks the full
+new action-state field as well as the existing state.
+
+For profile isolation, the existing `morrowind_m14_regression.json` scenario
+quicksaves and rejects GPRO/T4VR/T4ST/OMW4STATE/native-state markers. It requires
+`morrowind_data` in addition to openmw/resources. Its terrain-facing screenshot
+and short idle run do not establish full Morrowind gameplay regression coverage.
+
+Schema 9 reuses this workflow. A proven v8 input is
+`build/oblivion-compat/m15/S3/action-service-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `7a071b415a1acbbf96d0ffd9e32471e43f4d2647213c83ad1e43f4d55fc5286c`).
+For v8-to-v9 migration additionally require `native_actor_values == []` and
+preservation of the input action ledger. The passed example is
+`S3/native-actor-values-legacy-01/migration-verification.json`. Empty native
+entries prove only idle schema migration, not live actor-authority recovery.
+
+When testing promotion from pre-character-generation/AI schemas, build a
+complete current fixture or use the actual migration helper. Changing only the
+version omits required name/race/class and nonzero AI RNG defaults. Run the
+focused Python fixture before starting a broad build; do not start the runner
+unconditionally after a failed preflight. Preserve failed evidence directories.
+
+Schema 10 uses the same idle checks. A proven v9 input is
+`build/oblivion-compat/m15/S3/native-actor-values-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `3f81fc4e94500d2fc2c1a49e31a37fbe08c159f6a7dd07607b0e706bbdd25e69`).
+Require the current schema, preserved ledger/native entries and unchanged source
+and pristine hashes. Passed example:
+`S3/player-value-legacy-01/migration-verification.json`. Populated v9 player
+entries migrate without raw form inputs; the explicit player publication API
+rejects their activation until those inputs are deliberately initialized.
+
+## Rejecting structurally valid but non-actor bindings
+
+`oblivion_m15_reject_native_actor_binding.json` is a real-loader negative case.
+Prepare `OUTPUT/userdata/saves/M15Rejected/Quicksave.omwsave` from a **copy** of
+an S1 fixture save. Use the existing state helpers and editable fault source:
+
+```python
+state = load_save(source)
+fault = json.loads(Path("scripts/data/oblivion_compat/oblivion_m15_native_actor_binding_fault.json").read_text())
+state.update(fault)
+write_save(source, slot, state)  # source and slot MUST be different paths
+assert load_save(slot)["native_actor_values"] == fault["native_actor_values"]
+```
+
+Record source/fault/mutated-input hashes before running the scenario with the
+usual fixture variables. Afterwards require the exact native invalid-base error,
+no `Applied TES4 runtime state:` or save-write boundary, and unchanged source and
+mutated-input hashes. The error must come from content binding validation, not
+binary/schema parsing. Passed example:
+`S3/unloaded-actors-reject-01/binding-rejection-verification.json`.
+Inspect the rejection dialog and pair the negative case with a valid restart.
+
+## Shared base overrides (schema 11)
+
+A proven v10 migration input is
+`build/oblivion-compat/m15/S3/player-value-restart-01/first/snapshots/after.omwsave`
+(SHA-256 `91c806490e045b779b7627a54ff50605967bdc3f640e1677a9b78ec748130867`).
+Use `oblivion_m15_legacy_action_service.json` with a private copied slot as above.
+Require current schema, `native_actor_bases == []`, unchanged actor entries and
+ledger, and unchanged source/pristine hashes. The passing example is
+`S3/shared-base-state-legacy-01/verification.json`.
+
+To test populated typed persistence, merge the editable
+`scripts/data/oblivion_compat/oblivion_m15_native_base_roundtrip.json` into a
+copied decoded state and call `write_save(source, privateSlot, state)`. Run the
+same load/resave manifest, then require exact `native_actor_bases` equality.
+This distinguishes Health int32 16,777,217 from an extra AV's float 16,777,216.
+Passing example: `S3/shared-base-state-populated-01/verification.json`.
+Injected state verifies storage; it is not a normal-input SetAV or live actor
+publication test.
+
+The invalid-base counterpart uses
+`oblivion_m15_native_base_binding_fault.json` and
+`oblivion_m15_reject_native_base_binding.json`. It must fail content binding
+before `Applied TES4 runtime state:` and preserve source/pristine/mutated-input
+hashes, as in `S3/shared-base-state-reject-01/verification.json`. Pair it with
+`m15-restart` and Morrowind save isolation. Keep all generated saves and images
+in fresh ignored output directories. Hash the large engine binary once per
+unchanged build and reuse that verified identity in the reports.
+
+Shared-base consistency has an additional positive/negative pair:
+`oblivion_m15_native_actor_base_roundtrip.json` merges matching actor/base
+snapshots for the ordinary private-slot load/resave manifest;
+`oblivion_m15_native_base_conflict.json` merges a structurally valid conflicting
+raw player Health input. Run the latter with
+`oblivion_m15_reject_native_base_conflict.json`. Require the exact conflict
+message before Applied/save boundaries. Passed examples are
+`S3/shared-base-writer-populated-01` and `S3/shared-base-writer-conflict-01`.
+Verify both native vectors, input preservation and scenario status independently.
+`load_save` takes a `pathlib.Path`, and its version key is `schema_version`.
+
+## Native script query positive/negative/restart pair
+
+Merge `oblivion_m15_native_query_input.json` into a private copied S1 state,
+write the current save and run `oblivion_m15_native_query.json`. The event file
+exercises short/long current/base aliases and fractional Script/Damage values.
+Require all eight returned values, exact native vectors after resave and
+unchanged pristine input. `oblivion_m15_native_query_negative.json` deliberately
+requires 96.5 where the actual result is 95.5: require harness exit 1, all actions
+complete, and exactly that missing expected line with no other error. This is a
+successful negative control, not a passing scenario. Copy the positive resave
+to another private slot and run the positive manifest in a fresh process.
+Examples: `S3/native-script-query-{runtime,negative,continuation}-01`.
+Inspect each capture. These fixtures inject an unpublished authority snapshot;
+they prove script reads and persistence, not normal actor initialization or
+live gameplay publication. Scheduled acceptance commands log returned values;
+ordinary production GetAV calls do not produce this diagnostic traffic.
+
+## Lifecycle fields and death-event FIFO (schema 12)
+
+`oblivion_m15_native_life_roundtrip.json` is the editable injected lifecycle/
+queue overlay for the private-slot load/resave course. The actor is alive and
+the two events are historical queued notifications; a callback may execute
+after resurrection. Compare `native_actor_life`, `next_death_event` and
+`pending_death_events` exactly, including FIFO order, across fresh processes.
+Current examples `S3/native-lifecycle-{populated,continuation}-01` retain events
+because automatic dispatch is not yet wired. Do not call this a death test.
+The structurally valid static-object binding fault is
+`oblivion_m15_native_life_binding_fault.json`; use
+`oblivion_m15_reject_native_life_binding.json` and require rejection before
+Applied/save boundaries with unchanged inputs.
+
+A v11 migration source is
+`S3/native-script-query-continuation-01/userdata/saves/M15Legacy/Quicksave.omwsave`
+(SHA-256 `f95667daf6a5757a9f7ec659e1413bdce9ba38df6d3a83e349f2a5aa69dd6039`).
+Copy it, do not rewrite the source. Expected v12 lifecycle defaults are empty
+actor/event lists and next_death_event1; never derive death from negative Health.
+Legacy-only obscript.dead remains untouched until its live adapters are wired;
+coexisting typed/legacy fields must agree. Pin any tail-offset wire test to its
+actual schema version when appending fields, retaining current-schema combined
+coverage. Python reference fixtures must include `owner` and `lock_level`, even
+when those fields are unrelated to the behavior being tested.
+
+For native GetDead, use `oblivion_m15_native_{dead,essential}_query_input.json`
+overlays and the matching `_query.json` manifests. Both have the same scheduled
+GetDead command; phase Dead expects1 and EssentialUnconscious expects0. Copy
+each resave into a fresh private slot for continuation. The
+`oblivion_m15_native_life_query_negative.json` control loads essential input and
+allows all actions to finish, but deliberately expects the wrong final result1.
+Require exactly that missing line, scenario exit1 and no other error. Examples:
+`S3/native-life-query-{dead,essential}-01`, their `-continuation-01` directories,
+and `native-life-query-negative-01`. Inspect every capture and compare native
+life, queue, value and base vectors plus pristine hashes. This is script-query
+and persistence evidence; injected lifecycle remains unpublished to gameplay.
+
+## Registered native script writer course
+
+Start `oblivion_m15_native_writer.json` from a private v12 save containing the
+`oblivion_m15_native_query_input.json` overlay. It publishes actual Player views
+through Set/Mod/Force short/long aliases. Expected saved Strength is
+`[40,.5,20.5,-1]`, Health `[87,10,5,-2]`, raw player inputs `[7,3,0,0]`, one
+Strength40 base override, Alive lifecycle and no death events. Copy that resave
+into a fresh slot for `oblivion_m15_native_writer_continuation.json`. Its negative
+base Health write must produce current -7/base -20 with GetDead0, then restore
+Health7; final base overrides additionally contain raw Health7. The negative
+control uses the original injected input and deliberately expects61 instead of60.
+Require only that missing log line and all actions complete. Examples:
+`S3/native-script-writer-{runtime,continuation,negative}-02`. Preserve all source
+hashes and inspect every capture. This exercises live writer publication from
+registered authority, not automatic actor registration or all legacy adapters.
+
+
+Native death queue delivery uses `oblivion_m15_native_death_events.json`, its
+continuation and negative manifests. Prepare private inputs as in
+`S3/authority-draft/death-dispatch-prepare.py`; retain pristine hashes. Verify
+ordered IDs 4/9, saved empty queue/next ID 10, unchanged native vectors, and no
+fresh-process replay. The negative expects absent ID 5 and must fail only that
+assertion after all actions complete. Evidence lives in
+`S3/native-death-dispatch-{runtime,continuation,negative}-01`. Older lifecycle
+persistence binaries intentionally retained the queue before this consumer
+existed; those are historical evidence, not current delivery expectations.
+These fixtures have no attached OnDeath body and do not prove callback saves.
+
+For actual callback-save coverage, build `tes4_m15_lifecycle_fixture.py` using
+the pinned master, boot recipe and editable `m15_lifecycle_observer.obscript`.
+Use `oblivion_m15_native_callback_initial.json` for a fresh save, then the runtime,
+negative and continuation manifests. The observer counts OnDeath and saves at
+count 1. Assert that callback Autosave contains only pending ID 9 and count 1;
+final Quicksave must have no events and count 2. Restart Autosave and require
+only ID 9, count 2 and no new Autosave. Preparation/independent checks are retained
+in `S3/authority-draft/native-callback-{prepare,verify}.py`; passing courses are
+runtime/negative-01 and continuation-03. Preserve source/pristine hashes.
+A copied save retains its internal description: an Autosave renamed Quicksave
+is still an Autosave slot and a later Quicksave may acquire a numeric suffix.
+Keep its real filename and assert both files. Captures face the room wall and
+cannot establish NPC pose; these are injected-history callback tests.
+
+Native script Kill uses the lifecycle NPC fixture plus injected registered AVs
+and no initial life. `oblivion_m15_native_kill_{runtime,negative,continuation}`
+checks positive-Health Kill, duplicate suppression, first killer retention and
+callback-save restart. The optional resurrection migration-guard course checks
+explicit failure without changing typed state; it is not resurrection support.
+Passing evidence: `S3/native-script-kill-{runtime,negative}-02`, continuation-01,
+and `native-script-resurrect-guard-01`; preparation/verification scripts are in
+`S3/authority-draft/native-kill-{prepare,verify}.py`. Acceptance command argument
+strings are not compiled ObScript builtins: use the canonical dynamic Player
+key as killer, rather than the string `player` (which can resolve the NPC base).
+
+Concurrent scenarios require the `-displayfd` Xvfb allocator in
+`oblivion_compat._start_xvfb`. Never infer ownership from a socket appearing:
+two launches can race and capture/control the other scenario's window. The
+server must report readiness through its own inherited pipe. The actual
+8-server isolation/peer-teardown course is `S3/xvfb-concurrency-01`; all 8
+reported unique usable displays. Inspect xvfb.log as well as engine logs, and
+retain/rerun contaminated courses. The affected historical runs are
+`S3/native-death-count-{legacy,morrowind}-01`, superseded by `-02`. The audit of
+all other retained S3 logs found no other conflicting-server errors.
+
+Schema 13 death counters use `oblivion_m15_native_death_count_*` manifests and
+the lifecycle observer fixture. Inject counters 0/32767/65535, then run duplicate
+Kill and require query results 1/-32768/0 with exactly one callback. Compare
+callback Autosave and final Quicksave uint16 storage, all AVs, first killer and
+namespace. Restart the signed callback Autosave; no replay or increment is
+allowed. An actual v12 dead-actor save must migrate to empty history, not infer
+counts from current death flags. Reject a counter bound to the room STAT before
+runtime application. Preparation/verification lives in
+`S3/authority-draft/native-death-count-{prepare,verify}.py`; evidence is
+runtime/negative/signed/wrap/continuation/binding-reject-01, legacy/morrowind-02.
+
+## Native breath frame courses
+
+Saved native AV maps alone do **not** activate shared stat projections while
+M15 automatic publication is gated. A read-only GetAV persistence run cannot
+prove frame ownership. Use explicit native `ModAV Health 0` for both actors,
+as in `m15_native_breath_frame_events.txt`, before testing frame adapters.
+The retained `S3/native-breath-water-red-03` demonstrates the legacy writer
+failure; earlier red01/02 omitted publication and only observed stale maps.
+
+Build the pinned lifecycle fixture, then `tes4_m15_water_fixture.py SOURCE
+OUTPUT` with `m15_water_fixture.json`. It changes only CELL water flag/height,
+validates source SHA and reopens the result. The generated plugin SHA is
+538bc636a2a2f42b6844e10a56bf2cc6c1d28a4c28994dbe33e6cdbe57902502.
+A fresh initial save must have this content hash; never reuse dry content
+fingerprints as though they describe the flooded plugin.
+
+`oblivion_m15_native_breath_frame.json` starts from native NPC Health100,
+Endurance0/breath2 and Player Health100, Endurance50/breath8. Keep Alive life
+records, empty death history and pristine saves. Compare native and projected
+Health, NPC timer0, decreasing positive Player timer and absent deaths/errors.
+Player timer consumption measures simulation duration; at base Health100,
+NPC damage is20/second after timer exhaustion. Whole-frame damage on the
+crossing frame permits the predeclared five-Health tolerance. The continuation
+manifest uses the actual Quicksave in a fresh process with no state injection.
+The dry variant uses its own correctly fingerprinted source and requires both
+Endurance50 timers19, unchanged Health and a hidden bar. Examples and independent
+checks live in `S3/native-breath-{water-frame,water-continuation,dry-frame}-01`
+and `S3/authority-draft/verify-water-frame.py`. Inspect captures separately from
+save-state checks; these silent runs do not prove sound or normal campaign setup.
+
+The refreshed final UI implementation uses short water/dry `-02` evidence.
+`oblivion_m15_native_breath_death.json` waits9 seconds so both NPC terminal damage
+and Player continuous damage occur before Quicksave. Require NPC Health<1/Dead,
+count1/local callback counter1, next event2/empty queue, Player Alive/Health<100,
+and both timers0. Restart the actual callback Autosave using the death-continuation
+manifest; retain its filename, require no replay/new Autosave and unchanged NPC
+Health/counts. Final examples are death-02/death-continuation-01.
+`native-breath-water-death-01` exposed UI cache assignment over native views;
+`oblivion_m15_native_ui_snapshots.json` now covers22 writes and repeated updates
+to all dynamic stats plus Strength/Blade. Read-only caches must copy-construct
+new snapshots; do not loosen native actor write guards to fix a UI cache.
+
+## Snapshot lifetime and resource regression courses
+
+UI cache setters can receive a reference to their own cached entry
+(`StatsWindow::addSkills` does this). Copy the input before erasing/replacing the
+entry, and retain that copy through widget updates. Optional `emplace(value)`
+also destroys an aliased input before copying; construct a temporary first.
+Keep native actor write guards intact. All623 sanitizer unit tests missed this
+GUI path; actual `S3/native-magicka-frame-sanitized-01` caught it. The repaired
+`-02` repeats the pristine input and passes. Use an actual sanitizer engine run
+when changing these UI lifetime paths; compiling the GUI is not runtime coverage.
+Record graphical leak-off separately from leak-on engine tests.
+
+For a native Magicka frame course, use the breath-frame manifest with initial
+Magicka20/base100/Willpower50 and explicit publication. Measure elapsed simulation
+time from Player breath; expected Magicka is20+1.75*elapsed, tolerance.05. Stunted1
+must suppress Magicka while Fatigue still recovers. Examples and verifiers are
+`S3/native-magicka-{frame,continuation,stunted-frame}-01` and
+`S3/authority-draft/verify-magicka-frame.py`. Hash the executable named in the
+scenario command, not a hardcoded regular-build path.
+
+`morrowind_m15_magic_regression.json` sets up Hearth Heal, saves before casting,
+then performs normal R/mouse input and saves again. Console `player->Cast` only
+selects the player's spell; it does not execute it. The independent TES3 save
+reader in `S3/authority-draft/verify-morrowind-magic.py` checks Health increase,
+Magicka cost and no native markers. PLAY contains42 STBA entries:27 skills,
+8 attributes,3 dynamic stats,4 integer AI fields; dynamics are indices35:38,
+not the final three entries. Passing regular/sanitized examples are
+`S3/native-resource-morrowind-magic-01` and `-sanitized-01`.
+
+### Combat query fixtures
+
+Use the tracked `oblivion_m15_native_combat_query_{paired,unpaired,terminal}.json`
+courses for script query wiring. Check source preconditions before reusing a
+pristine: `native-engagement-runtime-01/pristine.omwsave` intentionally inherits
+next_death_event=UINT64_MAX. Death must reject on that source. The successful
+terminal course resets only that counter to1, with empty counts/event queue;
+it does not pre-apply death. Preserve both the rejection and success evidence.
+
+Changing a fixture plugin requires a deliberately rebound synthetic save
+fingerprint; do not weaken the production content check. Record this setup
+explicitly. An AI package query returning false does not prove fallback selection:
+verify the saved selected package identity. With a previously idle fixture,
+explicit EvaluatePackage is appropriate to test the condition adapter, but is
+not proof of autonomous AI scheduling. Keep generated assets outside Git and
+promote reusable recipes/builders after the experiment is established.
+
+### Fixed-hour wait menu
+
+`oblivion_m15_native_wait_dialog.json` uses injured registered input from
+`S3/native-rest-dialog-red-02/pristine.omwsave`, opens T, advances the slider to
+2 hours, cancels with Escape, then saves. Inspect both singular/plural captures
+and assert that less than .1 ordinary game hour elapsed: cancellation must not
+restore resources or advance the selected duration. Use `key_held` and a short
+rendering pause before screenshots. The first sanitized attempt with a brief
+`key` Up returned success but its screenshot still showed1 hour; input delivery
+success is not gameplay acceptance.
+
+Pair binaries with their own build's resources directory. After different Git
+revisions have configured regular and sanitizer builds, sharing
+`build/resources` can produce a resource-version mismatch in the sanitizer
+engine. Keep that failure and rerun using `build/m15-sanitize/resources`;
+do not whitelist the warning. Examples: `native-wait-dialog-sanitized-01`
+(resource mismatch), `-02` (missed slider input), `-03` (corrected course).
+
+## Hourly Wait and regeneration fixtures
+
+Use `oblivion_m15_native_wait_hour.json`,
+`oblivion_m15_native_wait_continuation.json`, and
+`morrowind_m15_wait_hour.json` for actual held-key Wait/save/restart cases.
+The ordinary native input is `S3/native-rest-dialog-red-02/pristine.omwsave`
+under `build/oblivion-compat/m15`, SHA256
+`ffc9345176fef60e1b0c3eccf4aa2e5c238aaf1cc5cd358b6aeb09e46fec6f91`.
+It requires `S3/native-callback-fixture-01/m15-lifecycle.esm`, SHA256
+`8c47f944cfdd75bcd558e7ebf5ed74983a71c2aa4800a37cfea1506c4aba52b1`.
+Prepare a private M15Legacy slot and a pristine copy as above. Record the actual
+openmw executable hash **before** launch; hashing after a concurrent rebuild
+can incorrectly attribute old evidence to a new binary. Match resources to the
+selected build directory, especially the separate sanitizer configuration.
+
+Until automatic native publication is implemented, numerical frame/rest cases
+need explicit zero-Health native writes at simulation time0. A bootstrap at1
+second loses that interval from native regeneration even though ordinary logs
+and saving succeed. Allow0.5 seconds after command acknowledgements before the
+first HUD capture; immediate capture can show a stale projected bar. Preserve
+this fixture limitation explicitly; it is not automatic activation acceptance.
+
+The engine clamps actor processing range to at least3584. A range100 fixture
+therefore does not create a distant actor. Proven distant setup moves the NPC
+to x4096 and its AI last-valid position likewise, with range3584. For disabled rest-only eligibility,
+omit NPC setup writes to isolate restoration. Registered disabled actors with
+initialized lifecycle now support native script Mod/Force/Set by stable key;
+`native-hour-disabled-01` retains the earlier resident-only adapter failure.
+Neither distant nor disabled fixtures alone prove cell-unloaded runtime behavior.
+
+Decode pristine and resaved state independently. Ordinary Wait should advance
+one hour plus running frames; continuation must advance only running frames.
+Assert exact actor/resource expectations and preserve nonresource values,
+lifecycle, event counters and pending actions. Normalize pre-v15 absent combat
+membership to an empty list only as the documented migration. For unstunted NPC
+Magicka with max1000, Willpower50, TimeScale3600, initial100, an independently
+audited expectation is100+17.5*(saved hour delta+2 for nearby, +0 for distant).
+Declare tolerance before launch; the existing numerical cases use1 point.
+Inspect screenshots separately; saved numerical state cannot validate HUD text,
+and an offscreen NPC is not visually verified by the Player HUD.
+
+For disabled command acceptance use `oblivion_m15_disabled_value_commands.json`
+and `oblivion_m15_disabled_value_continuation.json`. The private input is
+`S3/native-hour-disabled-02/pristine.omwsave`, SHA256
+`2c24c80fcd4da4747468c811a5058fc0a77515ee4eaa4cc9b703b747ebe739b0`.
+Starting NPC Health is base100, Damage-75. Mod -5 then Force40 then Set200
+must produce base200, Script15, Damage-75, current140. Disabled GetAV reports
+the raw base200, not current140. Waiting leaves this disabled NPC unchanged;
+Player Health becomes100. A fresh process must preserve all channels and the
+shared base override. The continuation intentionally runs only zero writes and
+queries, never repeats the modifying command sequence. Old unloaded entries
+without initialized lifecycle still need explicit migration work.
+
+## Native local Lua state and timer restart
+
+The Lua resource fixtures are `oblivion_m15_lua_resource_{current,continuation}.json`.
+Their private starting save is `S3/lua-resource-runtime-01/pristine.omwsave`, SHA256
+`d7321e0b5aea9dbd36701b3d57265b6b3a1a49909698e1c9ddace022e7676b19`.
+It uses the pinned lifecycle plugin above, with NPC Magicka multiplier15 and
+Stunted Magicka. It is synthetic setup, not automatic native actor registration.
+The manifests publish registered views with zero Health writes at time0; waiting
+until time1 is too late for a restored local script's first onUpdate read.
+Expected public currents: Player Health40.25/Magicka17.5/Fatigue200; NPC
+Health35.5/Magicka22.5/Fatigue100. NPC raw Magicka Damage is-85 at scale1.5.
+A continuation must emit exactly one restored marker per actor and no queued or
+committed writes. Identical absolute resource values can hide a replay.
+
+`oblivion_m15_lua_pending_{initial,disabled,enable}.json` reverses two unchanged
+`.omwscripts` files to test pending script-ID remapping. Start the initial course
+from the same private input. For disabled setup copy its actual result, change
+only NPC reference `enabled` to false with `tes4_runtime_state.write_save`, and
+preserve Lua records and all actor channels. Disabled resave must not activate the
+NPC script; it changes saved script ID30->29 while preserving the script path,
+Lua data and timers. The enable course reverses order again and must restore the
+NPC once without replay. An acknowledged Enable command alone is not proof of
+activation; check saved enabled state and the actual local script marker.
+Editing an existing omwscripts file instead of reordering unchanged files rightly
+fails the native content fingerprint guard. Do not weaken that guard for fixtures.
+
+`oblivion_m15_lua_timers_{initial,continuation,no_replay}.json` adds named timers
+on both clocks and object userdata in both script state and callback arguments.
+Timer delay is30 simulation seconds/900 game seconds. The first save has two
+pending NPC timers and onSave counter1. Restart reverses two independent native
+masters, asserts userdata still refers to self, and fires each clock once per
+actor. The resave has zero timers and counter2. A third process must restore both
+fired flags, deliver no timers/writes, and save counter3. Pass `lua_order_data`
+in addition to the usual lifecycle variables. Reproduce its empty master from
+the editable recipe (no licensed records, scripts or gameplay changes):
+
+```bash
+python3 - scripts/data/oblivion_compat/m15_lua_order_fixture.json build/m15-lua-order <<'PY'
+from pathlib import Path
+import hashlib, json, struct, sys
+recipe = json.loads(Path(sys.argv[1]).read_text())
+payload = b'HEDR' + struct.pack('<HfII', 12, recipe['hedr_version'],
+    recipe['record_count'], recipe['next_id'])
+data = struct.pack('<4sIIII', b'TES4', len(payload), recipe['flags'], 0, 0) + payload
+assert hashlib.sha256(data).hexdigest() == recipe['sha256']
+output = Path(sys.argv[2]); output.mkdir(parents=True, exist_ok=True)
+(output / 'm15-lua-order.esm').write_bytes(data)
+PY
+```
+
+**Choose the actual output save.** Reordering the first master can select a new
+character directory: `lua-persistence-timers-continuation-01` wrote
+`userdata/saves/Bendu_Olo/Quicksave.omwsave` while the copied M15Legacy input stayed
+unchanged. Require exactly one candidate Quicksave whose hash differs from the
+pristine input, a real save boundary and positive elapsed time. Never use the
+first glob result or assume the output slot is the input slot. Preserve the
+wrong-slot report if a verifier made that mistake, then verify the actual result.
+
+Lua data lives in the versioned NLSV companion inside LUAM, not in diagnostic
+T4ST snapshots. Read owner/script/timer subrecords structurally and map script IDs
+through that save's LUAP paths. Check callback delivery independently from the
+binary snapshot. The actual acceptance helpers and historical independent
+reports are retained in `S3/authority-draft` and `S3/lua-persistence-*`.
+
+Codec/integration lessons: `ESMReader::isNextSub` consumes a matching tag;
+`peekNextSub` is required when checking a profile and handing the tag to another
+reader. `FormRecordMetadata::mRecordType` contains raw `ESM4::REC_*` FourCC values,
+not OpenMW's internally flagged `ESM::REC_*4` class identifiers. Test both at the
+real-loader boundary. Keep known Morrowind baseline reviewed-error patterns when
+building a negative manifest; adding an intended rejection must not accidentally
+discard the existing missing-weather-asset classification.
+
+For pending native Lua activation, use `oblivion_m15_lua_pending_enable.json`
+then `oblivion_m15_lua_pending_continuation.json` with the actual changed save.
+The continuation intentionally issues no Enable. Require the NPC's saved
+reference enabled flag, both restoration markers, no repeated resource writes,
+and preserved Lua data/timers. An Enable acknowledgement alone is insufficient:
+disabled references in loaded cells may be absent from the Ptr registry and must
+be resolved through the resident-cell lookup before updating actual RefData.
+
+Native local Lua owners must also exist in the saved T4ST reference vector,
+including dynamic owners. A winning content reference alone is insufficient;
+a save containing native local Lua owners without T4ST is inconsistent. Exercise
+both faults with `oblivion_m15_lua_reject_malformed.json`, preserving a pristine
+input and checking the exact missing-owner error before native application or
+Lua restoration/writes. The owner check does not prove preservation of a prior
+running world: StateManager's cleanup-before-load boundary is a separate gate.
+
+Reproduce the two binary faults from a private copy of a saved resource course
+using this structural recipe (OpenMW save record headers are16 bytes; subrecord
+headers are8). `source`, `destination` and `fault` are Python variables; fault is
+`dynamic-owner` or `missing-state`. Never overwrite the source:
+
+```python
+import struct
+from pathlib import Path
+assert source.resolve() != destination.resolve()
+raw = source.read_bytes()
+records, offset, changed = [], 0, 0
+while offset < len(raw):
+    assert offset + 16 <= len(raw)
+    end = offset + 16 + struct.unpack_from('<I', raw, offset + 4)[0]
+    assert end <= len(raw)
+    record = raw[offset:end]
+    if fault == 'missing-state' and record[:4] == b'T4ST':
+        changed += 1
+    elif fault == 'dynamic-owner' and record[:4] == b'LUAM':
+        subs, cursor, owner = [], 16, False
+        while cursor < len(record):
+            assert cursor + 8 <= len(record)
+            tag = record[cursor:cursor + 4]
+            size = struct.unpack_from('<I', record, cursor + 4)[0]
+            stop = cursor + 8 + size
+            assert stop <= len(record)
+            data = record[cursor + 8:stop]
+            if tag == b'NLSK' and not owner:
+                data = b'dynamic:missing:000000000000002a'
+                owner, changed = True, changed + 1
+            subs.append(tag + struct.pack('<I', len(data)) + data)
+            cursor = stop
+        payload = b''.join(subs)
+        records.append(record[:4] + struct.pack('<I', len(payload)) + record[8:16] + payload)
+    else:
+        records.append(record)
+    offset = end
+assert changed == 1
+with destination.open('xb') as output:
+    output.write(b''.join(records))
+```
+
+Retained red inputs in `S3/lua-persistence-reject-{dynamic,missing-state}-red-01`
+loaded on the old engine: the first replayed NPC writes; the second emitted NPC
+Lua assertion failures. `S3/lua-owner-{regular,sanitized}-{dynamic,missing-state}-02`
+rejects those exact files. Pair with the corresponding `writes-02` and
+`continuation-02` courses to check absent-section compatibility and real fresh
+process preservation. Unit sanitizer runs enable leak detection; graphical
+courses explicitly disable it and retain halting UBSan.
+
+## Native Lua attribute/skill modifier requests
+
+`oblivion_m15_lua_stat_modifiers.json` and its `_continuation.json` sibling
+exercise Speed and Blade Maximum/Damage requests on Player and NPC while
+preserving nonzero Script modifiers. Lua's existing Blade accessor is
+`types.NPC.stats.skills.longblade`; native AV index14 remains Blade. The
+`_zero_script.json` course is the simpler control. These are explicit actor
+bootstrap courses, not proof of automatic publication or physical combat.
+
+Use `oblivion_m15_lua_stat_modifiers_input.json` as the editable setup recipe.
+The source is `S3/lua-resource-runtime-01/pristine.omwsave`; check its recipe
+SHA256 before copying. Load it with `scripts.tes4_runtime_state.load_save`.
+For each `native_actor_values` row, apply `all_actor_updates`; also apply
+`player_updates` for actor key `dynamic:player:0000000000000001`. Apply
+`nonzero_script_updates` unless running the zero-script control. Recipe AV keys
+are decimal indices; channel indices in each values tuple are Maximum1,
+Script2, Damage3 (Base0). Write a separate save with `write_save` and prepare a
+private M15Legacy slot. Verified setup hashes:
+
+- Zero Script: `e83cf857383f4341408b7ec8da3fffec1626815e3c4adb758c8b0f221c3d2194`.
+- Nonzero Script: `4eacfd36ac0dda0135f8b78fefcc98b11ac1a8c3b5fdba8fae41331981ffe80c`.
+
+Full Fatigue avoids unrelated regeneration; the zero Player Health Script entry
+matches the required ModAV0 bootstrap. The retained `lua-stat-regular-zero-script-01`
+passed Lua checks but failed the independent unchanged-resource assertion because
+its original depleted Fatigue regenerated and bootstrap materialized that zero.
+Do not weaken the comparison or change engine regeneration to fit that fixture.
+
+After actual save, independently require Speed Maximum2.5/Damage-1.25 and Blade
+Maximum3.5/Damage-1.5 for both actors. Preserve Base/Script, every other AV channel,
+life, actions and event counts. Nonzero-Script modified values are Speed58.5,
+NPC Blade5.75 and Player Blade30.75. Assertions execute both immediately after
+queuing and after the deferred writes. Require exactly one queued/committed
+marker per actor. Fresh-process continuation must restore once per actor with
+no queued/committed markers and identical NPC Lua companion data. Examples are
+`S3/lua-stat-{regular,sanitized}-{script,continuation}-02`; all accepted captures
+were inspected. Graphical sanitizer leak detection is off; unit suites enable it.
+
+These requests use the existing native float delta writer; native rounding and
+sparse Damage clamping still apply. Attribute/skill base writes, dynamic-stat
+modifiers and skill-progress semantics are separate unfinished adapter work.
+
+## TES4 pathgrid object classification regression
+
+`MWWorldPathgridStoreTest.*` loads binary CELL/PGRD and object records through
+ESMStore before inspecting classified links. FormRecordMetadata.mRecordType is
+a raw ESM4 signature; do not compare it with internal ESM::REC_*4 dispatch IDs.
+The reader fixture must group CELL records and provide the owning CELL context
+for placed-reference overrides as well as original references. An ungrouped
+CELL throws at grp(); a reference with no current CELL fails preprocessing.
+The test covers reordered masters, deletion and missing bases. Its passing
+store assertions do not establish actual AI door traversal or gameplay.
+
+## Native actor clock save contract
+
+T4ST v16 appends a binary32 manager time and a counted, sorted actor-key/time
+map. Read fields `native_actor_manager_time` and `native_actor_update_times`.
+Older versions have no timestamps, not a fabricated timestamp per actor.
+Use `oblivion_m15_actor_clock_input.json` with the actual saved output from
+`S3/lua-stat-regular-script-02`; verify its declared source hash before editing.
+Load with `scripts.tes4_runtime_state.load_save`, assign the two declared fields,
+and write a separate input via `write_save`. The negative-zero variant sets
+manager time and the NPC timestamp to -0.0; Player remains100000. Use the existing
+`oblivion_m15_lua_stat_modifiers_continuation.json` in fresh private save slots.
+
+These recipes were reproduced byte-for-byte:
+
+- Nonzero input: `64cffa90240be82c4ad883a0f05fd9d2d97fb78a5bbfed27fccacc0178035c37`.
+- Signed-zero input: `4ab5cd33192c77312a7a69ada6899d0660022731f7b494102c66098bca00ef04`.
+
+Check normal F5 output and fresh-process output independently. Compare float
+bits with `struct.pack('<f', value)`, including the engine's `script-report.json`
+`runtime_state` fields; numeric equality alone misses a lost zero sign. The
+retained `actor-clock-regular-zero-red-load-01` demonstrates this: binary -0.0
+survived while JSON `-0` parsed as integer0. The fixed exporter uses a decimal
+representation. Require Lua restored once per actor with no writes, unchanged
+NPC companion data, all actor-value channels/lifecycle/actions preserved, and
+inspect the actual captures. The ordinary v15 source also loads and resaves as
+v16 with manager0 and no actor timestamps (`actor-clock-regular-migration-load-01`).
+
+For owner rejection, alter only the final clock-map entry's key from900101 to
+9001ff inside the concatenated T4ST DATA payload, preserving subrecord lengths
+and every other save record. Python encoding intentionally rejects this state,
+so mutation must happen after valid serialization. Use
+`oblivion_m15_actor_clock_reject.json`, require the exact invalid/dangling actor
+update-time error, no native application/Lua writes, and unchanged input bytes.
+Do not treat this as preservation of a previously running world.
+
+The above courses close the save contract while clock advancement is still
+unwired. Once scheduler integration lands, replace constant-time expectations
+with independently derived advancement/reset expectations; retained intermediate
+courses are not proof of a running native clock.
+
+### Resident clock advancement and resource timing
+
+After clock advancement is integrated, the old v16 constant-clock persistence
+courses are historical save-contract evidence. Use
+`oblivion_m15_actor_frame_clock.json` with the actor-clock recipe's normal or
+100000 reset variant. Completed resident times must equal saved manager time
+bitwise; manager advances through a fresh process, resets rather than taking a
+remainder, and unchanged full-resource/Lua state must not replay writes. Pause
+3 seconds before initial captures: under a concurrent sanitizer build, the
+former .5-second pause captured Loading Area even after Lua restored messages.
+
+`oblivion_m15_actor_clock_wait_input.json` declares a depleted high-capacity
+Fatigue fixture so one Wait hour cannot hide timing errors behind clamping.
+This fixture's Fatigue rate is10 (default return base10, multiplier0), not its
+Magicka rate17.5. NPC expected Fatigue is prior current +10*(saved manager
+change) +20 for the single normal High hourly call; fresh continuation omits20.
+Declare0.5 tolerance before running to bound repeated float Damage stores.
+Player raw form Fatigue9800 must be an integer; runtime base10000 includes
+four50-point attributes. Preserve every other72 AV channel and lifecycle/action
+field independently. Select the unique changed Quicksave recursively.
+
+For character creation, change legacy GLOB chargenstate FLTV to1; this synthetic
+internal global is not a T4ST stable FormKey. NPC Health stays25 while Player
+restores100. Skip the special20 addition; next resident frame can catch up the
+elapsed interval because skipped hourly dispatch did not stamp the NPC clock.
+Use `oblivion_m15_native_chargen_wait_continuation.json`: the ordinary restart
+manifest expects NPC Health100 and is deliberately inappropriate here. Keep
+failed fixture/manifest attempts. Numerical saved resource values do not prove HUD synchronization. An initial
+visual estimate of the small Health bar was wrong; pixel measurements show16
+red pixels in the menu and61 after Wait, correctly matching25 and100. Use the
+quantitative check below alongside direct image review.
+Automatic native publication and full scheduler cadence are still open.
+
+
+### Quantify the fixed fixture HUD
+
+Use [verify_fixture_hud.py](../scripts/verify_fixture_hud.py) for the current
+1280x720 default-skin M15 fixture captures. It requires the same ImageMagick
+installation as the runtime harness; no additional Python image library is
+needed. It measures contiguous dominant-color pixels along declared bar rows,
+records image SHA256 and expectation bounds, and refuses an existing output.
+Declare bounds before a course, for example:
+
+```bash
+python3 SKILL/scripts/verify_fixture_hud.py --image CASE/rest-dialog.png --bar health:0.22:0.30 --bar magicka:0.17:0.25 --bar fatigue:0.45:0.60 --output CASE/hud-before.json
+python3 SKILL/scripts/verify_fixture_hud.py --image CASE/after-rest.png --bar health:0.95:1 --bar magicka:0.17:0.25 --bar fatigue:0.95:1 --output CASE/hud-after.json
+```
+
+The hour manifest now pauses3 seconds after focus before the initial capture;
+command acknowledgments can precede the first GUI projection, particularly on
+the sanitized engine. The pre-Wait menu is also a useful stable control. This
+scanner is deliberately tied to the current skin/layout and cannot establish
+image provenance, identity, NPC visibility, general rendering, or audio. Do not
+adjust bounds to fit a failed case. Keep normal-input logs and independent save
+checks, and directly review images. Small on-screen bars are easy to misread:
+the former reported short-after-Wait bar was actually full. Quantitative review
+prevented an unnecessary speculative GUI change.
+
+## Native staged reload and frame readiness
+
+Use `scripts/data/oblivion_compat/oblivion_m15_staged_reload.json` for the
+canonical current-fixture initial load/F5/F9 load/render/F5/quit course. Before
+launching, stage a **copy** of the enriched M15Review pristine save at
+`OUTPUT/userdata/saves/M15Review/Quicksave.omwsave` and its
+`autoequip-gmsts.esp` at `OUTPUT/test-data/autoequip-gmsts.esp`. Proven paired
+inputs and provenance are in `S3/root-load-transaction-runtime-normal-06` and
+`-sanitized-07`. The fixture requires the generated blade/history/local-script
+save and signed bounty/Infamy/high Fame values; it is not an arbitrary native
+save smoke test. Its initial saved `m15-reputation.lua` data has no persisted
+`loads` counter; the manifest records it during F5 and waits for load count2.
+
+The manifest waits for Player `onFrame` number5 after reload and logs Player and
+camera positions before the post-load capture. An immediate capture can show
+only fog/HUD before cold-backend frame updates; do not lower the entropy gate or
+describe such a failed capture as accepted rendering. For sanitizer SDL replay,
+keep the actual ASan library first in `LD_PRELOAD`, plus the explicit ASan/UBSan
+environment described above. The normal source manifest does not hardcode that
+platform-specific preload.
+
+Require two committed load events, two save events and run-end in one PID;
+second-load SHA must equal first-save SHA. Decode the final T4ST and compare
+selected native contracts and all nonempty reference inventories. Fresh-process
+continuation additionally requires a new PID and an input SHA matching the
+preceding process's real output. Copied StateManager fault probes can inject
+immediately after `LuaManager::gameLoaded` to verify actual late rollback, or
+after `load-complete` to verify errors cannot clear an already committed world.
+Keep those copies/hashes and their scope distinct from the canonical executable.

@@ -50,14 +50,15 @@ class RunnerTest(unittest.TestCase):
             build.mkdir(parents=True, exist_ok=True)
             (build / 'CMakeCache.txt').write_text(f'CMAKE_HOME_DIRECTORY:INTERNAL={self.repo}\n'
                                                'CMAKE_CXX_FLAGS:STRING=-fsanitize=address,undefined\n')
-            exe = build / 'components-tests'
-            exe.write_text(FAKE_TEST)
-            exe.chmod(0o755)
+            for target in ['components-tests', 'openmw-tests']:
+                exe = build / target
+                exe.write_text(FAKE_TEST)
+                exe.chmod(0o755)
 
-    def run_case(self, name, mode='sanitize', timeout=10):
+    def run_case(self, name, mode='sanitize', timeout=10, extra=()):
         self.env['SKILL_TEST_CASE'] = name
         result = subprocess.run([sys.executable, str(RUNNER), '--repo', str(self.repo), '--output',
-                                 f'evidence/{name}', '--mode', mode, '--timeout', str(timeout)],
+                                 f'evidence/{name}', '--mode', mode, '--timeout', str(timeout), *extra],
                                 env=self.env, text=True, capture_output=True)
         path = self.repo / f'evidence/{name}/verification.json'
         return result, json.loads(path.read_text()) if path.exists() else None
@@ -92,6 +93,23 @@ class RunnerTest(unittest.TestCase):
         result, report = self.run_case('timeout', timeout=1)
         self.assertEqual(result.returncode, 1)
         self.assertTrue(report['commands'][-1]['timed_out'])
+
+    def test_engine_runtime_build_is_opt_in(self):
+        for name, extra, expected in [
+                ('engine-only', (), ['openmw-tests']),
+                ('engine-runtime', ('--with-runtime',), ['openmw-tests', 'openmw', 'esmtool'])]:
+            with self.subTest(name=name):
+                result, report = self.run_case(name, 'engine', extra=extra)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                build = report['commands'][0]['argv']
+                self.assertEqual(build[build.index('--target') + 1:build.index('-j')], expected)
+                self.assertEqual(report['results']['engine']['executed'], 1)
+
+    def test_runtime_option_requires_engine_mode(self):
+        result, report = self.run_case('bad-runtime', 'components', extra=('--with-runtime',))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn('--with-runtime requires --mode engine', result.stderr)
+        self.assertIsNone(report)
 
 
 if __name__ == '__main__':

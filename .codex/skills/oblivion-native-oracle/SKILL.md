@@ -10,6 +10,19 @@ from emulated arithmetic alone.
 
 ## Select the evidence needed
 
+Start with the requirement or observed discrepancy, the unresolved question,
+and the implementation decision it will enable. Search existing evidence first;
+reuse it when executable identity, caller context, input domain and boundary
+assumptions apply. Stop when the evidence resolves that question. Record adjacent
+unknowns for later; expand only for required behavior, contradictory evidence or
+an invalid boundary assumption.
+
+Follow AGENTS.md's fidelity policy: ordinary combat math needs reasonable gameplay
+similarity, not bit-identical arithmetic or random sequences. Prefer bounded
+behavioral checks and justified tolerances. Use instruction-level precision work
+when it explains a meaningful discrepancy or is explicitly required by the user,
+not merely because a historical recipe exhaustively compared floats.
+
 - **Rules/branches:** read [references/instruction-oracles.md](references/instruction-oracles.md).
   Use the original executable's full relevant instruction path where practical;
   explicitly identify any boundary stubs. Verify registers, caller arguments,
@@ -29,10 +42,10 @@ reuse its addresses against another binary merely because its version string
 matches. On mismatch, stop the address-based experiment and identify the image.
 
 Implement reviewed formulas as immutable input/output rules in `components/esm4`.
-Use double intermediates and explicit float stores only where the native path
-requires them; inspect integer conversion and branch flags. Test deterministic
-boundaries first, then generated comparisons/probability distributions as
-required by the plan. Validate malformed supported-domain inputs explicitly.
+Choose numeric precision appropriate to the gameplay behavior; reproduce native
+stores/conversions when their effects matter. Test relevant boundaries first,
+then generated comparisons/probability distributions where useful. Validate
+malformed supported-domain inputs explicitly.
 Keep unknown semantics open rather than tuning constants to one observation.
 
 Publish concise provenance, expected values and editable probe manifests in

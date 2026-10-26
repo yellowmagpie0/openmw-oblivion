@@ -9,6 +9,15 @@ be a symlink into the checkout. Do not assume the shell is at the repo root.
 
 ## Choose the check
 
+Use focused checks during development, affected suites and runtime courses at
+integration checkpoints, and required broad normal/sanitizer/regression gates
+for acceptance or shared-system risk. Batch related changes before expensive
+runs. Before launching one, identify the new uncertainty it resolves. After a
+failure, repair and rerun the failing check first, then broaden when it passes
+unless the failure itself requires wider investigation. Follow AGENTS.md's
+fidelity policy when choosing numeric assertions; do not add bit-exact gates
+for ordinary combat math by default.
+
 Use [scripts/run_checks.py](scripts/run_checks.py) for fresh build/test evidence:
 
 ```bash
@@ -18,14 +27,19 @@ python3 SKILL/scripts/run_checks.py --repo REPO --output build/oblivion-compat/m
 Replace `SKILL`, `REPO` and `CHUNK-01` with actual paths/name. The output directory
 must not exist. The helper builds first, records the source fingerprint and
 binary/cache hashes, verifies inventory against XML, and refuses source drift.
-Do not edit sources or commit during a run. Run via a yielding command tool;
-follow progress in its logs and keep the user updated during long builds.
+The fingerprint includes HEAD, tracked changes (including docs) and untracked
+files outside the evidence directory. Do not edit these or commit during a run.
+Use the wait for useful read-only investigation when available. Run via a yielding
+command tool; poll at sensible intervals rather than repeatedly reading unchanged
+logs, and keep the user updated during long builds.
 
 - `components`: `components-tests`, full inventory by default.
 - `sanitize`: the separate `build/m15-sanitize` configuration, all `ESM4*`
   suites by default so newly added native suites are not silently omitted.
   ASan leak checks are disabled; UBSan halts on errors. This is not leak coverage.
-- `engine`: builds `openmw`, `openmw-tests`, `esmtool`; runs engine tests.
+- `engine`: builds `openmw-tests` and runs engine tests. Add `--with-runtime`
+  to also build `openmw` and `esmtool` when preparing a runtime course. Without
+  that flag, a passing engine test run does not establish a current game binary.
   For an instrumented engine run, use `--build-dir build/m15-sanitize` with the
   explicit sanitizer environment in [references/build-config.md](references/build-config.md).
 - `python`: `python -m unittest discover -s scripts/tests`, requiring a nonempty,

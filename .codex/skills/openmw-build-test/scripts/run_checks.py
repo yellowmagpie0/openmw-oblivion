@@ -44,11 +44,15 @@ def main():
     parser.add_argument('--build-dir', type=Path, default=Path('build'))
     parser.add_argument('--sanitize-dir', type=Path, default=Path('build/m15-sanitize'))
     parser.add_argument('--filter', help='Explicit GoogleTest selection; sanitizer default is ESM4*, others *')
+    parser.add_argument('--with-runtime', action='store_true',
+                        help='With engine mode, also build openmw and esmtool for runtime courses')
     parser.add_argument('--jobs', type=int, default=6)
     parser.add_argument('--timeout', type=int, default=3600, help='Seconds per subprocess')
     args = parser.parse_args()
     if args.jobs < 1 or args.timeout < 1 or len(args.mode) != len(set(args.mode)):
         parser.error('positive jobs/timeout and unique modes required')
+    if args.with_runtime and 'engine' not in args.mode:
+        parser.error('--with-runtime requires --mode engine')
     repo = args.repo.resolve()
     output = (repo / args.output).resolve()
     if not (repo / 'components/esm4').is_dir():
@@ -113,7 +117,9 @@ def main():
                     or ('-fsanitize=address' in flags and '-fsanitize=undefined' in flags)):
                 raise RuntimeError('sanitizer mode requires both ASan and UBSan in the CMake configuration')
             binary = build / ('openmw-tests' if mode == 'engine' else 'components-tests')
-            targets = ['openmw', 'openmw-tests', 'esmtool'] if mode == 'engine' else ['components-tests']
+            targets = ['openmw-tests'] if mode == 'engine' else ['components-tests']
+            if mode == 'engine' and args.with_runtime:
+                targets.extend(['openmw', 'esmtool'])
             run(['cmake', '--build', build, '--target', *targets, '-j', str(args.jobs)], f'{mode}-build.log')
             selection = args.filter if args.filter is not None else ('ESM4*' if mode == 'sanitize' else '*')
             mode_env = env.copy()
