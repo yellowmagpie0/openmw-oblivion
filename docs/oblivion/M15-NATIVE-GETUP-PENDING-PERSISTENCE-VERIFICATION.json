@@ -1,0 +1,446 @@
+{
+  "schema_version": 1,
+  "scope": "Schema74 synthetic pending GetUp state readmission and actual engine save/quit/fresh-load/resave; no load completion or visible recovery acceptance",
+  "passed": true,
+  "tested_source": {
+    "head": "fb429136fa5a6b70d2c1431a4c28b46b8dda3ce0",
+    "source_fingerprint": "b88182ef517cfffbdacc3772153d246f19f6f7035dddd21132e398486a702e9e"
+  },
+  "production_cpp_commit": "fb429136fa5a6b70d2c1431a4c28b46b8dda3ce0",
+  "production_build_and_sanitizers": "docs/oblivion/M15-NATIVE-GETUP-PENDING-STATE-VERIFICATION.json",
+  "changes": [
+    "Added a hash-pinned declarative four-slot pending ownership recipe and bounded staging helper that preserves every undeclared decoded field and opaque save records.",
+    "Added an isolated SDL offscreen scenario using actual F5 save and clean quit, with a frame5 script query before saving.",
+    "Added four fixture validation/preservation tests; full Python suite428 passes."
+  ],
+  "python_checks": {
+    "python": {
+      "executed": 428,
+      "passed": true,
+      "log_sha256": "2b15b2e20bed250419b11995a0bb5d34d8f9dc2c6f7f7818d4f97a46ee687c78"
+    }
+  },
+  "runtime_checks": {
+    "passed": true,
+    "scope": "Actual engine readmission/save/quit/fresh-load/resave of synthetic pending ownership. No IO scheduler, load completion or visible recovery acceptance.",
+    "schema": 74,
+    "source_seed_sha256": "2e0d5664c84f16fc8aa788e4cb18374400e4ee1dc5bc791c74762b0b2c7c4c52",
+    "courses": [
+      {
+        "directory": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02",
+        "pid": 2444875,
+        "start_ticks": 73891368,
+        "input_sha256": "4d8ff661b026de7224c57b8a35023e4064f8201869c833c1f3a8ce04486e54ca",
+        "output_sha256": "3df10e6bfc7c4aa590f18c19d59ed22f704b863c14539d492b31adf1d8d25c22",
+        "combat_rng_before": 15,
+        "combat_rng_after": 15,
+        "ordinary_actor_clock_before": 11.512004852294922,
+        "ordinary_actor_clock_after": 16.824016571044922,
+        "script_sequence_before": 8668,
+        "script_sequence_after": 11581,
+        "compiled_units": 9993,
+        "compilation_failures": 0,
+        "binary_sha256": "be581f336afa18c37d62d0e3ea3c37a5867b6f0e2d3ba6c22a7ae663d54494a9"
+      },
+      {
+        "directory": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02",
+        "pid": 2445009,
+        "start_ticks": 73901121,
+        "input_sha256": "3df10e6bfc7c4aa590f18c19d59ed22f704b863c14539d492b31adf1d8d25c22",
+        "output_sha256": "e7862b19e56fe6d425720cc10384ba095ff7f623ea9428afe1733c700aeb986e",
+        "combat_rng_before": 15,
+        "combat_rng_after": 15,
+        "ordinary_actor_clock_before": 16.824016571044922,
+        "ordinary_actor_clock_after": 22.136028289794922,
+        "script_sequence_before": 11581,
+        "script_sequence_after": 14494,
+        "compiled_units": 9993,
+        "compilation_failures": 0,
+        "binary_sha256": "be581f336afa18c37d62d0e3ea3c37a5867b6f0e2d3ba6c22a7ae663d54494a9"
+      }
+    ],
+    "exact_graph_across_both_processes": true,
+    "outstanding_flags": [
+      true,
+      false,
+      true,
+      false
+    ],
+    "requests": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "frontier": 8,
+    "loaded_resources": 0,
+    "sequences": 0,
+    "selected_idles": 0,
+    "process_knocked_state": 5,
+    "process_action": -1,
+    "combat_rng_preserved": true,
+    "ordinary_actor_clocks_advance": true,
+    "distinct_process_epochs": true,
+    "restart_input_is_exact_prior_output": true
+  },
+  "content_audit": {
+    "installed_plugin_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "winning_scope": "Oblivion.esm plus the pinned M15StationaryOpponent fixture. Installed Player raw model and four authored male GetUp IDLE bindings independently decoded; actual engine bank/content readmission passed. Conditions are not run to generate this synthetic setup.",
+    "script_units_per_course": 9993,
+    "compilation_failures": 0
+  },
+  "prior_attempts": [
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01",
+      "passed": false,
+      "reason": "Schema21 input lacks known native Active process action; actual load rejects with native action query has unknown legacy Active state. Process terminated; failed evidence retained. No invented neutral migration added. This legacy runtime migration gap remains open."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02",
+      "passed": false,
+      "reason": "Actual engine load succeeded, but harness waited for GetAV instead of logged lowercase getav. Expected-log casing corrected; process exited0 after diagnostic wait failure. Not counted as passing acceptance."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03",
+      "passed": true,
+      "scope": "Schema61 input with explicit process fields naturally promoted to74 in actual engine and saved cleanly; provides the pinned current seed."
+    },
+    {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01",
+      "passed": true,
+      "scope": "Preliminary pending-state run passed exact graph/RNG checks. Superseded by the canonical two courses with explicit PID/start-tick receipts; no PID claim for preliminary course."
+    }
+  ],
+  "verification_layers": {
+    "structural_write": "Staging helper validates complete graph before write, refuses overwrite, preserves source and every undeclared decoded field; opaque record preservation covered.",
+    "compiler_world_validation": "Actual engine load validates installed actor model, winning IDLE and bank membership. Each canonical course compiled9993 script units with no failures/diagnostics. No C++ changes in this fixture chunk; prior full normal/sanitized evidence referenced.",
+    "semantic_reinspection": "Python independently decoded both input/output saves and required exact four-slot graph, all four bindings/flags, frontier8, no loaded resources/NIs/selection, raw5/action-1 and unchanged combat RNG15. Existing ordinary actor clock and script event sequence advance.",
+    "runtime_acceptance": "Real engine persistence only: PID2444875 fully exited before fresh PID2445009 loaded its exact saved bytes. Both reached frame5 query, received SDL F5 and clean quit, exited0 and resaved74. Setup is synthetic; recovery and IO scheduling are not exercised."
+  },
+  "remaining": [
+    "Actual pending WorkQueue ownership/completion/cancellation and reconstruction after load",
+    "Live GetUp factory, dispatcher and shared manager registration/root lifecycle",
+    "Atomic physical-slot reset and ledger cancellation across all controller owners",
+    "Normal-input recovery/view/device/FPS courses and uninterrupted-versus-restarted recovery comparison",
+    "Unknown legacy Active-process action migration exposed by schema21 input",
+    "Full M15S4 delivery"
+  ],
+  "artifact_pins": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-fixture-python-01/python.log",
+      "sha256": "2b15b2e20bed250419b11995a0bb5d34d8f9dc2c6f7f7818d4f97a46ee687c78"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-fixture-python-01/verification.json",
+      "sha256": "4619067149d6aed74bceb9fcf23c880255e0e8e1cc687fb20ba9f713acfd8816"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-runtime-work-01/content-audit.json",
+      "sha256": "a33235a854a29bd630a9ce2879bf94a7e58c2c76618a812807bd42ef6fc34821"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-runtime-work-01/persistence-verification.json",
+      "sha256": "f05029571fb8759f7065d14e6eab74a5f5a35acf99cfac5622fdcef0b3836e63"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-runtime-work-01/run-course.py",
+      "sha256": "7805ca53517c69202678c805065ce7c390b113fe1446cd168feff008d3770d61"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-runtime-work-01/verify-course.py",
+      "sha256": "e90a4af430bf25daf742f5692dde49b00941e447587d58c6ec1122cda61e1f18"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/config/openmw.cfg",
+      "sha256": "eb6bf5839886926e99e90ed1f9c68a10a107a3ae168bec40e179b2b3a3850a7a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/config/settings.cfg",
+      "sha256": "7aa55ff8460f0db3aa21cf8080c061d512c2c7121cabbb3de78b49adbfc23e7d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/input-pristine.omwsave",
+      "sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/process.log",
+      "sha256": "226c60bef9a749ae3365326a92c9db1c5135def27c6934976de0f2f744897895"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/scenario.json",
+      "sha256": "8defac275712afbb5b3f0091781d746408013de4a34f1152b87d922e34e6f3f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/sdl-input-provenance.json",
+      "sha256": "b491794803dcc2cc6f7653f33ac424c7903b7f1153dd1e643bfeabe8acdbff6c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/sdl-input.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/staging.json",
+      "sha256": "e4c8d880341ddadea51b0ba74048e5ac083ec3e5bee0f385ab42917944c13f5d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-01/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/config/openmw.cfg",
+      "sha256": "97ddf70350b3a8b9549c8d91380baad6e81182c048f70225fae3559863648d4b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/config/settings.cfg",
+      "sha256": "6135e8938f3e9dcffd17577d0ab918f8cda073a5e73660c002baa45663092c2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/process.log",
+      "sha256": "9b7e341bdfebb4d832295493603f0a5109fca354ddc9589e71eb97d77af0475c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/scenario.json",
+      "sha256": "871c4453665a3076287ea12bac7575d86fa7677a5316da26a21d18ab144f7fdb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/script-report.json",
+      "sha256": "674b2e96980f1f4e599ac8a4ebd7aa55c74c39e7141c07e8386836394189b347"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/sdl-input-provenance.json",
+      "sha256": "6ffab29dc372afc96290de21afa05d05ef6a5f07edd68570e70b7440d0f4612f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/sdl-input.txt",
+      "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/staging.json",
+      "sha256": "7a52ae5b7333fb185a3db3ee766892f658fffdcb9c38734b218972887078ea44"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-02/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "475c10663a875fda35950ea2f8c9d8241930dfefffa404f8112f7e55360a64f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/config/openmw.cfg",
+      "sha256": "5b07717aca715ce14f64e66ae5a8e102e2aa860d004926e785e9d358e3b7797b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/config/settings.cfg",
+      "sha256": "6135e8938f3e9dcffd17577d0ab918f8cda073a5e73660c002baa45663092c2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/process.log",
+      "sha256": "366c48710e457b678d5f5b57cb20a71e5fcc53c966f65c465e0f2a5ace5b0879"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/scenario.json",
+      "sha256": "12af51376aa1ba8345e029207fed0eb5faa6fb08041c17c68506367b1f651db9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/script-report.json",
+      "sha256": "ffcaf05d96817ef5278fda7b296d8383ad2a7fa8add9fecc5e0749fc86532a48"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/sdl-input-provenance.json",
+      "sha256": "ad0bde750dd2763cd2e314dea5d056e81fd681cdb4505fe246d0af060433009a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/sdl-input.txt",
+      "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/staging.json",
+      "sha256": "99d99c3af82a942368f106693078c481129f8f6683bd3c9b59c54c6382f681bf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "2e0d5664c84f16fc8aa788e4cb18374400e4ee1dc5bc791c74762b0b2c7c4c52"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/config/openmw.cfg",
+      "sha256": "ea2f8e626527bfb8bb3d900323f8cb9692fdc852bbc2799e03569dc6f219c998"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/config/settings.cfg",
+      "sha256": "6135e8938f3e9dcffd17577d0ab918f8cda073a5e73660c002baa45663092c2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/input-pristine.omwsave",
+      "sha256": "4d8ff661b026de7224c57b8a35023e4064f8201869c833c1f3a8ce04486e54ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/input-pristine.staging.json",
+      "sha256": "59b5d30181fec7599d52f4025bed4904d1fc7f8cdbded7880a3c145b2c592080"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/process.log",
+      "sha256": "75f8ff35b1d4918f07c7655e3d1c669b5c824ae7f1b719b1c5f9a5d6213c7e15"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/scenario.json",
+      "sha256": "9c64150c87bd76ea9a7220ed116ea1608ea001239b05e3df034bedf628c8dbaa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/script-report.json",
+      "sha256": "09dd02e8716e0937c597563684465660ff2be41f788829a4dece7579abfde849"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/sdl-input-provenance.json",
+      "sha256": "5b510bfce518c5f1525f0ce15cd97baa5a603aa7eaa82dc77f78b4f033e75909"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/sdl-input.txt",
+      "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-01/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "16ef74b64f8b555133bb102f1ed3adf2507751a710599df52b4bbe80d0b5b321"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/config/openmw.cfg",
+      "sha256": "ded5e9651c75dd94a75294d4c1b6039505daade8b32bea01724754acd643f80d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/config/settings.cfg",
+      "sha256": "6135e8938f3e9dcffd17577d0ab918f8cda073a5e73660c002baa45663092c2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/input-pristine.omwsave",
+      "sha256": "4d8ff661b026de7224c57b8a35023e4064f8201869c833c1f3a8ce04486e54ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/process-epoch.json",
+      "sha256": "c9b1c4c43d4b04af3af51f62016f5bf3626e323c899ff59df505a9c838ddec5c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/process.log",
+      "sha256": "a47f2d7248cf6083e19750e4442950a697d046fd031a296fb3e89aa468be430d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/scenario.json",
+      "sha256": "4bd4b7ef75bb5d49831d3560192073dd6b959aaac620596c5ad0a2938ab07c87"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/script-report.json",
+      "sha256": "09dd02e8716e0937c597563684465660ff2be41f788829a4dece7579abfde849"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/sdl-input-provenance.json",
+      "sha256": "83f676592e9b7bbd1d6640c2c122dcb42ee52410ce15760c501a52a899f7aa7f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/sdl-input.txt",
+      "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-normal-02/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "3df10e6bfc7c4aa590f18c19d59ed22f704b863c14539d492b31adf1d8d25c22"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/config/openmw.cfg",
+      "sha256": "bedb4f597044de16c688d27a9283d9a5b8bb4bd4fcde339756f509ad64b27e48"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/config/settings.cfg",
+      "sha256": "6135e8938f3e9dcffd17577d0ab918f8cda073a5e73660c002baa45663092c2f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/input-pristine.omwsave",
+      "sha256": "3df10e6bfc7c4aa590f18c19d59ed22f704b863c14539d492b31adf1d8d25c22"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/process-epoch.json",
+      "sha256": "01dec07627955fb383d53ee8a3637e92b17e7dfca4efc787fff929f24795f6a8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/process.log",
+      "sha256": "6716331a23892b8127c5446ffe23997e2256855cf2ebeb65d63783a58949302d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/scenario.json",
+      "sha256": "05354a1007453ef123f13f91f9fae9fb31af1c540faeaf93cd2be6ab46403cea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/script-report.json",
+      "sha256": "52e0b2d342848046f0a79adc4a5f9c0a0385a9463bbecb86130305a9f7984c47"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/sdl-input-provenance.json",
+      "sha256": "1a5386d3ebf679b895f3c4b12be3b9f929de8ab0faa1f0438e8845f26915c27d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/sdl-input.txt",
+      "sha256": "bdcfa0594e8cf26b9249cab88d11d0e819c4718e2533109d425f32b459fd1e35"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/staging.json",
+      "sha256": "2102f51c0b03b0bc95af7643667f76badaf275a8fad9912c6f919490806c3521"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/test-data/events.txt",
+      "sha256": "e8886a24b1d3aafe9fcd34c1dfefc84e5d033253f4747aec8f0d7ff3016ed1e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-runtime-restart-normal-02/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "e7862b19e56fe6d425720cc10384ba095ff7f623ea9428afe1733c700aeb986e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-master-recovery-fixture-02/fixture/M15StationaryOpponent.esp",
+      "sha256": "a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-player-common-hit-runtime-03/first/input-pristine.omwsave",
+      "sha256": "5443fd0781b1a6f12b8cea604f332fc389926744844df111a966b1b91684ba80"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-process-construction-legacy-offscreen-01/first/input-pristine.omwsave",
+      "sha256": "9c4a087758ef72f412e2d92ba7c9e76d76bca71d7ebffbaf530178b8692bbc9e"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_pending_getup_state_fixture.json",
+      "sha256": "973471099262833d7aae66e3fdca293f63400f61c89a0d7d19ac248625953760"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/oblivion_m15_pending_getup_state_persistence.json",
+      "sha256": "d69379c3ee32660b58ff21d45f01343c46bc8e1b59f244668765c57218ab5a54"
+    },
+    {
+      "path": "scripts/tes4_m15_pending_getup_fixture.py",
+      "sha256": "59b0fd3515395e30feff44aa559065de1e2e11e57b48a8fd764b0fe8fe548584"
+    },
+    {
+      "path": "scripts/tests/test_tes4_m15_pending_getup_fixture.py",
+      "sha256": "95653fa7dc6f87ca38d000f6a8d5e5f43fb41c7ebe86da95f9ffa9a41548317c"
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "purpose": "Synthetic schema74 four-slot pending GetUp state persistence. Outstanding ownership alternates with completed-empty ownership; this does not queue IO, perform IDLE selection or demonstrate normal-input recovery. All other decoded seed state is preserved.",
+  "source": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/userdata/saves/M15Review/Quicksave.omwsave",
+  "source_sha256": "2e0d5664c84f16fc8aa788e4cb18374400e4ee1dc5bc791c74762b0b2c7c4c52",
+  "target_schema": 74,
+  "actor": "dynamic:player:0000000000000001",
+  "process_knocked_state": 5,
+  "process_action": -1,
+  "playback": {
+    "actor": "dynamic:player:0000000000000001",
+    "next_identity": 8,
+    "cached_sequence": 0,
+    "resident_sequence": 0,
+    "action_sequence": 0,
+    "requests": [
+      {
+        "id": 1,
+        "resource": 0,
+        "sequence": 0,
+        "status": 0,
+        "actor_bound": false
+      },
+      {
+        "id": 2,
+        "resource": 0,
+        "sequence": 0,
+        "status": 0,
+        "actor_bound": false
+      },
+      {
+        "id": 3,
+        "resource": 0,
+        "sequence": 0,
+        "status": 0,
+        "actor_bound": false
+      },
+      {
+        "id": 4,
+        "resource": 0,
+        "sequence": 0,
+        "status": 0,
+        "actor_bound": false
+      }
+    ],
+    "resources": [],
+    "sequences": [],
+    "request_selections": [],
+    "pending_requests": [
+      {
+        "request": 1,
+        "base": "dynamic:player-base:0000000000000001",
+        "idle": "content:oblivion.esm:02a984",
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model": "Characters\\_Male\\IdleAnims\\OneHandGetUpFaceUp.kf",
+        "load_pending": true
+      },
+      {
+        "request": 2,
+        "base": "dynamic:player-base:0000000000000001",
+        "idle": "content:oblivion.esm:02a985",
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model": "Characters\\_Male\\IdleAnims\\HandToHandGetUpFaceUp.kf",
+        "load_pending": false
+      },
+      {
+        "request": 3,
+        "base": "dynamic:player-base:0000000000000001",
+        "idle": "content:oblivion.esm:02a982",
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model": "Characters\\_Male\\IdleAnims\\OneHandGetUpFaceDown.kf",
+        "load_pending": true
+      },
+      {
+        "request": 4,
+        "base": "dynamic:player-base:0000000000000001",
+        "idle": "content:oblivion.esm:02a983",
+        "actor_model": "Characters\\_Male\\skeleton.NIF",
+        "model": "Characters\\_Male\\IdleAnims\\HandToHandGetUpFaceDown.kf",
+        "load_pending": false
+      }
+    ]
+  }
+}
