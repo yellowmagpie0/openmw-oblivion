@@ -1,0 +1,821 @@
+{
+  "schema_version": 1,
+  "milestone": "M15S4",
+  "scope": "Schema74 pending GetUp provenance and request-keyed outstanding load ownership; portable state and atomic service publication only",
+  "tested_source": {
+    "head": "86fa6f70859209502ab54e7d7a16899674ab8c70",
+    "source_fingerprint": "a23ccc794053d2a1aa6da93d814d4e4acd02890173220766bba6a731fc2c3805"
+  },
+  "changes": [
+    "Schema74 persists four pending request sources and distinguishes outstanding loads from completed-empty status0 requests. No loaded hash is fabricated.",
+    "C++/Python wire and JSON codecs reject malformed ownership and preserve legacy72/73 layout. Fixture recipes target74.",
+    "Prepared service publication admits pending-to-loaded transitions only for the same selected source and outstanding owner; low-process ownership and old-schema capture reject.",
+    "World readmission validates pending content without acquiring KF bytes or queueing jobs."
+  ],
+  "checks": {
+    "normal": {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01",
+      "results": {
+        "components": {
+          "executed": 3173,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "eb2f0590439b4c2a267d176cb82a574e9d18074640c39ac77ac8af276bf50323",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "90a14903acbda2ee368ecb3dcee94e9c20d281cbad1a21dcfd6bff9b9879dabe",
+          "inventory_sha256": "448d3ff8cd5ac48c60233b6de16e7aa46585dbf12e9f8197182b9a595ae12c1f",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2019,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "278a78dff5839ec6c9100621adc68b488bee994ef8f842c3f05241133be458be",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "aaaecc8eac8a91c64d0f21f878ead2c601202e6c3adeeeabc7c88aaf49ca019d",
+          "inventory_sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "sanitized": {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01",
+      "results": {
+        "sanitize": {
+          "executed": 1012,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4*",
+          "binary_sha256": "603f5f1a2c83a0e2439feb58ee90d81d456f89a4bae3ed43c592b765ca014fd7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6deab67a4251d9aa99ada27fc4e99c013ed1fe842c379b4b9d4a30cd68ffec94",
+          "inventory_sha256": "b83d6de020ea8cc341515a42c7355c5df12ac53c9d34282e34dd4f9882721170",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2019,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "cdf5681948934fa150f90d2e1a8a351553ee087a5ae7a992932326b85bff394c",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "012d046df860a15ba091e441672422669a69e906827a340a1eac7cd950f5b4d4",
+          "inventory_sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "focused": {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01",
+      "results": {
+        "components": {
+          "executed": 15,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*GetUp*:NativeGetUpPlaybackTest.*:NativeGetUpRequestTest.PendingReadmission*",
+          "binary_sha256": "eb2f0590439b4c2a267d176cb82a574e9d18074640c39ac77ac8af276bf50323",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "df80ece0ea05ecf12c80df5ae13f725a243375acf24c7efa1d44ee9d1aff7859",
+          "inventory_sha256": "d9b63fa1f86d76f8cc09cf717994cf9fa04fb4eba1f2302167da25e61d7efb94",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 12,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*GetUp*:NativeGetUpPlaybackTest.*:NativeGetUpRequestTest.PendingReadmission*",
+          "binary_sha256": "278a78dff5839ec6c9100621adc68b488bee994ef8f842c3f05241133be458be",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "50a677e99996bc1013139cd41eaaa5234829880a6582378c232c64387071bdc7",
+          "inventory_sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "python": {
+          "executed": 424,
+          "passed": true,
+          "log_sha256": "28c212b4fc06481a498dae53240c6fb45eb9509f0aa374f5ccbf155073db2411"
+        }
+      }
+    },
+    "leak": {
+      "evidence": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01",
+      "results": {
+        "components": {
+          "executed": 4,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.PendingGetUp74*:NativeGetUpPlaybackTest.*:NativeGetUpRequestTest.PendingReadmission*",
+          "binary_sha256": "603f5f1a2c83a0e2439feb58ee90d81d456f89a4bae3ed43c592b765ca014fd7",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "37674c0366f7288ea4718bc04d8e98ee35a1101a72b3ff6de23630f1b9b3a7ad",
+          "inventory_sha256": "80467f34d2917d7e30c62db6b687b9e4a8dfdd82c6555cde68f542725a8f84f6",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 12,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.PendingGetUp74*:NativeGetUpPlaybackTest.*:NativeGetUpRequestTest.PendingReadmission*",
+          "binary_sha256": "cdf5681948934fa150f90d2e1a8a351553ee087a5ae7a992932326b85bff394c",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "6275f33800461105c79d2989ec960a4a3f38fd59199e48e817b7849611032ff4",
+          "inventory_sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "sanitizer_environment": {
+    "full": {
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "focused_leak": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "cross_language": {
+    "case_count": 15,
+    "cases": [
+      {
+        "name": "legacy72",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355"
+      },
+      {
+        "name": "legacy73",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "15767c092c8ea2344329819ef23efcebee0f6796d744ffc61b0f719fac54fd11"
+      },
+      {
+        "name": "pending-four",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "4c3271254d133c5a90d29dd49caec46c9e40e48b7898d6ae7263b8654fc41df0"
+      },
+      {
+        "name": "pending-one",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "38429a4f806f8e696308d551eee8bc5fbfd7a2342cbff6545ba086cae2c8b676"
+      },
+      {
+        "name": "pending-empty",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "57066cfc87c6e4d97a41485b8e39080c69dfe57637ff7610c74334cbd860636b"
+      },
+      {
+        "name": "promoted74",
+        "mode": "roundtrip",
+        "passed": true,
+        "sha256": "3197a8f762fdd34591491d44d80717aad6f87390a04e86202660d38af807794a"
+      },
+      {
+        "name": "legacy72",
+        "mode": "promote",
+        "passed": true
+      },
+      {
+        "name": "legacy73",
+        "mode": "promote",
+        "passed": true
+      },
+      {
+        "name": "pending-queued",
+        "mode": "C++ fixture creation -> Python decode/encode",
+        "passed": true
+      },
+      {
+        "name": "pending-empty",
+        "mode": "C++ fixture creation -> Python decode/encode",
+        "passed": true
+      },
+      {
+        "name": "duplicate",
+        "mode": "malformed input rejected by both codecs",
+        "passed": true
+      },
+      {
+        "name": "nonboolean",
+        "mode": "malformed input rejected by both codecs",
+        "passed": true
+      },
+      {
+        "name": "truncated",
+        "mode": "malformed input rejected by both codecs",
+        "passed": true
+      },
+      {
+        "name": "too-many",
+        "mode": "malformed input rejected by both codecs",
+        "passed": true
+      },
+      {
+        "name": "foreign-base",
+        "mode": "malformed input rejected by both codecs",
+        "passed": true
+      }
+    ],
+    "baseline_parent": "86fa6f70859209502ab54e7d7a16899674ab8c70",
+    "baseline_python_sha256": "42a720fd94f31fd1ea52b2365f7253f59d63c02c83ba1e326fdb35f87d68542a",
+    "legacy_wire_sha256": {
+      "legacy72": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355",
+      "legacy73": "15767c092c8ea2344329819ef23efcebee0f6796d744ffc61b0f719fac54fd11"
+    },
+    "binary_sha256": "2622a85165e2571704c33cc379ecb4b669df667739391467fea9860f3b63af5f",
+    "scope": "Synthetic headless cross-language codec fixtures; no load scheduler or game process"
+  },
+  "allocation_probe": {
+    "passed": true,
+    "scope": "Standalone normal engine-library host, glibc malloc/calloc/realloc failure injection; not normal-input gameplay",
+    "commands": [
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/probe",
+          "--gtest_list_tests"
+        ],
+        "returncode": 0
+      },
+      {
+        "argv": [
+          "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/probe",
+          "--gtest_filter=NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe",
+          "--gtest_repeat=1",
+          "--gtest_shuffle=0",
+          "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/allocation.xml"
+        ],
+        "returncode": 0
+      }
+    ],
+    "preload_sha256": "7d39925491ef6fada1cb24189c4292a9bc747357ff1033605f24ef1b4e0af02d",
+    "gtest": {
+      "executed": 1,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "NativeGetUpPlaybackTest.AllocationFailurePreparationAndNoAllocationPublicationProbe"
+    },
+    "counts": {
+      "preparation_attempts": 17,
+      "rejected_preparation_cases": 16,
+      "bad_alloc_cases": 13,
+      "other_exception_cases": 3,
+      "publication_profiles": 6,
+      "denied_publication_allocations": 0,
+      "negative_control_denied": 1
+    }
+  },
+  "original_evidence": {
+    "fresh_this_chunk": false,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "reports": [
+      "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-report01.json",
+      "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json"
+    ],
+    "interpretation": "Reuses original instruction evidence: completion removes request-keyed pending ownership even when no Info is delivered. The persisted boolean is outstanding ownership, not the native scheduler state byte. Scheduling equivalence is not claimed."
+  },
+  "verification_layers": {
+    "structural_write": "Editable source, schema and fixture manifests",
+    "compiler_world_validation": "Full normal components3173 and engine2019; sanitizer ESM4 components1012 and engine2019; Python424; focused leak4 components and12 engine. All inventories match, no failures/skips.",
+    "semantic_reinspection": "Queued and completed-empty ownership, immutable binding, codec compatibility and actual World content validation tested; original pending protocol evidence reused.",
+    "runtime_acceptance": "Headless codec/engine-library tests only. No original game process, live worker reconstruction, rendered gameplay or normal-input acceptance in this chunk."
+  },
+  "remaining": [
+    "Actual worker scheduling/completion/cancellation and pending IO fresh-process reconstruction",
+    "Live GetUp factory, shared manager registration/root ownership and dispatcher",
+    "Normal-input first/third-person, device/FPS and fresh-process runtime acceptance",
+    "Full M15S4 delivery"
+  ],
+  "artifact_pins": [
+    {
+      "path": "apps/components_tests/esm4/runtimestate.cpp",
+      "sha256": "eb4bced1cbd945d2d24bef0a6d456b3b79acd341da7c0aef76badc80733ffd05"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "1e6e0912fccb05cf74549355e46bb25fa7776f8bc69ea21783451313b57d0567"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "0515b6fdbac1d5e58b85727bd8e49388d2191639743350ec5cdc8264c9bbb896"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "537c73b192c5ea9e547588b5299c7ad506f3b1934392152d9c3e1b3d2973f98a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-corpus01.json",
+      "sha256": "9d19158e472394e0636c5184c3c8e2c234d18835bf695404598c944d03f304f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json",
+      "sha256": "19f1102320ee69e8d3a2e5c31e7166af4855241e1dcc59492a4cc36ec659cd74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05.py",
+      "sha256": "9bd20e691e8350e2868fd6d9bcbed59be38f196082910ac0710aa960d2a7eebe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-corpus01.json",
+      "sha256": "d43c75444fd5ec9828797ba6aec07b626c187cedeb74fc877fdcdac57fb1ae74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-report01.json",
+      "sha256": "5ed0557d92d77d4e8360a6a8f41e622e9739cc7502f625bef23f7c1365b00201"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01.py",
+      "sha256": "35bae8e76202580c7a72a3c1eff972cecfca2cd577b818b02d86ab6f1e1708a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/allocation-counts.json",
+      "sha256": "193f53703f6c240afe04c34b920f58c9fd66fadaafc8fa538c51ba70b0f2da67"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/allocation.log",
+      "sha256": "509bfd708916ed8ea21265eadb99680b2ed74167eb68f35512b82e4414756c70"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/allocation.xml",
+      "sha256": "2c17ea3f507e236e0f5de2246cc49b0d47a118b0a10eb38ce36667a6538d2813"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/inventory.log",
+      "sha256": "13bc07f8af53b13ba898c91bb08ba5699458203a2330df47ec41ad7e997ad6b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-normal-01/verified.json",
+      "sha256": "3bd9c970096531f4aa3534c6bf430bd728baca4e49e4648e28c855108f0a2fac"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/allocation-guard.c",
+      "sha256": "afa548192c770a1b4477f20fbd0adda2cd30e69724e7d930b17339e2f6e3285d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/build-fresh-process-probe.py",
+      "sha256": "3162f8a42f38b5d705be3bb558e1dc2e067377c678a5041b2a2947c5590a75d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/fixture.o.build.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/fresh-process-probe.cpp",
+      "sha256": "8bcf9da5c0fd7b3593896ca5bb27b208ff570ae552911c0a4be4d84d5e342e1f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/probe-build.json",
+      "sha256": "b7e4ab7b376e71675fe2ade3a399f5b01cce3dcd09841e73538d97c5713adf9c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/probe.link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/probe.o.build.log",
+      "sha256": "a552cee225e88cf820dab22b5ebefa83785327804a26c3178689f7eb1d23c7b5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-allocation-work-01/run-probe.py",
+      "sha256": "4d42e9ac2e7059b0b2c0fc018bd4260aff5f8924c170055a0bfde9d8a9239c9e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/bad-duplicate.bin",
+      "sha256": "e960a7df818cea66118a1430e61b3c6490175ba44523d050600abb402e31efbd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/bad-foreign-base.bin",
+      "sha256": "2a86edff24f075d9e071470849f717e72f25c0064d2b3bead809bb48fefc2c50"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/bad-nonboolean.bin",
+      "sha256": "eca3a111f1fdb0da89038a23f34cc7c22b75e7cdadbf2cda63713572cad5677a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/bad-too-many.bin",
+      "sha256": "7a3698dbb813db2540342a437120767851e700ec5f723203c0c5fd3e10f26767"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/bad-truncated.bin",
+      "sha256": "8dd08c2e1cac96b9db678b917e3e7266f4ec5220a191a05791a8dfa7bd2e8e38"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/baseline73.py",
+      "sha256": "42a720fd94f31fd1ea52b2365f7253f59d63c02c83ba1e326fdb35f87d68542a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/cpp-pending-empty.bin",
+      "sha256": "2cdeb7f3681d3ada0cd931f89d96b27dfec141c49afe33de57c79c8d56d8490b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/cpp-pending-empty.json",
+      "sha256": "fba98a30d6370bec97a065fac24f02cdf7af1e5d7ad9d79c455ecece64594d4e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/cpp-pending-queued.bin",
+      "sha256": "8ced235c7b017eb07aacabbd10d20d54a27d27a5b6068954f401cff3ce745ce2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/cpp-pending-queued.json",
+      "sha256": "0993a16635735b2b15cc76aaad9a119fc13806db0a480eaedb56e7b478d5dc23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.input.bin",
+      "sha256": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.input.json",
+      "sha256": "f6b5ce0ddc7b2f66bf366b15b539dbbf0b4ae840c1b74ae8e8d27658e9fba580"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.promoted.bin",
+      "sha256": "cd3ea3d9aed77ce6ddf643ceeee9c57fa476f79479389e7cfcc19d4d705a7291"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.promoted.json",
+      "sha256": "5b06cd50972c5de43fc3e2784962e36f1f8c1063c964a33f1290424e02f10dc0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.roundtrip.bin",
+      "sha256": "8fd1104fc653dc3b6c11542aa3347e5a7109b46eabcf3d87025a162268084355"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy72.roundtrip.json",
+      "sha256": "19e8b0710372cccf8f56221fddae860d334be7b455cabc7cb98a8f00f429fd14"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.input.bin",
+      "sha256": "15767c092c8ea2344329819ef23efcebee0f6796d744ffc61b0f719fac54fd11"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.input.json",
+      "sha256": "83f9a56c54ae0d9ee8019fc05098ce79f3a033dbb0bec3c5fa3730f148e69dcb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.promoted.bin",
+      "sha256": "3197a8f762fdd34591491d44d80717aad6f87390a04e86202660d38af807794a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.promoted.json",
+      "sha256": "f6163d7f3cd3e59d1419f877616834231c6661ccf55cc0c41bcf32f63c07c5e0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.roundtrip.bin",
+      "sha256": "15767c092c8ea2344329819ef23efcebee0f6796d744ffc61b0f719fac54fd11"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/legacy73.roundtrip.json",
+      "sha256": "dc21c3a9b910dca979573390a1d944d95383cc704e89230f530787b78a32cc79"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-empty.input.bin",
+      "sha256": "57066cfc87c6e4d97a41485b8e39080c69dfe57637ff7610c74334cbd860636b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-empty.input.json",
+      "sha256": "c774b65b8d2eb79114f5bb2fd7a96e94f478c66abd76c419f6a3a4c1dd699566"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-empty.roundtrip.bin",
+      "sha256": "57066cfc87c6e4d97a41485b8e39080c69dfe57637ff7610c74334cbd860636b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-empty.roundtrip.json",
+      "sha256": "061df489fdab72d9eebad572d0630cf01acce08b886769234323f25553e5bfa7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-four.input.bin",
+      "sha256": "4c3271254d133c5a90d29dd49caec46c9e40e48b7898d6ae7263b8654fc41df0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-four.input.json",
+      "sha256": "0371dec7576b4ea4082a3d3fae44fd752be613830ea3b43d4e6a796f2128d290"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-four.roundtrip.bin",
+      "sha256": "4c3271254d133c5a90d29dd49caec46c9e40e48b7898d6ae7263b8654fc41df0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-four.roundtrip.json",
+      "sha256": "45976763d3294a74fc5f52bfc4acd095e28cd172a07b99423633095a8f1de086"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-one.input.bin",
+      "sha256": "38429a4f806f8e696308d551eee8bc5fbfd7a2342cbff6545ba086cae2c8b676"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-one.input.json",
+      "sha256": "8601c28b2da198bce6181cc6083414219ba06d30da6967da51d54d04a970d97e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-one.roundtrip.bin",
+      "sha256": "38429a4f806f8e696308d551eee8bc5fbfd7a2342cbff6545ba086cae2c8b676"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/pending-one.roundtrip.json",
+      "sha256": "c38d4131eb7913ad96c0d113c147ec2069672005aaa9e41e1a8bf9fc711cbade"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/promoted74.input.bin",
+      "sha256": "3197a8f762fdd34591491d44d80717aad6f87390a04e86202660d38af807794a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/promoted74.input.json",
+      "sha256": "d7b2c8d4535b7e4b7b7ce7e7983895e801fdea2b79bf56a9f9dd092037a9bd6f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/promoted74.roundtrip.bin",
+      "sha256": "3197a8f762fdd34591491d44d80717aad6f87390a04e86202660d38af807794a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/promoted74.roundtrip.json",
+      "sha256": "f6163d7f3cd3e59d1419f877616834231c6661ccf55cc0c41bcf32f63c07c5e0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-cross-normal-01/verification.json",
+      "sha256": "b1380a0154bfb3673a53df765eb39aedba5483a4f6ad4a6e38ce85d6fcbd107e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/components-build.log",
+      "sha256": "63bef66002a5466c7447a394cc00d60d05f2597257ba5872b6b16a183b27aa10"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/components-inventory.txt",
+      "sha256": "d9b63fa1f86d76f8cc09cf717994cf9fa04fb4eba1f2302167da25e61d7efb94"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/components.log",
+      "sha256": "4dfc45d7d94cb6ffe7936f66320d76fbefaf74f3266fb5f0fe794cb66646a0cd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/components.xml",
+      "sha256": "df80ece0ea05ecf12c80df5ae13f725a243375acf24c7efa1d44ee9d1aff7859"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/engine-build.log",
+      "sha256": "11a544d8c137d8f13b5dcc8dbaaf2e1614d058e61370f0f1630a3daacc3d83e2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/engine-inventory.txt",
+      "sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/engine.log",
+      "sha256": "893b1f211e059dd64a4be686c8e42af6411f4693c606254f7e9daa59f48f4c77"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/engine.xml",
+      "sha256": "50a677e99996bc1013139cd41eaaa5234829880a6582378c232c64387071bdc7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/python.log",
+      "sha256": "28c212b4fc06481a498dae53240c6fb45eb9509f0aa374f5ccbf155073db2411"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-focused-01/verification.json",
+      "sha256": "1de42718b0eb999d3d7465934a60e66799057e3da870b976e6ae15a0e868ea9a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/components-build.log",
+      "sha256": "8ae8f65ff3ea7976061991a8adeb3fc6990f6ffb27dc3c39ef12d6f65378d36a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/components-inventory.txt",
+      "sha256": "80467f34d2917d7e30c62db6b687b9e4a8dfdd82c6555cde68f542725a8f84f6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/components.log",
+      "sha256": "e420ae2e702308fb5ac8fcfd3f2bf8b3ce2abed87ff2cbcc5c3b23304621ca73"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/components.xml",
+      "sha256": "37674c0366f7288ea4718bc04d8e98ee35a1101a72b3ff6de23630f1b9b3a7ad"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/engine-build.log",
+      "sha256": "1f35498f0aab8d5b50ea7397e6b6d92d9b92c6370249f3edfb71f3e13ff0358d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/engine-inventory.txt",
+      "sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/engine.log",
+      "sha256": "ef64d0f418348435f740005d98d66d9aaa15dde0edac791098f2624573a1f63a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/engine.xml",
+      "sha256": "6275f33800461105c79d2989ec960a4a3f38fd59199e48e817b7849611032ff4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-leak-01/verification.json",
+      "sha256": "4705661725ee5aee146778485db34636dd6362e0533ad319f9fb7c3268d2adeb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/components-build.log",
+      "sha256": "a1163c25c49079ef8219a44b682f8a7e1a3cfb1a39e64f7d26f7d1b79625cb43"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/components-inventory.txt",
+      "sha256": "448d3ff8cd5ac48c60233b6de16e7aa46585dbf12e9f8197182b9a595ae12c1f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/components.log",
+      "sha256": "ea28f99b283521de7cf18f848bdf1a0067b9a1834e0187c9f001a58c64fda2d9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/components.xml",
+      "sha256": "90a14903acbda2ee368ecb3dcee94e9c20d281cbad1a21dcfd6bff9b9879dabe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/engine-build.log",
+      "sha256": "67a5299ee6035ab22092efe6c14a7101493523db54a660bb755eedc56eaa68c7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/engine-inventory.txt",
+      "sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/engine.log",
+      "sha256": "a6a7d4d7013557f5a7ab4246f0d1c323dda5501028251ec590606dba5cf835fa"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/engine.xml",
+      "sha256": "aaaecc8eac8a91c64d0f21f878ead2c601202e6c3adeeeabc7c88aaf49ca019d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-normal-01/verification.json",
+      "sha256": "57880a30ea87784a8818745ffec0a8d7733becac13107652c12f800d3ea71ba5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/engine-build.log",
+      "sha256": "c110830c2d2a3052a53c5c74b741daee40bc26e3f97e4f304cc081b85899ba0d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/engine-inventory.txt",
+      "sha256": "6d7c7b1728a68d3d8afb4fcd3521cc774ff41df5fe84b4bc31426a9d555b258d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/engine.log",
+      "sha256": "839159e1b1a0467241797bffdb3735c251cdc675110e52e7814b57acd57c81d5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/engine.xml",
+      "sha256": "012d046df860a15ba091e441672422669a69e906827a340a1eac7cd950f5b4d4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/sanitize-build.log",
+      "sha256": "f7fb20afba89e16618eca6eae62172dc2ae4b8a458aa16e8d3192331a5e89130"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/sanitize-inventory.txt",
+      "sha256": "b83d6de020ea8cc341515a42c7355c5df12ac53c9d34282e34dd4f9882721170"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/sanitize.log",
+      "sha256": "7d1d328453574a79aa64b2ad6ef12cfffb55731620a21761eec9596e57698917"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/sanitize.xml",
+      "sha256": "6deab67a4251d9aa99ada27fc4e99c013ed1fe842c379b4b9d4a30cd68ffec94"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-sanitized-01/verification.json",
+      "sha256": "b07938be9e36e0029b43acf0b938296ec3804faa27d3c325403182d3c140ad21"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/build-cross-codec.py",
+      "sha256": "f46ad0472e618faab34587f12b296a1dcdc8f12ee98df36a38aec3015cc9385c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/cross-codec-build.json",
+      "sha256": "11e43061db38b33de14d8d1c2863757f6f1d7002570b6659823bea47ffc5969e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/cross-codec.compile.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/cross-codec.cpp",
+      "sha256": "2917b663d7003a3cd54fc9964cf8fb63db2ce37c5e283aeae7c90ed02c5810cf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/cross-codec.link.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-state-work-01/run-cross-codec.py",
+      "sha256": "1b53899e1f1f27ae969c59f933af25c4dfbb72b13317fe4694733e16466914a5"
+    },
+    {
+      "path": "components/esm4/runtimestate.cpp",
+      "sha256": "a57bec94068fd2c4eb74411f2fbdbe75aa94becf482b64609fa19b0d1caa75ab"
+    },
+    {
+      "path": "components/esm4/runtimestate.hpp",
+      "sha256": "dbf1d5e4baaf56390e868751c2832951dcf28c49ae57495f08ae848494225686"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_cached_block_input.json",
+      "sha256": "75c7144efe95dafdac93a37adf14cfdc49365843b28c6eb05cead22d30677a94"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_pending_state_cases.json",
+      "sha256": "c0ed0e1491ae791670d220abb1ec4901d0d2fcd6697c6ef443bb342f9dcaf23e"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_npc_passive_strike_fixture.json",
+      "sha256": "5341e5522e7fb8f5132d4fd2eeab36423b62fa2bc1579fa77afbc75f9cd2cf8a"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_passive_slot3_controller_fixture.json",
+      "sha256": "166dfc1923c855f1c279e848dd6914c70892ec03ab71bae04a2e6e1bab921627"
+    },
+    {
+      "path": "scripts/tes4_m15_cached_block_input.py",
+      "sha256": "9c1f156d2ad7fafa29db4bd1fe4d3230cf0dd7fc2c3c22b797cfa1981e74c59b"
+    },
+    {
+      "path": "scripts/tes4_m15_npc_passive_fixture.py",
+      "sha256": "f6bbc7c7513a02f6f4b92d833b7bde7bd2b4185c836124db759c23578c185bab"
+    },
+    {
+      "path": "scripts/tes4_m15_passive_slot3_fixture.py",
+      "sha256": "82298ac36c43bcf2a9fb900b1ed2500594730a881b85e7d0458034b92adf46e0"
+    },
+    {
+      "path": "scripts/tes4_runtime_state.py",
+      "sha256": "b1db56e99c052a8c4402e6e763b429e25fbad608e181f837fcf19d04d3ab4b30"
+    },
+    {
+      "path": "scripts/tests/test_tes4_runtime_state.py",
+      "sha256": "6962a2ce762fda8e549c0f3830c1bdb54619f637d8281bcecd38bd75e68aa495"
+    }
+  ]
+}

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 73
+CURRENT_VERSION = 74
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1663,6 +1663,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     for graph in graphs:
         graph_fields = {"actor", "next_identity", "cached_sequence", "resident_sequence", "action_sequence", "requests", "resources", "sequences"}
         if version >= 73: graph_fields.add("request_selections")
+        if version >= 74: graph_fields.add("pending_requests")
         if not isinstance(graph, dict) or set(graph) != graph_fields:
             raise RuntimeStateError("Invalid GetUp graph shape")
         actor = graph["actor"]; native_key(actor)
@@ -1681,7 +1682,7 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if type(value) is not int or not 0 <= value < 1 << 64 or (value and value not in table):
                 raise RuntimeStateError("Dangling GetUp sequence reference")
         resources = {}; used_resources = set(); sequences = {}; used_sequences = set()
-        def getup_binding(binding):
+        def getup_binding(binding, loaded=True):
             for key in (binding["base"], binding["idle"]): native_key(key)
             if binding["base"] != value_bases[actor] or not binding["idle"].startswith("content:"):
                 raise RuntimeStateError("Mismatched GetUp graph resource owner")
@@ -1689,10 +1690,13 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 path = binding[field]
                 if not isinstance(path, str) or not path or len(path) >= 260 or any(ord(c) == 0 or ord(c) >= 128 for c in path):
                     raise RuntimeStateError("Invalid GetUp graph authored path")
-            digest = binding["asset_hash"]
-            if (not binding["model"].lower().endswith(".kf") or not isinstance(digest, str)
-                    or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest)):
-                raise RuntimeStateError("Invalid GetUp graph KF identity")
+            if not binding["model"].lower().endswith(".kf"):
+                raise RuntimeStateError("Invalid GetUp graph KF model")
+            if loaded:
+                digest = binding["asset_hash"]
+                if (not isinstance(digest, str) or len(digest) != 32
+                        or any(c not in "0123456789abcdef" for c in digest)):
+                    raise RuntimeStateError("Invalid GetUp graph KF identity")
         for resource in check_collection(graph["resources"], "GetUp graph resources"):
             if not isinstance(resource, dict) or set(resource) != {"id", "base", "idle", "actor_model", "model", "asset_hash"}:
                 raise RuntimeStateError("Invalid GetUp resource shape")
@@ -1755,6 +1759,17 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 elif sequence["inactive"]: raise RuntimeStateError("Unanchored inactive GetUp retirement")
             if not sequence["managed"] and not sequence["inactive"]:
                 raise RuntimeStateError("Detached GetUp sequence is active")
+        pending_requests = {}
+        for pending in check_collection(graph.get("pending_requests", []), "pending GetUp requests"):
+            if (not isinstance(pending, dict)
+                    or set(pending) != {"request", "base", "idle", "actor_model", "model", "load_pending"}):
+                raise RuntimeStateError("Invalid pending GetUp request shape")
+            request_id = pending["request"]
+            if (type(request_id) is not int or not 0 < request_id < frontier
+                    or request_id in pending_requests or type(pending["load_pending"]) is not bool):
+                raise RuntimeStateError("Invalid or duplicate pending GetUp request")
+            pending_requests[request_id] = pending; getup_binding(pending, loaded=False)
+        if len(pending_requests) > 4: raise RuntimeStateError("Too many pending GetUp requests")
         requests = graph["requests"]
         if not isinstance(requests, list) or len(requests) != 4:
             raise RuntimeStateError("GetUp requires four fixed request slots")
@@ -1764,8 +1779,13 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 raise RuntimeStateError("Invalid GetUp request shape")
             identity(request["id"]); reference(request["sequence"], sequences)
             status = request["status"]; bound = request["actor_bound"]; seq = request["sequence"]
-            if (type(request["resource"]) is not int or request["resource"] not in resources
-                    or type(status) is not int or not 1 <= status <= 3 or type(bound) is not bool
+            if type(status) is not int or type(bound) is not bool or type(request["resource"]) is not int:
+                raise RuntimeStateError("Invalid GetUp request fields")
+            if status == 0:
+                if version < 74 or request["resource"] or seq or bound or request["id"] not in pending_requests:
+                    raise RuntimeStateError("Pending GetUp request lacks its unbound source ownership")
+                continue
+            if (request["resource"] not in resources or not 1 <= status <= 3
                     or (status == 1 and (seq or bound)) or (status == 2 and (not seq or not bound)) or bool(seq) != bound):
                 raise RuntimeStateError("Unsupported GetUp request lifecycle")
             used_resources.add(request["resource"])
@@ -1776,12 +1796,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         selections = check_collection(graph.get("request_selections", []), "GetUp request selections")
         if len(selections) > 4: raise RuntimeStateError("Too many GetUp request selections")
         requests_by_id = {request["id"]: request for request in requests if request is not None}
+        for request_id in pending_requests:
+            if request_id not in requests_by_id or requests_by_id[request_id]["status"] != 0:
+                raise RuntimeStateError("Dangling or loaded pending GetUp request")
         seen_selections = set()
         for selection in selections:
             if not isinstance(selection, dict) or set(selection) != {"request", "base", "idle", "actor_model", "model", "asset_hash"}:
                 raise RuntimeStateError("Invalid GetUp request selection shape")
             request_id = selection["request"]
-            if type(request_id) is not int or request_id not in requests_by_id or request_id in seen_selections:
+            if (type(request_id) is not int or request_id not in requests_by_id or request_id in seen_selections
+                    or requests_by_id[request_id]["status"] == 0):
                 raise RuntimeStateError("Duplicate or dangling GetUp request selection")
             seen_selections.add(request_id); getup_binding(selection)
             resource = resources[requests_by_id[request_id]["resource"]]
@@ -2825,6 +2849,14 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     selection = {"request": reader.unpack("<Q")}
                     for field in ("base", "idle", "actor_model", "model", "asset_hash"): selection[field] = reader.string()
                     graph["request_selections"].append(selection)
+            if version >= 74:
+                count = reader.count()
+                if count > 4: raise RuntimeStateError("Too many pending GetUp requests")
+                graph["pending_requests"] = []
+                for _ in range(count):
+                    pending = {"request": reader.unpack("<Q")}
+                    for field in ("base", "idle", "actor_model", "model"): pending[field] = reader.string()
+                    pending["load_pending"] = getup_boolean(); graph["pending_requests"].append(pending)
             result["native_getup_playback"].append(graph)
     if version >= 31:
         result["native_actor_ragdolls"] = []
@@ -3601,6 +3633,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 for selection in selections:
                     writer.pack("<Q", selection["request"])
                     for field in ("base", "idle", "actor_model", "model", "asset_hash"): writer.string(selection[field])
+            if version >= 74:
+                pending_requests = sorted(graph["pending_requests"], key=lambda entry: entry["request"])
+                writer.pack("<I", len(pending_requests))
+                for pending in pending_requests:
+                    writer.pack("<Q", pending["request"])
+                    for field in ("base", "idle", "actor_model", "model"): writer.string(pending[field])
+                    writer.pack("<B", pending["load_pending"])
     if version >= 31:
         ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
         writer.pack("<I", len(ragdolls))
@@ -3912,6 +3951,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
         if state.get("schema_version", 1) < 73 and graph.get("request_selections"):
             raise RuntimeStateError("Legacy TES4 save cannot carry GetUp request selections")
         graph.setdefault("request_selections", [])
+        if state.get("schema_version", 1) < 74 and graph.get("pending_requests"):
+            raise RuntimeStateError("Legacy TES4 save cannot carry pending GetUp requests")
+        graph.setdefault("pending_requests", [])
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])

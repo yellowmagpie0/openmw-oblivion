@@ -5892,3 +5892,103 @@ TEST(ESM4RuntimeState, GetUpGraph73RejectsDanglingMismatchedAndDuplicateSelectio
     wire = state.serializeBinary(); wire.resize(offset + entry.size() - 1);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }
+
+namespace
+{
+    ESM4::RuntimeState pendingGetUpState(bool fourSlots = true)
+    {
+        auto state = getUpIdleState();
+        const auto [actor, source] = *state.mNativeGetUpIdles.begin();
+        state.mNativeGetUpIdles.clear();
+        auto& graph = state.mNativeGetUpPlayback[actor]; graph.mNextIdentity = 8;
+        std::uint64_t id = 0;
+        for (auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                 &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+        {
+            if (!fourSlots && id) break;
+            ++id; *slot = ESM4::makeNativeIdleRequest(id, 0);
+            graph.mPendingRequests.emplace(id, ESM4::RuntimeGetUpPendingRequest{
+                source.mBase, source.mIdle, source.mActorModel, source.mModel, bool(id & 1)});
+        }
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, PendingGetUp74RetainsFourSourcesAndActualLoadOwnershipWithoutResourceOrClock)
+{
+    const auto state = pendingGetUpState(); const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored, state); EXPECT_EQ(restored.serializeBinary(), bytes);
+    const auto& graph = restored.mNativeGetUpPlayback.begin()->second;
+    EXPECT_TRUE(graph.mResources.empty()); EXPECT_TRUE(graph.mSequences.empty());
+    EXPECT_TRUE(restored.mNativeGetUpIdles.empty()); EXPECT_TRUE(restored.mNativeAnimationClocks.empty());
+    ASSERT_EQ(graph.mPendingRequests.size(), 4);
+    EXPECT_TRUE(graph.mPendingRequests.at(1).mLoadPending); EXPECT_FALSE(graph.mPendingRequests.at(2).mLoadPending);
+    EXPECT_EQ(graph.mNextIdentity, 8); EXPECT_EQ(restored.mCombatRngState, state.mCombatRngState);
+    EXPECT_NE(restored.canonicalJson().find("\"pending_requests\":[{\"request\":1"), std::string::npos);
+    EXPECT_NE(restored.canonicalJson().find("\"load_pending\":false"), std::string::npos);
+}
+
+TEST(ESM4RuntimeState, PendingGetUp74RejectsDanglingLoadedOrForeignSources)
+{
+    const auto valid = pendingGetUpState();
+    const auto reject = [&](const auto& change) {
+        auto state = valid; change(state.mNativeGetUpPlayback.begin()->second);
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto& graph) { graph.mPendingRequests.erase(1); });
+    reject([](auto& graph) { graph.mPendingRequests.emplace(7, graph.mPendingRequests.at(1)); });
+    reject([](auto& graph) { graph.mNextIdentity = 4; });
+    reject([](auto& graph) { graph.mRequests.mPrimary->mResource = 7; });
+    reject([](auto& graph) { graph.mRequests.mPrimary->mSequence = 7; });
+    reject([](auto& graph) { graph.mRequests.mPrimary->mActorBound = true; });
+    reject([](auto& graph) { graph.mRequests.mPrimary->mStatus = 1; });
+    reject([](auto& graph) { graph.mRequests.mPrimary->mStatus = 4; });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mBase = ESM::FormKey::content("oblivion.esm", 0x999); });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mIdle = ESM::FormKey::dynamic("idle", 1); });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mActorModel.clear(); });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mModel = "getup.nif"; });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mModel = std::string("getup.kf\0tail", 13); });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mModel = "\xff.kf"; });
+    reject([](auto& graph) { graph.mPendingRequests.at(1).mModel = std::string(260, 'x') + ".kf"; });
+    reject([](auto& graph) {
+        const auto& p = graph.mPendingRequests.at(1);
+        graph.mRequestSelections.emplace(1, ESM4::RuntimeGetUpIdle{p.mBase, p.mIdle, p.mActorModel,
+            p.mModel, "00112233445566778899aabbccddeeff"});
+    });
+}
+
+TEST(ESM4RuntimeState, PendingGetUp74RejectsDuplicateTruncatedAndNonBooleanWireEntries)
+{
+    const auto state = pendingGetUpState(false); const auto wire = state.serializeBinary();
+    const auto& pending = state.mNativeGetUpPlayback.begin()->second.mPendingRequests.at(1);
+    std::vector<std::uint8_t> entry{1, 0, 0, 0, 0, 0, 0, 0};
+    for (const auto& value : {pending.mBase.serialize(), pending.mIdle.serialize(), pending.mActorModel, pending.mModel})
+    {
+        for (unsigned shift : {0, 8, 16, 24}) entry.push_back(static_cast<std::uint8_t>(value.size() >> shift));
+        entry.insert(entry.end(), value.begin(), value.end());
+    }
+    entry.push_back(1);
+    const auto found = std::search(wire.begin(), wire.end(), entry.begin(), entry.end()); ASSERT_NE(found, wire.end());
+    const auto start = std::distance(wire.begin(), found); ASSERT_GE(start, 4);
+    auto bad = wire; bad[start - 4] = 2; bad.insert(bad.begin() + start, entry.begin(), entry.end());
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    bad = wire; bad[start + entry.size() - 1] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+    bad = wire; bad.resize(start + entry.size() - 1);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(bad), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, PendingGetUp74CannotReinterpretLegacyGraphsAndAddsOnlyItsOwnSection)
+{
+    auto state = pendingGetUpState(); state.mVersion = 73;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    auto& graph = state.mNativeGetUpPlayback.begin()->second;
+    graph.mRequests = {}; graph.mPendingRequests.clear();
+    const auto legacy = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(legacy).serializeBinary(), legacy);
+    EXPECT_EQ(state.canonicalJson().find("pending_requests"), std::string::npos);
+    state.mVersion = 74; const auto current = state.serializeBinary();
+    EXPECT_EQ(current.size(), legacy.size() + 4);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(current), state);
+}

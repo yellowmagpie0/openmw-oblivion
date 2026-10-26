@@ -6351,8 +6351,10 @@ namespace MWMechanics
             || (update.mClock && (!std::isfinite(*update.mClock) || *update.mClock < 0 || *update.mClock > 100000)))
             throw std::invalid_argument("invalid GetUp playback process byte or clock");
         update.mPlayback.validate(update.mClock);
+        const auto& requests = update.mPlayback.mRequests;
+        const bool hasRequests = requests.mPrimary || requests.mSecondary || requests.mRetired[0] || requests.mRetired[1];
         if (values->mProcess == ESM4::ActorValueProcess::Low
-            ? update.mKnockedState || update.mAction || update.mIdle
+            ? update.mKnockedState || update.mAction || update.mIdle || hasRequests
                 || !update.mPlayback.mResources.empty() || !update.mPlayback.mSequences.empty()
             : !update.mKnockedState || !update.mAction)
             throw std::invalid_argument("GetUp playback has incompatible native process ownership");
@@ -6363,6 +6365,9 @@ namespace MWMechanics
         for (const auto& [id, resource] : update.mPlayback.mResources)
             if (resource.mBase != values->mBase)
                 throw std::invalid_argument("GetUp playback resource belongs to another actor base");
+        for (const auto& [id, pending] : update.mPlayback.mPendingRequests)
+            if (pending.mBase != values->mBase)
+                throw std::invalid_argument("Pending GetUp request belongs to another actor base");
         if (update.mIdle)
         {
             update.mIdle->validate();
@@ -6411,16 +6416,34 @@ namespace MWMechanics
                 if (const auto found = old.mSequences.find(id); found != old.mSequences.end()
                     && sequence.mResource != found->second.mResource)
                     throw std::invalid_argument("GetUp playback retargeted an existing NI identity");
+            const auto sameBinding = [](const auto& a, const auto& b) {
+                return a.mBase == b.mBase && a.mIdle == b.mIdle
+                    && a.mActorModel == b.mActorModel && a.mModel == b.mModel;
+            };
             for (const auto* slot : {&update.mPlayback.mRequests.mPrimary, &update.mPlayback.mRequests.mSecondary,
                      &update.mPlayback.mRequests.mRetired[0], &update.mPlayback.mRequests.mRetired[1]})
                 if (*slot)
                     for (const auto* previousSlot : {&old.mRequests.mPrimary, &old.mRequests.mSecondary,
                              &old.mRequests.mRetired[0], &old.mRequests.mRetired[1]})
-                        if (*previousSlot && (*previousSlot)->mIdentity == (*slot)->mIdentity
-                            && ((*previousSlot)->mResource != (*slot)->mResource
-                                || old.requestSelection((*slot)->mIdentity)
-                                    != update.mPlayback.requestSelection((*slot)->mIdentity)))
+                    {
+                        if (!*previousSlot || (*previousSlot)->mIdentity != (*slot)->mIdentity) continue;
+                        const auto id = (*slot)->mIdentity;
+                        if ((*previousSlot)->mStatus == 0)
+                        {
+                            const auto& pending = old.mPendingRequests.at(id);
+                            if ((*slot)->mStatus == 0)
+                            {
+                                const auto& next = update.mPlayback.mPendingRequests.at(id);
+                                if (!sameBinding(pending, next) || (!pending.mLoadPending && next.mLoadPending))
+                                    throw std::invalid_argument("GetUp playback retargeted or restarted a pending request");
+                            }
+                            else if (!pending.mLoadPending || !sameBinding(pending, update.mPlayback.requestSelection(id)))
+                                throw std::invalid_argument("GetUp delivery has no pending load or changed its selected source");
+                        }
+                        else if ((*previousSlot)->mResource != (*slot)->mResource
+                            || old.requestSelection(id) != update.mPlayback.requestSelection(id))
                             throw std::invalid_argument("GetUp playback changed an existing request selection");
+                    }
         }
         const auto sameClock = [](auto a, auto b) {
             return a.has_value() == b.has_value() && (!a || std::bit_cast<std::uint32_t>(*a)
@@ -6721,6 +6744,9 @@ namespace MWMechanics
         if (state.mVersion < 73 && std::any_of(mGetUpPlayback.begin(), mGetUpPlayback.end(),
                 [](const auto& entry) { return !entry.second.mRequestSelections.empty(); }))
             throw std::invalid_argument("GetUp request selections require schema73");
+        if (state.mVersion < 74 && std::any_of(mGetUpPlayback.begin(), mGetUpPlayback.end(),
+                [](const auto& entry) { return !entry.second.mPendingRequests.empty(); }))
+            throw std::invalid_argument("Pending GetUp requests require schema74");
         if (state.mVersion < 71 && !mGetUpIdles.empty())
             throw std::invalid_argument("selected GetUp IDLE ownership requires schema71");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
@@ -6969,6 +6995,13 @@ namespace MWMechanics
                 if (!record || std::string_view(record->mModel.getOriginal()).substr(
                         0, record->mModel.getOriginal().find('\0')) != selection.mModel)
                     throw std::invalid_argument("Saved GetUp request IDLE differs from winning content");
+            }
+            for (const auto& [request, pending] : graph.mPendingRequests)
+            {
+                const auto* record = store.search<ESM4::IdleAnimation>(pending.mIdle);
+                if (!record || std::string_view(record->mModel.getOriginal()).substr(
+                        0, record->mModel.getOriginal().find('\0')) != pending.mModel)
+                    throw std::invalid_argument("Saved pending GetUp IDLE differs from winning content");
             }
         }
         for (const auto& actor : state.mNativeActorValues)

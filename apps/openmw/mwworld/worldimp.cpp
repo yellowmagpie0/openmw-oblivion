@@ -3354,7 +3354,7 @@ namespace MWWorld
             if (incoming) if (const auto* record = incoming->search<T>(key)) return record;
             return mStore.search<T>(key);
         };
-        const auto acquire = [&](const ESM::FormKey& actor, const ESM4::RuntimeGetUpIdle& idle) {
+        const auto validateBinding = [&](const ESM::FormKey& actor, const auto& idle) {
             idle.validate();
             const auto* record = lookup.template operator()<ESM4::IdleAnimation>(idle.mIdle);
             if (!record || getUpCString(record->mModel.getOriginal()) != idle.mModel)
@@ -3387,6 +3387,9 @@ namespace MWWorld
                 pending.insert(pending.end(), entry.mChildren.begin(), entry.mChildren.end());
             }
             if (!member) throw std::invalid_argument("Saved GetUp IDLE is outside its actor model bank");
+        };
+        const auto acquire = [&](const ESM::FormKey& actor, const ESM4::RuntimeGetUpIdle& idle) {
+            validateBinding(actor, idle);
             const auto resource = MWRender::Animation::acquireNativeIdleResource(*mResourceSystem, idle.mModel);
             if (!resource || getUpResourceHash(resource->fileHash()) != idle.mAssetHash)
                 throw std::invalid_argument("Saved GetUp KF differs from acquired bytes");
@@ -3407,7 +3410,7 @@ namespace MWWorld
                 result->mGraphs[actor].emplace(id, acquire(actor, idle));
             for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
                      &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
-                if (*slot)
+                if (*slot && (*slot)->mStatus != 0)
                 {
                     const auto resource = (*slot)->mResource;
                     result->mLoadedInfos[actor].try_emplace(resource,
@@ -3416,6 +3419,10 @@ namespace MWWorld
                 }
             for (const auto& [request, selection] : graph.mRequestSelections)
                 acquire(actor, selection);
+            // Pending provenance has no loaded bytes to audit. Admission must
+            // not run selection, consume RNG or turn a queued/failed job into IO.
+            for (const auto& [request, pending] : graph.mPendingRequests)
+                validateBinding(actor, pending);
             for (const auto& [id, sequence] : graph.mSequences)
             {
                 const auto& metadata = result->mGraphs.at(actor).at(sequence.mResource)->metadata();

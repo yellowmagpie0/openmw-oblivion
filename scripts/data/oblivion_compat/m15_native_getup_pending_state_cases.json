@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "Schema74 pending GetUp provenance and request-keyed outstanding load ownership; portable state and atomic service publication only",
+  "cases": [
+    {
+      "id": "pending-four-slots",
+      "expected": "Retain selected base/IDLE/model per status0 request, queued or completed-empty ownership, without resource, hash, NI, clock or RNG draw."
+    },
+    {
+      "id": "pending-delivery",
+      "expected": "Only an outstanding load can deliver to the same request identity and selected binding; no retry of a completed-empty job."
+    },
+    {
+      "id": "pending-readmission",
+      "expected": "Validate winning content, actor model and bank membership without opening KF bytes, selecting again, starting IO or changing live simulation."
+    },
+    {
+      "id": "legacy-layout",
+      "expected": "Schemas72/73 retain exact parent bytes; v74 adds its own section; malformed, dangling, foreign or nonboolean ownership rejects."
+    },
+    {
+      "id": "atomic-publication",
+      "expected": "Preparation failure preserves snapshot; publication makes zero allocation calls and invalidates competing plans."
+    }
+  ],
+  "remaining": [
+    "Actual worker scheduling/completion/cancellation and pending IO fresh-process reconstruction",
+    "Live GetUp factory, shared manager registration/root ownership and dispatcher",
+    "Normal-input first/third-person, device/FPS and fresh-process runtime acceptance",
+    "Full M15S4 delivery"
+  ]
+}

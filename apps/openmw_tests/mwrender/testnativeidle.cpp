@@ -739,7 +739,109 @@ namespace
             const auto seed = combat().combatRandomState(); next.mRandom = {seed, seed, 0};
             return next;
         }
+        MWMechanics::OblivionCombatService::GetUpPlaybackUpdate pendingUpdate()
+        {
+            auto next = update(); const auto source = *next.mIdle;
+            next.mIdle.reset(); next.mClock.reset(); next.mPlayback = {}; next.mPlayback.mNextIdentity = 2;
+            next.mPlayback.mRequests.mPrimary = ESM4::makeNativeIdleRequest(1, 0);
+            next.mPlayback.mPendingRequests.emplace(1, ESM4::RuntimeGetUpPendingRequest{
+                source.mBase, source.mIdle, source.mActorModel, source.mModel, true});
+            return next;
+        }
     };
+}
+
+TEST_F(NativeGetUpPlaybackTest, PendingPublicationAndDeliveryRetainRequestSelectionWithoutReplayingRandom)
+{
+    auto pending = pendingUpdate(); auto ready = update(); const auto before = snapshot();
+    const auto contact = combat().allocateAction(key()); const auto withContact = snapshot();
+    auto prepared = combat().prepareGetUpPlayback(key(), pending); ASSERT_TRUE(prepared->isValid());
+    auto competing = combat().prepareGetUpPlayback(key(), pending);
+    EXPECT_EQ(snapshot(), withContact); ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(competing->commit());
+    EXPECT_TRUE(combat().isActionPending(contact, key()));
+    EXPECT_TRUE(combat().getUpPlayback(key())->mResources.empty()); EXPECT_FALSE(combat().getUpIdle(key()));
+    EXPECT_THROW(combat().getUpPlayback(key())->requestSelection(1), std::invalid_argument);
+    const auto waiting = snapshot();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(waiting.serializeBinary()), waiting);
+    EXPECT_EQ(waiting.mCombatRngState, before.mCombatRngState);
+    auto retarget = ready; retarget.mPlayback.mResources.at(2).mModel = "OUTSIDE\\SAME.KF";
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), retarget), std::invalid_argument);
+    auto changed = pending; changed.mPlayback.mPendingRequests.at(1).mActorModel = "Other\\Skeleton.NIF";
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), changed), std::invalid_argument);
+    EXPECT_EQ(snapshot(), waiting);
+    prepared = combat().prepareGetUpPlayback(key(), ready); ASSERT_TRUE(prepared->isValid());
+    EXPECT_EQ(snapshot(), waiting); ASSERT_TRUE(prepared->commit());
+    const auto delivered = snapshot();
+    EXPECT_EQ(combat().getUpPlayback(key())->mRequests.mPrimary->mIdentity, 1);
+    EXPECT_EQ(combat().getUpPlayback(key())->mRequests.mPrimary->mStatus, 1);
+    EXPECT_TRUE(combat().getUpPlayback(key())->mPendingRequests.empty());
+    EXPECT_EQ(delivered.mCombatRngState, before.mCombatRngState);
+    EXPECT_TRUE(combat().isActionPending(contact, key()));
+    auto legacy = delivered; legacy.mVersion = 73;
+    EXPECT_NO_THROW(legacy.serializeBinary()); // Loaded state has no v74 ownership to lose.
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), pending), std::invalid_argument);
+}
+
+TEST_F(NativeGetUpPlaybackTest, CompletedEmptyLoadSurvivesRestoreWithoutRestartOrLateDelivery)
+{
+    auto pending = pendingUpdate(); const auto ready = update();
+    auto prepared = combat().prepareGetUpPlayback(key(), pending); ASSERT_TRUE(prepared->commit());
+    pending.mPlayback.mPendingRequests.at(1).mLoadPending = false;
+    prepared = combat().prepareGetUpPlayback(key(), pending); ASSERT_TRUE(prepared->commit());
+    const auto failed = snapshot(); combat().restore(failed, mFixture.mWorld.getStore());
+    EXPECT_EQ(snapshot(), failed); EXPECT_FALSE(combat().getUpPlayback(key())->mPendingRequests.at(1).mLoadPending);
+    auto retry = pending; retry.mPlayback.mPendingRequests.at(1).mLoadPending = true;
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), retry), std::invalid_argument);
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), ready), std::invalid_argument);
+    auto legacy = failed; legacy.mVersion = 73; const auto unchanged = legacy;
+    EXPECT_THROW(combat().capture(legacy), std::invalid_argument); EXPECT_EQ(legacy, unchanged);
+    EXPECT_EQ(snapshot(), failed);
+    // A new request is distinct from retrying the completed job on identity1.
+    auto replacement = pending; replacement.mPlayback.mRequests.mPrimary = ESM4::makeNativeIdleRequest(2, 0);
+    auto source = replacement.mPlayback.mPendingRequests.at(1); source.mLoadPending = true;
+    replacement.mPlayback.mPendingRequests.clear(); replacement.mPlayback.mPendingRequests.emplace(2, source);
+    replacement.mPlayback.mNextIdentity = 3;
+    prepared = combat().prepareGetUpPlayback(key(), replacement); ASSERT_TRUE(prepared->commit());
+    EXPECT_TRUE(combat().getUpPlayback(key())->mPendingRequests.at(2).mLoadPending);
+}
+
+TEST_F(NativeGetUpPlaybackTest, PendingOwnershipCannotBePublishedForLowProcess)
+{
+    auto pending = pendingUpdate(); auto low = snapshot();
+    auto& values = low.mNativeActorValues.front(); values.mProcess = ESM4::ActorValueProcess::Low;
+    values.mProcessKnockedState.reset(); values.mProcessAction.reset(); low.mNativeGetUpIdles.clear();
+    combat().restore(low, mFixture.mWorld.getStore());
+    pending.mKnockedState.reset(); pending.mAction.reset();
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), pending), std::invalid_argument);
+    EXPECT_EQ(snapshot(), low);
+}
+
+TEST_F(NativeGetUpRequestTest, PendingReadmissionChecksContentWithoutOpeningMissingKfOrStartingIo)
+{
+    auto& world = mFixture.mWorld;
+    const auto selected = world.prepareOblivionGetUpIdle(mActor); const auto before = snapshot();
+    auto saved = before; saved.mNativeActorValues.front().mProcessKnockedState = 5;
+    auto& graph = saved.mNativeGetUpPlayback[key()]; graph.mNextIdentity = 2;
+    graph.mRequests.mPrimary = ESM4::makeNativeIdleRequest(1, 0);
+    graph.mPendingRequests.emplace(1, ESM4::RuntimeGetUpPendingRequest{combat().findActorValues(key())->mBase,
+        selected.mIdle, selected.mActorModel, selected.mModel, true});
+    ASSERT_TRUE(std::filesystem::remove(mFixture.mDirectory / "meshes/outside/same.kf"));
+    mFixture.mResources.clearCache();
+    for (const bool queued : {true, false})
+    {
+        graph.mPendingRequests.at(1).mLoadPending = queued;
+        ASSERT_NO_THROW(saved.validate());
+        EXPECT_NO_THROW(world.validateOblivionSaveState(saved));
+        EXPECT_EQ(snapshot(), before); EXPECT_EQ(mAnimation->sources(), 0); EXPECT_FALSE(mAnimation->reactionRoot());
+    }
+    auto wrong = saved; wrong.mNativeGetUpPlayback.at(key()).mPendingRequests.at(1).mActorModel = "Other\\Skeleton.NIF";
+    EXPECT_THROW(world.validateOblivionSaveState(wrong), std::invalid_argument);
+    wrong = saved; auto& otherBank = wrong.mNativeGetUpPlayback.at(key()).mPendingRequests.at(1);
+    otherBank.mIdle = ESM::FormKey::content("headless.esm", 0xb00); otherBank.mModel = "Cat\\IdleAnims\\Other.kf";
+    EXPECT_THROW(world.validateOblivionSaveState(wrong), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
+    combat().restore(saved, world.getStore());
+    EXPECT_EQ(snapshot(), saved);
 }
 
 TEST_F(NativeGetUpPlaybackTest, PublishesRequestGraphProcessFieldsClockAndRandomTogether)

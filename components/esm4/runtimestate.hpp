@@ -57,7 +57,8 @@ namespace ESM4
     // v68 retains current base combat-controller presence and directed targets.
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 73;
+    // v74 retains pending GetUp request sources and outstanding load ownership.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 74;
 
     struct RuntimeContentIdentity
     {
@@ -539,6 +540,20 @@ namespace ESM4
         friend bool operator==(const RuntimeGetUpIdle&, const RuntimeGetUpIdle&) = default;
     };
 
+    // No loaded resource/fingerprint exists yet. A native status0 request may
+    // also survive a loader completion without info; that is not a queued job
+    // and must not acquire an invented retry on restore.
+    struct RuntimeGetUpPendingRequest
+    {
+        ESM::FormKey mBase;
+        ESM::FormKey mIdle;
+        std::string mActorModel;
+        std::string mModel;
+        bool mLoadPending = true;
+        void validate() const;
+        friend bool operator==(const RuntimeGetUpPendingRequest&, const RuntimeGetUpPendingRequest&) = default;
+    };
+
     // Logical strike kinds, with stock native group selection owned by the
     // controller adapter. These values are save enums, not raw TES4 group IDs.
     enum class MeleeStrikeKind : std::uint8_t
@@ -614,6 +629,8 @@ namespace ESM4
         // provenance. Absence retains the v72 resource DTO interpretation.
         // Different requests can select different records yet share one info/NI.
         std::map<std::uint64_t, RuntimeGetUpIdle> mRequestSelections;
+        // v74: exactly the source/loader ownership of status0 requests.
+        std::map<std::uint64_t, RuntimeGetUpPendingRequest> mPendingRequests;
         const RuntimeGetUpIdle& requestSelection(std::uint64_t request) const;
         void validate(std::optional<float> clock) const;
         friend bool operator==(const RuntimeGetUpPlayback&, const RuntimeGetUpPlayback&) = default;

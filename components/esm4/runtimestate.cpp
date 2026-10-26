@@ -181,6 +181,17 @@ namespace ESM4
                              selection.mActorModel, selection.mModel, selection.mAssetHash}) writer.string(text);
                 }
             }
+            if (version >= 74)
+            {
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(graph.mPendingRequests.size()));
+                for (const auto& [request, pending] : graph.mPendingRequests)
+                {
+                    writer.integer(request);
+                    for (const auto& text : {pending.mBase.serialize(), pending.mIdle.serialize(),
+                             pending.mActorModel, pending.mModel}) writer.string(text);
+                    writer.integer<std::uint8_t>(pending.mLoadPending);
+                }
+            }
         }
 
         RuntimeGetUpPlayback readGetUpPlayback(BinaryReader& reader, std::uint32_t version)
@@ -255,6 +266,20 @@ namespace ESM4
                     selection.mModel = reader.string(); selection.mAssetHash = reader.string();
                     if (!graph.mRequestSelections.emplace(request, std::move(selection)).second)
                         throw std::runtime_error("Duplicate GetUp request selection");
+                }
+            }
+            if (version >= 74)
+            {
+                count = reader.count();
+                if (count > 4) throw std::runtime_error("Too many pending GetUp requests");
+                for (std::uint32_t i = 0; i < count; ++i)
+                {
+                    const auto request = reader.integer<std::uint64_t>();
+                    RuntimeGetUpPendingRequest pending;
+                    pending.mBase = key(); pending.mIdle = key(); pending.mActorModel = reader.string();
+                    pending.mModel = reader.string(); pending.mLoadPending = boolean();
+                    if (!graph.mPendingRequests.emplace(request, std::move(pending)).second)
+                        throw std::runtime_error("Duplicate pending GetUp request");
                 }
             }
             return graph;
@@ -1668,25 +1693,36 @@ namespace ESM4
         }
     }
 
-    void RuntimeGetUpIdle::validate() const
+    static void validateGetUpBinding(const ESM::FormKey& base, const ESM::FormKey& idle,
+        const std::string& actorModel, const std::string& model)
     {
         try
         {
-            if (mBase.isNull() || !mIdle.isContent()
-                || ESM::FormKey::deserialize(mBase.serialize()) != mBase
-                || ESM::FormKey::deserialize(mIdle.serialize()) != mIdle)
+            if (base.isNull() || !idle.isContent()
+                || ESM::FormKey::deserialize(base.serialize()) != base
+                || ESM::FormKey::deserialize(idle.serialize()) != idle)
                 throw std::runtime_error("Invalid native GetUp identity");
-            for (const auto* path : {&mActorModel, &mModel})
+            for (const auto* path : {&actorModel, &model})
                 if (path->empty() || path->find('\0') != std::string::npos
                     || path->size() >= 260 || std::any_of(path->begin(), path->end(),
                         [](unsigned char c) { return c >= 128; }))
                     throw std::runtime_error("Invalid native GetUp authored C-string path");
-            if (!nativeIdleHasFile(mModel) || mAssetHash.size() != 32
-                || std::any_of(mAssetHash.begin(), mAssetHash.end(), [](char c) {
-                    return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f'); }))
-                throw std::runtime_error("Invalid native GetUp KF identity");
+            if (!nativeIdleHasFile(model)) throw std::runtime_error("Invalid native GetUp KF model");
         }
         catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
+    }
+
+    void RuntimeGetUpPendingRequest::validate() const
+    {
+        validateGetUpBinding(mBase, mIdle, mActorModel, mModel);
+    }
+
+    void RuntimeGetUpIdle::validate() const
+    {
+        validateGetUpBinding(mBase, mIdle, mActorModel, mModel);
+        if (mAssetHash.size() != 32 || std::any_of(mAssetHash.begin(), mAssetHash.end(), [](char c) {
+                return !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f'); }))
+            throw std::runtime_error("Invalid native GetUp KF identity");
     }
 
     const RuntimeGetUpIdle& RuntimeGetUpPlayback::requestSelection(std::uint64_t request) const
@@ -1695,6 +1731,7 @@ namespace ESM4
                  &mRequests.mRetired[0], &mRequests.mRetired[1]})
             if (*slot && (*slot)->mIdentity == request)
             {
+                if ((*slot)->mStatus == 0) throw std::invalid_argument("Pending GetUp request has no loaded selection");
                 const auto found = mRequestSelections.find(request);
                 return found != mRequestSelections.end() ? found->second : mResources.at((*slot)->mResource);
             }
@@ -1703,7 +1740,8 @@ namespace ESM4
 
     void RuntimeGetUpPlayback::validate(std::optional<float> clock) const
     {
-        if (mResources.size() > sMaximumCollectionSize || mSequences.size() > sMaximumCollectionSize)
+        if (mResources.size() > sMaximumCollectionSize || mSequences.size() > sMaximumCollectionSize
+            || mPendingRequests.size() > 4)
             throw std::runtime_error("GetUp graph exceeds collection size limit");
         if (!mNextIdentity || (clock && (!std::isfinite(*clock) || *clock < 0)))
             throw std::runtime_error("Invalid GetUp graph allocation frontier or clock");
@@ -1747,8 +1785,13 @@ namespace ESM4
             const auto& request = **slot;
             identity(request.mIdentity);
             requests.emplace(request.mIdentity, &request);
-            // Only the synchronous loaded-resource profile has readmission
-            // evidence. Do not serialize an invented asynchronous IO request.
+            if (request.mStatus == 0)
+            {
+                if (request.mResource || request.mSequence || request.mActorBound
+                    || !mPendingRequests.contains(request.mIdentity))
+                    throw std::runtime_error("Pending GetUp request lacks its unbound source ownership");
+                continue;
+            }
             if (request.mStatus < 1 || request.mStatus > 3 || !mResources.contains(request.mResource)
                 || (request.mStatus == 1 && (request.mSequence || request.mActorBound))
                 || (request.mStatus == 2 && (!request.mSequence || !request.mActorBound))
@@ -1759,10 +1802,18 @@ namespace ESM4
             if (request.mSequence && mSequences.at(request.mSequence).mResource != request.mResource)
                 throw std::runtime_error("GetUp request and sequence resource differ");
         }
+        for (const auto& [id, pending] : mPendingRequests)
+        {
+            const auto found = requests.find(id);
+            if (found == requests.end() || found->second->mStatus != 0)
+                throw std::runtime_error("Dangling or loaded pending GetUp request");
+            pending.validate();
+        }
         for (const auto& [id, selection] : mRequestSelections)
         {
             const auto found = requests.find(id);
-            if (found == requests.end()) throw std::runtime_error("Dangling GetUp request selection");
+            if (found == requests.end() || found->second->mStatus == 0)
+                throw std::runtime_error("Dangling or pending loaded GetUp request selection");
             selection.validate();
             const auto& resource = mResources.at(found->second->mResource);
             if (selection.mBase != resource.mBase || selection.mAssetHash != resource.mAssetHash
@@ -2135,6 +2186,8 @@ namespace ESM4
         {
             if (mVersion < 73 && !playback.mRequestSelections.empty())
                 throw std::runtime_error("GetUp request selections require schema73");
+            if (mVersion < 74 && !playback.mPendingRequests.empty())
+                throw std::runtime_error("Pending GetUp requests require schema74");
             if (!nativeActors.contains(actor) || !lives.contains(actor)
                 || runtimeReferenceKey(actor) != actor || ESM::FormKey::deserialize(actor.serialize()) != actor)
                 throw std::runtime_error("Dangling native GetUp playback owner");
@@ -2143,6 +2196,9 @@ namespace ESM4
             for (const auto& [id, resource] : playback.mResources)
                 if (resource.mBase != nativeActors.at(actor) || resource.mBase != lives.at(actor)->mBase)
                     throw std::runtime_error("GetUp graph resource belongs to another actor base");
+            for (const auto& [id, pending] : playback.mPendingRequests)
+                if (pending.mBase != nativeActors.at(actor) || pending.mBase != lives.at(actor)->mBase)
+                    throw std::runtime_error("Pending GetUp request belongs to another actor base");
         }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
@@ -5855,6 +5911,22 @@ namespace ESM4
                             << "\",\"actor_model\":\"" << escapeJson(selection.mActorModel)
                             << "\",\"model\":\"" << escapeJson(selection.mModel)
                             << "\",\"asset_hash\":\"" << selection.mAssetHash << "\"}";
+                    }
+                    stream << ']';
+                }
+                if (mVersion >= 74)
+                {
+                    stream << ",\"pending_requests\":[";
+                    bool firstPending = true;
+                    for (const auto& [request, pending] : graph.mPendingRequests)
+                    {
+                        if (!firstPending) stream << ',';
+                        firstPending = false;
+                        stream << "{\"request\":" << request << ",\"base\":\"" << escapeJson(pending.mBase.serialize())
+                            << "\",\"idle\":\"" << escapeJson(pending.mIdle.serialize())
+                            << "\",\"actor_model\":\"" << escapeJson(pending.mActorModel)
+                            << "\",\"model\":\"" << escapeJson(pending.mModel)
+                            << "\",\"load_pending\":" << (pending.mLoadPending ? "true" : "false") << '}';
                     }
                     stream << ']';
                 }

@@ -241,9 +241,10 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.encode_payload(loaded), wire)
         legacy = self.getup_graph_state(); legacy_wire = state_io.encode_payload(legacy)
         self.assertNotIn("request_selections", state_io.decode_payload(legacy_wire)["native_getup_playback"][0])
-        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 73
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = state_io.CURRENT_VERSION
         self.assertEqual(legacy["native_getup_playback"][0]["request_selections"], [])
-        self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 4)
+        self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
+        self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 8)
 
     def test_getup_graph73_rejects_invalid_selection_and_legacy_reinterpretation(self):
         changes = [lambda g: g["request_selections"][0].update(request=99),
@@ -268,6 +269,79 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         start = wire.index(entry); bad = bytearray(wire); bad[start-4] = 2; bad[start:start] = entry
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
         with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:start+len(entry)-1])
+
+    @classmethod
+    def getup_pending_state(cls, four_slots=True):
+        state = cls.getup_selected_graph_state(); state["schema_version"] = 74
+        old = state["native_getup_playback"][0]; source = old["resources"][0]
+        pending = []
+        requests = [None] * 4
+        for index in range(4 if four_slots else 1):
+            identity = index + 1
+            requests[index] = {"id": identity, "resource": 0, "sequence": 0, "status": 0, "actor_bound": False}
+            pending.append({key: source[key] for key in ("base", "idle", "actor_model", "model")})
+            pending[-1].update(request=identity, load_pending=bool(identity & 1))
+        state["native_getup_playback"] = [{"actor": old["actor"], "next_identity": 8,
+            "cached_sequence": 0, "resident_sequence": 0, "action_sequence": 0,
+            "requests": requests, "resources": [], "sequences": [], "request_selections": [],
+            "pending_requests": pending}]
+        state["native_getup_idles"] = []; state["native_animation_clocks"] = []
+        return state
+
+    def test_getup_pending74_roundtrip_preserves_queued_and_completed_empty_without_info(self):
+        state = self.getup_pending_state(); wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_getup_playback"], state["native_getup_playback"])
+        self.assertEqual(loaded["native_animation_clocks"], [])
+        self.assertEqual(loaded["native_getup_idles"], [])
+        self.assertEqual(loaded["combat_rng_state"], state["combat_rng_state"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+
+    def test_getup_pending74_rejects_malformed_ownership_and_source(self):
+        changes = [lambda g: g["pending_requests"].pop(0),
+            lambda g: g["pending_requests"].append(dict(g["pending_requests"][0])),
+            lambda g: g["pending_requests"][0].update(request=7),
+            lambda g: g["pending_requests"][0].update(request=True),
+            lambda g: g["pending_requests"][0].update(load_pending=1),
+            lambda g: g["pending_requests"][0].update(asset_hash="0"*32),
+            lambda g: g["pending_requests"][0].update(base="content:oblivion.esm:000999"),
+            lambda g: g["pending_requests"][0].update(idle="dynamic:idle:0000000000000001"),
+            lambda g: g["pending_requests"][0].update(model="getup.nif"),
+            lambda g: g["pending_requests"][0].update(model="getup.kf\0tail"),
+            lambda g: g["pending_requests"][0].update(actor_model=""),
+            lambda g: g["requests"][0].update(resource=True),
+            lambda g: g["requests"][0].update(resource=7),
+            lambda g: g["requests"][0].update(sequence=7),
+            lambda g: g["requests"][0].update(status=False),
+            lambda g: g["requests"][0].update(status=1),
+            lambda g: g["requests"][0].update(actor_bound=True),
+            lambda g: g.update(next_identity=4), lambda g: g.pop("pending_requests")]
+        for index, change in enumerate(changes):
+            with self.subTest(index=index):
+                state = self.getup_pending_state(); change(state["native_getup_playback"][0])
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_getup_pending74_rejects_duplicate_truncated_boolean_wire_and_legacy(self):
+        state = self.getup_pending_state(False); wire = state_io.encode_payload(state)
+        pending = state["native_getup_playback"][0]["pending_requests"][0]
+        entry = struct.pack("<Q", 1) + b"".join(struct.pack("<I", len(pending[k])) + pending[k].encode()
+            for k in ("base", "idle", "actor_model", "model")) + b"\x01"
+        start = wire.index(entry)
+        bad = bytearray(wire); bad[start-4] = 2; bad[start:start] = entry
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        bad = bytearray(wire); bad[start+len(entry)-1] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:start+len(entry)-1])
+        state["schema_version"] = 73
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_actor_knockback(state)
+
+    def test_getup_pending74_empty_legacy_promotion_preserves_old_layout(self):
+        legacy = self.getup_selected_graph_state(); wire = state_io.encode_payload(legacy)
+        self.assertNotIn("pending_requests", state_io.decode_payload(wire)["native_getup_playback"][0])
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 74
+        self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
+        self.assertEqual(len(state_io.encode_payload(legacy)), len(wire) + 4)
 
     def test_getup_graph72_roundtrip_shared_references_frontier_and_legacy_absence(self):
         state = self.getup_graph_state(); wire = state_io.encode_payload(state)
