@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "scope": "Prepared retained-source native layer publication for the future GetUp ownership transaction",
+  "runtime_schema": 73,
+  "changes_runtime_schema": false,
+  "cases": [
+    {
+      "id": "staged-source-layers",
+      "expected": "No alias/root/callback/local change at preparation; source batch and layers publish together; consumed plans reject"
+    },
+    {
+      "id": "unavailable-source",
+      "expected": "Missing or lazy-only ordinary source cannot publish any earlier staged alias"
+    },
+    {
+      "id": "frame-update",
+      "expected": "Explicit times and captured pose layers use real tracks without ordinary callback reconstruction or event replay"
+    },
+    {
+      "id": "stale-state",
+      "expected": "Callback, child hierarchy, names, blend inputs, source clear, projection ABA, owner expiry or foreign source batch reject before publication"
+    },
+    {
+      "id": "callback-order",
+      "expected": "Ordinary callbacks precede native layers, subclass callbacks follow them; replacement and empty release preserve ordinary callback objects"
+    },
+    {
+      "id": "compatible-shared-callbacks",
+      "expected": "Shared additional callbacks keep the same successors across nodes; empty, bind and release plans preserve their identities and order."
+    },
+    {
+      "id": "root-separation",
+      "expected": "Native first-sequence root and ordinary movement accumulation root remain distinct"
+    },
+    {
+      "id": "accumulation-fallback",
+      "expected": "A staged legacy root fallback prebuilds accumulation callback rebinding; retained ordinary playback is not rebuilt"
+    },
+    {
+      "id": "physical-targets",
+      "expected": "Frozen and AnimatedTargets callbacks stay detached; sampled target changes to17 while physical pose99 remains bit-identical"
+    },
+    {
+      "id": "owned-scene",
+      "expected": "Owned native-scene frame can publish layers before collision without replacing its root callback; ending owner invalidates prepared projection"
+    },
+    {
+      "id": "allocation-failure",
+      "expected": "Every injected reached malloc failure in preparation leaves live actor publication unchanged; first/fast/root/release publication and validity need no new glibc allocations"
+    }
+  ],
+  "validation_limits": [
+    "Renderer foundation only",
+    "No logical GetUp request factory/start/frame/completion added",
+    "No source-level NI/resource identity inference from VFS aliases",
+    "No canonical shared-save loading or normal-input recovery claim",
+    "Paired-view prepared transaction remains outside this API",
+    "Full M15S4 remains incomplete"
+  ]
+}

@@ -14490,3 +14490,56 @@ Editable cases: [m15_native_getup_selection_cases.json](../../scripts/data/obliv
 Evidence: [M15-NATIVE-GETUP-SELECTION-VERIFICATION.json](M15-NATIVE-GETUP-SELECTION-VERIFICATION.json).
 Tested source fingerprint: `7583ae035228f4fa8d3a99ecea932ee49abec1ab9d812eec150fa1a5404fd837`
 on parent `7cd540587b7e1944f2a2ef3521d48dfd2bbc4a98`.
+
+### Prepared native source and layer publication
+
+`Animation::prepareNativeSequenceLayers` now stages a retained-source batch and
+its native layers as one guarded publication. Preparation resolves retained or
+staged aliases without loading lazy ordinary sources. It prebuilds frames,
+controllers, callback chains and any legacy accumulation fallback. Commit checks
+owner, source/projection/physical generations, hierarchy, callbacks, active
+controller ownership and relevant blend properties, then publishes through swaps
+and prebuilt pointer writes. It does not rebuild ordinary playback, sample
+controllers, replay events, advance a service clock or consume RNG. Same-source
+frame updates retain controller identity. Existing direct setters reuse the
+extracted planner and keep their current loading/rebuild behavior.
+
+Eleven new regressions cover staged aliases, failure atomicity, lazy-source rejection,
+stale/expired/foreign owners and projection ABA, callback order and release,
+compatible shared callbacks, explicit clocks/captured poses, accumulation fallback, frozen/animated physical
+targets and publication from an owned native-scene frame before collision.
+The native first-sequence root and the renderer's ordinary movement accumulation
+root remain distinct. The tests explicitly initialize fresh registration/fallback
+states; they do not implement native NI-manager registration or infer its order.
+
+Full normal and ASan/UBSan engine runs each pass **1,995 tests**, with exact
+inventories/XML, zero failures and zero skips. All **eleven new cases** additionally
+pass with leak detection enabled. Full sanitizer runs retain the documented
+unrelated-suite leak exception. Component and Python code/tests are unchanged;
+their prior e816 verification remains a historical reference, not a new run.
+
+Review independently reproduced an overly strict shared-callback rejection by
+compiling the new regression against the previous checked library. The corrected
+guard checks attachment at each callback's own node; the prepared successor map
+still rejects conflicting shared-chain changes. Compatible shared additional
+callbacks retain their identities across empty, bind and release publication.
+
+A separate normal engine-library host injects **92 preparation allocation
+failures** with no partial alias/root/callback/local publication. Six publication
+profiles record **zero malloc/calloc/realloc calls** under a deny-all interposer.
+Controls prove actual malloc denial and reject a missing interposer. This bounded
+glibc probe is separate from sanitizer coverage. Retained failed candidates record
+the initial root-conflation assertions and fixture forward-declaration compile
+error; corrected candidates pass in fresh evidence directories.
+
+This is renderer/scene integration over parsed synthetic tracks. It adds no live
+GetUp request factory, start/frame/completion dispatcher, action11 lifecycle or
+renderer save reconstruction. Native loaded-cache/manager ownership, combined
+World/service/physics publication, all-slot retirement, physical/Player caller
+prefixes and the remaining S4 normal-input/device/FPS/audio/mastery/full-save gates
+remain open. **M15S4 is not delivered.**
+
+Editable cases: [m15_native_getup_projection_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_projection_cases.json).
+Evidence: [M15-NATIVE-GETUP-PROJECTION-VERIFICATION.json](M15-NATIVE-GETUP-PROJECTION-VERIFICATION.json).
+Tested source fingerprint: `3f60cf21136ebc069766059c5f1cd15aae8f9e010d7489e807d085ab62a65261`
+on parent `e8163541f5f916a887455c17e5d020925c8b3d27`.

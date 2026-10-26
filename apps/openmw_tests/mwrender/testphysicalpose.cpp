@@ -2163,3 +2163,113 @@ namespace
     }
 
 }
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, PreparedNativeFramesRetainClocksAndPoseLayersWithoutOrdinaryRebuilds)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto track = nativeTrack({1, 0, 0}); track->mVelocity = {4, 0, 0};
+        mAnimation->addNativeSource("prepared-idle", track, 20);
+        const auto builds = mAnimation->mControllerBuilds;
+        MWRender::Animation::NativeSequenceLayer layer{"prepared-idle", MWRender::BlendMask_All, .25f};
+        layer.mExposeSampleTime = true;
+        const auto before = mBone->getMatrix();
+        auto prepared = mAnimation->prepareNativeSequenceLayers(std::span(&layer, 1)); ASSERT_TRUE(prepared);
+        EXPECT_EQ(mBone->getMatrix(), before); EXPECT_EQ(track->mObserved->mSamples, 0);
+        ASSERT_TRUE(prepared->commit()); EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        traverse(); EXPECT_FLOAT_EQ(track->mObserved->mTime, .25f);
+        EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 2);
+        const auto callback = osg::ref_ptr(mBone->getUpdateCallback());
+        layer.mTime = .75f; prepared = mAnimation->prepareNativeSequenceLayers(std::span(&layer, 1)); ASSERT_TRUE(prepared);
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("prepared-idle"), .25f);
+        ASSERT_TRUE(prepared->commit()); EXPECT_EQ(mBone->getUpdateCallback(), callback);
+        mFrameStamp->setFrameNumber(1); traverse();
+        EXPECT_FLOAT_EQ(track->mObserved->mTime, .75f); EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("prepared-idle"), .75f);
+        EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 4);
+        const auto captured = mAnimation->captureNativeSequencePose("prepared-idle", 0); ASSERT_TRUE(captured);
+        std::array<MWRender::Animation::NativeSequenceLayer, 2> layers{{
+            {"prepared-idle", MWRender::BlendMask_All, 0, 1, .5f, false,
+                std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*captured)},
+            {"prepared-idle", MWRender::BlendMask_All, 1, 1, .5f}}};
+        prepared = mAnimation->prepareNativeSequenceLayers(layers); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit());
+        mFrameStamp->setFrameNumber(2); traverse();
+        EXPECT_FLOAT_EQ(track->mObserved->mTime, 1); EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 4.5f);
+        EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        const auto samples = track->mObserved->mSamples;
+        auto release = mAnimation->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+        mFrameStamp->setFrameNumber(3); traverse();
+        EXPECT_EQ(track->mObserved->mSamples, samples); EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, PreparedNativeProjectionPublishesInsideOwnedSceneFrameBeforeCollision)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto track = nativeTrack({1, 0, 0}); track->mVelocity = {4, 0, 0};
+        mAnimation->addNativeSource("scene-prepared", track, 20);
+        const auto builds = mAnimation->mControllerBuilds;
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        unsigned frames = 0, collisions = 0;
+        auto scene = mAnimation->prepareNativeScene(mGraph, placement, [&](const auto&, const auto&, unsigned) {
+            ++frames;
+            MWRender::Animation::NativeSequenceLayer layer{"scene-prepared", MWRender::BlendMask_All, frames * .25f};
+            layer.mExposeSampleTime = true;
+            auto projection = mAnimation->prepareNativeSequenceLayers(std::span(&layer, 1));
+            if (!projection || !projection->commit()) throw std::runtime_error("owned scene projection failed");
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            frame.mCollision = [&](std::uint32_t record, const Nif::NiTransform& animated) {
+                ++collisions; EXPECT_EQ(record, 8);
+                EXPECT_FLOAT_EQ(animated.mTranslation.x(), 101 + frames);
+                return SceneUtil::NifSceneTraversal::CollisionResult{};
+            };
+            return frame;
+        });
+        ASSERT_TRUE(mAnimation->commitNativeScene(*scene));
+        const auto rootCallback = osg::ref_ptr(mRoot->getUpdateCallback());
+        for (unsigned frame = 1; frame <= 2; ++frame)
+        {
+            mFrameStamp->setFrameNumber(frame); traverse();
+            EXPECT_EQ(frames, frame); EXPECT_EQ(collisions, frame);
+            EXPECT_EQ(mRoot->getUpdateCallback(), rootCallback);
+            EXPECT_FLOAT_EQ(track->mObserved->mTime, frame * .25f);
+            EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 1 + frame);
+            EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        }
+        MWRender::Animation::NativeSequenceLayer layer{"scene-prepared", MWRender::BlendMask_All, .75f};
+        auto stale = mAnimation->prepareNativeSequenceLayers(std::span(&layer, 1)); ASSERT_TRUE(stale);
+        mAnimation->endNativeScene(); EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit());
+        EXPECT_FLOAT_EQ(mAnimation->getCurrentTime("scene-prepared"), .5f);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, PreparedProjectionPreservesCompatibleSharedAdditionalCallbacks)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        osg::ref_ptr<NifOsg::MatrixTransform> other = new NifOsg::MatrixTransform;
+        other->setName("Other"); other->setTranslation({0, 0, 0}); other->setRotation(osg::Quat()); other->setScale(1);
+        mRoot->addChild(other);
+        osg::ref_ptr<SceneCounter> shared = new SceneCounter;
+        mAnimation->mBeforeControllers = {{mBone, shared}, {other, shared}};
+        mAnimation->rebuildControllers(); const auto builds = mAnimation->mControllerBuilds;
+        const auto tail = osg::ref_ptr(shared->getNestedCallback());
+        auto empty = mAnimation->prepareNativeSequenceLayers({}); ASSERT_TRUE(empty); ASSERT_TRUE(empty->commit());
+        EXPECT_EQ(mBone->getUpdateCallback(), shared); EXPECT_EQ(other->getUpdateCallback(), shared);
+        auto track = nativeTrack({7, 0, 0}); mAnimation->addNativeSource("shared-compatible", track, 20);
+        MWRender::Animation::NativeSequenceLayer layer{"shared-compatible", MWRender::BlendMask_All, 0};
+        auto prepared = mAnimation->prepareNativeSequenceLayers(std::span(&layer, 1)); ASSERT_TRUE(prepared);
+        ASSERT_TRUE(prepared->commit()); EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+        EXPECT_EQ(mBone->getUpdateCallback()->getNestedCallback(), shared);
+        EXPECT_EQ(other->getUpdateCallback(), shared); EXPECT_EQ(shared->getNestedCallback(), tail);
+        traverse(); EXPECT_EQ(shared->mVisits, 2);
+        EXPECT_FLOAT_EQ(mBone->getControllerTransform().mTranslation.x(), 7);
+        EXPECT_FLOAT_EQ(other->getControllerTransform().mTranslation.x(), 0);
+        auto release = mAnimation->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+        EXPECT_EQ(mBone->getUpdateCallback(), shared); EXPECT_EQ(other->getUpdateCallback(), shared);
+        EXPECT_EQ(shared->getNestedCallback(), tail); EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+    }
+}

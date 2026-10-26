@@ -19628,3 +19628,31 @@ No file-IO miss, asynchronous completion, concurrency or original normal-game
 process is claimed. Full M15S4 remains incomplete; see the
 [verification receipt](M15-NATIVE-GETUP-SELECTION-VERIFICATION.json) and
 [delivery audit](M15-S4-DELIVERY-AUDIT.md).
+
+### Prepared renderer publication for native sequence layers
+
+The renderer now stages source aliases, native frame/controller plans and callback
+bindings before a guarded commit. It keeps ordinary callback objects and ordering,
+places native controllers before additional subclass callbacks, and preserves
+physical detachment/manual target sampling. A native-scene frame can publish its
+new layer samples before the collision traversal without replacing the owning
+root callback. Compatible shared additional callbacks keep their existing
+successors across nodes; conflicting nested changes still reject before
+publication. The native sequence root remains separate from the adapter's
+movement accumulation root; explicit fallback initialization prebuilds any new
+accumulation reset callback.
+
+No new original-executable instruction probe is claimed for this transaction
+engineering. Real parsed synthetic KF tracks, captured poses, physical targets,
+owned-scene collision inputs, exact test inventories and a glibc allocation-failure
+interposer verify the implementation boundary. The normal-only interposer checks
+92 preparation failures and six allocation-free publication profiles, including
+positive denial and missing-interposer controls. Full normal/SAN engine suites
+pass 1,995 cases and the eleven new cases pass with leak detection enabled.
+
+Renderer source aliases are not native loadedInfo or NI identities. The actual
+manager registration/removal order and first-root authority still require the
+native lifecycle integration; this helper does not establish those rules or
+satisfy normal-input/save-restart recovery gates. See the
+[verification receipt](M15-NATIVE-GETUP-PROJECTION-VERIFICATION.json) and
+[delivery audit](M15-S4-DELIVERY-AUDIT.md). Full M15S4 remains incomplete.

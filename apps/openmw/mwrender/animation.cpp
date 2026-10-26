@@ -19,6 +19,8 @@
 #include <utility>
 
 #include <osg/BlendFunc>
+#include <osg/UserDataContainer>
+#include <osg/ValueObject>
 #include <osg/Material>
 #include <osg/Matrix>
 #include <osg/MatrixTransform>
@@ -1833,6 +1835,8 @@ namespace MWRender
 
     void Animation::resetActiveGroups()
     {
+        if (mNativeSequenceGeneration != std::numeric_limits<std::uint64_t>::max())
+            ++mNativeSequenceGeneration;
         std::optional<SceneUtil::ActorRagdollLocalPose> physical;
         if (mPhysicalPose && mPhysicalAnimatedTargets)
         {
@@ -1852,6 +1856,7 @@ namespace MWRender
             }
 
             mActiveControllers.clear();
+            mNativeSequenceBaseControllerCount = 0;
 
             mAccumCtrl = nullptr;
 
@@ -1928,6 +1933,7 @@ namespace MWRender
                 }
             }
 
+            mNativeSequenceBaseControllerCount = mActiveControllers.size();
             for (const auto& [node, callback] : mNativeSequenceControllers)
             {
                 node->addUpdateCallback(callback);
@@ -2271,14 +2277,54 @@ namespace MWRender
             && mPlaybackPeer->setNativeSequenceLayersImpl(firstPerson, true);
     }
 
-    bool Animation::setNativeSequenceLayersImpl(std::span<const NativeSequenceLayer> layers, bool apply)
+    struct Animation::NativeSequencePlan
+    {
+        std::vector<NativeSequenceLayer> mLayers;
+        std::vector<std::shared_ptr<AnimSource>> mSources;
+        std::vector<std::shared_ptr<const float>> mClocks;
+        std::vector<std::shared_ptr<NativeSequenceFrame>> mFrames;
+        ActiveControllersVector mControllers;
+        bool mSame = false;
+    };
+
+    std::unique_ptr<Animation::NativeSequencePlan> Animation::buildNativeSequencePlan(
+        std::span<const NativeSequenceLayer> layers, const AnimSourceList* stagedSources, bool loadSources)
     {
         if (layers.size() > 255)
             throw std::invalid_argument("too many native sequence layers");
-        std::vector<std::shared_ptr<AnimSource>> sources;
+        if (mNativeSequenceGeneration == std::numeric_limits<std::uint64_t>::max())
+            throw std::overflow_error("native sequence projection generation exhausted");
+        auto plan = std::make_unique<NativeSequencePlan>();
+        plan->mLayers.assign(layers.begin(), layers.end());
+        auto& sources = plan->mSources;
         sources.reserve(layers.size());
-        std::vector<std::shared_ptr<const float>> clocks;
+        auto& clocks = plan->mClocks;
         clocks.reserve(layers.size());
+        const auto sourceFor = [&](std::string_view group) -> std::shared_ptr<AnimSource> {
+            if (loadSources) return nativeSequenceSource(group);
+            const auto& available = stagedSources ? *stagedSources : mAnimSources;
+            const auto playing = mStates.find(group);
+            if (playing != mStates.end())
+                return std::find(available.begin(), available.end(), playing->second.mSource) != available.end()
+                    ? playing->second.mSource : nullptr;
+            for (auto source = available.rbegin(); source != available.rend(); ++source)
+            {
+                AnimState bounds;
+                if (reset(bounds, (*source)->getTextKeys(), group, "start", "stop", 0, false)) return *source;
+            }
+            return {};
+        };
+        const auto metadataFor = [](const std::shared_ptr<AnimSource>& source, std::string_view group) {
+            const SceneUtil::ControllerSequenceMetadata* result = nullptr;
+            if (source)
+                for (const auto& metadata : source->mKeyframes->mControllerSequences)
+                    if (Misc::StringUtils::ciEqual(metadata.mGroup, group))
+                    {
+                        if (result) return static_cast<const SceneUtil::ControllerSequenceMetadata*>(nullptr);
+                        result = &metadata;
+                    }
+            return result;
+        };
         for (const auto& layer : layers)
         {
             if (layer.mGroup.empty() || !layer.mBlendMask || (layer.mBlendMask & ~BlendMask_All)
@@ -2292,9 +2338,17 @@ namespace MWRender
                     [&](const auto& earlier) { return earlier.mExposeSampleTime
                         && Misc::StringUtils::ciEqual(earlier.mGroup, layer.mGroup); }))
                 throw std::invalid_argument("ambiguous exposed native sequence time");
-            auto source = nativeSequenceSource(layer.mGroup);
-            const auto* metadata = getControllerSequenceMetadata(layer.mGroup);
-            if (!source || !metadata) return false;
+            auto source = sourceFor(layer.mGroup);
+            const auto* metadata = metadataFor(source, layer.mGroup);
+            if (!source || !metadata) return nullptr;
+            if (!loadSources)
+                for (const auto& controllers : source->mControllerMap)
+                    for (const auto& [name, controller] : controllers)
+                    {
+                        const auto node = getNodeMap().find(name);
+                        if (node == getNodeMap().end() || !Misc::StringUtils::ciEqual(node->second->getName(), name))
+                            return nullptr;
+                    }
             if (layer.mPoseSnapshot)
             {
                 layer.mPoseSnapshot->validate();
@@ -2310,7 +2364,7 @@ namespace MWRender
             if (layer.mFollowAnimationTime)
             {
                 const auto playing = mStates.find(layer.mGroup);
-                if (playing == mStates.end()) return false;
+                if (playing == mStates.end()) return nullptr;
                 clock = playing->second.mTime;
                 if (!std::isfinite(*clock) || *clock < metadata->mTimelineStart || *clock > metadata->mTimelineStop)
                     throw std::invalid_argument("native background sample outside source timeline");
@@ -2323,34 +2377,18 @@ namespace MWRender
             same = layers[i].mGroup == mNativeSequenceLayers[i].mGroup
                 && layers[i].mBlendMask == mNativeSequenceLayers[i].mBlendMask
                 && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot;
-        if (same)
-        {
-            if (!apply) return true;
-            for (std::size_t i = 0; i < layers.size(); ++i)
-            {
-                auto& frame = *mNativeSequenceFrames[i];
-                frame.mTime = layers[i].mTime;
-                frame.mWeight = layers[i].mWeight;
-                frame.mEase = layers[i].mEase;
-                frame.mAnimationTime = clocks[i];
-                mNativeSequenceLayers[i].mTime = layers[i].mTime;
-                mNativeSequenceLayers[i].mWeight = layers[i].mWeight;
-                mNativeSequenceLayers[i].mEase = layers[i].mEase;
-                mNativeSequenceLayers[i].mFollowAnimationTime = layers[i].mFollowAnimationTime;
-                mNativeSequenceLayers[i].mExposeSampleTime = layers[i].mExposeSampleTime;
-            }
-            return true;
-        }
-        std::vector<std::shared_ptr<NativeSequenceFrame>> frames;
+        plan->mSame = same;
+        if (same) return plan;
+        auto& frames = plan->mFrames;
         std::map<osg::ref_ptr<osg::Node>, std::vector<NativeSequenceController::Track>> tracks;
         const auto& nodes = getNodeMap();
         for (std::size_t i = 0; i < layers.size(); ++i)
         {
             const auto& layer = layers[i];
-            const auto* metadata = getControllerSequenceMetadata(layer.mGroup);
+            const auto* metadata = metadataFor(sources[i], layer.mGroup);
             std::map<std::string, std::uint8_t, std::less<>> priorities;
             for (const auto& [name, priority] : metadata->mTransformPriorities)
-                if (!priorities.emplace(Misc::StringUtils::lowerCase(name), priority).second) return false;
+                if (!priorities.emplace(Misc::StringUtils::lowerCase(name), priority).second) return nullptr;
             auto frame = std::make_shared<NativeSequenceFrame>();
             frame->mTime = layer.mTime;
             frame->mWeight = layer.mWeight;
@@ -2364,12 +2402,12 @@ namespace MWRender
                     const auto name = Misc::StringUtils::lowerCase(pose.mBone);
                     const auto node = nodes.find(name);
                     if (!priorities.contains(name) || node == nodes.end()
-                        || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get())) return false;
+                        || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get())) return nullptr;
                     bool admitted = false;
                     for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
                         if ((layer.mBlendMask & (1 << mask)) && sources[i]->mControllerMap[mask].contains(name))
                             admitted = true;
-                    if (!admitted) return false;
+                    if (!admitted) return nullptr;
                     tracks[node->second].push_back({nullptr, frame, pose.mPriority,
                         ESM4::SequenceBlendPose{pose.mTranslation, pose.mRotation, pose.mScale}});
                 }
@@ -2383,7 +2421,7 @@ namespace MWRender
                     const auto priority = priorities.find(name);
                     const auto node = nodes.find(name);
                     if (priority == priorities.end() || node == nodes.end()
-                        || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get())) return false;
+                        || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get())) return nullptr;
                     osg::ref_ptr<SceneUtil::KeyframeController> cloned
                         = osg::clone(controller.get(), osg::CopyOp::SHALLOW_COPY);
                     cloned->getAsCallback()->setNestedCallback(nullptr);
@@ -2391,7 +2429,7 @@ namespace MWRender
                 }
             }
         }
-        ActiveControllersVector controllers;
+        auto& controllers = plan->mControllers;
         for (auto& [node, nodeTracks] : tracks)
         {
             float threshold = 0;
@@ -2399,15 +2437,325 @@ namespace MWRender
             node->getUserValue("nativeSequenceBlendThreshold", threshold);
             node->getUserValue("nativeSequenceBlendOnlyHighest", highest);
             node->getUserValue("nativeSequenceBlendAmbiguous", ambiguous);
-            if (ambiguous) return false;
+            if (ambiguous) return nullptr;
             controllers.emplace_back(node, new NativeSequenceController(std::move(nodeTracks), threshold, highest));
         }
-        std::vector<NativeSequenceLayer> prepared(layers.begin(), layers.end());
+        return plan;
+    }
+
+    struct Animation::PreparedNativeSequenceLayers::Data
+    {
+        struct Chain
+        {
+            osg::ref_ptr<osg::Node> mNode;
+            std::string mName;
+            std::vector<osg::ref_ptr<osg::Node>> mChildren;
+            std::vector<osg::ref_ptr<osg::Callback>> mExpected, mNext;
+            osg::ref_ptr<osg::UserDataContainer> mUserData;
+            std::vector<osg::ref_ptr<osg::Object>> mUserObjects;
+            std::vector<std::string> mUserNames;
+            std::vector<std::pair<osg::ref_ptr<osg::FloatValueObject>, float>> mFloats;
+            std::vector<std::pair<osg::ref_ptr<osg::BoolValueObject>, bool>> mBools;
+        };
+        Animation* mOwner;
+        std::weak_ptr<const char> mIdentity;
+        osg::ref_ptr<osg::Group> mRoot;
+        MWWorld::Ptr mActor;
+        std::uint64_t mSourceGeneration, mProjectionGeneration, mPhysicalGeneration;
+        const SceneUtil::ActorRagdollPoseBinding* mPhysical;
+        std::shared_ptr<NativeSceneState> mNativeScene;
+        bool mAnimatedTargets, mConsumed = false;
+        std::unique_ptr<PreparedNativeIdleSources> mSourceBatch;
+        std::unique_ptr<NativeSequencePlan> mPlan;
+        ActiveControllersVector mExpectedActive, mNextActive;
+        std::size_t mExpectedBase = 0, mNextBase = 0;
+        osg::ref_ptr<osg::Node> mExpectedAccumRoot;
+        osg::ref_ptr<SceneUtil::KeyframeController> mExpectedAccum, mNextAccum;
+        osg::ref_ptr<ResetAccumRootCallback> mExpectedReset, mNextReset;
+        osg::Vec3f mAccumulate;
+        std::vector<Chain> mChains;
+        std::vector<std::pair<osg::ref_ptr<osg::Callback>, osg::ref_ptr<osg::Callback>>> mNestedWrites;
+    };
+
+    Animation::PreparedNativeSequenceLayers::PreparedNativeSequenceLayers(std::unique_ptr<Data> data)
+        : mData(std::move(data)) {}
+    Animation::PreparedNativeSequenceLayers::~PreparedNativeSequenceLayers() = default;
+
+    bool Animation::PreparedNativeSequenceLayers::isValid() const noexcept
+    {
+        const auto* data = mData.get();
+        if (!data || data->mConsumed || data->mIdentity.expired()) return false;
+        const auto& owner = *data->mOwner;
+        if (owner.mObjectRoot != data->mRoot || owner.mPtr != data->mActor
+            || owner.mPtr.isInCell() != data->mActor.isInCell()
+            || (owner.mPtr.isInCell() && owner.mPtr.getCell() != data->mActor.getCell())
+            || owner.mNativeIdleSourceGeneration != data->mSourceGeneration
+            || owner.mNativeSequenceGeneration != data->mProjectionGeneration
+            || owner.mPhysicalPoseGeneration != data->mPhysicalGeneration
+            || owner.mPhysicalPose.get() != data->mPhysical || owner.mNativeScene != data->mNativeScene
+            || owner.mPhysicalAnimatedTargets != data->mAnimatedTargets
+            || owner.mActiveControllers != data->mExpectedActive
+            || owner.mNativeSequenceBaseControllerCount != data->mExpectedBase
+            || owner.mAccumRoot != data->mExpectedAccumRoot || owner.mAccumCtrl != data->mExpectedAccum
+            || owner.mResetAccumRootCallback != data->mExpectedReset || owner.mAccumulate != data->mAccumulate
+            || (data->mSourceBatch && !data->mSourceBatch->isValid())) return false;
+        for (const auto& chain : data->mChains)
+        {
+            if (chain.mNode->getName() != chain.mName || chain.mNode->getUserDataContainer() != chain.mUserData)
+                return false;
+            const auto* group = chain.mNode->asGroup();
+            if (group && group->getNumChildren() != chain.mChildren.size()) return false;
+            for (std::size_t i = 0; i < chain.mChildren.size(); ++i)
+                if (!group || group->getChild(i) != chain.mChildren[i]) return false;
+            const osg::Callback* current = chain.mNode->getUpdateCallback();
+            for (const auto& expected : chain.mExpected)
+            {
+                if (current != expected) return false;
+                current = current->getNestedCallback();
+            }
+            if (current) return false;
+            if (chain.mUserData && chain.mUserData->getNumUserObjects() != chain.mUserObjects.size()) return false;
+            for (std::size_t i = 0; i < chain.mUserObjects.size(); ++i)
+            {
+                const auto* object = chain.mUserData->getUserObject(i);
+                if (object != chain.mUserObjects[i] || (object && object->getName() != chain.mUserNames[i])) return false;
+            }
+            for (const auto& [value, expected] : chain.mFloats)
+                if (value->getValue() != expected) return false;
+            for (const auto& [value, expected] : chain.mBools)
+                if (value->getValue() != expected) return false;
+        }
+        return true;
+    }
+
+    bool Animation::PreparedNativeSequenceLayers::commit() noexcept
+    {
+        if (!isValid()) return false;
+        auto& data = *mData;
+        auto& owner = *data.mOwner;
+        // A source batch performs only guarded swaps. No fallible work follows it.
+        if (data.mSourceBatch && !data.mSourceBatch->commit()) return false;
+        auto& plan = *data.mPlan;
+        if (plan.mSame)
+        {
+            for (std::size_t i = 0; i < plan.mLayers.size(); ++i)
+            {
+                auto& frame = *owner.mNativeSequenceFrames[i];
+                frame.mTime = plan.mLayers[i].mTime;
+                frame.mWeight = plan.mLayers[i].mWeight;
+                frame.mEase = plan.mLayers[i].mEase;
+                frame.mAnimationTime = plan.mClocks[i];
+            }
+        }
+        else
+        {
+            owner.mNativeSequenceSources.swap(plan.mSources);
+            owner.mNativeSequenceFrames.swap(plan.mFrames);
+            owner.mNativeSequenceControllers.swap(plan.mControllers);
+        }
+        owner.mNativeSequenceLayers.swap(plan.mLayers);
+        for (const auto& [callback, next] : data.mNestedWrites) callback->setNestedCallback(next);
+        for (const auto& chain : data.mChains)
+        {
+            osg::Callback* next = chain.mNext.empty() ? nullptr : chain.mNext.front().get();
+            if (chain.mNode->getUpdateCallback() != next) chain.mNode->setUpdateCallback(next);
+        }
+        owner.mActiveControllers.swap(data.mNextActive);
+        owner.mNativeSequenceBaseControllerCount = data.mNextBase;
+        owner.mAccumCtrl = data.mNextAccum;
+        owner.mResetAccumRootCallback = data.mNextReset;
+        ++owner.mNativeSequenceGeneration;
+        data.mConsumed = true;
+        return true;
+    }
+
+    std::unique_ptr<Animation::PreparedNativeSequenceLayers> Animation::prepareNativeSequenceLayers(
+        std::span<const NativeSequenceLayer> layers, std::unique_ptr<PreparedNativeIdleSources> sources)
+    {
+        if (!mObjectRoot) return {};
+        if (sources && (!sources->isValid() || sources->mData->mOwner != this))
+            throw std::invalid_argument("native projection requires its current source batch");
+        auto data = std::make_unique<PreparedNativeSequenceLayers::Data>();
+        data->mOwner = this; data->mIdentity = mNativePhysicalSourceIdentity;
+        data->mRoot = mObjectRoot; data->mActor = mPtr;
+        data->mSourceGeneration = mNativeIdleSourceGeneration;
+        data->mProjectionGeneration = mNativeSequenceGeneration;
+        data->mPhysicalGeneration = mPhysicalPoseGeneration;
+        data->mPhysical = mPhysicalPose.get(); data->mNativeScene = mNativeScene;
+        data->mAnimatedTargets = mPhysicalAnimatedTargets;
+        data->mSourceBatch = std::move(sources);
+        data->mPlan = buildNativeSequencePlan(layers,
+            data->mSourceBatch ? &data->mSourceBatch->mData->mSources : nullptr, false);
+        if (!data->mPlan) return {};
+        data->mExpectedActive = mActiveControllers;
+        data->mExpectedBase = mNativeSequenceBaseControllerCount;
+        if (data->mExpectedBase > mActiveControllers.size())
+            throw std::logic_error("native projection lost its ordinary callback boundary");
+        data->mExpectedAccumRoot = mAccumRoot;
+        data->mExpectedAccum = data->mNextAccum = mAccumCtrl;
+        data->mExpectedReset = data->mNextReset = mResetAccumRootCallback;
+        data->mAccumulate = mAccumulate;
+        const auto nextRoot = data->mSourceBatch ? data->mSourceBatch->mData->mAccumRoot : mAccumRoot;
+        const bool rebindRoot = nextRoot != mAccumRoot;
+        if (rebindRoot)
+        {
+            data->mNextAccum = nullptr;
+            if (nextRoot && (!mPhysicalPose || mPhysicalAnimatedTargets))
+            {
+                auto active = mStates.end();
+                for (auto state = mStates.begin(); state != mStates.end(); ++state)
+                    if (state->second.blendMaskContains(BoneGroup_LowerBody)
+                        && (active == mStates.end()
+                            || active->second.mPriority[BoneGroup_LowerBody] < state->second.mPriority[BoneGroup_LowerBody]))
+                        active = state;
+                if (active != mStates.end())
+                    for (const auto& [name, controller] : active->second.mSource->mControllerMap[0])
+                    {
+                        const auto found = getNodeMap().find(name);
+                        if (found != getNodeMap().end() && found->second == nextRoot) data->mNextAccum = controller;
+                    }
+            }
+            if (data->mNextAccum)
+            {
+                data->mNextReset = new ResetAccumRootCallback;
+                data->mNextReset->setAccumulate(mAccumulate);
+            }
+        }
+        const auto oldNative = [&](const auto& entry) {
+            return std::find(mNativeSequenceControllers.begin(), mNativeSequenceControllers.end(), entry)
+                != mNativeSequenceControllers.end();
+        };
+        const auto oldReset = [&](const auto& entry) {
+            return rebindRoot && entry.second == mResetAccumRootCallback;
+        };
+        ActiveControllersVector extra;
+        for (std::size_t i = 0; i < mActiveControllers.size(); ++i)
+        {
+            const auto& entry = mActiveControllers[i];
+            if (oldNative(entry) || oldReset(entry)) continue;
+            (i < data->mExpectedBase ? data->mNextActive : extra).push_back(entry);
+        }
+        if (rebindRoot && data->mNextAccum) data->mNextActive.emplace_back(nextRoot, data->mNextReset);
+        data->mNextBase = data->mNextActive.size();
+        const auto& nextNative = data->mPlan->mSame ? mNativeSequenceControllers : data->mPlan->mControllers;
+        data->mNextActive.insert(data->mNextActive.end(), nextNative.begin(), nextNative.end());
+        data->mNextActive.insert(data->mNextActive.end(), extra.begin(), extra.end());
+        struct Chains : osg::NodeVisitor
+        {
+            PreparedNativeSequenceLayers::Data& mData;
+            explicit Chains(PreparedNativeSequenceLayers::Data& data)
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN), mData(data) { setNodeMaskOverride(~0u); }
+            void apply(osg::Node& node) override
+            {
+                const auto& path = getNodePath();
+                if (std::count(path.begin(), path.end(), &node) != 1)
+                    throw std::invalid_argument("cyclic native projection hierarchy");
+                if (std::any_of(mData.mChains.begin(), mData.mChains.end(),
+                        [&](const auto& chain) { return chain.mNode == &node; })) return;
+                PreparedNativeSequenceLayers::Data::Chain chain;
+                chain.mNode = &node; chain.mName = node.getName();
+                if (auto* group = node.asGroup())
+                    for (unsigned i = 0; i < group->getNumChildren(); ++i) chain.mChildren.emplace_back(group->getChild(i));
+                for (auto* callback = node.getUpdateCallback(); callback; callback = callback->getNestedCallback())
+                {
+                    if (std::find(chain.mExpected.begin(), chain.mExpected.end(), callback) != chain.mExpected.end())
+                        throw std::invalid_argument("cyclic native projection callback chain");
+                    chain.mExpected.emplace_back(callback);
+                }
+                chain.mUserData = node.getUserDataContainer();
+                if (chain.mUserData)
+                    for (unsigned i = 0; i < chain.mUserData->getNumUserObjects(); ++i)
+                    {
+                        auto* object = chain.mUserData->getUserObject(i);
+                        chain.mUserObjects.emplace_back(object);
+                        chain.mUserNames.push_back(object ? object->getName() : "");
+                        if (!object) continue;
+                        if (object->getName() == "nativeSequenceBlendThreshold")
+                            if (auto* value = dynamic_cast<osg::FloatValueObject*>(object))
+                                chain.mFloats.emplace_back(value, value->getValue());
+                        if (object->getName() == "nativeSequenceBlendOnlyHighest" || object->getName() == "nativeSequenceBlendAmbiguous")
+                            if (auto* value = dynamic_cast<osg::BoolValueObject*>(object))
+                                chain.mBools.emplace_back(value, value->getValue());
+                    }
+                mData.mChains.push_back(std::move(chain));
+                traverse(node);
+            }
+        } chains(*data);
+        mObjectRoot->accept(chains);
+        for (const auto& [node, callback] : mActiveControllers)
+        {
+            const bool attached = std::any_of(data->mChains.begin(), data->mChains.end(), [&](const auto& chain) {
+                return chain.mNode == node
+                    && std::find(chain.mExpected.begin(), chain.mExpected.end(), callback) != chain.mExpected.end();
+            });
+            if (attached == bool(mPhysicalPose))
+                throw std::invalid_argument("native projection has stale controller attachment");
+        }
+        for (auto& chain : data->mChains)
+        {
+            for (const auto& callback : chain.mExpected)
+            {
+                const std::pair entry{chain.mNode, callback};
+                if (!oldNative(entry) && !oldReset(entry)) chain.mNext.push_back(callback);
+            }
+            if (!mPhysicalPose)
+            {
+                auto position = std::find_if(chain.mNext.begin(), chain.mNext.end(), [&](const auto& callback) {
+                    return std::find(extra.begin(), extra.end(), std::pair{chain.mNode, callback}) != extra.end();
+                });
+                if (rebindRoot && data->mNextAccum && chain.mNode == nextRoot)
+                    position = std::next(chain.mNext.insert(position, data->mNextReset));
+                for (const auto& [node, callback] : nextNative)
+                    if (node == chain.mNode) position = std::next(chain.mNext.insert(position, callback));
+            }
+        }
+        // Every admitted controller must belong to the captured hierarchy.
+        for (const auto& [node, callback] : data->mNextActive)
+            if (std::none_of(data->mChains.begin(), data->mChains.end(),
+                    [&](const auto& chain) { return chain.mNode == node; })) return {};
+        std::map<osg::ref_ptr<osg::Callback>, osg::ref_ptr<osg::Callback>> successors;
+        for (const auto& chain : data->mChains)
+            for (std::size_t i = 0; i < chain.mNext.size(); ++i)
+            {
+                osg::ref_ptr<osg::Callback> next = i + 1 < chain.mNext.size() ? chain.mNext[i + 1] : nullptr;
+                const auto [found, inserted] = successors.emplace(chain.mNext[i], next);
+                if (!inserted && found->second != next)
+                    throw std::invalid_argument("native projection would mutate a shared callback chain");
+            }
+        for (const auto& [node, callback] : mNativeSequenceControllers) successors.try_emplace(callback, nullptr);
+        if (rebindRoot && mResetAccumRootCallback) successors.try_emplace(mResetAccumRootCallback, nullptr);
+        for (const auto& [callback, next] : successors)
+            if (callback->getNestedCallback() != next) data->mNestedWrites.emplace_back(callback, next);
+        return std::unique_ptr<PreparedNativeSequenceLayers>(new PreparedNativeSequenceLayers(std::move(data)));
+    }
+
+    bool Animation::setNativeSequenceLayersImpl(std::span<const NativeSequenceLayer> layers, bool apply)
+    {
+        auto plan = buildNativeSequencePlan(layers, nullptr, true);
+        if (!plan) return false;
         if (!apply) return true;
-        mNativeSequenceLayers.swap(prepared);
-        mNativeSequenceSources.swap(sources);
-        mNativeSequenceFrames.swap(frames);
-        mNativeSequenceControllers.swap(controllers);
+        if (plan->mSame)
+        {
+            for (std::size_t i = 0; i < layers.size(); ++i)
+            {
+                auto& frame = *mNativeSequenceFrames[i];
+                frame.mTime = layers[i].mTime;
+                frame.mWeight = layers[i].mWeight;
+                frame.mEase = layers[i].mEase;
+                frame.mAnimationTime = plan->mClocks[i];
+                mNativeSequenceLayers[i].mTime = layers[i].mTime;
+                mNativeSequenceLayers[i].mWeight = layers[i].mWeight;
+                mNativeSequenceLayers[i].mEase = layers[i].mEase;
+                mNativeSequenceLayers[i].mFollowAnimationTime = layers[i].mFollowAnimationTime;
+                mNativeSequenceLayers[i].mExposeSampleTime = layers[i].mExposeSampleTime;
+            }
+            ++mNativeSequenceGeneration;
+            return true;
+        }
+        mNativeSequenceLayers.swap(plan->mLayers);
+        mNativeSequenceSources.swap(plan->mSources);
+        mNativeSequenceFrames.swap(plan->mFrames);
+        mNativeSequenceControllers.swap(plan->mControllers);
         resetActiveGroups();
         return true;
     }
@@ -3883,6 +4231,8 @@ namespace MWRender
 
     void Animation::releaseNativeSequenceLayers() noexcept
     {
+        if (mNativeSequenceGeneration != std::numeric_limits<std::uint64_t>::max())
+            ++mNativeSequenceGeneration;
         std::erase_if(mActiveControllers, [&](const auto& active) {
             const bool native = std::find(mNativeSequenceControllers.begin(), mNativeSequenceControllers.end(), active)
                 != mNativeSequenceControllers.end();

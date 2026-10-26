@@ -133,6 +133,7 @@ namespace MWRender
     {
     public:
         class PreparedPhysicalPose;
+        class PreparedNativeIdleSources;
         using BlendMask = MWRender::BlendMask;
         using BoneGroup = MWRender::BoneGroup;
         using AnimPriority = MWRender::AnimPriority;
@@ -261,6 +262,12 @@ namespace MWRender
         std::vector<std::shared_ptr<AnimSource>> mNativeSequenceSources;
         std::vector<std::shared_ptr<NativeSequenceFrame>> mNativeSequenceFrames;
         ActiveControllersVector mNativeSequenceControllers;
+        // Invalidates prepared projections, including ordinary callback rebuilds.
+        std::uint64_t mNativeSequenceGeneration = 0;
+        std::size_t mNativeSequenceBaseControllerCount = 0;
+        struct NativeSequencePlan;
+        std::unique_ptr<NativeSequencePlan> buildNativeSequencePlan(std::span<const NativeSequenceLayer> layers,
+            const AnimSourceList* stagedSources, bool loadSources);
         bool setNativeSequenceLayersImpl(std::span<const NativeSequenceLayer> layers, bool apply);
         void releaseNativeSequenceLayers() noexcept;
 
@@ -683,6 +690,28 @@ namespace MWRender
         // Missing groups return false; invalid times or looping groups throw.
         bool setAnimationFrameTime(std::string_view groupname, float time,
             PlaybackScope scope = PlaybackScope::AllViews);
+
+        class PreparedNativeSequenceLayers
+        {
+            struct Data;
+            std::unique_ptr<Data> mData;
+            explicit PreparedNativeSequenceLayers(std::unique_ptr<Data> data);
+            friend class Animation;
+        public:
+            ~PreparedNativeSequenceLayers();
+            PreparedNativeSequenceLayers(const PreparedNativeSequenceLayers&) = delete;
+            PreparedNativeSequenceLayers& operator=(const PreparedNativeSequenceLayers&) = delete;
+            bool isValid() const noexcept;
+            bool commit() noexcept;
+        };
+        // Resolve only retained sources (including an optional staged batch).
+        // Preparation preserves scene callbacks, ordinary states and transforms.
+        // Commit on the renderer update thread, outside controller callbacks.
+        // All source aliases and native layers publish together without loading
+        // resources, rebuilding ordinary callbacks or allocating during commit.
+        std::unique_ptr<PreparedNativeSequenceLayers> prepareNativeSequenceLayers(
+            std::span<const NativeSequenceLayer> layers,
+            std::unique_ptr<PreparedNativeIdleSources> sources = {});
 
         // Project explicit native sequence samples, in occupied-slot order.
         // Uses each winning KF's per-node priority and node blend settings.

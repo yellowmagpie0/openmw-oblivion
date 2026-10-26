@@ -14,6 +14,8 @@
 #include <components/resource/keyframemanager.hpp>
 #include <components/resource/niffilemanager.hpp>
 #include <components/nifosg/matrixtransform.hpp>
+#include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/misc/osguservalues.hpp>
 #include <components/sceneutil/skeleton.hpp>
 #include <components/vfs/filesystemarchive.hpp>
 #include <gtest/gtest.h>
@@ -89,6 +91,7 @@ namespace
         void source(std::string_view path, std::string_view alias = {})
         { ASSERT_TRUE(addSingleAnimSource(VFS::Path::Normalized(path), "fixture", alias, false)); }
         std::size_t sources() const { return mAnimSources.size(); }
+        std::string projectedGroup() const { return mNativeSequenceLayers.at(0).mGroup; }
         auto reactionRoot() const { return mNativeReactionRootRecord; }
         void clear() { clearAnimSources(); }
         void replaceRoot() { mObjectRoot = new osg::Group; }
@@ -884,4 +887,232 @@ TEST_F(NativeGetUpSelectionTest, RequestSelectionReadmissionRejectsWrongActorBan
     ASSERT_NO_THROW(saved.validate());
     EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
     EXPECT_EQ(snapshot(), before);
+}
+
+namespace
+{
+    struct NativeIdleProjectionTest : NativeIdleResourceTest
+    {
+        using Layer = MWRender::Animation::NativeSequenceLayer;
+        std::unique_ptr<MWRender::Animation::PreparedNativeSequenceLayers> prepare(
+            IdleAnimation& actor, std::string_view path, float time = .5f)
+        {
+            const auto resource = actor.acquireNativeIdleResource(path);
+            if (!resource) throw std::runtime_error("projection fixture resource acquisition failed");
+            const std::array<const MWRender::Animation::NativeIdleResource*, 1> resources{resource.get()};
+            auto batch = actor.prepareNativeIdleSources(resources);
+            if (!batch) throw std::runtime_error("projection fixture source preparation failed");
+            Layer layer; layer.mGroup = batch->group(0); layer.mTime = time; layer.mExposeSampleTime = true;
+            return actor.prepareNativeSequenceLayers(std::span(&layer, 1), std::move(batch));
+        }
+        void update(IdleAnimation& actor)
+        {
+            osg::ref_ptr<osg::FrameStamp> stamp = new osg::FrameStamp;
+            stamp->setSimulationTime(.5);
+            osgUtil::UpdateVisitor visitor; visitor.setFrameStamp(stamp);
+            actor.runAnimation(0); actor.mRoot->accept(visitor);
+        }
+    };
+}
+
+TEST_F(NativeIdleProjectionTest, StagedAliasesAndLayersPublishTogetherWithoutChangingThePreparedPose)
+{
+    auto actor = animation(); const auto local = actor->mBone->getMatrix();
+    auto prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->isValid());
+    EXPECT_EQ(actor->sources(), 0); EXPECT_FALSE(actor->reactionRoot());
+    EXPECT_EQ(actor->mBone->getUpdateCallback(), nullptr); EXPECT_EQ(actor->mBone->getMatrix(), local);
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit()); EXPECT_FALSE(prepared->isValid());
+    EXPECT_EQ(actor->sources(), 1); EXPECT_EQ(actor->reactionRoot(), 4);
+    EXPECT_EQ(actor->mBone->getMatrix(), local); ASSERT_NE(actor->mBone->getUpdateCallback(), nullptr);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mBone->getControllerTransform().mTranslation.x(), 9);
+    const auto callback = osg::ref_ptr(actor->mBone->getUpdateCallback());
+    const auto group = actor->projectedGroup(); EXPECT_FLOAT_EQ(actor->getCurrentTime(group), .5f);
+    auto next = prepare(*actor, "one/same.kf", .75f); ASSERT_TRUE(next); ASSERT_TRUE(next->commit());
+    EXPECT_EQ(actor->sources(), 1); EXPECT_EQ(actor->mBone->getUpdateCallback(), callback);
+    EXPECT_FLOAT_EQ(actor->getCurrentTime(group), .75f);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mBone->getControllerTransform().mTranslation.x(), 9);
+}
+
+TEST_F(NativeIdleProjectionTest, MissingLayerAndLazyOrdinarySourceCannotPublishPartOfABatch)
+{
+    auto actor = animation(); actor->directory(); const auto before = actor->sources();
+    Layer ordinary; ordinary.mGroup = "same"; ordinary.mTime = .5f;
+    EXPECT_FALSE(actor->prepareNativeSequenceLayers(std::span(&ordinary, 1)));
+    EXPECT_EQ(actor->sources(), before); EXPECT_EQ(actor->mBone->getUpdateCallback(), nullptr);
+    const auto resource = actor->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(resource);
+    const std::array<const MWRender::Animation::NativeIdleResource*, 1> resources{resource.get()};
+    auto batch = actor->prepareNativeIdleSources(resources); ASSERT_TRUE(batch);
+    const std::array<Layer, 2> layers{{{batch->group(0), MWRender::BlendMask_All, .5f},
+        {"unavailable", MWRender::BlendMask_All, .5f}}};
+    EXPECT_FALSE(actor->prepareNativeSequenceLayers(layers, std::move(batch)));
+    EXPECT_EQ(actor->sources(), before); EXPECT_FALSE(actor->reactionRoot());
+    EXPECT_EQ(actor->mBone->getUpdateCallback(), nullptr);
+}
+
+TEST_F(NativeIdleProjectionTest, CallbackHierarchyAndBlendChangesRejectWithoutPublishingSources)
+{
+    for (int mutation = 0; mutation < 4; ++mutation)
+    {
+        SCOPED_TRACE(mutation); auto actor = animation(); auto prepared = prepare(*actor, "one/same.kf");
+        ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->isValid());
+        if (mutation == 0) actor->mBone->addUpdateCallback(new osg::NodeCallback);
+        if (mutation == 1) actor->mRoot->addChild(new osg::Group);
+        if (mutation == 2) actor->mBone->setName("Renamed");
+        if (mutation == 3) actor->mBone->setUserValue("nativeSequenceBlendThreshold", .5f);
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+        EXPECT_EQ(actor->sources(), 0); EXPECT_FALSE(actor->reactionRoot());
+    }
+    auto actor = animation(); actor->mBone->setUserValue("nativeSequenceBlendThreshold", .5f);
+    auto prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->isValid());
+    actor->mBone->setUserValue("nativeSequenceBlendThreshold", .75f);
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(actor->sources(), 0);
+}
+
+TEST_F(NativeIdleProjectionTest, ProjectionAbaSourceClearForeignOwnerAndExpiredOwnerReject)
+{
+    auto actor = animation(); auto prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared);
+    ASSERT_TRUE(actor->setNativeSequenceLayers({}));
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(actor->sources(), 0);
+    prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared); actor->clear();
+    EXPECT_FALSE(prepared->commit()); EXPECT_EQ(actor->sources(), 0);
+    const auto resource = actor->acquireNativeIdleResource("one/same.kf"); ASSERT_TRUE(resource);
+    const std::array<const MWRender::Animation::NativeIdleResource*, 1> resources{resource.get()};
+    auto batch = actor->prepareNativeIdleSources(resources); ASSERT_TRUE(batch);
+    Layer layer; layer.mGroup = batch->group(0); layer.mTime = .5f;
+    auto other = animation();
+    EXPECT_THROW(other->prepareNativeSequenceLayers(std::span(&layer, 1), std::move(batch)), std::invalid_argument);
+    EXPECT_EQ(actor->sources(), 0); EXPECT_EQ(other->sources(), 0);
+    prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared); actor = nullptr;
+    EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commit());
+}
+
+namespace
+{
+    struct CallbackOrderAnimation : IdleAnimation
+    {
+        struct Observe : osg::NodeCallback
+        {
+            std::vector<float> mSamples;
+            void operator()(osg::Node* node, osg::NodeVisitor* visitor) override
+            {
+                mSamples.push_back(static_cast<NifOsg::MatrixTransform*>(node)->getControllerTransform().mTranslation.x());
+                traverse(node, visitor);
+            }
+        };
+        osg::ref_ptr<Observe> mObserve = new Observe;
+        unsigned mBuilds = 0;
+        CallbackOrderAnimation(const MWWorld::Ptr& actor, Resource::ResourceSystem& resources)
+            : IdleAnimation(actor, resources) {}
+        void ordinary()
+        {
+            source("meshes/same.kf", "ordinary");
+            play("ordinary", MWRender::AnimPriority(1), MWRender::BlendMask_All, false, 1, "start", "stop", 0, 0);
+        }
+        // Start a fresh native registration while retaining ordinary adapter playback.
+        void restartNativeRegistration()
+        {
+            mNativeReactionFirstSequenceLoaded = false;
+            mNativeReactionRootRecord.reset();
+            ++mNativeIdleSourceGeneration;
+        }
+        void clearAccumulationForFixture()
+        {
+            if (!mNativeSequenceBaseControllerCount)
+                throw std::logic_error("fixture has no ordinary accumulation callback");
+            const auto reset = mActiveControllers.at(mNativeSequenceBaseControllerCount - 1);
+            if (reset.first != mAccumRoot)
+                throw std::logic_error("fixture accumulation callback is not the ordinary prefix tail");
+            reset.first->removeUpdateCallback(reset.second); reset.second->setNestedCallback(nullptr);
+            std::erase(mActiveControllers, reset);
+            --mNativeSequenceBaseControllerCount;
+            mAccumRoot = nullptr; mAccumCtrl = nullptr;
+            ++mNativeSequenceGeneration; ++mNativeIdleSourceGeneration;
+        }
+        bool hasAccumulator() const { return bool(mAccumCtrl); }
+        auto accumulatedRoot() const { return mAccumRoot; }
+        void addControllers() override
+        {
+            ++mBuilds;
+            mBone->addUpdateCallback(mObserve);
+            mActiveControllers.emplace_back(mBone, mObserve);
+        }
+    };
+}
+
+TEST_F(NativeIdleProjectionTest, OrdinaryAndAdditionalCallbacksKeepTheirOrderAcrossReplacementAndRelease)
+{
+    osg::ref_ptr<CallbackOrderAnimation> actor = new CallbackOrderAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources);
+    actor->ordinary(); const auto builds = actor->mBuilds;
+    const auto original = osg::ref_ptr(actor->mBone->getUpdateCallback());
+    auto prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(actor->mBuilds, builds); EXPECT_EQ(actor->mBone->getUpdateCallback(), original);
+    update(*actor); ASSERT_FALSE(actor->mObserve->mSamples.empty()); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 9);
+    prepared = prepare(*actor, "two/same.kf"); ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(actor->mBuilds, builds); EXPECT_EQ(actor->mBone->getUpdateCallback(), original);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 17);
+    auto release = actor->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+    EXPECT_EQ(actor->mBuilds, builds); EXPECT_EQ(actor->mBone->getUpdateCallback(), original);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0); // ordinary root accumulation remains active
+}
+
+TEST_F(NativeIdleProjectionTest, NativeFirstSequenceRootRemainsDistinctFromOrdinaryAccumulation)
+{
+    osg::ref_ptr<CallbackOrderAnimation> actor = new CallbackOrderAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources);
+    actor->ordinary(); ASSERT_TRUE(actor->hasAccumulator()); ASSERT_EQ(actor->accumulatedRoot(), actor->mBone);
+    const auto builds = actor->mBuilds; actor->restartNativeRegistration();
+    auto prepared = prepare(*actor, "missingroot.kf"); ASSERT_TRUE(prepared);
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(actor->reactionRoot());
+    EXPECT_TRUE(actor->hasAccumulator()); EXPECT_EQ(actor->accumulatedRoot(), actor->mBone);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 2);
+    auto release = actor->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0);
+    EXPECT_EQ(actor->mBuilds, builds);
+}
+
+TEST_F(NativeIdleProjectionTest, StagedAccumulationFallbackRebindsAnExistingOrdinarySource)
+{
+    osg::ref_ptr<CallbackOrderAnimation> actor = new CallbackOrderAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources);
+    actor->ordinary(); const auto builds = actor->mBuilds;
+    // Exercise a fresh legacy accumulation selection with retained adapter playback.
+    actor->clearAccumulationForFixture(); ASSERT_FALSE(actor->hasAccumulator()); ASSERT_FALSE(actor->accumulatedRoot());
+    const auto original = osg::ref_ptr(actor->mBone->getUpdateCallback());
+    auto prepared = prepare(*actor, "one/same.kf"); ASSERT_TRUE(prepared);
+    EXPECT_FALSE(actor->hasAccumulator()); EXPECT_FALSE(actor->accumulatedRoot());
+    ASSERT_TRUE(prepared->commit()); EXPECT_TRUE(actor->hasAccumulator()); EXPECT_EQ(actor->accumulatedRoot(), actor->mBone);
+    EXPECT_EQ(actor->mBone->getUpdateCallback(), original);
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 9);
+    auto release = actor->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0);
+    EXPECT_EQ(actor->mBuilds, builds);
+}
+
+TEST_F(NativeIdleProjectionTest, PhysicalProjectionKeepsCallbacksDetachedAndRetainsAnimatedTargets)
+{
+    for (const auto mode : {MWRender::PhysicalPoseAnimation::Frozen, MWRender::PhysicalPoseAnimation::AnimatedTargets})
+    {
+        SCOPED_TRACE(static_cast<int>(mode)); auto actor = animation();
+        actor->mRoot->setUserValue(Misc::OsgUserValues::sFileHash, std::string("projection-test"));
+        NifBullet::ActorRagdollDefinition graph; graph.mSourceHash = "projection-test";
+        NifBullet::RagdollBodyDefinition body{}; body.mRecord = 12; body.mNodeRecord = 4; body.mBone = "Bip01";
+        graph.mBodies.push_back(body);
+        auto initial = prepare(*actor, "one/same.kf"); ASSERT_TRUE(initial); ASSERT_TRUE(initial->commit()); update(*actor);
+        const auto placement = Nif::NiTransform::getIdentity();
+        auto physical = actor->prepareNativePhysicalPose(graph, placement, mode); ASSERT_TRUE(physical);
+        ASSERT_TRUE(actor->commitPhysicalPose(*physical));
+        actor->applyPhysicalPose(std::vector<NifBullet::RagdollBoneWorldPose>{{4, osg::Matrixf::translate(99, 0, 0)}}, placement);
+        const auto pose = actor->mBone->getMatrix(); const auto callback = osg::ref_ptr(actor->mBone->getUpdateCallback());
+        auto next = prepare(*actor, "two/same.kf"); ASSERT_TRUE(next); ASSERT_TRUE(next->commit());
+        EXPECT_EQ(actor->mBone->getMatrix(), pose); EXPECT_EQ(actor->mBone->getUpdateCallback(), callback);
+        if (mode == MWRender::PhysicalPoseAnimation::AnimatedTargets)
+        {
+            osg::ref_ptr<osg::FrameStamp> stamp = new osg::FrameStamp; stamp->setSimulationTime(.5);
+            osgUtil::UpdateVisitor visitor; visitor.setFrameStamp(stamp);
+            const auto targets = actor->samplePhysicalAnimationTarget(placement, visitor);
+            ASSERT_EQ(targets.size(), 1); EXPECT_FLOAT_EQ(targets[0].mPose.getTrans().x(), 17);
+            EXPECT_EQ(actor->mBone->getMatrix(), pose);
+        }
+        else { update(*actor); EXPECT_EQ(actor->mBone->getMatrix(), pose); }
+        actor->endPhysicalPose(); update(*actor);
+        EXPECT_FLOAT_EQ(actor->mBone->getControllerTransform().mTranslation.x(), 17);
+    }
 }
