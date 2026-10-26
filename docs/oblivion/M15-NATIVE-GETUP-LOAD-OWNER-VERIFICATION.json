@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "milestone": "M15S4",
+  "scope": "Simulation-owned pending loads and ready Info admission; NI start and visible recovery remain the next integration gap.",
+  "tested_source": {
+    "head": "3fc978bb650fc0b0d7c0150db55484c0ecc0a351",
+    "source_fingerprint": "75c479ece3eb52d41b4ded325955622f88eac7cc1651762d2befcabdc5f08e68"
+  },
+  "capability_improved": "World::update reconstructs outstanding KF work, admits ready Info without starting animation, and retires/discards work with its request and simulation. Completed-empty requests remain unqueued.",
+  "checks": {
+    "normal": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-load-owner-normal-01/verification.json",
+      "executed": 2027,
+      "filter": "*"
+    },
+    "sanitized": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-load-owner-sanitized-01/verification.json",
+      "executed": 2027,
+      "filter": "*"
+    },
+    "leak": {
+      "report": "build/oblivion-compat/m15/S4/native-getup-load-owner-leak-01/verification.json",
+      "executed": 8,
+      "filter": "NativeGetUpLoadTest.*"
+    }
+  },
+  "sanitizers": {
+    "full_engine": "ASan leak0 + UBSan halt",
+    "focused8": "ASan leak1 + UBSan halt"
+  },
+  "runtime": {
+    "report": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/runtime-verification.json",
+    "passed": true,
+    "first_pid": 2447198,
+    "fresh_pid": 2462191,
+    "binary_sha256": "cdeda2f9dba98d95313f3481f32ef4fcb9b8aaf285c401bdecc35b69b65094cb",
+    "result": "Requests1/3 became ready with actual stock KF hashes;2/4 stayed completed-empty. Actual save/quit/fresh-load/resave preserved exact ready graph; RNG15, no NI. Each course compiled9993 script units without errors."
+  },
+  "original_evidence": {
+    "concrete_requirement": "Preserve first-published Info identity across independent same-key jobs and clear outstanding ownership after a no-Info completion.",
+    "fresh_profiles": 20,
+    "reports": [
+      "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/completion-order01-report01.json",
+      "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/pending-delivery01-report01.json"
+    ],
+    "boundary": "Original instructions with supplied loaded Infos, scheduler notifications, CRT/OS and null actor/proxies; no original IO or OS scheduling equivalence claim."
+  },
+  "reuse": {
+    "components_and_codec": "docs/oblivion/M15-NATIVE-GETUP-PENDING-STATE-VERIFICATION.json; component and codec sources unchanged",
+    "python_and_fixture": "docs/oblivion/M15-NATIVE-GETUP-PENDING-PERSISTENCE-VERIFICATION.json; Python/fixture sources unchanged,428 tests not repeated"
+  },
+  "prior_attempts": {
+    "focused01": "38 cases passed before final ambiguous-identity guard and request-removal test; superseded by full final normal/SAN suites.",
+    "runtime_normal01": "Preliminary candidate reconstruction passed; superseded by final normal02 + restart-normal02."
+  },
+  "verification_layers": {
+    "structural_write": "C++ owner/service/test changes and editable cases; no schema or plugin change",
+    "compiler_world_validation": "2027 normal and2027 sanitizer engine cases;8 leak cases; inventory/XML match, no failures/skips",
+    "semantic_reinspection": "Actual workers, completion order, empty results, request/epoch cancellation, rollback and failure retention; independent actual-save decode/readmission checks",
+    "runtime_acceptance": "Pending load reconstruction and ready-state restart only. Synthetic setup reuses the existing fixture. Normal-input visible recovery is not accepted by this evidence."
+  },
+  "remaining_acceptance_gap": "Live knockdown-to-visible-GetUp-to-idle controller path, then combined normal-input course and required view/device/FPS/restart matrix. Current checklist and user workflow steering are in native-getup-load-owner-work-01/active-handoff.json.",
+  "artifact_pins": [
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.cpp",
+      "sha256": "08d16f28d60b0c7b95e48db3ff8f70ca81063979426d6b8ea8a2c3dcc8b4b1c8"
+    },
+    {
+      "path": "apps/openmw/mwmechanics/oblivioncombat.hpp",
+      "sha256": "e10983e7e4a2c9d0f41303367b775999a6f41c4838e4888079fd5997400167f8"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "0b9673a10af2190450560d26de68094a9a1add65c9d5569c777d5dfd7429b327"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "e9f94c4cfef47a9cd909616d656e9b85c6641339508412ce742cd303e0bc4321"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "a3a9e9c32eda2ff1d6878261ad2c1004facac61805adddba18ab0d3822e761e1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-leak-01/verification.json",
+      "sha256": "57bdda6260222134bbaabbe564585f1520ed877fc75dee81615f22e2cf6edd2c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-normal-01/verification.json",
+      "sha256": "3b91c89d253a7777d0dd44a5768ccb8678dc77be1fb7cd29bbf920d071574a12"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/input-pristine.omwsave",
+      "sha256": "4d8ff661b026de7224c57b8a35023e4064f8201869c833c1f3a8ce04486e54ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/process-epoch.json",
+      "sha256": "be8bf6e8bf74cef92d4f34fa2f8db0bde807fb33669399e38f04ed8ceaec857c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/process.log",
+      "sha256": "8c1a3aee5805af6f9d0792dacaf5375d91d38654b8429c95135f372500a67209"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/scenario.json",
+      "sha256": "5725db8f3f303810f964d9036b4193278ad7dad49721a501fb1e019005904be3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/script-report.json",
+      "sha256": "7adc0cbb1265b6226ad5f4581272ca682e2d054e5222c375524f7905943d826c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-normal-02/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "687811b323f8b9de458a41d489aaeea36aa46457413aaec38b0324fd4937244c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/input-pristine.omwsave",
+      "sha256": "687811b323f8b9de458a41d489aaeea36aa46457413aaec38b0324fd4937244c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/process-epoch.json",
+      "sha256": "19d6dd2f93cbbb29f493cbf2db43b86e7327ca076043da8ef4c9801a63ae4dc6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/process.log",
+      "sha256": "988194699693576f89e162358d2ca44271986dfefe39b4f142073045c52c37dd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/scenario.json",
+      "sha256": "e98a3c522decff2d01eeeb716343c5e8fe5b7a0a5b599ea32b7a16ceab6003a6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/script-report.json",
+      "sha256": "7df8b5e8da0611856e6971b5f9ba029d553cdc76df97e77d42026f3bf47c4922"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-runtime-restart-normal-02/userdata/saves/M15Review/Quicksave.omwsave",
+      "sha256": "583dfd201e9742f9c71f8bc6bbb9d7edbb26699aa7ff9dc2bd05a19218963b4d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-sanitized-01/verification.json",
+      "sha256": "049389a6a92df05b3f120078dff14cc8744c355e34b98427e4751c6dc347246b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/completion-order01-corpus01.json",
+      "sha256": "12d14284b36d11bc7fbbac7cd55fed3648982b0fcad7d01e8021d77af4d2cf83"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/completion-order01-report01.json",
+      "sha256": "10fb682f1d347d5371b2c24246a8557f6bf399524763bdb2be039f1812167331"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/completion-order01.py",
+      "sha256": "843b853226badfa09c08ebebbaf7fa94888fd4ef908584ead4ed187b73ba706b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/pending-delivery01-corpus01.json",
+      "sha256": "d43c75444fd5ec9828797ba6aec07b626c187cedeb74fc877fdcdac57fb1ae74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/pending-delivery01-report01.json",
+      "sha256": "5ed0557d92d77d4e8360a6a8f41e622e9739cc7502f625bef23f7c1365b00201"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/pending-delivery01.py",
+      "sha256": "35bae8e76202580c7a72a3c1eff972cecfca2cd577b818b02d86ab6f1e1708a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/runtime-verification.json",
+      "sha256": "ef74b131c03e65c0c23aaf58ab54bc6e6850bb98ee15ba2cdec0db9a838a7c90"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-load-owner-work-01/verify-loaded-restart.py",
+      "sha256": "5baad4ef4c6e20747483f1643b5939a572b4bf055891d6ad29b88652358a0eef"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-runtime-work-01/run-course.py",
+      "sha256": "7805ca53517c69202678c805065ce7c390b113fe1446cd168feff008d3770d61"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/group-classification-probe-09.py",
+      "sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_load_owner_cases.json",
+      "sha256": "4698f632ab01525aafbffefdb000c60fec34ff375b78a95a3e8c0e384c3ebf85"
+    }
+  ]
+}

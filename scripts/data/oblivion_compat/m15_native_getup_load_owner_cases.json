@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "acceptance_gap": "Saved pending GetUp requests previously retained provenance but never reconstructed actual KF loads, preventing the recovery owner from reaching ready Info.",
+  "scope": "Simulation-owned pending loads and ready Info admission; NI start and visible recovery remain the next integration gap.",
+  "engine_tests": "NativeGetUpLoadTest.*",
+  "required_cases": [
+    "Actual WorkQueue worker delivers Info with unchanged clock/RNG and no NI start",
+    "Empty completion clears outstanding ownership without retry",
+    "Reverse completion order shares one native Info while preserving per-request selected IDLE",
+    "Restore epoch discards old result despite identical request/source IDs",
+    "Retained simulation keeps completed work across candidate clear/rollback",
+    "Clear discards jobs without retired actor access",
+    "Request removal cancels work; replacement allocates a fresh identity",
+    "Preparation failure retains a result without resubmitting IO"
+  ],
+  "existing_fixture": "scripts/data/oblivion_compat/m15_pending_getup_state_fixture.json",
+  "existing_runtime_course": "scripts/data/oblivion_compat/oblivion_m15_pending_getup_state_persistence.json",
+  "runtime_expectations": {
+    "first_load": {
+      "ready_requests": [
+        1,
+        3
+      ],
+      "completed_empty_requests": [
+        2,
+        4
+      ],
+      "resources": 2,
+      "frontier": 10,
+      "sequences": 0,
+      "combat_rng": 15
+    },
+    "fresh_restart": "Exact prior output bytes become the fresh input; ready graph remains identical and completed-empty requests do not retry."
+  }
+}

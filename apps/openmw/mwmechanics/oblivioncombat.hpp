@@ -412,6 +412,7 @@ namespace MWMechanics
         } mPreparedReleaseIdentity;
         PreparedReleaseIdentity mPreparedRagdollIdentity;
         PreparedReleaseIdentity mPreparedGetUpIdentity;
+        PreparedReleaseIdentity mGetUpLoadIdentity;
         ESM4::ActionLedger mActions;
         std::uint32_t mCombatRngState = 1;
         // Process-frame flag B333B8: consumed by the next frame clock, then
@@ -506,6 +507,9 @@ namespace MWMechanics
         void clear();
         std::optional<ESM4::RuntimeGetUpIdle> getUpIdle(const ESM::FormKey& actor) const;
         std::optional<ESM4::RuntimeGetUpPlayback> getUpPlayback(const ESM::FormKey& actor) const;
+        const auto& getUpPlaybacks() const noexcept { return mGetUpPlayback; }
+        // Stable across request publications, invalidated by simulation restore/clear.
+        std::weak_ptr<const char> getUpLoadIdentity();
         class PreparedGetUpIdle
         {
             struct Impl;
@@ -699,6 +703,7 @@ namespace MWMechanics
         float playerBowTimer() const noexcept { return mPlayerBowTimer.value_or(0); }
         float updatePlayerBowTimer(float duration, std::int32_t processAction, ESM4::BowAnimationPhase phase);
         float animationClock(const ESM::FormKey& actor) const;
+        std::optional<float> findAnimationClock(const ESM::FormKey& actor) const;
         float advanceAnimationClock(const ESM::FormKey& actor, float duration);
         bool setMeleeSequenceTiming(std::uint64_t id, const ESM::FormKey& actor,
             const ESM4::MeleeSequenceTiming& timing,

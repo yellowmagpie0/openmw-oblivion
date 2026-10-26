@@ -212,6 +212,8 @@ namespace MWWorld
         std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
         struct OblivionGetUpResources;
         std::shared_ptr<const OblivionGetUpResources> mOblivionGetUpResources;
+        struct OblivionGetUpLoads;
+        std::shared_ptr<OblivionGetUpLoads> mOblivionGetUpLoads;
         mutable std::shared_ptr<MWRender::NativeIdleResourceCache> mOblivionIdleResourceCache;
         MWRender::NativeIdleResourceCache& oblivionIdleResourceCache() const;
         std::shared_ptr<const OblivionGetUpResources> prepareOblivionGetUpResources(
@@ -482,6 +484,9 @@ namespace MWWorld
         // Original521450 uses the raw actor base model and null second
         // reference. This prepares selection only; it does not start recovery.
         OblivionNativeIdleSelection prepareOblivionGetUpIdle(const Ptr& actor) const;
+        // Submit outstanding request loads and admit completed results on the
+        // main thread. No IDLE selection, NI start, clock advance or RNG draw.
+        std::size_t updateOblivionPendingGetUpLoads(SceneUtil::WorkQueue& queue);
         class PreparedOblivionGetUpIdle
         {
             struct Data;

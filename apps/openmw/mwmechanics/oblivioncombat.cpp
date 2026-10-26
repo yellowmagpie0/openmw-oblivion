@@ -724,6 +724,7 @@ namespace MWMechanics
         mPreparedReleaseIdentity.mValue.reset();
         mPreparedRagdollIdentity.mValue.reset();
         mPreparedGetUpIdentity.mValue.reset();
+        mGetUpLoadIdentity.mValue.reset();
         mActions = {};
         mCombatRngState = 1;
         mSceneIsComplex = false;
@@ -1295,6 +1296,18 @@ namespace MWMechanics
             throw std::invalid_argument("native animation clock requires initialized actor authority");
         const auto found = mAnimationClocks.find(actor);
         return found == mAnimationClocks.end() ? 0.f : found->second;
+    }
+
+    std::optional<float> OblivionCombatService::findAnimationClock(const ESM::FormKey& actor) const
+    {
+        const auto found = mAnimationClocks.find(actor);
+        return found == mAnimationClocks.end() ? std::nullopt : std::optional(found->second);
+    }
+
+    std::weak_ptr<const char> OblivionCombatService::getUpLoadIdentity()
+    {
+        if (!mGetUpLoadIdentity.mValue) mGetUpLoadIdentity.mValue = std::make_shared<const char>();
+        return mGetUpLoadIdentity.mValue;
     }
 
     float OblivionCombatService::advanceAnimationClock(const ESM::FormKey& actor, float duration)
@@ -7110,6 +7123,7 @@ namespace MWMechanics
         mPreparedReleaseIdentity.mValue.reset();
         mPreparedRagdollIdentity.mValue.reset();
         mPreparedGetUpIdentity.mValue.reset();
+        mGetUpLoadIdentity.mValue.reset();
         mActions = std::move(actions);
         mScriptDispositionPair.reset();
         mCombatRngState = state.mCombatRngState;

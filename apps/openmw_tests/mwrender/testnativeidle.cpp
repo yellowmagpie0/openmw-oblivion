@@ -17,6 +17,7 @@
 #include <components/nifbullet/actorragdollphysics.hpp>
 #include <components/misc/osguservalues.hpp>
 #include <components/sceneutil/skeleton.hpp>
+#include <components/sceneutil/workqueue.hpp>
 #include <components/vfs/filesystemarchive.hpp>
 #include <gtest/gtest.h>
 #include <osg/FrameStamp>
@@ -749,6 +750,184 @@ namespace
             return next;
         }
     };
+
+    struct NativeGetUpLoadTest : NativeGetUpSelectionTest
+    {
+        ESM4::RuntimeState pendingState(bool two = false)
+        {
+            auto state = snapshot();
+            for (auto& values : state.mNativeActorValues)
+                if (values.mActor == key()) values.mProcessKnockedState = 5;
+            auto& graph = state.mNativeGetUpPlayback[key()]; graph.mNextIdentity = 8;
+            graph.mRequests.mPrimary = ESM4::makeNativeIdleRequest(1, 0);
+            graph.mPendingRequests.emplace(1, ESM4::RuntimeGetUpPendingRequest{
+                combat().findActorValues(key())->mBase, ESM::FormKey::content("headless.esm", 0xa01),
+                "DoG\\Skeleton.NIF", "Outside\\same.kf", true});
+            if (two)
+            {
+                graph.mRequests.mSecondary = ESM4::makeNativeIdleRequest(2, 0);
+                auto source = graph.mPendingRequests.at(1);
+                source.mIdle = ESM::FormKey::content("headless.esm", 0xa02); source.mModel = "OUTSIDE\\SAME.KF";
+                graph.mPendingRequests.emplace(2, std::move(source));
+            }
+            state.validate();
+            return state;
+        }
+        void install(const ESM4::RuntimeState& state)
+        {
+            mFixture.mWorld.validateOblivionSaveState(state);
+            combat().restore(state, mFixture.mWorld.getStore());
+        }
+        static void complete(SceneUtil::WorkItem& job) { job.doWork(); job.signalDone(); }
+    };
+}
+
+TEST_F(NativeGetUpLoadTest, ActualWorkerDeliversInfoWithoutStartingNiChangingClockOrDrawingRandom)
+{
+    auto& world = mFixture.mWorld; install(pendingState()); const auto before = snapshot();
+    osg::ref_ptr<SceneUtil::WorkQueue> held = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*held), 0); ASSERT_EQ(held->getNumItems(), 1);
+    EXPECT_EQ(snapshot(), before);
+    auto job = held->removeWorkItem(); ASSERT_TRUE(job); ASSERT_FALSE(job->isDone());
+    osg::ref_ptr<SceneUtil::WorkQueue> worker = new SceneUtil::WorkQueue(1);
+    worker->addWorkItem(job); job->waitTillDone();
+    EXPECT_EQ(snapshot(), before); EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*held), 1);
+    const auto after = snapshot(); const auto& graph = after.mNativeGetUpPlayback.at(key());
+    EXPECT_EQ(graph.mRequests.mPrimary->mStatus, 1); EXPECT_EQ(graph.mRequests.mPrimary->mResource, 8);
+    EXPECT_EQ(graph.mNextIdentity, 9); EXPECT_TRUE(graph.mPendingRequests.empty());
+    ASSERT_EQ(graph.mResources.size(), 1); EXPECT_TRUE(graph.mSequences.empty());
+    EXPECT_TRUE(after.mNativeGetUpIdles.empty()); EXPECT_EQ(after.mNativeAnimationClocks, before.mNativeAnimationClocks);
+    EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+    EXPECT_EQ(mAnimation->sources(), 0); EXPECT_FALSE(mAnimation->reactionRoot());
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*held), 0); EXPECT_EQ(held->getNumItems(), 0);
+    EXPECT_NO_THROW(world.validateOblivionSaveState(after));
+}
+
+TEST_F(NativeGetUpLoadTest, EmptyCompletionRetainsStatusZeroAndNeverRetriesTheSameRequest)
+{
+    auto& world = mFixture.mWorld; install(pendingState());
+    ASSERT_TRUE(std::filesystem::remove(mFixture.mDirectory / "meshes/outside/same.kf"));
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0);
+    auto job = queue->removeWorkItem(); complete(*job);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1);
+    const auto failed = snapshot(); const auto& graph = failed.mNativeGetUpPlayback.at(key());
+    EXPECT_EQ(graph.mRequests.mPrimary->mStatus, 0); EXPECT_FALSE(graph.mPendingRequests.at(1).mLoadPending);
+    EXPECT_TRUE(graph.mResources.empty()); EXPECT_EQ(graph.mNextIdentity, 8);
+    write(kf(27)); mFixture.mResources.clearCache();
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); EXPECT_EQ(queue->getNumItems(), 0);
+    EXPECT_EQ(snapshot(), failed);
+}
+
+TEST_F(NativeGetUpLoadTest, CompletionOrderWinsSharedInfoWhileEachRequestKeepsItsSelectedRecord)
+{
+    auto& world = mFixture.mWorld; install(pendingState(true)); const auto before = snapshot();
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); ASSERT_EQ(queue->getNumItems(), 2);
+    auto first = queue->removeWorkItem(); auto second = queue->removeWorkItem();
+    complete(*second); complete(*first);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 2);
+    const auto saved = snapshot(); const auto& graph = saved.mNativeGetUpPlayback.at(key());
+    ASSERT_EQ(graph.mResources.size(), 1); EXPECT_EQ(graph.mResources.at(8).mIdle,
+        ESM::FormKey::content("headless.esm", 0xa02));
+    EXPECT_EQ(graph.mRequests.mPrimary->mResource, 8); EXPECT_EQ(graph.mRequests.mSecondary->mResource, 8);
+    EXPECT_EQ(graph.requestSelection(1).mIdle, ESM::FormKey::content("headless.esm", 0xa01));
+    EXPECT_EQ(graph.requestSelection(2).mIdle, ESM::FormKey::content("headless.esm", 0xa02));
+    EXPECT_EQ(graph.mNextIdentity, 9); EXPECT_TRUE(graph.mPendingRequests.empty());
+    EXPECT_EQ(saved.mCombatRngState, before.mCombatRngState);
+    EXPECT_NO_THROW(world.validateOblivionSaveState(saved));
+}
+
+TEST_F(NativeGetUpLoadTest, RestoreEpochRejectsCompletedOldJobEvenWhenRequestIdAndBindingMatch)
+{
+    auto& world = mFixture.mWorld; const auto pending = pendingState(); install(pending);
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0);
+    auto old = queue->removeWorkItem(); complete(*old);
+    const auto previous = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "Outside\\same.kf");
+    ASSERT_TRUE(previous); const auto oldHash = previous->fileHash();
+    write(kf(27)); mFixture.mResources.clearCache();
+    combat().restore(pending, world.getStore());
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); ASSERT_EQ(queue->getNumItems(), 1);
+    EXPECT_EQ(snapshot(), pending);
+    auto fresh = queue->removeWorkItem(); complete(*fresh);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1);
+    const auto current = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "Outside\\same.kf");
+    ASSERT_TRUE(current); EXPECT_NE(current->fileHash(), oldHash);
+    const auto restored = snapshot();
+    std::string expected;
+    for (unsigned char byte : current->fileHash())
+    {
+        expected += "0123456789abcdef"[byte >> 4];
+        expected += "0123456789abcdef"[byte & 15];
+    }
+    EXPECT_EQ(restored.mNativeGetUpPlayback.at(key()).mResources.at(8).mAssetHash, expected);
+    EXPECT_NO_THROW(world.validateOblivionSaveState(restored));
+}
+
+TEST_F(NativeGetUpLoadTest, RetainedSimulationPreservesCompletedWorkAcrossCandidateClearAndRollback)
+{
+    auto& world = mFixture.mWorld; install(pendingState()); const auto before = snapshot();
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); auto job = queue->removeWorkItem();
+    auto archive = world.retainSimulation();
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0);
+    complete(*job); EXPECT_EQ(snapshot(), before);
+    ASSERT_TRUE(archive.detach()); world.clear(); world.setupPlayer();
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); EXPECT_EQ(queue->getNumItems(), 0);
+    archive.prepareExchange(); ASSERT_TRUE(archive.restore()); EXPECT_EQ(snapshot(), before);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1); EXPECT_EQ(queue->getNumItems(), 0);
+    EXPECT_EQ(combat().getUpPlayback(key())->mRequests.mPrimary->mStatus, 1);
+}
+
+TEST_F(NativeGetUpLoadTest, ClearDiscardsWorkerWithoutReadingRetiredActorPointers)
+{
+    auto& world = mFixture.mWorld; install(pendingState()); const auto actor = key();
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); auto job = queue->removeWorkItem();
+    world.clear(); complete(*job);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); EXPECT_EQ(queue->getNumItems(), 0);
+    EXPECT_FALSE(world.getOblivionCombatService()->getUpPlayback(actor));
+}
+
+TEST_F(NativeGetUpLoadTest, RemovingRequestCancelsItsJobAndReplacementUsesAFreshIdentity)
+{
+    auto& world = mFixture.mWorld; install(pendingState());
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); auto old = queue->removeWorkItem();
+    MWMechanics::OblivionCombatService::GetUpPlaybackUpdate next;
+    next.mPlayback = *combat().getUpPlayback(key());
+    const auto source = next.mPlayback.mPendingRequests.at(1);
+    next.mPlayback.mRequests = {}; next.mPlayback.mPendingRequests.clear();
+    next.mClock = combat().findAnimationClock(key()); next.mKnockedState = 5; next.mAction = -1;
+    const auto random = combat().combatRandomState(); next.mRandom = {random, random, 0};
+    auto prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); complete(*old);
+    EXPECT_TRUE(combat().getUpPlayback(key())->mResources.empty());
+    next.mPlayback.mRequests.mPrimary = ESM4::makeNativeIdleRequest(8, 0);
+    next.mPlayback.mPendingRequests.emplace(8, source); next.mPlayback.mNextIdentity = 9;
+    prepared = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); ASSERT_EQ(queue->getNumItems(), 1);
+    auto replacement = queue->removeWorkItem(); complete(*replacement);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1);
+    const auto graph = combat().getUpPlayback(key());
+    EXPECT_EQ(graph->mRequests.mPrimary->mIdentity, 8); EXPECT_EQ(graph->mRequests.mPrimary->mResource, 9);
+    EXPECT_EQ(graph->mNextIdentity, 10); EXPECT_EQ(combat().combatRandomState(), random);
+}
+
+TEST_F(NativeGetUpLoadTest, PublicationPreparationFailureRetainsCompletedResultWithoutResubmittingIo)
+{
+    auto& world = mFixture.mWorld; auto pending = pendingState();
+    pending.mNativeGetUpPlayback.at(key()).mNextIdentity = std::numeric_limits<std::uint64_t>::max();
+    install(pending);
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); auto job = queue->removeWorkItem(); complete(*job);
+    EXPECT_THROW(world.updateOblivionPendingGetUpLoads(*queue), std::overflow_error);
+    EXPECT_EQ(snapshot(), pending); EXPECT_EQ(queue->getNumItems(), 0);
+    ASSERT_TRUE(std::filesystem::remove(mFixture.mDirectory / "meshes/outside/same.kf"));
+    mFixture.mResources.clearCache();
+    EXPECT_THROW(world.updateOblivionPendingGetUpLoads(*queue), std::overflow_error);
+    EXPECT_EQ(snapshot(), pending); EXPECT_EQ(queue->getNumItems(), 0);
 }
 
 TEST_F(NativeGetUpPlaybackTest, PendingPublicationAndDeliveryRetainRequestSelectionWithoutReplayingRandom)

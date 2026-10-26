@@ -14,12 +14,15 @@
 #include "../mwphysics/oblivionragdoll.hpp"
 
 #include <array>
+#include <atomic>
 #include <bit>
 #include <charconv>
 #include <cmath>
 #include <fstream>
+#include <exception>
 #include <limits>
 #include <list>
+#include <mutex>
 #include <type_traits>
 #include <vector>
 
@@ -186,6 +189,47 @@ namespace MWWorld
         // NI remains in its manager/cache after the final request is destroyed.
         std::map<ESM::FormKey, std::map<std::uint64_t, Resource>> mGraphs;
         std::map<ESM::FormKey, std::map<std::uint64_t, Resource>> mLoadedInfos;
+    };
+
+    struct World::OblivionGetUpLoads
+    {
+        struct CompletionOrder
+        {
+            std::mutex mMutex;
+            std::uint64_t mNext = 0;
+        };
+        struct Job final : SceneUtil::WorkItem
+        {
+            Resource::ResourceSystem& mResources;
+            const ESM4::RuntimeGetUpPendingRequest mSource;
+            const std::shared_ptr<CompletionOrder> mCompletion;
+            std::uint64_t mOrder = std::numeric_limits<std::uint64_t>::max();
+            std::atomic_bool mCancelled{false};
+            std::shared_ptr<const MWRender::Animation::NativeIdleResource> mResult;
+            std::exception_ptr mError;
+            Job(Resource::ResourceSystem& resources, ESM4::RuntimeGetUpPendingRequest source,
+                std::shared_ptr<CompletionOrder> completion)
+                : mResources(resources), mSource(std::move(source)), mCompletion(std::move(completion)) {}
+            void abort() override { mCancelled = true; }
+            void doWork() override
+            {
+                if (mCancelled) return;
+                // Engine joins its WorkQueue before destroying ResourceSystem.
+                // No World, actor, combat service or registry is touched here.
+                try { mResult = MWRender::Animation::acquireNativeIdleResource(mResources, mSource.mModel); }
+                catch (...) { mError = std::current_exception(); }
+                const std::lock_guard lock(mCompletion->mMutex);
+                mOrder = mCompletion->mNext++;
+            }
+        };
+        using Key = std::pair<ESM::FormKey, std::uint64_t>;
+        std::weak_ptr<const char> mIdentity;
+        std::shared_ptr<CompletionOrder> mCompletion = std::make_shared<CompletionOrder>();
+        std::map<Key, osg::ref_ptr<Job>> mJobs;
+        ~OblivionGetUpLoads()
+        {
+            for (const auto& [key, job] : mJobs) job->abort();
+        }
     };
 
     namespace
@@ -406,6 +450,7 @@ namespace MWWorld
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
         decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
+        decltype(World::mOblivionGetUpLoads) mOblivionGetUpLoads{};
         decltype(World::mOblivionIdleResourceCache) mOblivionIdleResourceCache{};
         decltype(World::mPendingOblivionRuntimeState) mPendingOblivionRuntimeState{};
         decltype(World::mPendingOblivionServices) mPendingOblivionServices{};
@@ -478,6 +523,7 @@ namespace MWWorld
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
         swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
+        swap(mOblivionGetUpLoads, data.mOblivionGetUpLoads);
         swap(mOblivionIdleResourceCache, data.mOblivionIdleResourceCache);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionRuntimeState)>);
         swap(mPendingOblivionRuntimeState, data.mPendingOblivionRuntimeState);
@@ -580,6 +626,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionGetUpResources.reset();
+        mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
         mPlayer.reset();
         mOblivionCombat.reset();
@@ -1401,6 +1448,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionGetUpResources.reset();
+        mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
         mPendingOblivionRuntimeState.reset();
         mPendingOblivionServices.reset();
@@ -3244,6 +3292,135 @@ namespace MWWorld
         if (!mOblivionIdleResourceCache)
             mOblivionIdleResourceCache = std::make_shared<MWRender::NativeIdleResourceCache>(*mResourceSystem);
         return *mOblivionIdleResourceCache;
+    }
+
+    std::size_t World::updateOblivionPendingGetUpLoads(SceneUtil::WorkQueue& queue)
+    {
+        if (!mOblivionCombat || !mResourceSystem
+            || (mRetainedSimulation && !mRetainedSimulation->mDetached)) return 0;
+        const auto identity = mOblivionCombat->getUpLoadIdentity().lock();
+        if (!mOblivionGetUpLoads || mOblivionGetUpLoads->mIdentity.lock() != identity)
+        {
+            auto loads = std::make_shared<OblivionGetUpLoads>();
+            loads->mIdentity = identity;
+            mOblivionGetUpLoads = std::move(loads);
+        }
+        auto& jobs = mOblivionGetUpLoads->mJobs;
+        for (auto it = jobs.begin(); it != jobs.end();)
+        {
+            const auto graph = mOblivionCombat->getUpPlaybacks().find(it->first.first);
+            bool retained = false;
+            if (graph != mOblivionCombat->getUpPlaybacks().end())
+                if (const auto pending = graph->second.mPendingRequests.find(it->first.second);
+                    pending != graph->second.mPendingRequests.end())
+                    retained = pending->second == it->second->mSource && pending->second.mLoadPending;
+            if (retained) ++it;
+            else { it->second->abort(); it = jobs.erase(it); }
+        }
+        for (const auto& [actor, graph] : mOblivionCombat->getUpPlaybacks())
+        {
+            const auto* values = mOblivionCombat->findActorValues(actor);
+            if (!values || values->mProcess == ESM4::ActorValueProcess::Low) continue;
+            for (const auto& [request, pending] : graph.mPendingRequests)
+            {
+                const OblivionGetUpLoads::Key key{actor, request};
+                if (!pending.mLoadPending || jobs.contains(key)) continue;
+                osg::ref_ptr<OblivionGetUpLoads::Job> job = new OblivionGetUpLoads::Job(
+                    *mResourceSystem, pending, mOblivionGetUpLoads->mCompletion);
+                jobs.emplace(key, job);
+                try { queue.addWorkItem(job); }
+                catch (...) { jobs.erase(key); throw; }
+            }
+        }
+        std::size_t admitted = 0;
+        // Snapshot completion order under the same lock used by workers. A
+        // lower-order result not yet signalled by WorkQueue must precede later
+        // results; actor/request IDs never define cache reconciliation order.
+        std::vector<decltype(jobs.begin())> completed;
+        {
+            const std::lock_guard lock(mOblivionGetUpLoads->mCompletion->mMutex);
+            for (auto it = jobs.begin(); it != jobs.end(); ++it)
+                if (it->second->mOrder != std::numeric_limits<std::uint64_t>::max()) completed.push_back(it);
+            std::sort(completed.begin(), completed.end(), [](const auto& a, const auto& b) {
+                return a->second->mOrder < b->second->mOrder;
+            });
+        }
+        for (auto it : completed)
+        {
+            const auto& job = *it->second;
+            if (!job.isDone()) break;
+            const auto& [actor, request] = it->first;
+            const auto* values = mOblivionCombat->findActorValues(actor);
+            if (!values || values->mProcess == ESM4::ActorValueProcess::Low) continue;
+            MWMechanics::OblivionCombatService::GetUpPlaybackUpdate next;
+            next.mPlayback = *mOblivionCombat->getUpPlayback(actor);
+            next.mIdle = mOblivionCombat->getUpIdle(actor);
+            next.mClock = mOblivionCombat->findAnimationClock(actor);
+            next.mKnockedState = values->mProcessKnockedState;
+            next.mAction = values->mProcessAction;
+            const auto random = mOblivionCombat->combatRandomState();
+            next.mRandom = {random, random, 0};
+            auto& graph = next.mPlayback;
+            std::shared_ptr<const OblivionGetUpResources> resources = mOblivionGetUpResources;
+            if (job.mResult)
+            {
+                auto loaded = oblivionIdleResourceCache().publishLoaded(job.mSource.mModel, *job.mResult);
+                auto staged = resources ? std::make_shared<OblivionGetUpResources>(*resources)
+                                        : std::make_shared<OblivionGetUpResources>();
+                staged->mCache = mOblivionIdleResourceCache;
+                auto& infos = staged->mLoadedInfos[actor];
+                std::uint64_t resource = 0;
+                for (const auto& [id, info] : infos)
+                    if (info == loaded)
+                    {
+                        if (resource)
+                            throw std::invalid_argument("GetUp delivery has ambiguous restored Info identities");
+                        resource = id;
+                    }
+                ESM4::RuntimeGetUpIdle selected{job.mSource.mBase, job.mSource.mIdle,
+                    job.mSource.mActorModel, job.mSource.mModel, getUpResourceHash(loaded->fileHash())};
+                if (!resource)
+                {
+                    if (graph.mNextIdentity == std::numeric_limits<std::uint64_t>::max())
+                        throw std::overflow_error("GetUp resource identity exhausted");
+                    resource = graph.mNextIdentity++;
+                    graph.mResources.emplace(resource, selected);
+                    staged->mGraphs[actor].emplace(resource, loaded->retainSourceArtifact());
+                    infos.emplace(resource, loaded);
+                }
+                for (auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                         &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+                    if (*slot && (*slot)->mIdentity == request)
+                    {
+                        (*slot)->mResource = resource;
+                        (*slot)->mStatus = 1;
+                    }
+                if (selected != graph.mResources.at(resource)) graph.mRequestSelections.emplace(request, selected);
+                graph.mPendingRequests.erase(request);
+                resources = std::move(staged);
+            }
+            else
+            {
+                // Actual native completion removes outstanding ownership even
+                // when no Info arrives. The status0 request itself survives.
+                if (job.mError)
+                {
+                    try { std::rethrow_exception(job.mError); }
+                    catch (const std::exception& error)
+                    { Log(Debug::Warning) << "Native GetUp load failed: " << job.mSource.mModel << ": " << error.what(); }
+                    catch (...) { Log(Debug::Warning) << "Native GetUp load failed: " << job.mSource.mModel; }
+                }
+                graph.mPendingRequests.at(request).mLoadPending = false;
+            }
+            auto state = mOblivionCombat->prepareGetUpPlayback(actor, std::move(next));
+            // A failed preparation/publication retains the completed job; it
+            // must not resubmit IO or clear outstanding ownership for a retry.
+            if (!state || !state->commit()) break;
+            mOblivionGetUpResources.swap(resources);
+            jobs.erase(it);
+            ++admitted;
+        }
+        return admitted;
     }
 
     struct World::PreparedOblivionGetUpIdle::Data
@@ -6132,6 +6309,7 @@ namespace MWWorld
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
         mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
         mOblivionGetUpResources = std::move(preparedGetUpResources);
+        mOblivionGetUpLoads.reset();
         preparedRegistry.commit();
         for (auto& reference : reconstructed)
             reference->commit();
@@ -7989,6 +8167,8 @@ namespace MWWorld
     void World::update(float duration, bool paused)
     {
         if (!dispatchOblivionEquipmentNotifications()) return;
+        if (mGameProfile == ESM::GameProfile::Oblivion && mRendering && mRendering->getWorkQueue())
+            updateOblivionPendingGetUpLoads(*mRendering->getWorkQueue());
         if (mGoToJail && !paused)
             goToJail();
 
