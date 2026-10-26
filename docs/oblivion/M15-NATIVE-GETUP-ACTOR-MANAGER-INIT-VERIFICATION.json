@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Original actor animation-manager initialization and exact-path default file-list order; prerequisite evidence for live GetUp manager integration",
+  "parent": "3f754e44412af785c0019ba664b573664bfb9314",
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_actor_manager_init_cases.json",
+  "original_evidence": {
+    "actor-init02-report01.json": {
+      "executed": true,
+      "passed": true,
+      "status": "all assertions passed",
+      "profiles": 120,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "a42a26720b792af8c4bca122338d9e70d055861c8eea58411fadbd2a7aa8302b",
+      "loader_sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1",
+      "corpus_sha256": "a8512c285a33572aa710b62e82f63f598e3a06be3c2601f72f786e43df7572d7",
+      "boundary": "Actual 475D80 actor manager initialization over supplied ordered file list and loaded Infos; actor base/bone lookup, model/proxy, heap/OS supplied; empty controlled blocks. No original game process or filesystem IO."
+    },
+    "actor-file-list02-report01.json": {
+      "executed": true,
+      "passed": true,
+      "status": "all assertions passed",
+      "profiles": 32,
+      "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "source_sha256": "e53992b11058e1878bab768b65712101c82264db446cbdf43b9355ad2035f86d",
+      "loader_sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1",
+      "corpus_sha256": "17222044883ef70b1f52555555d6e70d8151f836b2b2be5ee4d8ceaabd63f57f",
+      "boundary": "Actual 434850/431970/431460/446CB0 exact-path list construction followed by 475D80 manager initialization. Caller-extracted Idle.KF then Death.KF paths; supplied loose/archive presence and loaded Infos; actor base/bone lookup, model/proxy, heap/OS supplied; empty controlled blocks. No original game process or filesystem IO."
+    }
+  },
+  "summary": {
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "passed": true,
+    "initialization": {
+      "profiles": 120,
+      "input_file_visits": 426,
+      "result_counts": {
+        "1": 90,
+        "0": 30
+      },
+      "null_root_profiles": 40,
+      "initial_inactive_sequences": true
+    },
+    "file_list": {
+      "profiles": 32,
+      "return_success": 20,
+      "empty_input_lists": 5,
+      "nonempty_manager_after_false_return": 7,
+      "both_files_present": 13,
+      "bone_query_names": [
+        "Bip01",
+        "Bip01 L ForearmTwist",
+        "Torch",
+        "Weapon",
+        "Bip01 Head"
+      ]
+    },
+    "scope": "Fresh original-instruction execution with explicit file-presence, loaded-Info, actor/bone/model/proxy and heap/OS boundaries. No filesystem IO or native-game acceptance."
+  },
+  "findings": [
+    "Root authority must follow occupied native manager slots, including inactive sequences and null roots. Startup registration can replace and destroy earlier entries before any GetUp request.",
+    "The reviewed exact-path actor call context adds Idle then Death, while actual list construction prepends and therefore consumes Death first when both exist.",
+    "Native initialization is not an all-or-nothing operation: false return can leave a manager and registered sequences. This behavior must not be confused with a prepared publication guarantee."
+  ],
+  "retained_preliminary_runs": [
+    "actor-init01: four exploratory courses executed; report explicitly leaves inspection pending and is superseded by 120 asserted courses.",
+    "actor-file-list01: four archive-only presence masks passed; superseded by 32 loose/archive combinations."
+  ],
+  "artifact_pins": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_actor_manager_init_cases.json",
+      "sha256": "72bb57cfad8a7ba05ed5beeac1f2b723612187622c315c5f2f9c47a19278a834"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init-call-sites.json",
+      "sha256": "68baea1b9fa2521e9eb8de828125867c58d6194f3845b37bb97ff174a828f989"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/summary01.json",
+      "sha256": "cfcb38bc0c12feef3d9e2e280152123efca9882c7a51db9ce8ff1b4c4aac32b2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init01.py",
+      "sha256": "712232bb3d0b0d19b9b48a2e365311491e228217f220794b18f8679ed02b313a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init01-report01.json",
+      "sha256": "eb81f84de2418fd607074531e6eac478c0dd8d1b53cbaabfa53ed30212b8414b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init01-corpus01.json",
+      "sha256": "0b094c5b091afd0593604220caa86ea6472a8ca4e080462c0189e3778730f36d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init02.py",
+      "sha256": "a42a26720b792af8c4bca122338d9e70d055861c8eea58411fadbd2a7aa8302b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init02-report01.json",
+      "sha256": "ef7a14d399e554a5e7f26783bd289a1f06f0c21a360e1da995c63e399a59c177"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-init02-corpus01.json",
+      "sha256": "a8512c285a33572aa710b62e82f63f598e3a06be3c2601f72f786e43df7572d7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list01.py",
+      "sha256": "f5c6227d3fd8e0032894fee6f9e43b387b2506cc5e863c7c7524aebd7eb98e21"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list01-report01.json",
+      "sha256": "9e107a7ab2abdb0d6ca498ec09d0a9c45becd1e932c5d63f2c7cbad6b6ce4618"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list01-corpus01.json",
+      "sha256": "92ec5d34de4440c0d8b72ba8f559a4dff348caf58681910ce74a4b3e9018ccbf"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list02.py",
+      "sha256": "e53992b11058e1878bab768b65712101c82264db446cbdf43b9355ad2035f86d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list02-report01.json",
+      "sha256": "61eb2cef734edd6c3abbdf6a33434be0a3de2259163b28502178356c0eab2cf8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/actor-file-list02-corpus01.json",
+      "sha256": "17222044883ef70b1f52555555d6e70d8151f836b2b2be5ee4d8ceaabd63f57f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/group-classification-probe-09.py",
+      "sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/review-clone-counts.py",
+      "sha256": "51c37ab9a8e7854e09a507842799b3226037d027f0dffbe9dae43e567cb1463b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-actor-manager-init-work-01/clone-count-review.json",
+      "sha256": "378bc7bd678c62f3fb6a948e164d30a0c24f5d74b456c526b498ecef36ee8491"
+    }
+  ],
+  "not_run": [
+    "Engine C++ was unchanged, so passing checks from the preceding publication chunk were not rerun.",
+    "No original-game process, physical filesystem loading, controlled transform tracks or normal-input gameplay acceptance.",
+    "Outer actor callers, Player file-list construction, body/first-person dispatch and wildcard enumeration were not executed."
+  ],
+  "verification_layers": {
+    "structural_write": "Editable evidence manifest and verification receipt only. No C++ or generated content change.",
+    "compiler_and_world_validation": "Not rerun for this evidence-only chunk.",
+    "semantic_reinspection": "152 fresh original-instruction profiles with full return/stack checks and explicit boundary shims.",
+    "actual_runtime_acceptance": "Open; original-instruction execution is not game-process or normal-input acceptance."
+  },
+  "remaining": [
+    "Implement actual manager ownership with baseline and dynamic registrations; source alias order and opaque-ID sorting cannot stand in for native manager slots.",
+    "Trace Player callers 667EA8/66951A and 435830 file-list inputs before defining body/first-person restoration policy.",
+    "Implement live GetUp graph factory/dispatcher, pending IO lifecycle/restoration, physical prefix and normal-input/FPS/restart acceptance."
+  ],
+  "clone_count_review": {
+    "passed": true,
+    "scope": "Reinspection of fresh original-instruction events, not another original execution",
+    "profiles": 120,
+    "file_visits": 426,
+    "clones": 290,
+    "registrations": 290,
+    "same_info_repeats_without_clone": 136,
+    "corpus_sha256": "a8512c285a33572aa710b62e82f63f598e3a06be3c2601f72f786e43df7572d7"
+  }
+}

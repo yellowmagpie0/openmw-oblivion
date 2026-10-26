@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "scope": "Original actor animation-manager initialization and exact-path default file-list order; prerequisite evidence for live GetUp manager integration",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "initial-registration-and-replacement",
+      "inputs": {
+        "authored_sequence_names": [
+          "Idle",
+          "SpecialIdle_GetUp",
+          "SpecialIdle_GetUp2"
+        ],
+        "source_root_names": [
+          "Bip01",
+          "Absent",
+          "Bip01"
+        ],
+        "count": 120,
+        "course_alphabet": [
+          0,
+          1,
+          2
+        ],
+        "course_lengths": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "expected_native_group_codes": [
+          0,
+          2,
+          2
+        ],
+        "actor_base_type_byte": 35,
+        "player_global": null,
+        "controlled_blocks_per_sequence": 0
+      },
+      "expected": [
+        "Actual group codes are 0,2,2. The last distinct source in each group replaces that group cache entry; repeating the same cached Info does not create another NI.",
+        "For these two-group courses, live manager slots retain first-seen group order with the final source for each group. All final NIs are inactive state0; manager query still uses the first occupied slot.",
+        "A null root in that first sequence returns null even when later sequences have a root. Later same-group replacement can change the first root.",
+        "Initializer returns success exactly when group0 Idle is available in these profiles; false return can retain an initialized manager and non-idle registrations."
+      ],
+      "original": [
+        "475D80",
+        "474070",
+        "49FD90",
+        "6C5610",
+        "6C5760",
+        "471600"
+      ],
+      "coverage_limit": "Supplied ordered input list and loaded Infos, actor base/bone/model/proxy and heap/OS boundaries; empty controlled blocks."
+    },
+    {
+      "id": "default-exact-path-list",
+      "inputs": {
+        "calls": [
+          "Add meshes\\fixture\\Idle.KF using fixture\\Skeleton.NIF as the relative model",
+          "Add meshes\\fixture\\Death.KF to the returned list"
+        ],
+        "loose_branch_byte_0xb04460": [
+          0,
+          1
+        ],
+        "per_file_availability": [
+          "absent",
+          "loose only",
+          "archive only",
+          "both"
+        ],
+        "count": 32,
+        "availability_encoding": {
+          "absent": 0,
+          "loose only": 1,
+          "archive only": 2,
+          "both": 3
+        },
+        "profile_order": [
+          "loose_branch_byte",
+          "idle_availability",
+          "death_availability"
+        ]
+      },
+      "expected": [
+        "434850/431970/431460 use exact-path lookup for these non-wildcard paths. An enabled successful loose check avoids archive fallback; otherwise the supplied archive result decides presence.",
+        "446CB0 prepends entries. When both files are present, 475D80 consumes fixture\\Death.KF before fixture\\Idle.KF. A sole present file is retained; both missing produce no list and no manager.",
+        "Death uses an absent root in this fixture; when present it wins the first manager slot and query returns null even with Idle rooted at Bip01.",
+        "Seven profiles return false after registering Death without Idle; five profiles have no input list and create no manager."
+      ],
+      "original": [
+        "434850",
+        "431970",
+        "431460",
+        "446CB0",
+        "475D80",
+        "471600"
+      ],
+      "static_caller_context": [
+        "4E3A21",
+        "4E3CEF"
+      ],
+      "coverage_limit": "Caller-extracted default path literals, actual list-builder/initializer routines and supplied loose/archive presence and loaded Infos. The outer actor callers were reviewed statically, not executed; Player callers and wildcard enumeration remain open."
+    }
+  ],
+  "remaining": [
+    "Implement actual manager ownership with baseline and dynamic registrations; source alias order and opaque-ID sorting cannot stand in for native manager slots.",
+    "Trace Player callers 667EA8/66951A and 435830 file-list inputs before defining body/first-person restoration policy.",
+    "Implement live GetUp graph factory/dispatcher, pending IO lifecycle/restoration, physical prefix and normal-input/FPS/restart acceptance."
+  ]
+}
