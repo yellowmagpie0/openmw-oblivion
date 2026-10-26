@@ -13,6 +13,16 @@ from tes4_m14_audit import _subrecords
 
 
 class StationaryFixtureTests(unittest.TestCase):
+    def partition_inputs(self):
+        source, recipe, script = self.inputs()
+        cell = string('EDID', 'TestInterior') + sub('DATA', b'\x01') + sub('XCLL', bytes(36))
+        static = string('EDID', 'TestPartition') + string('MODL', 'Furniture\\Partition.NIF')
+        source += record('CELL', 0x1234, cell) + record('STAT', 0x2345, static)
+        recipe.update(version=2, source_sha256=hashlib.sha256(source).hexdigest(),
+                      partition=dict(cell=0x1234, base=0x2345, reference=0x1000882,
+                                     position=[735, 70, -109, 0, 0, 1.5707963267948966]))
+        return source, recipe, script
+
     def inputs(self):
         directory = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
         recipe = json.loads((directory / 'm15_stationary_opponent_fixture.json').read_text())
@@ -47,6 +57,51 @@ class StationaryFixtureTests(unittest.TestCase):
         self.assertEqual(next(x['payload'] for x in data if x['name'] == 'SCRO'), struct.pack('<I', 0x14))
         self.assertEqual(struct.unpack('<6I', next(x['payload'] for x in data if x['name'] == 'SLSD')), (1,0,0,0,1,0))
         self.assertNotIn('SCDA', [x['name'] for x in data]) # Fork source compilation, not original-game bytecode acceptance.
+
+    def test_partition_places_unchanged_master_static_and_preserves_cell_and_combat_records(self):
+        source, recipe, script = self.partition_inputs()
+        output, report = fixture.build(source, recipe, script)
+        self.assertEqual(fixture.build(source, recipe, script)[0], output)
+        rows = list(records(output))
+        old = {t: p for t, _, p in records(source)}
+        self.assertEqual(next(p for t, _, p in rows if t == 'CELL'), old['CELL'])
+        self.assertNotIn('STAT', [t for t, _, _ in rows]) # Use the master base, without copying/changing it.
+        self.assertEqual(report['record_count'], 5)
+        placed = next(p for t, i, p in rows if t == 'REFR' and i == 0x1000882)
+        data = {s['name']: s['payload'] for s in _subrecords(placed, 'placed', 'REFR')}
+        self.assertEqual(set(data), {'EDID', 'NAME', 'DATA'})
+        self.assertEqual(data['NAME'], struct.pack('<I', 0x2345))
+        self.assertEqual(data['DATA'], struct.pack('<6f', *recipe['partition']['position']))
+        self.assertEqual(report['partition']['model'], 'Furniture\\Partition.NIF')
+        one = copy.deepcopy(recipe); one['version'] = 1; del one['partition']
+        previous, _ = fixture.build(source, one, script)
+        self.assertEqual([(t, i, p) for t, i, p in rows if t in ('CSTY', 'NPC_', 'SCPT')],
+                         [(t, i, p) for t, i, p in records(previous) if t in ('CSTY', 'NPC_', 'SCPT')])
+
+    def test_partition_rejects_missing_wrong_or_ambiguous_master_content(self):
+        source, recipe, script = self.partition_inputs()
+        for added in (record('CELL', 0x1234, sub('DATA', b'\x01')),
+                      record('STAT', 0x2345, string('MODL', 'Other.NIF'))):
+            bad = source + added
+            with self.assertRaises(ValueError):
+                fixture.build(bad, dict(recipe, source_sha256=hashlib.sha256(bad).hexdigest()), script)
+        for changed in (source.replace(b'DATA\x01\x00\x01', b'DATA\x01\x00\x00'),
+                        source.replace(b'MODL', b'ZMOD')):
+            with self.assertRaises(ValueError):
+                fixture.build(changed, dict(recipe, source_sha256=hashlib.sha256(changed).hexdigest()), script)
+        for field in ('cell', 'base'):
+            bad = copy.deepcopy(recipe); bad['partition'][field] = 0x9999
+            with self.assertRaises(ValueError):fixture.build(source, bad, script)
+
+    def test_partition_rejects_collisions_invalid_transforms_and_extra_gameplay_fields(self):
+        source, recipe, script = self.partition_inputs()
+        for changes in ({'reference': recipe['style']['id']}, {'reference': recipe['script']['id']},
+                        {'reference': True}, {'reference': 0x800}, {'cell': True}, {'base': 0x1000000},
+                        {'position': [0] * 5}, {'position': [0, 0, float('inf'), 0, 0, 0]},
+                        {'position': [0, 0, 0, 0, 0, 7]}, {'position': [65537, 0, 0, 0, 0, 0]},
+                        {'script': 'ForceHit'}):
+            bad = copy.deepcopy(recipe); bad['partition'].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ValueError):fixture.build(source, bad, script)
 
     def test_malformed_identity_profile_hash_and_script_inputs_fail_closed(self):
         source, recipe, script = self.inputs()

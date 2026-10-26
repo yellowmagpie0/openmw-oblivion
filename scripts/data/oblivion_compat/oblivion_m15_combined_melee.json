@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "name": "S4 combined equipped block, Player Stagger/recovery, nonlethal return attack and facing range miss; behind-wall segment remains open",
+  "name": "S4 combined normal-input course: block, Player Stagger/recovery, nonlethal return attack, range miss and in-reach wall miss; full acceptance matrix remains open",
   "cwd": "{source}",
   "files": [
     {
@@ -29,7 +29,7 @@
     },
     {
       "path": "test-data/scripts/m15_course_observer.lua",
-      "content": "local self = require('openmw.self')\nlocal nearby = require('openmw.nearby')\nlocal util = require('openmw.util')\nlocal timer = 0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt\n if timer<0.5 then return end\n timer=0\n for _, target in ipairs(nearby.actors) do\n  if target.recordId == 'FormId:0x1025200' then\n   local p,t=self.position,target.position\n   local v=t-p\n   local forward=self.rotation:apply(util.vector3(0,1,0))\n   local distance=v:length()\n   local angle=math.deg(math.acos(math.max(-1,math.min(1,(forward.x*v.x+forward.y*v.y)/math.sqrt(v.x*v.x+v.y*v.y)))))\n   local mask=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.HeightMap+nearby.COLLISION_TYPE.Door\n   local low=nearby.castRay(p+util.vector3(0,0,100),t+util.vector3(0,0,100),{{collisionType=mask}})\n   local high=nearby.castRay(p+util.vector3(0,0,125),t+util.vector3(0,0,125),{{collisionType=mask}})\n   print(string.format('M15 course geometry: x=%.2f y=%.2f z=%.2f distance=%.2f facing=%.2f blocked100=%s blocked125=%s farFacing=%s rightLane=%s retreated=%s obstacle=%s',p.x,p.y,p.z,distance,angle,tostring(low.hit),tostring(high.hit),tostring(distance>200 and angle<10),tostring(p.x>=760),tostring(p.y<=-125),tostring(low.hitObject and low.hitObject.recordId)))\n  end\n end\nend}}}}\n"
+      "content": "local self = require('openmw.self')\nlocal nearby = require('openmw.nearby')\nlocal util = require('openmw.util')\nlocal timer = 0\nreturn {{engineHandlers={{onFrame=function(dt)\n timer=timer+dt\n if timer<0.1 then return end\n timer=0\n for _, target in ipairs(nearby.actors) do\n  if target.recordId == 'FormId:0x1025200' then\n   local p,t=self.position,target.position\n   local v=t-p\n   local forward=self.rotation:apply(util.vector3(0,1,0))\n   local distance=v:length()\n   local angle=math.deg(math.acos(math.max(-1,math.min(1,(forward.x*v.x+forward.y*v.y)/math.sqrt(v.x*v.x+v.y*v.y)))))\n   local mask=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.HeightMap+nearby.COLLISION_TYPE.Door\n   local low=nearby.castRay(p+util.vector3(0,0,100),t+util.vector3(0,0,100),{{collisionType=mask}})\n   local high=nearby.castRay(p+util.vector3(0,0,125),t+util.vector3(0,0,125),{{collisionType=mask}})\n   print(string.format('M15 course geometry: x=%.2f y=%.2f z=%.2f distance=%.2f facing=%.2f blocked100=%s blocked125=%s farFacing=%s rightLane=%s retreated=%s wallLane=%s wallAlong=%s nearWall=%s rangeLane=%s obstacle=%s',p.x,p.y,p.z,distance,angle,tostring(low.hit),tostring(high.hit),tostring(distance>200 and angle<10 and not low.hit and not high.hit),tostring(p.x>=760),tostring(p.y<=-125),tostring(p.x>=788),tostring(p.y>=65),tostring(distance<137 and angle<10 and low.hit and high.hit),tostring(p.x>=708),tostring(low.hitObject and low.hitObject.recordId)))\n  end\n end\nend}}}}\n"
     }
   ],
   "command": [
@@ -170,7 +170,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 course geometry:.*rightLane=true",
+      "pattern": "M15 course geometry:.*rangeLane=true",
       "timeout_seconds": 180
     },
     {
@@ -201,13 +201,13 @@
       "y": 0
     },
     {
-      "type": "mouse_move",
-      "x": -100,
-      "y": 0
-    },
-    {
       "type": "sleep",
       "seconds": 1
+    },
+    {
+      "type": "mouse_move",
+      "x": -40,
+      "y": 0
     },
     {
       "type": "wait_log",
@@ -256,10 +256,114 @@
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
       "timeout_seconds": 120
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 40,
+      "y": 0
+    },
+    {
+      "type": "key_down",
+      "value": "d"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course geometry:.*wallLane=true",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_up",
+      "value": "d"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course geometry:.*wallAlong=true",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": -400,
+      "y": 0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course geometry:.*nearWall=true",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-wall-facing.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=5",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=5 action=-1",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 180
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-wall-settled.png",
+      "minimum_entropy": 0.03
     }
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 900,
+  "timeout_seconds": 1200,
   "expected_exit": 0,
   "expected_log": [
     "Applied TES4 runtime state:",
@@ -269,7 +373,9 @@
     "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
     "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4",
     "M15 course geometry:.*farFacing=true",
-    "M15 melee hit sound requested:.*sound=WPNBlockBlade played=1"
+    "M15 melee hit sound requested:.*sound=WPNBlockBlade played=1",
+    "M15 course geometry:.*nearWall=true.*obstacle=FormId:0x1024e74",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=5"
   ],
   "forbidden_log": [
     "Error in frame",
@@ -286,7 +392,7 @@
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
     "OPENMW_M15_EVENTS": "{output}/events.jsonl",
-    "OPENMW_M15_RUN_ID": "combined-melee-normal-02",
+    "OPENMW_M15_RUN_ID": "combined-wall-normal-02",
     "OPENMW_M15_EPOCH": "1",
     "ALSOFT_CONF": "{output}/config/alsoft.conf",
     "ALSOFT_DRIVERS": "wave"

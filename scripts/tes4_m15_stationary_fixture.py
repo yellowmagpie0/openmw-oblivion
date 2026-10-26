@@ -1,7 +1,8 @@
 """Reproduce the S4 NPC activation fixture from a hash-pinned TES4 master.
 
-Only the NPC's CSTY/SCRI links change. Stats, appearance, packages, factions and
-other native fields stay intact. Editable JSON/ObScript are source; generated
+Only the NPC's CSTY/SCRI links change. Version 2 can also place one unchanged
+master static as a partition in an unchanged interior cell. Stats, appearance,
+packages, factions and other native fields stay intact. Editable JSON/ObScript are source; generated
 licensed NPC payloads stay in ignored evidence. This is fork SCTX compilation,
 not a claim of original-game acceptance or TES3 MCP authoring support.
 """
@@ -10,6 +11,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import struct
 from pathlib import Path
@@ -31,8 +33,11 @@ def identifier(value):
 
 
 def build(source: bytes, recipe: dict, script: str) -> tuple[bytes, dict]:
-    fields(recipe, 'version purpose source_sha256 master npc style script')
-    if type(recipe['version']) is not int or recipe['version'] != 1 or recipe['master'] != 'Oblivion.esm':
+    version = recipe.get('version') if isinstance(recipe, dict) else None
+    if type(version) is not int or version not in (1, 2):
+        raise ValueError('unsupported stationary fixture version')
+    fields(recipe, 'version purpose source_sha256 master npc style script' + (' partition' if version == 2 else ''))
+    if recipe['master'] != 'Oblivion.esm':
         raise ValueError('unsupported stationary fixture version/master')
     if hashlib.sha256(source).hexdigest() != recipe['source_sha256']:
         raise ValueError('stationary fixture master differs from reviewed recipe')
@@ -50,6 +55,19 @@ def build(source: bytes, recipe: dict, script: str) -> tuple[bytes, dict]:
         raise ValueError('stationary fixture FormID outside master/own domains')
     if style['id'] == program['id']:
         raise ValueError('stationary fixture own identity collision')
+    partition = recipe.get('partition')
+    if version == 2:
+        fields(partition, 'cell base reference position')
+        if (any(type(partition[k]) is not int or not 1 <= partition[k] <= 0xffffff for k in ('cell', 'base'))
+                or type(partition['reference']) is not int
+                or not 0x01000800 <= partition['reference'] <= 0x01ffffff
+                or partition['reference'] in (style['id'], program['id'])):
+            raise ValueError('invalid or colliding stationary partition identity')
+        pos = partition['position']
+        if (not isinstance(pos, list) or len(pos) != 6
+                or any(type(x) not in (int, float) or not math.isfinite(x) for x in pos)
+                or any(abs(x) > 65536 for x in pos[:3]) or any(abs(x) > 2 * math.pi for x in pos[3:])):
+            raise ValueError('invalid stationary partition transform')
     profile = {'attack_chance': 100, 'block_chance': 0, 'dodge_chance': 0, 'power_attack_chance': 0,
                'idle': [0, 0], 'hold': [0, 0], 'flags': 34, 'do_not_acquire': True}
     for key, expected in profile.items():
@@ -100,20 +118,52 @@ def build(source: bytes, recipe: dict, script: str) -> tuple[bytes, dict]:
     payloads = {'NPC_': record('NPC_', npc['id'], npc_payload),
                 'CSTY': record('CSTY', style['id'], string('EDID', style['editor_id']) + sub('CSTD', bytes(standard))),
                 'SCPT': record('SCPT', program['id'], script_payload)}
-    header = sub('HEDR', struct.pack('<fII', 1, 3, (max(style['id'], program['id']) & 0xffffff) + 1))
+    partition_metadata = None
+    if partition is not None:
+        selected = {}
+        for tag, ident, payload in records(source):
+            if (tag, ident) not in {('CELL', partition['cell']), ('STAT', partition['base'])}:
+                continue
+            if tag in selected:
+                raise ValueError('ambiguous stationary partition source')
+            selected[tag] = payload
+        if set(selected) != {'CELL', 'STAT'}:
+            raise ValueError('missing stationary partition cell or static base')
+        cell_fields = _subrecords(selected['CELL'], 'stationary partition', 'CELL')
+        data = [s['payload'] for s in cell_fields if s['name'] == 'DATA']
+        static = _subrecords(selected['STAT'], 'stationary partition', 'STAT')
+        models = [s['payload'] for s in static if s['name'] == 'MODL']
+        if (len(data) != 1 or not data[0] or not data[0][0] & 1
+                or len(models) != 1 or not models[0] or any(s['name'] == 'SCRI' for s in static)):
+            raise ValueError('stationary partition requires an interior and script-free modeled static')
+        cell = partition['cell']; label = struct.pack('<I', cell)
+        placed = record('REFR', partition['reference'], string('EDID', 'M15MeleePartition')
+                        + sub('NAME', struct.pack('<I', partition['base']))
+                        + sub('DATA', struct.pack('<6f', *partition['position'])), 0x400)
+        children = group(label, 6, group(label, 8, placed))
+        payloads['CELL'] = group(struct.pack('<I', cell % 10), 2,
+            group(struct.pack('<I', cell // 10 % 10), 3, record('CELL', cell, selected['CELL']) + children))
+        partition_metadata = dict(partition, model=models[0].rstrip(b'\0').decode('cp1252'),
+                                  cell_payload_sha256=hashlib.sha256(selected['CELL']).hexdigest())
+    count = 3 + (2 if partition is not None else 0)
+    last_id = max(style['id'], program['id'], partition['reference'] if partition is not None else 0)
+    header = sub('HEDR', struct.pack('<fII', 1, count, (last_id & 0xffffff) + 1))
     header += string('CNAM', 'OpenMW synthetic S4 stationary opponent')
     header += string('MAST', recipe['master']) + sub('DATA', bytes(8))
     output = record('TES4', 0, header) + b''.join(group(tag.encode('ascii'), 0, data) for tag, data in sorted(payloads.items()))
     emitted = list(records(output))
-    if len(emitted) != 4:
+    if len(emitted) != count + 1:
         raise ValueError('stationary fixture emitted record count differs')
     reinspected = _subrecords(next(p for t, _, p in emitted if t == 'NPC_'), 'stationary output', 'NPC_')
     if [(x['name'], x['payload']) for x in reinspected if x['name'] not in ('ZNAM', 'SCRI')] != [(x['name'], x['payload']) for x in preserved]:
         raise ValueError('stationary fixture altered unrelated NPC fields')
-    return output, {'kind': 'synthetic-native-stationary-opponent', 'record_count': 3,
+    report = {'kind': 'synthetic-native-stationary-opponent', 'record_count': count,
                     'master_sha256': recipe['source_sha256'], 'script_sha256': program['sha256'],
                     'sha256': hashlib.sha256(output).hexdigest(), 'style': semantic_style,
                     'npc_fields_changed': ['ZNAM', 'SCRI'], 'scope': 'Structural/semantic artifact; actual fork compilation and normal activation/contact/restart are separate gates.'}
+    if partition_metadata is not None:
+        report['partition'] = partition_metadata
+    return output, report
 
 
 def main():

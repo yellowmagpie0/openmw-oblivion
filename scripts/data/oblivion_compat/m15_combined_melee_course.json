@@ -1,11 +1,10 @@
 {
   "schema_version": 1,
-  "status": "verified_partial_combined_course",
+  "status": "verified_core_course_configuration",
   "full_M15S4_acceptance": false,
-  "scope": "First-person keyboard movement/attack/block plus mouse aim: one production NPC equipped-block contact, actual Player Stagger/recovery, nonlethal return attack against Valen Dreth, facing clear-ray range miss and settled endpoint. Behind-wall segment remains incomplete.",
+  "scope": "First-person keyboard/mouse core course: production opponent blocked with positive mitigation, actual Player Stagger and natural recovery, nonlethal named-target return attack, distinct clear-LOS range miss and in-reach stock-partition wall miss, then settled endpoint. Matched in-flight restart and complete required matrix remain open.",
   "implementation_commit": "430d3a4b45",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
-  "tested_manifest_sha256": "d86ee8840af28c42338df26a6838a5249049da2d347e14ee5ff2bee50ac403ca",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
     "source_sha256": "ca63a124f8732202d964477f8245748ef78a678d5d513083ebd02b1c00b4bbcb",
@@ -22,95 +21,62 @@
       ],
       "content.m15stationaryopponent.esp": [
         "sha256:a2a97deed49f124b4cb87c976c1ed0c69cced7ecaeb7b1c84359ecec9bdc3a44",
-        "sha256:bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac"
+        "sha256:e7650dbd7f993ae7680573b72ed6af824c421b8986daee5d2eb183775c45ff68"
       ]
     },
-    "staged_sha256": "d07509553e7e73e6bda87c003d0d1354526df61892fb8b50a26b13fd898b181d",
-    "staged": "build/oblivion-compat/m15/S4/combined-course-work-01/combined-input-02.omwsave",
+    "staged_sha256": "68c9312375c99182944bba542ab0895cccc1f9993573b2893226ea83f1ed1e89",
+    "staged": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
     "procedure": "Decode source with scripts/tes4_runtime_state.py; require empty ledger next2 and no controller. Equip the existing Player item content:oblivion.esm:090615 in right-hand mask65536, select initial RNG1, replace only the stationary plugin fingerprint with the declared original one-shot script revision, then write_save and re-inspect every content hash. No attack/contact/reaction/damage outcome is injected. Imported generic defaults may normalize; assertions start from the actual baseline save.",
     "seed_reason": "The fourth CRT raw word is26500 (percentile0), after controller construction and two empty spell selections. The actual normal contact selects damage Stagger; no extra original-engine precision work is required."
   },
   "fixture": {
     "builder": "scripts/tes4_m15_stationary_fixture.py",
-    "recipe": "scripts/data/oblivion_compat/m15_stationary_opponent_fixture.json",
+    "recipe": "scripts/data/oblivion_compat/m15_stationary_partition_fixture.json",
     "script": "scripts/data/oblivion_compat/m15_stationary_opponent.obscript",
-    "plugin_sha256": "bd79c20de3e3b879414e09799fa273f0c20c7ebe635b3cd04e4723f089b3ecac",
+    "plugin_sha256": "e7650dbd7f993ae7680573b72ed6af824c421b8986daee5d2eb183775c45ff68",
     "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
-    "reuse": "Existing stationary opponent, equipped-block input map, recovery look bindings, SDL replay and epoch/save monitor. Only a read-only Player geometry observer is added; no new harness."
+    "reuse": "Existing stationary builder gains optional version2 static placement; original version1 bytes are unchanged. Existing actor, combat style, script, SDL replay, geometry observer and epoch/save monitor are reused.",
+    "partition": {
+      "base": "content:oblivion.esm:024e74",
+      "reference": "content:m15stationaryopponent.esp:000882",
+      "unscaled_position": [
+        735,
+        50,
+        -9,
+        0,
+        0,
+        1.5707963267948966
+      ],
+      "model": "Furniture/MiddleClass/MiddleBookshelf02.NIF",
+      "model_sha256": "d83a6c8f8a7618510eb9d553625a7757e8228d5485953285619bb76f71f87fbb",
+      "bounds_evidence": "build/oblivion-compat/m15/S4/combined-wall-work-01/partition-bounds-02.txt"
+    }
   },
   "protocol": {
-    "movement": "HoldD until observedx>=760, then holdS until observedy<=-125. Release inputs and aim at the target with normal mouse motion. Displacement is observed rather than timed.",
-    "mouse": "Prime two zero-delta events for warp compensation and first-move suppression before relative look-100. The actual saved yaw changes to-0.390625.",
+    "movement": "HoldD untilx>=708 to clear the table while retaining a clear target sightline. HoldS untily<=-125, then mouse aim-40 after two zero-delta events. Require distance>200/facing<10 and both world/door rays clear before range miss4.",
+    "mouse": "Prime two zero-delta events before deliberate relative motion after F5. Range aim-40, primed reset+40, then primed wall aim-400; actual final yaw-1.5625. These events drive normal mouse input.",
     "range": "In this stock-shortsword/normal-scale course, require distance>200 scene units, facing<10degrees and clear world/door rays100/125 above both roots, then a native miss. This threshold is specific to this course, not a generic reach formula.",
-    "endpoint": "Wait for miss4 to finish and process action-1 before the final save.",
-    "fps": "Configured cap15; measured FPS acceptance matrix remains open."
-  },
-  "verification": {
-    "normal": {
-      "directory": "build/oblivion-compat/m15/S4/combined-melee-normal-02",
-      "semantic_sha256": "cd379e084be2006658848830259f1ebbc5fdd4c2138b1f078fe1039d30f5687b",
-      "actual_pid": 2554379,
-      "game_sha256": "ecb8d9d552ac26af55dc90104ac7589e6d62825258162a68e2c9e6ef1f9346be",
-      "loaded_libraries": {
-        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
-      },
-      "snapshots": 5,
-      "contacts": [
-        2,
-        3
-      ],
-      "range_miss": 4,
-      "all_binary_saves_equal_live": true,
-      "final_ledger_empty_both_actions_minus1": true,
-      "no_target_values_inventory_player_inventory_health_or_rng_writes_on_miss": true,
-      "block_fraction": 0.125,
-      "block_audio_clusters": 1,
-      "block_audio_peak_correlation": 0.930863942523797,
-      "duration_seconds": 50.421357,
-      "visual_review": "Stagger, recovery, target-hit, range and settled captures inspected."
-    },
-    "sanitize": {
-      "directory": "build/oblivion-compat/m15/S4/combined-melee-sanitize-02",
-      "semantic_sha256": "86f8523938f4ff8bd4a8411633891c9855693522441ddaa9568923a1aeadd630",
-      "actual_pid": 2554440,
-      "game_sha256": "aed9835cc6907a04bd5859135505985936f138f95cf29515f152afe96ef7b4cb",
-      "loaded_libraries": {
-        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
-      },
-      "snapshots": 5,
-      "contacts": [
-        2,
-        3
-      ],
-      "range_miss": 4,
-      "all_binary_saves_equal_live": true,
-      "final_ledger_empty_both_actions_minus1": true,
-      "no_target_values_inventory_player_inventory_health_or_rng_writes_on_miss": true,
-      "block_fraction": 0.125,
-      "block_audio_clusters": 1,
-      "block_audio_peak_correlation": 0.9182764992953409,
-      "duration_seconds": 283.441334,
-      "visual_review": "Stagger, recovery, target-hit, range and settled captures inspected. Sanitizer standalone Stagger capture precedes publication; actual save5 thumbnail inspected for displaced reaction view and binary retains active action8/kind2."
-    }
+    "endpoint": "Wait for each miss4/5 to finish naturally with process action-1 before its settled save.",
+    "fps": "Configured cap15; measured FPS acceptance matrix remains open.",
+    "wall": "After range miss settles, prime/reset yaw, moveD untilx>=788 and W untily>=65; face target and require distance<137/facing<10 plus both rays hitting stock partition24e74. Miss5 must finish before final save."
   },
   "reused_regression": {
     "receipt": "docs/oblivion/M15-NATURAL-RECOVERY-VERIFICATION.json",
-    "reason": "C++ implementation, harness Python/C++, fixture builder and linked dependencies unchanged. New runtime course/observer verified directly; unchanged builds and suites are not repeated.",
-    "coverage": "2037 full engine tests each normal and sanitizer/LSan;3179 normal components,1117 selected sanitizer components,429 Python tests with original provenance in the receipt."
+    "reason": "C++ implementation, SDL/Python harness and linked dependencies unchanged; game/test binary identities retained. No redundant engine/component rebuilds. Original fixture bytes also remain unchanged in version1.",
+    "coverage": "2037 full engine tests each normal and sanitizer/LSan;3179 normal components and1117 selected sanitizer components with original provenance. Python evidence superseded by the432-test receipt above."
   },
   "retained_attempts": {
-    "content_precondition": "combined-melee-pilot-normal-01/fixture-failure.json; loader correctly rejected a mismatched plugin fingerprint before gameplay.",
-    "input_precondition": "combined-melee-pilot-normal-02/fixture-failure.json; omitted B/channel51 binding. Merged only look controls and checked all needed bindings.",
-    "geometry": "combined-melee-pilot-normal-03 and combined-geometry-pilot-normal-02/03 preserve insufficient retreat/overstrict250-unit attempts. Final course observes position and uses the declared200-unit/facing check.",
-    "endpoint": "combined-melee-normal-01 passed its actions but final save was still miss-recovery action3. Final02 waits for natural completion.",
-    "audio_format": "combined-course-work-01/normal-01-audio.log: OpenAL float WAVE is converted with ffmpeg to PCM16 before the unchanged assay."
+    "history": "Earlier partial-course receipts and failures remain linked at commit7a4f7865b1.",
+    "native_geometry": "combined-wall-geometry-normal-01 observed no suitable existing pillar obstruction; no gameplay acceptance claimed.",
+    "partition01": "combined-wall-partition-normal-01: wider centered bookshelf intersected approach and was sunk vertically. Actual bounds selected the unchanged narrower full-height stock asset and floor placement.",
+    "joined01": "combined-wall-normal-01 and combined-wall-sanitize-01/fixture-failure.json: conflicting range sightline and unprimed post-save mouse reset. Known-invalid fixture runs stopped; terminal130 retained. Corrected geometry suffix passes before final02.",
+    "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "A target behind a wall within otherwise valid melee reach in the same course.",
-    "Fresh-process continuation during windup, blocking and recovery, matched against uninterrupted gameplay.",
-    "All remaining S4 actor/weapon/directional/mastery/effect, safe-interruption, view/device/FPS and sound/HUD requirements from the controlling plan and delivery audit."
+    "Save/quit/fresh-process continuations during windup, blocking and recovery, matched against uninterrupted gameplay.",
+    "All remaining S4 actor/weapon/directional/mastery/effect, command/query, safe-interruption and view/device/FPS/sound requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Add and validate the behind-wall segment using the existing course/fixture, without expanding into unrelated native details.",
+  "next_bounded_task": "Use actual current Stagger saves to complete matched fresh-process recovery continuation, then windup/blocking continuation and the remaining matrix.",
   "audio_assay": {
     "tool": "scripts/tes4_m15_block_audio.py",
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
@@ -119,10 +85,92 @@
     "scope": "One audible stock block cluster per process; coincident voice count and every simultaneous SFX are not established."
   },
   "sanitizer_scope": "Rendered runtime ASAN_OPTIONS=detect_leaks=0:halt_on_error=1, UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1; ASan first in LD_PRELOAD. No rendered-process leak coverage. Same gameplay actions; overlay changes run id, sanitizer environment and timeouts only.",
-  "post_verification_edits": "This receipt/recipe and short delivery-audit link only. Canonical course manifest and gameplay source remain as executed.",
+  "post_verification_edits": "This receipt/recipe and short delivery-audit summary only; executed course manifest, Python builder/tests/partition source and C++ implementation remain as verified.",
   "verifier": {
-    "path": "build/oblivion-compat/m15/S4/combined-course-work-01/verify-course.py",
-    "sha256": "e1ac4b066c82b7ad8e799dd1264d27b986ed0a9b5208e107d452a23529c78af1",
-    "overlay_equivalence": "Normal and sanitizer source file contents and gameplay action lists compared; only declared environment/run-id/timeouts differ."
-  }
+    "path": "build/oblivion-compat/m15/S4/combined-wall-work-01/verify-course.py",
+    "sha256": "b8c81d3bd2ee17f98f65987bace48b0af05b773e7c4fa02f6ac102f3d5f9dad7",
+    "overlay_equivalence": "Normal/SAN file contents and gameplay actions compared; overlay changes only declared run id, sanitizer environment and timeouts."
+  },
+  "prior_combined_checkpoint": {
+    "commit": "7a4f7865b1",
+    "recipe": "scripts/data/oblivion_compat/m15_combined_melee_course.json at that commit",
+    "normal": "build/oblivion-compat/m15/S4/combined-melee-normal-02/semantic-verification.json",
+    "sanitize": "build/oblivion-compat/m15/S4/combined-melee-sanitize-02/semantic-verification.json"
+  },
+  "tested_manifest_sha256": "0fd54a513eed3cb87c196be13c0578d1dda384b6d20f97b65ae4b24f3d2aa76f",
+  "validation_layers": {
+    "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
+    "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
+    "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
+    "runtime": "Accepted joined normal/SAN processes each contain seven exact binary/live pairs, two hits and two distinct misses, reviewed captures and one verified stock block-audio cluster."
+  },
+  "verification": {
+    "normal": {
+      "directory": "build/oblivion-compat/m15/S4/combined-wall-normal-02",
+      "semantic_sha256": "a83976e179376ddac81e23efe30945485da1ca7358f833affe5a7ce1dc5173fc",
+      "actual_pid": 2556987,
+      "game_sha256": "ecb8d9d552ac26af55dc90104ac7589e6d62825258162a68e2c9e6ef1f9346be",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      },
+      "snapshots": 7,
+      "contacts": [
+        2,
+        3
+      ],
+      "misses": [
+        4,
+        5
+      ],
+      "all_binary_saves_equal_live": true,
+      "final_ledger_empty_both_actions_minus1": true,
+      "no_target_inventory_player_health_or_rng_writes_on_misses": true,
+      "block_fraction": 0.125,
+      "block_audio_clusters": 1,
+      "block_audio_peak_correlation": 0.9313206543612492,
+      "duration_seconds": 59.559867
+    },
+    "sanitize": {
+      "directory": "build/oblivion-compat/m15/S4/combined-wall-sanitize-02",
+      "semantic_sha256": "715add3b9a29ee7a0da92019f227a48552b83d673420df04f0643953eca48791",
+      "actual_pid": 2557010,
+      "game_sha256": "aed9835cc6907a04bd5859135505985936f138f95cf29515f152afe96ef7b4cb",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+      },
+      "snapshots": 7,
+      "contacts": [
+        2,
+        3
+      ],
+      "misses": [
+        4,
+        5
+      ],
+      "all_binary_saves_equal_live": true,
+      "final_ledger_empty_both_actions_minus1": true,
+      "no_target_inventory_player_health_or_rng_writes_on_misses": true,
+      "block_fraction": 0.125,
+      "block_audio_clusters": 1,
+      "block_audio_peak_correlation": 0.8566004012879201,
+      "duration_seconds": 332.749599
+    }
+  },
+  "wall_control": {
+    "receipt": "build/oblivion-compat/m15/S4/combined-wall-work-01/wall-control-verification.json",
+    "sha256": "afaadc444af4cff9e45c77cb9e752445d096d29645e29fbcc3834ce596d97871",
+    "scope": "Normal control02 changes only the partition enabled flag tofalse in the actual wall-facing save. Two binary/live pairs, same actor pose within0.05 scene units and identical pre-hit Health; normal contact4 hits, leaving the target alive. Enabled-partition course misses at a nearer pose.",
+    "manifest": "build/oblivion-compat/m15/S4/combined-wall-work-01/unobstructed-control-02.json"
+  },
+  "python": {
+    "receipt": "build/oblivion-compat/m15/S4/combined-wall-python-01/verification.json",
+    "executed": 432,
+    "failed": 0,
+    "skipped": 0,
+    "source_fingerprint": "0279545c9b15a552d90356d4f8bef5a80cecbe2d6da107b341d859917097ef40",
+    "reuse_scope": "Builder, tests and partition recipe unchanged after this gate; only course route JSON and receipt metadata changed. New route syntax/expansion and actual runtime were checked separately.",
+    "focused": "Six stationary fixture cases pass; three added cases cover unchanged master placement/combat records and invalid identities/transforms/content.",
+    "unchanged_source_pins": "build/oblivion-compat/m15/S4/combined-wall-work-01/source-pins.json"
+  },
+  "visual_review": "Normal and sanitizer Stagger/recovery, range, wall and endpoint captures inspected; SAN actual save5 thumbnail confirms displaced reaction view. Control02 shows unobstructed opponent at the same pose. Stock partition renders bright; this proves actual geometry/occlusion rather than general furniture material fidelity."
 }
