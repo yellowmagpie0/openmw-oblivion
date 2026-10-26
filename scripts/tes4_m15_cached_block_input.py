@@ -21,7 +21,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72)):
+            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73)):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)
@@ -57,6 +57,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected.setdefault('combat_controllers', {})
     expected.setdefault('native_getup_idles', [])
     expected.setdefault('native_getup_playback', [])
+    for graph in expected['native_getup_playback']: graph.setdefault('request_selections', [])
     for reference in expected['references']:
         reference.setdefault('dropper', None)
         reference.setdefault('dropped_items', None)
@@ -86,7 +87,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                                    'inventory.extra_scale': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],
-                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': []})
+                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': []})
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 

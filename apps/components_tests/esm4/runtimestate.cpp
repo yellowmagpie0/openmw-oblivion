@@ -5723,7 +5723,7 @@ namespace
 
 TEST(ESM4RuntimeState, GetUpGraph72RetainsSharedReferencesFixedSlotsAndAllocationFrontier)
 {
-    auto state = getUpGraphState();
+    auto state = getUpGraphState(); state.mVersion = 72;
     const auto wire = state.serializeBinary();
     const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
     EXPECT_EQ(restored, state); EXPECT_EQ(restored.serializeBinary(), wire);
@@ -5823,4 +5823,72 @@ TEST(ESM4RuntimeState, GetUpGraph72PreservesNativeColdPoseAndCachedTimingMasks)
     const auto expired = ESM4::advanceNativeClampSequence(ESM4::retireNativeClampSequence({}, 2, .1f),
         1e8f, 2, 0, 2, {0, 1}, .1f, true);
     check(expired, false, 1e8f, false);
+}
+
+TEST(ESM4RuntimeState, GetUpGraph73RetainsDistinctSelectionsSharingOneResourceAndSequence)
+{
+    auto state = getUpGraphState(); auto& graph = state.mNativeGetUpPlayback.begin()->second;
+    auto selection = graph.mResources.at(2);
+    selection.mIdle = ESM::FormKey::content("oblivion.esm", 0xa02);
+    std::transform(selection.mModel.begin(), selection.mModel.end(), selection.mModel.begin(),
+        [](unsigned char c) { return c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c; });
+    graph.mRequestSelections.emplace(5, selection);
+    EXPECT_EQ(graph.requestSelection(4), graph.mResources.at(2));
+    EXPECT_EQ(graph.requestSelection(5), selection);
+    EXPECT_THROW(graph.requestSelection(99), std::invalid_argument);
+    const auto wire = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored, state); EXPECT_EQ(restored.serializeBinary(), wire);
+    EXPECT_NE(restored.canonicalJson().find("\"request_selections\":[{\"request\":5,"), std::string::npos);
+    EXPECT_EQ(restored.mNativeGetUpPlayback.begin()->second.mResources.size(), 1);
+    EXPECT_EQ(restored.mNativeGetUpPlayback.begin()->second.mSequences.size(), 1);
+    EXPECT_EQ(restored.mNativeAnimationClocks, state.mNativeAnimationClocks);
+    EXPECT_EQ(restored.mCombatRngState, state.mCombatRngState);
+}
+
+TEST(ESM4RuntimeState, GetUpGraph73EmptyExtensionPreservesLegacy72Interpretation)
+{
+    auto state = getUpGraphState(); state.mVersion = 72;
+    const auto legacy = state.serializeBinary();
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(legacy), state);
+    EXPECT_EQ(state.canonicalJson().find("request_selections"), std::string::npos);
+    state.mVersion = 73;
+    EXPECT_EQ(state.serializeBinary().size(), legacy.size() + 4);
+    EXPECT_NE(state.canonicalJson().find("\"request_selections\":[]"), std::string::npos);
+    state.mVersion = 72;
+    auto& graph = state.mNativeGetUpPlayback.begin()->second;
+    graph.mRequestSelections.emplace(5, graph.mResources.at(2));
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, GetUpGraph73RejectsDanglingMismatchedAndDuplicateSelections)
+{
+    auto state = getUpGraphState(); auto& graph = state.mNativeGetUpPlayback.begin()->second;
+    graph.mRequestSelections.emplace(5, graph.mResources.at(2));
+    const auto reject = [&](const auto& change) {
+        auto bad = state; change(bad.mNativeGetUpPlayback.begin()->second);
+        EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto& g) { g.mRequestSelections.emplace(99, g.mResources.at(2)); });
+    reject([](auto& g) { g.mRequestSelections.at(5).mBase = ESM::FormKey::content("oblivion.esm", 0x999); });
+    reject([](auto& g) { g.mRequestSelections.at(5).mAssetHash = std::string(32, 'f'); });
+    reject([](auto& g) { g.mRequestSelections.at(5).mModel = "Outside/GetUp.KF"; });
+    reject([](auto& g) { g.mRequestSelections.at(5).mModel = "Outside\\.\\GetUp.KF"; });
+    // Locate the independently specified appended selection entry, then corrupt its wire count.
+    std::vector<std::uint8_t> entry{5, 0, 0, 0, 0, 0, 0, 0};
+    const auto& selection = graph.mRequestSelections.at(5);
+    for (const auto& text : {selection.mBase.serialize(), selection.mIdle.serialize(), selection.mActorModel,
+             selection.mModel, selection.mAssetHash})
+    {
+        const auto size = static_cast<std::uint32_t>(text.size());
+        for (unsigned shift = 0; shift < 32; shift += 8) entry.push_back(size >> shift);
+        entry.insert(entry.end(), text.begin(), text.end());
+    }
+    auto wire = state.serializeBinary();
+    auto found = std::search(wire.begin(), wire.end(), entry.begin(), entry.end());
+    ASSERT_NE(found, wire.end()); const auto offset = std::distance(wire.begin(), found); ASSERT_GE(offset, 4);
+    wire[offset - 4] = 2; wire.insert(wire.begin() + offset, entry.begin(), entry.end());
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
+    wire = state.serializeBinary(); wire.resize(offset + entry.size() - 1);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }

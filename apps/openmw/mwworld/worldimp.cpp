@@ -3377,6 +3377,8 @@ namespace MWWorld
         {
             for (const auto& [id, idle] : graph.mResources)
                 result->mGraphs[actor].emplace(id, acquire(actor, idle));
+            for (const auto& [request, selection] : graph.mRequestSelections)
+                acquire(actor, selection);
             for (const auto& [id, sequence] : graph.mSequences)
             {
                 const auto& metadata = result->mGraphs.at(actor).at(sequence.mResource)->metadata();

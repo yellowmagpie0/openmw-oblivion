@@ -19601,3 +19601,30 @@ view/device/FPS/fresh-process matrix remain open. See the
 Final engine source fingerprint:
 `9a8a4340f3d8f6440ebebf6f0af66c95853a21ad31f9343796ec7ceadb86286a`
 on parent `bc9f07bad65ad92513f2fddd0f1f31da009a5f2d`.
+
+### Native GetUp loaded-resource keys and selected-record ownership
+
+Actual `438F10/43E680/43E760/43E820` cache construction and operations, plus
+`4383B0/438540` resource hit/release and `436CB0` destruction, confirm ASCII
+case-insensitive keys with separators and dot segments preserved. Actual
+`474C50` uses dynamic formatter `402E30` with `Meshes\\` and the selected
+record's raw model string. The coupled three-course/twelve-request probe retains
+different TESIdle pointers at request+24 while sharing loadedInfo and NI sequence
+identity. This distinguishes request selection from resource provenance; a
+normalized VFS path or opaque KF hash cannot substitute for the native cache key.
+The known executable SHA-256 remains
+`a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6`.
+
+Schema73 preserves those distinct selected records through request overrides,
+keeping schema72's interpretation when no override exists. Structural validation
+checks request/resource references and native key/hash/base agreement. World
+readmission checks every retained selection against winning content and its actor
+bank without condition/RNG replay. The normal and instrumented standalone T4ST
+fixtures verify exact C++/Python persistence and changed-second-record rejection;
+they do not establish renderer restoration or normal-input recovery. Cache probes
+supply OS/TLS/Interlocked/heap boundaries; coupled probes additionally supply
+model/actor/action boundaries and hold an outside resource reference fixture.
+No file-IO miss, asynchronous completion, concurrency or original normal-game
+process is claimed. Full M15S4 remains incomplete; see the
+[verification receipt](M15-NATIVE-GETUP-SELECTION-VERIFICATION.json) and
+[delivery audit](M15-S4-DELIVERY-AUDIT.md).

@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 72
+CURRENT_VERSION = 73
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1661,7 +1661,9 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     graph_clocks = {entry["actor"]: entry["clock"] for entry in clocks}
     graph_actors: set[str] = set()
     for graph in graphs:
-        if not isinstance(graph, dict) or set(graph) != {"actor", "next_identity", "cached_sequence", "resident_sequence", "action_sequence", "requests", "resources", "sequences"}:
+        graph_fields = {"actor", "next_identity", "cached_sequence", "resident_sequence", "action_sequence", "requests", "resources", "sequences"}
+        if version >= 73: graph_fields.add("request_selections")
+        if not isinstance(graph, dict) or set(graph) != graph_fields:
             raise RuntimeStateError("Invalid GetUp graph shape")
         actor = graph["actor"]; native_key(actor)
         if actor in graph_actors or actor not in native_keys or actor not in life_keys:
@@ -1679,21 +1681,23 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             if type(value) is not int or not 0 <= value < 1 << 64 or (value and value not in table):
                 raise RuntimeStateError("Dangling GetUp sequence reference")
         resources = {}; used_resources = set(); sequences = {}; used_sequences = set()
+        def getup_binding(binding):
+            for key in (binding["base"], binding["idle"]): native_key(key)
+            if binding["base"] != value_bases[actor] or not binding["idle"].startswith("content:"):
+                raise RuntimeStateError("Mismatched GetUp graph resource owner")
+            for field in ("actor_model", "model"):
+                path = binding[field]
+                if not isinstance(path, str) or not path or len(path) >= 260 or any(ord(c) == 0 or ord(c) >= 128 for c in path):
+                    raise RuntimeStateError("Invalid GetUp graph authored path")
+            digest = binding["asset_hash"]
+            if (not binding["model"].lower().endswith(".kf") or not isinstance(digest, str)
+                    or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest)):
+                raise RuntimeStateError("Invalid GetUp graph KF identity")
         for resource in check_collection(graph["resources"], "GetUp graph resources"):
             if not isinstance(resource, dict) or set(resource) != {"id", "base", "idle", "actor_model", "model", "asset_hash"}:
                 raise RuntimeStateError("Invalid GetUp resource shape")
             identity(resource["id"]); resources[resource["id"]] = resource
-            for key in (resource["base"], resource["idle"]): native_key(key)
-            if resource["base"] != value_bases[actor] or not resource["idle"].startswith("content:"):
-                raise RuntimeStateError("Mismatched GetUp graph resource owner")
-            for field in ("actor_model", "model"):
-                path = resource[field]
-                if not isinstance(path, str) or not path or len(path) >= 260 or any(ord(c) == 0 or ord(c) >= 128 for c in path):
-                    raise RuntimeStateError("Invalid GetUp graph authored path")
-            digest = resource["asset_hash"]
-            if (not resource["model"].lower().endswith(".kf") or not isinstance(digest, str)
-                    or len(digest) != 32 or any(c not in "0123456789abcdef" for c in digest)):
-                raise RuntimeStateError("Invalid GetUp graph KF identity")
+            getup_binding(resource)
         clock = graph_clocks.get(actor)
         def finite_optional(value):
             if value is not None: native_float(value)
@@ -1769,6 +1773,21 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                 used_sequences.add(seq)
                 if sequences[seq]["resource"] != request["resource"]:
                     raise RuntimeStateError("GetUp request and sequence resource differ")
+        selections = check_collection(graph.get("request_selections", []), "GetUp request selections")
+        if len(selections) > 4: raise RuntimeStateError("Too many GetUp request selections")
+        requests_by_id = {request["id"]: request for request in requests if request is not None}
+        seen_selections = set()
+        for selection in selections:
+            if not isinstance(selection, dict) or set(selection) != {"request", "base", "idle", "actor_model", "model", "asset_hash"}:
+                raise RuntimeStateError("Invalid GetUp request selection shape")
+            request_id = selection["request"]
+            if type(request_id) is not int or request_id not in requests_by_id or request_id in seen_selections:
+                raise RuntimeStateError("Duplicate or dangling GetUp request selection")
+            seen_selections.add(request_id); getup_binding(selection)
+            resource = resources[requests_by_id[request_id]["resource"]]
+            if (selection["base"] != resource["base"] or selection["asset_hash"] != resource["asset_hash"]
+                    or selection["model"].lower() != resource["model"].lower()):
+                raise RuntimeStateError("GetUp request selection differs from its loaded resource")
         for field in ("cached_sequence", "resident_sequence", "action_sequence"):
             seq = graph[field]; reference(seq, sequences)
             if seq: used_sequences.add(seq)
@@ -2798,6 +2817,14 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 sequence["pose_snapshot"] = read_melee_pose() if getup_boolean() else None
                 sequence["retirement"] = {"duration": reader.unpack("<f"), "start_clock": getup_optional()} if getup_boolean() else None
                 graph["sequences"].append(sequence)
+            if version >= 73:
+                count = reader.count()
+                if count > 4: raise RuntimeStateError("Too many GetUp request selections")
+                graph["request_selections"] = []
+                for _ in range(count):
+                    selection = {"request": reader.unpack("<Q")}
+                    for field in ("base", "idle", "actor_model", "model", "asset_hash"): selection[field] = reader.string()
+                    graph["request_selections"].append(selection)
             result["native_getup_playback"].append(graph)
     if version >= 31:
         result["native_actor_ragdolls"] = []
@@ -3568,6 +3595,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                 writer.pack("<B", retirement is not None)
                 if retirement is not None:
                     writer.pack("<f", retirement["duration"]); getup_optional(retirement["start_clock"])
+            if version >= 73:
+                selections = sorted(graph["request_selections"], key=lambda entry: entry["request"])
+                writer.pack("<I", len(selections))
+                for selection in selections:
+                    writer.pack("<Q", selection["request"])
+                    for field in ("base", "idle", "actor_model", "model", "asset_hash"): writer.string(selection[field])
     if version >= 31:
         ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
         writer.pack("<I", len(ragdolls))
@@ -3875,6 +3908,10 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 72 and state.get("native_getup_playback"):
         raise RuntimeStateError("Legacy TES4 save cannot carry GetUp playback")
     state.setdefault("native_getup_playback", [])
+    for graph in state["native_getup_playback"]:
+        if state.get("schema_version", 1) < 73 and graph.get("request_selections"):
+            raise RuntimeStateError("Legacy TES4 save cannot carry GetUp request selections")
+        graph.setdefault("request_selections", [])
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])

@@ -57,6 +57,11 @@ namespace ESM4
         return dot != std::string_view::npos && foldedKey(model.substr(dot)) == ".kf";
     }
 
+    std::string nativeIdleResourceKey(std::string_view model)
+    {
+        return foldedKey(std::string("Meshes\\") + std::string(modelPath(model)));
+    }
+
     NativeIdleRegistrationEvent nativeIdleRegistrationEvent(const IdleAnimation& record)
     {
         return {record.mId, record.mParent, record.mPrevious, std::string(record.mModel.getOriginal()), record.mFlags};

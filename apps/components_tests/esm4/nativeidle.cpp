@@ -286,3 +286,18 @@ TEST(ESM4NativeIdleSelector, OptionalOnlyPostcheckMatches36OriginalReadConsumpti
         EXPECT_EQ(conditions, (std::vector<int>{0, 1}));
     }
 }
+
+TEST(ESM4NativeIdleSelector, LoadedResourceKeysFoldCaseAndPreserveNativePathSpelling)
+{
+    EXPECT_EQ(ESM4::nativeIdleResourceKey("Creatures\\Dog\\IdleAnims\\GetUp0.KF"),
+        "meshes\\creatures\\dog\\idleanims\\getup0.kf");
+    EXPECT_EQ(ESM4::nativeIdleResourceKey("Outside\\same.kf"),
+        ESM4::nativeIdleResourceKey("OUTSIDE\\SAME.KF"));
+    EXPECT_NE(ESM4::nativeIdleResourceKey("Outside\\same.kf"),
+        ESM4::nativeIdleResourceKey("Outside/same.kf"));
+    EXPECT_NE(ESM4::nativeIdleResourceKey("Outside\\same.kf"),
+        ESM4::nativeIdleResourceKey("Outside\\.\\same.kf"));
+    EXPECT_EQ(ESM4::nativeIdleResourceKey(std::string_view("A.KF\0ignored", 12)), "meshes\\a.kf");
+    EXPECT_THROW(ESM4::nativeIdleResourceKey(std::string(260, 'a')), std::invalid_argument);
+    EXPECT_THROW(ESM4::nativeIdleResourceKey(std::string("a.") + char(0x80)), std::invalid_argument);
+}

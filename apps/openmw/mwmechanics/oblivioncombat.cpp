@@ -6521,6 +6521,9 @@ namespace MWMechanics
             throw std::invalid_argument("native actor knockback requires an Oblivion v30+ save");
         if (state.mVersion < 72 && !mGetUpPlayback.empty())
             throw std::invalid_argument("GetUp playback ownership requires schema72");
+        if (state.mVersion < 73 && std::any_of(mGetUpPlayback.begin(), mGetUpPlayback.end(),
+                [](const auto& entry) { return !entry.second.mRequestSelections.empty(); }))
+            throw std::invalid_argument("GetUp request selections require schema73");
         if (state.mVersion < 71 && !mGetUpIdles.empty())
             throw std::invalid_argument("selected GetUp IDLE ownership requires schema71");
         if (state.mVersion < 31 && !mActorRagdolls.empty())
@@ -6755,6 +6758,7 @@ namespace MWMechanics
                 throw std::invalid_argument("Saved GetUp IDLE differs from winning content");
         }
         for (const auto& [actor, graph] : state.mNativeGetUpPlayback)
+        {
             for (const auto& [id, resource] : graph.mResources)
             {
                 const auto* record = store.search<ESM4::IdleAnimation>(resource.mIdle);
@@ -6762,6 +6766,14 @@ namespace MWMechanics
                         0, record->mModel.getOriginal().find('\0')) != resource.mModel)
                     throw std::invalid_argument("Saved GetUp graph IDLE differs from winning content");
             }
+            for (const auto& [request, selection] : graph.mRequestSelections)
+            {
+                const auto* record = store.search<ESM4::IdleAnimation>(selection.mIdle);
+                if (!record || std::string_view(record->mModel.getOriginal()).substr(
+                        0, record->mModel.getOriginal().find('\0')) != selection.mModel)
+                    throw std::invalid_argument("Saved GetUp request IDLE differs from winning content");
+            }
+        }
         for (const auto& actor : state.mNativeActorValues)
             if (actor.mOwner == ESM4::ActorValueOwner::NonPlayer)
                 nonPlayerContentIsCreature(actor, store);

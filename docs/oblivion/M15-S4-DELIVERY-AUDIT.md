@@ -14447,3 +14447,46 @@ Editable cases: [m15_native_getup_resident_frame_cases.json](../../scripts/data/
 Evidence: [M15-NATIVE-GETUP-RESIDENT-FRAME-VERIFICATION.json](M15-NATIVE-GETUP-RESIDENT-FRAME-VERIFICATION.json).
 Tested source fingerprint: `05f2301bde4778edf0f3ff1cb79ba12fe3c20b5d7f7f97387e4d4312880b41b2`
 on parent `c496f96a9eb8c940b5c52dc46c1a0c9794f9842d`.
+
+### Shared loaded resources retain per-request IDLE selections
+
+Independent original-executable probes confirm that case-only KF paths share a
+ModelLoader entry while slash and dot-segment spellings remain distinct. Three
+coupled courses execute twelve requests through the actual path formatter,
+resource-cache hit/release and request/cache/clone/start paths. Four distinct
+selected TESIdle pointers can share one loadedInfo and, for the first three
+requests, one NI sequence. Request+24 retains each selected record. Cache-only
+probes also verify held-reference retention and last-reference erasure. Heap,
+OS/TLS/Interlocked, actor/model and action boundaries remain supplied; file IO,
+queue misses and concurrent execution are outside this evidence.
+
+Runtime schema73 adds per-request selected-IDLE overrides to the existing shared
+GetUp graph. An absent override keeps the resource DTO interpretation of
+schema72. Legacy72 wire and JSON remain unchanged; overrides cannot be silently
+written to an older schema. Each override names an owned request and matches its
+resource's base, opaque KF hash and native cache key. World admission checks all
+selected winning records, actor models and model-bank membership without
+re-evaluating conditions or advancing RNG. Service restore validates each winning
+selected path and rejects before mutation. The three fixture migrators now write
+schema73 and add empty selection lists to upgraded legacy graphs.
+
+Full normal and ASan/UBSan runs each pass **3,167 component and 1,984 engine
+tests**, with exact inventories/XML, zero failures and zero skips. All **420 Python
+tests** pass. Four new component and two new engine cases additionally pass with
+leak detection enabled. Full sanitizer suites retain the documented unrelated
+suite-leak exception. Six standalone headless processes, three per build, verify
+identical C++ producer/consumer DTOs, exact Python payload reencoding, unchanged
+input hashes and rejection of a changed second selected record before service
+mutation. The instrumented processes run with leak detection enabled. These are
+injected T4ST graph/service/World-admission fixtures, not canonical shared-save
+loading, renderer reconstruction or normal-input recovery.
+
+No live GetUp dispatcher is added. Loaded-cache ownership, combined graph/source/
+layer publication, all-slot retirement, natural start/frame/completion and the
+remaining S4 input/device/FPS/audio/mastery/full-save gates remain open.
+**M15S4 is not delivered.**
+
+Editable cases: [m15_native_getup_selection_cases.json](../../scripts/data/oblivion_compat/m15_native_getup_selection_cases.json).
+Evidence: [M15-NATIVE-GETUP-SELECTION-VERIFICATION.json](M15-NATIVE-GETUP-SELECTION-VERIFICATION.json).
+Tested source fingerprint: `7583ae035228f4fa8d3a99ecea932ee49abec1ab9d812eec150fa1a5404fd837`
+on parent `7cd540587b7e1944f2a2ef3521d48dfd2bbc4a98`.

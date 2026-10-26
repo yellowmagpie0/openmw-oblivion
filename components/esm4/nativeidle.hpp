@@ -22,6 +22,10 @@ namespace ESM4
     // bytes, before the first NUL. They do not normalize a VFS path.
     std::string nativeIdleModelKey(std::string_view model);
     bool nativeIdleHasFile(std::string_view model);
+    // Actual474C50 formatter and43E680 cache lookup: prefix Meshes\ and
+    // fold ASCII case, preserving separators and dot segments. This key is
+    // independent of the backend's normalized KF path or content hash.
+    std::string nativeIdleResourceKey(std::string_view model);
 
     struct NativeIdleNode
     {

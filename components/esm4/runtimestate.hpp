@@ -57,7 +57,7 @@ namespace ESM4
     // v68 retains current base combat-controller presence and directed targets.
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 72;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 73;
 
     struct RuntimeContentIdentity
     {
@@ -610,6 +610,11 @@ namespace ESM4
         std::uint64_t mCachedSequence = 0; // verified SpecialIdle group2 only
         std::uint64_t mResidentSequence = 0; // resident physical slot0
         std::uint64_t mActionSequence = 0; // process reference owned by this graph
+        // v73: selected IDLE bindings that differ from loaded-resource
+        // provenance. Absence retains the v72 resource DTO interpretation.
+        // Different requests can select different records yet share one info/NI.
+        std::map<std::uint64_t, RuntimeGetUpIdle> mRequestSelections;
+        const RuntimeGetUpIdle& requestSelection(std::uint64_t request) const;
         void validate(std::optional<float> clock) const;
         friend bool operator==(const RuntimeGetUpPlayback&, const RuntimeGetUpPlayback&) = default;
     };

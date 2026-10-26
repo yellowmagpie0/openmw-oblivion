@@ -223,6 +223,52 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 dict(request, id=5), dict(request, id=6, status=3)], "resources": [resource], "sequences": [sequence]}]
         return state
 
+    @classmethod
+    def getup_selected_graph_state(cls):
+        state = cls.getup_graph_state(); state["schema_version"] = 73; state["combat_rng_state"] = 12345
+        graph = state["native_getup_playback"][0]
+        selection = {key: value for key, value in graph["resources"][0].items() if key != "id"}
+        selection.update(request=5, idle="content:oblivion.esm:000a02", model=selection["model"].upper())
+        graph["request_selections"] = [selection]
+        return state
+
+    def test_getup_graph73_distinct_selections_share_resource_without_changing_legacy72(self):
+        state = self.getup_selected_graph_state(); wire = state_io.encode_payload(state)
+        loaded = state_io.decode_payload(wire)
+        self.assertEqual(loaded["native_getup_playback"], state["native_getup_playback"])
+        self.assertEqual(loaded["native_animation_clocks"], state["native_animation_clocks"])
+        self.assertEqual(loaded["combat_rng_state"], state["combat_rng_state"])
+        self.assertEqual(state_io.encode_payload(loaded), wire)
+        legacy = self.getup_graph_state(); legacy_wire = state_io.encode_payload(legacy)
+        self.assertNotIn("request_selections", state_io.decode_payload(legacy_wire)["native_getup_playback"][0])
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 73
+        self.assertEqual(legacy["native_getup_playback"][0]["request_selections"], [])
+        self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 4)
+
+    def test_getup_graph73_rejects_invalid_selection_and_legacy_reinterpretation(self):
+        changes = [lambda g: g["request_selections"][0].update(request=99),
+            lambda g: g["request_selections"].append(dict(g["request_selections"][0])),
+            lambda g: g["request_selections"][0].update(base="content:oblivion.esm:000999"),
+            lambda g: g["request_selections"][0].update(asset_hash="f"*32),
+            lambda g: g["request_selections"][0].update(model="Outside/GetUp.KF"),
+            lambda g: g["request_selections"][0].update(model="Outside\\.\\GetUp.KF"),
+            lambda g: g.pop("request_selections")]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.getup_selected_graph_state(); change(state["native_getup_playback"][0])
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.getup_selected_graph_state(); state["schema_version"] = 72
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_actor_knockback(state)
+        state = self.getup_selected_graph_state(); wire = state_io.encode_payload(state)
+        selection = state["native_getup_playback"][0]["request_selections"][0]
+        entry = struct.pack("<Q", selection["request"]) + b"".join(
+            struct.pack("<I", len(selection[k].encode())) + selection[k].encode()
+            for k in ("base", "idle", "actor_model", "model", "asset_hash"))
+        start = wire.index(entry); bad = bytearray(wire); bad[start-4] = 2; bad[start:start] = entry
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(bad))
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:start+len(entry)-1])
+
     def test_getup_graph72_roundtrip_shared_references_frontier_and_legacy_absence(self):
         state = self.getup_graph_state(); wire = state_io.encode_payload(state)
         loaded = state_io.decode_payload(wire)

@@ -3,7 +3,7 @@
   "purpose": "Injected recovered NPC slot3 residence. Actual native stationary policy starts attacks after normal activation; not normal Stagger activation.",
   "source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-passive-slot3-controller-normal-first-03/second/snapshots/save-3.omwsave",
   "source_sha256": "896c4a0ba19ada4086f5344f1c2eae76157f9de62a915e2a415c7158999e7ea6",
-  "target_schema": 72,
+  "target_schema": 73,
   "actor": "content:oblivion.esm:01fc43",
   "actor_clock": 16.99001693725586,
   "actor_draw_state": 1,

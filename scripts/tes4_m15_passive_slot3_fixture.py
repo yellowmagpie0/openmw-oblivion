@@ -23,7 +23,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
-            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72)
+            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73)
             or recipe['actor'] != actor or type(recipe['process_action']) is not int or recipe['process_action'] != 8
             or type(recipe['shared_player_draw_state']) is not int or recipe['shared_player_draw_state'] != 1
             or type(recipe['camera_first_person']) is not bool
@@ -90,7 +90,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                   source_schema=59, target_schema=runtime.CURRENT_VERSION,
                   mutations=['Player process action -1 -> 8', 'declared Player melee state installed'],
                   shared_camera=dict(source_first_person=True, output_first_person=recipe['camera_first_person']),
-                  schema_defaults={'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': []},
+                  schema_defaults={'melee.held_blocks': [], 'first_person.held_blocks': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': []},
                   all_other_decoded_state_preserved=True, compiler_world_validation=False,
                   runtime_acceptance=False, normal_input_contact=False)
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')

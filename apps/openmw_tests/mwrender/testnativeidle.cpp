@@ -451,17 +451,22 @@ namespace
 {
     struct NativeGetUpRequestTest : testing::Test
     {
-        static std::string records()
+        static std::string records(bool alias)
         {
             const std::array<std::uint32_t, 6> condition{0x60, std::bit_cast<std::uint32_t>(0.f), 77, 0, 0, 0};
             return idle(0xa00, 0, "Dog\\IdleAnims", sub(ESM::fourCC("CTDA"), bytes(condition)))
                 + idle(0xa01, 0xa00, "Outside\\same.kf")
-                + idle(0xb00, 0, "Cat\\IdleAnims\\Other.kf");
+                + idle(0xb00, 0, "Cat\\IdleAnims\\Other.kf")
+                + (alias ? idle(0xa02, 0xa00, "OUTSIDE\\SAME.KF",
+                    sub(ESM::fourCC("CTDA"), bytes(std::array<std::uint32_t, 6>{0,
+                        std::bit_cast<std::uint32_t>(1.f), 46, 0, 0, 0}))) : "");
         }
-        TestingOpenMW::NativeWorldFixture mFixture{false, false, false, {}, {}, records(), 3};
+        TestingOpenMW::NativeWorldFixture mFixture;
         MWWorld::Ptr mActor;
         osg::ref_ptr<IdleAnimation> mAnimation;
-        NativeGetUpRequestTest()
+        NativeGetUpRequestTest() : NativeGetUpRequestTest(false) {}
+        explicit NativeGetUpRequestTest(bool alias)
+            : mFixture{false, false, false, {}, {}, records(alias), alias ? 4u : 3u}
         {
             auto& world = mFixture.mWorld; auto& store = world.getStore();
             MWClass::Npc::registerSelf(); world.setupPlayer();
@@ -517,6 +522,30 @@ namespace
             combat().capture(state);
             state.validate();
             return state;
+        }
+    };
+
+    struct NativeGetUpSelectionTest : NativeGetUpRequestTest
+    {
+        NativeGetUpSelectionTest() : NativeGetUpRequestTest(true) {}
+
+        ESM4::RuntimeState selectedGraph()
+        {
+            write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+            auto prepared = mFixture.mWorld.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+            if (!prepared->commit()) throw std::runtime_error("selection fixture request failed");
+            auto saved = snapshot(); auto& graph = saved.mNativeGetUpPlayback[key()];
+            graph.mNextIdentity = 100; graph.mResources.emplace(2, saved.mNativeGetUpIdles.at(key()));
+            graph.mRequests.mPrimary = ESM4::NativeIdleRequest{4, 2, 3, 2, true};
+            graph.mRequests.mRetired[0] = ESM4::NativeIdleRequest{5, 2, 3, 2, true};
+            ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2;
+            graph.mSequences.emplace(3, sequence);
+            graph.mCachedSequence = graph.mResidentSequence = graph.mActionSequence = 3;
+            saved.mNativeAnimationClocks[key()] = 0;
+            auto selection = graph.mResources.at(2);
+            selection.mIdle = ESM::FormKey::content("headless.esm", 0xa02); selection.mModel = "OUTSIDE\\SAME.KF";
+            graph.mRequestSelections.emplace(5, selection);
+            return saved;
         }
     };
 }
@@ -816,4 +845,43 @@ TEST_F(NativeGetUpRequestTest, ReadmissionPreservesColdPoseCancellationAndCached
         auto captured = saved; restored.capture(captured);
         EXPECT_EQ(captured, saved); EXPECT_EQ(snapshot(), before);
     }
+}
+
+TEST_F(NativeGetUpSelectionTest, SharedResourceRetainsDistinctWinningSelectionsWithoutConditionOrRngReplay)
+{
+    auto& world = mFixture.mWorld; auto saved = selectedGraph(); const auto before = snapshot();
+    const auto wire = saved.serializeBinary(); saved = ESM4::RuntimeState::deserializeBinary(wire);
+    ASSERT_NO_THROW(world.validateOblivionSaveState(saved));
+    MWMechanics::OblivionCombatService restored; ASSERT_NO_THROW(restored.restore(saved, world.getStore()));
+    auto captured = saved; restored.capture(captured); EXPECT_EQ(captured, saved);
+    const auto graph = restored.getUpPlayback(key()); ASSERT_TRUE(graph);
+    EXPECT_EQ(graph->requestSelection(4).mIdle, ESM::FormKey::content("headless.esm", 0xa01));
+    EXPECT_EQ(graph->requestSelection(5).mIdle, ESM::FormKey::content("headless.esm", 0xa02));
+    EXPECT_EQ(graph->mResources.size(), 1); EXPECT_EQ(graph->mSequences.size(), 1);
+    EXPECT_EQ(restored.combatRandomState(), saved.mCombatRngState); EXPECT_EQ(snapshot(), before);
+    auto legacy = saved; legacy.mVersion = 72; const auto unchanged = legacy;
+    EXPECT_THROW(restored.capture(legacy), std::invalid_argument); EXPECT_EQ(legacy, unchanged);
+    auto& store = world.getStore(); const auto selected = ESM::FormKey::content("headless.esm", 0xa02);
+    auto changed = *store.search<ESM4::IdleAnimation>(selected); changed.mModel = "Outside\\changed.kf";
+    store.getWritable<ESM4::IdleAnimation>().insertStatic(changed, selected);
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+    EXPECT_THROW(restored.restore(saved, store), std::invalid_argument);
+    auto after = captured; restored.capture(after); EXPECT_EQ(after, captured);
+}
+
+TEST_F(NativeGetUpSelectionTest, RequestSelectionReadmissionRejectsWrongActorBankAndModel)
+{
+    auto& world = mFixture.mWorld; auto saved = selectedGraph(); const auto before = snapshot();
+    auto& selection = saved.mNativeGetUpPlayback.at(key()).mRequestSelections.at(5);
+    selection.mActorModel = "Cat\\Skeleton.NIF";
+    ASSERT_NO_THROW(saved.validate());
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+    selection.mActorModel = saved.mNativeGetUpIdles.at(key()).mActorModel;
+    const auto other = ESM::FormKey::content("headless.esm", 0xb00);
+    auto& store = world.getStore(); auto changed = *store.search<ESM4::IdleAnimation>(other);
+    changed.mModel = "OUTSIDE\\SAME.KF"; store.getWritable<ESM4::IdleAnimation>().insertStatic(changed, other);
+    selection.mIdle = other;
+    ASSERT_NO_THROW(saved.validate());
+    EXPECT_THROW(world.validateOblivionSaveState(saved), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
 }

@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scope": "Per-request selected IDLE bindings for shared native loaded resources; schema73 persistence and readmission",
+  "runtime_schema": 73,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "native-cache-key",
+      "expected": "Meshes prefix, ASCII casefold only; slash and dot-segment variants distinct",
+      "original": "438F10/43E680/43E760/43E820 cache and 4383B0/438540 acquisition/release",
+      "boundary": "WinTLS, InterlockedCompareExchange and heap; no filesystem misses or concurrency"
+    },
+    {
+      "id": "different-idle-same-resource",
+      "expected": "Distinct TESIdle selections remain per request while sharing loadedInfo and NI sequence",
+      "original": "475300/474C50/4383B0/477E50 plus manager tick",
+      "boundary": "Actor/model/action boundaries and OS/heap supplied; actual path formatter and cache hit run"
+    },
+    {
+      "id": "schema73-roundtrip",
+      "expected": "Request override binds another IDLE to one resource/sequence; clocks, RNG and frontier unchanged"
+    },
+    {
+      "id": "legacy72",
+      "expected": "Wire and JSON retain old interpretation; no override inferred; nonempty override rejected"
+    },
+    {
+      "id": "malformed-bindings",
+      "expected": "Dangling, duplicate, mismatched base/hash/key and truncated wire rejected"
+    },
+    {
+      "id": "semantic-readmission",
+      "expected": "All winning selected records, actor models and bank membership checked without condition or RNG replay"
+    },
+    {
+      "id": "fresh-process",
+      "expected": "Distinct producer/consumer/rejection PIDs; identical C++ DTO and Python payload; changed second selected record rejects before mutation"
+    }
+  ],
+  "not_accepted": [
+    "Canonical shared-save loading",
+    "Renderer reconstruction",
+    "Natural GetUp request/start/frame/completion",
+    "Normal-input view/device/FPS recovery",
+    "Full M15S4 delivery"
+  ]
+}

@@ -131,7 +131,7 @@ namespace ESM4
         void writeMeleePose(BinaryWriter&, const RuntimeMeleePoseSnapshot&);
         RuntimeMeleePoseSnapshot readMeleePose(BinaryReader&);
 
-        void writeGetUpPlayback(BinaryWriter& writer, const RuntimeGetUpPlayback& graph)
+        void writeGetUpPlayback(BinaryWriter& writer, const RuntimeGetUpPlayback& graph, std::uint32_t version)
         {
             writer.integer(graph.mNextIdentity);
             for (auto id : {graph.mCachedSequence, graph.mResidentSequence, graph.mActionSequence}) writer.integer(id);
@@ -171,9 +171,19 @@ namespace ESM4
                 writer.integer<std::uint8_t>(state.mRetirement.has_value());
                 if (state.mRetirement) { writer.floating(state.mRetirement->mDuration); optional(state.mRetirement->mStartClock); }
             }
+            if (version >= 73)
+            {
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(graph.mRequestSelections.size()));
+                for (const auto& [request, selection] : graph.mRequestSelections)
+                {
+                    writer.integer(request);
+                    for (const auto& text : {selection.mBase.serialize(), selection.mIdle.serialize(),
+                             selection.mActorModel, selection.mModel, selection.mAssetHash}) writer.string(text);
+                }
+            }
         }
 
-        RuntimeGetUpPlayback readGetUpPlayback(BinaryReader& reader)
+        RuntimeGetUpPlayback readGetUpPlayback(BinaryReader& reader, std::uint32_t version)
         {
             const auto boolean = [&] {
                 const auto value = reader.integer<std::uint8_t>();
@@ -232,6 +242,20 @@ namespace ESM4
                 if (boolean()) state.mRetirement = MeleeSequenceRetirement{reader.float32(), optional()};
                 if (!graph.mSequences.emplace(id, std::move(sequence)).second)
                     throw std::runtime_error("Duplicate GetUp graph sequence");
+            }
+            if (version >= 73)
+            {
+                count = reader.count();
+                if (count > 4) throw std::runtime_error("Too many GetUp request selections");
+                for (std::uint32_t i = 0; i < count; ++i)
+                {
+                    const auto request = reader.integer<std::uint64_t>();
+                    RuntimeGetUpIdle selection;
+                    selection.mBase = key(); selection.mIdle = key(); selection.mActorModel = reader.string();
+                    selection.mModel = reader.string(); selection.mAssetHash = reader.string();
+                    if (!graph.mRequestSelections.emplace(request, std::move(selection)).second)
+                        throw std::runtime_error("Duplicate GetUp request selection");
+                }
             }
             return graph;
         }
@@ -1665,6 +1689,18 @@ namespace ESM4
         catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
     }
 
+    const RuntimeGetUpIdle& RuntimeGetUpPlayback::requestSelection(std::uint64_t request) const
+    {
+        for (const auto* slot : {&mRequests.mPrimary, &mRequests.mSecondary,
+                 &mRequests.mRetired[0], &mRequests.mRetired[1]})
+            if (*slot && (*slot)->mIdentity == request)
+            {
+                const auto found = mRequestSelections.find(request);
+                return found != mRequestSelections.end() ? found->second : mResources.at((*slot)->mResource);
+            }
+        throw std::invalid_argument("Unknown GetUp request selection");
+    }
+
     void RuntimeGetUpPlayback::validate(std::optional<float> clock) const
     {
         if (mResources.size() > sMaximumCollectionSize || mSequences.size() > sMaximumCollectionSize)
@@ -1672,6 +1708,7 @@ namespace ESM4
         if (!mNextIdentity || (clock && (!std::isfinite(*clock) || *clock < 0)))
             throw std::runtime_error("Invalid GetUp graph allocation frontier or clock");
         std::set<std::uint64_t> identities, resources, sequences;
+        std::map<std::uint64_t, const NativeIdleRequest*> requests;
         const auto identity = [&](std::uint64_t id) {
             if (!id || id >= mNextIdentity || !identities.insert(id).second)
                 throw std::runtime_error("Duplicate, null or future GetUp graph identity");
@@ -1709,6 +1746,7 @@ namespace ESM4
             if (!*slot) continue;
             const auto& request = **slot;
             identity(request.mIdentity);
+            requests.emplace(request.mIdentity, &request);
             // Only the synchronous loaded-resource profile has readmission
             // evidence. Do not serialize an invented asynchronous IO request.
             if (request.mStatus < 1 || request.mStatus > 3 || !mResources.contains(request.mResource)
@@ -1720,6 +1758,16 @@ namespace ESM4
             reference(request.mSequence);
             if (request.mSequence && mSequences.at(request.mSequence).mResource != request.mResource)
                 throw std::runtime_error("GetUp request and sequence resource differ");
+        }
+        for (const auto& [id, selection] : mRequestSelections)
+        {
+            const auto found = requests.find(id);
+            if (found == requests.end()) throw std::runtime_error("Dangling GetUp request selection");
+            selection.validate();
+            const auto& resource = mResources.at(found->second->mResource);
+            if (selection.mBase != resource.mBase || selection.mAssetHash != resource.mAssetHash
+                || nativeIdleResourceKey(selection.mModel) != nativeIdleResourceKey(resource.mModel))
+                throw std::runtime_error("GetUp request selection differs from its loaded resource");
         }
         for (auto id : {mCachedSequence, mResidentSequence, mActionSequence}) reference(id);
         if (mCachedSequence && !mSequences.at(mCachedSequence).mManaged)
@@ -2085,6 +2133,8 @@ namespace ESM4
             throw std::runtime_error("Native GetUp playback requires schema72");
         for (const auto& [actor, playback] : mNativeGetUpPlayback)
         {
+            if (mVersion < 73 && !playback.mRequestSelections.empty())
+                throw std::runtime_error("GetUp request selections require schema73");
             if (!nativeActors.contains(actor) || !lives.contains(actor)
                 || runtimeReferenceKey(actor) != actor || ESM::FormKey::deserialize(actor.serialize()) != actor)
                 throw std::runtime_error("Dangling native GetUp playback owner");
@@ -3265,7 +3315,7 @@ namespace ESM4
         if (mVersion >= 72)
         {
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeGetUpPlayback.size()));
-            for (const auto& [actor, graph] : mNativeGetUpPlayback) { writeKey(writer, actor); writeGetUpPlayback(writer, graph); }
+            for (const auto& [actor, graph] : mNativeGetUpPlayback) { writeKey(writer, actor); writeGetUpPlayback(writer, graph, mVersion); }
         }
         if (mVersion >= 31)
         {
@@ -4379,7 +4429,7 @@ namespace ESM4
                 try { actor = ESM::FormKey::deserialize(text); }
                 catch (const std::invalid_argument& error) { throw std::runtime_error(error.what()); }
                 if (actor.serialize() != text) throw std::runtime_error("Noncanonical GetUp playback owner");
-                auto graph = readGetUpPlayback(reader);
+                auto graph = readGetUpPlayback(reader, result.mVersion);
                 if (!result.mNativeGetUpPlayback.emplace(actor, std::move(graph)).second)
                     throw std::runtime_error("Duplicate GetUp playback owner");
             }
@@ -5791,7 +5841,24 @@ namespace ESM4
                     } else stream << "null";
                     stream << '}';
                 }
-                stream << "]}";
+                stream << ']';
+                if (mVersion >= 73)
+                {
+                    stream << ",\"request_selections\":[";
+                    bool firstSelection = true;
+                    for (const auto& [request, selection] : graph.mRequestSelections)
+                    {
+                        if (!firstSelection) stream << ',';
+                        firstSelection = false;
+                        stream << "{\"request\":" << request << ",\"base\":\"" << escapeJson(selection.mBase.serialize())
+                            << "\",\"idle\":\"" << escapeJson(selection.mIdle.serialize())
+                            << "\",\"actor_model\":\"" << escapeJson(selection.mActorModel)
+                            << "\",\"model\":\"" << escapeJson(selection.mModel)
+                            << "\",\"asset_hash\":\"" << selection.mAssetHash << "\"}";
+                    }
+                    stream << ']';
+                }
+                stream << '}';
             }
             stream << ']';
         }
