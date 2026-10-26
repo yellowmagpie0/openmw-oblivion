@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Independent original-executable research only; no production changes or new build/runtime acceptance",
+  "parent": "391760098e526e187ca29bdda1cede8368c57530",
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_manager_cases.json",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "results": {
+    "manager_operation_course_operations": 14,
+    "manager_hole_profiles": 128,
+    "construction_caller_profiles": 1,
+    "delivery_branch_profiles": 12,
+    "cold_cache_profiles": 2,
+    "cold_cache_requests": 4
+  },
+  "accepted_reports": [
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order01-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order02-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-caller01-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json"
+  ],
+  "retained_attempts": [
+    {
+      "attempt": "pending-cache01/02",
+      "accepted": false,
+      "reason": "Omitted outside scheduler reference; cancellation destroys the otherwise unowned job, invalidating later fixture access."
+    },
+    {
+      "attempt": "pending-cache03",
+      "accepted": false,
+      "reason": "Exploratory passing report invalidated: TlsAlloc shim returned slot0 for both independent maps. Not used for conclusions."
+    },
+    {
+      "attempt": "pending-cache04",
+      "accepted": false,
+      "reason": "Second cold request exposed shared TLS slot fixture error; expected two scheduler notifications but got one."
+    },
+    {
+      "attempt": "pending-cache05",
+      "accepted": true,
+      "reason": "Distinct TLS slots and supplied outside scheduler reference; two independent pending entries and jobs, actual cache reconciliation/cancellation/delivery pass."
+    }
+  ],
+  "artifact_pins": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_manager_cases.json",
+      "sha256": "f2c097822da6fe52bab98c148fa07404fda4aaa7d1abf89c211256dc0c0f3154"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order01.py",
+      "sha256": "b49525b44f13fc105af76aa67b0c0fd79dfe356a56a38b72b8874c9b1605f43a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order01-corpus01.json",
+      "sha256": "a71e3b829729590655969d63e47be91bbee74dddd667c2cb0113abb41eba80a2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order01-report01.json",
+      "sha256": "f056eb98fabc314456c06342aa618baa0d9bb13003ff983fed6aaa2d81e86357"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order01-run01.log",
+      "sha256": "b9afb5cab8eb393c302b6fc7617aed304100b775dfa80cbdd0b149c597d03df2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order02.py",
+      "sha256": "09dbb03026bf4f33d9d555669dc660ace7e5cb6b1428becb3fee5fc87438ba30"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order02-corpus01.json",
+      "sha256": "d0f8a770cbaa360d9208994afea9760b909803cabe20d3d882f03c97da767737"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order02-report01.json",
+      "sha256": "e8d01c05f7ac816953f73767bbc2a6d8def191436f6a3ba0aff2adedf385138b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-order02-run01.log",
+      "sha256": "26e7af1aa688d2ed6ad78b045aaaf36d0d6fab96a9e790cf81794b2f59c4e2db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-caller01.py",
+      "sha256": "888a9c11351511e62c0186a0e25bbdf0ccc22f8aa075591778d73a6cc0e304ca"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-caller01-report01.json",
+      "sha256": "674b05f7d5d9d4c446c316df96b6c133b06c34273fd11bc7b64d134d922dbffe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01.py",
+      "sha256": "35bae8e76202580c7a72a3c1eff972cecfca2cd577b818b02d86ab6f1e1708a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-corpus01.json",
+      "sha256": "d43c75444fd5ec9828797ba6aec07b626c187cedeb74fc877fdcdac57fb1ae74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-delivery01-report01.json",
+      "sha256": "5ed0557d92d77d4e8360a6a8f41e622e9739cc7502f625bef23f7c1365b00201"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05.py",
+      "sha256": "9bd20e691e8350e2868fd6d9bcbed59be38f196082910ac0710aa960d2a7eebe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-corpus01.json",
+      "sha256": "9d19158e472394e0636c5184c3c8e2c234d18835bf695404598c944d03f304f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json",
+      "sha256": "19f1102320ee69e8d3a2e5c31e7166af4855241e1dcc59492a4cc36ec659cd74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache01.py",
+      "sha256": "e8332d1afd38636127205e5e5724c6d4ee1b907f24d6e9fdc0811a18656c33ac"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache01-attempt01.json",
+      "sha256": "4c0c44ef0f003763a16c2edc0389dc0ae77887a00272de077612fbb04397d5e9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache02.py",
+      "sha256": "75f4ec0469d53c90542c183adb3f6182f76f34fd6c521df9a7ba4e0c27f6fcfe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache02-attempt01.json",
+      "sha256": "b8a51b64b98d83c6fd09c9fd8db468b0a106e1eb819966ff778f152fdecc8595"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache03.py",
+      "sha256": "3978a5821f82de802f97553646c74b7ee38e1f71b8a17105140a7215f85373db"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache03-report01.json",
+      "sha256": "2d72dcb88868fc22080db62ba0ed03905ca236539cd567397bb5f0c4606ec9c7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache04.py",
+      "sha256": "e9efbcea72355742dd3c2275a44ea51ad50f48a30fe277dbd90ea4cee93dfb86"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache04-attempt01.json",
+      "sha256": "4b416b7caf22d1899221be2a3b90267a81631a0bbabfda1149adeda8c06a7a93"
+    }
+  ],
+  "limitations": [
+    "Actual target/controlled-block binding",
+    "Worker scheduling, concurrent delivery or filesystem parsing",
+    "Pending-request fresh-process restoration",
+    "Whole actor manager registration across ordinary, contact, held and GetUp owners",
+    "Live GetUp creation/start/frame/completion or renderer restoration",
+    "Normal-input device/view/FPS courses",
+    "Full M15S4 delivery"
+  ],
+  "verification_layers": {
+    "original_instruction_execution": "passed within declared boundaries",
+    "structural_writes": "JSON manifests and evidence only",
+    "compiler_world_validation": "not run: production sources unchanged",
+    "semantic_reinspection": "Independent actual cache/array/request state inspected in emulator",
+    "runtime_acceptance": "not run; all live gates remain open"
+  }
+}

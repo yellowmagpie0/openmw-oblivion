@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "scope": "Original-executable manager registration order and pending KF resource lifecycle; prerequisite evidence for live GetUp integration",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "registered-array-holes",
+      "original": "6C5760 / 6C4A10 / 6C5240 / 6D7F60",
+      "profiles": 128,
+      "setup": "Register seven actual NI sequences; remove a subset of the first six, then the seventh; cover all 64 resulting hole patterns for each constructor flag.",
+      "expected": "Removal clears a slot and decrements live count. Removing the final slot decrements high-water end by one, without sweeping earlier holes. Insertion fills the lowest slot in the rightmost contiguous hole run, or appends when live count equals end. Duplicate registration and missing removal preserve state."
+    },
+    {
+      "id": "first-registered-root",
+      "original": "471600 / 6C5610",
+      "profiles": 128,
+      "expected": "When manager byte +6C is enabled, scan registration slots through high-water end and return the first nonnull sequence root, even if that root is null. With the byte disabled return null. Identity sort and first nonnull root search are incorrect.",
+      "boundary": "Actual constructors/register/remove/map/array/query. Root pointers supplied after registration, target binding skipped, empty controlled blocks and outside references100."
+    },
+    {
+      "id": "construction-caller",
+      "original": "475E74..475E85 -> 6C5610",
+      "profiles": 1,
+      "expected": "Caller passes AnimData+4 as target and literal1 as the constructor root-query flag.",
+      "boundary": "Only this caller slice and actual NI constructors execute; AnimData and allocated manager storage supplied."
+    },
+    {
+      "id": "pending-delivery-branches",
+      "original": "4352B0 -> 477C40",
+      "profiles": 12,
+      "setup": "Job states0,1,2,3,5,6 crossed with absent/present loaded info; initially pending request, null actor and model proxies.",
+      "expected": "Delivery updates info, increments its reference count and sets request status1 only when info is nonnull and job state is not6. Queue removal executes in every profile. Cancellation/absent info leave request bytes unchanged.",
+      "boundary": "Job/request/info fields and queue removal vcall supplied. This does not establish scheduling or all job-state transitions."
+    },
+    {
+      "id": "cold-cache-convergence-and-cancellation",
+      "original": "4383B0 / 4377D0 / 43C820 / 439D20 / 432130 / 439AF0 / 4378F0 / 4352B0 / 477C40",
+      "profiles": 2,
+      "requests": 4,
+      "setup": "Two same-key cold requests create distinct jobs and pending entries; loaded results supplied separately; run normal and first-request-cancelled courses.",
+      "expected": "Both cold jobs register separately. Actual cache publication replaces the second loaded result with the first cached info. Each eligible delivery acquires its own info reference. First-request cancellation sets job state6 and removes its pending entry; subsequent delivery skips it while the second request becomes ready.",
+      "boundary": "Actual loaded-cache and pending-map constructors/registration/lookup/removal, job construction/empty-proxy notification, cancellation, cache reconciliation and delivery. Distinct TLS slots, heap/CRT/Interlocked, loaded info, null actor/proxies and scheduler notification/outside job reference supplied. Job state remains0 unless cancelled because worker scheduling is omitted."
+    }
+  ],
+  "not_accepted": [
+    "Actual target/controlled-block binding",
+    "Worker scheduling, concurrent delivery or filesystem parsing",
+    "Pending-request fresh-process restoration",
+    "Whole actor manager registration across ordinary, contact, held and GetUp owners",
+    "Live GetUp creation/start/frame/completion or renderer restoration",
+    "Normal-input device/view/FPS courses",
+    "Full M15S4 delivery"
+  ]
+}
