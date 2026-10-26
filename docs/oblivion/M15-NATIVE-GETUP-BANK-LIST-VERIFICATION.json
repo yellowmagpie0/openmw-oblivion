@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Native IdleAnims bank file-list creation and Player-used input-list wrapper through actor manager initialization",
+  "parent": "2d5aa3072a70290b07737632a7f59b26da14460d",
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_bank_list_cases.json",
+  "original_evidence": {
+    "executed": true,
+    "passed": true,
+    "status": "all assertions passed",
+    "profiles": 36,
+    "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "source_sha256": "0ee81d4869b68a54cd857f2d717c9705247a6faa7a1d785f7b0ec8e55b105b9b",
+    "loader_sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1",
+    "corpus_sha256": "e273328ec6d23317f9cfc4f128f944553ee6f46860a56fb575a760b843a926d8",
+    "boundary": "Actual 5215C0 bank construction, 521190 bank lookup, 435830 list copy/fallback, 431970/446CB0 list building and 475D80 initialization. Supplied typed registry with actual vtable, Win32 file enumeration and no archive matches, loaded Infos; actor base/bone lookup, model/proxy, heap/OS supplied; empty controlled blocks. No original game process or filesystem IO."
+  },
+  "summary": {
+    "profiles": 36,
+    "input_file_visits": 80,
+    "nonempty_bank_profiles": 34,
+    "enumerations": 38,
+    "successful_initialization": 26,
+    "upper_case_query_profiles": 18
+  },
+  "findings": [
+    "The lookup is the existing native IDLE bank registry, not an unspecified generic animation cache. Bank+20 owns a startup directory file list.",
+    "Bank creation and Player-used list copying perform two prepend passes; using one reversal or opaque source sorting produces a different manager order.",
+    "Bank-list ownership survives actor-copy consumption, while an empty stored list permits another enumeration."
+  ],
+  "retained_failures": [
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list01-attempt01.json",
+      "reason": "The first harness accepted only a lowercase fallback directory. An empty-bank uppercase-model query correctly preserved uppercase in its fallback pattern; the presence shim was corrected without changing original instructions or engine code."
+    }
+  ],
+  "artifact_pins": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_bank_list_cases.json",
+      "sha256": "855fc9e9931e5b8eb0ffb0c2ae75e01f4123e50022bb07c4d744c37d4ba2ae23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list01.py",
+      "sha256": "1bebf4dff466f1ebeb6d71593a1662a6fac7af3e5cfba20bb77fdc3e82953692"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list01-attempt01.json",
+      "sha256": "53dc2016b36964411b0ea5aed74ca499fb6d667d17fd6b70058d930c8a94a453"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list02.py",
+      "sha256": "0ee81d4869b68a54cd857f2d717c9705247a6faa7a1d785f7b0ec8e55b105b9b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list02-report01.json",
+      "sha256": "e8ff8a54531e5e6bf139c5c3f9e8b7337dd58620fbb3d8fe32155191ac266647"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-player-list-work-01/bank-list02-corpus01.json",
+      "sha256": "e273328ec6d23317f9cfc4f128f944553ee6f46860a56fb575a760b843a926d8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/group-classification-probe-09.py",
+      "sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-idle-registry-original-live-01/initial-memory.json",
+      "sha256": "4f5d35f304694287cdad0aaa8ad960ce914bdc6596417855929dbe33770cd916"
+    }
+  ],
+  "verification_layers": {
+    "structural_write": "Evidence manifest/receipt only; no generated plugin or C++ write.",
+    "compiler_and_world_validation": "Unchanged engine/Python implementation not rebuilt or retested in this research chunk.",
+    "semantic_reinspection": "36 fresh original-instruction profiles with actual bank creation/map lookup/list copying/manager initialization and full return/stack checks. Typed registry input and explicit external boundaries are declared.",
+    "actual_runtime_acceptance": "Not established; no original game process, filesystem IO, controlled transforms or Player outer dispatch executed."
+  },
+  "remaining": [
+    "Actual archive enumeration and mixed loose/archive winning order",
+    "Player outer caller/scheduler and temporary AnimData override ownership",
+    "Live shared manager registration/root/persistence and GetUp factory/dispatcher",
+    "Pending IO ownership/persistence and normal-input/FPS/fresh-process acceptance"
+  ]
+}

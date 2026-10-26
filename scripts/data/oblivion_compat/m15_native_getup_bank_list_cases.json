@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "scope": "Native IdleAnims bank file-list creation and Player-used input-list wrapper through actor manager initialization",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "bank-list-to-manager",
+      "profiles": 36,
+      "inputs": {
+        "enumerated_source_indices": [
+          0,
+          1,
+          2
+        ],
+        "authored_names": [
+          "Idle",
+          "SpecialIdle_GetUp",
+          "SpecialIdle_GetUp2"
+        ],
+        "source_roots": [
+          "Bip01",
+          "Absent",
+          "Bip01"
+        ],
+        "courses": {
+          "include_empty": true,
+          "permutations_of_lengths": [
+            1,
+            2,
+            3
+          ],
+          "additional_words": [
+            [
+              1,
+              2,
+              1,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        },
+        "model_queries": [
+          "fixture\\Skeleton.NIF",
+          "FIXTURE\\SKELETON.NIF"
+        ],
+        "bank_key": "fixture\\IdleAnims",
+        "actor_base_type_byte": 35,
+        "loose_enumeration_enabled": true,
+        "archive_matches": false,
+        "controlled_blocks_per_sequence": 0
+      },
+      "expected": [
+        "Actual 5215C0 creates one bank, obtains the directory list through 435830/431970 and stores it at bank+20 before insertion in the actual string map. The supplied registry uses actual vtable A53920, corroborated by the earlier original-process registry snapshot.",
+        "Actual 521190 replaces the model filename with IdleAnims and performs native case-insensitive bank lookup.",
+        "Actual file enumeration/list insertion prepends, so the stored bank list reverses supplied enumeration order. 435830 copies that list by prepending again, restoring enumeration order for 475D80 consumption.",
+        "Nonempty bank lists avoid a second enumeration and retain their nodes/strings after the actor consumes and frees its independent copy. Empty bank lists trigger fallback enumeration again.",
+        "The final inactive registered sequences, group replacement and first-slot root match actual initialization order; no body/first-person policy is inferred from this shared wrapper."
+      ],
+      "original": [
+        "5215C0",
+        "521190",
+        "55E000",
+        "412D30",
+        "435830",
+        "431970",
+        "446CB0",
+        "475D80",
+        "474070",
+        "6C5610",
+        "6C5760",
+        "471600"
+      ],
+      "coverage_limit": "Actual 5215C0 bank construction, 521190 bank lookup, 435830 list copy/fallback, 431970/446CB0 list building and 475D80 initialization. Supplied typed registry with actual vtable, Win32 file enumeration and no archive matches, loaded Infos; actor base/bone lookup, model/proxy, heap/OS supplied; empty controlled blocks. No original game process or filesystem IO."
+    }
+  ],
+  "remaining": [
+    "Actual archive enumeration and mixed loose/archive winning order",
+    "Player outer caller/scheduler and temporary AnimData override ownership",
+    "Live shared manager registration/root/persistence and GetUp factory/dispatcher",
+    "Pending IO ownership/persistence and normal-input/FPS/fresh-process acceptance"
+  ]
+}
