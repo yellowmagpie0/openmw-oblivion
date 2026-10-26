@@ -6313,6 +6313,9 @@ namespace MWMechanics
         std::map<ESM::FormKey, ESM4::RuntimeGetUpIdle> mIdle;
         std::map<ESM::FormKey, float> mClock;
         std::unique_ptr<PreparedMeleeReactionFrame> mMelee;
+        std::optional<ESM4::RuntimeBowState> mExpectedBow;
+        std::optional<ESM4::ActionLedger> mExpectedActions, mNextActions;
+        std::map<std::uint64_t, ESM::FormKey> mExpectedActionOwners, mNextActionOwners;
         bool mCommitted = false;
     };
 
@@ -6337,6 +6340,10 @@ namespace MWMechanics
         if (!matches(owner.mGetUpIdles, data.mExpectedIdle)
             || !matches(owner.mGetUpPlayback, data.mExpectedGraph)
             || !matches(owner.mMeleeStates, data.mExpectedMelee)) return false;
+        if (data.mUpdate.mResetCombat
+            && (!matches(owner.mBowStates, data.mExpectedBow)
+                || !owner.mActions.sameState(*data.mExpectedActions)
+                || owner.mActionOwners != data.mExpectedActionOwners)) return false;
         const auto clock = owner.mAnimationClocks.find(data.mActor);
         if (data.mExpectedClock ? clock == owner.mAnimationClocks.end()
                 || std::bit_cast<std::uint32_t>(clock->second)
@@ -6462,7 +6469,21 @@ namespace MWMechanics
             return a.has_value() == b.has_value() && (!a || std::bit_cast<std::uint32_t>(*a)
                 == std::bit_cast<std::uint32_t>(*b));
         };
-        if (melee)
+        if (update.mResetCombat)
+        {
+            if (melee) throw std::invalid_argument("combat reset cannot also advance a melee owner");
+            if (const auto bow = mBowStates.find(actor); bow != mBowStates.end()) data->mExpectedBow = bow->second;
+            data->mExpectedActions = data->mNextActions = mActions;
+            data->mExpectedActionOwners = data->mNextActionOwners = mActionOwners;
+            for (auto it = data->mNextActionOwners.begin(); it != data->mNextActionOwners.end();)
+                if (it->second == actor)
+                {
+                    data->mNextActions->consume(it->first);
+                    it = data->mNextActionOwners.erase(it);
+                }
+                else ++it;
+        }
+        else if (melee)
         {
             if (!melee->isValid() || melee->mData->mOwner != this || melee->mData->mActor != actor
                 || !sameClock(update.mClock, std::optional(melee->mData->mNextClock)))
@@ -6470,7 +6491,7 @@ namespace MWMechanics
         }
         else if (data->mExpectedMelee && !sameClock(update.mClock, data->mExpectedClock))
             throw std::invalid_argument("GetUp playback cannot advance another owner's clock alone");
-        const auto* nextMelee = melee ? &melee->mData->mNext
+        const auto* nextMelee = update.mResetCombat ? nullptr : melee ? &melee->mData->mNext
             : data->mExpectedMelee ? &*data->mExpectedMelee : nullptr;
         if (nextMelee && ((nextMelee->mReaction && update.mAction != nextMelee->mReaction->processAction())
                 || (nextMelee->mStrike && update.mAction != nextMelee->mStrike->processAction())))
@@ -6504,6 +6525,14 @@ namespace MWMechanics
             auto& frame = *data.mMelee->mData;
             std::swap(owner.mMeleeStates.find(data.mActor)->second, frame.mNext);
             frame.mCommitted = true;
+        }
+        if (data.mUpdate.mResetCombat)
+        {
+            owner.mMeleeStates.erase(data.mActor);
+            owner.mBowStates.erase(data.mActor);
+            std::swap(owner.mActions, *data.mNextActions);
+            owner.mActionOwners.swap(data.mNextActionOwners);
+            owner.mPreparedReleaseIdentity.mValue.reset();
         }
         publish(owner.mGetUpPlayback, data.mGraph);
         publish(owner.mGetUpIdles, data.mIdle);

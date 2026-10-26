@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "status": "verified_bounded_recovery",
+  "stage_status": "M15S4 remains incomplete",
+  "scope": "Normal-input low-Fatigue collapse, coherent GetUp and upright return for unchanged stock Bailey/RenaDog02; normal and sanitizer actual Down-save fresh-process restart.",
+  "source": {
+    "parent": "8992d891981085bf306f4fbcefda56f92d055a96",
+    "tested_dirty_fingerprint": "574ab4489c9c22a7f05ab9e32899ae43ad7f54f7e395640d80eddb50318800b0",
+    "unchanged_source_confirmed": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/self-proxy-source-after-checks.json",
+    "post_verification_edits": "This receipt and the small delivery-audit link only; implementation and tested dependencies unchanged."
+  },
+  "implementation": [
+    "Atomic actor-owned melee/bow cancellation and GetUp request/clock/action publication.",
+    "Native physical model binding, world drawing boundary and collision filter ownership.",
+    "Actual swimming context for IDLE selection, queued loading and explicit KF timeline sampling.",
+    "Authored defaults for missing/omitted KF channels and successful-animation pose restoration on owned release.",
+    "Keep the movement proxy admitted while excluding only its own ragdoll bodies. Weak-owner guards and publication/removal cleanup preserve other collision exceptions and owner lifetimes."
+  ],
+  "checks": {
+    "normal_components": {
+      "receipt": "build/oblivion-compat/m15/S4/natural-recovery-pose-integration-normal-01/verification.json",
+      "tests": 3179,
+      "failed": 0,
+      "skipped": 0,
+      "binary_sha256": "1d6a77d16fe12f538b8e256b4bd7f459d33000d730f65019705cab9d47eccfdd",
+      "reused": true
+    },
+    "sanitizer_components": {
+      "receipt": "build/oblivion-compat/m15/S4/natural-recovery-pose-components-sanitize-01/verification.json",
+      "tests": 1117,
+      "failed": 0,
+      "skipped": 0,
+      "binary_sha256": "a2606fff5d8c744ec2a1bd973912d04f25c03b0592b2f52a21d8c84199661586",
+      "reused": true,
+      "filter": "ESM4*:ActorRagdollPoseTest.*:NifSceneTraversalTest.*"
+    },
+    "normal_engine": {
+      "receipt": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-engine-normal-01/verification.json",
+      "tests": 2037,
+      "failed": 0,
+      "skipped": 0,
+      "binary_sha256": "90a44062c7ff5e308a741bc61b8eea11d0e281417370099616da67fcbc91a85f",
+      "reused": false
+    },
+    "sanitizer_engine": {
+      "receipt": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-engine-sanitize-01/verification.json",
+      "tests": 2037,
+      "failed": 0,
+      "skipped": 0,
+      "binary_sha256": "e740cfdaa14c5e1e1b98e66491c8b07b0ff37f67b80f11fcdcd5dee4dc2cc31a",
+      "reused": false
+    }
+  },
+  "component_reuse_provenance": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/self-proxy-reused-components.json",
+  "sanitizer_engine_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "sanitizer_component_options": {
+    "ASAN_OPTIONS": "detect_leaks=0",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "sanitizer_runtime_options": {
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "/usr/lib64/libasan.so.8.0.0"
+  },
+  "runtime": {
+    "normal": {
+      "scenario": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-runtime-normal-02/scenario.json",
+      "epoch": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-runtime-normal-02/process-epoch.json",
+      "pid": 2543052,
+      "start_ticks": 78417153,
+      "game_sha256": "ecb8d9d552ac26af55dc90104ac7589e6d62825258162a68e2c9e6ef1f9346be",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    "normal_restart": {
+      "scenario": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-restart-normal-02/scenario.json",
+      "epoch": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-restart-normal-02/process-epoch.json",
+      "pid": 2543232,
+      "start_ticks": 78444155,
+      "game_sha256": "ecb8d9d552ac26af55dc90104ac7589e6d62825258162a68e2c9e6ef1f9346be",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+      }
+    },
+    "sanitizer": {
+      "scenario": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-runtime-sanitize-01/scenario.json",
+      "epoch": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-runtime-sanitize-01/process-epoch.json",
+      "pid": 2543372,
+      "start_ticks": 78466160,
+      "game_sha256": "aed9835cc6907a04bd5859135505985936f138f95cf29515f152afe96ef7b4cb",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+      }
+    },
+    "sanitizer_restart": {
+      "scenario": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-restart-sanitize-01/scenario.json",
+      "epoch": "build/oblivion-compat/m15/S4/natural-recovery-self-proxy-restart-sanitize-01/process-epoch.json",
+      "pid": 2543812,
+      "start_ticks": 78499106,
+      "game_sha256": "aed9835cc6907a04bd5859135505985936f138f95cf29515f152afe96ef7b4cb",
+      "loaded_libraries": {
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/_deps/mygui-build/lib64/libMyGUIEngine_d.so.3.4.3": "978656d3272be4647e87fd781b2fbc82ab8beebc25ad82af8a053bddc3bfcd67"
+      }
+    }
+  },
+  "save_comparisons": {
+    "normal": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/self-proxy-normal-comparison.json",
+    "sanitizer": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/self-proxy-sanitize-comparison.json",
+    "assertions": "Source raw state 4 with one ragdoll; both endpoints raw state 0/action -1/no ragdoll. Health and combat RNG unchanged during recovery. All endpoint actor-value channels match except regenerating Fatigue. Private source hashes, distinct actual process epochs and stable game/MyGUI identities checked."
+  },
+  "visual_review": "Current fresh and restarted GetUp/endpoint captures reviewed in both configurations; body remains coherent and returns upright. The updated restart fixture captures GetUp before completion.",
+  "initial_setup": "Unchanged stock Bailey/RenaDog02 base 0x1771fc, placed 0x000800; initial ModAV Fatigue -149 and isolated flat Fatigue regeneration 0.1. One normal-input unarmed contact causes native Health/Fatigue damage and automatic recovery; no forced body/animation/reaction.",
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "fixtures": {
+      "M15CreatureFatigue.esp": "7fbe015f663b0e30735a9752dfd2ea693d21a8ffc43aff76edf5e45bfe428b82",
+      "fatigue-recovery.esp": "ecfaf3c1cfe01cdbb8e216613eed22426127357f05fbbb01f63fda20768e07bb"
+    }
+  },
+  "diagnosis": {
+    "asset_and_joints": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/pose-joints-output02.txt",
+    "source_hash": "85070ec42945e22233ddf0d82bf929ab",
+    "retained_old_pose_drift": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/pose-joint-anchor-comparison.json",
+    "controlled_proxy_probe": "build/oblivion-compat/m15/S4/natural-recovery-integration-work-01/pose-proxy-output01.txt",
+    "observation": "At the same 60 Hz step, an overlapping proxy raised peak joint-anchor separation from 3.934 to 16.268 scene units. Excluding only that proxy restored 3.934. No native solver coefficients or timing policy changed."
+  },
+  "retained_failures": {
+    "prior_pose": "natural-recovery-pose-runtime-sanitize-01/recovery-getup.png shows severe distortion before the owner exclusion. Old damaged saved poses retain their recorded distortion; the prevention gate uses current fresh saves.",
+    "invalid_restart_input": "natural-recovery-self-proxy-restart-normal-01/fixture-failure.json: observer started late and copied endpoint raw state 0. Replay stopped. Corrected capture is armed with launch and decoded before restart.",
+    "sanitizer_environment": "Earlier desktop/NVIDIA shutdown leaks and dummy-driver GL failures are retained under natural-recovery-pose-engine-sanitize-* and focused GL attempts. Explicit Mesa passes all tests with leak detection enabled; no suppression.",
+    "wall_timeout": "Earlier sanitizer recovery wait expired at negative Fatigue with correct regeneration. Sanitizer-only wall allowance increased to 600 seconds, total 1200; outcome unchanged."
+  },
+  "reused_evidence": {
+    "python": "natural-recovery-integration-normal-01/verification.json:429tests; Python implementation unchanged since that receipt.",
+    "pending_worker": "docs/oblivion/M15-NATIVE-GETUP-LOAD-OWNER-VERIFICATION.json:unchanged committed worker machinery."
+  },
+  "limitations": [
+    "Rendered runtime courses disable sound and do not establish audio acceptance.",
+    "Configured frame cap15; actual FPS matrix not established.",
+    "Endpoint clocks differ; no exact regenerating Fatigue or position equality claim.",
+    "Full combined attack/block/range+wall miss/recovery and remaining S4 matrix stay incomplete.",
+    "Player/NPC collapse and the complete reaction/interruption matrix are not established by this creature course."
+  ],
+  "remaining_acceptance": "Complete the combined attack/block/range+wall miss/recovery course and all remaining S4 actor, weapon/mastery/effect, view/device/FPS and interruption/restart requirements."
+}

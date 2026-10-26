@@ -2455,6 +2455,7 @@ namespace MWRender
                         if (node == getNodeMap().end() || !Misc::StringUtils::ciEqual(node->second->getName(), name))
                             return nullptr;
                     }
+            if (layer.mDefaultPose) layer.mDefaultPose->validate();
             if (layer.mPoseSnapshot)
             {
                 layer.mPoseSnapshot->validate();
@@ -2482,7 +2483,8 @@ namespace MWRender
         for (std::size_t i = 0; same && i < layers.size(); ++i)
             same = layers[i].mGroup == mNativeSequenceLayers[i].mGroup
                 && layers[i].mBlendMask == mNativeSequenceLayers[i].mBlendMask
-                && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot;
+                && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot
+                && layers[i].mDefaultPose == mNativeSequenceLayers[i].mDefaultPose;
         plan->mSame = same;
         if (same) return plan;
         auto& frames = plan->mFrames;
@@ -2519,6 +2521,7 @@ namespace MWRender
                 }
                 continue;
             }
+            std::set<std::string, std::less<>> animatedNodes;
             for (std::size_t mask = 0; mask < sNumBlendMasks; ++mask)
             {
                 if (!(layer.mBlendMask & (1 << mask))) continue;
@@ -2531,9 +2534,32 @@ namespace MWRender
                     osg::ref_ptr<SceneUtil::KeyframeController> cloned
                         = osg::clone(controller.get(), osg::CopyOp::SHALLOW_COPY);
                     cloned->getAsCallback()->setNestedCallback(nullptr);
-                    tracks[node->second].push_back({std::move(cloned), frame, priority->second});
+                    std::optional<ESM4::SequenceBlendPose> defaults;
+                    if (layer.mDefaultPose)
+                        for (const auto& pose : layer.mDefaultPose->mTracks)
+                            if (Misc::StringUtils::ciEqual(pose.mBone, name))
+                            {
+                                defaults = ESM4::SequenceBlendPose{pose.mTranslation, pose.mRotation, pose.mScale};
+                                break;
+                            }
+                    tracks[node->second].push_back({std::move(cloned), frame, priority->second, {}, defaults});
+                    animatedNodes.insert(name);
                 }
             }
+            // A physical body can also own nodes omitted entirely by this KF.
+            // Keep those nodes in animation space during recovery instead of
+            // feeding their previous physical locals into the next sample.
+            if (layer.mDefaultPose)
+                for (const auto& pose : layer.mDefaultPose->mTracks)
+                {
+                    const auto name = Misc::StringUtils::lowerCase(pose.mBone);
+                    if (animatedNodes.contains(name)) continue;
+                    const auto node = nodes.find(name);
+                    if (node == nodes.end() || !dynamic_cast<NifOsg::MatrixTransform*>(node->second.get()))
+                        return nullptr;
+                    tracks[node->second].push_back({nullptr, frame, 0,
+                        ESM4::SequenceBlendPose{pose.mTranslation, pose.mRotation, pose.mScale}});
+                }
         }
         auto& controllers = plan->mControllers;
         for (auto& [node, nodeTracks] : tracks)
@@ -3019,6 +3045,40 @@ namespace MWRender
         return result;
     }
 
+    std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> Animation::captureNativeAnimationDefaults(
+        const NativePhysicalSource& source)
+    {
+        if (!isCurrentNativePhysicalSource(source) || !mResourceSystem)
+            throw std::invalid_argument("animation defaults require the current physical asset");
+        const auto file = mResourceSystem->getNifFileManager()->get(source.mModel);
+        if (file->mHash != source.mDefinition->mSourceHash)
+            throw std::invalid_argument("animation defaults asset changed");
+        auto result = std::make_shared<ESM4::RuntimeMeleePoseSnapshot>();
+        for (const auto& [name, node] : getNodeMap())
+        {
+            const auto* transform = dynamic_cast<const NifOsg::MatrixTransform*>(node.get());
+            if (!transform) continue;
+            const auto record = source.mBinding->nodeRecord(*transform);
+            if (!record) continue;
+            const auto* object = dynamic_cast<const Nif::NiAVObject*>(file->mRecords.at(*record).get());
+            if (!object) throw std::invalid_argument("animation default requires an authored NIF transform");
+            const auto& local = object->mTransform;
+            ESM4::RuntimeMeleePoseTrack track;
+            track.mBone = name; track.mScale = local.mScale;
+            std::array<float, 9> rotation;
+            for (unsigned row = 0; row < 3; ++row)
+            {
+                track.mTranslation[row] = local.mTranslation[row];
+                for (unsigned column = 0; column < 3; ++column)
+                    rotation[row * 3 + column] = local.mRotation.mValues[row][column];
+            }
+            track.mRotation = ESM4::captureSequenceRotation(rotation);
+            result->mTracks.push_back(std::move(track));
+        }
+        result->validate();
+        return result;
+    }
+
     bool Animation::isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept
     {
         const auto owner = source.mOwner.lock();
@@ -3038,14 +3098,7 @@ namespace MWRender
             || !file->mRoots[0] || file->mRoots[0]->mRecordIndex != root)
             throw std::invalid_argument("native GetUp scene root does not match its parsed actor asset");
         const auto plan = NifBullet::loadActorRagdollGetUpPlan(*file, root);
-        const osg::Group* assetRoot = mObjectRoot;
-        std::string assetHash;
-        if (!assetRoot->getUserValue(Misc::OsgUserValues::sFileHash, assetHash))
-        {
-            if (assetRoot->getNumChildren() != 1 || !assetRoot->getChild(0)->asGroup())
-                throw std::invalid_argument("unidentified native GetUp renderer asset root");
-            assetRoot = assetRoot->getChild(0)->asGroup();
-        }
+        const osg::Group* assetRoot = &source.mBinding->sourceAssetRoot();
         std::unordered_map<std::uint32_t, const NifOsg::MatrixTransform*> records;
         std::unordered_set<const osg::Node*> visited;
         const auto walk = [&](auto&& self, const osg::Node& node) -> void {
@@ -3180,9 +3233,11 @@ namespace MWRender
         Animation* mOwner;
         std::weak_ptr<const char> mIdentity;
         osg::ref_ptr<osg::Group> mRoot;
+        osg::observer_ptr<osg::Group> mDrawingWorld;
         MWWorld::Ptr mActor;
         std::uint64_t mGeneration;
         NativeSceneFrameSource mSource;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mDefaults;
         std::unique_ptr<SceneUtil::ActorRagdollPoseBinding> mBinding;
         std::unique_ptr<SceneUtil::NifSceneTraversal> mTraversal;
         osg::ref_ptr<Update> mCallback;
@@ -3245,7 +3300,8 @@ namespace MWRender
     }
     std::unique_ptr<Animation::PreparedNativeScene> Animation::prepareNativeScene(
         const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& placement,
-        NativeSceneFrameSource source)
+        NativeSceneFrameSource source, osg::Group* drawingWorld,
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> defaults)
     {
         if (hasPhysicalPose() || !mObjectRoot || !source)
             throw std::invalid_argument("native scene preparation requires an unbound renderer and frame source");
@@ -3254,14 +3310,19 @@ namespace MWRender
         auto state = std::make_shared<NativeSceneState>();
         state->mOwner = this; state->mIdentity = mNativePhysicalSourceIdentity;
         state->mRoot = mObjectRoot; state->mActor = mPtr; state->mGeneration = mPhysicalPoseGeneration;
+        if (defaults) defaults->validate();
+        state->mDefaults = std::move(defaults);
+        state->mDrawingWorld = drawingWorld;
         state->mSource = std::move(source); state->mExternal = mActiveControllers;
         state->mBinding = std::make_unique<SceneUtil::ActorRagdollPoseBinding>(definition, *mObjectRoot,
             SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
         state->mBones = state->mBinding->captureWorldBones(placement);
         if (auto* native = dynamic_cast<NifOsg::MatrixTransform*>(mObjectRoot.get()))
-            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocal(*native, placement);
+            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocal(
+                *native, placement, Nif::NativeTransformPrecision::Single, drawingWorld);
         else
-            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocalContainer(*mObjectRoot, placement);
+            state->mTraversal = SceneUtil::NifSceneTraversal::prepareObjectLocalContainer(
+                *mObjectRoot, placement, Nif::NativeTransformPrecision::Single, drawingWorld);
         struct Chains : osg::NodeVisitor
         {
             NativeSceneState& mState;
@@ -3310,8 +3371,13 @@ namespace MWRender
     {
         if (!mNativeScene) return;
         if (mNativeScene->mUpdating || mNativeScene->mPrePhysicsInProgress) throw std::logic_error("native scene cannot release during its update");
+        if (mNativeScene->current()) mNativeScene->mTraversal->restoreAnimationLocals();
         mNativeScene->close();
         mNativeScene.reset();
+    }
+    std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> Animation::nativeSceneAnimationDefaults() const
+    {
+        return mNativeScene ? mNativeScene->mDefaults : nullptr;
     }
     bool Animation::updateNativeSceneBeforePhysics(const osg::FrameStamp& stamp, unsigned traversalNumber)
     {
@@ -3326,7 +3392,8 @@ namespace MWRender
         visitor.setTraversalNumber(traversalNumber);
         visitor.setNodeMaskOverride(~0u);
         std::vector<osg::ref_ptr<osg::Node>> parents;
-        for (osg::Node* node = state->mRoot; node->getNumParents() != 0;)
+        for (osg::Node* node = state->mRoot;
+             state->mDrawingWorld.valid() ? node != state->mDrawingWorld.get() : node->getNumParents() != 0;)
         {
             if (node->getNumParents() != 1)
                 throw std::invalid_argument("ambiguous native renderer ancestor path");

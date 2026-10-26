@@ -539,6 +539,10 @@ namespace MWMechanics
             std::optional<std::int8_t> mKnockedState = 0;
             std::optional<std::int16_t> mAction;
             OblivionCombatRandomTransition mRandom;
+            // Recovery takes the actor's animation slots from combat. Stage
+            // cancellation with this publication, including outstanding contact
+            // IDs; preparation failure must preserve the interrupted owner.
+            bool mResetCombat = false;
         };
         class PreparedGetUpPlayback
         {

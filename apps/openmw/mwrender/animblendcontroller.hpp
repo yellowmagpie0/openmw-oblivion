@@ -41,6 +41,7 @@ namespace MWRender
             std::shared_ptr<NativeSequenceFrame> mFrame;
             std::uint8_t mPriority = 0;
             std::optional<ESM4::SequenceBlendPose> mPose = std::nullopt;
+            std::optional<ESM4::SequenceBlendPose> mDefaults = std::nullopt;
         };
         NativeSequenceController() = default;
         NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest);

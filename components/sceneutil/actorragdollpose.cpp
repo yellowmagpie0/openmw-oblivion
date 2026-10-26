@@ -176,11 +176,20 @@ namespace SceneUtil
                 mAssetRoot = &root;
             else
             {
-                // Animation::setObjectRoot may wrap an unskinned NIF group
-                // in a Skeleton without copying the asset's user values.
-                require(dynamic_cast<Skeleton*>(&root) && root.getNumChildren() == 1,
+                // Animation wraps unskinned NIFs in a Skeleton; TES4 creature
+                // parts can subsequently become siblings of that source asset.
+                require(dynamic_cast<Skeleton*>(&root),
                     "unidentified ragdoll renderer root");
-                mAssetRoot = root.getChild(0)->asGroup();
+                for (unsigned i = 0; i < root.getNumChildren(); ++i)
+                {
+                    auto* child = root.getChild(i)->asGroup();
+                    std::string hash;
+                    if (child && child->getUserValue(Misc::OsgUserValues::sFileHash, hash) && hash == mSourceHash)
+                    {
+                        require(!mAssetRoot.valid(), "ambiguous ragdoll renderer source asset");
+                        mAssetRoot = child;
+                    }
+                }
             }
             validateRoot();
             std::unordered_set<const osg::Node*> visited;
@@ -316,6 +325,20 @@ namespace SceneUtil
         bool isValid() const noexcept
         {
             if (!mRoot.valid() || !mAssetRoot.valid()) return false;
+            if (mRoot != mAssetRoot)
+            {
+                unsigned matches = 0;
+                for (unsigned i = 0; i < mRoot->getNumChildren(); ++i)
+                {
+                    const auto* childData = mRoot->getChild(i)->getUserDataContainer();
+                    if (!childData) continue;
+                    const auto index = childData->getUserObjectIndex(Misc::OsgUserValues::sFileHash);
+                    if (index >= childData->getNumUserObjects()) continue;
+                    const auto* hash = dynamic_cast<const osg::StringValueObject*>(childData->getUserObject(index));
+                    if (hash && hash->getValue() == mSourceHash) ++matches;
+                }
+                if (matches != 1) return false;
+            }
             const auto* data = mAssetRoot->getUserDataContainer();
             if (!data) return false;
             const auto index = data->getUserObjectIndex(Misc::OsgUserValues::sFileHash);
@@ -398,6 +421,12 @@ namespace SceneUtil
     }
 
     ActorRagdollPoseBinding::~ActorRagdollPoseBinding() = default;
+
+    const osg::Group& ActorRagdollPoseBinding::sourceAssetRoot() const
+    {
+        require(isValid(), "stale ragdoll renderer source asset");
+        return *mImpl->mAssetRoot;
+    }
 
     std::uint32_t ActorRagdollPoseBinding::sceneRootRecord() const
     {

@@ -464,6 +464,35 @@ namespace MWPhysics
             }
         }
 
+        // Retaining the movement proxy preserves world queries and movement,
+        // while its own ragdoll must not be driven out of that kinematic hull.
+        std::weak_ptr<Actor> mRetainedCapsule;
+        bool mHasRetainedCapsule = false;
+        btCollisionObject* mIgnoredCapsule = nullptr;
+        void ignoreRetainedCapsule(const std::shared_ptr<Actor>& capsule)
+        {
+            if (!capsule) return;
+            mIgnoredCapsule = capsule->getCollisionObject();
+            for (auto* body : mPhysics.collisionObjects())
+            {
+                body->setIgnoreCollisionCheck(mIgnoredCapsule, true);
+                mIgnoredCapsule->setIgnoreCollisionCheck(body, true);
+            }
+        }
+        void clearRetainedCapsuleIgnore() noexcept
+        {
+            if (!mIgnoredCapsule) return;
+            const auto capsule = mRetainedCapsule.lock();
+            for (auto* body : mPhysics.collisionObjects())
+            {
+                body->setIgnoreCollisionCheck(mIgnoredCapsule, false);
+                if (capsule && capsule->getCollisionObject() == mIgnoredCapsule)
+                    mIgnoredCapsule->setIgnoreCollisionCheck(body, false);
+            }
+            mIgnoredCapsule = nullptr;
+        }
+        ~ActorRagdoll() override { clearRetainedCapsuleIgnore(); }
+
         const std::shared_ptr<const NativeRagdollRestoreLifetime> mLifetime;
         const NifBullet::ActorRagdollDefinition mDefinition;
         NifBullet::ActorRagdollPhysics mPhysics;
@@ -1487,16 +1516,23 @@ namespace MWPhysics
     std::unique_ptr<PhysicsTaskScheduler::PreparedActorRagdoll> PhysicsTaskScheduler::prepareActorRagdoll(
         const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-        const NifBullet::RagdollInternalCollisionFilter* internalFilter)
+        const NifBullet::RagdollInternalCollisionFilter* internalFilter,
+        const std::shared_ptr<Actor>& retainedCapsule)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
         if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate detached actor owner/world");
+        if (retainedCapsule && (retainedCapsule->getPtr() != ptr || retainedCapsule->getPtr().mCell != ptr.mCell
+                || retainedCapsule->isCollisionSuspended()
+                || !mCollisionObjects.contains(retainedCapsule->getCollisionObject())))
+            throw std::invalid_argument("retained ragdoll capsule requires its current movement owner");
         ActorRagdollMap staged;
         staged.emplace(ptr.mRef, std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
             poses, collisionGroup, collisionMask, internalFilter, NifBullet::ActorRagdollPhysics::Publication::Deferred));
+        staged.begin()->second->mRetainedCapsule = retainedCapsule;
+        staged.begin()->second->mHasRetainedCapsule = bool(retainedCapsule);
         auto impl = std::make_unique<PreparedActorRagdoll::Impl>();
         if (!mActorPreparationIdentity) mActorPreparationIdentity = std::make_shared<const char>();
         impl->mOwner = this;
@@ -1521,7 +1557,15 @@ namespace MWPhysics
             || data->mIdentity.lock() != mActorPreparationIdentity
             || data->mNode.empty() || data->mNode.mapped()->mPhysics.isPublished())
             return false;
-        const auto ptr = data->mNode.mapped()->getPtr();
+        const auto& owned = *data->mNode.mapped();
+        const auto ptr = owned.getPtr();
+        if (owned.mHasRetainedCapsule)
+        {
+            const auto capsule = owned.mRetainedCapsule.lock();
+            if (!capsule || capsule->getPtr() != ptr || capsule->getPtr().mCell != ptr.mCell
+                || capsule->isCollisionSuspended() || !mCollisionObjects.contains(capsule->getCollisionObject()))
+                return false;
+        }
         const auto slot = mActorPreparationSlots.find(data->mNode.key());
         return slot != mActorPreparationSlots.end() && slot->second.lock() == data->mSlotIdentity
             && !mActorRagdolls.contains(data->mNode.key()) && !mLooseObjects.contains(data->mNode.key())
@@ -1545,6 +1589,7 @@ namespace MWPhysics
         if (!world) return false;
         auto& node = prepared.mImpl->mNode;
         auto& owned = *node.mapped();
+        const auto capsule = owned.mRetainedCapsule.lock();
         std::vector<btCollisionObject*> inserted;
         const auto objects = owned.mPhysics.collisionObjects();
         inserted.reserve(objects.size());
@@ -1560,11 +1605,13 @@ namespace MWPhysics
                 }
                 inserted.push_back(object);
             }
+            owned.ignoreRetainedCapsule(capsule);
             if (!owned.mPhysics.publish(*world))
                 throw std::invalid_argument("detached actor graph publication rejected");
         }
         catch (...)
         {
+            owned.clearRetainedCapsuleIgnore();
             for (auto* object : inserted) mCollisionObjects.erase(object);
             throw;
         }

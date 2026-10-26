@@ -2103,6 +2103,8 @@ namespace MWMechanics
                 }
                 catch (const std::invalid_argument&) { return ESM4::ConditionValue::unsupported(); }
             }
+            if (function == "IsSwimming")
+                return mWorld.mPhysics ? value(mWorld.isSwimming(subjectPtr)) : ESM4::ConditionValue::missing();
             if (function == "GetDead")
                 return value(nativeStats().isDead() ? 1.0 : 0.0);
             if (function == "GetIsCreature")

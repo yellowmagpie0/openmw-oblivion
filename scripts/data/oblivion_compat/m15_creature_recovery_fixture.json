@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "purpose": "Place unchanged stock Bailey (RenaDog02), a named spell-free Dog and the stock Dog physical/GetUp model, to observe normal contact and natural recovery. No base, spells, combat outcomes or animation state changed.",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "cell": 129977,
+  "creature": 1536508,
+  "reference": 16779264,
+  "position": [
+    672,
+    -100,
+    -109.68916,
+    0,
+    0,
+    0
+  ]
+}

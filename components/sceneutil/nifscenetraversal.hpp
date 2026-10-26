@@ -129,19 +129,28 @@ namespace SceneUtil
         // owned exclusively through commit; callbacks have their own owner.
         static std::unique_ptr<NifSceneTraversal> prepareObjectLocal(NifOsg::MatrixTransform& objectRoot,
             const Nif::NiTransform& nativeParentWorld,
-            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single,
+            osg::Group* drawingWorld = nullptr);
         // Renderer-only Group/Skeleton containing one or more ordinary NIF
         // roots. Placement applies independently to each native root. Full
         // traversal only; no singular reference-root callback or selective
         // policy is inferred for this rendering container.
+        // An explicit non-transform drawingWorld ends placement ancestry at
+        // the world scene. Camera/view aliases above it are not actor parents;
+        // every link from the model to that boundary must remain unique.
         static std::unique_ptr<NifSceneTraversal> prepareObjectLocalContainer(osg::Group& container,
             const Nif::NiTransform& nativeParentWorld,
-            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single);
+            Nif::NativeTransformPrecision precision = Nif::NativeTransformPrecision::Single,
+            osg::Group* drawingWorld = nullptr);
         bool commitPrepared() noexcept;
         // Release only still-owned drawing handles, including after hierarchy
         // damage. Preserve current author locals and foreign replacements.
         // Reject reentry while traversing. Retirement is final for this owner.
         bool retire() noexcept;
+        // Return the last successful controller locals to animation ownership.
+        // Keep drawing handles until retire(); reject foreign/replaced owners
+        // before writing. Physical writeback never becomes this animation pose.
+        void restoreAnimationLocals();
         // Rebase only drawing handles against current rendering ancestors.
         // Preserve cached native worlds and author locals; refresh skin bounds
         // and space conversion without controller/property/collision callbacks.
@@ -207,9 +216,9 @@ namespace SceneUtil
 
     private:
         NifSceneTraversal(NifOsg::MatrixTransform& objectRoot, const Nif::NiTransform& nativeParentWorld,
-            Nif::NativeTransformPrecision precision, bool deferred);
+            Nif::NativeTransformPrecision precision, bool deferred, osg::Group* drawingWorld);
         NifSceneTraversal(osg::Group& container, const Nif::NiTransform& nativeParentWorld,
-            Nif::NativeTransformPrecision precision);
+            Nif::NativeTransformPrecision precision, osg::Group* drawingWorld);
         void updateImpl(const osg::FrameStamp& stamp, unsigned traversalNumber,
             const Callbacks& callbacks, bool rootOnly, Mode mode, bool updateControllers,
             const Nif::NiTransform* nativeParentWorld = nullptr, bool rootPropertiesUpdated = false);

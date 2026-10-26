@@ -214,6 +214,8 @@ namespace MWWorld
         std::shared_ptr<const OblivionGetUpResources> mOblivionGetUpResources;
         struct OblivionGetUpLoads;
         std::shared_ptr<OblivionGetUpLoads> mOblivionGetUpLoads;
+        float mOblivionPhysicalFrameSeconds = 0;
+        Nif::NiTransform oblivionRecoveryPlacement(const Ptr& actor) const;
         mutable std::shared_ptr<MWRender::NativeIdleResourceCache> mOblivionIdleResourceCache;
         MWRender::NativeIdleResourceCache& oblivionIdleResourceCache() const;
         std::shared_ptr<const OblivionGetUpResources> prepareOblivionGetUpResources(
@@ -487,6 +489,8 @@ namespace MWWorld
         // Submit outstanding request loads and admit completed results on the
         // main thread. No IDLE selection, NI start, clock advance or RNG draw.
         std::size_t updateOblivionPendingGetUpLoads(SceneUtil::WorkQueue& queue);
+        bool advanceOblivionGetUpPlayback(MWRender::Animation& animation, const Ptr& actor, float duration);
+        bool updateOblivionActorRecovery(MWRender::Animation& animation, const Ptr& actor, float duration);
         class PreparedOblivionGetUpIdle
         {
             struct Data;

@@ -7,6 +7,9 @@
 #include "worldimp.hpp"
 #include "oblivionnativeidle.hpp"
 #include <components/esm4/loadidle.hpp>
+#include <components/esm4/nativeclampframe.hpp>
+#include <components/esm4/nativesequencedeactivation.hpp>
+#include <components/resource/niffilemanager.hpp>
 #include "../mwclass/esm4npc.hpp"
 #include "oblivionweapondrop.hpp"
 #include "oblivioncombatdata.hpp"
@@ -91,6 +94,7 @@
 #include <components/sceneutil/keyframe.hpp>
 
 #include <components/sceneutil/lightmanager.hpp>
+#include <components/nifbullet/ragdollcollisionfilter.hpp>
 #include <components/sceneutil/positionattitudetransform.hpp>
 #include <components/sceneutil/workqueue.hpp>
 
@@ -3273,7 +3277,7 @@ namespace MWWorld
         const auto* selected = selector.select(model, [&](const ESM4::IdleAnimation& idle) {
             const auto condition = mOblivionAi->evaluateNativeIdleConditions(actor, idle.mConditions, inputs);
             if (condition == ESM4::ConditionResult::MissingContext || condition == ESM4::ConditionResult::Unsupported)
-                throw std::invalid_argument("native GetUp reached an unavailable IDLE condition");
+                throw std::invalid_argument("native GetUp reached an unavailable IDLE condition: " + idle.mEditorId);
             return condition == ESM4::ConditionResult::True;
         });
         if (selected)
@@ -3421,6 +3425,523 @@ namespace MWWorld
             ++admitted;
         }
         return admitted;
+    }
+
+    Nif::NiTransform World::oblivionRecoveryPlacement(const Ptr& actor) const
+    {
+        if (actor.getType() == ESM::REC_CREA4)
+        {
+            const auto placement = ESM4::creaturePlacementRoot(actor.getRefData().getPosition(),
+                actor.getCellRef().getScale(), actor.get<ESM4::Creature>()->mBase->mBaseScale);
+            if (placement) return *placement;
+        }
+        if (actor.getType() == ESM::REC_NPC_4)
+        {
+            const auto placement = MWRender::resolveOblivionNpcDropPlacement(actor, mStore);
+            if (placement) return *placement;
+        }
+        if (mPlayer && actor == mPlayer->getPlayer())
+        {
+            const auto base = getOblivionReferenceBaseKey(ESM::FormKey::dynamic("player", 1));
+            const auto* npc = base ? mStore.search<ESM4::Npc>(*base) : nullptr;
+            const auto* race = npc ? mStore.get<ESM4::Race>().search(npc->mRace) : nullptr;
+            if (npc && race)
+            {
+                const bool female = npc->mBaseConfig.tes4.flags & ESM4::Npc::TES4_Female;
+                const auto placement = ESM4::npcPlacementRoot(actor.getRefData().getPosition(), actor.getCellRef().getScale(),
+                    ESM4::NpcPlacementMorphology{female ? race->mWeightFemale : race->mWeightMale,
+                        female ? race->mHeightFemale : race->mHeightMale});
+                if (placement) return *placement;
+            }
+        }
+        throw std::invalid_argument("recovery requires native actor placement");
+    }
+
+    bool World::updateOblivionActorRecovery(MWRender::Animation& animation, const Ptr& actor, float duration)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || animation.getPtr() != actor
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("recovery requires its actor renderer and finite duration");
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached) return false;
+        auto& service = *mOblivionCombat;
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                               : actor.getCellRef().getFormKey();
+        const auto* values = service.findActorValues(key); const auto* life = service.findActorLife(key);
+        if (!values || !life || values->mProcess == ESM4::ActorValueProcess::Low) return false;
+        if (life->mPhase == ESM4::ActorLifePhase::Dead)
+        {
+            const auto previousGraph = service.getUpPlayback(key);
+            if (!previousGraph || (previousGraph->mResources.empty() && previousGraph->mPendingRequests.empty()))
+                return false;
+            MWMechanics::OblivionCombatService::GetUpPlaybackUpdate stopped;
+            stopped.mPlayback.mNextIdentity = previousGraph->mNextIdentity;
+            stopped.mKnockedState = 0; stopped.mAction = -1;
+            stopped.mClock = service.findAnimationClock(key); stopped.mResetCombat = true;
+            const auto random = service.combatRandomState(); stopped.mRandom = {random, random, 0};
+            auto state = service.prepareGetUpPlayback(key, std::move(stopped));
+            auto scene = animation.prepareNativeSequenceLayers({});
+            auto resources = mOblivionGetUpResources ? std::make_shared<OblivionGetUpResources>(*mOblivionGetUpResources)
+                                                   : std::make_shared<OblivionGetUpResources>();
+            resources->mActors.erase(key); resources->mGraphs.erase(key); resources->mLoadedInfos.erase(key);
+            if (!state || !scene || !state->isValid() || !scene->isValid())
+                throw std::invalid_argument("recovery death cleanup changed during preparation");
+            if (animation.hasPhysicalPose() && mPhysics && mPhysics->hasActorRagdoll(actor))
+            {
+                std::vector<NifBullet::RagdollNativeKnockdownControllerSetupRequest> down;
+                for (const auto& body : mPhysics->actorRagdollDefinition(actor).mBodies)
+                    down.push_back({body.mNodeRecord, {}, .1f});
+                mPhysics->prepareActorRagdollKnockdownControllerSetup(actor, down, {0, .1f});
+            }
+            if (!state->commit() || !scene->commit()) throw std::logic_error("recovery death cleanup publication changed");
+            mOblivionGetUpResources = std::move(resources);
+            return false;
+        }
+        const auto fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
+        const auto paralysis = service.getProcessParalysis(key);
+        auto raw = service.getProcessKnockedState(key);
+        if (raw == 1 || raw == 2) return false; // Ordinary HIT ownership stays with its existing dispatcher.
+        const bool incapacitated = ESM4::requiresIncapacitation(fatigue, paralysis != 0,
+            life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
+        if (!raw && !incapacitated) return false;
+        const auto previous = service.actorRagdoll(key);
+        if (duration == 0 && !raw && !previous) return false;
+        if (!animation.hasPhysicalPose() && (previous || (raw == 0 && incapacitated)))
+        {
+            if (!mPhysics) throw std::invalid_argument("recovery requires World physics");
+            auto model = previous ? VFS::Path::Normalized(previous->mModel) : actor.getClass().getCorrectedModel(actor);
+            if (!previous && actor == getPlayerPtr() && actor.getType() == ESM::REC_NPC_
+                && !actor.get<ESM::NPC>()->mBase->mModel.empty())
+                model = Misc::ResourceHelpers::correctActorModelPath(
+                    Misc::ResourceHelpers::correctMeshPath(actor.get<ESM::NPC>()->mBase->mModel.getNormalized()),
+                    mResourceSystem->getVFS());
+            const auto source = animation.captureNativePhysicalSource(model);
+            if (!source || source->definition()->mBodies.empty())
+                throw std::invalid_argument("recovery requires the rendered actor's physical NIF");
+            const auto placement = oblivionRecoveryPlacement(actor);
+            const auto& configuration = getOblivionPhysicalBlendConfiguration();
+            std::vector<std::uint32_t> filters;
+            for (const auto& body : source->definition()->mBodies)
+                filters.push_back(body.mInfoFilter.mLayer | (std::uint32_t(body.mInfoFilter.mFlags) << 8)
+                    | (std::uint32_t(body.mInfoFilter.mGroup) << 16));
+            auto definition = std::make_shared<const NifBullet::ActorRagdollDefinition>(
+                NifBullet::ragdollDefinitionWithNativeScaledProperties(
+                    NifBullet::ragdollDefinitionWithNativeLinkedBlendState(*source->definition(), filters,
+                        configuration.mPostLink), placement.mScale));
+            const std::weak_ptr<const char> worldIdentity = mOblivionRestoreIdentity;
+            const auto actorIdentity = actor.getRefData().prepareRuntimeIdentity();
+            auto renderer = animation.prepareNativeScene(*definition, placement,
+                [this, worldIdentity, actorIdentity, definition, placement](const Ptr& owner, const auto&, unsigned) {
+                    MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+                    if (worldIdentity.expired() || actorIdentity.expired() || !mPhysics
+                        || !mPhysics->hasActorRagdoll(owner)) return frame;
+                    frame.mPlacement = oblivionRecoveryPlacement(owner);
+                    if (frame.mPlacement.mScale != placement.mScale)
+                        throw std::invalid_argument("physical recovery actor scale changed");
+                    const auto time = mOblivionCombat->actorManagerTime();
+                    const auto dt = mOblivionPhysicalFrameSeconds;
+                    const auto bodies = mPhysics->captureActorRagdoll(owner);
+                    const auto blends = mPhysics->captureActorRagdollBlendStates(owner);
+                    frame.mCollision = [this, owner, definition, bodies, blends, time, dt](std::uint32_t node,
+                        const Nif::NiTransform& animated) {
+                        using Result = SceneUtil::NifSceneTraversal::CollisionResult;
+                        const auto body = std::find_if(definition->mBodies.begin(), definition->mBodies.end(),
+                            [&](const auto& value) { return value.mNodeRecord == node; });
+                        if (body == definition->mBodies.end()) return Result{};
+                        auto matrix = animated.mRotation.toOsgMatrix(); matrix.setTrans(animated.mTranslation);
+                        if (dt > 0 && body->mBlend)
+                        {
+                            mPhysics->advanceActorRagdollPhysicalNodeControllers(owner, node, time);
+                            const auto published = mPhysics->updateActorRagdollBlendSceneNode(owner, node, matrix, dt, 0);
+                            if (published)
+                            {
+                                Result result{published->mCollisionFlags, {}};
+                                if (published->mSceneTarget)
+                                {
+                                    auto target = animated; target.mTranslation = published->mSceneTarget->getTrans();
+                                    for (unsigned i = 0; i < 3; ++i) for (unsigned j = 0; j < 3; ++j)
+                                        target.mRotation.mValues[i][j] = (*published->mSceneTarget)(j, i);
+                                    result.mPhysicalTarget = target;
+                                }
+                                return result;
+                            }
+                            return Result{};
+                        }
+                        // Paused frames project the saved pose/gains without
+                        // advancing controllers or writing physical velocities.
+                        const auto current = std::find_if(bodies.begin(), bodies.end(),
+                            [&](const auto& value) { return value.mRecord == body->mRecord; });
+                        if (current == bodies.end()) throw std::invalid_argument("recovery lost a physical body");
+                        const auto q = current->mPose.getRotation(); const auto p = current->mPose.getOrigin();
+                        NifBullet::RagdollNativeTargetPose physical{{float(p.x() / NifBullet::RagdollNativeLengthScale),
+                            float(p.y() / NifBullet::RagdollNativeLengthScale), float(p.z() / NifBullet::RagdollNativeLengthScale)},
+                            {float(q.x()), float(q.y()), float(q.z()), float(q.w())}};
+                        physical = NifBullet::ragdollNativeSceneTargetFromBodyPose(physical, *body);
+                        auto projected = NifBullet::ragdollBoneWorldFromNativePose(physical);
+                        auto flags = body->mCollisionFlags;
+                        const auto blend = std::find_if(blends.begin(), blends.end(),
+                            [&](const auto& value) { return value.mBodyRecord == body->mRecord; });
+                        if (blend != blends.end())
+                        {
+                            flags = blend->mCollisionFlags;
+                            if (blend->mGains.mHierarchy >= 1) return Result{flags, {}};
+                            if (blend->mGains.mHierarchy > 0)
+                                projected = NifBullet::ragdollNativeBlendPoseTargets(physical, matrix,
+                                    blend->mGains.mHierarchy, flags).mSceneTarget;
+                        }
+                        auto target = animated; target.mTranslation = projected.getTrans();
+                        for (unsigned i = 0; i < 3; ++i) for (unsigned j = 0; j < 3; ++j)
+                            target.mRotation.mValues[i][j] = projected(j, i);
+                        return Result{flags, target};
+                    };
+                    return frame;
+                }, mRendering ? mRendering->getLightRoot() : nullptr, animation.captureNativeAnimationDefaults(*source));
+            const auto poses = NifBullet::ragdollBodyWorldPoses(*definition, renderer->initialBones(),
+                Nif::NativeTransformPrecision::Single);
+            // GetUp updates the same owned native filter words as Down.
+            // Give fresh graphs a free nonzero group; snapshot restoration
+            // below retains the saved words rather than allocating new IDs.
+            NifBullet::RagdollInternalCollisionFilter internal;
+            std::set<std::uint16_t> usedGroups;
+            for (const auto& owner : mPhysics->actorRagdollOwners())
+            {
+                const auto ownerKey = owner == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                                              : owner.getCellRef().getFormKey();
+                if (const auto cached = service.actorRagdoll(ownerKey); cached && cached->mInternalFilters)
+                    for (const auto& filter : *cached->mInternalFilters)
+                        usedGroups.insert(static_cast<std::uint16_t>(filter.mPackedFilter >> 16));
+            }
+            internal.mSystemGroup = 10;
+            while (usedGroups.contains(internal.mSystemGroup))
+            {
+                internal.mSystemGroup = NifBullet::nextRagdollSystemGroup(internal.mSystemGroup);
+                if (internal.mSystemGroup == 10) throw std::overflow_error("recovery collision groups exhausted");
+            }
+            auto bodies = mPhysics->prepareActorRagdoll(actor, *definition, NifBullet::RagdollNativeLengthScale,
+                poses, MWPhysics::CollisionType_Actor,
+                MWPhysics::CollisionType_World | MWPhysics::CollisionType_HeightMap | MWPhysics::CollisionType_Actor,
+                &internal, MWPhysics::ActorRagdollCapsulePolicy::Retain);
+            if (previous)
+                MWPhysics::restoreNativeActorRagdollSnapshot(bodies->physics(), *previous, values->mBase,
+                    model.value(), *definition);
+            else
+            {
+                std::vector<NifBullet::RagdollNativeKnockdownControllerSetupRequest> down;
+                for (std::size_t i = 0; i < definition->mBodies.size(); ++i)
+                    down.push_back({definition->mBodies[i].mNodeRecord, {},
+                        ESM4::physicalBlendDurationForFilter(configuration.mDurations, filters[i], false)});
+                const auto& profile = configuration.mProfiles.mDefault;
+                bodies->physics().prepareNativeKnockdownControllerSetup(down,
+                    {profile.mPassOutForce, profile.mPassOutTime});
+            }
+            auto cache = service.prepareActorRagdollUpdate(key, previous,
+                MWPhysics::captureNativeActorRagdollSnapshot(bodies->physics(), values->mBase, model.value(), *definition));
+            MWMechanics::OblivionCombatService::GetUpPlaybackUpdate entering;
+            entering.mPlayback = service.getUpPlayback(key).value_or(ESM4::RuntimeGetUpPlayback{});
+            entering.mClock = service.findAnimationClock(key);
+            entering.mKnockedState = raw ? raw : (paralysis ? 3 : 4);
+            entering.mAction = previous ? values->mProcessAction : std::optional<std::int16_t>(-1);
+            entering.mResetCombat = true;
+            const auto random = service.combatRandomState(); entering.mRandom = {random, random, 0};
+            auto state = service.prepareGetUpPlayback(key, std::move(entering));
+            auto* peer = animation.getPlaybackPeer();
+            auto first = peer ? peer->prepareNativeSequenceLayers({}) : nullptr;
+            if (!state || !state->isValid() || !cache || !cache->isValid()
+                || !renderer->isValid() || !bodies->isValid() || (peer && (!first || !first->isValid())))
+                throw std::invalid_argument("recovery body changed during preparation");
+            if (!bodies->commit() || !animation.commitNativeScene(*renderer) || !cache->commit() || !state->commit())
+                throw std::logic_error("recovery body publication changed");
+            if (first && !first->commit()) throw std::logic_error("recovery first-person reset changed");
+            raw = service.getProcessKnockedState(key);
+            Log(Debug::Verbose) << "M15 recovery body admitted: actor=" << key.serialize()
+                                << " state=" << unsigned(raw) << " restored=" << bool(previous);
+        }
+        if (raw == 4)
+        {
+            const auto snapshot = service.actorRagdoll(key);
+            if (!snapshot || !mPhysics) throw std::invalid_argument("knockdown has no physical owner");
+            const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(snapshot->mModel));
+            if (!source) throw std::invalid_argument("knockdown lost its rendered source");
+            const auto root = NifBullet::loadActorRagdollRootBlend(*mResourceSystem->getNifFileManager()->get(source->model()),
+                source->reactionRootRecord());
+            std::optional<float> gain;
+            if (root)
+                for (const auto& blend : mPhysics->captureActorRagdollBlendStates(actor))
+                    if (blend.mBodyRecord == root->mBodyRecord) gain = blend.mGains.mHierarchy;
+            if (ESM4::knockdownBlendEntryReady(source->reactionRootRecord().has_value(), gain))
+            {
+                service.setProcessKnockedState(key, 3);
+                Log(Debug::Verbose) << "M15 recovery transition: actor=" << key.serialize() << " from=4 to=3";
+            }
+        }
+        if (advanceOblivionGetUpPlayback(animation, actor, duration)) return true;
+        service.advanceAnimationClock(key, duration);
+        return true;
+    }
+
+    bool World::advanceOblivionGetUpPlayback(MWRender::Animation& animation, const Ptr& actor, float duration)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || animation.getPtr() != actor
+            || !std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("GetUp frame requires its actor renderer and finite duration");
+        if (mRetainedSimulation && !mRetainedSimulation->mDetached) return false;
+        auto& service = *mOblivionCombat;
+        const auto key = actor == getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+                                               : actor.getCellRef().getFormKey();
+        const auto* values = service.findActorValues(key);
+        const auto* life = service.findActorLife(key);
+        if (!values || !life || values->mProcess == ESM4::ActorValueProcess::Low) return false;
+        const auto raw = service.getProcessKnockedState(key);
+        if (raw != 3 && raw != 5 && raw != 6) return false;
+        const auto savedGraph = service.getUpPlayback(key);
+        if (duration == 0 && !savedGraph) return false;
+        const float fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
+        const bool incapacitated = ESM4::requiresIncapacitation(fatigue, service.getProcessParalysis(key) != 0,
+            life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
+        MWMechanics::OblivionCombatService::GetUpPlaybackUpdate next;
+        next.mPlayback = savedGraph.value_or(ESM4::RuntimeGetUpPlayback{});
+        next.mKnockedState = raw; next.mAction = values->mProcessAction;
+        next.mResetCombat = service.findMeleeState(key) != nullptr;
+        const float previousClock = service.animationClock(key);
+        next.mClock = duration > 0 ? std::optional(ESM4::advanceMeleeAnimationClock(previousClock, duration))
+                                  : service.findAnimationClock(key);
+        const auto seed = service.combatRandomState(); next.mRandom = {seed, seed, 0};
+        auto& graph = next.mPlayback;
+        auto resources = mOblivionGetUpResources ? std::make_shared<OblivionGetUpResources>(*mOblivionGetUpResources)
+                                               : std::make_shared<OblivionGetUpResources>();
+        resources->mCache = mOblivionIdleResourceCache;
+        const auto allocate = [&]() {
+            if (graph.mNextIdentity == std::numeric_limits<std::uint64_t>::max())
+                throw std::overflow_error("GetUp identity exhausted");
+            return graph.mNextIdentity++;
+        };
+        const auto metadata = [&](std::uint64_t resource) -> const SceneUtil::ControllerSequenceMetadata& {
+            return resources->mGraphs.at(key).at(resource)->metadata();
+        };
+        const auto textKeys = [](const auto& source) {
+            std::vector<ESM4::MeleeTextKey> result;
+            for (const auto& [time, text] : source.mTextKeys) result.push_back({time, text});
+            return result;
+        };
+        const auto retire = [&](std::uint64_t id) {
+            if (!id) return;
+            auto& sequence = graph.mSequences.at(id);
+            if (sequence.mState.mInactive || sequence.mState.mRetirement) return;
+            const auto& source = metadata(sequence.mResource);
+            sequence.mState = ESM4::retireNativeClampSequence(sequence.mState, source.mFrequency,
+                ESM4::meleeBlendDuration({}, ESM4::meleeBlendFrames(textKeys(source)), .1f),
+                sequence.mTransitionFrame);
+            if (graph.mResidentSequence == id) graph.mResidentSequence = 0;
+        };
+        bool startPhysical = false;
+        float startKey = 0;
+        const auto legacy = raw == 5 && !service.getUpPlayback(key) ? service.getUpIdle(key) : std::nullopt;
+        if (duration > 0 && ((!incapacitated && raw == 3) || (raw == 5 && !graph.mRequests.mPrimary && legacy)))
+        {
+            const auto selected = legacy ? OblivionNativeIdleSelection{key, legacy->mActorModel, legacy->mIdle,
+                legacy->mModel, seed, seed, 0} : prepareOblivionGetUpIdle(actor);
+            next.mResetCombat = true; next.mAction = -1;
+            next.mRandom = {selected.mExpectedRandomState, selected.mNextRandomState, selected.mRandomDraws};
+            if (selected.mIdle.isNull()) next.mKnockedState = 0;
+            else
+            {
+                const auto request = allocate();
+                auto change = ESM4::replaceNativeIdleRequest(graph.mRequests, graph.mResidentSequence,
+                    ESM4::makeNativeIdleRequest(request, 0));
+                for (const auto& effect : change.mEffects)
+                {
+                    retire(effect.mRequest.mSequence);
+                    if (effect.mKind != ESM4::NativeIdleRequestEffectKind::DestroyRequest) continue;
+                    if (effect.mRequest.mSequence)
+                    {
+                        graph.mSequences.at(effect.mRequest.mSequence).mManaged = false;
+                        if (graph.mCachedSequence == effect.mRequest.mSequence) graph.mCachedSequence = 0;
+                    }
+                    graph.mRequestSelections.erase(effect.mRequest.mIdentity);
+                    graph.mPendingRequests.erase(effect.mRequest.mIdentity);
+                }
+                graph.mRequests = std::move(change.mSlots);
+                const auto info = mOblivionIdleResourceCache ? mOblivionIdleResourceCache->find(selected.mModel) : nullptr;
+                if (info)
+                {
+                    std::uint64_t resource = 0;
+                    for (const auto& [id, held] : resources->mLoadedInfos[key])
+                        if (held == info)
+                        {
+                            if (resource) throw std::invalid_argument("ambiguous GetUp loaded identity");
+                            resource = id;
+                        }
+                    ESM4::RuntimeGetUpIdle binding{values->mBase, selected.mIdle, selected.mActorModel,
+                        selected.mModel, getUpResourceHash(info->fileHash())};
+                    if (!resource)
+                    {
+                        resource = allocate(); graph.mResources.emplace(resource, binding);
+                        resources->mGraphs[key].emplace(resource, info->retainSourceArtifact());
+                        resources->mLoadedInfos[key].emplace(resource, info);
+                    }
+                    graph.mRequests.mPrimary = ESM4::makeNativeIdleRequest(request, resource);
+                    if (binding != graph.mResources.at(resource)) graph.mRequestSelections.emplace(request, binding);
+                }
+                else graph.mPendingRequests.emplace(request, ESM4::RuntimeGetUpPendingRequest{
+                    values->mBase, selected.mIdle, selected.mActorModel, selected.mModel, true});
+                next.mKnockedState = 5;
+            }
+        }
+        else if (duration > 0 && raw == 5 && ESM4::nativeIdleRequestReady(graph.mRequests)
+            && (!graph.mResidentSequence || (!graph.mSequences.at(graph.mResidentSequence).mState.mTiming.mEasing
+                && !graph.mSequences.at(graph.mResidentSequence).mState.mRetirement)))
+        {
+            auto& request = *graph.mRequests.mPrimary;
+            const auto& source = metadata(request.mResource);
+            const auto keys = ESM4::reactionKeyTimes(textKeys(source));
+            if (source.mCycleType != 2 || ESM4::nativeGetUpSequenceGroup(source.mSequenceName) != 2
+                || keys.mMatchedCount != 2 || source.mFrequency <= 0)
+                throw std::invalid_argument("GetUp requires a clamp SpecialIdle with Start/End keys");
+            std::uint64_t sequence = graph.mCachedSequence;
+            if (!sequence || graph.mSequences.at(sequence).mResource != request.mResource)
+            {
+                sequence = allocate();
+                ESM4::RuntimeGetUpSequence created; created.mResource = request.mResource;
+                graph.mSequences.emplace(sequence, std::move(created));
+                graph.mCachedSequence = sequence;
+            }
+            auto& ni = graph.mSequences.at(sequence); ni.mState = {}; ni.mManaged = true;
+            ni.mTransitionFrame.reset(); ni.mPoseSnapshot.reset();
+            ni.mState.mTiming.mEasing = true;
+            ni.mState.mTiming.mEaseEnd = ESM4::meleeBlendDuration({}, ESM4::meleeBlendFrames(textKeys(source)), .1f);
+            if (ni.mState.mTiming.mEaseEnd <= 0) ni.mState.mTiming.mEasing = false;
+            // Actor clocks use seconds; an authored nonzero KF start must not
+            // add a dead interval before playback begins.
+            ni.mState.mTiming.mOffset = source.mStartTime / source.mFrequency - previousClock;
+            ni.mState.mTiming.mEaseStart = previousClock;
+            ni.mState.mTiming.mEaseEnd += previousClock;
+            ni.mState.mTiming.mLastInput = source.mStartTime / source.mFrequency;
+            ni.mState.mTiming.mWeightedTime = ni.mState.mTiming.mOutputTime = source.mStartTime;
+            const auto started = ESM4::startNativeIdleRequest(request, true, sequence, -1, 0);
+            request = started.mRequest; next.mAction = started.mAction;
+            graph.mResidentSequence = graph.mActionSequence = started.mActionSequence;
+            next.mKnockedState = 6; next.mResetCombat = true;
+            startPhysical = animation.hasPhysicalPose(); startKey = keys.mTimes[0];
+        }
+        else if (duration > 0 && raw == 5 && !graph.mRequests.mPrimary && !graph.mRequests.mSecondary)
+            next.mKnockedState = 3;
+
+        for (auto& [id, sequence] : graph.mSequences)
+        {
+            if (duration == 0 || sequence.mState.mInactive) continue;
+            const auto& source = metadata(sequence.mResource);
+            const auto keys = ESM4::reactionKeyTimes(textKeys(source));
+            const std::array<float, 2> seconds{keys.mTimes[0] / source.mFrequency, keys.mTimes[1] / source.mFrequency};
+            const auto retirement = ESM4::meleeBlendDuration({}, ESM4::meleeBlendFrames(textKeys(source)), .1f);
+            sequence.mState = id == graph.mResidentSequence
+                ? ESM4::advanceNativeResidentClampSequence(sequence.mState, previousClock, *next.mClock,
+                    source.mFrequency, source.mStartTime, source.mStopTime, seconds, retirement,
+                    false, sequence.mTransitionFrame)
+                : ESM4::advanceNativeClampSequence(sequence.mState, *next.mClock, source.mFrequency,
+                    source.mStartTime, source.mStopTime, seconds, retirement, false, sequence.mTransitionFrame);
+            if (!sequence.mState.mTiming.mEasing)
+            { sequence.mTransitionFrame.reset(); sequence.mPoseSnapshot.reset(); }
+            if (sequence.mState.mRetirement || sequence.mState.mInactive)
+                if (graph.mResidentSequence == id) graph.mResidentSequence = 0;
+        }
+        if (duration > 0 && graph.mRequests.mPrimary && graph.mRequests.mPrimary->mStatus == 2)
+        {
+            auto& request = *graph.mRequests.mPrimary;
+            const auto done = ESM4::completeNativeIdleRequest(request,
+                graph.mSequences.at(request.mSequence).mState.mInactive ? 0u : 1u, next.mAction.value_or(-1));
+            request = done.mRequest; next.mAction = done.mAction;
+            if (done.mCompleted) graph.mActionSequence = 0;
+        }
+        if (duration > 0 && raw == 6 && ESM4::nativeIdleRequestDone(graph.mRequests)) next.mKnockedState = 0;
+
+        std::set<std::uint64_t> liveRequests, infos, usedResources;
+        for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                 &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+            if (*slot)
+            {
+                liveRequests.insert((*slot)->mIdentity);
+                if ((*slot)->mResource) infos.insert((*slot)->mResource);
+            }
+        std::erase_if(graph.mPendingRequests, [&](const auto& entry) { return !liveRequests.contains(entry.first); });
+        std::erase_if(graph.mRequestSelections, [&](const auto& entry) { return !liveRequests.contains(entry.first); });
+        std::erase_if(graph.mSequences, [&](const auto& entry) {
+            if (entry.second.mManaged) return false;
+            for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                     &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+                if (*slot && (*slot)->mSequence == entry.first) return false;
+            return true;
+        });
+        usedResources = infos;
+        for (const auto& [id, sequence] : graph.mSequences) usedResources.insert(sequence.mResource);
+        std::erase_if(graph.mResources, [&](const auto& entry) { return !usedResources.contains(entry.first); });
+        std::erase_if(resources->mGraphs[key], [&](const auto& entry) { return !usedResources.contains(entry.first); });
+        std::erase_if(resources->mLoadedInfos[key], [&](const auto& entry) { return !infos.contains(entry.first); });
+        resources->mActors.erase(key);
+        std::vector<const MWRender::Animation::NativeIdleResource*> sources;
+        std::vector<std::uint64_t> projecting;
+        for (const auto& [id, sequence] : graph.mSequences)
+            if (!sequence.mState.mInactive)
+            {
+                projecting.push_back(id); sources.push_back(resources->mGraphs.at(key).at(sequence.mResource).get());
+            }
+        auto bindings = animation.prepareNativeIdleSources(sources);
+        if (!bindings) throw std::invalid_argument("GetUp cannot bind its actor scene");
+        std::vector<MWRender::Animation::NativeSequenceLayer> layers;
+        for (std::size_t i = 0; i < projecting.size(); ++i)
+        {
+            const auto& sequence = graph.mSequences.at(projecting[i]); const auto& timing = sequence.mState.mTiming;
+            const auto& source = metadata(sequence.mResource);
+            const auto ease = sequence.mState.mRetirement
+                ? ESM4::sequenceBlendEase(*next.mClock, *sequence.mState.mRetirement->mStartClock,
+                    timing.mEaseEnd, true)
+                : timing.mEasing ? ESM4::sequenceBlendEase(*next.mClock, *timing.mEaseStart, timing.mEaseEnd, false) : 1.f;
+            if (sequence.mPoseSnapshot)
+                layers.push_back({bindings->group(i), MWRender::BlendMask_All, 0, 1, 1 - ease, false,
+                    std::make_shared<const ESM4::RuntimeMeleePoseSnapshot>(*sequence.mPoseSnapshot)});
+            const auto& bound = bindings->metadata(i);
+            const MWMechanics::OblivionMeleeSequenceMetadata coordinates{bindings->group(i), source.mFrequency,
+                source.mStartTime, source.mStopTime, bound.mTimelineStart, bound.mTimelineStop};
+            layers.push_back({bindings->group(i), MWRender::BlendMask_All,
+                coordinates.rendererTime(timing.mOutputTime), source.mWeight, ease});
+        }
+        for (auto& layer : layers) layer.mDefaultPose = animation.nativeSceneAnimationDefaults();
+        auto scene = animation.prepareNativeSequenceLayers(layers, std::move(bindings));
+        auto* peer = animation.getPlaybackPeer();
+        auto first = peer ? peer->prepareNativeSequenceLayers({}) : nullptr;
+        auto state = service.prepareGetUpPlayback(key, std::move(next));
+        if (!scene || !state || !scene->isValid() || !state->isValid() || (peer && (!first || !first->isValid())))
+            throw std::invalid_argument("GetUp frame changed during preparation");
+        const auto publish = [&] {
+            if (!state->commit() || !scene->commit()) throw std::logic_error("GetUp publication lost its prepared owner");
+            if (first && !first->commit()) throw std::logic_error("GetUp first-person reset changed");
+            std::shared_ptr<const OblivionGetUpResources> published = resources;
+            mOblivionGetUpResources.swap(published);
+        };
+        if (startPhysical)
+        {
+            const auto previous = service.actorRagdoll(key);
+            if (!previous || !mPhysics) throw std::invalid_argument("GetUp physical owner is missing");
+            const auto source = animation.captureNativePhysicalSource(VFS::Path::toNormalized(previous->mModel));
+            if (!source) throw std::invalid_argument("GetUp physical source changed");
+            const auto plan = animation.captureNativeGetUpPlan(*source);
+            const auto& configuration = getOblivionPhysicalBlendConfiguration();
+            mPhysics->setupActorRagdollGetUpSnapshot(actor, values->mBase, previous->mModel, plan,
+                configuration.mDurations, configuration.mPostLink, startKey, [&](const auto& snapshot) {
+                    auto cache = service.prepareActorRagdollUpdate(key, previous, snapshot);
+                    if (!cache || !cache->isValid() || !state->isValid() || !scene->isValid())
+                        throw std::invalid_argument("GetUp body changed during preparation");
+                    if (!cache->commit()) throw std::logic_error("GetUp body publication changed");
+                    publish();
+                });
+        }
+        else publish();
+        if (service.getProcessKnockedState(key) != raw)
+            Log(Debug::Verbose) << "M15 recovery transition: actor=" << key.serialize()
+                                << " from=" << unsigned(raw)
+                                << " to=" << unsigned(service.getProcessKnockedState(key))
+                                << " action=" << service.getProcessAction(key);
+        if (service.getProcessKnockedState(key) == 0 && animation.hasPhysicalPose())
+            endOblivionActorPhysicalPose(animation, actor);
+        return true;
     }
 
     struct World::PreparedOblivionGetUpIdle::Data
@@ -8231,6 +8752,7 @@ namespace MWWorld
     void World::updatePhysicsImpl(float duration, bool paused, osg::Timer_t frameStart, unsigned int frameNumber,
         osg::Stats& stats, const ESM4::PhysicalFrameResult* nativeFrame, float remaining)
     {
+        mOblivionPhysicalFrameSeconds = paused ? 0.f : duration;
         if (mGameProfile == ESM::GameProfile::Oblivion && mRendering)
             mRendering->updateNativeScenesBeforePhysics();
         if (!paused)

@@ -351,6 +351,7 @@ namespace MWRender
             }
             const auto sampled = mTracks[i].mController->getCurrentTransformation(visitor);
             auto& pose = poses[i];
+            if (mTracks[i].mDefaults) pose = *mTracks[i].mDefaults;
             if (sampled.mTranslation)
             {
                 const auto& value = *sampled.mTranslation;
@@ -362,7 +363,7 @@ namespace MWRender
                 pose.mRotation = std::array<float, 4>{static_cast<float>(value.w()), static_cast<float>(value.x()),
                     static_cast<float>(value.y()), static_cast<float>(value.z())};
             }
-            pose.mScale = sampled.mScale;
+            if (sampled.mScale) pose.mScale = sampled.mScale;
         }
         // Finish every sample/validation before publishing any node channel.
         const auto pose = ESM4::blendSequenceTransforms(poses, normalized);

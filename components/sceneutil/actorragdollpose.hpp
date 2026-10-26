@@ -97,6 +97,9 @@ namespace SceneUtil
         // Renderer-only wrappers have no record identity. Reject ambiguous
         // roots; this is independent of a KF's accumulator/root selection.
         std::uint32_t sceneRootRecord() const;
+        // The hash-identified source below an optional renderer wrapper.
+        // Separately attached body parts remain outside this asset namespace.
+        const osg::Group& sourceAssetRoot() const;
         // One settled native actor frame after animation callbacks. Missing
         // scene targets keep animated locals; bit0 gates physical reads and
         // bit8 alone authorizes local writeback. Pending0x40 needs its separate

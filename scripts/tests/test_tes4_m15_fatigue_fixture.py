@@ -42,7 +42,10 @@ class FatigueFixtureTests(unittest.TestCase):
         source = self.source()
         for changes in ({"source_sha256": "0" * 64}, {"master": "Morrowind.esm"}, {"version": True},
                         {"settings": {"fHandHealthMax": 0}},
-                        {"settings": {"fFatigueReturnBase": 1, "fFatigueReturnMult": 0}},
+                        {"settings": {"fFatigueReturnBase": -1, "fFatigueReturnMult": 0}},
+                        {"settings": {"fFatigueReturnBase": float('nan'), "fFatigueReturnMult": 0}},
+                        {"settings": {"fFatigueReturnBase": float('inf'), "fFatigueReturnMult": 0}},
+                        {"settings": {"fFatigueReturnBase": 1e39, "fFatigueReturnMult": 0}},
                         {"settings": {"fFatigueReturnBase": False, "fFatigueReturnMult": 0}}):
             recipe = copy.deepcopy(self.recipe(source)); recipe.update(changes)
             with self.subTest(changes=changes), self.assertRaises(ValueError):
@@ -52,6 +55,21 @@ class FatigueFixtureTests(unittest.TestCase):
         source = self.source(duplicate=True)
         with self.assertRaises(ValueError):
             fixture.build(source, self.recipe(source))
+
+    def test_positive_regeneration_is_authored_without_actor_or_outcome_changes(self):
+        source = self.source()
+        recipe = self.recipe(source)
+        recipe['settings'] = {'fFatigueReturnBase': .05, 'fFatigueReturnMult': .01}
+        output, report = fixture.build(source, recipe)
+        parsed = list(records(output))
+        self.assertEqual([x[0] for x in parsed], ['TES4', 'GMST', 'GMST'])
+        for tag, _, payload in parsed[1:]:
+            fields = _subrecords(payload, 'fixture', tag)
+            editor = fields[0]['payload'].rstrip(b'\0').decode('ascii')
+            value = struct.unpack('<f', fields[1]['payload'])[0]
+            self.assertAlmostEqual(value, recipe['settings'][editor], places=7)
+        self.assertEqual(report['script_count'], 0)
+        self.assertFalse(report['actor_or_item_changes'])
 
 
 if __name__ == "__main__":

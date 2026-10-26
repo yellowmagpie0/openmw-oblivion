@@ -50,6 +50,7 @@ namespace SceneUtil
             Nif::NiTransform mWorld;
             NifOsg::MatrixTransform::TraversalMatrix mPublished;
             std::optional<std::uint16_t> mSelectiveFlags;
+            Nif::NiTransform mAnimationLocal, mPendingAnimationLocal;
         };
         struct Group
         {
@@ -81,6 +82,8 @@ namespace SceneUtil
             std::vector<NifOsg::MatrixTransform::TraversalMatrix> mProjections;
         };
         osg::observer_ptr<osg::Group> mRoot;
+        osg::observer_ptr<osg::Group> mDrawingWorld;
+        bool mHasDrawingWorld;
         bool mContainer;
         Nif::NativeTransformPrecision mPrecision;
         std::vector<Node> mNodes;
@@ -93,10 +96,14 @@ namespace SceneUtil
         bool mUpdating = false;
 
         Impl(osg::Group& root, Nif::NativeTransformPrecision precision,
-            const Nif::NiTransform* nativeParentWorld = nullptr, bool deferred = false, bool container = false)
-            : mRoot(&root), mContainer(container), mPrecision(precision)
+            const Nif::NiTransform* nativeParentWorld = nullptr, bool deferred = false, bool container = false,
+            osg::Group* drawingWorld = nullptr)
+            : mRoot(&root), mDrawingWorld(drawingWorld), mHasDrawingWorld(drawingWorld != nullptr)
+            , mContainer(container), mPrecision(precision)
             , mNativeParentWorld(nativeParentWorld ? std::optional(*nativeParentWorld) : std::nullopt)
         {
+            require(!drawingWorld || (!drawingWorld->asTransform() && drawingWorld != &root),
+                "NIF drawing world must be an external world-space group");
             require(precision == Nif::NativeTransformPrecision::Single
                     || precision == Nif::NativeTransformPrecision::Double, "unknown NIF scene precision");
             require(!container || (nativeParentWorld && (typeid(root) == typeid(osg::Group)
@@ -127,7 +134,7 @@ namespace SceneUtil
                     require(world.has_value(), "invalid initial NIF scene composition");
                     const auto index = mNodes.size();
                     mIndices.emplace(&node, index);
-                    mNodes.push_back({&transform, parent, {}, *world, {}, {}});
+                    mNodes.push_back({&transform, parent, {}, *world, {}, {}, local, local});
                     if (parent) mNodes[*parent].mChildren.push_back(index);
                     parent = index;
                 }
@@ -165,10 +172,11 @@ namespace SceneUtil
         osg::NodePath externalPath() const
         {
             require(mRoot.valid(), "expired NIF scene root");
+            require(!mHasDrawingWorld || mDrawingWorld.valid(), "expired NIF drawing world");
             osg::NodePath path;
             std::unordered_set<const osg::Node*> visited{mRoot.get()};
             const osg::Node* node = mRoot.get();
-            while (node->getNumParents())
+            while (mHasDrawingWorld ? node != mDrawingWorld.get() : node->getNumParents() != 0)
             {
                 require(node->getNumParents() == 1, "ambiguous NIF scene placement");
                 node = node->getParent(0);
@@ -211,7 +219,7 @@ namespace SceneUtil
 
         bool valid() const noexcept
         {
-            if (mRetired || !mRoot.valid()) return false;
+            if (mRetired || !mRoot.valid() || (mHasDrawingWorld && !mDrawingWorld.valid())) return false;
             for (const auto& entry : mNodes)
                 if (!entry.mTransform.valid() || entry.mTransform->getReferenceFrame() != osg::Transform::RELATIVE_RF
                     || entry.mTransform->getNumParents() > 1
@@ -248,7 +256,7 @@ namespace SceneUtil
                     if (node->getNumParents() != 1 || node->getParent(0) != *i) return false;
                     node = *i;
                 }
-                if (node->getNumParents()) return false;
+                if (mHasDrawingWorld ? node != mDrawingWorld.get() : node->getNumParents() != 0) return false;
                 try
                 {
                     if (osg::computeLocalToWorld(saved.mPath) != saved.mWorld) return false;
@@ -330,6 +338,7 @@ namespace SceneUtil
             const auto world = parent ? Nif::tryComposeNativeTransform(*parent, local, mPrecision)
                                       : std::optional<Nif::NiTransform>(local);
             require(world.has_value(), "invalid NIF scene composition");
+            entry.mPendingAnimationLocal = local;
             CollisionResult collision;
             if (callbacks.mCollision)
             {
@@ -566,23 +575,38 @@ namespace SceneUtil
         Nif::NativeTransformPrecision precision)
         : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld)) {}
     NifSceneTraversal::NifSceneTraversal(NifOsg::MatrixTransform& root, const Nif::NiTransform& nativeParentWorld,
-        Nif::NativeTransformPrecision precision, bool deferred)
-        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, deferred)) {}
+        Nif::NativeTransformPrecision precision, bool deferred, osg::Group* drawingWorld)
+        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, deferred, false, drawingWorld)) {}
     NifSceneTraversal::NifSceneTraversal(osg::Group& root, const Nif::NiTransform& nativeParentWorld,
-        Nif::NativeTransformPrecision precision)
-        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, true, true)) {}
+        Nif::NativeTransformPrecision precision, osg::Group* drawingWorld)
+        : mImpl(std::make_unique<Impl>(root, precision, &nativeParentWorld, true, true, drawingWorld)) {}
     std::unique_ptr<NifSceneTraversal> NifSceneTraversal::prepareObjectLocal(NifOsg::MatrixTransform& root,
-        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision)
+        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision, osg::Group* drawingWorld)
     {
-        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision, true));
+        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision, true, drawingWorld));
     }
     std::unique_ptr<NifSceneTraversal> NifSceneTraversal::prepareObjectLocalContainer(osg::Group& root,
-        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision)
+        const Nif::NiTransform& nativeParentWorld, Nif::NativeTransformPrecision precision, osg::Group* drawingWorld)
     {
-        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision));
+        return std::unique_ptr<NifSceneTraversal>(new NifSceneTraversal(root, nativeParentWorld, precision, drawingWorld));
     }
     bool NifSceneTraversal::commitPrepared() noexcept { return mImpl->commitPrepared(); }
     bool NifSceneTraversal::retire() noexcept { return mImpl->retire(); }
+    void NifSceneTraversal::restoreAnimationLocals()
+    {
+        require(mImpl->valid() && mImpl->mPublished && !mImpl->mUpdating,
+            "animation locals require their current native scene owner");
+        for (const auto& entry : mImpl->mNodes)
+            require(Nif::tryComposeNativeTransform(Nif::NiTransform::getIdentity(), entry.mAnimationLocal,
+                mImpl->mPrecision).has_value(), "invalid retained NIF animation local");
+        for (auto& entry : mImpl->mNodes)
+        {
+            entry.mTransform->setRotation(entry.mAnimationLocal.mRotation);
+            entry.mTransform->setScale(entry.mAnimationLocal.mScale);
+            entry.mTransform->setTranslation(entry.mAnimationLocal.mTranslation);
+        }
+        Impl::invalidateCurrentSkeletons(mImpl->mRoot.get());
+    }
     void NifSceneTraversal::refreshDrawingPlacement(const osg::FrameStamp& stamp, unsigned traversalNumber)
     {
         require(mImpl->valid() && mImpl->mPublished && !mImpl->mUpdating,
@@ -790,6 +814,7 @@ namespace SceneUtil
             ~Reset() { mUpdating = false; }
         } reset{mImpl->mUpdating};
         mImpl->mUpdating = true;
+        for (auto& entry : mImpl->mNodes) entry.mPendingAnimationLocal = entry.mAnimationLocal;
         osg::ref_ptr<osg::Group> root;
         require(mImpl->mRoot.lock(root), "expired NIF scene root");
         // NodeVisitor's NodePath is borrowed. A callback can detach this root
@@ -810,5 +835,6 @@ namespace SceneUtil
         }
         require(mImpl->valid(), "NIF publisher changed the bound hierarchy");
         mImpl->requirePlacement(placement);
+        for (auto& entry : mImpl->mNodes) entry.mAnimationLocal = entry.mPendingAnimationLocal;
     }
 }

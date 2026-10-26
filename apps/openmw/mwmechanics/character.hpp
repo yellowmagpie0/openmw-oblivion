@@ -234,6 +234,7 @@ namespace MWMechanics
         std::vector<std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot>> mOblivionHeldPoseBindings;
         std::vector<std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot>> mOblivionFirstPersonHeldPoseBindings;
         bool mOblivionMeleeProjection = false;
+        bool mOblivionRecoveryActive = false;
         std::uint64_t mOblivionFirstPersonRenderedReaction = 0;
         std::string mOblivionFirstPersonReactionGroup;
         std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mOblivionFirstPersonPoseSnapshot;

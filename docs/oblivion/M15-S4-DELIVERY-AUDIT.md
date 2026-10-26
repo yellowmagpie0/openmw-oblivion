@@ -6,6 +6,12 @@ scope is [S4 in the implementation plan](M15-COMBAT-STEALTH-CRIME-IMPLEMENTATION
 including its tests and gate. Historical pure-rule, isolated body and service
 checkpoints in the milestone ledger do not establish complete live gameplay.
 
+The latest [bounded natural recovery checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
+takes a normal unarmed contact against unchanged stock Bailey through physical
+Down, coherent GetUp and upright return, including actual Down-save fresh-process
+restarts in normal and sanitizer runs. The combined course and complete S4 matrix
+remain open.
+
 ## Required implementation
 
 | S4 item | Current source evidence | Remaining delivery work |

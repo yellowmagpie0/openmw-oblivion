@@ -210,7 +210,8 @@ namespace MWPhysics
         std::unique_ptr<PreparedActorRagdoll> prepareActorRagdoll(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-            const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr);
+            const NifBullet::RagdollInternalCollisionFilter* internalFilter = nullptr,
+            const std::shared_ptr<Actor>& retainedCapsule = {});
         bool validatePreparedActorRagdoll(const PreparedActorRagdoll& prepared);
         bool commitActorRagdoll(PreparedActorRagdoll& prepared);
         void addActorRagdoll(const MWWorld::Ptr& ptr, const NifBullet::ActorRagdollDefinition& definition,

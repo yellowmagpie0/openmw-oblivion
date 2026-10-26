@@ -68,6 +68,43 @@ namespace
         }
     };
 
+    TEST_F(NifSceneTraversalTest, ExplicitDrawingWorldAdmitsViewAliasesButKeepsActorPlacementUnique)
+    {
+        osg::ref_ptr<osg::Group> world = new osg::Group, mainView = new osg::Group, mapView = new osg::Group;
+        mainView->addChild(world); mapView->addChild(world);
+        osg::ref_ptr<osg::MatrixTransform> actor = new osg::MatrixTransform;
+        actor->setMatrix(osg::Matrixd::translate(100, 0, 0));
+        world->addChild(actor); actor->addChild(mRoot);
+        auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
+        EXPECT_THROW(Binding::prepareObjectLocal(*mRoot, placement), std::invalid_argument);
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement, Nif::NativeTransformPrecision::Single, world);
+        ASSERT_TRUE(prepared->commitPrepared());
+        unsigned calls = 0;
+        mRoot->setUpdateCallback(new Callback([&](Node&, osg::NodeVisitor&) { ++calls; }));
+        prepared->updateObjectLocal(mStamp, 1, placement);
+        EXPECT_EQ(calls, 1u);
+        EXPECT_EQ(prepared->cachedWorld(*mLeaf).mTranslation, osg::Vec3f(117, 0, 0));
+        const auto matrices = mRoot->getWorldMatrices(); ASSERT_EQ(matrices.size(), 2u);
+        for (const auto& matrix : matrices) EXPECT_NEAR(matrix.getTrans().x(), 110, 1e-5);
+        osg::ref_ptr<osg::Group> anotherPlacement = new osg::Group;
+        world->addChild(anotherPlacement); anotherPlacement->addChild(actor);
+        EXPECT_THROW(prepared->updateObjectLocal(mStamp, 2, placement), std::invalid_argument);
+        EXPECT_EQ(calls, 1u); // Reject the ambiguous actor before running callbacks.
+    }
+
+    TEST_F(NifSceneTraversalTest, DrawingWorldPreparationRejectsChangedOrUnrelatedPlacement)
+    {
+        osg::ref_ptr<osg::Group> world = new osg::Group, unrelated = new osg::Group, otherParent = new osg::Group;
+        world->addChild(mRoot);
+        const auto placement = Nif::NiTransform::getIdentity();
+        EXPECT_THROW(Binding::prepareObjectLocal(*mRoot, placement,
+            Nif::NativeTransformPrecision::Single, unrelated), std::invalid_argument);
+        auto prepared = Binding::prepareObjectLocal(*mRoot, placement, Nif::NativeTransformPrecision::Single, world);
+        otherParent->addChild(mRoot);
+        EXPECT_FALSE(prepared->isValid()); EXPECT_FALSE(prepared->commitPrepared());
+        EXPECT_FALSE(mRoot->getTraversalMatrix().getMatrix());
+    }
+
     TEST_F(NifSceneTraversalTest, OwnedCollisionRetainsDeferredPendingFlagsWithoutRetryingSynchronization)
     {
         auto placement = Nif::NiTransform::getIdentity(); placement.mTranslation = {100, 0, 0};
@@ -1767,5 +1804,46 @@ namespace
         EXPECT_TRUE(binding.cachedWorld(*mRoot).mRotation.isIdentity());
         EXPECT_TRUE(mRoot->getControllerTransform().mRotation.isIdentity());
         EXPECT_TRUE(binding.isValid());
+    }
+}
+
+namespace
+{
+    TEST_F(NifSceneTraversalTest, ReleaseRestoresAnimationBeforePhysicalWritebackAndRejectsForeignOwner)
+    {
+        Binding binding(*mRoot);
+        auto target = Nif::NiTransform::getIdentity();
+        target.mRotation.mValues[1][1] = target.mRotation.mValues[2][2] = -1;
+        target.mTranslation = {40, 0, 0};
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node& node, const auto&) {
+            return &node == mRoot ? Binding::CollisionResult{9, target} : Binding::CollisionResult{};
+        };
+        binding.update(mStamp, 1, callbacks);
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 40);
+        EXPECT_EQ(mRoot->mRotationScale.mValues[2][2], -1);
+        binding.restoreAnimationLocals();
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 10);
+        EXPECT_EQ(mRoot->mRotationScale.mValues[2][2], 1);
+        mRoot->setTranslation({77, 0, 0});
+        mChild->setTraversalMatrix(osg::Matrixd::translate(999, 0, 0));
+        EXPECT_THROW(binding.restoreAnimationLocals(), std::invalid_argument);
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 77);
+    }
+
+    TEST_F(NifSceneTraversalTest, FailedPassDoesNotReplaceRetainedAnimationLocals)
+    {
+        Binding binding(*mRoot);
+        binding.update(mStamp, 1, {});
+        mRoot->setTranslation({80, 0, 0});
+        Binding::Callbacks callbacks;
+        callbacks.mCollision = [&](const Node& node, const auto&) -> Binding::CollisionResult {
+            if (&node == mChild) throw std::runtime_error("failed child");
+            return {};
+        };
+        EXPECT_THROW(binding.update(mStamp, 2, callbacks), std::runtime_error);
+        binding.restoreAnimationLocals();
+        EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 10);
+        EXPECT_EQ(mChild->getControllerTransform().mTranslation.x(), 5);
     }
 }

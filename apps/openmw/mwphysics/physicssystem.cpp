@@ -1001,7 +1001,8 @@ namespace MWPhysics
         data->mPtr = ptr;
         data->mCapsulePolicy = capsulePolicy;
         data->mPhysical = mTaskScheduler->prepareActorRagdoll(
-            ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter);
+            ptr, definition, lengthScale, poses, collisionGroup, collisionMask, internalFilter,
+            capsulePolicy == ActorRagdollCapsulePolicy::Retain ? found->second : nullptr);
         return std::unique_ptr<PreparedActorRagdoll>(new PreparedActorRagdoll(std::move(data)));
     }
 

@@ -154,6 +154,8 @@ namespace MWRender
             // Cyclic native samples expose their own time without seeking or
             // replaying the shared event track on every wrap.
             bool mExposeSampleTime = false;
+            // Authored asset locals supply channels absent from recovery clips.
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mDefaultPose = nullptr;
         };
 
         struct NativeReactionResources
@@ -768,6 +770,8 @@ namespace MWRender
         // preparing a contact's physical reaction. No controller/body writes.
         // The sequence-selected reaction root stays distinct from file root0.
         std::optional<NativePhysicalSource> captureNativePhysicalSource(VFS::Path::NormalizedView model) const;
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> captureNativeAnimationDefaults(
+            const NativePhysicalSource& source);
         bool isCurrentNativePhysicalSource(const NativePhysicalSource& source) const noexcept;
         // GetUp uses the actor's full scene root, independently of the KF
         // accumulator root. Validate the current rendered source child order
@@ -817,9 +821,12 @@ namespace MWRender
         // supplies current placement and resolved timing; no timer is invented.
         // Current ordinary NIF hierarchy policy applies. No source/owner release
         // or topology changes are permitted inside frame/controller callbacks.
+        // drawingWorld is the world scene boundary, below camera/view aliases.
         std::unique_ptr<PreparedNativeScene> prepareNativeScene(
             const NifBullet::ActorRagdollDefinition& definition, const Nif::NiTransform& placement,
-            NativeSceneFrameSource source);
+            NativeSceneFrameSource source, osg::Group* drawingWorld = nullptr,
+            std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> defaults = nullptr);
+        std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> nativeSceneAnimationDefaults() const;
         bool commitNativeScene(PreparedNativeScene& prepared) noexcept;
         void endNativeScene();
         bool hasNativeScene() const { return mNativeScene != nullptr; }

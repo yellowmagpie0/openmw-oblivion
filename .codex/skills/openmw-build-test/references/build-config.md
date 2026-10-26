@@ -49,6 +49,13 @@ does not cover engine code. Record the actual sanitizer options with evidence.
 The engine suite passed with leak detection enabled; that is test-process
 coverage, not proof that a rendered game session is leak-free.
 
+On the current SDL2-compat/GLVND workstation, reuse the
+`sanitizer_engine_environment` in
+[the recovery receipt](../../../../docs/oblivion/M15-NATURAL-RECOVERY-VERIFICATION.json).
+It explicitly selects Mesa on X11 and passes the full suite with leak checking.
+The dummy video driver lacks the OpenGL contexts required by two tests; automatic
+vendor selection produced NVIDIA/D-Bus shutdown leaks in the retained attempts.
+
 On a first full GCC16 sanitizer build, `teststore.cpp` can take more than ten
 minutes after Make displays 100%. GCC may report a variable-tracking size limit
 and retry without `-fvar-tracking-assignments`; this is a debug-info fallback,

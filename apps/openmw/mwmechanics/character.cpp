@@ -483,6 +483,11 @@ namespace MWMechanics
             return;
         const auto world = MWBase::Environment::get().getWorld();
         auto& stats = charClass.getCreatureStats(mPtr);
+        if (mOblivionRecoveryActive)
+        {
+            stats.setBlock(false);
+            return;
+        }
         bool knockout = stats.isFatigueKnockedOut();
         bool recovery = stats.getHitRecovery();
         bool knockdown = stats.getKnockedDown();
@@ -2231,6 +2236,7 @@ namespace MWMechanics
 
     bool CharacterController::updateOblivionWeaponState(float duration)
     {
+        if (mOblivionRecoveryActive) return true;
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world ? world->getOblivionCombatService() : nullptr;
         if (!service || !mAnimation)
@@ -3598,6 +3604,31 @@ namespace MWMechanics
 
         updateMagicEffects();
 
+        bool nativeRecovery = false;
+        if (cls.isActor())
+            if (auto* nativeWorld = dynamic_cast<MWWorld::World*>(world);
+                nativeWorld && nativeWorld->getGameProfile() == ESM::GameProfile::Oblivion)
+            {
+                nativeRecovery = nativeWorld->updateOblivionActorRecovery(*mAnimation, mPtr,
+                    mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
+                if (nativeRecovery)
+                {
+                    mHitState = CharState_KnockOut;
+                    cls.getCreatureStats(mPtr).setKnockedDown(true);
+                }
+                else if (mOblivionRecoveryActive)
+                {
+                    const auto interruptedWeapon = mCurrentWeapon;
+                    cancelOblivionCombatInput();
+                    if (!interruptedWeapon.empty())
+                        mAnimation->disable(interruptedWeapon, MWRender::Animation::PlaybackScope::ThisView);
+                    resetCurrentHitState(); resetCurrentIdleState(); resetCurrentMovementState();
+                    cls.getCreatureStats(mPtr).setKnockedDown(false);
+                    cls.getCreatureStats(mPtr).setHitRecovery(false);
+                }
+                mOblivionRecoveryActive = nativeRecovery;
+            }
+
         bool isPlayer = mPtr == MWMechanics::getPlayer();
         bool isFirstPersonPlayer = isPlayer && MWBase::Environment::get().getWorld()->isFirstPerson();
         bool godmode = isPlayer && MWBase::Environment::get().getWorld()->getGodModeState();
@@ -4078,12 +4109,18 @@ namespace MWMechanics
         }
 
         // Original actor contact dispatch observes the prior Contact phase.
-        dispatchOblivionMeleeContact();
-        advanceOblivionMeleePlayback(duration);
+        if (!nativeRecovery)
+        {
+            dispatchOblivionMeleeContact();
+            advanceOblivionMeleePlayback(duration);
+        }
         osg::Vec3f movementFromAnimation
-            = mAnimation->runAnimation(mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
-        persistOblivionMeleeProgress();
-        finishOblivionMeleePlayback();
+            = mAnimation->runAnimation(nativeRecovery || (mSkipAnim && !isScriptedAnimPlaying()) ? 0.f : duration);
+        if (!nativeRecovery)
+        {
+            persistOblivionMeleeProgress();
+            finishOblivionMeleePlayback();
+        }
 
         if (mPtr.getClass().isActor() && !isScriptedAnimPlaying())
         {

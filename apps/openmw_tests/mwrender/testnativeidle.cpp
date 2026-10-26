@@ -6,6 +6,7 @@
 #include "apps/openmw/mwworld/worldmodel.hpp"
 #include "apps/openmw/mwworld/cellstore.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
+#include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include "apps/openmw/mwmechanics/creaturestats.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
 #include <components/esm4/loadidle.hpp>
@@ -97,6 +98,7 @@ namespace
         auto reactionRoot() const { return mNativeReactionRootRecord; }
         void clear() { clearAnimSources(); }
         void replaceRoot() { mObjectRoot = new osg::Group; }
+        void removeRoot() { mObjectRoot = nullptr; }
         void sample(std::string_view group)
         {
             MWRender::Animation::NativeSequenceLayer layer;
@@ -622,7 +624,7 @@ namespace
 {
     struct NativeGetUpRequestTest : testing::Test
     {
-        static std::string records(bool alias)
+        static std::string records(bool alias, bool swimming = false)
         {
             const std::array<std::uint32_t, 6> condition{0x60, std::bit_cast<std::uint32_t>(0.f), 77, 0, 0, 0};
             return idle(0xa00, 0, "Dog\\IdleAnims", sub(ESM::fourCC("CTDA"), bytes(condition)))
@@ -630,14 +632,17 @@ namespace
                 + idle(0xb00, 0, "Cat\\IdleAnims\\Other.kf")
                 + (alias ? idle(0xa02, 0xa00, "OUTSIDE\\SAME.KF",
                     sub(ESM::fourCC("CTDA"), bytes(std::array<std::uint32_t, 6>{0,
-                        std::bit_cast<std::uint32_t>(1.f), 46, 0, 0, 0}))) : "");
+                        std::bit_cast<std::uint32_t>(1.f), 46, 0, 0, 0}))) : "")
+                + (swimming ? idle(0xc00, 0, "Dog\\IdleAnims",
+                    sub(ESM::fourCC("CTDA"), bytes(std::array<std::uint32_t, 6>{0,
+                        std::bit_cast<std::uint32_t>(1.f), 185, 0, 0, 0}))) : "");
         }
         TestingOpenMW::NativeWorldFixture mFixture;
         MWWorld::Ptr mActor;
         osg::ref_ptr<IdleAnimation> mAnimation;
         NativeGetUpRequestTest() : NativeGetUpRequestTest(false) {}
-        explicit NativeGetUpRequestTest(bool alias)
-            : mFixture{false, false, false, {}, {}, records(alias), alias ? 4u : 3u}
+        explicit NativeGetUpRequestTest(bool alias, bool swimming = false)
+            : mFixture{false, false, false, {}, {}, records(alias, swimming), (alias ? 4u : 3u) + unsigned(swimming)}
         {
             auto& world = mFixture.mWorld; auto& store = world.getStore();
             MWClass::Npc::registerSelf(); world.setupPlayer();
@@ -694,6 +699,11 @@ namespace
             state.validate();
             return state;
         }
+    };
+
+    struct NativeGetUpSwimmingTest : NativeGetUpRequestTest
+    {
+        NativeGetUpSwimmingTest() : NativeGetUpRequestTest(false, true) {}
     };
 
     struct NativeGetUpSelectionTest : NativeGetUpRequestTest
@@ -1042,6 +1052,107 @@ TEST_F(NativeGetUpPlaybackTest, PublishesRequestGraphProcessFieldsClockAndRandom
     EXPECT_EQ(snapshot(), expected);
     EXPECT_TRUE(combat().isActionPending(contact, key()));
     EXPECT_THROW(prepared->state(), std::invalid_argument);
+}
+
+TEST_F(NativeGetUpPlaybackTest, RecoveryResetCancelsOwnedCombatTogetherWithClockAndKeepsOtherActions)
+{
+    combat().setProcessKnockedState(key(), 0);
+    const auto interrupted = combat().beginMeleeStrike(key(), ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+    ASSERT_NE(interrupted, 0); const auto unrelated = combat().allocateAction();
+    auto next = pendingUpdate(); next.mResetCombat = true; next.mClock = .5f;
+    const auto before = snapshot(); auto prepared = combat().prepareGetUpPlayback(key(), next);
+    ASSERT_TRUE(prepared->isValid()); EXPECT_EQ(snapshot(), before);
+    ASSERT_TRUE(prepared->commit()); EXPECT_FALSE(prepared->commit());
+    EXPECT_FALSE(combat().isActionPending(interrupted)); EXPECT_TRUE(combat().isActionPending(unrelated));
+    EXPECT_FALSE(combat().findMeleeState(key()));
+    EXPECT_EQ(combat().getProcessAction(key()), -1); EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    EXPECT_FLOAT_EQ(combat().animationClock(key()), .5f);
+    EXPECT_EQ(snapshot().mCombatRngState, before.mCombatRngState);
+}
+
+TEST_F(NativeGetUpPlaybackTest, RecoveryResetRejectsInterveningLedgerChangesWithoutLosingEitherAction)
+{
+    const auto owned = combat().allocateAction(key());
+    auto next = pendingUpdate(); next.mResetCombat = true;
+    auto stale = combat().prepareGetUpPlayback(key(), next);
+    const auto unrelated = combat().allocateAction(); const auto before = snapshot();
+    EXPECT_FALSE(stale->isValid()); EXPECT_FALSE(stale->commit()); EXPECT_EQ(snapshot(), before);
+    ASSERT_TRUE(combat().isActionPending(owned)); ASSERT_TRUE(combat().isActionPending(unrelated));
+    auto fresh = combat().prepareGetUpPlayback(key(), next); ASSERT_TRUE(fresh->commit());
+    EXPECT_FALSE(combat().isActionPending(owned)); EXPECT_TRUE(combat().isActionPending(unrelated));
+}
+
+TEST_F(NativeGetUpPlaybackTest, FailedRecoveryResetPreparationPreservesInterruptedContact)
+{
+    const auto owned = combat().allocateAction(key()); const auto before = snapshot();
+    auto next = pendingUpdate(); next.mResetCombat = true;
+    next.mPlayback.mPendingRequests.at(1).mBase = ESM::FormKey::content("headless.esm", 0xdead);
+    EXPECT_THROW(combat().prepareGetUpPlayback(key(), next), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before); EXPECT_TRUE(combat().isActionPending(owned));
+}
+
+TEST_F(NativeGetUpSwimmingTest, DryWorldSwimmingConditionSkipsSwimIdleBeforeGetUpWithoutPublishingSelection)
+{
+    auto& world = mFixture.mWorld;
+    auto* ai = world.getOblivionAiService(); ASSERT_TRUE(ai);
+    ESM4::PackageCondition swimming;
+    swimming.mFunction = 185; swimming.mComparisonValue = 1; swimming.mOperator = ESM4::ConditionOperator::Equal;
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(mActor, std::span(&swimming, 1), {}),
+        ESM4::ConditionResult::MissingContext);
+    world.initializePhysics(new osg::Group);
+    EXPECT_EQ(ai->evaluateNativeIdleConditions(mActor, std::span(&swimming, 1), {}),
+        ESM4::ConditionResult::False);
+    const auto before = snapshot();
+    EXPECT_EQ(world.prepareOblivionGetUpIdle(mActor).mIdle, ESM::FormKey::content("headless.esm", 0xa01));
+    EXPECT_EQ(snapshot(), before);
+}
+
+TEST_F(NativeGetUpLoadTest, QueuedRequestPlaysGetUpAndCompletesWithoutReplayingContactOrSelection)
+{
+    write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+    auto& world = mFixture.mWorld; const auto contact = combat().allocateAction(key());
+    EXPECT_TRUE(world.advanceOblivionGetUpPlayback(*mAnimation, mActor, .01f));
+    EXPECT_FALSE(combat().isActionPending(contact)); EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    const auto selected = snapshot(); const auto random = combat().combatRandomState();
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 0); ASSERT_EQ(queue->getNumItems(), 1);
+    auto job = queue->removeWorkItem(); complete(*job);
+    EXPECT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1);
+    EXPECT_TRUE(world.advanceOblivionGetUpPlayback(*mAnimation, mActor, .05f));
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 6); EXPECT_EQ(combat().getProcessAction(key()), 11);
+    ASSERT_GT(mAnimation->sources(), 0); EXPECT_FALSE(mAnimation->projectedGroup().empty());
+    unsigned frames = 0;
+    while (combat().getProcessKnockedState(key()) != 0 && frames++ < 65)
+        EXPECT_TRUE(world.advanceOblivionGetUpPlayback(*mAnimation, mActor, .05f));
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 0); EXPECT_EQ(combat().getProcessAction(key()), -1);
+    EXPECT_LT(frames, 65); // Authored10..12 starts immediately; duration is about2seconds, not12.
+    EXPECT_EQ(combat().combatRandomState(), random); EXPECT_FALSE(combat().isActionPending(contact));
+    EXPECT_EQ(snapshot().mPhysicalActions, selected.mPhysicalActions);
+    EXPECT_NO_THROW(world.validateOblivionSaveState(snapshot()));
+}
+
+TEST_F(NativeGetUpLoadTest, FreshRendererReadmitsSavedPlaybackAtZeroDurationWithoutChangingItsPhase)
+{
+    write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+    auto& world = mFixture.mWorld;
+    ASSERT_TRUE(world.advanceOblivionGetUpPlayback(*mAnimation, mActor, .01f));
+    osg::ref_ptr<SceneUtil::WorkQueue> queue = new SceneUtil::WorkQueue(0);
+    world.updateOblivionPendingGetUpLoads(*queue); auto job = queue->removeWorkItem(); complete(*job);
+    ASSERT_EQ(world.updateOblivionPendingGetUpLoads(*queue), 1);
+    ASSERT_TRUE(world.advanceOblivionGetUpPlayback(*mAnimation, mActor, .25f));
+    const auto saved = snapshot(); combat().restore(saved, world.getStore());
+    osg::ref_ptr<IdleAnimation> fresh = new IdleAnimation(mActor, mFixture.mResources);
+    EXPECT_TRUE(world.advanceOblivionGetUpPlayback(*fresh, mActor, 0));
+    EXPECT_EQ(snapshot(), saved); EXPECT_GT(fresh->sources(), 0); EXPECT_FALSE(fresh->projectedGroup().empty());
+    EXPECT_EQ(combat().getProcessAction(key()), 11);
+}
+
+TEST_F(NativeGetUpLoadTest, RecoveryRequestFailureDoesNotPublishClockRandomOrCancellation)
+{
+    const auto owned = combat().allocateAction(key()); const auto before = snapshot();
+    mAnimation->removeRoot(); // Selection can prepare, but the scene cannot publish.
+    EXPECT_THROW(mFixture.mWorld.advanceOblivionGetUpPlayback(*mAnimation, mActor, .01f), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before); EXPECT_TRUE(combat().isActionPending(owned));
 }
 
 TEST_F(NativeGetUpPlaybackTest, ResolvedStartCompletionAndClearRetainIdentityFrontier)

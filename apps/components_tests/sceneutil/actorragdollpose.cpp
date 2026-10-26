@@ -521,9 +521,41 @@ namespace
         equipment->addChild(unrelated);
         mHand->addChild(equipment);
         SceneUtil::ActorRagdollPoseBinding binding(mGraph, *wrapper);
+        EXPECT_EQ(&binding.sourceAssetRoot(), mRoot.get());
         binding.applyWorldBones(desired(), mObjectWorld);
         EXPECT_EQ(binding.captureWorldBones(mObjectWorld)[0].mPose.getTrans(), osg::Vec3f(120, 5, 0));
         EXPECT_EQ(unrelated->getMatrix().getTrans(), osg::Vec3f(99, 99, 99));
+    }
+
+    TEST_F(ActorRagdollPoseTest, FindsWrappedSourceAmongSeparatelyAttachedCreatureParts)
+    {
+        osg::ref_ptr<SceneUtil::Skeleton> wrapper = new SceneUtil::Skeleton;
+        osg::ref_ptr<NifOsg::MatrixTransform> part
+            = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        part->setUserValue(Misc::OsgUserValues::sFileHash, std::string("creature-part"));
+        part->setUserValue("recordIndex", 8u); // Foreign asset's overlapping record namespace.
+        part->setTranslation({99, 99, 99});
+        wrapper->addChild(part);
+        wrapper->addChild(mRoot);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *wrapper);
+        EXPECT_EQ(&binding.sourceAssetRoot(), mRoot.get());
+        binding.applyWorldBones(desired(), mObjectWorld);
+        EXPECT_EQ(binding.captureWorldBones(mObjectWorld)[0].mPose.getTrans(), osg::Vec3f(120, 5, 0));
+        EXPECT_EQ(part->getMatrix().getTrans(), osg::Vec3f(99, 99, 99));
+    }
+
+    TEST_F(ActorRagdollPoseTest, WrappedSourceRejectsDuplicateAssetsAndInvalidatesPreparedBindings)
+    {
+        osg::ref_ptr<SceneUtil::Skeleton> wrapper = new SceneUtil::Skeleton;
+        wrapper->addChild(mRoot);
+        SceneUtil::ActorRagdollPoseBinding binding(mGraph, *wrapper);
+        ASSERT_TRUE(binding.isValid());
+        osg::ref_ptr<osg::Group> duplicate = new osg::Group;
+        duplicate->setUserValue(Misc::OsgUserValues::sFileHash, mGraph.mSourceHash);
+        wrapper->addChild(duplicate);
+        EXPECT_FALSE(binding.isValid());
+        EXPECT_THROW(binding.sourceAssetRoot(), std::invalid_argument);
+        EXPECT_THROW((SceneUtil::ActorRagdollPoseBinding(mGraph, *wrapper)), std::invalid_argument);
     }
 
     TEST_F(ActorRagdollPoseTest, PreservesUnsimulatedScaledHelpersOutsidePhysicalAncestorPaths)

@@ -10,6 +10,7 @@
 #include <components/esm3/loadstat.hpp>
 #include <components/resource/bulletshape.hpp>
 #include <components/nifbullet/actorragdollphysics.hpp>
+#include <components/nifbullet/nativedynamicsworld.hpp>
 #include <components/settings/values.hpp>
 
 #include <BulletCollision/BroadphaseCollision/btDbvtBroadphase.h>
@@ -338,4 +339,75 @@ namespace
         EXPECT_TRUE(geometry.mIsActor);
     }
 
+}
+
+namespace
+{
+    TEST(ActorBoundsTest, RetainedCapsuleIgnoresOnlyOwnedBodiesAcrossPublicationAndRemoval)
+    {
+        struct RestoreThreads
+        {
+            int mPrevious = Settings::physics().mAsyncNumThreads;
+            ~RestoreThreads() { Settings::physics().mAsyncNumThreads.set(mPrevious); }
+        } restoreThreads;
+        MWClass::Static::registerSelf();
+        MWBase::Environment environment;
+        MWWorld::ESMStore store;
+        environment.setESMStore(store);
+        const BoundsActorClass type(false);
+        for (int threads : {0, 1, 2})
+        {
+            SCOPED_TRACE(threads);
+            Settings::physics().mAsyncNumThreads.set(threads);
+            btDefaultCollisionConfiguration configuration;
+            btCollisionDispatcher dispatcher(&configuration);
+            btDbvtBroadphase broadphase;
+            btSequentialImpulseConstraintSolver solver;
+            NifBullet::NativeDynamicsWorld world(&dispatcher, &broadphase, &solver, &configuration);
+            world.setGravity({0, 0, 0});
+            ESM::Static base; base.blank();
+            ESM::CellRef reference; reference.blank();
+            MWWorld::LiveCellRef<ESM::Static> live(reference, &base); live.mClass = &type;
+            MWWorld::Ptr ptr(&live);
+            MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+            osg::ref_ptr<Resource::BulletShape> shape = new Resource::BulletShape;
+            shape->mCollisionBox.mExtents = {1, 1, 2};
+            btCollisionObject unrelated;
+            auto actor = std::make_shared<MWPhysics::Actor>(ptr, shape, &scheduler, false,
+                DetourNavigator::CollisionShapeType::Aabb, osg::Vec3f{});
+            auto* capsule = actor->getCollisionObject();
+            capsule->setIgnoreCollisionCheck(&unrelated, true);
+            NifBullet::ActorRagdollDefinition graph;
+            NifBullet::RagdollBodyDefinition body{};
+            body.mRecord = 12; body.mNodeRecord = 8; body.mMass = 2;
+            body.mInertia = {1, 0, 0, 0, 1, 0, 0, 0, 1};
+            body.mShape = NifBullet::RagdollSphere{.5f}; graph.mBodies.push_back(body);
+            const std::array<btTransform, 1> poses{btTransform::getIdentity()};
+            const auto prepare = [&] { return scheduler.prepareActorRagdoll(ptr, graph, 1, poses,
+                MWPhysics::CollisionType_Actor, MWPhysics::CollisionType_Actor | MWPhysics::CollisionType_World,
+                nullptr, actor); };
+            {
+                auto cancelled = prepare();
+                EXPECT_EQ(capsule->getNumObjectsWithoutCollision(), 1);
+                EXPECT_TRUE(cancelled->physics().collisionObjects()[0]->checkCollideWith(capsule));
+            }
+            EXPECT_EQ(capsule->getNumObjectsWithoutCollision(), 1);
+            auto prepared = prepare(); auto* physical = prepared->physics().collisionObjects()[0];
+            ASSERT_TRUE(scheduler.commitActorRagdoll(*prepared));
+            EXPECT_FALSE(actor->isCollisionSuspended());
+            EXPECT_NE(capsule->getBroadphaseHandle(), nullptr);
+            EXPECT_FALSE(capsule->checkCollideWith(physical));
+            EXPECT_FALSE(physical->checkCollideWith(capsule));
+            EXPECT_FALSE(dispatcher.needsCollision(physical, capsule));
+            EXPECT_TRUE(physical->checkCollideWith(&unrelated));
+            EXPECT_EQ(capsule->getNumObjectsWithoutCollision(), 2);
+            scheduler.removeActorRagdoll(ptr);
+            EXPECT_EQ(capsule->getNumObjectsWithoutCollision(), 1);
+            EXPECT_FALSE(capsule->checkCollideWith(&unrelated));
+            auto stale = prepare();
+            actor.reset();
+            EXPECT_FALSE(scheduler.validatePreparedActorRagdoll(*stale));
+            EXPECT_FALSE(scheduler.commitActorRagdoll(*stale));
+        }
+    }
 }

@@ -1,6 +1,6 @@
-"""Build the bounded, script-free M15 expenditure observation GMST fixture.
+"""Build the bounded, script-free M15 Fatigue regeneration GMST fixture.
 
-Only regeneration is disabled. Actor resources, attacks and contact outcomes
+Only regeneration rates are configured. Actor resources, attacks and contact outcomes
 are never authored here. JSON is source; the generated plugin stays ignored.
 """
 from __future__ import annotations
@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import struct
 from pathlib import Path
 
@@ -26,8 +27,9 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
         raise ValueError("invalid or unpinned Fatigue fixture recipe")
     settings = recipe["settings"]
     if (not isinstance(settings, dict) or set(settings) != names
-            or any(type(v) not in (int, float) or v != 0 for v in settings.values())):
-        raise ValueError("Fatigue fixture may only disable both regeneration settings")
+            or any(type(v) not in (int, float) or not math.isfinite(v) or v < 0
+                   or v > 3.4028234663852886e38 for v in settings.values())):
+        raise ValueError("Fatigue fixture requires finite nonnegative binary32 regeneration settings")
     existing = {}
     for tag, ident, payload in records(source):
         if tag != "GMST":
@@ -50,8 +52,9 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
         else:
             ident = 0x01000000 | own
             own += 1
-        emitted.append(record("GMST", ident, string("EDID", editor) + sub("DATA", struct.pack("<f", 0))))
-        rows.append({"editor_id": editor, "form_id": ident, "value": 0,
+        encoded = struct.pack("<f", settings[editor])
+        emitted.append(record("GMST", ident, string("EDID", editor) + sub("DATA", encoded)))
+        rows.append({"editor_id": editor, "form_id": ident, "value": struct.unpack("<f", encoded)[0],
                      "kind": "override" if editor in existing else "new"})
     header = sub("HEDR", struct.pack("<fII", 1, len(emitted), own))
     header += string("CNAM", "OpenMW M15 expenditure observation fixture")

@@ -1153,6 +1153,30 @@ namespace
         { ++mVisits; mPathLength = visitor->getNodePath().size(); }
     };
 
+    TEST_F(PhysicalPoseAnimationTest, NativeScenePrePhysicsUsesWorldBoundaryBelowViewAliases)
+    {
+        osg::ref_ptr<osg::Group> mainView = new osg::Group, mapView = new osg::Group;
+        mainView->addChild(mParent); mapView->addChild(mParent);
+        auto placement = Nif::NiTransform::getIdentity();
+        unsigned frames = 0;
+        const auto source = [&](const auto&, const auto&, unsigned) {
+            ++frames;
+            MWRender::Animation::NativeSceneFrame frame; frame.mPlacement = placement;
+            return frame;
+        };
+        EXPECT_THROW(mAnimation->prepareNativeScene(mGraph, placement, source), std::invalid_argument);
+        auto prepared = mAnimation->prepareNativeScene(mGraph, placement, source, mParent);
+        ASSERT_TRUE(prepared->isValid()); ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        EXPECT_TRUE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 1));
+        EXPECT_FALSE(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 1));
+        EXPECT_EQ(frames, 1u); EXPECT_EQ(mAnimation->mWriter->mWrites, 1u);
+        osg::ref_ptr<osg::Group> secondPlacement = new osg::Group;
+        mParent->addChild(secondPlacement); secondPlacement->addChild(mRoot);
+        mFrameStamp->setFrameNumber(2);
+        EXPECT_THROW(mAnimation->updateNativeSceneBeforePhysics(*mFrameStamp, 2), std::invalid_argument);
+        EXPECT_EQ(frames, 1u);
+    }
+
     TEST_F(PhysicalPoseAnimationTest, NativeScenePreparationCommitsLiveCallbacksAndRetiresWithoutRebuilding)
     {
         osg::ref_ptr<SceneCounter> rootCallback = new SceneCounter;
@@ -2271,5 +2295,59 @@ namespace
         auto release = mAnimation->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
         EXPECT_EQ(mBone->getUpdateCallback(), shared); EXPECT_EQ(other->getUpdateCallback(), shared);
         EXPECT_EQ(shared->getNestedCallback(), tail); EXPECT_EQ(mAnimation->mControllerBuilds, builds);
+    }
+}
+
+namespace
+{
+    TEST_F(PhysicalPoseAnimationTest, GetUpDefaultsSupplyUnkeyedRotationAndReleaseLastAnimatedPose)
+    {
+        mAnimation->mWriter->mWriteTranslation = mAnimation->mWriter->mWriteRotation = false;
+        auto track = nativeTrack({2, 3, 4});
+        track->mPose.mRotation.reset();
+        track->mPose.mScale.reset();
+        mAnimation->addNativeSource("getup", track, 10);
+        osg::ref_ptr<NifOsg::MatrixTransform> omitted = new NifOsg::MatrixTransform(Nif::NiTransform::getIdentity());
+        omitted->setName("Omitted"); omitted->setUserValue("recordIndex", 9u);
+        mRoot->addChild(omitted);
+        auto body = mGraph.mBodies.front(); body.mNodeRecord = 9; body.mRecord = 13; body.mBone = "Omitted";
+        mGraph.mBodies.push_back(body);
+        auto defaults = std::make_shared<ESM4::RuntimeMeleePoseSnapshot>();
+        ESM4::RuntimeMeleePoseTrack pose; pose.mBone = "Pelvis"; pose.mScale = 2;
+        defaults->mTracks.push_back(pose);
+        pose.mBone = "Omitted"; pose.mScale = 1; pose.mTranslation = {5, 0, 0};
+        defaults->mTracks.push_back(pose);
+        auto physical = Nif::NiTransform::getIdentity();
+        physical.mRotation.mValues[1][1] = physical.mRotation.mValues[2][2] = -1;
+        bool uprightTarget = false, omittedUpright = false;
+        auto prepared = mAnimation->prepareNativeScene(mGraph, Nif::NiTransform::getIdentity(),
+            [&](const auto&, const auto&, unsigned) {
+                MWRender::Animation::NativeSceneFrame frame;
+                frame.mCollision = [&](std::uint32_t record, const Nif::NiTransform& animated) {
+                    (record == 8 ? uprightTarget : omittedUpright) = animated.mRotation.mValues[2][2] > .99f;
+                    return SceneUtil::NifSceneTraversal::CollisionResult{9, physical};
+                };
+                return frame;
+            }, nullptr, defaults);
+        ASSERT_TRUE(mAnimation->commitNativeScene(*prepared));
+        traverse();
+        EXPECT_EQ(mBone->mRotationScale.mValues[2][2], -1);
+        MWRender::Animation::NativeSequenceLayer layer{"getup"};
+        layer.mDefaultPose = mAnimation->nativeSceneAnimationDefaults();
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers(std::span(&layer, 1)));
+        traverse();
+        EXPECT_TRUE(uprightTarget);
+        EXPECT_TRUE(omittedUpright);
+        EXPECT_EQ(mBone->mRotationScale.mValues[2][2], -1);
+        ASSERT_TRUE(mAnimation->setNativeSequenceLayers({}));
+        mAnimation->endNativeScene();
+        EXPECT_EQ(mBone->mRotationScale.mValues[2][2], 1);
+        EXPECT_EQ(mBone->mScale, 2);
+        EXPECT_EQ(omitted->mRotationScale.mValues[2][2], 1);
+        EXPECT_EQ(omitted->getControllerTransform().mTranslation, osg::Vec3f(5, 0, 0));
+        EXPECT_EQ(mBone->getControllerTransform().mTranslation, osg::Vec3f(2, 3, 4));
+        const auto writes = mAnimation->mWriter->mWrites;
+        traverse();
+        EXPECT_EQ(mAnimation->mWriter->mWrites, writes + 1);
     }
 }
