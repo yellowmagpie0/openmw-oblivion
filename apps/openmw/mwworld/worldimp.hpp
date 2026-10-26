@@ -81,6 +81,7 @@ namespace MWRender
 {
     class SkyManager;
     class Animation;
+    class NativeIdleResourceCache;
     class Camera;
     class PostProcessor;
     class Objects;
@@ -211,6 +212,8 @@ namespace MWWorld
         std::shared_ptr<const NativeLooseWeaponStates> mOblivionLooseWeaponStates;
         struct OblivionGetUpResources;
         std::shared_ptr<const OblivionGetUpResources> mOblivionGetUpResources;
+        mutable std::shared_ptr<MWRender::NativeIdleResourceCache> mOblivionIdleResourceCache;
+        MWRender::NativeIdleResourceCache& oblivionIdleResourceCache() const;
         std::shared_ptr<const OblivionGetUpResources> prepareOblivionGetUpResources(
             const ESM4::RuntimeState& state, const ESMStore* incoming = nullptr) const;
         std::unique_ptr<ESM4::RuntimeState> mPendingOblivionRuntimeState;

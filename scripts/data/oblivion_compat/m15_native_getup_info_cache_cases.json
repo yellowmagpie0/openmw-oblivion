@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "scope": "Native-keyed loaded-resource provider cache, World acquisition and simulation-owned readmission; ready-resource profile and cold-result publication primitives",
+  "runtime_schema": 73,
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "native-key-identity",
+      "expected": "ASCII case-only authored model variants share a canonical loaded resource. Slash variants keep distinct identities even when normalized VFS path and file hash agree. Embedded NUL follows C-string semantics.",
+      "test": "NativeIdleResourceTest.NativeCacheSharesCaseOnlyKeysButKeepsSlashAliasesDistinct",
+      "original": "438F10 / 43E680 / 43E760 / 43E820 / 4383B0 / 438540"
+    },
+    {
+      "id": "last-owner-release",
+      "expected": "Cache entries are nonowning and disappear at the last canonical handle release. Retained renderer aliases and uncached source artifacts keep KF data without pinning the loaded-info identity. Reacquisition after backend eviction can obtain replacement bytes.",
+      "test": "NativeIdleResourceTest.NativeCacheRetainsInfoUntilLastOwnerButRendererAliasesDoNotOwnIt"
+    },
+    {
+      "id": "independent-cold-results",
+      "expected": "find performs no load; independent loaded candidates reconcile at publishLoaded. First resident native key wins even when another candidate has different parsed bytes/fingerprint. No worker scheduling or fixed pending delay is invented.",
+      "test": "NativeIdleResourceTest.NativeCacheColdJobPublicationUsesFirstResidentEvenWhenLoadedBytesDiffer",
+      "original": "4378F0 / 435B10; pending-cache05 actual pending map/cache publication courses"
+    },
+    {
+      "id": "strict-admission",
+      "expected": "admit checks the supplied validated source path and fingerprint and rejects a conflicting resident. This is separate from native job publication. It does not itself audit physical filesystem freshness.",
+      "test": "NativeIdleResourceTest.NativeCacheAdmissionChecksFreshBytesAndRejectsResidentConflicts"
+    },
+    {
+      "id": "facade-lifetime",
+      "expected": "Resource bytes remain usable after the provider facade is destroyed; cleanup does not dereference a retired provider.",
+      "test": "NativeIdleResourceTest.NativeCacheResourcesCanOutliveProviderFacade"
+    },
+    {
+      "id": "failed-acquisition",
+      "expected": "Missing, malformed, non-KF and multiplexed resources cannot populate the pool.",
+      "test": "NativeIdleResourceTest.NativeCacheDoesNotRetainMissingMalformedOrAmbiguousRequests"
+    },
+    {
+      "id": "concurrent-acquisition-and-expiry",
+      "expected": "Concurrent ready acquisitions share one live canonical identity; an expired predecessor cannot erase a newer entry under the same key; all entries reclaim after ownership ends.",
+      "test": "NativeIdleResourceTest.NativeCacheConcurrentAcquisitionSharesOneLiveInfoAndReclaimsEntries",
+      "stress": {
+        "iterations": 100,
+        "workers_per_phase": 4,
+        "acquisitions_per_worker_per_phase": 64,
+        "phases": 2,
+        "total_acquisitions": 51200
+      }
+    },
+    {
+      "id": "world-cross-actor-residency",
+      "expected": "Two actors in one World share the native provider pool. Backend eviction and a changed file do not replace still-resident info or publish either renderer source list.",
+      "test": "NativeGetUpRequestTest.DifferentActorsShareResidentInfoAcrossBackendEviction"
+    },
+    {
+      "id": "world-staged-readmission",
+      "expected": "A valid incoming current resource can be validated in a fresh cache despite a different live resident. Validation preserves the live snapshot and its next cache hit. Changed-byte cases explicitly evict the backend cache before the resource-service audit.",
+      "test": "NativeGetUpRequestTest.IncomingCacheValidationDoesNotReuseOrReplaceLiveResidentInfo"
+    },
+    {
+      "id": "world-simulation-cache-ownership",
+      "expected": "Retain/detach, candidate clear and rollback restore the original provider context with its original resident bytes.",
+      "test": "NativeGetUpRequestTest.RestoredSimulationRecoversItsCacheAfterCandidateClear"
+    },
+    {
+      "id": "world-ni-only-provenance",
+      "expected": "Readmission accepts a cached NI source after every request is gone without fabricating request slots. Source artifacts and request-backed canonical info leases occupy separate maps; portable resource/request/NI identities are unchanged.",
+      "test": "NativeGetUpRequestTest.SavedNiSourceCanOutliveEveryRequestWithoutInventingLoadedOwnership",
+      "coverage_limit": "Headless admission and source/slot inspection; no live renderer reconstruction or request destructor caller."
+    },
+    {
+      "id": "resident-repeated-request",
+      "expected": "Repeated ready-resource preparation uses resident info across backend eviction. Saved source audit still rejects a fingerprint that differs from the resource service.",
+      "test": "NativeGetUpRequestTest.PreparedRequestKeepsResidentInfoAcrossBackendEvictionAndRechecksSaveBytes",
+      "correction": "Previous assertion expected a new file hash on a resident native-key hit. Actual 4383B0 hit/release evidence establishes resident reuse until final ownership ends."
+    },
+    {
+      "id": "original-formatter",
+      "expected": "402E30 with the actual 474C50 format/directory literals unconditionally prefixes Meshes\\ and preserves slash/dot spelling until C-string termination. Already-prefixed input receives a second prefix.",
+      "original_profiles": 9,
+      "boundary": "Actual formatter and CRT, heap/OS shims; no filesystem loading or native game process."
+    }
+  ],
+  "not_accepted": [
+    "Live GetUp request/NI graph factory or dispatcher",
+    "Worker scheduling and pending-IO fresh-process restoration",
+    "Native NI-manager registration order integration and renderer restoration",
+    "Original filesystem-loading equivalence for all prefix/dot spellings; generic ResourceSystem backend path mapping is unchanged",
+    "Physical filesystem hot-reload freshness without backend invalidation",
+    "Normal-input view/device/FPS, recovery and canonical fresh-save courses",
+    "Full M15S4 delivery"
+  ]
+}

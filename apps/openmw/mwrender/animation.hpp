@@ -80,6 +80,8 @@ namespace MWRender
     class ResetAccumRootCallback;
     class RotateController;
     class TransparencyUpdater;
+    class NativeIdleResourceCache;
+    struct NativeIdleResourceCacheState;
 
     using ActiveControllersVector = std::vector<std::pair<osg::ref_ptr<osg::Node>, osg::ref_ptr<osg::Callback>>>;
 
@@ -614,9 +616,13 @@ namespace MWRender
         {
             VFS::Path::Normalized mModel;
             osg::ref_ptr<const SceneUtil::KeyframeHolder> mFrames;
+            std::weak_ptr<NativeIdleResourceCacheState> mCache;
+            std::string mCacheKey;
+            bool mCachePublished = false;
             NativeIdleResource(VFS::Path::Normalized model,
                 osg::ref_ptr<const SceneUtil::KeyframeHolder> frames);
             friend class Animation;
+            friend class NativeIdleResourceCache;
         public:
             ~NativeIdleResource();
             NativeIdleResource(const NativeIdleResource&) = delete;
@@ -932,6 +938,33 @@ namespace MWRender
     private:
         Animation(const Animation&);
         void operator=(Animation&);
+    };
+
+    // Native loaded-info identity belongs to the resource provider, across
+    // actor renderers. Backend VFS aliases and hashes are not this identity.
+    class NativeIdleResourceCache
+    {
+        std::shared_ptr<NativeIdleResourceCacheState> mState;
+        std::shared_ptr<const Animation::NativeIdleResource> insert(std::string key,
+            const Animation::NativeIdleResource& source);
+    public:
+        explicit NativeIdleResourceCache(Resource::ResourceSystem& resources);
+        ~NativeIdleResourceCache();
+        NativeIdleResourceCache(const NativeIdleResourceCache&) = delete;
+        NativeIdleResourceCache& operator=(const NativeIdleResourceCache&) = delete;
+        // Lookup never loads a file. Independent cold jobs publish their loaded
+        // candidates later; the first resident native key wins reconciliation.
+        std::shared_ptr<const Animation::NativeIdleResource> find(std::string_view model) const;
+        std::shared_ptr<const Animation::NativeIdleResource> publishLoaded(std::string_view model,
+            const Animation::NativeIdleResource& loaded);
+        // Convenience for the ready-resource profile; file loading occurs
+        // outside the registry lock, followed by the same reconciliation.
+        std::shared_ptr<const Animation::NativeIdleResource> acquire(std::string_view model);
+        // Readmission first validates current winning bytes independently.
+        // A conflicting resident info must not be silently replaced or reused.
+        std::shared_ptr<const Animation::NativeIdleResource> admit(std::string_view model,
+            const Animation::NativeIdleResource& validated);
+        std::size_t size() const;
     };
 
     class ObjectAnimation : public Animation

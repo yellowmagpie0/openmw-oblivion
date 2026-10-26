@@ -180,8 +180,12 @@ namespace MWWorld
     struct World::OblivionGetUpResources
     {
         using Resource = std::shared_ptr<const MWRender::Animation::NativeIdleResource>;
+        std::shared_ptr<MWRender::NativeIdleResourceCache> mCache;
         std::map<ESM::FormKey, std::pair<ESM4::RuntimeGetUpIdle, Resource>> mActors;
+        // Source provenance can outlive the native loaded info when a cloned
+        // NI remains in its manager/cache after the final request is destroyed.
         std::map<ESM::FormKey, std::map<std::uint64_t, Resource>> mGraphs;
+        std::map<ESM::FormKey, std::map<std::uint64_t, Resource>> mLoadedInfos;
     };
 
     namespace
@@ -402,6 +406,7 @@ namespace MWWorld
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
         decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
+        decltype(World::mOblivionIdleResourceCache) mOblivionIdleResourceCache{};
         decltype(World::mPendingOblivionRuntimeState) mPendingOblivionRuntimeState{};
         decltype(World::mPendingOblivionServices) mPendingOblivionServices{};
         decltype(World::mSharedDefinitionsPrepared) mSharedDefinitionsPrepared{};
@@ -473,6 +478,7 @@ namespace MWWorld
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
         swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
+        swap(mOblivionIdleResourceCache, data.mOblivionIdleResourceCache);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionRuntimeState)>);
         swap(mPendingOblivionRuntimeState, data.mPendingOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mPendingOblivionServices)>);
@@ -574,6 +580,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionGetUpResources.reset();
+        mOblivionIdleResourceCache.reset();
         mPlayer.reset();
         mOblivionCombat.reset();
     }
@@ -1394,6 +1401,7 @@ namespace MWWorld
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
         mOblivionGetUpResources.reset();
+        mOblivionIdleResourceCache.reset();
         mPendingOblivionRuntimeState.reset();
         mPendingOblivionServices.reset();
         mSharedDefinitionsPrepared = false;
@@ -3230,6 +3238,14 @@ namespace MWWorld
         return result;
     }
 
+    MWRender::NativeIdleResourceCache& World::oblivionIdleResourceCache() const
+    {
+        if (!mResourceSystem) throw std::invalid_argument("Native idle cache requires its resource service");
+        if (!mOblivionIdleResourceCache)
+            mOblivionIdleResourceCache = std::make_shared<MWRender::NativeIdleResourceCache>(*mResourceSystem);
+        return *mOblivionIdleResourceCache;
+    }
+
     struct World::PreparedOblivionGetUpIdle::Data
     {
         World* mWorld;
@@ -3300,7 +3316,7 @@ namespace MWWorld
         const auto& selected = data->mSelection;
         if (!selected.mIdle.isNull())
         {
-            const auto resource = animation.acquireNativeIdleResource(selected.mModel);
+            const auto resource = oblivionIdleResourceCache().acquire(selected.mModel);
             if (!resource) throw std::invalid_argument("Selected GetUp KF is unavailable or unsupported");
             data->mBinding = animation.prepareNativeIdleSource(*resource);
             if (!data->mBinding) throw std::invalid_argument("Selected GetUp KF cannot bind its actor scene");
@@ -3314,6 +3330,7 @@ namespace MWWorld
             data->mExpected = mOblivionGetUpResources;
             auto next = data->mExpected ? std::make_shared<OblivionGetUpResources>(*data->mExpected)
                                       : std::make_shared<OblivionGetUpResources>();
+            next->mCache = mOblivionIdleResourceCache;
             next->mActors.insert_or_assign(selected.mActor, std::pair{std::move(idle), resource});
             data->mNext = std::move(next);
         }
@@ -3328,6 +3345,10 @@ namespace MWWorld
         if (state.mNativeGetUpIdles.empty() && state.mNativeGetUpPlayback.empty()) return {};
         if (!mResourceSystem) throw std::invalid_argument("Saved GetUp has no resource service");
         auto result = std::make_shared<OblivionGetUpResources>();
+        // Incoming resources belong to a staged simulation, not the current
+        // live cache. Neither admission failure nor validation-only reads may
+        // replace a resident info or constrain an otherwise valid incoming KF.
+        result->mCache = std::make_shared<MWRender::NativeIdleResourceCache>(*mResourceSystem);
         const auto index = buildOblivionNativeIdleIndex(mStore);
         const auto lookup = [&]<class T>(const ESM::FormKey& key) -> const T* {
             if (incoming) if (const auto* record = incoming->search<T>(key)) return record;
@@ -3372,11 +3393,27 @@ namespace MWWorld
             return resource;
         };
         for (const auto& [actor, idle] : state.mNativeGetUpIdles)
-            result->mActors.emplace(actor, std::pair{idle, acquire(actor, idle)});
+        {
+            auto resource = acquire(actor, idle);
+            // The legacy ready-resource profile owns its selected info. With
+            // an explicit graph, request slots determine info ownership instead.
+            if (!state.mNativeGetUpPlayback.contains(actor))
+                resource = result->mCache->admit(idle.mModel, *resource);
+            result->mActors.emplace(actor, std::pair{idle, std::move(resource)});
+        }
         for (const auto& [actor, graph] : state.mNativeGetUpPlayback)
         {
             for (const auto& [id, idle] : graph.mResources)
                 result->mGraphs[actor].emplace(id, acquire(actor, idle));
+            for (const auto* slot : {&graph.mRequests.mPrimary, &graph.mRequests.mSecondary,
+                     &graph.mRequests.mRetired[0], &graph.mRequests.mRetired[1]})
+                if (*slot)
+                {
+                    const auto resource = (*slot)->mResource;
+                    result->mLoadedInfos[actor].try_emplace(resource,
+                        result->mCache->admit(graph.mResources.at(resource).mModel,
+                            *result->mGraphs.at(actor).at(resource)));
+                }
             for (const auto& [request, selection] : graph.mRequestSelections)
                 acquire(actor, selection);
             for (const auto& [id, sequence] : graph.mSequences)
@@ -6086,6 +6123,7 @@ namespace MWWorld
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
+        mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
         mOblivionGetUpResources = std::move(preparedGetUpResources);
         preparedRegistry.commit();
         for (auto& reference : reconstructed)

@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <mutex>
 #include <numeric>
 #include <stdexcept>
 #include <utility>
@@ -1026,7 +1027,32 @@ namespace MWRender
     Animation::NativeIdleResource::NativeIdleResource(VFS::Path::Normalized model,
         osg::ref_ptr<const SceneUtil::KeyframeHolder> frames)
         : mModel(std::move(model)), mFrames(std::move(frames)) {}
-    Animation::NativeIdleResource::~NativeIdleResource() = default;
+    struct NativeIdleResourceCacheState
+    {
+        struct Entry
+        {
+            std::weak_ptr<const Animation::NativeIdleResource> mResource;
+            const Animation::NativeIdleResource* mIdentity;
+        };
+        Resource::ResourceSystem& mResources;
+        std::mutex mMutex;
+        std::map<std::string, Entry, std::less<>> mEntries;
+        explicit NativeIdleResourceCacheState(Resource::ResourceSystem& resources) : mResources(resources) {}
+    };
+
+    Animation::NativeIdleResource::~NativeIdleResource()
+    {
+        if (!mCachePublished) return;
+        if (const auto cache = mCache.lock())
+        {
+            const std::lock_guard lock(cache->mMutex);
+            const auto found = cache->mEntries.find(mCacheKey);
+            // Another acquire may replace an expired weak entry while this
+            // destructor waits for the lock. Never erase its newer identity.
+            if (found != cache->mEntries.end() && found->second.mIdentity == this)
+                cache->mEntries.erase(found);
+        }
+    }
     const VFS::Path::Normalized& Animation::NativeIdleResource::model() const { return mModel; }
     const std::string& Animation::NativeIdleResource::fileHash() const { return mFrames->mFileHash; }
     const SceneUtil::ControllerSequenceMetadata& Animation::NativeIdleResource::metadata() const
@@ -1051,6 +1077,81 @@ namespace MWRender
         if (!frames || frames->mControllerSequences.size() != 1 || frames->mFileHash.size() != 16)
             return nullptr;
         return std::shared_ptr<const NativeIdleResource>(new NativeIdleResource(path, frames));
+    }
+
+    NativeIdleResourceCache::NativeIdleResourceCache(Resource::ResourceSystem& resources)
+        : mState(std::make_shared<NativeIdleResourceCacheState>(resources)) {}
+    NativeIdleResourceCache::~NativeIdleResourceCache() = default;
+
+    std::shared_ptr<const Animation::NativeIdleResource> NativeIdleResourceCache::insert(
+        std::string key, const Animation::NativeIdleResource& source)
+    {
+        // Caller holds the cache lock. An allocation failure before publication
+        // destroys an unregistered resource without recursively taking it.
+        auto resource = std::shared_ptr<Animation::NativeIdleResource>(
+            new Animation::NativeIdleResource(source.mModel, source.mFrames));
+        resource->mCache = mState;
+        resource->mCacheKey = key;
+        mState->mEntries.insert_or_assign(std::move(key),
+            NativeIdleResourceCacheState::Entry{resource, resource.get()});
+        resource->mCachePublished = true;
+        return resource;
+    }
+
+    std::shared_ptr<const Animation::NativeIdleResource> NativeIdleResourceCache::find(std::string_view model) const
+    {
+        const auto key = ESM4::nativeIdleResourceKey(model);
+        const std::lock_guard lock(mState->mMutex);
+        if (const auto found = mState->mEntries.find(key); found != mState->mEntries.end())
+            return found->second.mResource.lock();
+        return nullptr;
+    }
+
+    std::shared_ptr<const Animation::NativeIdleResource> NativeIdleResourceCache::publishLoaded(
+        std::string_view model, const Animation::NativeIdleResource& loaded)
+    {
+        auto key = ESM4::nativeIdleResourceKey(model);
+        model = model.substr(0, model.find('\0'));
+        if (loaded.model() != Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model)))
+            throw std::invalid_argument("native idle publication has a foreign resource path");
+        const std::lock_guard lock(mState->mMutex);
+        if (const auto found = mState->mEntries.find(key); found != mState->mEntries.end())
+            if (auto resource = found->second.mResource.lock()) return resource;
+        return insert(std::move(key), loaded);
+    }
+
+    std::shared_ptr<const Animation::NativeIdleResource> NativeIdleResourceCache::acquire(std::string_view model)
+    {
+        if (auto resource = find(model)) return resource;
+        const auto source = Animation::acquireNativeIdleResource(mState->mResources, model);
+        return source ? publishLoaded(model, *source) : nullptr;
+    }
+
+    std::shared_ptr<const Animation::NativeIdleResource> NativeIdleResourceCache::admit(
+        std::string_view model, const Animation::NativeIdleResource& validated)
+    {
+        auto key = ESM4::nativeIdleResourceKey(model);
+        model = model.substr(0, model.find('\0'));
+        if (validated.model() != Misc::ResourceHelpers::correctMeshPath(VFS::Path::Normalized(model)))
+            throw std::invalid_argument("native idle readmission has a foreign resource path");
+        std::unique_lock lock(mState->mMutex);
+        if (const auto found = mState->mEntries.find(key); found != mState->mEntries.end())
+            if (auto resource = found->second.mResource.lock())
+            {
+                if (resource->fileHash() != validated.fileHash())
+                {
+                    lock.unlock();
+                    throw std::invalid_argument("native idle readmission conflicts with resident loaded info");
+                }
+                return resource;
+            }
+        return insert(std::move(key), validated);
+    }
+
+    std::size_t NativeIdleResourceCache::size() const
+    {
+        const std::lock_guard lock(mState->mMutex);
+        return mState->mEntries.size();
     }
 
     struct Animation::PreparedNativeIdleSources::Data

@@ -22,6 +22,7 @@
 #include <osg/FrameStamp>
 #include <osgUtil/UpdateVisitor>
 #include <fstream>
+#include <future>
 #include <bit>
 #include <components/esm3/loadrace.hpp>
 #include <components/esm4/loadcell.hpp>
@@ -133,6 +134,146 @@ namespace
         osg::ref_ptr<IdleAnimation> animation()
         { return new IdleAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources); }
     };
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheSharesCaseOnlyKeysButKeepsSlashAliasesDistinct)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    auto one = cache.acquire("one\\same.kf"); ASSERT_TRUE(one);
+    EXPECT_EQ(cache.acquire("ONE\\SAME.KF"), one);
+    EXPECT_EQ(cache.acquire(std::string("one\\same.kf\0ignored", 19)), one);
+    auto slash = cache.acquire("one/same.kf"); ASSERT_TRUE(slash);
+    EXPECT_NE(slash, one);
+    EXPECT_EQ(slash->model(), one->model());
+    EXPECT_EQ(slash->fileHash(), one->fileHash());
+    EXPECT_EQ(cache.size(), 2);
+    one.reset(); EXPECT_EQ(cache.size(), 1);
+    slash.reset(); EXPECT_EQ(cache.size(), 0);
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheRetainsInfoUntilLastOwnerButRendererAliasesDoNotOwnIt)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    auto resource = cache.acquire("one\\same.kf"); ASSERT_TRUE(resource);
+    const auto oldHash = resource->fileHash();
+    std::weak_ptr<const MWRender::Animation::NativeIdleResource> old = resource;
+    auto a = animation(); auto binding = a->prepareNativeIdleSource(*resource);
+    ASSERT_TRUE(binding); ASSERT_TRUE(binding->commit());
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    EXPECT_EQ(cache.acquire("ONE\\SAME.KF"), resource);
+    resource.reset(); EXPECT_TRUE(old.expired()); EXPECT_EQ(cache.size(), 0);
+    auto current = cache.acquire("one\\same.kf"); ASSERT_TRUE(current);
+    EXPECT_NE(current->fileHash(), oldHash);
+    EXPECT_EQ(cache.size(), 1);
+    // The detached loaded-info identity expires even though backend source
+    // data remains owned by an actor's registered alias and prepared token.
+    a->sample(binding->group());
+    EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+    auto b = animation(); auto next = b->prepareNativeIdleSource(*current);
+    ASSERT_TRUE(next); ASSERT_TRUE(next->commit()); b->sample(next->group());
+    EXPECT_FLOAT_EQ(b->mBone->getControllerTransform().mTranslation.x(), 27);
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheColdJobPublicationUsesFirstResidentEvenWhenLoadedBytesDiffer)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    EXPECT_FALSE(cache.find("one\\same.kf"));
+    auto firstLoad = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "one/same.kf");
+    ASSERT_TRUE(firstLoad); EXPECT_FALSE(cache.find("one\\same.kf"));
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    auto secondLoad = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "one/same.kf");
+    ASSERT_TRUE(secondLoad); ASSERT_NE(firstLoad->fileHash(), secondLoad->fileHash());
+    auto first = cache.publishLoaded("one\\same.kf", *firstLoad); ASSERT_TRUE(first);
+    auto second = cache.publishLoaded("ONE\\SAME.KF", *secondLoad);
+    EXPECT_EQ(first, second); EXPECT_EQ(first->fileHash(), firstLoad->fileHash());
+    EXPECT_EQ(cache.find("one\\same.kf"), first);
+    // Save admission audits its own expected bytes. It must not silently adopt
+    // a resident with another fingerprint, unlike native job reconciliation.
+    EXPECT_THROW(cache.admit("one\\same.kf", *secondLoad), std::invalid_argument);
+    EXPECT_EQ(cache.size(), 1);
+    first.reset(); EXPECT_EQ(cache.size(), 1);
+    second.reset(); EXPECT_EQ(cache.size(), 0);
+    EXPECT_FALSE(cache.find("one\\same.kf"));
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheAdmissionChecksFreshBytesAndRejectsResidentConflicts)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    auto resident = cache.acquire("one\\same.kf"); ASSERT_TRUE(resident);
+    auto validated = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "one/same.kf");
+    ASSERT_TRUE(validated);
+    EXPECT_EQ(cache.admit("ONE\\SAME.KF", *validated), resident);
+    auto foreign = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "two/same.kf");
+    ASSERT_TRUE(foreign);
+    EXPECT_THROW(cache.admit("one\\same.kf", *foreign), std::invalid_argument);
+    write("meshes/one/same.kf", kf(27)); mFixture.mResources.clearCache();
+    validated = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "one/same.kf");
+    ASSERT_TRUE(validated); ASSERT_NE(validated->fileHash(), resident->fileHash());
+    EXPECT_THROW(cache.admit("one\\same.kf", *validated), std::invalid_argument);
+    EXPECT_EQ(cache.acquire("one\\same.kf"), resident); EXPECT_EQ(cache.size(), 1);
+    resident.reset(); EXPECT_EQ(cache.size(), 0);
+    auto admitted = cache.admit("one\\same.kf", *validated);
+    ASSERT_TRUE(admitted); EXPECT_EQ(admitted->fileHash(), validated->fileHash());
+    EXPECT_EQ(cache.acquire("ONE\\SAME.KF"), admitted);
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheResourcesCanOutliveProviderFacade)
+{
+    std::shared_ptr<const MWRender::Animation::NativeIdleResource> retained;
+    {
+        MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+        retained = cache.acquire("one\\same.kf"); ASSERT_TRUE(retained);
+        EXPECT_EQ(cache.size(), 1);
+    }
+    auto a = animation(); auto binding = a->prepareNativeIdleSource(*retained);
+    ASSERT_TRUE(binding); ASSERT_TRUE(binding->commit()); retained.reset();
+    a->sample(binding->group());
+    EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheDoesNotRetainMissingMalformedOrAmbiguousRequests)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    EXPECT_FALSE(cache.acquire("absent/same.kf"));
+    EXPECT_FALSE(cache.acquire("duplicate.kf"));
+    EXPECT_FALSE(cache.acquire("same.nif"));
+    EXPECT_THROW(cache.acquire(std::string(260, 'x') + ".kf"), std::invalid_argument);
+    EXPECT_THROW(cache.acquire("one/\xff.kf"), std::invalid_argument);
+    EXPECT_EQ(cache.size(), 0);
+    auto valid = cache.acquire("one/same.kf"); ASSERT_TRUE(valid); EXPECT_EQ(cache.size(), 1);
+}
+
+TEST_F(NativeIdleResourceTest, NativeCacheConcurrentAcquisitionSharesOneLiveInfoAndReclaimsEntries)
+{
+    MWRender::NativeIdleResourceCache cache(mFixture.mResources);
+    using Resource = std::shared_ptr<const MWRender::Animation::NativeIdleResource>;
+    std::vector<std::future<Resource>> workers;
+    for (int i = 0; i < 4; ++i)
+        workers.push_back(std::async(std::launch::async, [&cache, i] {
+            Resource retained;
+            for (int j = 0; j < 64; ++j)
+                retained = cache.acquire(i % 2 ? "one\\same.kf" : "ONE\\SAME.KF");
+            return retained;
+        }));
+    std::vector<Resource> resources;
+    for (auto& worker : workers) resources.push_back(worker.get());
+    for (const auto& resource : resources) { ASSERT_TRUE(resource); EXPECT_EQ(resource, resources.front()); }
+    EXPECT_EQ(cache.size(), 1);
+    resources.clear(); EXPECT_EQ(cache.size(), 0);
+    // Exercise expiry/replacement while another thread may be waiting in the
+    // old resource's destructor. The old identity must not erase its successor.
+    workers.clear();
+    for (int i = 0; i < 4; ++i)
+        workers.push_back(std::async(std::launch::async, [&cache] {
+            for (int j = 0; j < 64; ++j)
+            {
+                auto resource = cache.acquire("one\\same.kf");
+                if (!resource) throw std::runtime_error("native cache churn lost its resource");
+            }
+            return Resource{};
+        }));
+    for (auto& worker : workers) EXPECT_FALSE(worker.get());
+    EXPECT_EQ(cache.size(), 0);
 }
 
 TEST_F(NativeIdleResourceTest, ExactPathsDoNotBorrowStemWinnerAndSampleRealParsedTracks)
@@ -709,7 +850,7 @@ TEST_F(NativeGetUpRequestTest, PreparedSelectionRejectsChangedAuthoredActorAndId
     EXPECT_FALSE(prepared->commit()); EXPECT_EQ(snapshot(), before);
 }
 
-TEST_F(NativeGetUpRequestTest, PreparedRequestKeepsAcquiredKfWhenCacheAndFileBytesChange)
+TEST_F(NativeGetUpRequestTest, PreparedRequestKeepsResidentInfoAcrossBackendEvictionAndRechecksSaveBytes)
 {
     auto& world = mFixture.mWorld;
     auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
@@ -721,8 +862,84 @@ TEST_F(NativeGetUpRequestTest, PreparedRequestKeepsAcquiredKfWhenCacheAndFileByt
     combat().setProcessKnockedState(key(), 3);
     prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(prepared->commit());
     ASSERT_TRUE(combat().getUpIdle(key()));
-    EXPECT_NE(combat().getUpIdle(key())->mAssetHash, original.mAssetHash);
+    EXPECT_EQ(combat().getUpIdle(key())->mAssetHash, original.mAssetHash);
+    const auto before = snapshot();
+    EXPECT_THROW(world.validateOblivionSaveState(before), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
     EXPECT_EQ(mAnimation->sources(), 0); EXPECT_FALSE(mAnimation->reactionRoot());
+}
+
+TEST_F(NativeGetUpRequestTest, DifferentActorsShareResidentInfoAcrossBackendEviction)
+{
+    auto& world = mFixture.mWorld;
+    auto first = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(first->commit());
+    const auto original = *combat().getUpIdle(key());
+    const auto base = original.mBase;
+    ESM4::ActorCharacter reference{}; reference.mId = {0x901, 0};
+    reference.mFormKey = ESM::FormKey::content("headless.esm", 0x901);
+    reference.mBaseKey = base; reference.mBaseObj = world.getStore().search<ESM4::Npc>(base)->mId;
+    world.getStore().getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+    MWWorld::LiveCellRef<ESM4::Npc> live(reference, world.getStore().search<ESM4::Npc>(base));
+    auto& cell = world.getWorldModel().getDraftCell();
+    const MWWorld::Ptr second(cell.insert(&live), &cell); world.getWorldModel().registerPtr(second);
+    ASSERT_TRUE(world.activateOblivionActor(second));
+    const auto secondKey = second.getCellRef().getFormKey(); combat().setProcessKnockedState(secondKey, 3);
+    osg::ref_ptr<IdleAnimation> secondAnimation = new IdleAnimation(second, mFixture.mResources);
+    write(kf(27)); mFixture.mResources.clearCache();
+    auto next = world.prepareOblivionGetUpIdleRequest(*secondAnimation, second); ASSERT_TRUE(next->isValid());
+    ASSERT_TRUE(next->commit());
+    const auto selected = combat().getUpIdle(secondKey); ASSERT_TRUE(selected);
+    EXPECT_EQ(selected->mAssetHash, original.mAssetHash);
+    EXPECT_EQ(combat().getUpIdle(key()), original);
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    EXPECT_EQ(combat().getProcessKnockedState(secondKey), 5);
+    EXPECT_EQ(mAnimation->sources(), 0); EXPECT_EQ(secondAnimation->sources(), 0);
+}
+
+TEST_F(NativeGetUpRequestTest, IncomingCacheValidationDoesNotReuseOrReplaceLiveResidentInfo)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared->commit());
+    const auto before = snapshot();
+    const auto oldHash = combat().getUpIdle(key())->mAssetHash;
+    write(kf(27)); mFixture.mResources.clearCache();
+    auto current = MWRender::Animation::acquireNativeIdleResource(mFixture.mResources, "Outside\\Same.kf");
+    ASSERT_TRUE(current);
+    std::string hash;
+    constexpr char digits[] = "0123456789abcdef";
+    for (unsigned char c : current->fileHash()) { hash += digits[c >> 4]; hash += digits[c & 15]; }
+    ASSERT_NE(hash, oldHash);
+    auto incoming = before;
+    incoming.mNativeGetUpIdles.at(key()).mAssetHash = hash;
+    ASSERT_NO_THROW(incoming.validate());
+    EXPECT_NO_THROW(world.validateOblivionSaveState(incoming));
+    EXPECT_THROW(world.validateOblivionSaveState(before), std::invalid_argument);
+    EXPECT_EQ(snapshot(), before);
+    combat().setProcessKnockedState(key(), 3);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(combat().getUpIdle(key())->mAssetHash, oldHash);
+}
+
+TEST_F(NativeGetUpRequestTest, RestoredSimulationRecoversItsCacheAfterCandidateClear)
+{
+    auto& world = mFixture.mWorld;
+    auto prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared->commit()); prepared.reset();
+    const auto before = snapshot();
+    const auto oldHash = combat().getUpIdle(key())->mAssetHash;
+    auto archive = world.retainSimulation();
+    ASSERT_TRUE(archive.detach());
+    world.clear(); world.setupPlayer();
+    write(kf(27)); mFixture.mResources.clearCache();
+    archive.prepareExchange();
+    ASSERT_TRUE(archive.restore());
+    EXPECT_EQ(snapshot(), before);
+    combat().setProcessKnockedState(key(), 3);
+    prepared = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor);
+    ASSERT_TRUE(prepared->commit());
+    EXPECT_EQ(combat().getUpIdle(key())->mAssetHash, oldHash);
 }
 
 TEST_F(NativeGetUpRequestTest, WorldClearInvalidatesPreparationBeforeReadingRetiredActorPointers)
@@ -793,6 +1010,25 @@ TEST_F(NativeGetUpRequestTest, SharedPlaybackGraphRestoresAndReadmitsEveryRetain
     auto afterGuard = saved; restored.capture(afterGuard);
     EXPECT_EQ(afterGuard, beforeGuard);
     restored.clear(); EXPECT_FALSE(restored.getUpPlayback(key()));
+}
+
+TEST_F(NativeGetUpRequestTest, SavedNiSourceCanOutliveEveryRequestWithoutInventingLoadedOwnership)
+{
+    write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();
+    auto& world = mFixture.mWorld;
+    auto ready = world.prepareOblivionGetUpIdleRequest(*mAnimation, mActor); ASSERT_TRUE(ready->commit());
+    const auto before = snapshot(); auto saved = before;
+    auto& graph = saved.mNativeGetUpPlayback[key()];
+    graph.mNextIdentity = 10;
+    graph.mResources.emplace(2, saved.mNativeGetUpIdles.at(key()));
+    ESM4::RuntimeGetUpSequence sequence; sequence.mResource = 2;
+    graph.mSequences.emplace(3, sequence); graph.mCachedSequence = 3;
+    saved.mNativeAnimationClocks[key()] = 0;
+    ASSERT_NO_THROW(saved.validate());
+    EXPECT_NO_THROW(world.validateOblivionSaveState(saved));
+    EXPECT_FALSE(graph.mRequests.mPrimary); EXPECT_FALSE(graph.mRequests.mSecondary);
+    EXPECT_FALSE(graph.mRequests.mRetired[0]); EXPECT_FALSE(graph.mRequests.mRetired[1]);
+    EXPECT_EQ(snapshot(), before);
 }
 
 TEST_F(NativeGetUpRequestTest, ReadyGraphDoesNotRequirePlayableMetadataButAttachedGraphDoes)

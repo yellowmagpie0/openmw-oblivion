@@ -1,0 +1,369 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Native-keyed loaded-resource provider cache, World acquisition and simulation-owned readmission; ready-resource profile and cold-result publication primitives",
+  "runtime_schema": 73,
+  "parent": "2a57e6b89f1432e60579387d91fb95c4ef2a61f7",
+  "tested_source": {
+    "head": "2a57e6b89f1432e60579387d91fb95c4ef2a61f7",
+    "source_fingerprint": "848275b1746768d38ef6c25f37e75bba54bc24e762b2f7d0db9a786cc194ccb7"
+  },
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_info_cache_cases.json",
+  "implementation": [
+    "NativeIdleResourceCache is provider-scoped and keyed by the original ASCII C-string cache key; VFS normalization and byte hashes do not define canonical identity.",
+    "find does no IO; publishLoaded reconciles independent cold results with the first resident; acquire loads outside the registry mutex; admit separately checks a validated path/fingerprint.",
+    "Weak entries are erased at final canonical ownership. Publication is marked only after successful map insertion, avoiding recursive-lock cleanup on allocation exceptions. Raw identity guards prevent an old destructor erasing a successor. Strict-admission mismatch unlocks before releasing a potentially final resource reference.",
+    "World uses one current pool across actors. Readmission stages a fresh pool; runtime-field exchange, candidate clear, rollback and publication carry the matching pool.",
+    "Uncached source provenance lives in mGraphs; only actual request-resource references populate mLoadedInfos. Graph-present legacy selection artifacts do not add an info lease. No portable graph IDs or wire format change."
+  ],
+  "checks": {
+    "normal": {
+      "executed": 2006,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "01324fea273f0e832330024898b4de3800ff90ac95e9337ec410bf2bb97f4b5b",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "d16dac5bf403135bf26b855b69e26f68497ab0929ffd11fe8c5c3b91efb0e50c",
+      "inventory_sha256": "ab6090c40c40fbc445da4b39ed8f2a5a2636423b9ecc51d352f1320fd51811bb",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitized": {
+      "executed": 2006,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "9ce77e09cad1fb19e0ef87422c96815da3417497af86964246d209856de06e45",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "88506996746adcf78774f77128d2694758f60b076045749e7bd412702755272c",
+      "inventory_sha256": "ab6090c40c40fbc445da4b39ed8f2a5a2636423b9ecc51d352f1320fd51811bb",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      },
+      "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    },
+    "focused_leak": {
+      "executed": 12,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "NativeIdleResourceTest.NativeCache*:NativeGetUpRequestTest.DifferentActorsShareResidentInfoAcrossBackendEviction:NativeGetUpRequestTest.IncomingCacheValidationDoesNotReuseOrReplaceLiveResidentInfo:NativeGetUpRequestTest.RestoredSimulationRecoversItsCacheAfterCandidateClear:NativeGetUpRequestTest.SavedNiSourceCanOutliveEveryRequestWithoutInventingLoadedOwnership:NativeGetUpRequestTest.PreparedRequestKeepsResidentInfoAcrossBackendEvictionAndRechecksSaveBytes",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "binary_sha256": "9ce77e09cad1fb19e0ef87422c96815da3417497af86964246d209856de06e45"
+    },
+    "churn": {
+      "passed": true,
+      "iterations": 100,
+      "workers_per_phase": 4,
+      "acquisitions_per_worker_per_phase": 64,
+      "phases": [
+        "shared live identity",
+        "expiry and replacement churn"
+      ],
+      "total_acquisitions": 51200,
+      "command": [
+        "/home/maciek/openmw-oblivion/openmw-oblivion/build/openmw-tests",
+        "--gtest_filter=NativeIdleResourceTest.NativeCacheConcurrentAcquisitionSharesOneLiveInfoAndReclaimsEntries",
+        "--gtest_repeat=100",
+        "--gtest_break_on_failure",
+        "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/native-getup-info-cache-churn-normal-02/tests.xml"
+      ],
+      "binary_sha256": "01324fea273f0e832330024898b4de3800ff90ac95e9337ec410bf2bb97f4b5b",
+      "tested_source": {
+        "head": "2a57e6b89f1432e60579387d91fb95c4ef2a61f7",
+        "source_fingerprint": "848275b1746768d38ef6c25f37e75bba54bc24e762b2f7d0db9a786cc194ccb7"
+      },
+      "xml_scope": "GTest XML represents the last iteration; complete log checked for exactly100 starts and100 successful finishes."
+    }
+  },
+  "binaries": [
+    {
+      "path": "build/openmw",
+      "sha256": "1e59eaa909d8ae2c7ff92fcdfbccd7966b2a3b072734e95cf303724937951850"
+    },
+    {
+      "path": "build/m15-sanitize/openmw",
+      "sha256": "340dfbb6b63d2759ffc8448c8ac5452bbf71deee82726391d8292db5622578a6"
+    }
+  ],
+  "original_evidence": [
+    {
+      "report": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/cache-identity-report02.json",
+      "fresh_this_chunk": false
+    },
+    {
+      "report": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json",
+      "fresh_this_chunk": false
+    },
+    {
+      "report": "build/oblivion-compat/m15/S4/native-getup-info-cache-work-01/cache-formatter01-report01.json",
+      "fresh_this_chunk": true
+    }
+  ],
+  "retained_verification_history": [
+    {
+      "evidence": "native-getup-info-cache-focused-01",
+      "result": "35 focused cases passed before cache/context API refinements; historical only."
+    },
+    {
+      "evidence": "native-getup-info-cache-normal-01",
+      "result": "Intentionally interrupted before test inventory during API review; runner plus9 recorded descendants confirmed terminal before edits; no pass claimed."
+    },
+    {
+      "evidence": [
+        "native-getup-info-cache-normal-02",
+        "native-getup-info-cache-sanitized-01"
+      ],
+      "result": "2004 cases passed before separating request-backed info leases from NI-only source provenance."
+    },
+    {
+      "evidence": [
+        "native-getup-info-cache-normal-03",
+        "native-getup-info-cache-sanitized-02"
+      ],
+      "result": "2005 cases passed before adding the cross-actor World test."
+    },
+    {
+      "evidence": "native-getup-info-cache-churn-normal-01",
+      "result": "Prior candidate100-iteration churn passed; final candidate reran in churn-normal-02."
+    }
+  ],
+  "source_files": [
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "31594ff808c754968242336f86cb942a1acf358230affb99c88a1442329c2793"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "849b3473141dfcacc19a97019742cc44bedb80527ad70b9bd47375b26e1a2007"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "39b7a41f63375eaf2a5186d9aaabbc8c44c3ae305f71329bbfc87f2981f24566"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "e7e5f9d18b652413ee51340ec4601f2f9280c4c785e08e732c8624a9f2af454d"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "05ffc3c33b6d2f1b5b8955c4066a1d13b8bb926989a7eb6d157bcc116611fcbb"
+    }
+  ],
+  "artifact_pins": [
+    {
+      "path": "apps/openmw/mwrender/animation.hpp",
+      "sha256": "31594ff808c754968242336f86cb942a1acf358230affb99c88a1442329c2793"
+    },
+    {
+      "path": "apps/openmw/mwrender/animation.cpp",
+      "sha256": "849b3473141dfcacc19a97019742cc44bedb80527ad70b9bd47375b26e1a2007"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.hpp",
+      "sha256": "39b7a41f63375eaf2a5186d9aaabbc8c44c3ae305f71329bbfc87f2981f24566"
+    },
+    {
+      "path": "apps/openmw/mwworld/worldimp.cpp",
+      "sha256": "e7e5f9d18b652413ee51340ec4601f2f9280c4c785e08e732c8624a9f2af454d"
+    },
+    {
+      "path": "apps/openmw_tests/mwrender/testnativeidle.cpp",
+      "sha256": "05ffc3c33b6d2f1b5b8955c4066a1d13b8bb926989a7eb6d157bcc116611fcbb"
+    },
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_info_cache_cases.json",
+      "sha256": "6d92dc6dceca1375b98279f1b120cb0d7e9d327bb44332edb08927cd7391dda4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-04/engine-build.log",
+      "sha256": "a0add748d9599ddae1cef49a522fc40013ac5d35ad793f23d32ff288cc1f4a23"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-04/engine-inventory.txt",
+      "sha256": "ab6090c40c40fbc445da4b39ed8f2a5a2636423b9ecc51d352f1320fd51811bb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-04/engine.log",
+      "sha256": "7e23aeeb6479dd3e70bcb1849337c6a368ae2db36b1f36c7a054622e18ce7f65"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-04/engine.xml",
+      "sha256": "d16dac5bf403135bf26b855b69e26f68497ab0929ffd11fe8c5c3b91efb0e50c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-04/verification.json",
+      "sha256": "2b67ca16df2dc7825c02386e8db14468d6c0aedb5282ef8748c2a4a6166f1d9c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-03/engine-build.log",
+      "sha256": "bd8db34b6e356450fc3e8f4fb369ec649315d9416fa2e9a5fa097e8e69c54ca4"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-03/engine-inventory.txt",
+      "sha256": "ab6090c40c40fbc445da4b39ed8f2a5a2636423b9ecc51d352f1320fd51811bb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-03/engine.log",
+      "sha256": "a80de5ca57dd749d69dcbfc2c7207d60bacd4eb7d943d687e41b7b511d43e483"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-03/engine.xml",
+      "sha256": "88506996746adcf78774f77128d2694758f60b076045749e7bd412702755272c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-03/verification.json",
+      "sha256": "f02673d808e5ca83143e40eb2175d93176fd623903fbb0514fe1710657658c3c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-leak-01/command.json",
+      "sha256": "c992953d9a00663eae491c85b43040ff15df0ac21f0e0094559457d8a4087c6d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-leak-01/inventory.txt",
+      "sha256": "ab6090c40c40fbc445da4b39ed8f2a5a2636423b9ecc51d352f1320fd51811bb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-leak-01/tests.log",
+      "sha256": "3ee1106644b8d86ca269e508165f0f86edf296bdb5a919eb3f1c783677d26f0f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-leak-01/tests.xml",
+      "sha256": "9e621d1beb8a335fcb66b976ca0e001baa0c0cff39eb576932b33e7c0ccb1c88"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-leak-01/verification.json",
+      "sha256": "cd25dab2c12a025bce262e04b1e5c6a946a438d8a1e7a9358b3726af36b9f4d3"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-churn-normal-02/tests.log",
+      "sha256": "eab26f38530c5a8bfe188a294db8874d2010c6b949e21f04ad67a49d103de807"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-churn-normal-02/tests.xml",
+      "sha256": "29cb5ddcdbfa74daf7ee360da36316854c6aa089193f2bec13fac13e1c09db1d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-churn-normal-02/verification.json",
+      "sha256": "cb98618aa8cfe87c079a5f02823d9340afb1e773b132101c4e5215b4bb78457b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/cache-identity02.py",
+      "sha256": "c64a7f04373bc55fad6dfca4fa0aa0a29e220be23b73beff9b991f8b0e1769c6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/cache-identity-report02.json",
+      "sha256": "0e30dae235371169020c1cead07d049121d3ef6dc1878213313872df0f27d5a7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/cache-identity-corpus02.json",
+      "sha256": "b601eba8828c48fe52288e442f01fe74fbfe3974a7e180498b6486498082c826"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-resource-identity-work-02/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05.py",
+      "sha256": "9bd20e691e8350e2868fd6d9bcbed59be38f196082910ac0710aa960d2a7eebe"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-report01.json",
+      "sha256": "19f1102320ee69e8d3a2e5c31e7166af4855241e1dcc59492a4cc36ec659cd74"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-cache05-corpus01.json",
+      "sha256": "9d19158e472394e0636c5184c3c8e2c234d18835bf695404598c944d03f304f9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-work-01/cache-formatter01.py",
+      "sha256": "a613dcf17ba51ee46d5bd27f83f8097be73ae045fb15139816fc509330dd7d76"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-work-01/cache-formatter01-report01.json",
+      "sha256": "ff47014bde8d7b425b5b7651f7f900b4c93ddd894f7c64eccd3f0e54281b3c7c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-work-01/cache-formatter01-corpus01.json",
+      "sha256": "c85ec7a4cc074766285d3074574f92019a4d99dcda6a9a0e6ef629e6c6761ac2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-work-01/original-exe.json",
+      "sha256": "996d3655be0d155d2e84fddb8cd9a9770f0adfc90bc4cad1ede4b1416d33285c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-reaction-cache-insertion-review-01/group-classification-probe-09.py",
+      "sha256": "f24119eb932414c7cd06f064eea353c36bd59ac7d5676224e7a9a045ae4ffad1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-focused-01/verification.json",
+      "sha256": "7bca40aa655ad804f46ed74762988fe2dbf080f2f5e7f87fb6bd1663c7b1981c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-01/interruption.json",
+      "sha256": "cab80a034d15551dd4649ca1407aed9c798b48e2d0e080327700c3fc7b1bc518"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-02/verification.json",
+      "sha256": "938be8ea95f7626ee78a0f262fd5ec6d49ce74301d8653d6b21a7cdb3127e682"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-01/verification.json",
+      "sha256": "b223da8c86a7c6d63352e30cb3476a8a0b2cac8984b25fe036baa672e7f87aa6"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-normal-03/verification.json",
+      "sha256": "8166518487206ee8e5f535301b70f693ea4b7649bb3603d1b0bf01be9319973a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-sanitized-02/verification.json",
+      "sha256": "072a2995bcaee295a369633723c34434eba7f6b8517724ae0f49b5e87316ad90"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-info-cache-churn-normal-01/verification.json",
+      "sha256": "d4e43c2aebd688b1bf26693406e3bab669c9225fc0abacbf2f98a24a4de49c2e"
+    }
+  ],
+  "warnings": "Existing character.cpp animation-queue diagnostic, aggregate-initializer warnings, World-test dangling-else/dangling-reference warnings and sanitizer variable-tracking fallback remain in retained build logs. No changes made to those unrelated sites.",
+  "not_run": [
+    "Components/Python suites: no component or Python production/test source changes in this chunk. Earlier receipts remain historical.",
+    "Native game process, rendered runtime course or normal-input acceptance."
+  ],
+  "verification_layers": {
+    "structural_write": "C++ provider/World/test sources and editable JSON evidence manifest",
+    "compiler_world_validation": "Both normal and sanitizer engine targets built; exact full inventory/XML2006 per build, no failures/skips;12 affected tests passed with leak detection enabled.",
+    "semantic_reinspection": "Real parsed KF tracks, resident bytes, key identity, actual World preparation/validation and simulation detach/clear/rollback tested. Original cache/cold-publication evidence reused with hashes; original formatter9 profiles freshly executed.",
+    "runtime_acceptance": "Headless engine tests and original instruction emulation only; live GetUp ownership and renderer restoration remain open."
+  },
+  "remaining": [
+    "Live GetUp request/NI graph factory or dispatcher",
+    "Worker scheduling and pending-IO fresh-process restoration",
+    "Native NI-manager registration order integration and renderer restoration",
+    "Original filesystem-loading equivalence for all prefix/dot spellings; generic ResourceSystem backend path mapping is unchanged",
+    "Physical filesystem hot-reload freshness without backend invalidation",
+    "Normal-input view/device/FPS, recovery and canonical fresh-save courses",
+    "Full M15S4 delivery",
+    "Live factory needs an exact retained source-artifact operation for cache hits, so provenance can survive without holding the canonical info alive. Bind logical resource IDs deliberately; provider pooling does not collapse durable request/resource/NI IDs."
+  ]
+}
