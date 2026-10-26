@@ -12,6 +12,12 @@ Down, coherent GetUp and upright return, including actual Down-save fresh-proces
 restarts in normal and sanitizer runs. The combined course and complete S4 matrix
 remain open.
 
+The [partial combined-course checkpoint](../../scripts/data/oblivion_compat/m15_combined_melee_course.json)
+now joins equipped block, actual Player Stagger/recovery, a nonlethal return
+attack and a facing range miss in normal and sanitizer processes. Each has five
+exact save/live comparisons, a settled endpoint and verified stock block audio.
+The behind-wall segment and the full required matrix remain open.
+
 ## Required implementation
 
 | S4 item | Current source evidence | Remaining delivery work |
