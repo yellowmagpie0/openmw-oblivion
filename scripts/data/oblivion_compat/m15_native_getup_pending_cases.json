@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scope": "Native pending request cancellation result and original cold-request/NI-start evidence",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "cases": [
+    {
+      "id": "actual-root-binding-hole-profiles",
+      "original": "6C5760 -> 6C9590 / 6C8220 plus manager palette lookup and 471600",
+      "profiles": 128,
+      "expected": "Same corpus as supplied-root profiles, now binding roots through the actual palette and target-binding path; missing named root remains null while fallback target name resolves the root.",
+      "boundary": "Empty controlled-block sets; actual node/manager/sequence constructors and supplied absent-root strings; no interpolators or skeletal gameplay."
+    },
+    {
+      "id": "cold-request-slots-and-destruction",
+      "original": "475300 / 474C50 / 472ED0 / 4729F0 plus original cache/pending-map paths",
+      "profiles": 4,
+      "requests": 12,
+      "expected": "Actual selected IDLE remains attached to each pending request. Four cold requests retain the first two in D4/D8; fourth creation destroys and cancels the outgoing third. Explicit D4 destruction also cancels its job. Delivery readies surviving requests without inventing playback or touching destroyed request fields.",
+      "boundary": "Model getters, null model proxies/actor, loaded info, scheduler notification and outside job reference, heap/CRT/TLS/Interlocked supplied. Empty constructed sequence cache required even when destroying a request without NI."
+    },
+    {
+      "id": "cold-delivery-to-ni-start",
+      "original": "475300 / 474C50 / 4383B0 / 4378F0 / 4352B0 / 477C40 / 477E50 / 6CA950 / 471600",
+      "courses": 3,
+      "requests": 12,
+      "expected": "Cold construction is pending0 with no info or NI. Delivery becomes ready1 without starting. Actual start creates/registers or reuses NI, sets status2/action11, and advances a frame; manager root query resolves actual Bip01 root. Same-resource, alternating-resource and distinct-resource courses pass.",
+      "boundary": "Original request, cache, clone/register/start and frame code; supplied loaded Info/NI/key data with outside refs100, actor/model/proxy/action boundaries and scheduler reference. Empty controlled blocks. No filesystem parsing, worker scheduling, rendered frame or game process.",
+      "cold_misses": 7,
+      "cache_hits": 5
+    },
+    {
+      "id": "destruction-cancellation-result",
+      "implementation": "NativeIdleRequestDestruction.mCancelPendingLoad",
+      "expected": "For policy1, request destruction reports cancellation exactly when loaded info is absent and status is0. Caller must execute request-keyed loader cancellation before freeing its request. Ready/started/completed requests with info use resource release instead.",
+      "validation": "Two new component tests and an augmented existing destruction test; original cold-slot/destructor and delivery probes supply expected behavior."
+    }
+  ],
+  "not_accepted": [
+    "Actual target/controlled-block binding",
+    "Worker scheduling, concurrent delivery or filesystem parsing",
+    "Pending-request fresh-process restoration",
+    "Whole actor manager registration across ordinary, contact, held and GetUp owners",
+    "Live GetUp creation/start/frame/completion or renderer restoration",
+    "Normal-input device/view/FPS courses",
+    "Full M15S4 delivery"
+  ]
+}

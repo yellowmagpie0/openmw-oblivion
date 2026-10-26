@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "passed": true,
+  "full_m15_s4_delivery": false,
+  "scope": "Native policy1 destruction protocol now reports pending-load cancellation; independent actual constructor/slot/destructor/cache/delivery/start and root-binding evidence",
+  "parent": "577b8ded1691b0a27c5048dc88c03498cf0ae45c",
+  "tested_source": {
+    "head": "577b8ded1691b0a27c5048dc88c03498cf0ae45c",
+    "source_fingerprint": "be14754fcc2f0c65c9bfa769296b13a3baf97cbdd89748d21ccbefecb41f3527"
+  },
+  "runtime_schema": 73,
+  "implementation": {
+    "change": "Add mCancelPendingLoad to NativeIdleRequestDestruction for status0 with absent info; no live caller added.",
+    "tests": "Two new tests verify the four-cold-request slot/destruction/readiness course and policy1 release-before-cancel branch. Existing destruction test checks pending versus loaded outcomes.",
+    "ordering": "Detach NI before request destruction; cancel request-keyed pending job before freeing request; cache erasure remains after destruction."
+  },
+  "checks": {
+    "components": {
+      "executed": 3169,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "*",
+      "binary_sha256": "0348c57dcae4022e5b5bc87ab39a4f24644efdb13c9e5b9f8048dc90a69af9c5",
+      "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+      "xml_sha256": "4a2d669767969e6401bb74a1e9cf104ecea51c21f7f69d3a6778d2b6ec3ae707",
+      "inventory_sha256": "934fb7582840d77abb1ed3bc2af3e6cd06e3dc6a22d837ca1879ef4a4382b298",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "",
+        "CMAKE_CXX_FLAGS_DEBUG": "-g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    },
+    "sanitize": {
+      "executed": 1008,
+      "inventory_matches": true,
+      "failed": 0,
+      "skipped": 0,
+      "filter": "ESM4*",
+      "binary_sha256": "15924a344a134dbadb047509557926fb0911b763da71a4c5c7def75dfaba4dad",
+      "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+      "xml_sha256": "9f21789e25f4cd8b7caf2b074d133ae20816813e9ab8f24bdc6efe056f1f4db0",
+      "inventory_sha256": "fd174fdb4a1df5539aed9a7d30528e6a6c65e5055b1124d00e635a1aa8a711af",
+      "configuration": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+        "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+        "OPENMW_USE_SYSTEM_BULLET": "OFF"
+      }
+    }
+  },
+  "focused_leak_check": {
+    "executed": 3,
+    "inventory_matches": true,
+    "failed": 0,
+    "skipped": 0,
+    "filter": "ESM4NativeIdleRequest.ColdReplacementCancelsOutgoingThirdWithoutCancellingRetainedRequests:ESM4NativeIdleRequest.LoaderCancellationRequiresPendingStatusAndAbsentInfo:ESM4NativeIdleRequest.DestructionDetachesSharedCacheAndUsesProcessSequenceForActionOwnership",
+    "environment": {
+      "ASAN_OPTIONS": "detect_leaks=1",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "binary_sha256": "15924a344a134dbadb047509557926fb0911b763da71a4c5c7def75dfaba4dad"
+  },
+  "original_reports": [
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-binding02-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request02-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request03-report01.json",
+    "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-start02-report05.json"
+  ],
+  "retained_failure": {
+    "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request01-attempt01.json",
+    "reason": "Fixture omitted AnimData sequence cache; actual outer destructor still performs group-FF erasure for null NI, causing invalid virtual dispatch. Corrected in pending-request02 with explicit empty cache; no production change based on the failure."
+  },
+  "artifact_pins": [
+    {
+      "path": "scripts/data/oblivion_compat/m15_native_getup_pending_cases.json",
+      "sha256": "5ebee9f2e4a1879ccf1d4cc1f507c854ccedfa94ba078f1339580d86f9784a05"
+    },
+    {
+      "path": "docs/oblivion/M15-NATIVE-GETUP-MANAGER-VERIFICATION.json",
+      "sha256": "fef11b952f7764877c1ef9fcf92c2b152ce4392ce6bc7748fb9c4c6ae86d69a0"
+    },
+    {
+      "path": "components/esm4/nativeidlerequest.hpp",
+      "sha256": "8386b8a706c1c292370189e811ef38188a6e6fa900fe6516baad3fdf1d833891"
+    },
+    {
+      "path": "components/esm4/nativeidlerequest.cpp",
+      "sha256": "70f0ebc1e6814734281df5c6f83d91d931afa6f7568e0ed5788807b9ebd5fc61"
+    },
+    {
+      "path": "apps/components_tests/esm4/nativeidlerequest.cpp",
+      "sha256": "a8f9422601d5b223e871b64d3c20fb74ae41566866f5c18f68628effd82cd0e8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/components-build.log",
+      "sha256": "51110960c8f3004dc27fb8bb86040e808591b47708ff48c3a5ea9db8cf959c1e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/components-inventory.txt",
+      "sha256": "934fb7582840d77abb1ed3bc2af3e6cd06e3dc6a22d837ca1879ef4a4382b298"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/components.log",
+      "sha256": "a8419ca6a5b9f17e014608f98c3294e408e3e20a6d58b8d1c6877d77d32f7254"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/components.xml",
+      "sha256": "4a2d669767969e6401bb74a1e9cf104ecea51c21f7f69d3a6778d2b6ec3ae707"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/sanitize-build.log",
+      "sha256": "166e3b5ed6f8fb1354953de7e8bbe5492a4cba48c31dc98dc2ce9879eb2464b9"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/sanitize-inventory.txt",
+      "sha256": "fd174fdb4a1df5539aed9a7d30528e6a6c65e5055b1124d00e635a1aa8a711af"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/sanitize.log",
+      "sha256": "810719e078fbc2b63d89010382f81710823ac575c15534a45981c80b4a564970"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/sanitize.xml",
+      "sha256": "9f21789e25f4cd8b7caf2b074d133ae20816813e9ab8f24bdc6efe056f1f4db0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-components-01/verification.json",
+      "sha256": "14d194bc133bcd64a9ee6cc8426e94321de33a7ba16396bdfd583c3aa6c7c18f"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-leak-01/inventory.txt",
+      "sha256": "73879e2bf339c2d02cbe6e880f87d0cfef295a8510c5c039aca76929be4acacb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-leak-01/tests.log",
+      "sha256": "333a3b7bc77838e3216e792034690696779f2982121ea4cfb2a840d1c1a59c5e"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-leak-01/tests.xml",
+      "sha256": "e7c1e2542c1c6842bafc0ccd55b2ea34976a1976770059c053ba684f7f6e4066"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-leak-01/verification.json",
+      "sha256": "c75b3ccf9c4de3ac840e8607d1febaa79a5c07d93ab21c3422db401b9ec4ac5c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-pending-leak-01/command.json",
+      "sha256": "fbdf2fd6b1ff4210b172df2b8a1e5cddeb327ba29c89367b97b167cbedc360ea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-binding02-report01.json",
+      "sha256": "b89325d2483e7db11d70d8c9064d4bf6a00ce9beb3dcce7ebed3d10180dac7e7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-binding02.py",
+      "sha256": "8b75ed99f095ebed6d8f8e2f788e1208b3ad95c90893b1971603301ba676627d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/manager-binding02-corpus01.json",
+      "sha256": "d0f8a770cbaa360d9208994afea9760b909803cabe20d3d882f03c97da767737"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request02-report01.json",
+      "sha256": "e40188fd888a05c2907d4a643d38d1e17c562645e2af92ca072f0415615958cd"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request02.py",
+      "sha256": "056777779e63271be6f6b6aa7b856f679d5b9e29f4de0bec2a716cdd97fad330"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request02-corpus01.json",
+      "sha256": "164c32920c115e128037cc17d83ab30dd72ff9730a94ad5d844fd6741e55e4a0"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request03-report01.json",
+      "sha256": "b358d2b62a64fa7d9d015a0772847dc60a4565114c00878fba450ac1d0eed434"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request03.py",
+      "sha256": "4d78f4defc84b165f3d8e3cf66b370156d2fc292a00a1c88997b19f832944ff7"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request03-corpus01.json",
+      "sha256": "5290271345a1e490252de44ad45fcc8b6db89c2d7c22aa6ecda6b9823067412c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-start02-report05.json",
+      "sha256": "b95acd244c6336c427581529b7193e5532117742bfe00c5a9671a5632e125d8c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-start02.py",
+      "sha256": "77fa853dda1247202002cbd69500d57d086cc83cd5dde175ca8da6a4a70ea5fc"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-start02-corpus05.json",
+      "sha256": "cfadca7894b7ddcac3214500b08c398041b51c306a297298aac21c2476b04478"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request01.py",
+      "sha256": "563cd96993f67423d220e22a28636f10534e7d3143ccbffae99611543841a47c"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/native-getup-manager-order-work-01/pending-request01-attempt01.json",
+      "sha256": "c1df7f7684f2651c06d5b27a35abe0190028b9408df1ce32883da9d749d67ab3"
+    }
+  ],
+  "warnings": [
+    "Existing runtimestate.cpp copied FormKey range-loop warning and GCC variable-tracking-size-limit diagnostic remain in logs."
+  ],
+  "verification_layers": {
+    "structural_write": "C++ protocol and descriptive JSON source changes",
+    "compiler_tests": "Normal full components3169; sanitizer ESM4*1008 with detect_leaks0; three affected cases detect_leaks1, all exact inventories and no failures/skips.",
+    "semantic_reinspection": "Original request-selected IDLE, pending entries, resource pointer convergence, cancellation, actual NI start/action and root lookup inspected.",
+    "runtime_acceptance": "No engine game process or live dispatcher; no new normal-input acceptance."
+  },
+  "not_run": [
+    "Engine rebuild/tests: this helper still has no engine caller; previous engine projection evidence is historical only.",
+    "Python suite: no Python production/test sources changed."
+  ],
+  "remaining": [
+    "Actual target/controlled-block binding",
+    "Worker scheduling, concurrent delivery or filesystem parsing",
+    "Pending-request fresh-process restoration",
+    "Whole actor manager registration across ordinary, contact, held and GetUp owners",
+    "Live GetUp creation/start/frame/completion or renderer restoration",
+    "Normal-input device/view/FPS courses",
+    "Full M15S4 delivery",
+    "Live caller must consume the cancellation result and own global cache/job/NI references in one transaction."
+  ],
+  "manifest": "scripts/data/oblivion_compat/m15_native_getup_pending_cases.json",
+  "start_course_counts": {
+    "courses": 3,
+    "requests": 12,
+    "cold_misses": 7,
+    "cache_hits": 5
+  }
+}

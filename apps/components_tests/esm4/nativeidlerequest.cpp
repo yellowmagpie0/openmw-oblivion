@@ -170,6 +170,7 @@ TEST(ESM4NativeIdleRequest, DestructionDetachesSharedCacheAndUsesProcessSequence
     const auto request = attached(1, 7);
     const auto matching = ESM4::destroyNativeIdleRequest(request, 2, 7, 11, 7);
     EXPECT_EQ(matching.mDetachSequence, 7);
+    EXPECT_FALSE(matching.mCancelPendingLoad);
     EXPECT_TRUE(matching.mEraseCacheGroup);
     EXPECT_EQ(matching.mCacheGroup, 2);
     EXPECT_EQ(matching.mAction, -1);
@@ -181,9 +182,70 @@ TEST(ESM4NativeIdleRequest, DestructionDetachesSharedCacheAndUsesProcessSequence
     EXPECT_EQ(foreign.mActionSequence, 8);
     const auto pending = ESM4::makeNativeIdleRequest(2, 0);
     const auto empty = ESM4::destroyNativeIdleRequest(pending, std::nullopt, std::nullopt, 11, 0);
+    EXPECT_TRUE(empty.mCancelPendingLoad);
     EXPECT_TRUE(empty.mEraseCacheGroup);
     EXPECT_EQ(empty.mCacheGroup, 0xff);
     EXPECT_EQ(empty.mAction, 11);
+}
+
+TEST(ESM4NativeIdleRequest, ColdReplacementCancelsOutgoingThirdWithoutCancellingRetainedRequests)
+{
+    // Original pending-request03: four 475300/474C50 cold requests, then
+    // 472ED0/4729F0 cancellation and 4352B0/477C40 delivery. No NI is created
+    // by resource readiness, including delivery to the D4/D8 retired requests.
+    ESM4::NativeIdleRequestSlots slots;
+    for (std::uint64_t id = 1; id <= 4; ++id)
+    {
+        auto next = ESM4::replaceNativeIdleRequest(slots, 0, ESM4::makeNativeIdleRequest(id, 0));
+        if (id < 4)
+            EXPECT_TRUE(next.mEffects.empty());
+        else
+        {
+            ASSERT_EQ(next.mEffects.size(), 1);
+            EXPECT_EQ(next.mEffects[0].mKind, ESM4::NativeIdleRequestEffectKind::DestroyRequest);
+            EXPECT_EQ(next.mEffects[0].mRequest.mIdentity, 3);
+            const auto destruction = ESM4::destroyNativeIdleRequest(
+                next.mEffects[0].mRequest, std::nullopt, std::nullopt, 16, 0);
+            EXPECT_TRUE(destruction.mCancelPendingLoad);
+            EXPECT_EQ(destruction.mDetachSequence, 0);
+            EXPECT_EQ(destruction.mAction, 16);
+        }
+        slots = std::move(next.mSlots);
+    }
+    ASSERT_TRUE(slots.mPrimary);
+    ASSERT_TRUE(slots.mRetired[0]);
+    ASSERT_TRUE(slots.mRetired[1]);
+    EXPECT_EQ(slots.mPrimary->mIdentity, 4);
+    EXPECT_EQ(slots.mRetired[0]->mIdentity, 1);
+    EXPECT_EQ(slots.mRetired[1]->mIdentity, 2);
+    EXPECT_FALSE(ESM4::nativeIdleRequestReady(slots));
+    for (auto* slot : {&slots.mPrimary, &slots.mRetired[0], &slots.mRetired[1]})
+    {
+        *slot = ESM4::acceptNativeIdleRequestResource(**slot, 100);
+        EXPECT_EQ((*slot)->mResource, 100);
+        EXPECT_EQ((*slot)->mStatus, 1);
+        EXPECT_EQ((*slot)->mSequence, 0);
+        EXPECT_FALSE((*slot)->mActorBound);
+        EXPECT_FALSE(ESM4::destroyNativeIdleRequest(**slot, std::nullopt, std::nullopt, 16, 0)
+                         .mCancelPendingLoad);
+    }
+    EXPECT_TRUE(ESM4::nativeIdleRequestReady(slots));
+    EXPECT_FALSE(ESM4::nativeIdleRequestDone(slots));
+}
+
+TEST(ESM4NativeIdleRequest, LoaderCancellationRequiresPendingStatusAndAbsentInfo)
+{
+    // Native policy1 has a nonzero request flag: present info takes the release
+    // branch before the status0 cancellation branch at 472B47.
+    for (std::uint32_t status : {0u, 1u, 2u, 3u})
+        for (std::uint64_t resource : {0u, 100u})
+        {
+            auto request = ESM4::makeNativeIdleRequest(1, resource);
+            request.mStatus = status;
+            EXPECT_EQ(ESM4::destroyNativeIdleRequest(request, std::nullopt, std::nullopt, 16, 0)
+                          .mCancelPendingLoad,
+                status == 0 && resource == 0);
+        }
 }
 
 TEST(ESM4NativeIdleRequest, FullRetiredPairCanEvictSequenceSharedByEarlierRequests)

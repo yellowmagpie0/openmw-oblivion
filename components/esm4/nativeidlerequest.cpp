@@ -120,6 +120,7 @@ namespace ESM4
         const bool matchingCache = resourceGroup && cachedSequence && *cachedSequence == request.mSequence;
         NativeIdleRequestDestruction next;
         next.mDetachSequence = request.mSequence;
+        next.mCancelPendingLoad = !request.mResource && request.mStatus == 0;
         next.mEraseCacheGroup = matchingCache || !request.mSequence;
         next.mCacheGroup = resourceGroup.value_or(0xff);
         const bool clear = request.mActorBound && action == 11 && actionSequence == request.mSequence;

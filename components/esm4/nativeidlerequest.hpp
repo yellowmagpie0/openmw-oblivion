@@ -88,6 +88,10 @@ namespace ESM4
     struct NativeIdleRequestDestruction
     {
         std::uint64_t mDetachSequence = 0;
+        // Policy1: 4729F0 cancels the request-keyed loader job when no loaded
+        // info exists and status is still0. Apply before freeing the request;
+        // removing its slot alone does not suppress a later delivery.
+        bool mCancelPendingLoad = false;
         // Resulting cache mutation. Native can repeat a group erasure;
         // the second erase has no entry left to remove.
         bool mEraseCacheGroup = false;
