@@ -1324,6 +1324,9 @@ class OblivionCompatTests(unittest.TestCase):
             )
         self.assertTrue(button["passed"] and axis["passed"] and trigger["passed"])
         offscreen.action.assert_not_called()
+        self.assertEqual(offscreen.controller_button.call_args_list, [mock.call('a', True), mock.call('a', False)])
+        self.assertEqual(offscreen.controller_axis.call_args_list,
+                         [mock.call('left_y', -32767), mock.call('left_trigger', 16384)])
         self.assertEqual(
             pad.event.call_args_list,
             [

@@ -6,6 +6,8 @@
 // Also: <sequence> focus, or <sequence> text <hex-encoded printable ASCII>.
 // Relative mouse input: <sequence> motion <signed x delta> <signed y delta>.
 // Buttons: <sequence> button-down|button-up <SDL button 1..5>.
+// Read-only uinput barriers: controller-axis|controller-button <SDL enum> <value>.
+// These acknowledge actual SDL state only after its native event queue drains.
 // Complete lines are consumed only after SDL's existing event queue is empty.
 // The helper supplies input events; it has no engine or game-state interface.
 
@@ -90,6 +92,34 @@ namespace
                         return fail(event, "text must be printable ASCII");
                     event.text.text[i / 2] = static_cast<char>(high * 16 + low);
                 }
+            }
+            else if (operation == "controller-axis" || operation == "controller-button")
+            {
+                int value = 0;
+                const bool axis = operation == "controller-axis";
+                if (!(fields >> code >> value) || (fields >> extra) || code < 0
+                    || code >= (axis ? static_cast<int>(SDL_CONTROLLER_AXIS_MAX)
+                                     : static_cast<int>(SDL_CONTROLLER_BUTTON_MAX))
+                    || (axis ? value < -32768 || value > 32767 : value < 0 || value > 1))
+                    return fail(event, "invalid controller state barrier");
+                SDL_GameController* controller = nullptr;
+                for (int i = 0; i < SDL_NumJoysticks(); ++i)
+                {
+                    auto* opened = SDL_GameControllerFromInstanceID(SDL_JoystickGetDeviceInstanceID(i));
+                    if (!opened)
+                        continue;
+                    if (controller)
+                        return fail(event, "controller barrier requires one open controller");
+                    controller = opened;
+                }
+                if (!controller)
+                    return false;
+                const int actual = axis
+                    ? SDL_GameControllerGetAxis(controller, static_cast<SDL_GameControllerAxis>(code))
+                    : SDL_GameControllerGetButton(controller, static_cast<SDL_GameControllerButton>(code));
+                if (actual != value)
+                    return false; // Retry next pump, without consuming or acknowledging the line.
+                event.type = SDL_USEREVENT; // Readiness receipt, never a synthetic controller input.
             }
             else if (operation == "motion")
             {

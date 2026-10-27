@@ -1378,8 +1378,12 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             if button not in VirtualGamepad.BUTTONS:
                 raise ValueError(f"Unknown gamepad button {button!r}")
             _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_KEY, VirtualGamepad.BUTTONS[button], 1)
+            if offscreen_input is not None:
+                offscreen_input.controller_button(button, True)
             time.sleep(float(action.get("hold_seconds", 0.08)))
             _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_KEY, VirtualGamepad.BUTTONS[button], 0)
+            if offscreen_input is not None:
+                offscreen_input.controller_button(button, False)
         else:
             axis = str(action["axis"]).casefold()
             if axis not in VirtualGamepad.AXES:
@@ -1390,6 +1394,8 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
             else:
                 raw = round(value * (1 if axis.startswith("dpad") else 32767))
             _VIRTUAL_GAMEPAD.event(VirtualGamepad.EV_ABS, VirtualGamepad.AXES[axis], raw)
+            if offscreen_input is not None:
+                offscreen_input.controller_axis(axis, raw)
         return {"type": action_type, "passed": True, "duration_seconds": time.monotonic() - started}
     if action_type == "assert_file":
         pattern = Path(str(action["path_glob"]))

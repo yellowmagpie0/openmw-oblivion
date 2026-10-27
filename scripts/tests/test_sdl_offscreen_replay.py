@@ -9,6 +9,20 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_controller_receipts_use_sdl_controller_enums_and_check_dpad_neutral(self):
+        control = object.__new__(replay.Replay)
+        control.send = mock.Mock()
+        control.controller_button('rightshoulder', True)
+        control.controller_axis('right_x', -16384)
+        control.controller_axis('right_trigger', 32767)
+        control.controller_axis('dpad_x', -1)
+        control.controller_axis('dpad_x', 0)
+        self.assertEqual(control.send.call_args_list, [
+            mock.call('controller-button', '10 1'), mock.call('controller-axis', '2 -16384'),
+            mock.call('controller-axis', '5 32767'), mock.call('controller-button', '13 1'),
+            mock.call('controller-button', '14 0'), mock.call('controller-button', '13 0'),
+            mock.call('controller-button', '14 0')])
+
     def test_mouse_buttons_deliver_acknowledged_down_up_and_click_protocol(self):
         control = object.__new__(replay.Replay)
         control.sequence = 0

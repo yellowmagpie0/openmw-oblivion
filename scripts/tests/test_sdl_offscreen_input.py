@@ -24,14 +24,32 @@ class SdlOffscreenInputTest(unittest.TestCase):
 #include <SDL.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 int main() {
-    if (SDL_Init(SDL_INIT_VIDEO)) return 2;
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER)) return 2;
+    SDL_GameController* controller = nullptr;
     SDL_Event e{};
     while (SDL_PollEvent(&e)) {}
     std::cout << "ready" << std::endl;
     std::string line;
     while (std::getline(std::cin, line)) {
-        if (line == "push") {
+        if (line == "controller") {
+            const int index = SDL_JoystickAttachVirtual(SDL_JOYSTICK_TYPE_GAMECONTROLLER,
+                SDL_CONTROLLER_AXIS_MAX, SDL_CONTROLLER_BUTTON_MAX, 0);
+            controller = SDL_GameControllerOpen(index);
+            std::cout << "controller " << (controller != nullptr) << std::endl;
+        } else if (line.rfind("axis ", 0) == 0 || line.rfind("padbutton ", 0) == 0) {
+            std::istringstream fields(line);
+            std::string kind; int code, value; fields >> kind >> code >> value;
+            auto* joystick = SDL_GameControllerGetJoystick(controller);
+            int result = kind == "axis" ? SDL_JoystickSetVirtualAxis(joystick, code, value)
+                : SDL_JoystickSetVirtualButton(joystick, code, value);
+            std::cout << "changed " << result << std::endl;
+        } else if (line == "padstate") {
+            std::cout << "state " << SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
+                      << " " << static_cast<int>(SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
+                      << std::endl;
+        } else if (line == "push") {
             e = {}; e.type = SDL_USEREVENT; SDL_PushEvent(&e);
             std::cout << "pushed" << std::endl;
         } else {
@@ -71,6 +89,7 @@ int main() {
                       << " " << count << std::endl;
         }
     }
+    if (controller) SDL_GameControllerClose(controller);
     SDL_Quit();
 }
 ''')
@@ -128,6 +147,55 @@ int main() {
         self.assertEqual(self.event(process)[4:7], [0, 0, 0])
         self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
 
+    def test_controller_barriers_wait_for_real_device_state_and_preserve_native_events(self):
+        process = self.launch()
+        receipt = Path(str(self.input) + '.delivered')
+        self.append('1 controller-axis 5 32767\n')
+        self.assertEqual(self.event(process)[0], 0)  # No controller, no receipt.
+        self.assertFalse(receipt.exists())
+        self.assertEqual(self.command(process, 'controller'), 'controller 1')
+        for _ in range(100):
+            if self.event(process)[0] == 0:
+                break
+        self.assertFalse(receipt.exists())  # Device exists but the requested trigger is not held.
+        self.assertEqual(self.command(process, 'axis 5 32767'), 'changed 0')
+        native = []
+        for _ in range(100):
+            native.append(self.event(process)[1])
+            if receipt.exists():
+                break
+        self.assertIn(1616, native)  # Actual SDL_CONTROLLERAXISMOTION precedes acknowledgement.
+        self.assertEqual(receipt.read_text(), '1 controller-axis 5 32767\n')
+        self.assertEqual(self.command(process, 'padstate'), 'state 32767 0')
+        self.append('2 controller-button 0 1\n')
+        self.assertEqual(self.event(process)[0], 0)
+        self.assertEqual(receipt.read_text(), '1 controller-axis 5 32767\n')
+        self.assertEqual(self.command(process, 'padbutton 0 1'), 'changed 0')
+        native = []
+        for _ in range(100):
+            native.append(self.event(process)[1])
+            if len(receipt.read_text().splitlines()) == 2:
+                break
+        self.assertIn(1617, native)  # Native SDL_CONTROLLERBUTTONDOWN, not replay-generated.
+        self.assertEqual(self.command(process, 'padstate'), 'state 32767 1')
+        self.append('3 controller-button 0 1\n')  # Unchanged state needs no fabricated edge.
+        self.assertEqual(self.event(process)[1], 32768)
+        self.assertEqual(receipt.read_text(), self.input.read_text())
+        self.append('4 controller-button 0 0\n5 controller-axis 5 0\n')
+        self.assertEqual(self.event(process)[0], 0)
+        self.assertEqual(self.command(process, 'padbutton 0 0'), 'changed 0')
+        for _ in range(100):
+            self.event(process)
+            if len(receipt.read_text().splitlines()) == 4:
+                break
+        self.assertEqual(self.command(process, 'axis 5 -32768'), 'changed 0')
+        for _ in range(100):
+            self.event(process)
+            if len(receipt.read_text().splitlines()) == 5:
+                break
+        self.assertEqual(self.command(process, 'padstate'), 'state 0 0')
+        self.assertEqual(receipt.read_text(), self.input.read_text())
+
     def test_mouse_buttons_hold_independent_masks_and_preserve_keys_and_motion(self):
         process = self.launch()
         self.append("1 down 4\n2 button-down 1\n3 button-down 3\n4 motion -3 4\n"
@@ -162,6 +230,17 @@ int main() {
                     self.append(f'1 {operation} {value}\n')
                     self.assertEqual(self.event(process)[1], 256)
                     self.assertFalse(Path(str(self.input) + '.delivered').exists())
+
+    def test_controller_barrier_domain_rejects_before_acknowledgement(self):
+        for query in ('controller-axis -1 0', 'controller-axis 6 0', 'controller-axis 0 -32769',
+                      'controller-axis 0 32768', 'controller-button 21 0', 'controller-button 0 2',
+                      'controller-axis 0 1 extra', 'controller-button 0 1.5'):
+            with self.subTest(query=query):
+                self.input.write_text('')
+                process = self.launch()
+                self.append(f'1 {query}\n')
+                self.assertEqual(self.event(process)[1], 256)
+                self.assertFalse(Path(str(self.input) + '.delivered').exists())
 
     def test_partial_line_waits_and_native_events_take_priority(self):
         process = self.launch()

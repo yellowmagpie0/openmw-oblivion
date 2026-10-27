@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "first_and_third_keyboard_mouse_core_courses_and_restarts_verified_matrix_incomplete",
+  "status": "keyboard_mouse_view_restarts_and_normal_gamepad_reference_verified_matrix_incomplete",
   "full_M15S4_acceptance": false,
   "scope": "First- and third-person keyboard/mouse cap15 joined melee profiles pass normally and under ASan/UBSan, each with matched held-block/Stagger/windup fresh continuations. Each profile covers production block, actual Stagger/natural recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Other devices, measured FPS, remaining actor/weapon/mastery/effect/command/interruption and sound-HUD requirements remain incomplete.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
@@ -78,7 +78,7 @@
     "Gamepad SAN/third-person/matched restarts, measured FPS and remaining required view/device/FPS/sound-HUD crosses. One normal first-person configured gamepad reference now passes; existing keyboard/mouse view profiles retain their full course/restart evidence. Configured cap15 only.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Complete the matching first-person gamepad SAN reference and held-block/Stagger/windup fresh continuations, using this configured input overlay and existing sources/verifier. Then third-person gamepad and measured FPS, followed by remaining S4 mechanics.",
+  "next_bounded_task": "Run corrected whole normal/SAN gamepad references using acknowledged input and final alignment, then matched block/Stagger/windup restarts with identical observer. Reuse focused verified source/controls and unchanged engine gates. Complete third-person gamepad, measured FPS and remaining S4 mechanics.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -498,7 +498,37 @@
         "combined-gamepad-normal-02/fixture-failure.json",
         "combined-gamepad-normal-03/fixture-failure.json",
         "combined-gamepad-recovery-focused-normal-01/fixture-failure.json"
-      ]
+      ],
+      "controller_delivery_checkpoint": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/ack-checkpoint-verification.json",
+        "sha256": "ee9fc9e68377218c6636e34d2f117a81877fb16490ca6055e711407d374534e7",
+        "implementation": "After each actual Linux uinput change, append readonly controller-axis/button barrier to existing offscreen replay; only acknowledge once native SDL queue drains and the one opened controller getter matches. No synthetic controller events or gameplay API calls. Begin hold duration after acknowledgement, confirm release too.",
+        "python": {
+          "receipt": "build/oblivion-compat/m15/S4/gamepad-controller-ack-python-02/verification.json",
+          "sha256": "4ae40c70ab3f5669bf7ea31c5a7e1cd3c0325a23daea3802c33b0f773e90ad88",
+          "executed": 435,
+          "tested_source_fingerprint": "8e75c3ac4acaaec00242afecf3ebcd3af7aa9abd073f6e9a327ca14c60388a25",
+          "head": "c1bc3a7be0d824b036d2e7cacea9869f1e9d367a"
+        },
+        "focused_runtime": "SAN range2 exact pairs+whole restore; normal configured cap2 fine-alignment/wall-miss2 pairs+whole restore; only-wall-disabled same-pose normal-keyboard positive control2 pairs+whole restore. Cap is not measured FPS. Full profiles/restarts still incomplete.",
+        "candidate_route_for_final_references": {
+          "status": "integration course not yet executed",
+          "movement_stick": 0.35,
+          "heading_reset": "After range, right_x=.25 until readonly debits>=2,forward.x>=0,forward.y>.95; neutral.",
+          "wall_approach": "Turn right_x=-.35 until angle<10 and both rays blocked; neutral. Forward left_y=-.35 until distance<130 and both rays blocked; neutral.",
+          "final_alignment": "Fine right_x=.21 until original geometry log facing<3,nearWall=true; neutral. Preserve original nearWall range/facing/ray gate before F5/strike. Focused actual stable wall-source fine alignment already passes at configured cap2.",
+          "observer": "Existing readonly observer plus heading, wall-facing and approach-range markers. Keep files identical between final reference and continuations; use original observer with only debits2 for focused normal alignment, as pinned in receipt."
+        },
+        "retained_attempts": [
+          "gamepad-controller-ack-python-01/verification.json",
+          "combined-gamepad-sanitize-01/fixture-failure.json",
+          "combined-gamepad-range-focused-sanitize-01/fixture-failure.json",
+          "combined-gamepad-wall-focused-sanitize-01/fixture-failure.json",
+          "combined-gamepad-wall-focused-sanitize-02/fixture-failure.json",
+          "combined-gamepad-wall-focused-sanitize-03/fixture-failure.json",
+          "combined-gamepad-alignment-normal-01/fixture-failure.json"
+        ]
+      }
     }
   }
 }

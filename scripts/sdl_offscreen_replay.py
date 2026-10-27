@@ -15,6 +15,11 @@ INPUT_ACTIONS = frozenset({"key", "key_down", "key_up", "key_hold", "key_held",
                           "mouse_click", "mouse_down", "mouse_up"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
 GAMEPAD_ACTIONS = frozenset({"gamepad_button", "gamepad_axis"})
+CONTROLLER_BUTTONS = {name: i for i, name in enumerate((
+    "a", "b", "x", "y", "back", "guide", "start", "leftstick", "rightstick",
+    "leftshoulder", "rightshoulder", "dpad_up", "dpad_down", "dpad_left", "dpad_right"))}
+CONTROLLER_AXES = {name: i for i, name in enumerate((
+    "left_x", "left_y", "right_x", "right_y", "left_trigger", "right_trigger"))}
 
 
 def scancode(value):
@@ -144,6 +149,17 @@ class Replay:
         self.send("down", code)
         time.sleep(seconds)
         self.send("up", code)
+
+    def controller_button(self, name, pressed):
+        self.send("controller-button", f"{CONTROLLER_BUTTONS[name]} {int(pressed)}")
+
+    def controller_axis(self, name, raw):
+        if name in ("dpad_x", "dpad_y"):
+            negative, positive = ("dpad_left", "dpad_right") if name == "dpad_x" else ("dpad_up", "dpad_down")
+            self.controller_button(negative, raw < 0)
+            self.controller_button(positive, raw > 0)
+        else:
+            self.send("controller-axis", f"{CONTROLLER_AXES[name]} {raw}")
 
     def action(self, action):
         kind = action["type"]
