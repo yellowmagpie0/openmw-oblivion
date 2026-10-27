@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "status": "core_course_and_matched_recovery_verified_matrix_incomplete",
+  "status": "core_course_all_three_inflight_restarts_verified_one_profile_matrix_incomplete",
   "full_M15S4_acceptance": false,
-  "scope": "One first-person keyboard/mouse course: equipped production block, actual Player Stagger and natural recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Matched actual Stagger-save fresh-process continuation passes in normal and sanitizer builds. Windup/blocking continuations and the complete S4 matrix remain open.",
+  "scope": "One first-person keyboard/mouse cap15 course: production block, actual Player Stagger/recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Actual held-block, pending-windup and Stagger-save fresh-process continuations pass normally and under ASan/UBSan. Complete S4 actor/weapon/mastery/effect/command/interruption and view/device/measured-FPS/sound matrices remain open.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
@@ -75,10 +75,10 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "Matched fresh-process continuations during windup and held blocking, using the captured current-course sources.",
-    "All remaining S4 actor/weapon/directional/mastery/effect, command/query, safe-interruption and view/device/FPS/sound requirements in the controlling plan and delivery audit."
+    "All remaining S4 actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit.",
+    "Other required view/device/FPS/sound-HUD profiles and relevant restart crosses; current proof covers only first-person keyboard/mouse with a configured cap15."
   ],
-  "next_bounded_task": "Use current reference save4 (held block) and save7 (pending Player windup) to close the remaining in-flight restart gates with the same fixture/observer/monitor. Choose subsequent work by the missing behavior blocking the required gameplay course.",
+  "next_bounded_task": "Run this same joined course through the third-person Player route, using normal camera input and the existing fixture/observer/monitor. Identify any concrete failure before investigating native engine details. Then address the remaining required input/FPS profiles and implementation branches.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -119,7 +119,7 @@
     }
   },
   "sanitizer_scope": "Full2038 engine tests run with ASan/UBSan and leak detection enabled using the recovery receipt X11/Mesa environment. Rendered reference/recovery use leak detection disabled, UBSan halt/stacktrace and ASan first before the SDL hook; no rendered leak-coverage claim.",
-  "post_verification_edits": "This receipt and the concise current delivery-audit/handoff update only. C++ implementation/tests, executed manifests and Python harness/fixture inputs remain as tested.",
+  "post_verification_edits": "Continuation case/evidence metadata and concise audit/handoff updates only. Runtime C++, Python harness, canonical manifests, fixture and dependencies remain unchanged from the referenced verified binaries; all derived overlays are pinned by preflight.",
   "verifier": {
     "path": "build/oblivion-compat/m15/S4/combined-restart-work-01/verify-recovery-pair.py",
     "sha256": "d9d79d72179bf7134ca4af58f3eea692b5c59a6959968f4d45129a5d146fa904",
@@ -141,7 +141,7 @@
     "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
     "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
     "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
-    "runtime": "Four terminal actual gameplay epochs, normal/SAN reference and fresh recovery. Each reference has9 and continuation5 exact binary/live pairs (28 total), no contact2 replay, one Player hit3 and distinct misses4/5, invariant miss resources, matched native endpoint values/active ownership/combat RNG, and block audio1/reference,0/restart. All original saved references survive; additional distant reference residency is recorded separately."
+    "runtime": "Current-profile aggregate:8 distinct actual engine epochs,48 exact save/live pairs and6 whole-source fresh restores across held block, pending windup and Stagger recovery. Every continuation reaches matching native resources/active ownership/combat RNG and shared inventories, once-only expected contacts, separate range/wall miss invariants and natural full Fatigue. Audio and reviewed captures are linked; other profiles remain incomplete."
   },
   "verification": {
     "normal": {
@@ -264,5 +264,105 @@
     ]
   },
   "recovery_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee_recovery_resume.json",
-  "endpoint_comparison": "Source load is wholly exact. Endpoints compare all native actor values including naturally full Fatigue140, active ownership, pending ledger, combat RNG and every shared reference inventory. Only elapsed/world-scheduling/position samples, inactive first-person block samples and last released-input duration with no owned/queued action are excluded; the linked receipts enumerate them. Both misses preserve target values/inventory, Player Health/inventory and combat RNG."
+  "endpoint_comparison": "Source load is wholly exact. Endpoints compare all native actor values including naturally full Fatigue140, active ownership, pending ledger, combat RNG and every shared reference inventory. Only elapsed/world-scheduling/position samples, inactive first-person block samples and last released-input duration with no owned/queued action are excluded; the linked receipts enumerate them. Both misses preserve target values/inventory, Player Health/inventory and combat RNG.",
+  "inflight_continuations": {
+    "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee_recovery_resume.json",
+    "reference_directory": "build/oblivion-compat/m15/S4/combined-stable-{kind}-02",
+    "derivation": "Reuse base files/config/environment and the suffix beginning with the exact wait_log selector. Prepend the listed normal-input actions. No actor, resource, inventory, RNG or saved content mutation. Generated runnable overlays remain in ignored evidence.",
+    "cases": {
+      "block": {
+        "source_save_sequence": 4,
+        "suffix_wait_log": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
+        "prefix_actions": [
+          {
+            "type": "key_down",
+            "value": "b"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 180
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "key_held",
+            "value": "space",
+            "hold_seconds": 0.08,
+            "pause_seconds": 0.08
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 Player reaction resources selected: actor=dynamic:player:0000000000000001 cause=2 kind=2",
+            "timeout_seconds": 240
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+            "timeout_seconds": 240
+          }
+        ],
+        "expected_log_additions": [
+          "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2",
+          "M15 Player reaction resources selected: actor=dynamic:player:0000000000000001 cause=2 kind=2",
+          "M15 melee hit sound requested:.*sound=WPNBlockBlade played=1"
+        ],
+        "forbidden_log_source": "reference manifest",
+        "expected_hits": [
+          [
+            "content:oblivion.esm:01fc43",
+            "2"
+          ],
+          [
+            "dynamic:player:0000000000000001",
+            "3"
+          ]
+        ],
+        "expected_stock_block_audio_clusters": 1
+      },
+      "windup": {
+        "source_save_sequence": 7,
+        "suffix_wait_log": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
+        "prefix_actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 180
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          }
+        ],
+        "expected_log_remove": [
+          "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2"
+        ],
+        "forbidden_log_source": "recovery manifest",
+        "expected_hits": [
+          [
+            "dynamic:player:0000000000000001",
+            "3"
+          ]
+        ],
+        "expected_stock_block_audio_clusters": 0
+      }
+    },
+    "gates": "Whole source restore and five actual save/live pairs per continuation; distinct process epoch; preserved source action/resource identities; exact same final native values, active ownership, combat RNG and shared inventories as the accepted reference with its declared inactive-clock exclusions. Commit each still-pending Player contact once with matching resource deltas; no old contact replay; clear range and in-reach wall miss invariants, natural full Fatigue, block audio and reviewed captures. Source block is action6 with active held block; source windup is action2/pending3/contact false. No extra draw/attack activation is injected into windup.",
+    "verification": {
+      "receipt": "build/oblivion-compat/m15/S4/combined-inflight-work-01/checkpoint-verification.json",
+      "sha256": "3e4c038c93877ca7c3e220c2df9f5761d49b257c660149c492d2c053356a9256",
+      "new_epochs": 4,
+      "new_exact_initial_restores": 4,
+      "new_exact_save_live_pairs": 20,
+      "normal_and_sanitizer_pass": true,
+      "block_audio_clusters": {
+        "held_block": 1,
+        "windup": 0
+      },
+      "engine_rebuilds": 0,
+      "scope": "Current first-person keyboard/mouse cap15 course only; all other required crosses remain open."
+    }
+  }
 }

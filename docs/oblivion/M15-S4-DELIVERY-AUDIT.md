@@ -8,17 +8,17 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 Current acceptance checklist (2026-10-26):
 
-- **Demonstrated:** the [combined core course and matched Stagger restart](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass normally and under ASan/UBSan: block, natural recovery, nonlethal return attack, clear range miss and in-reach wall miss. Four fresh process epochs provide 28 exact save/live pairs, matched resources/ownership and no contact or block-audio replay. New static script references preserve cold actor inventories; genuine saved empties remain authoritative. Full engine inventories pass **2,038 tests each**, plus eight focused ownership checks. Unchanged component/Python evidence is linked with its original provenance.
-- **Incomplete:** matched held-block and windup continuations, then the required actor/weapon/directional/mastery/effect, command/query, interruption and view/device/FPS/sound matrix below. Current gameplay evidence is one first-person keyboard/mouse configuration with cap15; measured FPS acceptance remains open.
+- **Demonstrated:** the [combined course and all three in-flight restart windows](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass for one first-person keyboard/mouse cap15 profile, normally and under ASan/UBSan: production block, natural Stagger recovery, nonlethal return attack and separate range/wall misses. Eight engine epochs provide **48 exact save/live pairs and six whole-source fresh restores**, preserving resources, active ownership, contact identity and combat RNG. Held-block and pending-windup continuations add 20 pairs using the existing fixture/route/inspector, without another engine build. Audio and captures pass. The unchanged implementation retains the linked **2,038-test normal/SAN engine gates**, eight focused ownership checks and original component/Python evidence.
+- **Incomplete:** the required actor/weapon/directional/mastery/effect, command/query, interruption and view/device/FPS/sound matrix below, including its remaining restart crosses. Current cap15 evidence does not establish measured FPS acceptance or other views/devices.
 - **Blocked:** none.
 
-The recovery chunk is complete. Next, reuse the reference saves already captured
-at held block (save4) and pending windup (save7) to close the remaining in-flight
-restart gates. The earlier [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
-and the recipe at `bff99f7018` retain their historical provenance.
-Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: choose work by
+The current-profile restart chunk is complete. Next, run the same joined course
+through the third-person Player route before pursuing further native details.
+The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
+and recipe at `da574b293a` retain their historical provenance.
+Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: select work by
 the missing gameplay behavior, use focused checks before batched integration
-gates, reuse applicable evidence, and keep unrelated discoveries deferred.
+gates, reuse applicable evidence, and defer unrelated discoveries.
 
 ## Required implementation
 
@@ -30,7 +30,7 @@ gates, reuse applicable evidence, and keep unrelated discoveries deferred.
 | 4. Safe interruptions | Controller cancellation clears strike/input/posture before animation disable. Actors cancel Player and owned stationary intents on pause and control locks. Lifetime-guarded unequip notifications can now be staged for dispatch after controller/actor updates and retained across simulation rollback. | Native loose-body/render state now restores for the bounded ordinary NPC weapon-break course; complete remaining equipment and interruption transitions. Verify all named transitions: weapon change/breakage, unequip, menu/control lock, stagger/knockdown, death, load, mount; release/held-input behavior and restarted ownership need live coverage. Existing guards alone are not proof of the entire matrix. |
 | 5. Actual animation, HUD and sound | Native KF timing, swish, unarmored NPC/Creature hits, equipped-block sounds and committed Player target Health HUD are wired in the controller. Weapon-block stock PCM and fresh-process replay checks pass. | The bounded selected Heavy-armor/blade PCM and fresh-reload course now passes. Remaining material/weapon crosses, unarmed-only/Creature sound branches and live shield audio remain open. Complete native reaction animation and related sound/HUD feedback across the required matrix. |
 | 6. Command/query semantics | `OblivionCombatService` and World/script adapters share native values and process action. GetFriendHit shares owned counters; native disposition shares saved modifiers. Script StartCombat now produces persistent base-package target state and priority/RNG changes. Schema 69 includes hidden Player package ownership while Player +330 remains null; bounded generic queries expose native package 5/procedure 13. Stationary intent uses directed targets separately from engagement. Actor-frame friend-hit expiry uses current-controller authority and the winning native timer. | Normal-hit notification and nonempty StartCombat self-spell selection/casting remain unwired. Empty-selection RNG now runs after existing-controller self or rooted rejection, and rooted rejection does not add engagement. Full death, raw 0D upper-package, mounted and cross-controller group behavior remains open. Six restrained command/save/restart processes establish package production and bounded query persistence. Four additional unrestrained normal-input processes verify one blocked NPC contact, disarm and mid-recovery restart with an actual script-created controller. Audit every related command/query against complete contact/mastery/reaction paths. |
-| 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` selects the first directed target from persistent controller state; graph membership alone does not authorize an attack. It sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Normal and sanitizer input courses now create the controller through authored StartCombat, receive one blocked NPC contact, and recover across a fresh mid-reaction restart without contact replay. Complete the remaining combined course and required matrix. Full S7 movement/style policy remains outside this item. |
+| 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` selects the first directed target from persistent controller state; graph membership alone does not authorize an attack. It sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Normal and sanitizer input courses now create the controller through authored StartCombat, receive one blocked NPC contact, and recover across a fresh mid-reaction restart without contact replay. Complete the remaining required actor/view/input/FPS matrix. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Enchanted weapon contact currently returns nullopt; resolve the narrowly required combat hook rather than declaring all effects deferred to M16. |
 
 Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
@@ -47,14 +47,13 @@ Fatigue, armor and weapon condition, contact identity and no replay.
 
 The complete S4 course requires a named nonlethal target attacked with normal
 input, blocking its production-policy attack, misses outside reach and behind a
-wall, and recovery after stagger. The bounded equipped-block course now verifies
-a production opponent attack and held-block restart, including stock audio.
-Complete the combined course and repeat first/third person, keyboard/mouse and
-gamepad, and FPS cases. Save/quit/fresh-process load during windup, blocking and
-recovery must match uninterrupted continuation. These are distinct from idle
-restart or direct rule/service tests. The final gate is input -> animation
-contact -> one native delta -> visible/audible reaction. Also retain the plan's
-sanitized synthetic melee course requirement.
+wall, and recovery after stagger. The joined first-person keyboard/mouse cap15
+course now passes, including matched save/quit/fresh-process continuations during
+windup, held blocking and recovery, in normal and sanitizer processes. Complete
+the required first/third-person, keyboard/mouse/gamepad and FPS matrix, with its
+remaining restart crosses. The final gate remains input -> animation contact ->
+one native delta -> visible/audible reaction. Retain the plan's sanitized
+synthetic melee-course requirement. This bounded profile does not deliver S4.
 
 ## Current regression evidence
 
