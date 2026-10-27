@@ -5992,3 +5992,75 @@ TEST(ESM4RuntimeState, PendingGetUp74CannotReinterpretLegacyGraphsAndAddsOnlyIts
     EXPECT_EQ(current.size(), legacy.size() + 4);
     EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(current), state);
 }
+
+namespace
+{
+    ESM4::RuntimeState physicalHitState(bool applied = false)
+    {
+        auto state = getUpIdleState(); state.mVersion = 75;
+        state.mNativeGetUpIdles.clear();
+        auto& actor = state.mNativeActorValues.front();
+        actor.mProcess = ESM4::ActorValueProcess::Active;
+        actor.mProcessKnockedState = 2; actor.mProcessAction = -1;
+        const auto cause = state.mPhysicalActions.mNext++;
+        state.mNativeGetUpPlayback[actor.mActor].mPhysicalHit
+            = ESM4::RuntimePhysicalHit{cause, {-0.f, 22, 33}, 85, 13.25f, applied};
+        if (applied)
+        {
+            ESM4::RuntimeActorRagdoll pose;
+            pose.mBase = actor.mBase; pose.mModel = "meshes/characters/_male/skeleton.nif";
+            pose.mAssetHash = "00112233445566778899aabbccddeeff";
+            ESM4::RuntimeRagdollBody body; body.mRecord = 12; body.mNodeRecord = 8;
+            body.mPosition = {1, 2, 3}; body.mLinearVelocity = {4, 5, 6};
+            pose.mBodies.push_back(body); state.mNativeActorRagdolls.emplace(actor.mActor, pose);
+        }
+        return state;
+    }
+}
+
+TEST(ESM4RuntimeState, PhysicalHit75PreservesPendingVersusAppliedForceAndStartHour)
+{
+    for (bool applied : {false, true})
+    {
+        const auto state = physicalHitState(applied); const auto wire = state.serializeBinary();
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+        EXPECT_EQ(loaded, state); EXPECT_EQ(loaded.serializeBinary(), wire);
+        const auto& hit = *loaded.mNativeGetUpPlayback.begin()->second.mPhysicalHit;
+        EXPECT_EQ(hit.mApplied, applied); EXPECT_FLOAT_EQ(hit.mStartedHour, 13.25f);
+        EXPECT_TRUE(std::signbit(hit.mSourcePosition[0]));
+        EXPECT_NE(loaded.canonicalJson().find("\"physical_hit\":{\"cause\":"), std::string::npos);
+    }
+}
+
+TEST(ESM4RuntimeState, PhysicalHit75RejectsUnconsumedOrLostProcessAndBodyOwnership)
+{
+    const auto valid = physicalHitState();
+    const auto reject = [&](const auto& mutate) {
+        auto state = valid; mutate(state, *state.mNativeGetUpPlayback.begin()->second.mPhysicalHit);
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    };
+    reject([](auto&, auto& h) { h.mCauseAction = 0; });
+    reject([](auto& s, auto& h) { h.mCauseAction = s.mPhysicalActions.mNext; });
+    reject([](auto&, auto& h) { h.mApplied = true; }); // No admitted body.
+    reject([](auto&, auto& h) { h.mStartedHour = 24; });
+    reject([](auto&, auto& h) { h.mSourcePosition[1] = std::numeric_limits<float>::quiet_NaN(); });
+    reject([](auto& s, auto&) { s.mNativeActorValues.front().mProcessKnockedState = 0; });
+    reject([](auto& s, auto&) { s.mNativeActorValues.front().mProcessKnockedState = 1; }); // Pending force.
+    reject([](auto& s, auto&) { s.mVersion = 74; });
+    auto applied = physicalHitState(true); applied.mNativeActorRagdolls.clear();
+    EXPECT_THROW(applied.serializeBinary(), std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, PhysicalHit75DoesNotInventLegacyForceOrTimestamp)
+{
+    auto legacy = physicalHitState();
+    legacy.mVersion = 74; legacy.mNativeGetUpPlayback.begin()->second.mPhysicalHit.reset();
+    const auto wire = legacy.serializeBinary();
+    auto loaded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_FALSE(loaded.mNativeGetUpPlayback.begin()->second.mPhysicalHit);
+    EXPECT_EQ(loaded.serializeBinary(), wire);
+    loaded.mVersion = 75;
+    EXPECT_EQ(loaded.serializeBinary().size(), wire.size() + 1);
+    EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(loaded.serializeBinary())
+        .mNativeGetUpPlayback.begin()->second.mPhysicalHit);
+}

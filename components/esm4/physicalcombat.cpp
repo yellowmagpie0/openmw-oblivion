@@ -1286,6 +1286,43 @@ namespace ESM4
         return static_cast<std::int32_t>(damage);
     }
 
+    float masteryPhysicalKnockdownForce(const MasteryKnockdownForceSettings& settings)
+    {
+        finite(settings.mMinimumForce); finite(settings.mMaximumForce);
+        finite(settings.mMinimumDamage); finite(settings.mMaximumDamage);
+        if (settings.mMaximumDamage <= settings.mMinimumDamage)
+            throw std::invalid_argument("invalid mastery physical force damage interval");
+        const double fraction = std::clamp((50.0 - settings.mMinimumDamage)
+            / (double(settings.mMaximumDamage) - settings.mMinimumDamage), 0.0, 1.0);
+        return rounded(settings.mMinimumForce
+            + (double(settings.mMaximumForce) - settings.mMinimumForce) * fraction);
+    }
+
+    PhysicalHitRecoveryAction resolvePhysicalHitRecovery(const PhysicalHitRecoveryInput& input)
+    {
+        finite(input.mStartedHour); finite(input.mCurrentHour);
+        nonnegative(input.mTimeScale); finite(input.mCurrentFatigue);
+        if (input.mCurrentFatigue < 0 || input.mParalyzed)
+            return PhysicalHitRecoveryAction::Wait;
+        // Retain the original reversed-clock branch as observed. It is not
+        // ordinary modulo24 subtraction; no unrelated calendar fix belongs here.
+        const float elapsed = input.mStartedHour > input.mCurrentHour
+            ? rounded(double(input.mStartedHour) + 23 - input.mCurrentHour)
+            : rounded(double(input.mCurrentHour) - input.mStartedHour);
+        if (elapsed <= double(input.mTimeScale) * .00066f)
+            return PhysicalHitRecoveryAction::Wait;
+        if (elapsed > double(input.mTimeScale) * .0015f)
+            return PhysicalHitRecoveryAction::GetUp;
+        return PhysicalHitRecoveryAction::CheckRootHeight;
+    }
+
+    bool physicalHitRootHeightReady(std::optional<float> relativeRootHeight)
+    {
+        if (!relativeRootHeight) return true;
+        finite(*relativeRootHeight);
+        return *relativeRootHeight <= 16.f;
+    }
+
     PhysicalReactionInitialization resolvePhysicalReactionInitialization(
         std::uint32_t rawLifeState, std::int8_t knockedState, float currentFatigue,
         std::int32_t paralysisInteger, bool duplicatePlayerAnimation)
@@ -1905,6 +1942,17 @@ namespace ESM4
             return std::nullopt;
         return strafe < 0 ? PowerAttackDirection::Left : PowerAttackDirection::Right;
     }
+    std::optional<PowerAttackDirection> longitudinalPowerAttackDirection(std::int32_t baseSkill,
+        float strafe, float forward, const CombatMasterySettings& mastery)
+    {
+        finite(strafe); finite(forward);
+        const auto rank = combatMastery(baseSkill, mastery);
+        if (strafe != 0) return std::nullopt;
+        if (forward < 0 && rank >= CombatMastery::Expert) return PowerAttackDirection::Backward;
+        if (forward > 0 && rank >= CombatMastery::Master) return PowerAttackDirection::Forward;
+        return std::nullopt;
+    }
+
     float powerAttackMultiplier(std::int32_t skill, PowerAttackDirection direction,
         const PowerAttackSettings& settings, const CombatMasterySettings& mastery)
     {

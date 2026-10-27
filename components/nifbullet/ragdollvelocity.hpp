@@ -4,6 +4,7 @@
 #include <osg/Vec3f>
 #include <optional>
 #include <array>
+#include <cstdint>
 #include <components/esm4/physicalsceneworld.hpp>
 
 namespace NifBullet
@@ -19,6 +20,14 @@ namespace NifBullet
     // damping/cap, activation, body publication or keyframed dispatch.
     std::array<float, 4> ragdollNativeLinearVelocityAfterForce(const std::array<float, 4>& current,
         float inverseMass, float frameSeconds, const std::array<float, 4>& force);
+
+    // Original5364B0 adds radial linear velocity directly, without dt or
+    // angular impulse. Portable normalization intentionally uses sqrt rather
+    // than reproducing CPU-specific RSQRT rounding. Coincident centers retain
+    // velocity instead of publishing nonfinite native normalization output.
+    std::array<float, 4> ragdollNativeLinearVelocityAfterPhysicalHit(
+        const std::array<float, 4>& current, const osg::Vec3f& center,
+        const osg::Vec3f& source, float inverseMass, std::uint32_t packedFilter, float force);
 
     // Original world+190 gravity delta, before the motion damping/cap stores.
     osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds);

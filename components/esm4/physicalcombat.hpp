@@ -264,6 +264,8 @@ namespace ESM4
     // Longitudinal variants are selected by their separate admission route.
     std::optional<PowerAttackDirection> sidePowerAttackDirection(std::int32_t baseSkill,
         float strafe, float forward, const CombatMasterySettings& mastery);
+    std::optional<PowerAttackDirection> longitudinalPowerAttackDirection(std::int32_t baseSkill,
+        float strafe, float forward, const CombatMasterySettings& mastery);
     struct PowerAttackSettings
     {
         float mBaseMultiplier;
@@ -392,6 +394,34 @@ namespace ESM4
     // animation-completion signal. Essential means already unconscious, not
     // simply flagged essential. Recovery may begin when this becomes false.
     bool requiresIncapacitation(float currentFatigue, bool paralyzed, bool essentialUnconscious);
+
+    struct MasteryKnockdownForceSettings
+    {
+        // fDeathForceForceMin/Max and fDeathForceDamageMin/Max. The melee
+        // mastery caller uses this existing force curve with fixed damage50.
+        float mMinimumForce = 35.f;
+        float mMaximumForce = 85.f;
+        float mMinimumDamage = 0.f;
+        float mMaximumDamage = 50.f;
+    };
+    float masteryPhysicalKnockdownForce(const MasteryKnockdownForceSettings& settings);
+
+    struct PhysicalHitRecoveryInput
+    {
+        float mStartedHour;
+        float mCurrentHour;
+        float mTimeScale;
+        float mCurrentFatigue;
+        bool mParalyzed;
+    };
+    enum class PhysicalHitRecoveryAction { Wait, CheckRootHeight, GetUp };
+    // Original654913 state1 gate. Keep the process timestamp across saves;
+    // unlike paralysis, physical hits have a minimum/maximum time window.
+    // CheckRootHeight alone requests the caller's read-only visual-root query.
+    PhysicalHitRecoveryAction resolvePhysicalHitRecovery(const PhysicalHitRecoveryInput& input);
+    // Original5F0270 compares the selected bone's world Z with reference Z,
+    // allowing a missing peer/root/bone. It is not a capsule ground predicate.
+    bool physicalHitRootHeightReady(std::optional<float> relativeRootHeight);
 
     enum class PhysicalReactionInitializationAction : std::uint8_t
     {

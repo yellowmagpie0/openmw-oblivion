@@ -39,6 +39,12 @@ namespace MWPhysics
         const NifBullet::ActorRagdollPhysics& physics, const ESM::FormKey& base,
         std::string_view model, const NifBullet::ActorRagdollDefinition& definition,
         const NifBullet::RagdollNativeGetUpPublication& publication);
+    // Stage the existing tree's immediate dynamic/zero-gain hit and radial
+    // velocity publication. Source position and pose share World units; native
+    // packed velocities retain their independent unit conversion. No mutation.
+    ESM4::RuntimeActorRagdoll prepareNativeActorPhysicalHitSnapshot(
+        const ESM4::RuntimeActorRagdoll& current, const NifBullet::ActorRagdollDefinition& definition,
+        const ESM4::RuntimePhysicalHit& hit);
     std::unique_ptr<NifBullet::ActorRagdollPhysics::PreparedRestore> prepareNativeActorRagdollSnapshot(
         const NifBullet::ActorRagdollPhysics& physics, const ESM4::RuntimeActorRagdoll& snapshot,
         const ESM::FormKey& base, std::string_view model, const NifBullet::ActorRagdollDefinition& definition);

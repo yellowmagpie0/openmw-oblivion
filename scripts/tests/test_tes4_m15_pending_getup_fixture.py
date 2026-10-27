@@ -14,14 +14,15 @@ from scripts.tests import test_tes4_runtime_state as runtime_tests
 class PendingGetUpFixtureTests(unittest.TestCase):
     def source(self, folder):
         state = runtime_tests.Tes4RuntimeStateTests.getup_pending_state()
+        runtime._upgrade_actor_knockback(state); state['schema_version'] = runtime.CURRENT_VERSION
         graph = state['native_getup_playback'].pop()
         payload = runtime.encode_payload(state)
-        body = struct.pack('<4sII', b'VERS', 4, 74) + struct.pack('<4sI', b'DATA', len(payload)) + payload
+        body = struct.pack('<4sII', b'VERS', 4, runtime.CURRENT_VERSION) + struct.pack('<4sI', b'DATA', len(payload)) + payload
         opaque = struct.pack('<4sIII', b'TEST', 12, 0, 0) + struct.pack('<4sI', b'DATA', 4) + b'keep'
         source = folder / 'source.omwsave'
         source.write_bytes(struct.pack('<4sIII', b'T4ST', len(body), 0, 0) + body + opaque)
         recipe = dict(schema_version=1, purpose='synthetic codec test', source=str(source),
-                      source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), target_schema=74,
+                      source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(), target_schema=runtime.CURRENT_VERSION,
                       actor=graph['actor'], process_knocked_state=5, process_action=-1, playback=graph)
         return source, recipe, opaque
 

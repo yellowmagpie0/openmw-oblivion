@@ -6928,3 +6928,23 @@ namespace
         EXPECT_EQ(actor.capture()[0].mPose, mPoses[0]);
     }
 }
+
+TEST(RagdollNativePhysicalHitVelocity, RadialHitUsesFilterAndInverseMassWithoutFrameTime)
+{
+    const std::array<float, 4> before{1, 2, 3, 0};
+    // Independent full5364B0 receipts: (3,4,0) direction, force85,
+    // inverseMass.5. Tolerance allows portable normalization instead of RSQRT.
+    const auto result = NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(before,
+        {4, 6, 3}, {1, 2, 3}, .5f, 0, 85);
+    EXPECT_NEAR(result[0], 45.625f, .0001f); EXPECT_NEAR(result[1], 61.5f, .0001f);
+    EXPECT_EQ(result[2], 3); EXPECT_EQ(result[3], 0);
+    const auto light = NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(before,
+        {4, 6, 3}, {1, 2, 3}, .5f, 6 << 8, 85);
+    EXPECT_NEAR(light[0], 12.15625f, .0001f); EXPECT_NEAR(light[1], 16.875f, .0001f);
+    EXPECT_EQ(NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(before,
+        {4, 6, 3}, {1, 2, 3}, .5f, 25 << 8, 85), before);
+    EXPECT_EQ(NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(before,
+        {1, 2, 3}, {1, 2, 3}, .5f, 0, 85), before);
+    EXPECT_THROW(NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(before,
+        {4, 6, 3}, {1, 2, 3}, -.5f, 0, 85), std::invalid_argument);
+}

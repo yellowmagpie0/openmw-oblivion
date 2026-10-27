@@ -560,6 +560,7 @@ namespace MWWorld
             // Only an owned forward-power prefix can use this pre-speech
             // effect phase; its final reaction tail remains available afterward.
             std::unique_ptr<PreparedOblivionPhysicalContact> prepareDefaultParalysisBeforeSpeech();
+            std::unique_ptr<PreparedOblivionPhysicalContact> preparePhysicalKnockdownBeforeSpeech(float force);
             // Scene admission may throw before any contact resources publish.
             bool commit();
         };
@@ -1181,12 +1182,13 @@ namespace MWWorld
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactImpl(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit,
-            bool attackerRecoil, PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis = false);
+            bool attackerRecoil, PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis = false,
+            bool preSpeechPhysicalHit = false);
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
             bool attackerRecoil = false, PreparedOblivionPhysicalContact* previous = nullptr,
-            bool preSpeechParalysis = false);
+            bool preSpeechParalysis = false, bool preSpeechPhysicalHit = false);
     };
 }
 

@@ -758,4 +758,52 @@ namespace
         const auto state = save(*projected);
         EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).canonicalJson(), state.canonicalJson());
     }
+    TEST_F(NativeRagdollSnapshotTest, PhysicalHitStagesDynamicPoseAndOnceOnlyRadialVelocity)
+    {
+        const float scale = NifBullet::RagdollNativeLengthScale;
+        for (auto& body : mBodies)
+        {
+            body.mPose.setOrigin(btVector3(4 * scale, 6 * scale, 3 * scale));
+            body.mLinearVelocity = btVector3(scale, 2 * scale, 3 * scale);
+            body.mAngularVelocity = btVector3(4 * scale, 5 * scale, 6 * scale);
+        }
+        mGraph.mBodies[0].mBlend = NifBullet::RagdollBlendDefinition{30, 0x208, 1, 1};
+        mGraph.mBodies[0].mBlendController = NifBullet::RagdollBlendControllerDefinition{78, 20, 8, 1, 0, 0, 1, {}};
+        mGraph.mBodies[1].mInfoFilter.mFlags = 6;
+        const std::array packed{
+            NifBullet::RagdollNativePackedVelocityState{24, {{1, 2, 3, 0}, {4, 5, 6, 0}}},
+            NifBullet::RagdollNativePackedVelocityState{12, {{1, 2, 3, 0}, {4, 5, 6, 0}}}};
+        const std::array modes{
+            NifBullet::RagdollNativeMotionRequest{24, NifBullet::RagdollNativeMotion::Keyframed},
+            NifBullet::RagdollNativeMotionRequest{12, NifBullet::RagdollNativeMotion::Keyframed}};
+        const std::array blends{NifBullet::RagdollNativeBlendState{24, 0x208, {1, 1}, 6}};
+        ESM4::PhysicalBlendControllerState curve; curve.mTiming.mFlags = 8;
+        const std::array controllers{NifBullet::RagdollNativeBlendControllerState{78, 20, curve, 20}};
+        const auto current = MWPhysics::captureNativeActorRagdoll(mBase, mModel, mGraph, mBodies,
+            packed, modes, blends, MWPhysics::NativeRagdollControllerSnapshot{controllers, {}});
+        ESM4::RuntimePhysicalHit hit{7, {scale, 2 * scale, 3 * scale}, 85, 13.25f, false};
+        const auto next = MWPhysics::prepareNativeActorPhysicalHitSnapshot(current, mGraph, hit);
+        EXPECT_EQ(current.mBodies[0].mNativeMotion, ESM4::RuntimeRagdollMotion::Keyframed);
+        for (const auto& body : next.mBodies)
+        {
+            const auto& velocity = body.mNativePackedVelocity->mLinear;
+            EXPECT_NEAR(velocity[0], body.mRecord == 24 ? 45.625f : 12.15625f, .0001f);
+            EXPECT_NEAR(velocity[1], body.mRecord == 24 ? 61.5f : 16.875f, .0001f);
+            EXPECT_EQ(velocity[2], 3); EXPECT_EQ(velocity[3], 0);
+            EXPECT_EQ(body.mNativeMotion, ESM4::RuntimeRagdollMotion::Dynamic);
+            EXPECT_EQ(body.mNativePackedVelocity->mAngular, (std::array<float, 4>{4, 5, 6, 0}));
+        }
+        ASSERT_EQ(next.mNativeBlends->size(), 1u);
+        EXPECT_EQ(next.mNativeBlends->front().mHierarchyGain, 0);
+        EXPECT_EQ(next.mNativeBlends->front().mVelocityGain, 0);
+        EXPECT_EQ(next.mNativeBlends->front().mRequestedMotion, 1u);
+        EXPECT_EQ(next.mNativeBlends->front().mCollisionFlags, 8);
+        EXPECT_FALSE(next.mNativeControllers->mBlends.front().mState.mTiming.mFlags & 8);
+        EXPECT_EQ(save(next).serializeBinary(), ESM4::RuntimeState::deserializeBinary(save(next).serializeBinary()).serializeBinary());
+        hit.mApplied = true;
+        EXPECT_THROW(MWPhysics::prepareNativeActorPhysicalHitSnapshot(next, mGraph, hit), std::invalid_argument);
+        hit.mApplied = false; auto foreign = mGraph; foreign.mSourceHash[0] = 'z';
+        EXPECT_THROW(MWPhysics::prepareNativeActorPhysicalHitSnapshot(current, foreign, hit), std::invalid_argument);
+    }
+
 }

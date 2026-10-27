@@ -387,6 +387,8 @@ namespace MWMechanics
         // or the forward-power pre-speech phase, once per contact. General spell
         // overrides are separate.
         std::optional<float> mVictimDefaultParalysisPower{};
+        // Only the committed Backward prefix may originate this saved request.
+        std::optional<ESM4::RuntimePhysicalHit> mVictimPhysicalHit{};
     };
 
     struct OblivionPassiveEffectIdentity
@@ -834,6 +836,11 @@ namespace MWMechanics
             std::unique_ptr<PreparedPhysicalContact> preparePreSpeechParalysis(float casterPower,
                 MWWorld::Player* player, const ESM4::PlayerDynamicBaseSettings& playerBase,
                 bool playerGodMode = false);
+            bool preSpeechPhysicalHitAvailable() const noexcept;
+            std::unique_ptr<PreparedPhysicalContact> preparePreSpeechPhysicalHit(
+                const std::array<float, 3>& sourcePosition, float force, float startedHour,
+                MWWorld::Player* player, const ESM4::PlayerDynamicBaseSettings& playerBase,
+                bool playerGodMode = false);
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;
@@ -849,7 +856,7 @@ namespace MWMechanics
             const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
             bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
             const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode,
-            std::shared_ptr<bool> continuation);
+            std::shared_ptr<bool> continuation, bool physicalHitPhase = false);
     public:
         // Revalidate after fallible external admission. No allocation/callback
         // in validation or publication; stale participants leave all unchanged.

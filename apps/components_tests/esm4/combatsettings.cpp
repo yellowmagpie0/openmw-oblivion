@@ -579,3 +579,14 @@ TEST(ESM4CombatSettings, SidePowerAdmissionUsesBaseMasteryAndPureLocalStrafe)
     EXPECT_THROW(ESM4::sidePowerAttackDirection(100, 1, std::numeric_limits<float>::infinity(), mastery),
         std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, PhysicalMasteryForceUsesWinningDeathForceCurve)
+{
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce(ESM4::buildMasteryKnockdownForceSettings({})), 85.f, .001f);
+    ESM4::GameSetting maximum{}; maximum.mEditorId = "fDeathForceForceMax"; maximum.mData = 120.f;
+    ESM4::GameSetting damage{}; damage.mEditorId = "fDeathForceDamageMax"; damage.mData = 100.f;
+    std::array<const ESM4::GameSetting*, 2> settings{&maximum, &damage};
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce(ESM4::buildMasteryKnockdownForceSettings(settings)), 77.5f, .001f);
+    damage.mData = 0.f;
+    EXPECT_THROW(ESM4::buildMasteryKnockdownForceSettings(settings), std::invalid_argument);
+}

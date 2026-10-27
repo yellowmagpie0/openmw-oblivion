@@ -244,7 +244,8 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = state_io.CURRENT_VERSION
         self.assertEqual(legacy["native_getup_playback"][0]["request_selections"], [])
         self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
-        self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 8)
+        self.assertIsNone(legacy["native_getup_playback"][0]["physical_hit"])
+        self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 9)
 
     def test_getup_graph73_rejects_invalid_selection_and_legacy_reinterpretation(self):
         changes = [lambda g: g["request_selections"][0].update(request=99),
@@ -287,6 +288,60 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             "pending_requests": pending}]
         state["native_getup_idles"] = []; state["native_animation_clocks"] = []
         return state
+
+    @classmethod
+    def physical_hit_state(cls, applied=False):
+        state = cls.getup_pending_state(False); state["schema_version"] = 75
+        graph = state["native_getup_playback"][0]
+        graph.update(requests=[None]*4, pending_requests=[])
+        actions = state.setdefault("physical_actions", {"next": 1, "pending": []})
+        cause = actions["next"]; actions["next"] += 1
+        graph["physical_hit"] = {"cause": cause, "source_position": [-0., 22., 33.],
+            "force": 85., "started_hour": 13.25, "applied": applied}
+        actor = next(v for v in state["native_actor_values"] if v["actor"] == graph["actor"])
+        actor.update(process=1, process_knocked_state=2, process_action=-1)
+        if applied:
+            state["native_actor_ragdolls"] = [{"actor": actor["actor"], "base": actor["base"],
+                "model": "meshes/characters/_male/skeleton.nif", "asset_hash": "00112233445566778899aabbccddeeff",
+                "bodies": [{"record": 12, "node_record": 8, "rotation": [1.,0.,0.,0.,1.,0.,0.,0.,1.],
+                    "position": [1.,2.,3.], "linear_velocity": [4.,5.,6.], "angular_velocity": [0.,0.,0.]}]}]
+        return state
+
+    def test_physical_hit75_preserves_pending_and_applied_without_restarting_time(self):
+        for applied in (False, True):
+            state = self.physical_hit_state(applied); wire = state_io.encode_payload(state)
+            loaded = state_io.decode_payload(wire)
+            self.assertEqual(loaded["native_getup_playback"], state["native_getup_playback"])
+            self.assertEqual(state_io.encode_payload(loaded), wire)
+            hit = loaded["native_getup_playback"][0]["physical_hit"]
+            self.assertEqual(hit["applied"], applied); self.assertEqual(hit["started_hour"], 13.25)
+            self.assertEqual(math.copysign(1, hit["source_position"][0]), -1)
+
+    def test_physical_hit75_rejects_lost_cause_process_body_or_malformed_state(self):
+        mutations = [lambda h: h.update(cause=0), lambda h: h.update(cause=2**63),
+            lambda h: h.update(applied=1), lambda h: h.update(applied=True),
+            lambda h: h.update(started_hour=24), lambda h: h.update(started_hour=24-1e-10),
+            lambda h: h.update(force=float("nan")), lambda h: h.update(source_position=[1,2]),
+            lambda h: h.update(source_position=[1,2,float("inf")])]
+        for mutate in mutations:
+            state = self.physical_hit_state(); mutate(state["native_getup_playback"][0]["physical_hit"])
+            with self.subTest(mutate=mutate), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.physical_hit_state(); state["schema_version"] = 74
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for knocked in (0,1,4,5):
+            state = self.physical_hit_state(); actor = state["native_getup_playback"][0]["actor"]
+            next(v for v in state["native_actor_values"] if v["actor"] == actor)["process_knocked_state"] = knocked
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_physical_hit75_upgrade_keeps_legacy_timestamp_unknown(self):
+        state = self.physical_hit_state(); state["schema_version"] = 74
+        del state["native_getup_playback"][0]["physical_hit"]
+        wire = state_io.encode_payload(state); legacy = state_io.decode_payload(wire)
+        self.assertNotIn("physical_hit", legacy["native_getup_playback"][0])
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 75
+        self.assertIsNone(legacy["native_getup_playback"][0]["physical_hit"])
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(legacy))["native_getup_playback"],
+            legacy["native_getup_playback"])
 
     def test_getup_pending74_roundtrip_preserves_queued_and_completed_empty_without_info(self):
         state = self.getup_pending_state(); wire = state_io.encode_payload(state)
@@ -339,7 +394,8 @@ class Tes4RuntimeStateTests(unittest.TestCase):
     def test_getup_pending74_empty_legacy_promotion_preserves_old_layout(self):
         legacy = self.getup_selected_graph_state(); wire = state_io.encode_payload(legacy)
         self.assertNotIn("pending_requests", state_io.decode_payload(wire)["native_getup_playback"][0])
-        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 74
+        # Schema74 stays fixed; the current promoter also adds the schema75 field.
+        legacy["native_getup_playback"][0]["pending_requests"] = []; legacy["schema_version"] = 74
         self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
         self.assertEqual(len(state_io.encode_payload(legacy)), len(wire) + 4)
 

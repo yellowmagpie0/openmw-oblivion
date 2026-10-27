@@ -2775,6 +2775,8 @@ namespace MWMechanics
         std::uint64_t mExpectedNextDeath = 0;
         std::optional<decltype(OblivionCombatService::mActorKnockback)> mKnockback;
         std::optional<ESM4::TimedKnockbackState> mExpectedKnockback;
+        std::optional<decltype(OblivionCombatService::mGetUpPlayback)> mPhysicalHitGraph;
+        std::optional<ESM4::RuntimeGetUpPlayback> mExpectedPhysicalHitGraph;
         std::optional<OblivionCombatRandomTransition> mRandom;
         std::optional<float> mPlayerTimer;
         std::unique_ptr<OblivionActorProjection> mPlayerView;
@@ -2799,10 +2801,11 @@ namespace MWMechanics
         // All continuations prepared from this contact compete for one right.
         std::shared_ptr<bool> mContinuation = std::make_shared<bool>(false);
         std::weak_ptr<const char> mFrameIdentity;
-        std::shared_ptr<bool> mPreSpeechParalysis = std::make_shared<bool>(false);
+        std::shared_ptr<bool> mPreSpeechMastery = std::make_shared<bool>(false);
         bool mCanPreparePreSpeechParalysis = false;
-        bool mIsPreSpeechParalysis = false;
-        bool mRequestsParalysis = false;
+        bool mCanPreparePreSpeechPhysicalHit = false;
+        bool mIsPreSpeechMastery = false;
+        bool mRequestsMastery = false;
         bool mIsContinuation = false;
         bool mCanContinue = false;
         bool mCommitted = false;
@@ -2878,24 +2881,25 @@ namespace MWMechanics
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
         const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
     {
-        if (!continuationAvailable() || (deltas.mVictimDefaultParalysisPower && *mImpl->mPreSpeechParalysis))
+        if (!continuationAvailable() || (deltas.mVictimDefaultParalysisPower && *mImpl->mPreSpeechMastery))
             return nullptr;
         // This is a capability carried by the committed contact, not a general
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
-            || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments)
+            || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments
+            || deltas.mVictimPhysicalHit)
             throw std::invalid_argument("native contact continuation cannot repeat damage, wear or knockback");
         auto prepared = mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
             mImpl->mAttacker.mActor, mImpl->mVictim->mActor, deltas, player, false, {},
             playerBase, playerGodMode, mImpl->mContinuation);
-        if (prepared) prepared->mImpl->mPreSpeechParalysis = mImpl->mPreSpeechParalysis;
+        if (prepared) prepared->mImpl->mPreSpeechMastery = mImpl->mPreSpeechMastery;
         return prepared;
     }
 
     bool OblivionCombatService::PreparedPhysicalContact::preSpeechParalysisAvailable() const noexcept
     {
-        return continuationAvailable() && mImpl->mCanPreparePreSpeechParalysis && !*mImpl->mPreSpeechParalysis;
+        return continuationAvailable() && mImpl->mCanPreparePreSpeechParalysis && !*mImpl->mPreSpeechMastery;
     }
 
     std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
@@ -2908,8 +2912,32 @@ namespace MWMechanics
         auto prepared = prepareContinuation(effect, player, playerBase, playerGodMode);
         if (prepared)
         {
-            prepared->mImpl->mIsPreSpeechParalysis = true;
-            prepared->mImpl->mPreSpeechParalysis = mImpl->mPreSpeechParalysis;
+            prepared->mImpl->mIsPreSpeechMastery = true;
+            prepared->mImpl->mPreSpeechMastery = mImpl->mPreSpeechMastery;
+        }
+        return prepared;
+    }
+
+    bool OblivionCombatService::PreparedPhysicalContact::preSpeechPhysicalHitAvailable() const noexcept
+    {
+        return continuationAvailable() && mImpl->mCanPreparePreSpeechPhysicalHit && !*mImpl->mPreSpeechMastery;
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
+    OblivionCombatService::PreparedPhysicalContact::preparePreSpeechPhysicalHit(
+        const std::array<float, 3>& sourcePosition, float force, float startedHour,
+        MWWorld::Player* player, const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
+    {
+        if (!preSpeechPhysicalHitAvailable()) return nullptr;
+        OblivionPhysicalContactDeltas effect;
+        effect.mVictimPhysicalHit = ESM4::RuntimePhysicalHit{mImpl->mId, sourcePosition, force, startedHour, false};
+        auto prepared = mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
+            mImpl->mAttacker.mActor, mImpl->mVictim->mActor, effect, player, false, {},
+            playerBase, playerGodMode, mImpl->mContinuation, true);
+        if (prepared)
+        {
+            prepared->mImpl->mIsPreSpeechMastery = true;
+            prepared->mImpl->mPreSpeechMastery = mImpl->mPreSpeechMastery;
         }
         return prepared;
     }
@@ -2938,7 +2966,7 @@ namespace MWMechanics
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
         bool victimEssential, const ESM4::EssentialRecoverySettings& recovery,
         const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode,
-        std::shared_ptr<bool> continuation)
+        std::shared_ptr<bool> continuation, bool physicalHitPhase)
     {
         const auto actorKey = [&](const MWWorld::Ptr& ptr) {
             if (ptr.isEmpty())
@@ -2947,6 +2975,13 @@ namespace MWMechanics
                 ? ESM::FormKey::dynamic("player", 1) : ptr.getCellRef().getFormKey();
         };
         const auto attackerKey = actorKey(attacker);
+        if (deltas.mVictimPhysicalHit)
+        {
+            deltas.mVictimPhysicalHit->validate();
+            if (!physicalHitPhase || !continuation || deltas.mVictimPhysicalHit->mCauseAction != id
+                || deltas.mVictimPhysicalHit->mApplied || deltas.mVictimDefaultParalysisPower)
+                throw std::invalid_argument("physical hit requires its committed pre-speech contact phase");
+        }
         if (deltas.mVictimDefaultParalysisPower && !continuation)
             throw std::invalid_argument("native default paralysis requires a committed contact continuation");
         if (continuation ? (*continuation || !isActionConsumed(id)) : !isActionPending(id, attackerKey))
@@ -3107,6 +3142,30 @@ namespace MWMechanics
             }
             receiving->validate();
             if (!continuation) transition = prepareLifeTransition(*receivingLife);
+        }
+        std::optional<decltype(mGetUpPlayback)> physicalHitGraph;
+        std::optional<ESM4::RuntimeGetUpPlayback> expectedPhysicalHitGraph;
+        if (deltas.mVictimPhysicalHit)
+        {
+            if (!receiving || !receivingLife)
+                throw std::invalid_argument("physical hit requires a receiving actor");
+            // Native active living process0 admits the hit. Other process/life
+            // states still spend the phase right without a body or force.
+            if (receivingLife->mPhase == ESM4::ActorLifePhase::Alive
+                && receiving->mProcess == ESM4::ActorValueProcess::Active
+                && receiving->mProcessKnockedState == 0)
+            {
+                expectedPhysicalHitGraph = getUpPlayback(victimKey);
+                auto graph = expectedPhysicalHitGraph.value_or(ESM4::RuntimeGetUpPlayback{});
+                if (graph.mPhysicalHit)
+                    throw std::invalid_argument("physical hit cannot replace an unrecovered contact");
+                graph.mPhysicalHit = deltas.mVictimPhysicalHit;
+                graph.validate(findAnimationClock(victimKey));
+                physicalHitGraph.emplace();
+                physicalHitGraph->emplace(victimKey, std::move(graph));
+                receiving->mProcessKnockedState = 2;
+                receiving->validate();
+            }
         }
         spendFatigue(attacking, attacker, deltas.mAttackerFatigue);
         std::optional<decltype(mActorKnockback)> knockback;
@@ -3813,7 +3872,8 @@ namespace MWMechanics
         data->mId = id;
         if (!mContactFrameIdentity.mValue) mContactFrameIdentity.mValue = std::make_shared<const char>();
         data->mFrameIdentity = mContactFrameIdentity.mValue;
-        data->mRequestsParalysis = deltas.mVictimDefaultParalysisPower.has_value();
+        data->mRequestsMastery = deltas.mVictimDefaultParalysisPower.has_value()
+            || deltas.mVictimPhysicalHit.has_value();
         data->mIsContinuation = bool(continuation);
         if (continuation) data->mContinuation = std::move(continuation);
         data->mAttacker.capture(*this, attacker, attackerKey);
@@ -3834,6 +3894,10 @@ namespace MWMechanics
             && (!strike || strike->mKind != ESM4::MeleeStrikeKind::Counter);
         data->mCanPreparePreSpeechParalysis = data->mCanContinue && deltas.mOrdinaryHitArguments
             && strike && strike->mActionId == id && strike->mKind == ESM4::MeleeStrikeKind::ForwardPower;
+        data->mCanPreparePreSpeechPhysicalHit = data->mCanContinue && deltas.mOrdinaryHitArguments
+            && strike && strike->mActionId == id && strike->mKind == ESM4::MeleeStrikeKind::BackwardPower;
+        data->mPhysicalHitGraph = std::move(physicalHitGraph);
+        data->mExpectedPhysicalHitGraph = std::move(expectedPhysicalHitGraph);
         for (const auto& [action, owner] : mActionOwners)
             if (owner == attackerKey || (receiving && owner == victimKey))
                 data->mOwnedActions.emplace_back(action, owner);
@@ -3873,8 +3937,8 @@ namespace MWMechanics
             || (data->mIsContinuation ? (*data->mContinuation || data->mFrameIdentity.expired()
                     || !isActionConsumed(data->mId))
                 : !isActionPending(data->mId, data->mAttacker.mValues.mActor))
-            || (*data->mPreSpeechParalysis
-                && (data->mIsPreSpeechParalysis || (data->mIsContinuation && data->mRequestsParalysis)))
+            || (*data->mPreSpeechMastery
+                && (data->mIsPreSpeechMastery || (data->mIsContinuation && data->mRequestsMastery)))
             || !data->mAttacker.valid(*this) || (data->mVictim && !data->mVictim->valid(*this)))
             return false;
         const auto& attackerKey = data->mAttacker.mValues.mActor;
@@ -3890,6 +3954,13 @@ namespace MWMechanics
                     || action.second != data->mOwnedActions[owned].second || !mActions.isPending(action.first)) return false;
                 ++owned;
             }
+        if (data->mPhysicalHitGraph)
+        {
+            const auto graph = mGetUpPlayback.find(*victimKey);
+            if ((graph != mGetUpPlayback.end()) != data->mExpectedPhysicalHitGraph.has_value()
+                || (data->mExpectedPhysicalHitGraph && graph->second != *data->mExpectedPhysicalHitGraph))
+                return false;
+        }
         if (data->mKnockback)
         {
             const auto found = mActorKnockback.find(*victimKey);
@@ -3940,6 +4011,17 @@ namespace MWMechanics
             if (found == mActorKnockback.end()) mActorKnockback.insert(data.mKnockback->extract(next));
             else std::swap(found->second, next->second);
         }
+        if (data.mPhysicalHitGraph)
+        {
+            const auto next = data.mPhysicalHitGraph->begin();
+            const auto found = mGetUpPlayback.find(next->first);
+            if (found == mGetUpPlayback.end()) mGetUpPlayback.insert(data.mPhysicalHitGraph->extract(next));
+            else
+            {
+                static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpPlayback>);
+                std::swap(found->second, next->second);
+            }
+        }
         std::swap(mActorValues.find(attackerKey)->second, data.mAttacking);
         if (victimKey)
         {
@@ -3967,7 +4049,7 @@ namespace MWMechanics
         }
         while (!data.mReactionClocks.empty())
             mAnimationClocks.insert(data.mReactionClocks.extract(data.mReactionClocks.begin()));
-        if (data.mIsPreSpeechParalysis) *data.mPreSpeechParalysis = true;
+        if (data.mIsPreSpeechMastery) *data.mPreSpeechMastery = true;
         else if (data.mIsContinuation) *data.mContinuation = true;
         else consumeContactAction(data.mId, attackerKey);
         if (data.mTransition)
@@ -4056,6 +4138,7 @@ namespace MWMechanics
             throw std::invalid_argument("native nonplayer construction has no stable base identity");
         const auto key = actor.getCellRef().getFormKey();
         const auto* oldValues = findActorValues(key);
+        const bool resetPhysicalHit = activate && oldValues && oldValues->mProcess != process;
         auto values = oldValues ? *oldValues : MWWorld::resolveOblivionInitialNonPlayerValues(
             store, key, baseKey, playerLevel, process);
         validateNonPlayerIdentity(actor, values);
@@ -4115,6 +4198,9 @@ namespace MWMechanics
         }
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        if (resetPhysicalHit)
+            if (const auto graph = mGetUpPlayback.find(key); graph != mGetUpPlayback.end())
+                graph->second.mPhysicalHit.reset();
         view.commit();
     }
 
@@ -5763,6 +5849,9 @@ namespace MWMechanics
             return; // Original Low/MiddleLow virtual68F970 is a no-op.
         mPreparedGetUpIdentity.mValue.reset();
         found->second.mProcessKnockedState = state;
+        if (state == 0)
+            if (const auto graph = mGetUpPlayback.find(actor); graph != mGetUpPlayback.end())
+                graph->second.mPhysicalHit.reset();
     }
 
     const ESM4::RuntimeActorValues* OblivionCombatService::findActorValues(const ESM::FormKey& actor) const
@@ -6040,6 +6129,9 @@ namespace MWMechanics
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        // The new process cannot retain the old contact's pending/applied hit.
+        if (const auto graph = mGetUpPlayback.find(found->first); graph != mGetUpPlayback.end())
+            graph->second.mPhysicalHit.reset();
         if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
             cancelActorActions(found->first);
         prepared.commit();
@@ -6057,6 +6149,9 @@ namespace MWMechanics
         OblivionActorProjection prepared(ptr.getClass().getNpcStats(ptr), actorProjection(values, nullptr, &life));
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
+        // The new process cannot retain the old contact's pending/applied hit.
+        if (const auto graph = mGetUpPlayback.find(found->first); graph != mGetUpPlayback.end())
+            graph->second.mPhysicalHit.reset();
         if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
             cancelActorActions(found->first);
         prepared.commit();
@@ -6412,12 +6507,32 @@ namespace MWMechanics
         if ((update.mKnockedState && (*update.mKnockedState < 0 || *update.mKnockedState > 6))
             || (update.mClock && (!std::isfinite(*update.mClock) || *update.mClock < 0 || *update.mClock > 100000)))
             throw std::invalid_argument("invalid GetUp playback process byte or clock");
+        if (update.mKnockedState == 0) update.mPlayback.mPhysicalHit.reset();
         update.mPlayback.validate(update.mClock);
+        const auto oldPhysical = mGetUpPlayback.find(actor);
+        if (oldPhysical != mGetUpPlayback.end() && oldPhysical->second.mPhysicalHit
+            && !update.mPlayback.mPhysicalHit && update.mKnockedState != 0)
+            throw std::invalid_argument("physical hit ownership ends with its process recovery");
+        if (update.mPlayback.mPhysicalHit)
+        {
+            if (oldPhysical == mGetUpPlayback.end() || !oldPhysical->second.mPhysicalHit)
+                throw std::invalid_argument("physical hit must originate in its owned contact");
+            const auto& before = *oldPhysical->second.mPhysicalHit;
+            const auto& after = *update.mPlayback.mPhysicalHit;
+            auto expected = before; expected.mApplied = after.mApplied;
+            if (after != expected || (before.mApplied && !after.mApplied)
+                || !isActionConsumed(after.mCauseAction)
+                || !update.mKnockedState || (*update.mKnockedState != 1 && *update.mKnockedState != 2
+                    && *update.mKnockedState != 3 && *update.mKnockedState != 5 && *update.mKnockedState != 6)
+                || (!after.mApplied && *update.mKnockedState != 2))
+                throw std::invalid_argument("physical hit frame cannot replace or replay its contact");
+        }
         const auto& requests = update.mPlayback.mRequests;
         const bool hasRequests = requests.mPrimary || requests.mSecondary || requests.mRetired[0] || requests.mRetired[1];
         if (values->mProcess == ESM4::ActorValueProcess::Low
             ? update.mKnockedState || update.mAction || update.mIdle || hasRequests
                 || !update.mPlayback.mResources.empty() || !update.mPlayback.mSequences.empty()
+                || update.mPlayback.mPhysicalHit
             : !update.mKnockedState || !update.mAction)
             throw std::invalid_argument("GetUp playback has incompatible native process ownership");
         auto nextValues = *values;
@@ -6831,6 +6946,9 @@ namespace MWMechanics
         if (state.mVersion < 74 && std::any_of(mGetUpPlayback.begin(), mGetUpPlayback.end(),
                 [](const auto& entry) { return !entry.second.mPendingRequests.empty(); }))
             throw std::invalid_argument("Pending GetUp requests require schema74");
+        if (state.mVersion < 75 && std::any_of(mGetUpPlayback.begin(), mGetUpPlayback.end(),
+                [](const auto& entry) { return entry.second.mPhysicalHit.has_value(); }))
+            throw std::invalid_argument("Owned physical hit requires schema75");
         if (state.mVersion < 71 && !mGetUpIdles.empty())
             throw std::invalid_argument("selected GetUp IDLE ownership requires schema71");
         if (state.mVersion < 31 && !mActorRagdolls.empty())

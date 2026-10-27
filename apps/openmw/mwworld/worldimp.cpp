@@ -3472,7 +3472,8 @@ namespace MWWorld
         if (life->mPhase == ESM4::ActorLifePhase::Dead)
         {
             const auto previousGraph = service.getUpPlayback(key);
-            if (!previousGraph || (previousGraph->mResources.empty() && previousGraph->mPendingRequests.empty()))
+            if (!previousGraph || (previousGraph->mResources.empty() && previousGraph->mPendingRequests.empty()
+                    && !previousGraph->mPhysicalHit))
                 return false;
             MWMechanics::OblivionCombatService::GetUpPlaybackUpdate stopped;
             stopped.mPlayback.mNextIdentity = previousGraph->mNextIdentity;
@@ -3500,13 +3501,19 @@ namespace MWWorld
         const auto fatigue = actor == getPlayerPtr() ? service.getPlayerValue(10) : service.getNonPlayerValue(actor, 10);
         const auto paralysis = service.getProcessParalysis(key);
         auto raw = service.getProcessKnockedState(key);
-        if (raw == 1 || raw == 2) return false; // Ordinary HIT ownership stays with its existing dispatcher.
+        const auto hitGraph = service.getUpPlayback(key);
+        const bool physicalHit = hitGraph && hitGraph->mPhysicalHit;
+        const bool pendingHit = physicalHit && !hitGraph->mPhysicalHit->mApplied;
+        if ((raw == 1 || raw == 2) && !physicalHit) return false;
+        // Initial restore is observational. A pending contact must retain its
+        // exact saved owner until the first advancing frame applies the force.
+        if (pendingHit && duration == 0) return true;
         const bool incapacitated = ESM4::requiresIncapacitation(fatigue, paralysis != 0,
             life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious);
         if (!raw && !incapacitated) return false;
         const auto previous = service.actorRagdoll(key);
         if (duration == 0 && !raw && !previous) return false;
-        if (!animation.hasPhysicalPose() && (previous || (raw == 0 && incapacitated)))
+        if (!animation.hasPhysicalPose() && (previous || pendingHit || (raw == 0 && incapacitated)))
         {
             if (!mPhysics) throw std::invalid_argument("recovery requires World physics");
             auto model = previous ? VFS::Path::Normalized(previous->mModel) : actor.getClass().getCorrectedModel(actor);
@@ -3625,7 +3632,7 @@ namespace MWWorld
             if (previous)
                 MWPhysics::restoreNativeActorRagdollSnapshot(bodies->physics(), *previous, values->mBase,
                     model.value(), *definition);
-            else
+            else if (!pendingHit)
             {
                 std::vector<NifBullet::RagdollNativeKnockdownControllerSetupRequest> down;
                 for (std::size_t i = 0; i < definition->mBodies.size(); ++i)
@@ -3635,13 +3642,21 @@ namespace MWWorld
                 bodies->physics().prepareNativeKnockdownControllerSetup(down,
                     {profile.mPassOutForce, profile.mPassOutTime});
             }
+            if (pendingHit)
+            {
+                const auto hit = MWPhysics::prepareNativeActorPhysicalHitSnapshot(
+                    MWPhysics::captureNativeActorRagdollSnapshot(bodies->physics(), values->mBase, model.value(), *definition),
+                    *definition, *hitGraph->mPhysicalHit);
+                MWPhysics::restoreNativeActorRagdollSnapshot(bodies->physics(), hit, values->mBase, model.value(), *definition);
+            }
             auto cache = service.prepareActorRagdollUpdate(key, previous,
                 MWPhysics::captureNativeActorRagdollSnapshot(bodies->physics(), values->mBase, model.value(), *definition));
             MWMechanics::OblivionCombatService::GetUpPlaybackUpdate entering;
             entering.mPlayback = service.getUpPlayback(key).value_or(ESM4::RuntimeGetUpPlayback{});
+            if (pendingHit) entering.mPlayback.mPhysicalHit->mApplied = true;
             entering.mClock = service.findAnimationClock(key);
             entering.mKnockedState = raw ? raw : (paralysis ? 3 : 4);
-            entering.mAction = previous ? values->mProcessAction : std::optional<std::int16_t>(-1);
+            entering.mAction = previous && !pendingHit ? values->mProcessAction : std::optional<std::int16_t>(-1);
             entering.mResetCombat = true;
             const auto random = service.combatRandomState(); entering.mRandom = {random, random, 0};
             auto state = service.prepareGetUpPlayback(key, std::move(entering));
@@ -3657,7 +3672,34 @@ namespace MWWorld
             Log(Debug::Verbose) << "M15 recovery body admitted: actor=" << key.serialize()
                                 << " state=" << unsigned(raw) << " restored=" << bool(previous);
         }
-        if (raw == 4)
+        if (pendingHit && !service.getUpPlayback(key)->mPhysicalHit->mApplied)
+        {
+            // A recovered actor can retain its physical renderer/body. Reuse
+            // that owner for the next contact instead of admitting another rig.
+            if (!mPhysics || !previous || !mPhysics->hasActorRagdoll(actor))
+                throw std::invalid_argument("physical hit lost its existing body");
+            const auto definition = mPhysics->actorRagdollDefinition(actor);
+            auto hit = MWPhysics::prepareNativeActorPhysicalHitSnapshot(
+                mPhysics->captureActorRagdollSnapshot(actor, values->mBase, previous->mModel),
+                definition, *hitGraph->mPhysicalHit);
+            auto cache = service.prepareActorRagdollUpdate(key, previous, hit);
+            MWMechanics::OblivionCombatService::GetUpPlaybackUpdate applied;
+            applied.mPlayback = *hitGraph; applied.mPlayback.mPhysicalHit->mApplied = true;
+            applied.mClock = service.findAnimationClock(key); applied.mKnockedState = raw;
+            applied.mAction = -1; applied.mResetCombat = true;
+            const auto random = service.combatRandomState(); applied.mRandom = {random, random, 0};
+            auto state = service.prepareGetUpPlayback(key, std::move(applied));
+            auto scene = animation.prepareNativeSequenceLayers({});
+            auto* peer = animation.getPlaybackPeer();
+            auto first = peer ? peer->prepareNativeSequenceLayers({}) : nullptr;
+            if (!state || !state->isValid() || !cache || !cache->isValid() || !scene || !scene->isValid()
+                || (peer && (!first || !first->isValid())))
+                throw std::invalid_argument("physical hit body changed during preparation");
+            mPhysics->restoreActorRagdollSnapshot(actor, hit, values->mBase, previous->mModel);
+            if (!cache->commit() || !state->commit() || !scene->commit() || (first && !first->commit()))
+                throw std::logic_error("physical hit publication changed");
+        }
+        if (raw == 4 || (raw == 2 && duration > 0))
         {
             const auto snapshot = service.actorRagdoll(key);
             if (!snapshot || !mPhysics) throw std::invalid_argument("knockdown has no physical owner");
@@ -3671,9 +3713,26 @@ namespace MWWorld
                     if (blend.mBodyRecord == root->mBodyRecord) gain = blend.mGains.mHierarchy;
             if (ESM4::knockdownBlendEntryReady(source->reactionRootRecord().has_value(), gain))
             {
-                service.setProcessKnockedState(key, 3);
-                Log(Debug::Verbose) << "M15 recovery transition: actor=" << key.serialize() << " from=4 to=3";
+                const auto next = raw == 2 ? 1 : 3;
+                service.setProcessKnockedState(key, next);
+                Log(Debug::Verbose) << "M15 recovery transition: actor=" << key.serialize()
+                                    << " from=" << unsigned(raw) << " to=" << next;
+                raw = next;
             }
+        }
+        if (raw == 1 && physicalHit && duration > 0)
+        {
+            const auto action = ESM4::resolvePhysicalHitRecovery({hitGraph->mPhysicalHit->mStartedHour,
+                getTimeStamp().getHour(), mTimeManager->getGameTimeScale(), fatigue, paralysis != 0});
+            std::optional<float> height;
+            if (action == ESM4::PhysicalHitRecoveryAction::CheckRootHeight)
+                if (const auto bone = animation.captureNativeNodeWorldPose("Bip01 NonAccum",
+                        oblivionRecoveryPlacement(actor)))
+                    height = bone->mTranslation.z() - actor.getRefData().getPosition().pos[2];
+            if (action == ESM4::PhysicalHitRecoveryAction::GetUp
+                || (action == ESM4::PhysicalHitRecoveryAction::CheckRootHeight
+                    && ESM4::physicalHitRootHeightReady(height)))
+                service.setProcessKnockedState(key, 3); // Existing selector observes native GetUp state3.
         }
         if (advanceOblivionGetUpPlayback(animation, actor, duration)) return true;
         service.advanceAnimationClock(key, duration);
@@ -5206,6 +5265,20 @@ namespace MWWorld
     }
 
     std::unique_ptr<World::PreparedOblivionPhysicalContact>
+    World::PreparedOblivionPhysicalContact::preparePhysicalKnockdownBeforeSpeech(float force)
+    {
+        if (!mData || !mData->mCommitted || !mData->mCanContinue || mData->mIdentity.expired()
+            || !mData->mContact->preSpeechPhysicalHitAvailable()) return nullptr;
+        auto& world = *mData->mWorld;
+        const auto& position = mData->mAttacker.getRefData().getPosition();
+        MWMechanics::OblivionPhysicalContactDeltas effect;
+        effect.mVictimPhysicalHit = ESM4::RuntimePhysicalHit{mData->mId,
+            {position.pos[0], position.pos[1], position.pos[2]}, force, world.getTimeStamp().getHour(), false};
+        return world.prepareOblivionPhysicalContactImpl(mData->mId, mData->mAttacker, mData->mVictim,
+            effect, false, false, this, false, true);
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact>
     World::PreparedOblivionPhysicalContact::prepareDefaultParalysis(
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil, bool beforeSpeech)
     {
@@ -5309,11 +5382,11 @@ namespace MWWorld
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactImpl(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
-        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis)
+        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis, bool preSpeechPhysicalHit)
     {
         validateOblivionContactDisarms(deltas);
         auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas,
-            blockHit, attackerRecoil, previous, preSpeechParalysis);
+            blockHit, attackerRecoil, previous, preSpeechParalysis, preSpeechPhysicalHit);
         if (!contact) return nullptr;
         // Defensive mastery can select a disarm while resources are prepared.
         // Its resolved request must reach the same drop factory as an explicit
@@ -5385,7 +5458,7 @@ namespace MWWorld
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactResources(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
-        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis)
+        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis, bool preSpeechPhysicalHit)
     {
         if (!mOblivionCombat || attacker.isEmpty())
             return nullptr;
@@ -5500,6 +5573,14 @@ namespace MWWorld
         if (!prepareHeldEquipment()) return nullptr;
         const auto prepare = [&] {
             const auto base = resolveOblivionPlayerDynamicBaseSettings(mStore);
+            if (preSpeechPhysicalHit)
+            {
+                if (!previous || !preparedDeltas.mVictimPhysicalHit)
+                    throw std::logic_error("pre-speech physical hit requires its committed Backward prefix");
+                const auto& hit = *preparedDeltas.mVictimPhysicalHit;
+                return previous->mData->mContact->preparePreSpeechPhysicalHit(hit.mSourcePosition,
+                    hit.mForce, hit.mStartedHour, mPlayer.get(), base, getGodModeState());
+            }
             if (preSpeechParalysis)
             {
                 if (!previous || !preparedDeltas.mVictimDefaultParalysisPower)
@@ -5664,8 +5745,8 @@ namespace MWWorld
         const auto attackerKey = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
         if (!combat->isActionPending(id, attackerKey)) return std::nullopt;
         const auto* melee = combat->findMeleeState(attackerKey);
-        if (melee && melee->mStrike && melee->mStrike->mActionId == id
-            && melee->mStrike->mKind == ESM4::MeleeStrikeKind::BackwardPower) return std::nullopt;
+        const bool backwardPower = melee && melee->mStrike && melee->mStrike->mActionId == id
+            && melee->mStrike->mKind == ESM4::MeleeStrikeKind::BackwardPower;
         const bool forwardPower = melee && melee->mStrike && melee->mStrike->mActionId == id
             && melee->mStrike->mKind == ESM4::MeleeStrikeKind::ForwardPower;
         if (forwardPower && !supportsOblivionDefaultCombatParalysis(mStore)) return std::nullopt;
@@ -5693,6 +5774,8 @@ namespace MWWorld
         const auto mastery = ESM4::buildCombatMasterySettings(settings);
         const auto procs = ESM4::buildMasteryProcSettings(settings);
         const auto cone = ESM4::buildCombatHitConeAngle(settings);
+        const auto physicalHitForce = backwardPower
+            ? ESM4::masteryPhysicalKnockdownForce(ESM4::buildMasteryKnockdownForceSettings(settings)) : 0.f;
         const auto startRandom = combat->combatRandomState();
         auto prefixDeltas = deltas;
         prefixDeltas.mDeferSidePowerStagger = true;
@@ -5735,7 +5818,8 @@ namespace MWWorld
         auto cursor = combat->combatRandomState();
         for (auto& value : draws) { const auto draw = ESM4::combatRandomDraw(cursor); value = draw.mValue; cursor = draw.mNextState; }
         const auto masteryPrefix = ESM4::hitMasteryPrefix(input,
-            forwardPower ? ESM4::MasteryAttack::Forward : ESM4::MasteryAttack::Normal,
+            forwardPower ? ESM4::MasteryAttack::Forward
+                : backwardPower ? ESM4::MasteryAttack::Backward : ESM4::MasteryAttack::Normal,
             draws, knockdown, physical, procs, mastery);
         for (unsigned i = 0; i < masteryPrefix.mDraws; ++i) combat->drawNativeRandom();
         if (masteryPrefix.mParalysis)
@@ -5744,6 +5828,14 @@ namespace MWWorld
             if (!effect || !effect->commit())
                 throw std::runtime_error("forward-power paralysis rejected after accepted damage");
             Log(Debug::Verbose) << "M15 forward-power paralysis published: actor=" << key(victim).serialize()
+                                << " cause=" << id;
+        }
+        if (masteryPrefix.mPhysicalKnockdown)
+        {
+            auto effect = prefixContact->preparePhysicalKnockdownBeforeSpeech(physicalHitForce);
+            if (!effect || !effect->commit())
+                throw std::runtime_error("Backward-power knockdown rejected after accepted damage");
+            Log(Debug::Verbose) << "M15 Backward-power physical hit published: actor=" << key(victim).serialize()
                                 << " cause=" << id;
         }
         const auto speechDraw = ESM4::combatRandomDraw(combat->combatRandomState());

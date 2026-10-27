@@ -3664,6 +3664,49 @@ TEST(ESM4PhysicalBlendDriveParameters, RejectsInvalidFrameGainAndUnrepresentable
     EXPECT_EQ(minimum.mInverseFrameSeconds, 0x1p126f);
 }
 
+TEST(ESM4PhysicalCombat, MasteryKnockdownForceUsesCompiledDamage50AndConfiguredCurve)
+{
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce({}), 85.f, .001f);
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce({10, 90, 0, 100}), 50.f, .001f);
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce({10, 90, 100, 200}), 10.f, .001f);
+    EXPECT_NEAR(ESM4::masteryPhysicalKnockdownForce({10, 90, -100, 0}), 90.f, .001f);
+    EXPECT_THROW(ESM4::masteryPhysicalKnockdownForce({10, 90, 0, 0}), std::invalid_argument);
+}
+
+TEST(ESM4PhysicalCombat, HitRecoveryQueriesRootHeightOnlyWithinItsTimeWindow)
+{
+    using Action = ESM4::PhysicalHitRecoveryAction;
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10, 30, 0, false}), Action::Wait);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.0197f, 30, 0, false}), Action::Wait);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.0199f, 30, 0, false}), Action::CheckRootHeight);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.0451f, 30, 0, false}), Action::GetUp);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.05f, 30, -1, false}), Action::Wait);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.05f, 30, 1, true}), Action::Wait);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10, 0, 0, false}), Action::Wait);
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({10, 10.01f, 0, 0, false}), Action::GetUp);
+}
+
+TEST(ESM4PhysicalCombat, HitRecoveryPreservesObservedReverseClockAndVisualHeightRules)
+{
+    EXPECT_EQ(ESM4::resolvePhysicalHitRecovery({23.99f, .01f, 30, 0, false}),
+        ESM4::PhysicalHitRecoveryAction::GetUp);
+    EXPECT_TRUE(ESM4::physicalHitRootHeightReady(std::nullopt));
+    for (float height : {-20.f, 0.f, 16.f}) EXPECT_TRUE(ESM4::physicalHitRootHeightReady(height));
+    EXPECT_FALSE(ESM4::physicalHitRootHeightReady(16.1f));
+}
+
+TEST(ESM4PhysicalCombat, HitRecoveryRejectsNonfiniteStateAndNegativeTimeScale)
+{
+    const auto nan = std::numeric_limits<float>::quiet_NaN();
+    EXPECT_THROW(ESM4::resolvePhysicalHitRecovery({nan, 10, 30, 0, false}), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalHitRecovery({10, nan, 30, 0, false}), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalHitRecovery({10, 10, nan, 0, false}), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalHitRecovery({10, 10, 30, nan, false}), std::invalid_argument);
+    EXPECT_THROW(ESM4::resolvePhysicalHitRecovery({10, 10, -1, 0, false}), std::invalid_argument);
+    EXPECT_THROW(ESM4::physicalHitRootHeightReady(nan), std::invalid_argument);
+    EXPECT_THROW(ESM4::masteryPhysicalKnockdownForce({nan, 85, 0, 50}), std::invalid_argument);
+}
+
 TEST(ESM4PhysicalCombat, PhysicalReactionInitializationPreservesPlayerBypassAndClearsActorLife)
 {
     using Action = ESM4::PhysicalReactionInitializationAction;
@@ -6440,4 +6483,18 @@ TEST(ESM4PhysicalCombat, GetUpSpecialIdleGroupIgnoresFilenamePrefixAndTruncatesS
     EXPECT_EQ(ESM4::nativeGetUpSequenceGroup(std::string_view("SPECIALIDLE\0ignored", 19)), 2);
     for (const auto name : {"GetUpFaceUp", "Idle", "DynamicIdle", "Recoil", "SpecialIdleX", ""})
         EXPECT_FALSE(ESM4::nativeGetUpSequenceGroup(name));
+}
+
+TEST(ESM4PhysicalCombat, LongitudinalPowerInputRequiresPureMovementAndBaseMastery)
+{
+    const ESM4::CombatMasterySettings mastery{{25, 50, 75, 100}};
+    EXPECT_FALSE(ESM4::longitudinalPowerAttackDirection(74, 0, -1, mastery));
+    EXPECT_EQ(ESM4::longitudinalPowerAttackDirection(75, 0, -.5f, mastery), ESM4::PowerAttackDirection::Backward);
+    EXPECT_EQ(ESM4::longitudinalPowerAttackDirection(100, 0, -1, mastery), ESM4::PowerAttackDirection::Backward);
+    EXPECT_FALSE(ESM4::longitudinalPowerAttackDirection(99, 0, 1, mastery));
+    EXPECT_EQ(ESM4::longitudinalPowerAttackDirection(100, 0, 1, mastery), ESM4::PowerAttackDirection::Forward);
+    EXPECT_FALSE(ESM4::longitudinalPowerAttackDirection(100, 0, 0, mastery));
+    EXPECT_FALSE(ESM4::longitudinalPowerAttackDirection(100, 1, -1, mastery));
+    EXPECT_THROW(ESM4::longitudinalPowerAttackDirection(100, 0,
+        std::numeric_limits<float>::quiet_NaN(), mastery), std::invalid_argument);
 }

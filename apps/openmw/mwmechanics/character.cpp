@@ -2690,9 +2690,10 @@ namespace MWMechanics
                 if (direction)
                     return *direction == ESM4::PowerAttackDirection::Left
                         ? ESM4::MeleeStrikeKind::LeftPower : ESM4::MeleeStrikeKind::RightPower;
-                if (movement.mPosition[0] == 0 && movement.mPosition[1] > 0
-                    && ESM4::combatMastery(baseSkill, settingsForInput().mMastery) == ESM4::CombatMastery::Master)
-                    return ESM4::MeleeStrikeKind::ForwardPower;
+                if (const auto longitudinal = ESM4::longitudinalPowerAttackDirection(baseSkill,
+                        movement.mPosition[0], movement.mPosition[1], settingsForInput().mMastery))
+                    return *longitudinal == ESM4::PowerAttackDirection::Forward
+                        ? ESM4::MeleeStrikeKind::ForwardPower : ESM4::MeleeStrikeKind::BackwardPower;
             }
             return ESM4::MeleeStrikeKind::StandingPower;
         };

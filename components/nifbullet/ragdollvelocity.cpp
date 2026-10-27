@@ -72,6 +72,33 @@ namespace NifBullet
         return result;
     }
 
+    std::array<float, 4> ragdollNativeLinearVelocityAfterPhysicalHit(
+        const std::array<float, 4>& current, const osg::Vec3f& center,
+        const osg::Vec3f& source, float inverseMass, std::uint32_t packedFilter, float force)
+    {
+        coefficient(inverseMass); finite(center); finite(source);
+        if (!std::isfinite(force)) throw std::invalid_argument("nonfinite physical hit force");
+        for (float value : current)
+            if (!std::isfinite(value)) throw std::invalid_argument("nonfinite physical hit velocity");
+        constexpr std::array<float, 32> weights{1, 1, 1.5f, 1.5f, 1.5f, .75f, .25f, .5f,
+            .5f, .25f, .25f, .75f, .5f, .5f, .5f, .25f, .25f, .75f, .75f, .75f,
+            .75f, .75f, .75f, .75f, .75f, 0, 0, 0, 0, 0, 0, 0};
+        const double dx = double(center.x()) - source.x(), dy = double(center.y()) - source.y(),
+            dz = double(center.z()) - source.z();
+        const double length = std::sqrt(dx * dx + dy * dy + dz * dz);
+        if (length == 0) return current;
+        const double magnitude = double(force) * weights[(packedFilter >> 8) & 31]
+            * (.75 + .25 * inverseMass) / length;
+        auto result = current;
+        const std::array<double, 3> delta{dx, dy, dz};
+        for (unsigned axis = 0; axis < 3; ++axis)
+        {
+            result[axis] = float(double(current[axis]) + delta[axis] * magnitude);
+            if (!std::isfinite(result[axis])) throw std::invalid_argument("physical hit velocity overflow");
+        }
+        return result;
+    }
+
     osg::Vec3f ragdollNativeGravityDelta(const osg::Vec3f& gravity, float frameSeconds)
     {
         finite(gravity);

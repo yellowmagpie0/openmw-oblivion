@@ -7974,3 +7974,72 @@ TEST_F(OblivionActorStatsTest, compiledParalysisContinuationOwnsReplacementResis
         EXPECT_EQ(preparations, admitted ? 2u : 1u);
     }
 }
+
+    TEST_F(OblivionActorStatsTest, physicalHitOwnerCannotSurviveProcessResetIntoSavedOrdinaryState)
+    {
+        autoNpc(); mNpc.mFormKey = mActorKey; sharedStats();
+        mNpc.mBaseConfig.tes4.flags &= ~ESM4::Npc::TES4_PCLevelOffset;
+        mNpc.mBaseConfig.tes4.levelOrOffset = 2;
+        mStore.getWritable<ESM4::Npc>().insertStatic(mNpc, mActorKey);
+        ESM::NPC playerBase{}; playerBase.blank(); playerBase.mId = ESM::RefId::stringRefId("Player");
+        const auto* playerRecord = mStore.insertStatic(playerBase);
+        MWBase::Environment environment; environment.setESMStore(mStore);
+        ESM::ReadersCache readers; MWWorld::WorldModel model(mStore, readers); environment.setWorldModel(model);
+        MWClass::ESM4Npc::registerSelf(); MWClass::Npc::registerSelf();
+        ESM4::ActorCharacter reference{}; reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3}; reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCharacter>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Npc> live(reference, mStore.search<ESM4::Npc>(mActorKey));
+        MWWorld::Ptr npc(&live); MWWorld::Player player(playerRecord);
+        ESM::NpcState legacy{}; legacy.blank(); player.getPlayer().getClass().readAdditionalState(player.getPlayer(), legacy);
+        for (const bool isPlayer : {false, true})
+        for (const bool applied : {false, true})
+        for (const int operation : {0, 1, 2}) // Existing reset, explicit state0, NPC demotion.
+        {
+            if (isPlayer && operation == 2) continue;
+            SCOPED_TRACE(::testing::Message() << isPlayer << ':' << applied << ':' << operation);
+            ESM4::RuntimeState source;
+            source.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+            source.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+            source.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+            source.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+            ESM4::RuntimeReferenceState ref; ref.mKey = reference.mFormKey; ref.mBase = mActorKey;
+            ref.mCell = source.mPlayer.mCell; source.mReferences.push_back(ref);
+            ESM4::RuntimeActorValues values; values.mActor = isPlayer ? source.mPlayer.mReference : ref.mKey;
+            values.mBase = isPlayer ? ESM::FormKey::dynamic("player-base", 1) : mActorKey;
+            values.mOwner = isPlayer ? ESM4::ActorValueOwner::Player : ESM4::ActorValueOwner::NonPlayer;
+            values.mProcess = ESM4::ActorValueProcess::Active;
+            values.mProcessKnockedState = 2; values.mProcessAction = -1;
+            values.mValues[8].mBase = 100; values.mValues[9].mBase = 30; values.mValues[10].mBase = 40;
+            if (isPlayer) values.mPlayerFormValues = {{100, 30, 40, 0}};
+            source.mNativeActorValues.push_back(values);
+            source.mNativeActorLife.push_back({values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+            source.mPhysicalActions.mNext = 2;
+            source.mNativeGetUpPlayback[values.mActor].mPhysicalHit
+                = ESM4::RuntimePhysicalHit{1, {1, 2, 3}, 85, 13.25f, applied};
+            if (applied)
+            {
+                ESM4::RuntimeActorRagdoll body; body.mBase = values.mBase;
+                body.mModel = "meshes/synthetic-reset.nif"; body.mAssetHash = "00112233445566778899aabbccddeeff";
+                ESM4::RuntimeRagdollBody bone; bone.mRecord = 1; bone.mNodeRecord = 2;
+                body.mBodies.push_back(bone); source.mNativeActorRagdolls.emplace(values.mActor, body);
+            }
+            ASSERT_NO_THROW(source.serializeBinary());
+            MWMechanics::OblivionCombatService service; service.restore(source, mStore);
+            if (isPlayer) service.publishPlayerValues(player, values, {});
+            else service.publishNonPlayerValues(npc, values);
+            if (operation == 0)
+            {
+                if (isPlayer) service.resetPlayerForResurrection(player);
+                else service.resetNonPlayerForResurrection(npc);
+            }
+            else if (operation == 1) service.setProcessKnockedState(values.mActor, 0);
+            else service.initializeNonPlayerActor(npc, mStore, std::nullopt, ESM4::ActorValueProcess::Low,
+                std::nullopt, true);
+            ASSERT_TRUE(service.getUpPlayback(values.mActor));
+            EXPECT_FALSE(service.getUpPlayback(values.mActor)->mPhysicalHit);
+            auto saved = source; service.capture(saved);
+            EXPECT_NO_THROW(saved.serializeBinary());
+            EXPECT_TRUE(service.isActionConsumed(1));
+        }
+    }

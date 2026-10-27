@@ -1,5 +1,7 @@
 #include "oblivionragdoll.hpp"
 
+#include <components/nifbullet/ragdollvelocity.hpp>
+
 #include <algorithm>
 #include <stdexcept>
 #include <unordered_map>
@@ -325,6 +327,52 @@ namespace MWPhysics
                 body.mNativePackedVelocity = ESM4::PhysicalWorldSceneVelocities{};
             }
         }
+        result.validate();
+        return result;
+    }
+
+    ESM4::RuntimeActorRagdoll prepareNativeActorPhysicalHitSnapshot(
+        const ESM4::RuntimeActorRagdoll& current, const NifBullet::ActorRagdollDefinition& definition,
+        const ESM4::RuntimePhysicalHit& hit)
+    {
+        hit.validate(); current.validate();
+        if (hit.mApplied) throw std::invalid_argument("physical hit force cannot replay");
+        // Resolve identity and complete body coverage before preparing velocity.
+        (void)restoreNativeActorRagdoll(current, current.mBase, current.mModel, definition);
+        if (!current.mNativeBlends || !current.mNativeControllers)
+            throw std::invalid_argument("physical hit requires native collision/controller ownership");
+        auto result = current;
+        for (auto& body : result.mBodies)
+        {
+            const auto authored = std::find_if(definition.mBodies.begin(), definition.mBodies.end(),
+                [&](const auto& value) { return value.mRecord == body.mRecord; });
+            if (!body.mNativePackedVelocity || !body.mNativeMotion)
+                throw std::invalid_argument("physical hit requires native body motion and velocities");
+            auto filter = std::uint32_t(authored->mInfoFilter.mLayer)
+                | (std::uint32_t(authored->mInfoFilter.mFlags) << 8)
+                | (std::uint32_t(authored->mInfoFilter.mGroup) << 16);
+            if (result.mInternalFilters)
+                for (const auto& live : *result.mInternalFilters)
+                    if (live.mBodyRecord == body.mRecord) filter = live.mPackedFilter;
+            auto& velocity = body.mNativePackedVelocity->mLinear;
+            velocity = NifBullet::ragdollNativeLinearVelocityAfterPhysicalHit(velocity,
+                {body.mPosition[0], body.mPosition[1], body.mPosition[2]},
+                {hit.mSourcePosition[0], hit.mSourcePosition[1], hit.mSourcePosition[2]},
+                NifBullet::ragdollNativeInverseMass(authored->mMass), filter, hit.mForce);
+            for (unsigned axis = 0; axis < 3; ++axis)
+                body.mLinearVelocity[axis] = velocity[axis] * NifBullet::RagdollNativeLengthScale;
+            body.mNativeMotion = ESM4::RuntimeRagdollMotion::Dynamic;
+        }
+        // Original root virtual70(1,null) makes the tree dynamic immediately,
+        // zeroes blend gains and disables the old blend curves. No HIT profile.
+        for (auto& blend : *result.mNativeBlends)
+        {
+            blend.mCollisionFlags &= ~std::uint16_t(0x200);
+            blend.mHierarchyGain = blend.mVelocityGain = 0;
+            blend.mRequestedMotion = 1;
+        }
+        for (auto& controller : result.mNativeControllers->mBlends)
+            controller.mState.mTiming.mFlags &= ~std::uint16_t(8);
         result.validate();
         return result;
     }

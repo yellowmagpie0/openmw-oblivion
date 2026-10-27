@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 74
+CURRENT_VERSION = 75
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1664,12 +1664,26 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         graph_fields = {"actor", "next_identity", "cached_sequence", "resident_sequence", "action_sequence", "requests", "resources", "sequences"}
         if version >= 73: graph_fields.add("request_selections")
         if version >= 74: graph_fields.add("pending_requests")
+        if version >= 75: graph_fields.add("physical_hit")
         if not isinstance(graph, dict) or set(graph) != graph_fields:
             raise RuntimeStateError("Invalid GetUp graph shape")
         actor = graph["actor"]; native_key(actor)
         if actor in graph_actors or actor not in native_keys or actor not in life_keys:
             raise RuntimeStateError("Duplicate or dangling GetUp graph owner")
         graph_actors.add(actor)
+        hit = graph.get("physical_hit")
+        if hit is not None:
+            if (not isinstance(hit, dict) or set(hit) != {"cause", "source_position", "force", "started_hour", "applied"}
+                    or type(hit["cause"]) is not int or not 0 < hit["cause"] < next_action
+                    or hit["cause"] in seen_actions or type(hit["applied"]) is not bool
+                    or not isinstance(hit["source_position"], list) or len(hit["source_position"]) != 3):
+                raise RuntimeStateError("Invalid owned physical hit")
+            for value in [*hit["source_position"], hit["force"], hit["started_hour"]]: native_float(value)
+            values = native_value_states[actor]
+            knocked = values.get("process_knocked_state")
+            if (not 0 <= native_float(hit["started_hour"]) < 24 or values["process"] != 1 or knocked not in (1, 2, 3, 5, 6)
+                    or (not hit["applied"] and knocked != 2) or (hit["applied"] and actor not in ragdoll_actors)):
+                raise RuntimeStateError("Physical hit lost its process or body ownership")
         frontier = graph["next_identity"]
         if type(frontier) is not int or not 1 <= frontier < 1 << 64:
             raise RuntimeStateError("Invalid GetUp allocation frontier")
@@ -2857,6 +2871,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     pending = {"request": reader.unpack("<Q")}
                     for field in ("base", "idle", "actor_model", "model"): pending[field] = reader.string()
                     pending["load_pending"] = getup_boolean(); graph["pending_requests"].append(pending)
+            if version >= 75:
+                graph["physical_hit"] = None
+                if getup_boolean():
+                    hit = {"cause": reader.unpack("<Q"), "source_position": [reader.unpack("<f") for _ in range(3)]}
+                    hit["force"] = reader.unpack("<f"); hit["started_hour"] = reader.unpack("<f")
+                    hit["applied"] = getup_boolean(); graph["physical_hit"] = hit
             result["native_getup_playback"].append(graph)
     if version >= 31:
         result["native_actor_ragdolls"] = []
@@ -3640,6 +3660,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<Q", pending["request"])
                     for field in ("base", "idle", "actor_model", "model"): writer.string(pending[field])
                     writer.pack("<B", pending["load_pending"])
+            if version >= 75:
+                hit = graph["physical_hit"]; writer.pack("<B", hit is not None)
+                if hit is not None:
+                    writer.pack("<Q", hit["cause"])
+                    for value in [*hit["source_position"], hit["force"], hit["started_hour"]]: writer.pack("<f", value)
+                    writer.pack("<B", hit["applied"])
     if version >= 31:
         ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
         writer.pack("<I", len(ragdolls))
@@ -3954,6 +3980,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
         if state.get("schema_version", 1) < 74 and graph.get("pending_requests"):
             raise RuntimeStateError("Legacy TES4 save cannot carry pending GetUp requests")
         graph.setdefault("pending_requests", [])
+        if state.get("schema_version", 1) < 75 and graph.get("physical_hit") is not None:
+            raise RuntimeStateError("Legacy TES4 save cannot carry an owned physical hit")
+        graph.setdefault("physical_hit", None)
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])

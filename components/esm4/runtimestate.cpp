@@ -192,6 +192,18 @@ namespace ESM4
                     writer.integer<std::uint8_t>(pending.mLoadPending);
                 }
             }
+            if (version >= 75)
+            {
+                writer.integer<std::uint8_t>(graph.mPhysicalHit.has_value());
+                if (graph.mPhysicalHit)
+                {
+                    const auto& hit = *graph.mPhysicalHit;
+                    writer.integer(hit.mCauseAction);
+                    for (float value : hit.mSourcePosition) writer.floating(value);
+                    writer.floating(hit.mForce); writer.floating(hit.mStartedHour);
+                    writer.integer<std::uint8_t>(hit.mApplied);
+                }
+            }
         }
 
         RuntimeGetUpPlayback readGetUpPlayback(BinaryReader& reader, std::uint32_t version)
@@ -281,6 +293,14 @@ namespace ESM4
                     if (!graph.mPendingRequests.emplace(request, std::move(pending)).second)
                         throw std::runtime_error("Duplicate pending GetUp request");
                 }
+            }
+            if (version >= 75 && boolean())
+            {
+                RuntimePhysicalHit hit;
+                hit.mCauseAction = reader.integer<std::uint64_t>();
+                for (float& value : hit.mSourcePosition) value = reader.float32();
+                hit.mForce = reader.float32(); hit.mStartedHour = reader.float32();
+                hit.mApplied = boolean(); graph.mPhysicalHit = hit;
             }
             return graph;
         }
@@ -1738,8 +1758,17 @@ namespace ESM4
         throw std::invalid_argument("Unknown GetUp request selection");
     }
 
+    void RuntimePhysicalHit::validate() const
+    {
+        if (!mCauseAction || !std::isfinite(mForce) || !std::isfinite(mStartedHour)
+            || mStartedHour < 0 || mStartedHour >= 24
+            || std::any_of(mSourcePosition.begin(), mSourcePosition.end(), [](float v) { return !std::isfinite(v); }))
+            throw std::runtime_error("Invalid owned physical hit");
+    }
+
     void RuntimeGetUpPlayback::validate(std::optional<float> clock) const
     {
+        if (mPhysicalHit) mPhysicalHit->validate();
         if (mResources.size() > sMaximumCollectionSize || mSequences.size() > sMaximumCollectionSize
             || mPendingRequests.size() > 4)
             throw std::runtime_error("GetUp graph exceeds collection size limit");
@@ -2188,11 +2217,26 @@ namespace ESM4
                 throw std::runtime_error("GetUp request selections require schema73");
             if (mVersion < 74 && !playback.mPendingRequests.empty())
                 throw std::runtime_error("Pending GetUp requests require schema74");
+            if (mVersion < 75 && playback.mPhysicalHit)
+                throw std::runtime_error("Owned physical hit requires schema75");
             if (!nativeActors.contains(actor) || !lives.contains(actor)
                 || runtimeReferenceKey(actor) != actor || ESM::FormKey::deserialize(actor.serialize()) != actor)
                 throw std::runtime_error("Dangling native GetUp playback owner");
             const auto clock = mNativeAnimationClocks.find(actor);
             playback.validate(clock == mNativeAnimationClocks.end() ? std::nullopt : std::optional(clock->second));
+            if (playback.mPhysicalHit)
+            {
+                const auto& hit = *playback.mPhysicalHit;
+                const auto values = std::find_if(mNativeActorValues.begin(), mNativeActorValues.end(),
+                    [&](const auto& value) { return value.mActor == actor; });
+                const auto knocked = values->mProcessKnockedState;
+                if (values->mProcess == ActorValueProcess::Low || !knocked
+                    || (*knocked != 1 && *knocked != 2 && *knocked != 3 && *knocked != 5 && *knocked != 6)
+                    || (!hit.mApplied && *knocked != 2)
+                    || (hit.mApplied && !mNativeActorRagdolls.contains(actor))
+                    || hit.mCauseAction >= mPhysicalActions.mNext || pendingActions.contains(hit.mCauseAction))
+                    throw std::runtime_error("Physical hit lost its consumed contact, process or body ownership");
+            }
             for (const auto& [id, resource] : playback.mResources)
                 if (resource.mBase != nativeActors.at(actor) || resource.mBase != lives.at(actor)->mBase)
                     throw std::runtime_error("GetUp graph resource belongs to another actor base");
@@ -5929,6 +5973,20 @@ namespace ESM4
                             << "\",\"load_pending\":" << (pending.mLoadPending ? "true" : "false") << '}';
                     }
                     stream << ']';
+                }
+                if (mVersion >= 75)
+                {
+                    stream << ",\"physical_hit\":";
+                    if (!graph.mPhysicalHit) stream << "null";
+                    else
+                    {
+                        const auto& hit = *graph.mPhysicalHit;
+                        stream << "{\"cause\":" << hit.mCauseAction << ",\"source_position\":[";
+                        for (unsigned i = 0; i < 3; ++i) { if (i) stream << ','; floating(hit.mSourcePosition[i]); }
+                        stream << "],\"force\":"; floating(hit.mForce);
+                        stream << ",\"started_hour\":"; floating(hit.mStartedHour);
+                        stream << ",\"applied\":" << (hit.mApplied ? "true" : "false") << '}';
+                    }
                 }
                 stream << '}';
             }

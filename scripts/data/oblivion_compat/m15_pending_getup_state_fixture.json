@@ -3,7 +3,7 @@
   "purpose": "Synthetic schema74 four-slot pending GetUp state persistence. Outstanding ownership alternates with completed-empty ownership; this does not queue IO, perform IDLE selection or demonstrate normal-input recovery. All other decoded seed state is preserved.",
   "source": "build/oblivion-compat/m15/S4/native-getup-pending-state-migration-normal-03/userdata/saves/M15Review/Quicksave.omwsave",
   "source_sha256": "2e0d5664c84f16fc8aa788e4cb18374400e4ee1dc5bc791c74762b0b2c7c4c52",
-  "target_schema": 74,
+  "target_schema": 75,
   "actor": "dynamic:player:0000000000000001",
   "process_knocked_state": 5,
   "process_action": -1,

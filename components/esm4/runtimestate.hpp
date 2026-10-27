@@ -58,7 +58,7 @@ namespace ESM4
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
     // v74 retains pending GetUp request sources and outstanding load ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 74;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 75;
 
     struct RuntimeContentIdentity
     {
@@ -616,6 +616,17 @@ namespace ESM4
         bool mManaged = true;
         friend bool operator==(const RuntimeGetUpSequence&, const RuntimeGetUpSequence&) = default;
     };
+    struct RuntimePhysicalHit
+    {
+        std::uint64_t mCauseAction = 0;
+        std::array<float, 3> mSourcePosition{}; // Native reference/world units.
+        float mForce = 0;
+        float mStartedHour = 0; // Original process+14, not a restarted countdown.
+        bool mApplied = false; // Body force has published; never replay on load.
+        void validate() const;
+        friend bool operator==(const RuntimePhysicalHit&, const RuntimePhysicalHit&) = default;
+    };
+
     struct RuntimeGetUpPlayback
     {
         std::uint64_t mNextIdentity = 1;
@@ -631,6 +642,9 @@ namespace ESM4
         std::map<std::uint64_t, RuntimeGetUpIdle> mRequestSelections;
         // v74: exactly the source/loader ownership of status0 requests.
         std::map<std::uint64_t, RuntimeGetUpPendingRequest> mPendingRequests;
+        // v75: contact may precede physical admission by a frame. Keep the
+        // force request and recovery timestamp under the same saved owner.
+        std::optional<RuntimePhysicalHit> mPhysicalHit;
         const RuntimeGetUpIdle& requestSelection(std::uint64_t request) const;
         void validate(std::optional<float> clock) const;
         friend bool operator==(const RuntimeGetUpPlayback&, const RuntimeGetUpPlayback&) = default;

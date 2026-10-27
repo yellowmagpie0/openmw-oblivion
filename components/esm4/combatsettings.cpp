@@ -478,6 +478,16 @@ namespace ESM4
         return result;
     }
 
+    MasteryKnockdownForceSettings buildMasteryKnockdownForceSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        const MasteryKnockdownForceSettings result{
+            inputs.number("fDeathForceForceMin", 35.f), inputs.number("fDeathForceForceMax", 85.f),
+            inputs.number("fDeathForceDamageMin", 0.f), inputs.number("fDeathForceDamageMax", 50.f)};
+        (void)masteryPhysicalKnockdownForce(result);
+        return result;
+    }
+
     MasteryProcSettings buildMasteryProcSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

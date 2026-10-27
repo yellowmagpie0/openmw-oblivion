@@ -361,5 +361,143 @@
       "supplemental_whole_restores": 1,
       "engine_cases_each_build": 2045
     }
+  },
+  "backward_power_profiles": {
+    "status": "Bounded normal/SAN input, physical hit and natural fresh GetUp verified; full S4 incomplete",
+    "purpose": "Expert pure backward normal input, saved physical hit and natural GetUp in the existing combined-course fixture",
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon.json",
+    "continuation_manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon_continuation.json",
+    "fixture": {
+      "schema": 75,
+      "player_base_blade": 75,
+      "target": "content:oblivion.esm:01fc43",
+      "target_restrained": true,
+      "player_weapon": "content:oblivion.esm:090615",
+      "mastery_setting": "iPerkMarksmanKnockdownChance",
+      "setting_type": "int32",
+      "chance_values": [
+        0,
+        100
+      ],
+      "seeds": {
+        "positive": 1,
+        "nonproc": 2
+      },
+      "staging_receipts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/current-chance-100/staging.json",
+          "sha256": "d59310d9439dbc01398e9d83bd12e91455beadc8848abbcf9186fbdb4ffefb71"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/current-chance-0-seed2/staging.json",
+          "sha256": "b1fecc737c4c7b46683cfa7c3d9dde8c6eb235e2567d4a7105be94fd0e825e59"
+        }
+      ],
+      "outcome_injection": false
+    },
+    "input": {
+      "attack": "Normal U; hold S plus U until onehandattackbackpower admission, then release both",
+      "activation": "Normal Space invokes existing OnActivate StartCombat",
+      "reference_frame_cap": 15,
+      "continuation_frame_cap": 5,
+      "sound_enabled": false,
+      "measured_fps_acceptance": false
+    },
+    "requirements": [
+      "Distinct normal/power contacts, real nonlethal Health/Fatigue debits and no duplicate wear/contact",
+      "One saved cause/source/force/start hour with pending/applied ownership; no PARA substitute",
+      "Exact whole native-state fresh restore, no force/contact replay, natural GetUp releases hit/body ownership",
+      "Declared seed2/chance0 nonproc control preserves RNG on restart and creates no hit/body",
+      "Normal/SAN processes with binary/library pins and direct capture review"
+    ],
+    "native": {
+      "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": {
+        "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/entry-report.json",
+        "sha256": "db28e58a9fb4342c0678aca40372da2d2cd9bf817746f53b4da3a203cc15377d"
+      },
+      "recovery": {
+        "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/recovery-report-02.json",
+        "sha256": "e15e03b86effef4533f7cca580347ab0744bf27803b2a53da61ec927d57d3a5e"
+      },
+      "body_velocity": {
+        "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/body-velocity-report.json",
+        "sha256": "dcaf9bcb4e7d1288751c473d86dca12ff2e1ab14e6c6b7097ef2e0ecfb34c10f"
+      },
+      "counts": {
+        "entry": 32,
+        "recovery_and_force_scalar": 16,
+        "body_velocity": 12
+      },
+      "force_rule": "Fixed damage50 through winning death-force curve; defaults35/85/0/50 produce85. Radial linear velocity weighted by filter and inverse mass, no dt/angular impulse.",
+      "recovery_rule": "Raw2->1 root readiness; saved game hour, Fatigue/paralysis and visual NonAccum height gate into existing GetUp.",
+      "numeric_policy": "Portable sqrt, abs1e-4/rel1e-5 tolerance. Coincident source/body preserves velocity. No bit-identical RNG/RSQRT claim.",
+      "boundaries": "Entry clock/life/root operations supplied/captured; recovery callback queries supplied; body-velocity lookup/center/wake/setter/empty-child boundaries supplied. No original simulation claim."
+    },
+    "force_examples": {
+      "source": [
+        1,
+        2,
+        3
+      ],
+      "center": [
+        4,
+        6,
+        3
+      ],
+      "prior_velocity": [
+        1,
+        2,
+        3,
+        0
+      ],
+      "inverse_mass": 0.5,
+      "force": 85,
+      "cases": [
+        {
+          "filter_slot": 0,
+          "expected": [
+            45.625,
+            61.5,
+            3,
+            0
+          ]
+        },
+        {
+          "filter_slot": 6,
+          "expected": [
+            12.15625,
+            16.875,
+            3,
+            0
+          ]
+        },
+        {
+          "filter_slot": 25,
+          "expected": [
+            1,
+            2,
+            3,
+            0
+          ]
+        }
+      ]
+    },
+    "ownership_boundary": "Once-only logical request before hit speech; body/velocity on next advancing recovery frame. Saved applied status prevents replay; zero-duration initial restore does not apply pending force.",
+    "limits": [
+      "Bounded keyboard/weapon/actor profile; remaining S4 crosses and FPS/seed campaigns remain open",
+      "Normal visible pose has folded knees/displaced arms against rear ledge; no flat-floor claim",
+      "Broader callback pose/motion, effect/query/interruption and audio/HUD gates remain open"
+    ],
+    "verification": {
+      "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/checkpoint-verification.json",
+      "sha256": "86cfd225b4dd0c6fed1bf4cc1a738018fecf10c102193d06e6212127117bceec"
+    },
+    "runtime_totals": {
+      "pairs": 13,
+      "epochs": 10,
+      "whole_restores": 6
+    },
+    "reused_normal_runtime_provenance": "Game861c97fcc359befa9ede25245327ef31db71d60b76f6c3ed581c585696ff8e03 at tested source0d72d37b998d271df068542e70867453317a084ab17072c8d36c2c048c36ce62, before engine-only process reset/state0 cleanup. Unchanged active-hit/recovery paths reused; reset paths separately covered by final2050 engine gates. No final-binary normal-runtime claim."
   }
 }

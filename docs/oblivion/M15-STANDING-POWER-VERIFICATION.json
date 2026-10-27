@@ -392,7 +392,8 @@
     },
     "case_catalog": {
       "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
-      "sha256": "db74f8e307b8d6309318451e0c42f0c9bfda41db37d92ff4b2684de821416234"
+      "sha256": "db74f8e307b8d6309318451e0c42f0c9bfda41db37d92ff4b2684de821416234",
+      "source_commit": "c1974a66b014f9fbd720a725b3de5527046c4516"
     },
     "core_pairs": 12,
     "core_epochs": 8,
@@ -404,5 +405,26 @@
     "tested_source_fingerprint": "2bb34a21ad7fd7baf3369dece7408a0b164707c8caf7d49da9d8f30c4b983bf7",
     "limits": "Configured keyboard, first-person. References cap15; continuations cap5. Audio disabled; achievedFPS not measured. Normal nonproc reference retains original query-binary provenance; no same-binary claim for that one reused reference. Engine LSan1; rendered ASan/UBSan leaks0. Metadata updated after gates; implementation hashes in receipt are unchanged.",
     "next": "Backward power admission and Expert physical knockdown, then remaining S4 audit gates."
+  },
+  "backward_power_checkpoint": {
+    "status": "Bounded normal/SAN input, physical hit and natural fresh GetUp verified; full S4 incomplete",
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/longitudinal-backward-work-01/checkpoint-verification.json",
+      "sha256": "86cfd225b4dd0c6fed1bf4cc1a738018fecf10c102193d06e6212127117bceec"
+    },
+    "case_catalog": {
+      "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
+      "sha256": "5dc792a59cc5f3338a878189cb18bc8ef3c93905f459f33de1437c7022d959f5"
+    },
+    "core_pairs": 9,
+    "core_epochs": 8,
+    "core_whole_restores": 4,
+    "supplemental_capture_pairs": 4,
+    "supplemental_epochs": 2,
+    "supplemental_whole_restores": 2,
+    "engine_cases_each_build": 2050,
+    "tested_source_fingerprint": "df6faf58301ad415a3cd204bd7820289bceee45e7eb66932ef8cd4c22a985951",
+    "limits": "Configured keyboard/first-person RustyShortsword against restrained NPC with actual StartCombat. Reference cap15, continuation cap5; audio disabled, achievedFPS unmeasured. Normal runtime retains pre-reset-cleanup source/game provenance. SAN positive raw fixture failure retained and scoped reinspection disclosed. Full S4 remains incomplete.",
+    "next": "Join directional mastery profiles into existing combined normal-input course; observed acceptance failures determine further implementation."
   }
 }

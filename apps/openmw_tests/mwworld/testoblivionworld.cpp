@@ -24108,8 +24108,10 @@ TEST(OblivionWorldTest, StandingPowerRecipesUseRawSkillAndMultiplyWeaponBeforeAt
             const auto forward = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
                 item, 0, false, ESM4::MeleeStrikeKind::ForwardPower);
             ASSERT_TRUE(forward); EXPECT_NEAR(forward->mHealth, 27.f, .001f);
-            for (const auto unsupported : {ESM4::MeleeStrikeKind::BackwardPower,
-                     ESM4::MeleeStrikeKind::Counter, static_cast<ESM4::MeleeStrikeKind>(255)})
+            const auto backward = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                item, 0, false, ESM4::MeleeStrikeKind::BackwardPower);
+            ASSERT_TRUE(backward); EXPECT_NEAR(backward->mHealth, 27.f, .001f);
+            for (const auto unsupported : {ESM4::MeleeStrikeKind::Counter, static_cast<ESM4::MeleeStrikeKind>(255)})
             {
                 EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
                     item, 0, false, unsupported));
@@ -36819,5 +36821,138 @@ TEST(OblivionWorldTest, ForwardPowerCommonHitPublishesSelectedParalysisBeforeIts
         const auto after = captureNativeActorState(fixture, npc).serializeBinary();
         EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit));
         EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), after);
+    }
+}
+
+TEST(OblivionWorldTest, BackwardPhysicalHitPreSpeechOwnsSavedPendingForceAndOneFinalTail)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& service = *world.getOblivionCombatService();
+    const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901, 100, 0x802);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(attacker, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, ESM4::ActorValueProcess::Active));
+    const auto key = victim.getCellRef().getFormKey();
+    const auto id = service.beginMeleeStrike(attacker.getCellRef().getFormKey(),
+        ESM4::MeleeStrikeKind::BackwardPower, "handtohandattackbackpower");
+    MWMechanics::OblivionPhysicalContactDeltas damage{0, -3};
+    damage.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 0, 3, 0, 17, true};
+    auto prefix = service.preparePhysicalContact(id, attacker, victim, damage, nullptr, false, {}, {});
+    ASSERT_TRUE(prefix);
+    EXPECT_FALSE(prefix->preSpeechPhysicalHitAvailable());
+    ASSERT_TRUE(prefix->commit());
+    const auto health = service.getNonPlayerValue(victim, 8);
+    const auto rng = service.combatRandomState();
+    auto prematureTail = prefix->prepareContinuation({}, nullptr, {});
+    auto first = prefix->preparePreSpeechPhysicalHit({1, 2, 3}, 85, 13.25f, nullptr, {});
+    auto other = prefix->preparePreSpeechPhysicalHit({1, 2, 3}, 85, 13.25f, nullptr, {});
+    ASSERT_TRUE(first); ASSERT_TRUE(other); ASSERT_TRUE(prematureTail);
+    EXPECT_FALSE(service.getUpPlayback(key));
+    ASSERT_TRUE(first->commit());
+    EXPECT_FALSE(other->commit()); EXPECT_FALSE(first->commit()); EXPECT_FALSE(prematureTail->commit());
+    EXPECT_FALSE(prefix->preSpeechPhysicalHitAvailable());
+    EXPECT_FALSE(first->prepareContinuation({}, nullptr, {}));
+    EXPECT_EQ(service.getProcessKnockedState(key), 2);
+    ASSERT_TRUE(service.getUpPlayback(key));
+    const auto hit = service.getUpPlayback(key)->mPhysicalHit;
+    ASSERT_TRUE(hit);
+    EXPECT_EQ(hit->mCauseAction, id); EXPECT_FALSE(hit->mApplied);
+    EXPECT_EQ(hit->mSourcePosition, (std::array<float, 3>{1, 2, 3}));
+    EXPECT_FLOAT_EQ(hit->mForce, 85.f); EXPECT_FLOAT_EQ(hit->mStartedHour, 13.25f);
+    EXPECT_FALSE(service.actorRagdoll(key)); // Admission, not the contact, applies body force.
+    auto tail = prefix->prepareContinuation({}, nullptr, {});
+    ASSERT_TRUE(tail); ASSERT_TRUE(tail->commit());
+    EXPECT_FALSE(prefix->prepareContinuation({}, nullptr, {}));
+    EXPECT_NEAR(service.getNonPlayerValue(victim, 8), health, .001f);
+    EXPECT_EQ(service.combatRandomState(), rng);
+    auto saved = captureNativeActorState(fixture, attacker);
+    saved.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+    const auto bytes = saved.serializeBinary();
+    ESM4::RuntimeState legacy; legacy.mVersion = 74;
+    EXPECT_THROW(service.capture(legacy), std::invalid_argument);
+    service.restore(ESM4::RuntimeState::deserializeBinary(bytes), world.getStore());
+    EXPECT_EQ(service.getUpPlayback(key)->mPhysicalHit, hit);
+    EXPECT_FALSE(prefix->preparePreSpeechPhysicalHit({1, 2, 3}, 85, 13.25f, nullptr, {}));
+    EXPECT_FALSE(service.preparePhysicalContact(id, attacker, victim, damage, nullptr, false, {}, {}));
+}
+
+TEST(OblivionWorldTest, BackwardPhysicalHitRejectsUnownedRequestsAndSpendsIneligiblePhaseOnce)
+{
+    for (const auto process : {ESM4::ActorValueProcess::Active, ESM4::ActorValueProcess::Low})
+    for (const int knocked : {0, 3})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = addNativeNpc(fixture, 0x900), victim = addNativeNpc(fixture, 0x901, 100, 0x802);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(attacker, ESM4::ActorValueProcess::Active));
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, process));
+        const auto key = victim.getCellRef().getFormKey();
+        if (process == ESM4::ActorValueProcess::Active) service.setProcessKnockedState(key, knocked);
+        const auto id = service.beginMeleeStrike(attacker.getCellRef().getFormKey(),
+            ESM4::MeleeStrikeKind::BackwardPower, "handtohandattackbackpower");
+        MWMechanics::OblivionPhysicalContactDeltas forged;
+        forged.mVictimPhysicalHit = ESM4::RuntimePhysicalHit{id, {}, 85, 1, false};
+        EXPECT_THROW(service.preparePhysicalContact(id, attacker, victim, forged, nullptr, false, {}, {}),
+            std::invalid_argument);
+        MWMechanics::OblivionPhysicalContactDeltas damage;
+        damage.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{1, 0, 1, 0, 17, true};
+        auto prefix = service.preparePhysicalContact(id, attacker, victim, damage, nullptr, false, {}, {});
+        ASSERT_TRUE(prefix); ASSERT_TRUE(prefix->commit());
+        EXPECT_THROW(prefix->prepareContinuation(forged, nullptr, {}), std::invalid_argument);
+        auto effect = prefix->preparePreSpeechPhysicalHit({}, 85, 1, nullptr, {});
+        ASSERT_TRUE(effect); ASSERT_TRUE(effect->commit());
+        const bool admitted = process == ESM4::ActorValueProcess::Active && knocked == 0;
+        EXPECT_EQ(service.getUpPlayback(key).has_value(), admitted);
+        EXPECT_EQ(service.getProcessKnockedState(key), admitted ? 2 : process == ESM4::ActorValueProcess::Active ? knocked : 0);
+        EXPECT_FALSE(prefix->preparePreSpeechPhysicalHit({}, 85, 1, nullptr, {}));
+        auto tail = prefix->prepareContinuation({}, nullptr, {});
+        ASSERT_TRUE(tail); EXPECT_TRUE(tail->commit());
+    }
+}
+
+TEST(OblivionWorldTest, BackwardPowerCommonHitPublishesPhysicalOwnershipWithoutParalysisOrDamageReplay)
+{
+    for (const bool playerAttacks : {false, true})
+    for (const int chance : {0, 100})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto player = prepareParalysisContactPlayer(fixture);
+        const auto npc = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = playerAttacks ? player : npc, victim = playerAttacks ? npc : player;
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(attacker, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 75));
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 4, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 10));
+        ESM4::GameSetting proc{}; proc.mId = {0x990, 0}; proc.mEditorId = "iPerkMarksmanKnockdownChance";
+        proc.mData = std::int32_t(chance);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(proc, ESM::FormKey::content("headless.esm", 0x990));
+        const auto source = playerAttacks ? ESM::FormKey::dynamic("player", 1) : npc.getCellRef().getFormKey();
+        const auto target = playerAttacks ? npc.getCellRef().getFormKey() : ESM::FormKey::dynamic("player", 1);
+        const float health = playerAttacks ? service.getNonPlayerValue(npc, 8) : service.getPlayerValue(8);
+        const auto id = service.beginMeleeStrike(source, ESM4::MeleeStrikeKind::BackwardPower, "handtohandattackbackpower");
+        MWMechanics::OblivionPhysicalContactDeltas hit{-2, -1};
+        hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{1, 0, 1, 0, 17, true};
+        unsigned sounds = 0;
+        const auto result = world.commitOblivionPlayerNpcHit(id, attacker, victim, hit, [&] { ++sounds; });
+        ASSERT_TRUE(result); EXPECT_EQ(sounds, 1u);
+        EXPECT_NEAR(playerAttacks ? service.getNonPlayerValue(npc, 8) : service.getPlayerValue(8), health - 1, .001f);
+        EXPECT_TRUE(service.findActorValues(target)->mMeleeParalysis.empty());
+        const auto graph = service.getUpPlayback(target);
+        ASSERT_EQ(graph.has_value(), chance == 100);
+        if (graph)
+        {
+            ASSERT_TRUE(graph->mPhysicalHit);
+            EXPECT_EQ(graph->mPhysicalHit->mCauseAction, id);
+            EXPECT_FALSE(graph->mPhysicalHit->mApplied);
+            EXPECT_NEAR(graph->mPhysicalHit->mForce, 85, .001f);
+            EXPECT_EQ(service.getProcessKnockedState(target), 2);
+        }
+        const auto before = captureNativeActorState(fixture, npc).serializeBinary();
+        EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit));
+        EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before);
     }
 }
