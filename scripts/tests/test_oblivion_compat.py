@@ -56,7 +56,7 @@ class OblivionCompatTests(unittest.TestCase):
     def test_offscreen_scenario_rejects_incompatible_backends_and_actions(self):
         base = {"schema_version": 1, "name": "offscreen", "command": ["openmw"],
                 "sdl_offscreen_input": True, "actions": []}
-        for changes in ({"xvfb": True}, {"virtual_gamepad": True},
+        for changes in ({"xvfb": True},
                         {"actions": [{"type": "mouse_move_absolute", "x": 0, "y": 0}]},
                         {"sdl_offscreen_input": "true"}):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
@@ -1290,6 +1290,17 @@ class OblivionCompatTests(unittest.TestCase):
             [314, 315, 316, 317, 318],
         )
         pad = mock.Mock()
+        offscreen = mock.Mock()
+        MODULE.validate_scenario_manifest({
+            "schema_version": 1, "name": "offscreen gamepad", "command": ["openmw"],
+            "sdl_offscreen_input": True, "virtual_gamepad": True,
+            "actions": [{"type": "gamepad_button", "value": "a"},
+                        {"type": "gamepad_axis", "axis": "left_y", "value": -1}]})
+        with self.assertRaisesRegex(ValueError, "virtual_gamepad=true"):
+            MODULE.validate_scenario_manifest({
+                "schema_version": 1, "name": "missing gamepad", "command": ["openmw"],
+                "sdl_offscreen_input": True,
+                "actions": [{"type": "gamepad_button", "value": "a"}]})
         with tempfile.TemporaryDirectory() as temporary, mock.patch.object(
             MODULE, "_VIRTUAL_GAMEPAD", pad
         ), mock.patch.object(MODULE.time, "sleep"):
@@ -1297,18 +1308,22 @@ class OblivionCompatTests(unittest.TestCase):
                 {"type": "gamepad_button", "value": "a", "hold_seconds": 0},
                 environment={},
                 output=Path(temporary),
+                offscreen_input=offscreen,
             )
             axis = MODULE._run_action(
                 {"type": "gamepad_axis", "axis": "left_y", "value": -1},
                 environment={},
                 output=Path(temporary),
+                offscreen_input=offscreen,
             )
             trigger = MODULE._run_action(
                 {"type": "gamepad_axis", "axis": "left_trigger", "value": 0.5},
                 environment={},
                 output=Path(temporary),
+                offscreen_input=offscreen,
             )
         self.assertTrue(button["passed"] and axis["passed"] and trigger["passed"])
+        offscreen.action.assert_not_called()
         self.assertEqual(
             pad.event.call_args_list,
             [

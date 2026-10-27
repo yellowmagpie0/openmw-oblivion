@@ -14,6 +14,7 @@ INPUT_ACTIONS = frozenset({"key", "key_down", "key_up", "key_hold", "key_held",
                           "type", "type_held", "focus_window", "screenshot", "mouse_move",
                           "mouse_click", "mouse_down", "mouse_up"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
+GAMEPAD_ACTIONS = frozenset({"gamepad_button", "gamepad_axis"})
 
 
 def scancode(value):
@@ -63,10 +64,15 @@ def validate(manifest):
         raise ValueError("sdl_offscreen_input must be a boolean")
     if not manifest.get("sdl_offscreen_input", False):
         return
-    if manifest.get("xvfb") or manifest.get("virtual_gamepad") or "m14" in manifest or "m15" in manifest:
+    if manifest.get("xvfb") or "m14" in manifest or "m15" in manifest:
         raise ValueError("SDL offscreen controls currently support isolated diagnostic scenarios only")
     receipt_timeout(manifest.get("sdl_input_timeout_seconds", 10))
     for action in manifest.get("actions", []):
+        if action.get("type") in GAMEPAD_ACTIONS:
+            if not manifest.get("virtual_gamepad", False):
+                raise ValueError("Offscreen gamepad actions require virtual_gamepad=true (Linux uinput)")
+            # Delivered by the existing uinput backend, not the SDL replay hook.
+            continue
         if action.get("type") not in INPUT_ACTIONS | PASSIVE_ACTIONS:
             raise ValueError(f"Unsupported offscreen action: {action.get('type')!r}")
         if action["type"].startswith("key"):

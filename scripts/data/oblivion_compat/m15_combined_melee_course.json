@@ -75,10 +75,10 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "Gamepad, measured FPS and remaining required view/device/FPS/sound-HUD crosses. Both current view profiles use keyboard/mouse and configured cap15 only.",
+    "Gamepad SAN/third-person/matched restarts, measured FPS and remaining required view/device/FPS/sound-HUD crosses. One normal first-person configured gamepad reference now passes; existing keyboard/mouse view profiles retain their full course/restart evidence. Configured cap15 only.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Complete the joined course through actual SDL gamepad input, reusing the existing input harness and fixture. Inspect available controller support and normal binding path; extend that harness if needed, without substituting keyboard events or direct gameplay state changes. Then measured FPS and remaining mechanics.",
+  "next_bounded_task": "Complete the matching first-person gamepad SAN reference and held-block/Stagger/windup fresh continuations, using this configured input overlay and existing sources/verifier. Then third-person gamepad and measured FPS, followed by remaining S4 mechanics.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -424,6 +424,81 @@
         "saved_camera_restored_without_toggle": true,
         "no_engine_builds": true
       }
+    }
+  },
+  "input_profiles": {
+    "gamepad_first_person": {
+      "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+      "virtual_gamepad": true,
+      "backend": "Existing Linux uinput Xbox-compatible VirtualGamepad; SDL recognizes Xbox 360 Controller, normal SDL controller events and production ICS channels. Existing offscreen hook handles only focus/screenshots/F5 instrumentation.",
+      "scope": "Configured LT block/RT attack layout, not default-layout acceptance. Normal first-person reference only; SAN/view/restart crosses remain open.",
+      "input_xml_overlay": {
+        "remove_joystick_axis_binders_from_controls": [
+          10,
+          11,
+          51
+        ],
+        "add_axis_binders": [
+          {
+            "control": 10,
+            "axis": 5,
+            "deviceId": 1
+          },
+          {
+            "control": 51,
+            "axis": 4,
+            "deviceId": 1
+          }
+        ],
+        "control51_initialValue": 0.5
+      },
+      "action_overlay": {
+        "key_down_up": {
+          "b": "left_trigger +1/0",
+          "d": "left_x +1/0",
+          "s": "left_y +1/0",
+          "w": "left_y -1/0"
+        },
+        "key_held": {
+          "f": "gamepad_button x, same duration",
+          "space": "gamepad_button a, same duration",
+          "u": "right_trigger1, sleep0.2, right_trigger0",
+          "F5": "retain keyboard instrumentation save, including short windup pulse"
+        },
+        "mouse_moves": "Remove zero-delta priming and +40 reset; first deliberate turn right_x=-0.25 until farFacing, final right_x=-0.35 until nearWall; zero right_x immediately after corresponding geometry wait. Existing readonly observer/required geometry guards unchanged.",
+        "after_each_screenshot": [
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "sleep",
+            "seconds": 0.25
+          }
+        ],
+        "idle_log_wait": "Accept equivalent action=(?:-1|ffff) after observed SDL diagnostic hex formatting; saved process_action remains numeric -1 and exact binary/live checks are unchanged."
+      },
+      "observer_and_fixture": "Unchanged original observer, registration, source save, stock partition and other files. No gameplay setters.",
+      "normal_run_id": "combined-gamepad-normal-04",
+      "verification": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/normal-checkpoint-verification.json",
+        "sha256": "dc4ef33cb82082c24c1df60b1b061455a3605715e11030a34292f225c9fd40c3",
+        "normal_reference_pass": true,
+        "exact_save_live_pairs": 9,
+        "sanitizer_and_restarts_complete": false
+      },
+      "python": {
+        "receipt": "build/oblivion-compat/m15/S4/gamepad-backend-python-01/verification.json",
+        "executed": 432,
+        "source_fingerprint": "85642953f50c0cc8825aece3d1466266c7c50d6fb4c1b1f775441de1b7e8f22d",
+        "provenance": "HEAD eb720a4523 with only replay validator and routing-test edits; later metadata changes do not change tested implementation."
+      },
+      "retained_attempts": [
+        "combined-gamepad-normal-01/fixture-failure.json",
+        "combined-gamepad-normal-02/fixture-failure.json",
+        "combined-gamepad-normal-03/fixture-failure.json",
+        "combined-gamepad-recovery-focused-normal-01/fixture-failure.json"
+      ]
     }
   }
 }
