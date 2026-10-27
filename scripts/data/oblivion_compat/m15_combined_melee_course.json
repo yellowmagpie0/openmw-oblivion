@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "status": "keyboard_mouse_view_restarts_and_first_person_gamepad_restarts_verified_matrix_incomplete",
+  "status": "all_view_device_pairs_and_pairwise_restart_course_verified_fps_and_mechanics_incomplete",
   "full_M15S4_acceptance": false,
-  "scope": "First-/third-person keyboard/mouse and first-person configured gamepad cap15 joined courses pass normal/SAN, each with matched held-block/Stagger/windup fresh continuations. Three profiles provide144 core exact save/live pairs,24epochs,18whole fresh restores; positive controls are separately linked. Remaining third-person gamepad, FPS/seed, actor/weapon/mastery/effect/command/interruption and sound-HUD requirements remain incomplete.",
+  "scope": "All four first-/third-person and keyboard/mouse/gamepad pairs pass the joined cap15 course normally and under ASan/UBSan. Existing K/M view restarts plus first-person gamepad restarts provide all view/window and device/window pairs:162 exact core save/live pairs,26 epochs,18 exact whole-source restores total. Third-person gamepad contributes2references/18pairs, not direct restart cases. Section8 pairwise provenance is explicit; no measured-FPS/default-layout/full-S4 claim.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
@@ -75,10 +75,10 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "Third-person gamepad course and remaining required view/device/FPS/seed/sound-HUD crosses. Section8 permits pairwise combinations plus identified high-risk full crosses; existing K/M third-person restart and first-person gamepad restart evidence remains applicable with original provenance. Section4.5 retains >=3fixed seeds,30/60/120FPS caps and independent repeated final campaigns. Configured cap15 is not measured FPS.",
+    "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Close missing third-person gamepad view/device pair with normal/SAN joined references, using normal right-stick-button POV input and readonly camera marker. Reuse unchanged third-person K/M view/restart and first-person gamepad device/restart evidence for covered pairwise combinations (section8); add a full cross only for an identified interaction/discrepancy. Then FPS/seed campaign and remaining S4 mechanics.",
+  "next_bounded_task": "Choose the next missing S4 actor/weapon/power/effect behavior from the current audit and a focused normal-input variant of this fixture. Complete related implementation before the expensive final FPS/seed integration campaign; preserve all section4.5 and remaining section8 gates. Do not investigate new original-engine details without a concrete requirement/discrepancy.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -141,7 +141,7 @@
     "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
     "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
     "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
-    "runtime": "Three profiles (K/M first+third and gamepad first), each48 exact pairs/8epochs/6whole fresh restores:144core pairs24epochs18restores total, separately linked controls. Within each profile, active ownership/resources/combatRNG/shared inventories strictly match; unowned cache sample clocks normalized under established guards. First-person gamepad also validates actual saved wall pose and every SDL receipt. Full S4 remains incomplete."
+    "runtime": "162 core exact pairs across26 engine epochs,18 whole fresh source restores. Four view/device pairs normal/SAN; K/M first+third and gamepad first include all3restart windows, while gamepad third adds two joined references. Section8 pairwise evidence reused with exact receipts/provenance; no direct third-gamepad restart or measuredFPS claim. Active ownership/resources/combatRNG/shared inventories remain strict within completed restart profiles."
   },
   "verification": {
     "normal": {
@@ -564,6 +564,42 @@
         "before_geometry_print": "   local look = input.getAxisValue(input.CONTROLLER_AXIS.RightX)\n   if look>0.209 and look<0.211 and distance<137 and angle<3 and low.hit and high.hit then print('M15 course final alignment: ready=true') end\n",
         "ownership": "Read-only getters/prints only. Unique marker requires actual fine right-stick input .21, excluding old coarse-turn/reset logs. Files identical in all8 accepted processes."
       }
+    },
+    "gamepad_third_person": {
+      "base_input_profile": "input_profiles.gamepad_first_person",
+      "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+      "source": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
+      "source_sha256": "68c9312375c99182944bba542ab0895cccc1f9993573b2893226ea83f1ed1e89",
+      "normal_input_after_focus": [
+        {
+          "type": "gamepad_button",
+          "value": "rightstick",
+          "hold_seconds": 0.08
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 course view: thirdPerson=true",
+          "timeout_seconds": 240
+        }
+      ],
+      "camera_observer": "Reuse view_profiles.third_person.observer_additions; readonly camera getter/forbid leaving third person. Combine with current gamepad input observer. No camera setters.",
+      "reference_run_ids": {
+        "normal": "combined-gamepad-third-normal-01",
+        "sanitize": "combined-gamepad-third-sanitize-01"
+      },
+      "verification": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/third-checkpoint-verification.json",
+        "sha256": "99e0a146c29daf6b7b677f3b65d3956e9f6d7a8b3200797f570f1424f7ed8636",
+        "normal_and_sanitizer_pass": true,
+        "new_exact_save_live_pairs": 18,
+        "new_actual_epochs": 2,
+        "direct_fresh_restart_cases": 0,
+        "camera_marker_and_body_captures": true,
+        "saved_wall_ready_pose_checked": true,
+        "exact_sdl_receipts": true
+      },
+      "restart_coverage": "Section8 pairwise coverage: third-person/window from unchanged third-person keyboard profile (all3windows,normal/SAN); gamepad/window from completed first-person gamepad profile (all3windows,normal/SAN). Proof links exact original receipts/hashes. Third-person gamepad references close view/device pair; no direct three-way restart claim. Add targeted high-risk cross for a concrete interaction/discrepancy.",
+      "scope": "Configured cap15 and current LT-block/RT-attack layout only. FPS/seed campaigns and all remaining S4 mechanics remain incomplete."
     }
   }
 }

@@ -8,13 +8,13 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 Current acceptance checklist (2026-10-26):
 
-- **Demonstrated:** the [joined course and all three restart windows](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass in first-/third-person keyboard/mouse and first-person configured gamepad cap15 profiles, normally and under ASan/UBSan. Each profile covers production block, Stagger/recovery, nonlethal return hit and range/wall misses, with held-block, recovery and pending-windup fresh continuations: **144 exact save/live pairs, 24 engine epochs and 18 whole-source restores** across the three profiles. Required resources, active ownership, combat RNG and shared inventories match within each profile; audio/captures and separately linked positive controls pass. Gamepad input uses actual uinput/SDL, with exact delivery receipts and independently checked saved wall distance/facing. Unchanged 2,038-test normal/SAN engine gates and435 Python tests are reused with provenance; no rebuild was repeated.
-- **Incomplete:** third-person gamepad, FPS/seed campaign and the remaining actor/weapon/directional/mastery/effect, command/query, interruption and sound/HUD requirements below. Section8 calls for pairwise combinations plus identified high-risk full crosses; retain required checks without repeating every Cartesian combination. Section4.5 retains at least three fixed seeds,30/60/120FPS caps and repeated independent final campaigns. Cap15 does not establish measured FPS or a default controller layout.
+- **Demonstrated:** all four first-/third-person and keyboard/mouse/gamepad pairs pass the [joined cap15 course](../../scripts/data/oblivion_compat/m15_combined_melee_course.json), normally and under ASan/UBSan: production block, Stagger/recovery, nonlethal return hit, clear range and in-reach wall misses. Three full restart profiles plus the two third-person gamepad references provide **162 exact save/live pairs, 26 epochs and 18 whole-source restores**. Third-person K/M restarts cover view/window pairs; first-person gamepad restarts cover device/window pairs. The recipe links exact reused receipts and section8 pairwise provenance; it does not claim direct third-person gamepad restarts. Required resources/ownership/RNG/inventories, audio, rendered captures and positive controls pass. Unchanged 2,038-test normal/SAN engine and435 Python gates are reused.
+- **Incomplete:** FPS/seed campaign, remaining identified high-risk crosses and the actor/weapon/directional/mastery/effect, command/query, interruption and sound/HUD requirements below. Retain section4.5's at least three fixed seeds,30/60/120FPS caps and repeated independent final campaigns. Configured cap15 does not establish measured FPS or a default controller layout.
 - **Blocked:** none.
 
-The third-person keyboard/mouse chunk is complete. Next, take the same joined
-course through actual SDL gamepad input, extending the existing harness only
-where required. Do not substitute keyboard events or direct gameplay changes.
+The view/device and pairwise restart course gaps are closed. Next, select a
+missing actor/weapon/power/effect behavior from this audit and a focused normal-input
+variant. Batch related implementation before the final FPS/seed campaign.
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
 and recipe at `b1583d624f` retain their historical provenance.
 Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: select work by
@@ -50,8 +50,8 @@ The complete S4 course requires a named nonlethal target attacked with normal
 input, blocking its production-policy attack, misses outside reach and behind a
 wall, and recovery after stagger. The joined cap15 course now passes in first-/third-person keyboard/mouse and first-person gamepad,
 including matched save/quit/fresh-process continuations during windup, held
-blocking and recovery, in normal and sanitizer processes. Complete the third-person gamepad
-and FPS/seed matrix, with its remaining required crosses. The final gate remains input -> animation contact ->
+blocking and recovery, in normal and sanitizer processes. Third-person gamepad joined references now also pass; section8 pairwise restart
+coverage is linked above. Complete the FPS/seed matrix and remaining required crosses. The final gate remains input -> animation contact ->
 one native delta -> visible/audible reaction. Retain the plan's sanitized
 synthetic melee-course requirement. This bounded profile does not deliver S4.
 
