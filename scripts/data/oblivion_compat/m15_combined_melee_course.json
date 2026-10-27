@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "status": "keyboard_mouse_view_restarts_and_normal_gamepad_reference_verified_matrix_incomplete",
+  "status": "keyboard_mouse_view_restarts_and_first_person_gamepad_restarts_verified_matrix_incomplete",
   "full_M15S4_acceptance": false,
-  "scope": "First- and third-person keyboard/mouse cap15 joined melee profiles pass normally and under ASan/UBSan, each with matched held-block/Stagger/windup fresh continuations. Each profile covers production block, actual Stagger/natural recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Other devices, measured FPS, remaining actor/weapon/mastery/effect/command/interruption and sound-HUD requirements remain incomplete.",
+  "scope": "First-/third-person keyboard/mouse and first-person configured gamepad cap15 joined courses pass normal/SAN, each with matched held-block/Stagger/windup fresh continuations. Three profiles provide144 core exact save/live pairs,24epochs,18whole fresh restores; positive controls are separately linked. Remaining third-person gamepad, FPS/seed, actor/weapon/mastery/effect/command/interruption and sound-HUD requirements remain incomplete.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
@@ -75,10 +75,10 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "Gamepad SAN/third-person/matched restarts, measured FPS and remaining required view/device/FPS/sound-HUD crosses. One normal first-person configured gamepad reference now passes; existing keyboard/mouse view profiles retain their full course/restart evidence. Configured cap15 only.",
+    "Third-person gamepad course and remaining required view/device/FPS/seed/sound-HUD crosses. Section8 permits pairwise combinations plus identified high-risk full crosses; existing K/M third-person restart and first-person gamepad restart evidence remains applicable with original provenance. Section4.5 retains >=3fixed seeds,30/60/120FPS caps and independent repeated final campaigns. Configured cap15 is not measured FPS.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Run corrected whole normal/SAN gamepad references using acknowledged input and final alignment, then matched block/Stagger/windup restarts with identical observer. Reuse focused verified source/controls and unchanged engine gates. Complete third-person gamepad, measured FPS and remaining S4 mechanics.",
+  "next_bounded_task": "Close missing third-person gamepad view/device pair with normal/SAN joined references, using normal right-stick-button POV input and readonly camera marker. Reuse unchanged third-person K/M view/restart and first-person gamepad device/restart evidence for covered pairwise combinations (section8); add a full cross only for an identified interaction/discrepancy. Then FPS/seed campaign and remaining S4 mechanics.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -141,7 +141,7 @@
     "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
     "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
     "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
-    "runtime": "Two view profiles, each8 engine epochs/48 exact save-live pairs/6 whole fresh restores:96 joined-course pairs across16 epochs, plus their separately linked positive controls (new third-person control adds2 exact pairs). Native resources/active ownership/combat RNG and shared inventories match within each profile. Inactive cache sample clocks excluded symmetrically, source restore wholly exact. Mode getters/captures confirm third person survives load without another toggle. Full S4 matrix remains open."
+    "runtime": "Three profiles (K/M first+third and gamepad first), each48 exact pairs/8epochs/6whole fresh restores:144core pairs24epochs18restores total, separately linked controls. Within each profile, active ownership/resources/combatRNG/shared inventories strictly match; unowned cache sample clocks normalized under established guards. First-person gamepad also validates actual saved wall pose and every SDL receipt. Full S4 remains incomplete."
   },
   "verification": {
     "normal": {
@@ -431,7 +431,7 @@
       "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
       "virtual_gamepad": true,
       "backend": "Existing Linux uinput Xbox-compatible VirtualGamepad; SDL recognizes Xbox 360 Controller, normal SDL controller events and production ICS channels. Existing offscreen hook handles only focus/screenshots/F5 instrumentation.",
-      "scope": "Configured LT block/RT attack layout, not default-layout acceptance. Normal first-person reference only; SAN/view/restart crosses remain open.",
+      "scope": "Configured LT block/RT attack first-person gamepad cap15 joined course plus held-block/Stagger/windup fresh continuations pass normal/SAN:48 exact pairs,8 actual epochs,6 whole initial restores. Third-person gamepad and FPS/seed/remaining mechanics are incomplete; no default-layout or measured-FPS claim.",
       "input_xml_overlay": {
         "remove_joystick_axis_binders_from_controls": [
           10,
@@ -455,9 +455,9 @@
       "action_overlay": {
         "key_down_up": {
           "b": "left_trigger +1/0",
-          "d": "left_x +1/0",
-          "s": "left_y +1/0",
-          "w": "left_y -1/0"
+          "d": "left_x +0.35/0",
+          "s": "left_y +0.35/0",
+          "w": "left_y -0.35/0"
         },
         "key_held": {
           "f": "gamepad_button x, same duration",
@@ -465,7 +465,7 @@
           "u": "right_trigger1, sleep0.2, right_trigger0",
           "F5": "retain keyboard instrumentation save, including short windup pulse"
         },
-        "mouse_moves": "Remove zero-delta priming and +40 reset; first deliberate turn right_x=-0.25 until farFacing, final right_x=-0.35 until nearWall; zero right_x immediately after corresponding geometry wait. Existing readonly observer/required geometry guards unchanged.",
+        "mouse_moves": "Remove zero-delta mouse priming. Replace -40 range turn by right_x=-.25 until original farFacing then neutral. Replace +40 reset by right_x=.25 until readonly returnHeading (debits>=2,forward.x>=0,forward.y>.95), neutral. Replace -400 final turn by right_x=-.35 until readonly wallFacing (angle<10,two blocked rays), neutral; approach left_y=-.35 until readonly wallApproachRange(distance<130,two blocked rays), neutral; fine right_x=.21 until unique final alignment marker, neutral. Retain original nearWall gate before save/attack.",
         "after_each_screenshot": [
           {
             "type": "focus_window",
@@ -476,16 +476,33 @@
             "seconds": 0.25
           }
         ],
-        "idle_log_wait": "Accept equivalent action=(?:-1|ffff) after observed SDL diagnostic hex formatting; saved process_action remains numeric -1 and exact binary/live checks are unchanged."
+        "idle_log_wait": "Accept equivalent action=(?:-1|ffff) after observed SDL diagnostic hex formatting; saved process_action remains numeric -1 and exact binary/live checks are unchanged.",
+        "before_initial_held_trigger": {
+          "cases": [
+            "block",
+            "recovery"
+          ],
+          "action": {
+            "type": "wait_log",
+            "pattern": "Detected game controller: Xbox 360 Controller",
+            "timeout_seconds": 180
+          },
+          "reason": "SDL must register/calibrate neutral device before initial hold; hold is still delivered before Applied source state. Retained normal-block01 readonly probe explains failure."
+        }
       },
-      "observer_and_fixture": "Unchanged original observer, registration, source save, stock partition and other files. No gameplay setters.",
-      "normal_run_id": "combined-gamepad-normal-04",
+      "observer_and_fixture": "Original observer extended only by these readonly markers; original registration, source save, stock partition and all other files preserved. No gameplay setters.",
+      "normal_run_id": "combined-gamepad-normal-05",
       "verification": {
-        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/normal-checkpoint-verification.json",
-        "sha256": "dc4ef33cb82082c24c1df60b1b061455a3605715e11030a34292f225c9fd40c3",
-        "normal_reference_pass": true,
-        "exact_save_live_pairs": 9,
-        "sanitizer_and_restarts_complete": false
+        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/profile-checkpoint-verification.json",
+        "sha256": "d23fa0b8cc45366e17d1fc034ec10bd9dfbb997dba83dc4e0ac538858501a574",
+        "normal_and_sanitizer_pass": true,
+        "profile_epochs": 8,
+        "exact_save_live_pairs": 48,
+        "whole_initial_restores": 6,
+        "saved_wall_ready_distance_and_facing_checked": true,
+        "exact_sdl_receipts": true,
+        "maximum_saved_wall_distance": 125.43756561365845,
+        "no_engine_builds": true
       },
       "python": {
         "receipt": "build/oblivion-compat/m15/S4/gamepad-backend-python-01/verification.json",
@@ -497,7 +514,8 @@
         "combined-gamepad-normal-01/fixture-failure.json",
         "combined-gamepad-normal-02/fixture-failure.json",
         "combined-gamepad-normal-03/fixture-failure.json",
-        "combined-gamepad-recovery-focused-normal-01/fixture-failure.json"
+        "combined-gamepad-recovery-focused-normal-01/fixture-failure.json",
+        "combined-gamepad-block-normal-01/fixture-failure.json"
       ],
       "controller_delivery_checkpoint": {
         "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/ack-checkpoint-verification.json",
@@ -511,14 +529,6 @@
           "head": "c1bc3a7be0d824b036d2e7cacea9869f1e9d367a"
         },
         "focused_runtime": "SAN range2 exact pairs+whole restore; normal configured cap2 fine-alignment/wall-miss2 pairs+whole restore; only-wall-disabled same-pose normal-keyboard positive control2 pairs+whole restore. Cap is not measured FPS. Full profiles/restarts still incomplete.",
-        "candidate_route_for_final_references": {
-          "status": "integration course not yet executed",
-          "movement_stick": 0.35,
-          "heading_reset": "After range, right_x=.25 until readonly debits>=2,forward.x>=0,forward.y>.95; neutral.",
-          "wall_approach": "Turn right_x=-.35 until angle<10 and both rays blocked; neutral. Forward left_y=-.35 until distance<130 and both rays blocked; neutral.",
-          "final_alignment": "Fine right_x=.21 until original geometry log facing<3,nearWall=true; neutral. Preserve original nearWall range/facing/ray gate before F5/strike. Focused actual stable wall-source fine alignment already passes at configured cap2.",
-          "observer": "Existing readonly observer plus heading, wall-facing and approach-range markers. Keep files identical between final reference and continuations; use original observer with only debits2 for focused normal alignment, as pinned in receipt."
-        },
         "retained_attempts": [
           "gamepad-controller-ack-python-01/verification.json",
           "combined-gamepad-sanitize-01/fixture-failure.json",
@@ -527,7 +537,32 @@
           "combined-gamepad-wall-focused-sanitize-02/fixture-failure.json",
           "combined-gamepad-wall-focused-sanitize-03/fixture-failure.json",
           "combined-gamepad-alignment-normal-01/fixture-failure.json"
-        ]
+        ],
+        "route_status": "Integrated and verified by the current profile verification. The earlier focused receipt remains immutable."
+      },
+      "prior_reference": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-gamepad-work-01/normal-checkpoint-verification.json",
+        "sha256": "dc4ef33cb82082c24c1df60b1b061455a3605715e11030a34292f225c9fd40c3",
+        "normal_reference_pass": true,
+        "exact_save_live_pairs": 9,
+        "sanitizer_and_restarts_complete": false
+      },
+      "reference_run_ids": {
+        "normal": "combined-gamepad-normal-05",
+        "sanitize": "combined-gamepad-sanitize-02"
+      },
+      "observer_additions": {
+        "after_util_require": "local input = require('openmw.input')\n",
+        "replace_geometry_format": {
+          "from": "rangeLane=%s obstacle=%s",
+          "to": "rangeLane=%s obstacle=%s returnHeading=%s wallFacing=%s wallApproachRange=%s"
+        },
+        "replace_geometry_arguments": {
+          "from": "tostring(low.hitObject and low.hitObject.recordId)))",
+          "to": "tostring(low.hitObject and low.hitObject.recordId),tostring(debits>=2 and forward.x>=0 and forward.y>0.95),tostring(angle<10 and low.hit and high.hit),tostring(distance<130 and low.hit and high.hit)))"
+        },
+        "before_geometry_print": "   local look = input.getAxisValue(input.CONTROLLER_AXIS.RightX)\n   if look>0.209 and look<0.211 and distance<137 and angle<3 and low.hit and high.hit then print('M15 course final alignment: ready=true') end\n",
+        "ownership": "Read-only getters/prints only. Unique marker requires actual fine right-stick input .21, excluding old coarse-turn/reset logs. Files identical in all8 accepted processes."
       }
     }
   }
