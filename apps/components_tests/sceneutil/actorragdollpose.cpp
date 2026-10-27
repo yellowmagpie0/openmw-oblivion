@@ -1063,3 +1063,48 @@ namespace
         EXPECT_EQ(binding.sceneRootRecord(), 8u);
     }
 }
+
+TEST_F(ActorRagdollPoseTest, NativeMorphologyPreservesBonePositionsAtTheRigidPhysicsBoundary)
+{
+    SceneUtil::ActorRagdollPoseBinding binding(mGraph, *mRoot,
+        SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal);
+    auto placement = Nif::NiTransform::getIdentity();
+    placement.mTranslation = {100, 0, 0};
+    placement.mRotation.mValues[0][0] = -.95f;
+    placement.mRotation.mValues[1][1] = -.95f;
+    const auto bones = binding.captureWorldBones(placement);
+    ASSERT_EQ(bones.size(), 2u);
+    EXPECT_NEAR(bones[0].mPose.getTrans().x(), 89.55f, 1e-4);
+    EXPECT_NEAR(bones[0].mPose.getTrans().y(), -1.9f, 1e-4);
+    EXPECT_NEAR(bones[1].mPose.getTrans().x(), 90.5f, 1e-4);
+    for (const auto& bone : bones)
+    {
+        EXPECT_NO_THROW(NifBullet::ragdollNativePoseFromBoneWorld(bone.mPose));
+        EXPECT_NEAR(bone.mPose(0, 0), -1, 1e-5);
+        EXPECT_NEAR(bone.mPose(1, 1), -1, 1e-5);
+        EXPECT_NEAR(bone.mPose(2, 2), 1, 1e-5);
+    }
+    // Morphology remains in the scene placement; capture changes no local bone.
+    EXPECT_FLOAT_EQ(placement.mRotation.mValues[0][0], -.95f);
+    EXPECT_EQ(mPelvis->getMatrix().getTrans(), osg::Vec3f(10, 0, 0));
+    EXPECT_EQ(mHand->getMatrix().getTrans(), osg::Vec3f(1, 0, 0));
+}
+
+TEST(ActorRigidWorldPose, PreservesRigidInputsAndRejectsInvalidSceneTransforms)
+{
+    const auto rigid = osg::Matrixf::rotate(.4f, osg::Vec3f(0, 0, 1)) * osg::Matrixf::translate(2, 3, 4);
+    EXPECT_EQ(SceneUtil::rigidActorWorldPose(rigid), rigid);
+    const auto scaled = osg::Matrixf::scale(.95f, .95f, 1) * rigid;
+    const auto projected = SceneUtil::rigidActorWorldPose(scaled);
+    EXPECT_EQ(projected.getTrans(), rigid.getTrans());
+    for (unsigned row = 0; row < 3; ++row)
+        for (unsigned col = 0; col < 3; ++col)
+            EXPECT_NEAR(projected(row, col), rigid(row, col), 1e-5);
+    EXPECT_THROW(SceneUtil::rigidActorWorldPose(osg::Matrixf::scale(0, 1, 1)), std::invalid_argument);
+    EXPECT_THROW(SceneUtil::rigidActorWorldPose(osg::Matrixf::scale(-1, 1, 1)), std::invalid_argument);
+    auto invalid = rigid; invalid(0, 3) = 1;
+    EXPECT_THROW(SceneUtil::rigidActorWorldPose(invalid), std::invalid_argument);
+    invalid = rigid; invalid(0, 0) = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(SceneUtil::rigidActorWorldPose(invalid), std::invalid_argument);
+    EXPECT_THROW(NifBullet::ragdollNativeSceneTargetPose(scaled), std::invalid_argument);
+}

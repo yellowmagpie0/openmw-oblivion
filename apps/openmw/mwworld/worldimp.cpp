@@ -91,6 +91,7 @@
 
 #include <components/resource/bulletshape.hpp>
 #include <components/resource/resourcesystem.hpp>
+#include <components/sceneutil/actorragdollpose.hpp>
 #include <components/sceneutil/keyframe.hpp>
 
 #include <components/sceneutil/lightmanager.hpp>
@@ -3548,6 +3549,7 @@ namespace MWWorld
                             [&](const auto& value) { return value.mNodeRecord == node; });
                         if (body == definition->mBodies.end()) return Result{};
                         auto matrix = animated.mRotation.toOsgMatrix(); matrix.setTrans(animated.mTranslation);
+                        matrix = SceneUtil::rigidActorWorldPose(matrix);
                         if (dt > 0 && body->mBlend)
                         {
                             mPhysics->advanceActorRagdollPhysicalNodeControllers(owner, node, time);
@@ -5194,8 +5196,22 @@ namespace MWWorld
     World::PreparedOblivionPhysicalContact::prepareDefaultParalysisContinuation(
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil)
     {
+        return prepareDefaultParalysis(deltas, blockHit, attackerRecoil, false);
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact>
+    World::PreparedOblivionPhysicalContact::prepareDefaultParalysisBeforeSpeech()
+    {
+        return prepareDefaultParalysis({}, false, false, true);
+    }
+
+    std::unique_ptr<World::PreparedOblivionPhysicalContact>
+    World::PreparedOblivionPhysicalContact::prepareDefaultParalysis(
+        const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil, bool beforeSpeech)
+    {
         if (!mData || !mData->mCommitted || !mData->mCanContinue || mData->mIdentity.expired()
-            || !mData->mContact->continuationAvailable()) return nullptr;
+            || !(beforeSpeech ? mData->mContact->preSpeechParalysisAvailable()
+                              : mData->mContact->continuationAvailable())) return nullptr;
         auto& world = *mData->mWorld;
         if (world.mOblivionClearGeneration != mData->mGeneration
             || world.mOblivionCombat.get() != mData->mCombat || world.mPlayer.get() != mData->mPlayer
@@ -5223,7 +5239,8 @@ namespace MWWorld
         // once on commit, without consulting unreachable caster-power inputs.
         auto resolved = deltas;
         resolved.mVictimDefaultParalysisPower = power;
-        return prepareContinuation(resolved, blockHit, attackerRecoil);
+        return world.prepareOblivionPhysicalContactImpl(mData->mId, mData->mAttacker, victim,
+            resolved, blockHit, attackerRecoil, this, beforeSpeech);
     }
 
     bool World::PreparedOblivionPhysicalContact::commit()
@@ -5292,11 +5309,11 @@ namespace MWWorld
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactImpl(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
-        PreparedOblivionPhysicalContact* previous)
+        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis)
     {
         validateOblivionContactDisarms(deltas);
         auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas,
-            blockHit, attackerRecoil, previous);
+            blockHit, attackerRecoil, previous, preSpeechParalysis);
         if (!contact) return nullptr;
         // Defensive mastery can select a disarm while resources are prepared.
         // Its resolved request must reach the same drop factory as an explicit
@@ -5368,7 +5385,7 @@ namespace MWWorld
     std::unique_ptr<World::PreparedOblivionPhysicalContact> World::prepareOblivionPhysicalContactResources(
         std::uint64_t id, const Ptr& attacker, const Ptr& victim,
         const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit, bool attackerRecoil,
-        PreparedOblivionPhysicalContact* previous)
+        PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis)
     {
         if (!mOblivionCombat || attacker.isEmpty())
             return nullptr;
@@ -5483,6 +5500,13 @@ namespace MWWorld
         if (!prepareHeldEquipment()) return nullptr;
         const auto prepare = [&] {
             const auto base = resolveOblivionPlayerDynamicBaseSettings(mStore);
+            if (preSpeechParalysis)
+            {
+                if (!previous || !preparedDeltas.mVictimDefaultParalysisPower)
+                    throw std::logic_error("pre-speech paralysis requires its committed forward-power prefix");
+                return previous->mData->mContact->preparePreSpeechParalysis(
+                    *preparedDeltas.mVictimDefaultParalysisPower, mPlayer.get(), base, getGodModeState());
+            }
             return previous ? previous->mData->mContact->prepareContinuation(preparedDeltas, mPlayer.get(), base,
                                   getGodModeState())
                             : mOblivionCombat->preparePhysicalContact(id, attacker, victim, preparedDeltas, mPlayer.get(),
@@ -5639,6 +5663,12 @@ namespace MWWorld
             || (victim != player && victim.getType() != ESM::REC_NPC_4)) return std::nullopt;
         const auto attackerKey = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
         if (!combat->isActionPending(id, attackerKey)) return std::nullopt;
+        const auto* melee = combat->findMeleeState(attackerKey);
+        if (melee && melee->mStrike && melee->mStrike->mActionId == id
+            && melee->mStrike->mKind == ESM4::MeleeStrikeKind::BackwardPower) return std::nullopt;
+        const bool forwardPower = melee && melee->mStrike && melee->mStrike->mActionId == id
+            && melee->mStrike->mKind == ESM4::MeleeStrikeKind::ForwardPower;
+        if (forwardPower && !supportsOblivionDefaultCombatParalysis(mStore)) return std::nullopt;
         const bool enemyNotification = supportsOblivionEnemyHitNotification(attacker, victim);
         const auto raw = *deltas.mOrdinaryHitArguments;
         if (raw.mUsedSkill < 12 || raw.mUsedSkill > 32 || deltas.mKnockback
@@ -5704,7 +5734,21 @@ namespace MWWorld
         std::array<std::uint16_t, 3> draws;
         auto cursor = combat->combatRandomState();
         for (auto& value : draws) { const auto draw = ESM4::combatRandomDraw(cursor); value = draw.mValue; cursor = draw.mNextState; }
-        const auto prefix = ESM4::ordinaryHitPrefix(input, draws, knockdown, physical, speech, mastery);
+        const auto masteryPrefix = ESM4::hitMasteryPrefix(input,
+            forwardPower ? ESM4::MasteryAttack::Forward : ESM4::MasteryAttack::Normal,
+            draws, knockdown, physical, procs, mastery);
+        for (unsigned i = 0; i < masteryPrefix.mDraws; ++i) combat->drawNativeRandom();
+        if (masteryPrefix.mParalysis)
+        {
+            auto effect = prefixContact->prepareDefaultParalysisBeforeSpeech();
+            if (!effect || !effect->commit())
+                throw std::runtime_error("forward-power paralysis rejected after accepted damage");
+            Log(Debug::Verbose) << "M15 forward-power paralysis published: actor=" << key(victim).serialize()
+                                << " cause=" << id;
+        }
+        const auto speechDraw = ESM4::combatRandomDraw(combat->combatRandomState());
+        const std::array<std::uint16_t, 1> speechDraws{speechDraw.mValue};
+        const auto prefix = ESM4::hitSpeechDecision(input, masteryPrefix.mDamageFlag, speechDraws, speech);
         for (unsigned i = 0; i < prefix.mDraws; ++i) combat->drawNativeRandom();
         const auto dispatchHitSpeech = [&] {
             const auto* current = combat->findActorValues(key(victim));
@@ -5809,7 +5853,7 @@ namespace MWWorld
         const unsigned consumed = ESM4::combatRandomDistance(startRandom, combat->combatRandomState());
         if (mOblivionObservation)
             mOblivionObservation->record("ordinary-hit-phases", {{"actor", key(attacker).serialize()},
-                {"victim", key(victim).serialize()}, {"action", id}, {"prefix_draws", prefix.mDraws},
+                {"victim", key(victim).serialize()}, {"action", id}, {"prefix_draws", masteryPrefix.mDraws + prefix.mDraws},
                 {"damage_flag", prefix.mDamageFlag}, {"side_power_disarmed", sidePowerDisarmed}, {"speech_requested", prefix.mHitSpeech},
                 {"stagger_selected", staggerSelected}, {"stagger_prepared", tail.mVictimReaction.has_value()},
                 {"blocked_dispatch", block.mBlockedDispatch}, {"lower_recoil_draws", block.mDraws},

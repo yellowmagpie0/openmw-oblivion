@@ -1843,14 +1843,28 @@ namespace MWMechanics
                             // A base controller cannot prove which upper
                             // package wins. Keep that owner distinction, and
                             // do not turn an unselected script slot into null.
-                            if (controller || current->mPackage.isNull() || current->mPackage.isDynamic())
+                            if (current->mPackage.isNull() || current->mPackage.isDynamic()
+                                || (controller && (condition.mFunction != 111 || !current->mScriptPackage.isNull())))
                                 return ESM4::ConditionValue::unsupported();
                             const auto* record = package(current->mPackage);
                             if (!record) return ESM4::ConditionValue::missing();
                             if (record->mRawPKDT.size() != 4 && record->mRawPKDT.size() != 8)
                                 return ESM4::ConditionValue::unsupported();
-                            selected = ESM4::NativePackageQueryView{record->mData.type, record->mData.flags,
-                                std::nullopt, std::nullopt};
+                            selected = ESM4::nativeAuthoredPackageQueryView(record->mData.type, record->mData.flags);
+                            if (controller)
+                            {
+                                // IsWaiting needs no winner when both possible
+                                // owners independently give the same answer.
+                                // Package/procedure identity remains unresolved.
+                                const auto authored = ESM4::nativePackageIsWaiting(selected);
+                                const auto combat = ESM4::nativePackageIsWaiting(
+                                    ESM4::nativeCombatControllerPackageView());
+                                if (authored.mStatus == ESM4::ConditionValueStatus::Value
+                                    && combat.mStatus == ESM4::ConditionValueStatus::Value
+                                    && authored.mValue == combat.mValue)
+                                    return authored;
+                                return ESM4::ConditionValue::unsupported();
+                            }
                         }
                         else if (controller)
                             selected = ESM4::nativeCombatControllerPackageView();

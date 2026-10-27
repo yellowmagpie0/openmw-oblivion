@@ -662,9 +662,10 @@ namespace MWMechanics
             result.mRandomDraws = prepared->randomDraws();
             return result;
         }
-        // Longitudinal knockdown/paralysis consequences are not admitted yet.
+        // Backward physical knockdown is not admitted yet.
         if (kind > ESM4::MeleeStrikeKind::StandingPower
-            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
+            && kind != ESM4::MeleeStrikeKind::ForwardPower)
             return std::nullopt;
         const bool power = kind >= ESM4::MeleeStrikeKind::StandingPower;
         std::vector<const ESM4::GameSetting*> settings;
@@ -677,6 +678,12 @@ namespace MWMechanics
         const auto contact = acquireOblivionMeleeContact(world, actionId, attacker, selectedTarget, reach);
         if (!contact)
             return std::nullopt;
+        const auto playerContact = world.getPlayerPtr();
+        const bool forwardPowerPair = kind == ESM4::MeleeStrikeKind::ForwardPower && !contact->isEmpty()
+            && ((attacker == playerContact && contact->getType() == ESM::REC_NPC_4)
+                || (attacker.getType() == ESM::REC_NPC_4 && *contact == playerContact));
+        if (kind == ESM4::MeleeStrikeKind::ForwardPower && !contact->isEmpty() && !forwardPowerPair)
+            return std::nullopt; // Remaining actor routes need the same complete effect owner.
         OblivionOrdinaryContactResult result{*contact, {0, 0}};
         std::int32_t soundWeaponType = -1;
         std::int32_t hitArmorClass = -1;
@@ -792,11 +799,10 @@ namespace MWMechanics
         }
         deltas.mVictimFatigue = -result.mDamage.mFatigue;
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
-        const auto playerContact = world.getPlayerPtr();
         // NPC Hit responses observe the old friend-hit count; notification
         // follows reactions. The stationary enemy path owns both stages.
         const bool phased = !contact->isEmpty() && deltas.mOrdinaryHitArguments
-            && ((attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
+            && (forwardPowerPair || (attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
                     && *contact == playerContact)
                 || nativeWorld->supportsOblivionEnemyHitNotification(attacker, *contact));
         // Original600528 blocked dispatch bypasses5FFF99's general-hit force,
@@ -1300,7 +1306,8 @@ namespace MWMechanics
         if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower
-            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
+            && kind != ESM4::MeleeStrikeKind::ForwardPower)
             return std::nullopt;
         auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
             : oblivionHandToHandContactDamage(world, attacker, victim);
@@ -1511,7 +1518,8 @@ namespace MWMechanics
         if (resistance != 0)
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower
-            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
+            && kind != ESM4::MeleeStrikeKind::ForwardPower)
             return std::nullopt;
         const float incoming = weaponContactDamage(world, attacker, item, kind);
         if (creatureHasSpells(victim))

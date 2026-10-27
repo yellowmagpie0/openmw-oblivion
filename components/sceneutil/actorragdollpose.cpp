@@ -42,14 +42,15 @@ namespace SceneUtil
             return result;
         }
 
-        Nif::NiTransform nativePlacement(const Nif::NiTransform& pose)
+        Nif::NiTransform nativePlacement(const Nif::NiTransform& pose, bool nativeMorphology)
         {
             // Validate rotation independently of its separate native scale.
-            worldPose(pose.mRotation.toOsgMatrix());
+            if (nativeMorphology) rigidActorWorldPose(pose.mRotation.toOsgMatrix());
+            else worldPose(pose.mRotation.toOsgMatrix());
             return NifBullet::composeRagdollBonePose(pose, Nif::NiTransform::getIdentity());
         }
 
-        osg::Matrixf physicalWorldMatrix(const Nif::NiTransform& pose, float placementScale)
+        osg::Matrixf physicalWorldMatrix(const Nif::NiTransform& pose, float placementScale, bool nativeMorphology)
         {
             // Ordinary body sync consumes NiWorld rotation and position, not
             // its separate scale slot. Require authored physical bone scale
@@ -59,6 +60,7 @@ namespace SceneUtil
                 "unadmitted physical bone world scale");
             auto matrix = pose.mRotation.toOsgMatrix();
             matrix.setTrans(pose.mTranslation);
+            if (nativeMorphology) return rigidActorWorldPose(matrix);
             NifBullet::ragdollNativePoseFromBoneWorld(matrix);
             return matrix;
         }
@@ -79,6 +81,33 @@ namespace SceneUtil
             result.mScale = node.mScale;
             return result;
         }
+    }
+
+    osg::Matrixf rigidActorWorldPose(const osg::Matrixf& scenePose)
+    {
+        for (unsigned i = 0; i < 16; ++i)
+            require(std::isfinite(scenePose.ptr()[i]), "nonfinite native actor scene pose");
+        require(scenePose(0, 3) == 0 && scenePose(1, 3) == 0 && scenePose(2, 3) == 0
+                && scenePose(3, 3) == 1, "projective native actor scene pose");
+        const osg::Vec3d x(scenePose(0, 0), scenePose(0, 1), scenePose(0, 2));
+        const osg::Vec3d y(scenePose(1, 0), scenePose(1, 1), scenePose(1, 2));
+        const osg::Vec3d z(scenePose(2, 0), scenePose(2, 1), scenePose(2, 2));
+        const double determinant = x * (y ^ z);
+        require(std::isfinite(determinant) && determinant > 0, "singular or reflected native actor scene pose");
+        if (std::abs(determinant - 1) < 1e-4 && std::abs(x.length2() - 1) < 1e-4
+            && std::abs(y.length2() - 1) < 1e-4 && std::abs(z.length2() - 1) < 1e-4
+            && std::abs(x * y) < 1e-4 && std::abs(x * z) < 1e-4 && std::abs(y * z) < 1e-4)
+            return scenePose;
+        osg::Vec3d translation, scale;
+        osg::Quat rotation, stretchOrientation;
+        osg::Matrixd(scenePose).decompose(translation, rotation, scale, stretchOrientation);
+        const double length = rotation.length();
+        require(std::isfinite(length) && length > 0, "invalid native actor polar rotation");
+        rotation /= length;
+        osg::Matrixf rigid = osg::Matrixf::rotate(rotation);
+        rigid.setTrans(scenePose.getTrans());
+        NifBullet::ragdollNativePoseFromBoneWorld(rigid); // Retain the physical invariant.
+        return rigid;
     }
 
     std::optional<Nif::NiTransform> captureNativeNodeWorldPose(
@@ -473,7 +502,7 @@ namespace SceneUtil
         const Nif::NiTransform& objectWorld)
     {
         require(mImpl->mRootSpace == RootSpace::NativeObjectLocal, "native actor frame requires native object space");
-        const auto placement = nativePlacement(objectWorld);
+        const auto placement = nativePlacement(objectWorld, mImpl->mRootSpace == RootSpace::NativeObjectLocal);
         auto local = mImpl->locals();
         std::unordered_map<std::size_t, const NifBullet::RagdollNativeBlendPublication*> selected;
         for (const auto& publication : publications)
@@ -528,7 +557,8 @@ namespace SceneUtil
         std::vector<NifBullet::RagdollBoneWorldPose> result;
         result.reserve(mImpl->mBodies.size());
         for (const auto& body : mImpl->mBodies)
-            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale)});
+            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale,
+                mImpl->mRootSpace == RootSpace::NativeObjectLocal)});
         mImpl->validateHierarchy();
         for (std::size_t i = 0; i < local.size(); ++i)
         {
@@ -639,12 +669,13 @@ namespace SceneUtil
     std::vector<NifBullet::RagdollBoneWorldPose> ActorRagdollPoseBinding::captureWorldBones(
         const Nif::NiTransform& objectWorld) const
     {
-        const auto placement = nativePlacement(objectWorld);
+        const auto placement = nativePlacement(objectWorld, mImpl->mRootSpace == RootSpace::NativeObjectLocal);
         const auto world = mImpl->worlds(mImpl->locals(), placement);
         std::vector<NifBullet::RagdollBoneWorldPose> result;
         result.reserve(mImpl->mBodies.size());
         for (const auto& body : mImpl->mBodies)
-            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale)});
+            result.push_back({body.mNodeRecord, physicalWorldMatrix(world[body.mNode], placement.mScale,
+                mImpl->mRootSpace == RootSpace::NativeObjectLocal)});
         return result;
     }
 
@@ -652,7 +683,7 @@ namespace SceneUtil
         const Nif::NiTransform& objectWorld)
     {
         require(poses.size() == mImpl->mBodies.size(), "ragdoll renderer snapshot count mismatch");
-        const auto placement = nativePlacement(objectWorld);
+        const auto placement = nativePlacement(objectWorld, mImpl->mRootSpace == RootSpace::NativeObjectLocal);
         auto local = mImpl->locals();
         const auto previousWorld = mImpl->worlds(local, placement);
         std::unordered_map<std::uint32_t, Nif::NiTransform> desired;
@@ -664,7 +695,8 @@ namespace SceneUtil
         {
             const auto found = desired.find(body.mNodeRecord);
             require(found != desired.end(), "missing ragdoll renderer snapshot target");
-            physicalWorldMatrix(previousWorld[body.mNode], placement.mScale);
+            physicalWorldMatrix(previousWorld[body.mNode], placement.mScale,
+                mImpl->mRootSpace == RootSpace::NativeObjectLocal);
             targets.emplace(body.mNode, found->second);
         }
         std::vector<Nif::NiTransform> candidateWorld;

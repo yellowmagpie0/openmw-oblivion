@@ -24105,7 +24105,10 @@ TEST(OblivionWorldTest, StandingPowerRecipesUseRawSkillAndMultiplyWeaponBeforeAt
             const auto side = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
                 item, 0, false, ESM4::MeleeStrikeKind::LeftPower);
             ASSERT_TRUE(side); EXPECT_NEAR(side->mHealth, 27.f, .001f);
-            for (const auto unsupported : {ESM4::MeleeStrikeKind::ForwardPower, ESM4::MeleeStrikeKind::BackwardPower,
+            const auto forward = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                item, 0, false, ESM4::MeleeStrikeKind::ForwardPower);
+            ASSERT_TRUE(forward); EXPECT_NEAR(forward->mHealth, 27.f, .001f);
+            for (const auto unsupported : {ESM4::MeleeStrikeKind::BackwardPower,
                      ESM4::MeleeStrikeKind::Counter, static_cast<ESM4::MeleeStrikeKind>(255)})
             {
                 EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
@@ -36169,15 +36172,15 @@ TEST(OblivionWorldTest, NativeIdleSubjectlessReferenceUsesOppositeActorWithoutIn
 TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstructedCombatGetUp)
 {
     NativeIdleQueryWindows windows;
-    const auto pack = [](std::uint32_t id, std::uint8_t type) {
-        const ESM4::AIPackage::PKDT data{0, type, {0, 0, 0}};
+    const auto pack = [](std::uint32_t id, std::uint8_t type, std::uint32_t flags = 0) {
+        const ESM4::AIPackage::PKDT data{flags, type, {0, 0, 0}};
         const ESM4::AIPackage::PSDT schedule{-1, -1, 0, -1, 0};
         return idleQueryRecord(ESM4::REC_PACK, id,
             idleQuerySub(ESM::fourCC("EDID"), std::string("NativePackageQuery") + '\0')
             + idleQuerySub(ESM::fourCC("PKDT"), idleQueryBytes(data))
             + idleQuerySub(ESM::fourCC("PSDT"), idleQueryBytes(schedule)));
     };
-    const auto records = pack(0xd00, 5) + pack(0xd01, 6)
+    const auto records = pack(0xd00, 5) + pack(0xd01, 6) + pack(0xd02, 6, 0x10000)
         + idleQueryIdle(0xa00, "Dog\\IdleAnims\\Escort.kf", 0, 0, idleQueryCondition(111, 1))
         + idleQueryIdle(0xa01, "Dog\\IdleAnims\\CombatGetUp.kf", 0, 0xa00,
             idleQueryCondition(110, 5) + idleQueryCondition(107, 1));
@@ -36225,6 +36228,17 @@ TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstr
     snapshot.mActorAi = {authored};
     ASSERT_NO_THROW(ai.restore(snapshot));
     EXPECT_EQ(evaluate(110, 14), ESM4::ConditionResult::True);
+    // Native Travel descriptor preparation is independent of the shared AI
+    // phase. No cursor is invented, including for a completed saved package.
+    for (const auto phase : {ESM4::PackagePhase::Path, ESM4::PackagePhase::Wait, ESM4::PackagePhase::Complete})
+    {
+        authored.mPhase = phase; snapshot.mActorAi = {authored};
+        ASSERT_NO_THROW(ai.restore(snapshot));
+        const auto beforeQuery = world.captureOblivionRuntimeState();
+        EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::True);
+        EXPECT_EQ(evaluate(143, 0), ESM4::ConditionResult::Unsupported);
+        EXPECT_EQ(world.captureOblivionRuntimeState(), beforeQuery);
+    }
     auto pending = authored;
     pending.mScriptPackage = pending.mPackage;
     pending.mPackage = {};
@@ -36258,8 +36272,19 @@ TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstr
     ASSERT_NO_THROW(ai.restore(snapshot));
     // A base controller with another package view does not prove the winner.
     EXPECT_EQ(evaluate(110, 5), ESM4::ConditionResult::Unsupported);
-    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::Unsupported);
+    EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::True); // Both candidates have no WAIT.
+    EXPECT_EQ(evaluate(143, 0), ESM4::ConditionResult::Unsupported);
     EXPECT_THROW(world.prepareOblivionGetUpIdle(npc), std::invalid_argument);
+    for (const auto package : {0xd00u, 0xd02u})
+    {
+        authored.mPackage = ESM::FormKey::content("headless.esm", package);
+        authored.mPackageType = package == 0xd00 ? ESM4::AIPackageType::Wander : ESM4::AIPackageType::Travel;
+        authored.mProcedure = package == 0xd00 ? ESM4::PackageProcedure::Wander : ESM4::PackageProcedure::Travel;
+        snapshot.mActorAi = {authored};
+        ASSERT_NO_THROW(ai.restore(snapshot));
+        // Unknown authored progress or forced WAIT cannot establish agreement.
+        EXPECT_EQ(evaluate(111, 0), ESM4::ConditionResult::Unsupported);
+    }
 }
 
 namespace
@@ -36599,5 +36624,200 @@ TEST(OblivionWorldTest, PhasedSidePowerDropGrantsExactlyOnePostSpeechReactionTai
         service.restore(ESM4::RuntimeState::deserializeBinary(afterTail.serializeBinary()), world.getStore());
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), afterTail.serializeBinary());
         EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, packet));
+    }
+}
+
+TEST(OblivionWorldTest, ForwardPowerPreSpeechParalysisPreservesOneFinalTailWithoutReplay)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    (void)prepareParalysisContactPlayer(fixture);
+    auto& service = *world.getOblivionCombatService();
+    const auto attacker = addNativeNpc(fixture, 0x900);
+    const auto victim = addNativeNpc(fixture, 0x901, 100, 0x802);
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(attacker, ESM4::ActorValueProcess::Active));
+    ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, ESM4::ActorValueProcess::Active));
+    installParalysisContactDefinition(fixture);
+    const auto key = victim.getCellRef().getFormKey();
+    const auto id = service.beginMeleeStrike(attacker.getCellRef().getFormKey(),
+        ESM4::MeleeStrikeKind::ForwardPower, "handtohandattackforwardpower");
+    MWMechanics::OblivionPhysicalContactDeltas damage{-1, -3, -2};
+    damage.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 2, 3, 0, 17, true};
+    auto prefix = world.prepareOblivionPhysicalContact(id, attacker, victim, damage);
+    ASSERT_TRUE(prefix);
+    EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech());
+    ASSERT_TRUE(prefix->commit());
+    const auto health = service.getNonPlayerValue(victim, 8);
+    const auto fatigue = service.getNonPlayerValue(victim, 10);
+    const auto rng = service.combatRandomState();
+    auto prematureTail = prefix->prepareContinuation({});
+    auto first = prefix->prepareDefaultParalysisBeforeSpeech();
+    auto competing = prefix->prepareDefaultParalysisBeforeSpeech();
+    ASSERT_TRUE(first); ASSERT_TRUE(competing); ASSERT_TRUE(prematureTail);
+    EXPECT_TRUE(service.findActorValues(key)->mMeleeParalysis.empty());
+    ASSERT_TRUE(first->commit());
+    EXPECT_FALSE(first->commit()); EXPECT_FALSE(competing->commit());
+    EXPECT_FALSE(prematureTail->commit()); // Its victim snapshot precedes the effect.
+    EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech());
+    EXPECT_FALSE(prefix->prepareDefaultParalysisContinuation({})); // No second effect in the final tail.
+    EXPECT_FALSE(first->prepareContinuation({})); // The intermediate handle grants no extra tail.
+    ASSERT_EQ(service.findActorValues(key)->mMeleeParalysis.size(), 1u);
+    EXPECT_EQ(service.findActorValues(key)->mMeleeParalysis[0].mCauseAction, id);
+    EXPECT_FLOAT_EQ(service.findActorValues(key)->mMeleeParalysis[0].mState.mDuration, 10.f);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 10), fatigue);
+    EXPECT_EQ(service.combatRandomState(), rng);
+    MWMechanics::OblivionPhysicalContactDeltas tail;
+    tail.mRandomTransition = service.prepareCombatRandom(1);
+    auto final = prefix->prepareContinuation(tail);
+    auto otherFinal = prefix->prepareContinuation(tail);
+    ASSERT_TRUE(final); ASSERT_TRUE(otherFinal);
+    ASSERT_TRUE(final->commit()); EXPECT_FALSE(otherFinal->commit());
+    EXPECT_FALSE(prefix->prepareContinuation({}));
+    EXPECT_EQ(service.combatRandomState(), tail.mRandomTransition->mNextState);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
+    EXPECT_EQ(service.getNonPlayerValue(victim, 10), fatigue);
+    const auto snapshot = [&] {
+        auto state = captureNativeActorState(fixture, attacker);
+        state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+        return state;
+    };
+    const auto saved = snapshot();
+    service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+    EXPECT_EQ(snapshot().serializeBinary(), saved.serializeBinary());
+    EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech());
+    EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, damage));
+}
+
+TEST(OblivionWorldTest, ForwardPowerPreSpeechParalysisRetriesStaleResistanceAndCannotOutliveFinalTail)
+{
+    for (const int resistance : {50, 100})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = addNativeNpc(fixture, 0x900);
+        const auto victim = addNativeNpc(fixture, 0x901, 100, 0x802);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(attacker, ESM4::ActorValueProcess::Active));
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, ESM4::ActorValueProcess::Active));
+        installParalysisContactDefinition(fixture);
+        const auto key = victim.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(attacker.getCellRef().getFormKey(),
+            ESM4::MeleeStrikeKind::ForwardPower, "handtohandattackforwardpower");
+        MWMechanics::OblivionPhysicalContactDeltas damage{0, -1};
+        damage.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{1, 0, 1, 0, 17, true};
+        auto prefix = world.prepareOblivionPhysicalContact(id, attacker, victim, damage);
+        ASSERT_TRUE(prefix); ASSERT_TRUE(prefix->commit());
+        auto stale = prefix->prepareDefaultParalysisBeforeSpeech();
+        ASSERT_TRUE(stale);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 64, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, resistance));
+        EXPECT_FALSE(stale->commit());
+        auto retry = prefix->prepareDefaultParalysisBeforeSpeech();
+        auto oldEffectTail = prefix->prepareDefaultParalysisContinuation({});
+        ASSERT_TRUE(retry); ASSERT_TRUE(oldEffectTail);
+        if (resistance == 50)
+        {
+            ASSERT_TRUE(retry->commit());
+            EXPECT_FALSE(oldEffectTail->commit());
+            ASSERT_EQ(service.findActorValues(key)->mMeleeParalysis.size(), 1u);
+            EXPECT_FLOAT_EQ(service.findActorValues(key)->mMeleeParalysis[0].mState.mDuration, 5.f);
+        }
+        auto final = prefix->prepareContinuation({});
+        ASSERT_TRUE(final); ASSERT_TRUE(final->commit());
+        EXPECT_FALSE(retry->commit()); // Including the no-effect/resisted case.
+        EXPECT_FALSE(oldEffectTail->commit());
+        EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech());
+    }
+}
+
+TEST(OblivionWorldTest, PreSpeechParalysisRequiresOwnedForwardPowerResourcePrefix)
+{
+    for (const bool forward : {false, true})
+    for (const bool marked : {false, true})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = addNativeNpc(fixture, 0x900);
+        const auto victim = addNativeNpc(fixture, 0x901, 100, 0x802);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(attacker, ESM4::ActorValueProcess::Active));
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(victim, ESM4::ActorValueProcess::Active));
+        const auto id = service.beginMeleeStrike(attacker.getCellRef().getFormKey(), forward
+            ? ESM4::MeleeStrikeKind::ForwardPower : ESM4::MeleeStrikeKind::StandingPower,
+            forward ? "handtohandattackforwardpower" : "handtohandattackpower");
+        MWMechanics::OblivionPhysicalContactDeltas damage{0, -1};
+        if (marked) damage.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{1, 0, 1, 0, 17, true};
+        auto prefix = world.prepareOblivionPhysicalContact(id, attacker, victim, damage);
+        ASSERT_TRUE(prefix); ASSERT_TRUE(prefix->commit());
+        EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech()); // Missing profile never spends either right.
+        installParalysisContactDefinition(fixture);
+        auto effect = prefix->prepareDefaultParalysisBeforeSpeech();
+        EXPECT_EQ(bool(effect), forward && marked);
+        if (effect) ASSERT_TRUE(effect->commit());
+        auto tail = prefix->prepareContinuation({});
+        ASSERT_TRUE(tail); ASSERT_TRUE(tail->commit());
+        EXPECT_FALSE(prefix->prepareDefaultParalysisBeforeSpeech());
+    }
+}
+
+TEST(OblivionWorldTest, ForwardPowerCommonHitPublishesSelectedParalysisBeforeItsFinalTailOnce)
+{
+    for (bool playerAttacks : {false, true})
+    for (int chance : {0, 100})
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto player = prepareParalysisContactPlayer(fixture);
+        const auto npc = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        const auto attacker = playerAttacks ? player : npc, victim = playerAttacks ? npc : player;
+        for (const auto [actor, av, value] : {std::tuple{attacker, 17, 100}, std::tuple{victim, 4, 10}})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, value));
+        std::uint32_t settingId = 0x990;
+        const auto procId = settingId++;
+        ESM4::GameSetting proc{}; proc.mId = {procId, 0}; proc.mEditorId = "iPerkMarksmanParalyzeChance";
+        proc.mData = std::int32_t(chance);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(proc,
+            ESM::FormKey::content("headless.esm", procId));
+        for (const auto [name, value] : {std::pair{"fMagicFatigueDrainBase", 1.f},
+                 std::pair{"fMagicFatigueDrainMult", 0.f}})
+        {
+            const auto id = settingId++;
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            world.getStore().getWritable<ESM4::GameSetting>().insertStatic(setting,
+                ESM::FormKey::content("headless.esm", id));
+        }
+        const auto attackerKey = playerAttacks ? ESM::FormKey::dynamic("player", 1) : npc.getCellRef().getFormKey();
+        const auto victimKey = playerAttacks ? npc.getCellRef().getFormKey() : ESM::FormKey::dynamic("player", 1);
+        const float health = playerAttacks ? service.getNonPlayerValue(npc, 8) : service.getPlayerValue(8);
+        const auto id = service.beginMeleeStrike(attackerKey, ESM4::MeleeStrikeKind::ForwardPower,
+            "handtohandattackforwardpower");
+        MWMechanics::OblivionPhysicalContactDeltas hit{-2, -1};
+        hit.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{1, 0, 1, 0, 17, true};
+        const auto rng = service.combatRandomState();
+        unsigned sounds = 0;
+        EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit, [&] { ++sounds; }));
+        EXPECT_EQ(sounds, 0u);
+        EXPECT_TRUE(service.isActionPending(id));
+        EXPECT_EQ(service.combatRandomState(), rng);
+        EXPECT_EQ(playerAttacks ? service.getNonPlayerValue(npc, 8) : service.getPlayerValue(8), health);
+        installParalysisContactDefinition(fixture);
+        const auto result = world.commitOblivionPlayerNpcHit(id, attacker, victim, hit, [&] { ++sounds; });
+        ASSERT_TRUE(result); EXPECT_EQ(sounds, 1u);
+        EXPECT_EQ(*result, ESM4::combatRandomDistance(rng, service.combatRandomState()));
+        EXPECT_EQ(playerAttacks ? service.getNonPlayerValue(npc, 8) : service.getPlayerValue(8), health - 1);
+        const auto& effects = service.findActorValues(victimKey)->mMeleeParalysis;
+        ASSERT_EQ(effects.size(), chance == 100 ? 1u : 0u);
+        if (!effects.empty())
+        {
+            EXPECT_EQ(effects[0].mCauseAction, id);
+            EXPECT_FLOAT_EQ(effects[0].mState.mDuration, 10.f);
+        }
+        const auto after = captureNativeActorState(fixture, npc).serializeBinary();
+        EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit));
+        EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), after);
     }
 }

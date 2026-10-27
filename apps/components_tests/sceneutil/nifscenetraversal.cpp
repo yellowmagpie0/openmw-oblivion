@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <osg/FrameStamp>
+#include <osg/PositionAttitudeTransform>
 #include <osg/Geometry>
 #include <osg/StateSet>
 #include <osgUtil/UpdateVisitor>
@@ -1846,4 +1847,33 @@ namespace
         EXPECT_EQ(mRoot->getControllerTransform().mTranslation.x(), 10);
         EXPECT_EQ(mChild->getControllerTransform().mTranslation.x(), 5);
     }
+}
+
+TEST_F(NifSceneTraversalTest, ActorAttachmentKeepsOrdinaryCallbacksOutsideThePhysicalRig)
+{
+    osg::ref_ptr<osg::PositionAttitudeTransform> attachment = new osg::PositionAttitudeTransform;
+    attachment->setAttitude(osg::Quat(.2, osg::Vec3f(0, 0, 1)));
+    attachment->setScale({-1, 1, 1}); // Existing mirrored/rotated attachment wrapper.
+    auto part = makeNode(3);
+    attachment->addChild(part); mChild->addChild(attachment);
+    EXPECT_THROW(Binding::prepareObjectLocal(*mRoot, Nif::NiTransform::getIdentity()), std::invalid_argument);
+    attachment->setUserValue("openmwNativeActorAttachment", true);
+    auto binding = Binding::prepareObjectLocal(*mRoot, Nif::NiTransform::getIdentity());
+    ASSERT_TRUE(binding); ASSERT_TRUE(binding->commitPrepared());
+    unsigned partUpdates = 0, projected = 0;
+    part->setUpdateCallback(new Callback([&](Node& node, osg::NodeVisitor&) {
+        ++partUpdates; node.setTranslation({4, 0, 0});
+    }));
+    Binding::Callbacks callbacks;
+    callbacks.mProjected = [&](Node& node, const auto&, auto) {
+        EXPECT_NE(&node, part.get()); ++projected;
+    };
+    binding->updateObjectLocal(mStamp, 1, Nif::NiTransform::getIdentity(), callbacks);
+    EXPECT_EQ(partUpdates, 1u); EXPECT_EQ(projected, 3u);
+    EXPECT_EQ(part->getMatrix().getTrans(), osg::Vec3f(4, 0, 0));
+    EXPECT_FALSE(part->getTraversalMatrix().getMatrix());
+    EXPECT_EQ(binding->cachedWorld(*mChild).mTranslation, osg::Vec3f(15, 0, 0));
+    // Removing the attachment still invalidates the owning rig's child list.
+    mChild->removeChild(attachment);
+    EXPECT_FALSE(binding->isValid());
 }

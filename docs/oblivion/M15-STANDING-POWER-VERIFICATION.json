@@ -374,7 +374,8 @@
     },
     "case_catalog": {
       "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
-      "sha256": "b8bc8d242c19679eabaeac18fee9c0dd4bf9e2592e2d7e468a7201b569a5c333"
+      "sha256": "b8bc8d242c19679eabaeac18fee9c0dd4bf9e2592e2d7e468a7201b569a5c333",
+      "source_commit": "a562e065cc"
     },
     "core_pairs": 8,
     "core_epochs": 8,
@@ -382,5 +383,26 @@
     "supplemental_generic_pairs": 4,
     "engine_tests_each_profile": 2041,
     "next": "Forward/backward power admission and required mastery consequences."
+  },
+  "forward_power_checkpoint": {
+    "status": "Bounded Forward input/PARA/fall/GetUp checkpoint passed; full S4 incomplete",
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/longitudinal-forward-work-01/checkpoint-verification.json",
+      "sha256": "0df1948cbb5d937e52f415b3dee1ab87ddca330a34b27d33ed4cb3c36698d993"
+    },
+    "case_catalog": {
+      "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
+      "sha256": "db74f8e307b8d6309318451e0c42f0c9bfda41db37d92ff4b2684de821416234"
+    },
+    "core_pairs": 12,
+    "core_epochs": 8,
+    "core_whole_restores": 4,
+    "supplemental_capture_pairs": 2,
+    "supplemental_epochs": 1,
+    "supplemental_whole_restores": 1,
+    "engine_cases_each_build": 2045,
+    "tested_source_fingerprint": "2bb34a21ad7fd7baf3369dece7408a0b164707c8caf7d49da9d8f30c4b983bf7",
+    "limits": "Configured keyboard, first-person. References cap15; continuations cap5. Audio disabled; achievedFPS not measured. Normal nonproc reference retains original query-binary provenance; no same-binary claim for that one reused reference. Engine LSan1; rendered ASan/UBSan leaks0. Metadata updated after gates; implementation hashes in receipt are unchanged.",
+    "next": "Backward power admission and Expert physical knockdown, then remaining S4 audit gates."
   }
 }

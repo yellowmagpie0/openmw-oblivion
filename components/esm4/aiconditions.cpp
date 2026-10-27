@@ -312,6 +312,14 @@ namespace ESM4
         return ConditionValue::value(result);
     }
 
+    NativePackageQueryView nativeAuthoredPackageQueryView(std::uint8_t type, std::uint32_t flags)
+    {
+        NativePackageQueryView result{type, flags, std::nullopt, std::nullopt};
+        if (type == 6) // Original5672A0 type6 ->5672DB, no location/target reads.
+            result.mProcedureArrayIndex = 0;
+        return result;
+    }
+
     NativePackageQueryView nativeCombatControllerPackageView()
     {
         return {12, 6, 12, std::nullopt};

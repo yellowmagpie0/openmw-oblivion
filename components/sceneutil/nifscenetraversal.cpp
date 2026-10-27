@@ -111,6 +111,12 @@ namespace SceneUtil
             std::unordered_set<const osg::Node*> visited;
             std::vector<InitialLocal> locals;
             const auto walk = [&](auto&& self, osg::Node& node, std::optional<std::size_t> parent) -> void {
+                // TES4 composed actors attach independent parts beneath their
+                // rig. Keep their normal callbacks/drawing transforms, without
+                // assigning this rig's native body indices or projection rules.
+                bool attachment = false;
+                if (&node != &root && node.getUserValue("openmwNativeActorAttachment", attachment) && attachment)
+                    return;
                 if (!visited.insert(&node).second)
                 {
                     require(node.asDrawable() && !node.getUpdateCallback(), "shared NIF update hierarchy");

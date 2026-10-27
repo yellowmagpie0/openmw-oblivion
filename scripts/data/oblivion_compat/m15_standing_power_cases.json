@@ -281,5 +281,85 @@
     "instrumented_deadlines": "Reuse instrumented_variant action/input600s and scenario1200s; initial SAN attempt retained default10s SDL receipt failure before gameplay.",
     "checkpoint": "build/oblivion-compat/m15/S4/side-power-work-01/checkpoint-verification.json",
     "rendered_ownership": "Refresh the removed NPC carried mesh while reaction owns the controller; do not wait for recovery. Current normal/SAN phased captures and refresh logs verify this."
+  },
+  "forward_power_profiles": {
+    "status": "Bounded normal/SAN forward input, paralysis/fall/GetUp and exact fresh-process gates passed; full S4 incomplete",
+    "purpose": "Master pure-forward normal input publishes one owned default paralysis before hit speech, falls and naturally gets up across a fresh process; full S4 remains incomplete",
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon.json",
+    "continuation_manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon_continuation.json",
+    "fixture": {
+      "source": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
+      "source_sha256": "68c9312375c99182944bba542ab0895cccc1f9993573b2893226ea83f1ed1e89",
+      "schema": 74,
+      "player_base_blade": 100,
+      "target": "content:oblivion.esm:01fc43",
+      "target_restrained": true,
+      "mastery_setting": "iPerkMarksmanParalyzeChance",
+      "setting_type": "int32",
+      "chance_values": [
+        0,
+        100
+      ],
+      "staging_receipts": [
+        {
+          "path": "build/oblivion-compat/m15/S4/longitudinal-forward-work-01/current-chance-0/staging.json",
+          "sha256": "947af8d9d56a9f42ffcea42ae76011b0fd0a50df8a1ba0d3582f8fe5693d50f6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/longitudinal-forward-work-01/current-chance-100/staging.json",
+          "sha256": "0f324905e1830400d380bcbd686bbc4f870fc041242b9ebc857099ad144dfecb"
+        }
+      ],
+      "outcome_injection": false,
+      "player_weapon": "content:oblivion.esm:090615"
+    },
+    "input": {
+      "attack": "U; hold W plus U until onehandattackforwardpower admission, then release both",
+      "activation": "Normal Space runs existing stationary OnActivate StartCombat producer; no assumption that the earlier ordinary hit must Stagger",
+      "view": "first person; normal R camera toggle for mid-recovery inspection",
+      "measured_fps_acceptance": false,
+      "sound_enabled": false,
+      "reference_frame_cap": 15,
+      "continuation_frame_cap": 5
+    },
+    "requirements": [
+      "Distinct ordinary and power contact IDs; power Fatigue cost39; nonlethal real Health changes",
+      "Exactly one selected paralysis cause, owned physical body, no competing Stagger",
+      "Fresh whole-source restore; no hit/effect replay; natural GetUp removes paralysis and physical ownership",
+      "Zero-chance control creates neither paralysis nor ragdoll",
+      "Normal and sanitizer courses with binary/library/epoch pins and direct capture review"
+    ],
+    "native": {
+      "hit_caller": "Retained S2/sources-01/contact-reactions.txt:6002EA..600410",
+      "travel": {
+        "path": "build/oblivion-compat/m15/S4/longitudinal-package-owner-work-01/travel-report.json",
+        "sha256": "426ada2ee8f72e43f57c488e2870996fb92bf708a871722d5635cc228bf7c576"
+      },
+      "travel_scope": "16 original-instruction profiles: type6 preparation writes procedure array0 independent of target/location/cache; array0 [0,44] contains no WAIT. Flags0x10000 still force true. Typed actor/process/package memory supplied; no constructors/simulation; cursor production not proved.",
+      "waiting_owner_rule": "With authored Travel and combat controller candidates, IsWaiting returns their agreed result only; unresolved package/procedure identity stays unsupported."
+    },
+    "remaining": [
+      "Backward power and Expert physical knockdown",
+      "Other actor/weapon/effect/query/interruption/audio/HUD and required FPS/seed campaign in the S4 audit"
+    ],
+    "physical_capture": {
+      "driver": "build/oblivion-compat/m15/S4/longitudinal-forward-work-01/run-08.py",
+      "trigger": "Existing process-local scheduler: at 3 command content:oblivion.esm:01fc43 getav Health; wait for NPC query telemetry before normal R/F5/F12",
+      "assertions": "Mid-save must retain active cause4 paralysis and physical body; direct capture must show fall. Read-only query marks gameplay time; it does not set outcomes.",
+      "reason": "Fixed10wallseconds captured SANtick3 beforefall; processParalysis is excluded from generic scalarGetAV, so use supportedHealth query."
+    },
+    "checkpoint": {
+      "path": "build/oblivion-compat/m15/S4/longitudinal-forward-work-01/checkpoint-verification.json",
+      "sha256": "0df1948cbb5d937e52f415b3dee1ab87ddca330a34b27d33ed4cb3c36698d993"
+    },
+    "runtime_totals": {
+      "core_pairs": 12,
+      "core_epochs": 8,
+      "core_whole_restores": 4,
+      "supplemental_capture_pairs": 2,
+      "supplemental_epochs": 1,
+      "supplemental_whole_restores": 1,
+      "engine_cases_each_build": 2045
+    }
   }
 }

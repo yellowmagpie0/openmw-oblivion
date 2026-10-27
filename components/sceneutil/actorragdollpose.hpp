@@ -18,6 +18,13 @@ namespace NifOsg { class MatrixTransform; }
 
 namespace SceneUtil
 {
+    // Native actor scene matrices can include race morphology. Preserve their
+    // world position and use the polar rotation for the rigid physics bridge;
+    // keep scale/stretch in the scene, outside Bullet's rigid transforms.
+    // Already-rigid inputs retain their exact matrix. Reject nonfinite,
+    // projective, singular and reflected inputs.
+    osg::Matrixf rigidActorWorldPose(const osg::Matrixf& scenePose);
+
     // Read a uniquely named live NIF node using case-sensitive scene lookup.
     // Placement is the actor's native reference root, outside the loaded NIF.
     // Preserve separate NIF scale and observed Single composition. Missing

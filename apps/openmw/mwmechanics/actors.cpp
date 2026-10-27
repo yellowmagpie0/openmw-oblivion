@@ -1928,7 +1928,10 @@ namespace MWMechanics
                 world->setActorActive(actor.getPtr(), true);
 
                 const bool isDead = actor.getPtr().getClass().getCreatureStats(actor.getPtr()).isDead();
-                if (!isDead && actor.getPtr().getClass().getCreatureStats(actor.getPtr()).isParalyzed())
+                // TES4 paralysis enters the owned physical Down/GetUp path.
+                // A legacy animation freeze would give that owner zero frame
+                // time forever, preventing admission of its physical body.
+                if (!isDead && stats.isParalyzed() && world->getGameProfile() != ESM::GameProfile::Oblivion)
                     ctrl.skipAnim();
 
                 // Handle player last, in case a cell transition occurs by casting a teleportation spell

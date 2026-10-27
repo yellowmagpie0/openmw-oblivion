@@ -534,6 +534,9 @@ namespace MWWorld
             std::unique_ptr<Data> mData;
             explicit PreparedOblivionPhysicalContact(std::unique_ptr<Data> data);
             friend class World;
+            std::unique_ptr<PreparedOblivionPhysicalContact> prepareDefaultParalysis(
+                const MWMechanics::OblivionPhysicalContactDeltas& deltas,
+                bool blockHit, bool attackerRecoil, bool beforeSpeech);
         public:
             ~PreparedOblivionPhysicalContact();
             PreparedOblivionPhysicalContact(const PreparedOblivionPhysicalContact&) = delete;
@@ -554,6 +557,9 @@ namespace MWWorld
             std::unique_ptr<PreparedOblivionPhysicalContact> prepareDefaultParalysisContinuation(
                 const MWMechanics::OblivionPhysicalContactDeltas& deltas,
                 bool blockHit = false, bool attackerRecoil = false);
+            // Only an owned forward-power prefix can use this pre-speech
+            // effect phase; its final reaction tail remains available afterward.
+            std::unique_ptr<PreparedOblivionPhysicalContact> prepareDefaultParalysisBeforeSpeech();
             // Scene admission may throw before any contact resources publish.
             bool commit();
         };
@@ -1175,11 +1181,12 @@ namespace MWWorld
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactImpl(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit,
-            bool attackerRecoil, PreparedOblivionPhysicalContact* previous);
+            bool attackerRecoil, PreparedOblivionPhysicalContact* previous, bool preSpeechParalysis = false);
         std::unique_ptr<PreparedOblivionPhysicalContact> prepareOblivionPhysicalContactResources(
             std::uint64_t id, const Ptr& attacker, const Ptr& victim,
             const MWMechanics::OblivionPhysicalContactDeltas& deltas, bool blockHit = false,
-            bool attackerRecoil = false, PreparedOblivionPhysicalContact* previous = nullptr);
+            bool attackerRecoil = false, PreparedOblivionPhysicalContact* previous = nullptr,
+            bool preSpeechParalysis = false);
     };
 }
 

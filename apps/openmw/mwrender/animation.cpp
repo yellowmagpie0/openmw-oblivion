@@ -3033,7 +3033,13 @@ namespace MWRender
         // This read-only binding validates the asset hash, all body records,
         // bone names and hierarchy against the visible model. Equipment and
         // separately loaded face/body parts retain their own asset identities.
-        auto binding = std::make_shared<const SceneUtil::ActorRagdollPoseBinding>(*definition, *mObjectRoot);
+        // A native physical scene projects drawing matrices independently of
+        // its controller locals. Reinspection during GetUp must read those
+        // native locals, including morphology, instead of validating a drawing
+        // projection as an unscaled legacy pose.
+        const auto space = mNativeScene ? SceneUtil::ActorRagdollPoseBinding::RootSpace::NativeObjectLocal
+                                       : SceneUtil::ActorRagdollPoseBinding::RootSpace::ObjectLocal;
+        auto binding = std::make_shared<const SceneUtil::ActorRagdollPoseBinding>(*definition, *mObjectRoot, space);
         NativePhysicalSource result;
         result.mModel = VFS::Path::Normalized(model);
         result.mDefinition = std::move(definition);

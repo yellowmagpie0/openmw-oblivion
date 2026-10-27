@@ -120,6 +120,11 @@ namespace ESM4
     ConditionValue nativePackageIsWaiting(const std::optional<NativePackageQueryView>& package);
     ConditionValue nativeCurrentAiProcedure(const std::optional<NativePackageQueryView>& package);
 
+    // Selected authored PACK descriptor after native5672A0 preparation.
+    // Travel/type6 unconditionally uses array0, independently of actor progress.
+    // Other arrays and every current cursor remain unproved here.
+    NativePackageQueryView nativeAuthoredPackageQueryView(std::uint8_t type, std::uint32_t flags);
+
     // Fields established by native61BB60 and retained by target-list operations.
     // The current procedure cursor is deliberately not inferred from existence.
     NativePackageQueryView nativeCombatControllerPackageView();

@@ -383,8 +383,9 @@ namespace MWMechanics
         // Post-damage compiled default self-PARA request. Caller resolves the
         // spell/profile and current Player caster power; NPC/Creature power is
         // one. Service reads NPC/Creature AV64/AV66; Player's self range bypasses
-        // target resistance. Only the committed contact's once-only continuation
-        // may request it. General spell overrides are separate.
+        // target resistance. A committed contact may request it in its tail
+        // or the forward-power pre-speech phase, once per contact. General spell
+        // overrides are separate.
         std::optional<float> mVictimDefaultParalysisPower{};
     };
 
@@ -826,6 +827,13 @@ namespace MWMechanics
             std::unique_ptr<PreparedPhysicalContact> prepareContinuation(
                 const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
                 const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode = false);
+            // Forward-power resource prefixes alone may publish one default
+            // paralysis before speech, leaving their one final reaction tail.
+            // Alternatives compete; the final tail closes this right too.
+            bool preSpeechParalysisAvailable() const noexcept;
+            std::unique_ptr<PreparedPhysicalContact> preparePreSpeechParalysis(float casterPower,
+                MWWorld::Player* player, const ESM4::PlayerDynamicBaseSettings& playerBase,
+                bool playerGodMode = false);
             // One-shot observers, after the complete World transaction.
             void notifyEquipmentChange(const MWWorld::Ptr& item);
             PreparedPhysicalContact(const PreparedPhysicalContact&) = delete;

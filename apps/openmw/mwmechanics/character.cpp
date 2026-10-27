@@ -2690,6 +2690,9 @@ namespace MWMechanics
                 if (direction)
                     return *direction == ESM4::PowerAttackDirection::Left
                         ? ESM4::MeleeStrikeKind::LeftPower : ESM4::MeleeStrikeKind::RightPower;
+                if (movement.mPosition[0] == 0 && movement.mPosition[1] > 0
+                    && ESM4::combatMastery(baseSkill, settingsForInput().mMastery) == ESM4::CombatMastery::Master)
+                    return ESM4::MeleeStrikeKind::ForwardPower;
             }
             return ESM4::MeleeStrikeKind::StandingPower;
         };
@@ -2766,7 +2769,7 @@ namespace MWMechanics
         }
         if (selected)
         {
-            // Forward/backward and sneak admission remain separate adapter work.
+            // Backward and sneak admission remain separate adapter work.
             constexpr std::array suffixes = {"attackleft", "attackright", "attackpower", "attackforwardpower",
                 "attackbackpower", "attackleftpower", "attackrightpower"};
             const std::string group = family + suffixes[static_cast<unsigned>(*selected)];

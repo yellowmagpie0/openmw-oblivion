@@ -2799,6 +2799,10 @@ namespace MWMechanics
         // All continuations prepared from this contact compete for one right.
         std::shared_ptr<bool> mContinuation = std::make_shared<bool>(false);
         std::weak_ptr<const char> mFrameIdentity;
+        std::shared_ptr<bool> mPreSpeechParalysis = std::make_shared<bool>(false);
+        bool mCanPreparePreSpeechParalysis = false;
+        bool mIsPreSpeechParalysis = false;
+        bool mRequestsParalysis = false;
         bool mIsContinuation = false;
         bool mCanContinue = false;
         bool mCommitted = false;
@@ -2874,16 +2878,40 @@ namespace MWMechanics
         const OblivionPhysicalContactDeltas& deltas, MWWorld::Player* player,
         const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
     {
-        if (!continuationAvailable()) return nullptr;
+        if (!continuationAvailable() || (deltas.mVictimDefaultParalysisPower && *mImpl->mPreSpeechParalysis))
+            return nullptr;
         // This is a capability carried by the committed contact, not a general
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
             || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments)
             throw std::invalid_argument("native contact continuation cannot repeat damage, wear or knockback");
-        return mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
+        auto prepared = mImpl->mOwner->preparePhysicalContactImpl(mImpl->mId,
             mImpl->mAttacker.mActor, mImpl->mVictim->mActor, deltas, player, false, {},
             playerBase, playerGodMode, mImpl->mContinuation);
+        if (prepared) prepared->mImpl->mPreSpeechParalysis = mImpl->mPreSpeechParalysis;
+        return prepared;
+    }
+
+    bool OblivionCombatService::PreparedPhysicalContact::preSpeechParalysisAvailable() const noexcept
+    {
+        return continuationAvailable() && mImpl->mCanPreparePreSpeechParalysis && !*mImpl->mPreSpeechParalysis;
+    }
+
+    std::unique_ptr<OblivionCombatService::PreparedPhysicalContact>
+    OblivionCombatService::PreparedPhysicalContact::preparePreSpeechParalysis(float casterPower,
+        MWWorld::Player* player, const ESM4::PlayerDynamicBaseSettings& playerBase, bool playerGodMode)
+    {
+        if (!preSpeechParalysisAvailable()) return nullptr;
+        OblivionPhysicalContactDeltas effect;
+        effect.mVictimDefaultParalysisPower = casterPower;
+        auto prepared = prepareContinuation(effect, player, playerBase, playerGodMode);
+        if (prepared)
+        {
+            prepared->mImpl->mIsPreSpeechParalysis = true;
+            prepared->mImpl->mPreSpeechParalysis = mImpl->mPreSpeechParalysis;
+        }
+        return prepared;
     }
 
     void OblivionCombatService::PreparedPhysicalContact::notifyEquipmentChange(const MWWorld::Ptr& item)
@@ -3785,6 +3813,7 @@ namespace MWMechanics
         data->mId = id;
         if (!mContactFrameIdentity.mValue) mContactFrameIdentity.mValue = std::make_shared<const char>();
         data->mFrameIdentity = mContactFrameIdentity.mValue;
+        data->mRequestsParalysis = deltas.mVictimDefaultParalysisPower.has_value();
         data->mIsContinuation = bool(continuation);
         if (continuation) data->mContinuation = std::move(continuation);
         data->mAttacker.capture(*this, attacker, attackerKey);
@@ -3803,6 +3832,8 @@ namespace MWMechanics
             && !deltas.mVictimReaction && !deltas.mVictimCounterRequested && !deltas.mVictimCounter
             && (deltas.mDisarms.empty() || deferredSideDisarm)
             && (!strike || strike->mKind != ESM4::MeleeStrikeKind::Counter);
+        data->mCanPreparePreSpeechParalysis = data->mCanContinue && deltas.mOrdinaryHitArguments
+            && strike && strike->mActionId == id && strike->mKind == ESM4::MeleeStrikeKind::ForwardPower;
         for (const auto& [action, owner] : mActionOwners)
             if (owner == attackerKey || (receiving && owner == victimKey))
                 data->mOwnedActions.emplace_back(action, owner);
@@ -3842,6 +3873,8 @@ namespace MWMechanics
             || (data->mIsContinuation ? (*data->mContinuation || data->mFrameIdentity.expired()
                     || !isActionConsumed(data->mId))
                 : !isActionPending(data->mId, data->mAttacker.mValues.mActor))
+            || (*data->mPreSpeechParalysis
+                && (data->mIsPreSpeechParalysis || (data->mIsContinuation && data->mRequestsParalysis)))
             || !data->mAttacker.valid(*this) || (data->mVictim && !data->mVictim->valid(*this)))
             return false;
         const auto& attackerKey = data->mAttacker.mValues.mActor;
@@ -3934,7 +3967,8 @@ namespace MWMechanics
         }
         while (!data.mReactionClocks.empty())
             mAnimationClocks.insert(data.mReactionClocks.extract(data.mReactionClocks.begin()));
-        if (data.mIsContinuation) *data.mContinuation = true;
+        if (data.mIsPreSpeechParalysis) *data.mPreSpeechParalysis = true;
+        else if (data.mIsContinuation) *data.mContinuation = true;
         else consumeContactAction(data.mId, attackerKey);
         if (data.mTransition)
         {

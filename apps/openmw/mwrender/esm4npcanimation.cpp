@@ -410,6 +410,9 @@ namespace MWRender
 
             osg::ref_ptr<osg::Node> attached
                 = SceneUtil::attach(std::move(node), mObjectRoot, {}, attachment, sceneManager, attitude);
+            // This independently loaded part follows the actor's rig through
+            // its ordinary renderer callbacks; it is not another physical rig.
+            attached->setUserValue("openmwNativeActorAttachment", true);
             isolateTes4ActorGeometry(*attached);
             if (!texture.empty())
             {

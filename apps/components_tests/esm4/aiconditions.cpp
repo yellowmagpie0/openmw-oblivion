@@ -294,3 +294,23 @@ TEST(ESM4AIConditions, NativePublicProcedureMappingRejectsUnprovedOrInvalidProgr
     package.mProcedureCursor = 1;
     EXPECT_EQ(ESM4::nativeCurrentAiProcedure(package).mValue, 11); // Raw FOLLOW6.
 }
+
+TEST(ESM4AIConditions, SelectedTravelPackageProvesWaitingWithoutInventingProcedureCursor)
+{
+    // Original5672A0 + full waiting callback: both actual array0 positions
+    // agree, while their public procedures0/17 differ. Flags remain meaningful.
+    for (const std::uint32_t flags : {0u, 0x1000u, 0x10000u, 0xffffffffu})
+    {
+        const auto travel = ESM4::nativeAuthoredPackageQueryView(6, flags);
+        EXPECT_EQ(travel.mType, 6); EXPECT_EQ(travel.mFlags, flags);
+        EXPECT_EQ(travel.mProcedureArrayIndex, 0); EXPECT_FALSE(travel.mProcedureCursor);
+        EXPECT_EQ(ESM4::nativeCurrentAiPackage(travel).mValue, 14);
+        const auto waiting = ESM4::nativePackageIsWaiting(travel);
+        EXPECT_EQ(waiting.mStatus, ESM4::ConditionValueStatus::Value);
+        EXPECT_EQ(waiting.mValue, bool(flags & 0x10000));
+        EXPECT_EQ(ESM4::nativeCurrentAiProcedure(travel).mStatus, ESM4::ConditionValueStatus::Unsupported);
+    }
+    const auto unproved = ESM4::nativeAuthoredPackageQueryView(5, 0);
+    EXPECT_FALSE(unproved.mProcedureArrayIndex);
+    EXPECT_EQ(ESM4::nativePackageIsWaiting(unproved).mStatus, ESM4::ConditionValueStatus::Unsupported);
+}
