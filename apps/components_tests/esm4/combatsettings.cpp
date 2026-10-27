@@ -558,3 +558,24 @@ TEST(ESM4CombatSettings, CombatSpellPowerRejectsAmbiguousMistypedAndNonfiniteWin
     setting.mEditorId = "unrelatedSetting"; setting.mData = std::string("ignored");
     EXPECT_EQ(ESM4::buildCombatSpellPowerSettings(settings).mFatigueBase, 0.f);
 }
+
+TEST(ESM4CombatSettings, SidePowerAdmissionUsesBaseMasteryAndPureLocalStrafe)
+{
+    const auto mastery = ESM4::buildCombatMasterySettings({});
+    for (const float strafe : {-1.f, -.35f, .35f, 1.f})
+    {
+        EXPECT_FALSE(ESM4::sidePowerAttackDirection(49, strafe, 0, mastery));
+        EXPECT_EQ(ESM4::sidePowerAttackDirection(50, strafe, 0, mastery),
+            strafe < 0 ? ESM4::PowerAttackDirection::Left : ESM4::PowerAttackDirection::Right);
+        for (const float forward : {-1.f, -.35f, .35f, 1.f})
+            EXPECT_FALSE(ESM4::sidePowerAttackDirection(100, strafe, forward, mastery));
+    }
+    EXPECT_FALSE(ESM4::sidePowerAttackDirection(100, 0, 0, mastery));
+    const ESM4::CombatMasterySettings custom{{10, 30, 60, 90}};
+    EXPECT_FALSE(ESM4::sidePowerAttackDirection(29, 1, 0, custom));
+    EXPECT_EQ(ESM4::sidePowerAttackDirection(30, 1, 0, custom), ESM4::PowerAttackDirection::Right);
+    EXPECT_THROW(ESM4::sidePowerAttackDirection(100, std::numeric_limits<float>::quiet_NaN(), 0, mastery),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::sidePowerAttackDirection(100, 1, std::numeric_limits<float>::infinity(), mastery),
+        std::invalid_argument);
+}

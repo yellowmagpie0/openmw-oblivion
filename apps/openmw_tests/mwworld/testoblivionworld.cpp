@@ -24100,8 +24100,19 @@ TEST(OblivionWorldTest, StandingPowerRecipesUseRawSkillAndMultiplyWeaponBeforeAt
                 item, 0, false, ESM4::MeleeStrikeKind::StandingPower);
             ASSERT_TRUE(armed); EXPECT_EQ(armed->mHealth, skill == 24 ? 27 : 31);
             EXPECT_EQ(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, attacker, item), 15);
-            EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
-                item, 0, false, ESM4::MeleeStrikeKind::LeftPower));
+            // Numeric resolution admits side power; the contact transaction
+            // separately owns eligibility and any selected disarm consequence.
+            const auto side = MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                item, 0, false, ESM4::MeleeStrikeKind::LeftPower);
+            ASSERT_TRUE(side); EXPECT_NEAR(side->mHealth, 27.f, .001f);
+            for (const auto unsupported : {ESM4::MeleeStrikeKind::ForwardPower, ESM4::MeleeStrikeKind::BackwardPower,
+                     ESM4::MeleeStrikeKind::Counter, static_cast<ESM4::MeleeStrikeKind>(255)})
+            {
+                EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(world, attacker, victim,
+                    item, 0, false, unsupported));
+                EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, attacker, victim,
+                    0, false, unsupported));
+            }
             EXPECT_EQ(snapshot(), before);
         }
 }
@@ -36408,5 +36419,185 @@ TEST(OblivionWorldTest, GetUpPublishesActualSceneRootSetupAndSavedOwnerTogether)
         EXPECT_THROW(world.setupOblivionActorGetUp(animation, actor, 0), std::invalid_argument);
         animation.updatePtr(actor);
         world.endOblivionActorPhysicalPose(animation, actor);
+    }
+}
+
+TEST(OblivionWorldTest, SidePowerDisarmUsesBaseSkillAndProjectedEligibleWeaponWithoutMutation)
+{
+    struct Row { int rank, modifier; unsigned variation, prior; bool roll, drop; };
+    for (const auto kind : {ESM4::MeleeStrikeKind::LeftPower, ESM4::MeleeStrikeKind::RightPower})
+    for (const auto row : {Row{49, 51, 0, 0, false, false}, Row{50, -50, 0, 0, true, true},
+             Row{100, 0, 0, 2, true, true}, Row{50, 0, 1, 0, false, false},
+             Row{50, 0, 2, 0, false, false}, Row{50, 0, 3, 0, false, false},
+             Row{50, 0, 4, 0, true, false}, Row{50, 0, 5, 1, false, false},
+             Row{50, 0, 6, 0, false, false}, Row{50, 0, 7, 0, true, false},
+             Row{50, 0, 8, 0, false, false}})
+    {
+        SCOPED_TRACE(::testing::Message() << unsigned(kind) << ',' << row.rank << ',' << row.variation);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto source = fixture.mPlayer, target = fixture.mAttacker;
+        MWWorld::Ptr item;
+        if (row.variation != 3) item = installMasterTargetWeapon(fixture.mFixture, target, row.variation == 1);
+        source.getClass().getCreatureStats(source).setDrawState(row.variation == 4
+            ? MWMechanics::DrawState::Nothing : MWMechanics::DrawState::Weapon);
+        target.getClass().getCreatureStats(target).setDrawState(row.variation == 2
+            ? MWMechanics::DrawState::Nothing : MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(source, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, row.rank));
+        if (row.modifier) ASSERT_TRUE(world.executeOblivionActorValueCommand(source, 17,
+            ESM4::ActorValueCommand::Mod, ESM4::ActorValueCommandSource::Script, row.modifier));
+        ESM4::GameSetting chance{}; chance.mId = {0x99d, 0}; chance.mEditorId = "iPerkAttackDisarmChance";
+        chance.mData = std::int32_t(row.variation == 7 ? 0 : 100);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance, ESM::FormKey::content("headless.esm", 0x99d));
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        packet.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 0, 3, 0, 17, true};
+        if (row.prior) packet.mRandomTransition = service.prepareCombatRandom(row.prior);
+        if (row.variation == 5)
+        {
+            auto change = MWMechanics::captureOblivionPhysicalConditionChange(target, item, 0);
+            change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Drop;
+            packet.mConditionChanges.push_back(change);
+        }
+        if (row.variation == 6) packet.mOrdinaryHitArguments->mBlockAbsorbedFraction = .5f;
+        if (row.variation == 8) packet.mOrdinaryHitArguments->mDamagePath = false;
+        const auto before = fixture.snapshot().serializeBinary();
+        const auto selected = MWMechanics::prepareOblivionSidePowerConsequences(world, source, target, kind, packet);
+        ASSERT_TRUE(selected); EXPECT_EQ(*selected, row.drop);
+        EXPECT_EQ(packet.mDisarms.size(), unsigned(row.drop));
+        if (row.drop) EXPECT_EQ(packet.mDisarms.front().mItem, item);
+        EXPECT_EQ(packet.mRandomTransition.has_value(), row.prior + row.roll != 0);
+        if (packet.mRandomTransition)
+        {
+            EXPECT_EQ(packet.mRandomTransition->mDraws, row.prior + row.roll);
+        }
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+    }
+}
+
+TEST(OblivionWorldTest, SidePowerAutomaticDisarmOwnsDamageDropAndReplayBoundary)
+{
+    for (const auto kind : {ESM4::MeleeStrikeKind::LeftPower, ESM4::MeleeStrikeKind::RightPower})
+    for (const unsigned outcome : {0u, 1u, 2u})
+    {
+        SCOPED_TRACE(::testing::Message() << unsigned(kind) << ',' << outcome);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+        auto& world = fixture.mWorld;
+        const auto attacker = prepareNativeDropContactActors(fixture), victim = fixture.mActor;
+        auto& service = *world.getOblivionCombatService();
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(attacker, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 50));
+        ESM4::GameSetting chance{}; chance.mId = {0x99d, 0}; chance.mEditorId = "iPerkAttackDisarmChance";
+        chance.mData = std::int32_t(100);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance, ESM::FormKey::content("headless.esm", 0x99d));
+        auto& inventory = victim.getClass().getInventoryStore(victim);
+        const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto key = attacker.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(key, kind,
+            kind == ESM4::MeleeStrikeKind::LeftPower ? "handtohandattackleftpower" : "handtohandattackrightpower");
+        service.setProcessAction(key, 2);
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        packet.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 0, 3, 0, 17, true};
+        // Independently owned scene, same existing explicit resource factory.
+        const std::array<MWWorld::EquippedWeaponDrop, 1> drops{{{victim, item, *fixture.mAnimation, {}, true}}};
+        const auto before = world.captureOblivionRuntimeState();
+        const auto health = service.getNonPlayerValue(victim, 8), fatigue = service.getNonPlayerValue(attacker, 10);
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, packet));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        auto plan = world.prepareOblivionPhysicalContactWithWeaponDrops(id, attacker, victim, packet,
+            *fixture.mObjects, *fixture.mPhysics, drops);
+        ASSERT_TRUE(plan); EXPECT_EQ(plan->randomDraws(), 1u);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+        if (outcome == 1)
+        {
+            plan.reset();
+            EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), before.serializeBinary());
+            ASSERT_NE(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), item);
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+            continue;
+        }
+        if (outcome == 2)
+        {
+            item.getCellRef().setNativeItemCondition(49.f);
+            EXPECT_FALSE(plan->commit());
+            EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
+            EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue);
+            EXPECT_EQ(service.combatRandomState(), before.mCombatRngState);
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+            continue;
+        }
+        ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+        EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 3);
+        EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue - 7);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        const auto reference = world.getWorldModel().getDynamicNativePtr(
+            ESM::FormKey::dynamic("native-reference", before.mNextDynamicSerial));
+        ASSERT_FALSE(reference.isEmpty()); EXPECT_TRUE(fixture.mPhysics->hasLooseObject(reference));
+        EXPECT_EQ(reference.getCellRef().getNativeItemCondition(), 50.f);
+        EXPECT_EQ(reference.getCellRef().getNativeDropRelations().mDropper, victim.getCellRef().getFormKey());
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mNextDynamicSerial, before.mNextDynamicSerial + 1);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, packet));
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, PhasedSidePowerDropGrantsExactlyOnePostSpeechReactionTail)
+{
+    for (const auto kind : {ESM4::MeleeStrikeKind::LeftPower, ESM4::MeleeStrikeKind::RightPower})
+    {
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+        auto& world = fixture.mWorld;
+        const auto attacker = prepareNativeDropContactActors(fixture), victim = fixture.mActor;
+        auto& service = *world.getOblivionCombatService();
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(attacker, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 50));
+        ESM4::GameSetting chance{}; chance.mId = {0x99d, 0}; chance.mEditorId = "iPerkAttackDisarmChance";
+        chance.mData = std::int32_t(100);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance, ESM::FormKey::content("headless.esm", 0x99d));
+        auto& inventory = victim.getClass().getInventoryStore(victim);
+        const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto source = attacker.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(source, kind,
+            kind == ESM4::MeleeStrikeKind::LeftPower ? "handtohandattackleftpower" : "handtohandattackrightpower");
+        service.setProcessAction(source, 2);
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        packet.mOrdinaryHitArguments = MWMechanics::OblivionOrdinaryHitArguments{3, 0, 3, 0, 17, true};
+        packet.mDeferSidePowerStagger = true;
+        const auto before = world.captureOblivionRuntimeState();
+        const auto health = service.getNonPlayerValue(victim, 8);
+        const std::array<MWWorld::EquippedWeaponDrop, 1> drops{{{victim, item, *fixture.mAnimation, {}, true}}};
+        auto prefix = world.prepareOblivionPhysicalContactWithWeaponDrops(id, attacker, victim, packet,
+            *fixture.mObjects, *fixture.mPhysics, drops);
+        ASSERT_TRUE(prefix); ASSERT_TRUE(prefix->commit());
+        EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 3);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        EXPECT_EQ(service.getProcessAction(victim.getCellRef().getFormKey()), -1);
+        const auto afterDrop = world.captureOblivionRuntimeState();
+        EXPECT_EQ(afterDrop.mNextDynamicSerial, before.mNextDynamicSerial + 1);
+        // These are explicit resources for the existing independent test scene;
+        // runtime binds the projected unarmed Stagger after speech callbacks.
+        MWMechanics::OblivionPhysicalContactDeltas tail;
+        tail.mVictimReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Stagger, "handtohandstagger"};
+        auto first = prefix->prepareContinuation(tail);
+        auto competing = prefix->prepareContinuation(tail);
+        ASSERT_TRUE(first); ASSERT_TRUE(competing);
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), afterDrop.serializeBinary());
+        ASSERT_TRUE(first->commit()); EXPECT_FALSE(competing->commit());
+        EXPECT_FALSE(first->commit()); EXPECT_FALSE(prefix->prepareContinuation(tail));
+        const auto afterTail = world.captureOblivionRuntimeState();
+        EXPECT_EQ(afterTail.mCombatRngState, afterDrop.mCombatRngState);
+        EXPECT_EQ(afterTail.mNextDynamicSerial, afterDrop.mNextDynamicSerial);
+        EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 3);
+        EXPECT_EQ(service.getProcessAction(victim.getCellRef().getFormKey()), 8);
+        service.restore(ESM4::RuntimeState::deserializeBinary(afterTail.serializeBinary()), world.getStore());
+        EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), afterTail.serializeBinary());
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, packet));
     }
 }

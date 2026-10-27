@@ -5139,6 +5139,7 @@ namespace MWWorld
         Ptr mAttacker, mVictim;
         bool mCommitted = false, mCanContinue = false, mSuppressBlockHit = false;
         bool mCounterSelected = false, mCounterPrepared = false;
+        bool mSidePowerDisarmed = false;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
@@ -5330,6 +5331,11 @@ namespace MWWorld
         MWPhysics::PhysicsSystem& physics, std::span<const EquippedWeaponDrop> drops)
     {
         validateOblivionContactDisarms(deltas);
+        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas);
+        if (!contact) return nullptr;
+        auto resolved = deltas;
+        resolved.mDisarms = contact->mData->mResolvedDisarms;
+        validateOblivionContactDisarms(resolved);
         std::size_t expected = 0;
         for (const auto& change : deltas.mConditionChanges)
             if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
@@ -5343,10 +5349,10 @@ namespace MWWorld
                     || change.mOwner.getType() != ESM::REC_NPC_4 || count != 1)
                     throw std::invalid_argument("native contact drop requires one matching broken NPC weapon");
             }
-        for (const auto& disarm : deltas.mDisarms)
+        for (const auto& disarm : resolved.mDisarms)
         {
             ++expected;
-            const auto condition = disarmConditionAfterWear(deltas, disarm);
+            const auto condition = disarmConditionAfterWear(resolved, disarm);
             if (std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
                     return drop.mActor == disarm.mOwner && drop.mItem == disarm.mItem
                         && drop.mConditionAfterWear == condition && drop.mUseDefaultPlacement;
@@ -5355,8 +5361,6 @@ namespace MWWorld
         }
         if (expected == 0 || expected != drops.size())
             throw std::invalid_argument("native contact drop requests do not match contact dispositions");
-        auto contact = prepareOblivionPhysicalContactResources(id, attacker, victim, deltas);
-        if (!contact) return nullptr;
         contact->mData->mDrops = prepareEquippedWeaponDrops(*this, objects, physics, drops);
         return contact;
     }
@@ -5486,6 +5490,24 @@ namespace MWWorld
         };
         auto contact = prepare();
         if (!contact) return nullptr;
+        bool sidePowerQuery = false, sidePowerDisarmed = false;
+        const auto* melee = mOblivionCombat->findMeleeState(key);
+        if (!previous && contact->victimRemainsAlive() && preparedDeltas.mOrdinaryHitArguments
+            && melee && melee->mStrike && melee->mStrike->mActionId == id
+            && (melee->mStrike->mKind == ESM4::MeleeStrikeKind::LeftPower
+                || melee->mStrike->mKind == ESM4::MeleeStrikeKind::RightPower))
+        {
+            sidePowerQuery = true;
+            // Stage disarm in the damage transaction, before speech callbacks.
+            // Its draw follows wear, rather than requiring native RNG parity
+            // with the later general-hit knockdown/speech selection.
+            const auto selected = MWMechanics::prepareOblivionSidePowerConsequences(
+                *this, attacker, victim, melee->mStrike->mKind, preparedDeltas);
+            if (!selected) return nullptr;
+            sidePowerDisarmed = *selected;
+            if (sidePowerDisarmed && !preparedDeltas.mDeferSidePowerStagger
+                && !prepareOblivionStaggerReaction(id, victim, preparedDeltas)) return nullptr;
+        }
         const bool defensiveQuery = blockHit && !deltas.mVictimCounterRequested && contact->victimRemainsAlive();
         bool counterSelected = deltas.mVictimCounterRequested;
         if (defensiveQuery)
@@ -5514,7 +5536,7 @@ namespace MWWorld
             || (!victim.isEmpty() && !prepareHeldCancellation(victim,
                 preparedDeltas.mVictimReaction, preparedDeltas.mVictimHeldSources))) return nullptr;
         if (!prepareHeldEquipment()) return nullptr;
-        if (defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
+        if (sidePowerQuery || defensiveQuery || preparedDeltas.mVictimReaction || preparedDeltas.mAttackerReaction || preparedDeltas.mVictimCounter)
         {
             contact = prepare();
             if (!contact) return nullptr;
@@ -5534,6 +5556,7 @@ namespace MWWorld
         data->mScene = mWorldScene.get();
         data->mGodMode = getGodModeState();
         data->mRandomDraws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws : 0;
+        data->mSidePowerDisarmed = sidePowerDisarmed;
         data->mCounterSelected = counterSelected;
         data->mCounterPrepared = preparedDeltas.mVictimCounter.has_value();
         data->mContact = std::move(contact);
@@ -5641,7 +5664,9 @@ namespace MWWorld
         const auto procs = ESM4::buildMasteryProcSettings(settings);
         const auto cone = ESM4::buildCombatHitConeAngle(settings);
         const auto startRandom = combat->combatRandomState();
-        auto prefixContact = prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+        auto prefixDeltas = deltas;
+        prefixDeltas.mDeferSidePowerStagger = true;
+        auto prefixContact = prepareOblivionPhysicalContact(id, attacker, victim, prefixDeltas);
         if (!prefixContact) return std::nullopt;
         const auto attackerLease = attacker.getRefData().prepareRuntimeIdentity();
         const auto victimLease = victim.getRefData().prepareRuntimeIdentity();
@@ -5702,13 +5727,14 @@ namespace MWWorld
         if (!contextExists()) return std::nullopt;
         MWMechanics::OblivionPhysicalContactDeltas tail;
         bool staggerSelected = false;
-        if (prefix.mDamageFlag && combat->getProcessKnockedState(key(victim)) == 0)
+        const bool sidePowerDisarmed = prefixContact->mData->mSidePowerDisarmed;
+        if ((sidePowerDisarmed || prefix.mDamageFlag) && combat->getProcessKnockedState(key(victim)) == 0)
         {
             const auto& from = attacker.getRefData().getPosition();
             const auto& to = victim.getRefData().getPosition();
             const float dx = static_cast<float>(double(from.pos[0]) - to.pos[0]);
             const float dy = static_cast<float>(double(from.pos[1]) - to.pos[1]);
-            staggerSelected = ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy), cone).mInside;
+            staggerSelected = sidePowerDisarmed || ESM4::combatHitCone(to.rot[2], std::atan2(dx, dy), cone).mInside;
             if (staggerSelected && !prepareOblivionStaggerReaction(id, victim, tail))
                 throw std::runtime_error("ordinary hit Stagger cannot bind its current native resources");
         }
@@ -5784,7 +5810,7 @@ namespace MWWorld
         if (mOblivionObservation)
             mOblivionObservation->record("ordinary-hit-phases", {{"actor", key(attacker).serialize()},
                 {"victim", key(victim).serialize()}, {"action", id}, {"prefix_draws", prefix.mDraws},
-                {"damage_flag", prefix.mDamageFlag}, {"speech_requested", prefix.mHitSpeech},
+                {"damage_flag", prefix.mDamageFlag}, {"side_power_disarmed", sidePowerDisarmed}, {"speech_requested", prefix.mHitSpeech},
                 {"stagger_selected", staggerSelected}, {"stagger_prepared", tail.mVictimReaction.has_value()},
                 {"blocked_dispatch", block.mBlockedDispatch}, {"lower_recoil_draws", block.mDraws},
                 {"lower_recoil_selected", block.mAttackerRecoil},

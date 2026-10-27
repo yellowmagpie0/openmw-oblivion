@@ -97,6 +97,13 @@ namespace MWMechanics
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& defender,
         OblivionPhysicalContactDeltas& deltas, bool cachedDispatch = false);
 
+    // Append a surviving general-hit side-power query to the contact's wear
+    // cursor without mutating live state. True means an owned disarm selected;
+    // nullopt means the selected consequence cannot currently be prepared.
+    std::optional<bool> prepareOblivionSidePowerConsequences(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        ESM4::MeleeStrikeKind kind, OblivionPhysicalContactDeltas& deltas);
+
     // Adapter for this fork's existing -100..100 GUI slider. Config values
     // outside that UI range saturate; this is not native INI deserialization.
     float oblivionNormalizedDifficulty(int difficultySetting);

@@ -3791,10 +3791,18 @@ namespace MWMechanics
         if (receiving) data->mVictim.emplace().capture(*this, victim, victimKey);
         // A resource prefix may continue once. Already selected consequences
         // and Counter's separate phase1 path must not grant another tail.
+        const auto* strike = data->mAttacker.mMelee && data->mAttacker.mMelee->mStrike
+            ? &*data->mAttacker.mMelee->mStrike : nullptr;
+        // A phased side-power prefix owns the drop before speech, but still
+        // needs its one post-speech reaction tail. This does not grant another
+        // right to Counter, explicit disarms, or an already selected reaction.
+        const bool deferredSideDisarm = deltas.mDeferSidePowerStagger && deltas.mOrdinaryHitArguments
+            && strike && (strike->mKind == ESM4::MeleeStrikeKind::LeftPower
+                || strike->mKind == ESM4::MeleeStrikeKind::RightPower);
         data->mCanContinue = !data->mIsContinuation && receiving && !deltas.mAttackerReaction
             && !deltas.mVictimReaction && !deltas.mVictimCounterRequested && !deltas.mVictimCounter
-            && deltas.mDisarms.empty() && (!data->mAttacker.mMelee || !data->mAttacker.mMelee->mStrike
-                || data->mAttacker.mMelee->mStrike->mKind != ESM4::MeleeStrikeKind::Counter);
+            && (deltas.mDisarms.empty() || deferredSideDisarm)
+            && (!strike || strike->mKind != ESM4::MeleeStrikeKind::Counter);
         for (const auto& [action, owner] : mActionOwners)
             if (owner == attackerKey || (receiving && owner == victimKey))
                 data->mOwnedActions.emplace_back(action, owner);

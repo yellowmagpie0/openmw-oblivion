@@ -153,5 +153,133 @@
     "preload": "Resolve an actual libasan ELF shared library, then set LD_PRELOAD in a private manifest copy; the compiler libasan.so path can be a linker script.",
     "action_and_input_deadline_seconds": 600,
     "scenario_deadline_seconds": 1200
+  },
+  "side_power_profiles": {
+    "purpose": "Existing standing-power course extended to Journeyman sideways admission and owned NPC disarm; bounded normal/sanitizer gameplay and fresh-process gates passed. Full S4 remains incomplete.",
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon.json",
+    "continuation_manifest": "scripts/data/oblivion_compat/oblivion_m15_standing_power_weapon_continuation.json",
+    "input": {
+      "source": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
+      "sha256": "68c9312375c99182944bba542ab0895cccc1f9993573b2893226ea83f1ed1e89",
+      "schema": 74,
+      "fixture": "scripts/data/oblivion_compat/m15_stationary_partition_fixture.json",
+      "plugin": "build/oblivion-compat/m15/S4/combined-wall-work-01/partition-fixture-02/M15StationaryOpponent.esp",
+      "mutations": {
+        "player_base_blade": 50,
+        "target": "content:oblivion.esm:01fc43",
+        "target_existing_weapon": "content:oblivion.esm:090615",
+        "target_weapon_condition": 50,
+        "target_draw_state": 1,
+        "target_ai_restrained": true
+      },
+      "outcome_injection": false
+    },
+    "chance_fixture": {
+      "master": "Oblivion.esm",
+      "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "plugin": "M15SidePowerChance.esp",
+      "setting": "iPerkAttackDisarmChance",
+      "type": "int32",
+      "values": [
+        100,
+        0
+      ],
+      "record": "Override the existing record when present; otherwise define plugin-local FormID 0x01000800. Preserve all other content."
+    },
+    "input_overlay": {
+      "after_ordinary_contact": "Admit an ordinary U press and release U at its production action log. Wait for that contact and completion. Hold A/D and U, then release both when the side-power animation starts; one queued ordinary windup is replaced by power.",
+      "device": "configured keyboard normal input",
+      "view": "first person",
+      "frame_cap": 15,
+      "measured_fps_acceptance": false
+    },
+    "requirements": [
+      "Actual ordinary then side power contact with distinct owned action IDs and power Fatigue expenditure.",
+      "Proc: exactly one intact weapon drop, preserved condition/dropper identity, visible projected unarmed Stagger.",
+      "Non-proc: no drop and target weapon remains equipped.",
+      "Fresh process preserves damage, inventories and RNG with no contact/drop replay.",
+      "Normal and sanitizer runs; original source and runtime binary/library/epoch provenance retained."
+    ],
+    "fidelity": "Reuse existing independent mastery/multiplier and caller-order evidence. Damage/drop publish before speech; forced Stagger follows speech on the phased route. Disarm RNG is staged after wear, so original RNG sequence parity is not claimed. Player-target and spare replacement weapon drop policies remain incomplete.",
+    "fixed_seeds": {
+      "proc": 1,
+      "nonproc": 2,
+      "inclusive_boundary": "Seed1 also procs at chance0: its selected roll is zero under the existing inclusive comparison. Keep that right-power positive control; seed2 supplies nonproc."
+    },
+    "phased_profile": {
+      "activation": "Normal Space before the first attack, with the existing stationary OnActivate StartCombat producer. NPC stays restrained, so the combat target/controller persists without another NPC attack. Wait for the fixed-seed ordinary-hit NPC Stagger to recover before holding strafe+U, then verify the new post-disarm handtohand Stagger.",
+      "requirements": [
+        "ordinary-hit-phases action4 side_power_disarmed=true",
+        "enemy-hit-notification action4",
+        "forced handtohandstagger and one owned drop",
+        "fresh whole-source restore and natural recovery without replay"
+      ],
+      "runtime_acceptance": {
+        "passed": true,
+        "normal": {
+          "path": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-phased-render-normal-01-verification.json",
+          "sha256": "f74a41a3c8e57c3a5275c858101aaf8fe1c3f6b8a2c3ab445117018cea42971c",
+          "game_sha256": "b083e8c01a394758d2887933b01ab1ee7fd1e9724bf8faf95737b6e7f30567ab",
+          "pairs": 2,
+          "epochs": 2,
+          "whole_restores": 1,
+          "scope": "Current rendered disarm + phased speech/reaction tail"
+        },
+        "sanitize": {
+          "path": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-phased-render-sanitize-01-verification.json",
+          "sha256": "594a722956f6da0d495c5a112a7b42c4a3e0757fd32810c4d611d77e861c63ab",
+          "game_sha256": "a02fbce7896d485623f444063f7906e06041752217a4d637c6a54cea8d91faa8",
+          "pairs": 2,
+          "epochs": 2,
+          "whole_restores": 1,
+          "scope": "Current rendered disarm + phased speech/reaction tail"
+        }
+      }
+    },
+    "normal_generic_evidence": {
+      "side-power-left-normal-03": {
+        "receipt": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-left-normal-03-verification.json",
+        "sha256": "23d4b6613890785abd8be0b4ecc4568b15249022d0d98328d937367d3732137a",
+        "game_sha256": "3ca2c2695c7230ed81b502ba5c3960d87491fe282e074ea0440832ff0e240708",
+        "scope": "Generic hit route before phased-tail correction; original binary provenance retained."
+      },
+      "side-power-right-normal-01": {
+        "receipt": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-right-normal-01-verification.json",
+        "sha256": "36e12061909d7bb48da95b62a9ff0a40512379d54e008b13aba7ec0be9d2be48",
+        "game_sha256": "3ca2c2695c7230ed81b502ba5c3960d87491fe282e074ea0440832ff0e240708",
+        "scope": "Generic hit route before phased-tail correction; original binary provenance retained."
+      },
+      "side-power-right-nonproc-normal-01": {
+        "receipt": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-right-nonproc-normal-01-verification.json",
+        "sha256": "43a53d949455210dac59057d50227ceac54e0b45a0ab30c0540c854314b8acfe",
+        "game_sha256": "3ca2c2695c7230ed81b502ba5c3960d87491fe282e074ea0440832ff0e240708",
+        "scope": "Generic hit route before phased-tail correction; original binary provenance retained."
+      }
+    },
+    "nonproc_profile": {
+      "seed": 2,
+      "chance": 0,
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-right-nonproc-normal-01-verification.json",
+        "sha256": "43a53d949455210dac59057d50227ceac54e0b45a0ab30c0540c854314b8acfe",
+        "game_sha256": "3ca2c2695c7230ed81b502ba5c3960d87491fe282e074ea0440832ff0e240708",
+        "pairs": 2,
+        "epochs": 2,
+        "whole_restores": 1,
+        "scope": "Retained unchanged non-proc route"
+      },
+      "sanitize": {
+        "path": "build/oblivion-compat/m15/S4/side-power-work-01/side-power-right-nonproc-sanitize-01-verification.json",
+        "sha256": "dcc7a7dc6426baf7a0de40ea1572146891b326bd3e2ec14163d226e92e2e63d3",
+        "game_sha256": "8662d7ae73b4ddd8536b251f2c59396e00ab3dbff7b3c4786a1773f86468fb6b",
+        "pairs": 2,
+        "epochs": 2,
+        "whole_restores": 1,
+        "scope": "Retained unchanged non-proc route"
+      }
+    },
+    "instrumented_deadlines": "Reuse instrumented_variant action/input600s and scenario1200s; initial SAN attempt retained default10s SDL receipt failure before gameplay.",
+    "checkpoint": "build/oblivion-compat/m15/S4/side-power-work-01/checkpoint-verification.json",
+    "rendered_ownership": "Refresh the removed NPC carried mesh while reaction owns the controller; do not wait for recovery. Current normal/SAN phased captures and refresh logs verify this."
   }
 }

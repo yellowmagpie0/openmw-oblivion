@@ -515,6 +515,76 @@ namespace MWMechanics
         return OblivionDefensiveBlockConsequences{proc.mTriggered};
     }
 
+    std::optional<bool> prepareOblivionSidePowerConsequences(MWBase::World& world,
+        const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+        ESM4::MeleeStrikeKind kind, OblivionPhysicalContactDeltas& deltas)
+    {
+        if (kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            return false;
+        const auto player = world.getPlayerPtr();
+        auto* nativeWorld = dynamic_cast<MWWorld::World*>(&world);
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || attacker.isEmpty() || victim.isEmpty() || attacker == victim
+            || !deltas.mOrdinaryHitArguments) return std::nullopt;
+        const auto& raw = *deltas.mOrdinaryHitArguments;
+        if (!raw.mDamagePath || (attacker != player && attacker.getType() != ESM::REC_NPC_4)) return false;
+        if (raw.mUsedSkill != 14 && raw.mUsedSkill != 16 && raw.mUsedSkill != 17) return std::nullopt;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const auto victimKey = victim == player ? ESM::FormKey::dynamic("player", 1) : victim.getCellRef().getFormKey();
+        const auto hand = victim == player ? service->getPlayerBaseValue(17)
+            : service->getNonPlayerBaseValue(victimKey, 17, world.getStore());
+        if (raw.mBlockAbsorbedFraction > 0
+            || (raw.mBareHandBlock && ESM4::combatMastery(hand, mastery) >= ESM4::CombatMastery::Journeyman)) return false;
+        auto& inventory = victim.getClass().getInventoryStore(victim);
+        const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const bool armed = right != inventory.end() && right->getType() == ESM::REC_WEAP
+            && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                return change.mOwner == victim && change.mItem == *right
+                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None;
+            }) && std::none_of(deltas.mDisarms.begin(), deltas.mDisarms.end(), [&](const auto& drop) {
+                return drop.mOwner == victim && drop.mItem == *right;
+            });
+        const ESM4::Weapon* weapon = nullptr;
+        if (armed)
+        {
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), right->getCellRef().getRefId());
+            const auto* form = id.getIf<ESM::FormId>();
+            weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
+            if (!weapon) return std::nullopt;
+        }
+        const auto source = attacker == player ? ESM::FormKey::dynamic("player", 1) : attacker.getCellRef().getFormKey();
+        const auto baseSkill = attacker == player ? service->getPlayerBaseValue(raw.mUsedSkill)
+            : service->getNonPlayerBaseValue(source, raw.mUsedSkill, world.getStore());
+        const auto draw = ESM4::combatRandomDraw(deltas.mRandomTransition
+            ? deltas.mRandomTransition->mNextState : service->combatRandomState());
+        const auto proc = ESM4::sidePowerDisarm(baseSkill,
+            kind == ESM4::MeleeStrikeKind::LeftPower ? ESM4::MasteryAttack::Left : ESM4::MasteryAttack::Right, true,
+            {armed, victim.getClass().getCreatureStats(victim).getDrawState() == DrawState::Weapon,
+                weapon && (weapon->mFlags & ESM4::Rec_Persistent), victim == player && world.getGodModeState()},
+            attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon,
+            draw.mValue % 100, ESM4::buildMasteryProcSettings(settings), mastery);
+        auto candidate = deltas;
+        if (proc.mConsumesDraw)
+            candidate.mRandomTransition = service->prepareCombatRandom(
+                (deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
+        if (proc.mTriggered)
+        {
+            // Same explicit drop-policy boundary as Counter and defensive disarm.
+            if (victim == player || victim.getType() != ESM::REC_NPC_4) return std::nullopt;
+            for (auto item = inventory.begin(); item != inventory.end(); ++item)
+                if (item->getType() == ESM::REC_WEAP && *item != *right) return std::nullopt;
+            candidate.mDisarms.push_back({victim, *right});
+            candidate.mKnockback.reset();
+        }
+        deltas = std::move(candidate);
+        return proc.mTriggered;
+    }
+
     void emitOblivionMeleeHitSounds(MWBase::World& world, std::uint64_t action,
         const MWWorld::Ptr& attacker, const OblivionOrdinaryContactResult& contact)
     {
@@ -592,11 +662,11 @@ namespace MWMechanics
             result.mRandomDraws = prepared->randomDraws();
             return result;
         }
-        // Directional unlocked mastery consequences must join this transaction
-        // before those contacts are admitted. Standing power has no proc hook.
-        if (kind > ESM4::MeleeStrikeKind::StandingPower)
+        // Longitudinal knockdown/paralysis consequences are not admitted yet.
+        if (kind > ESM4::MeleeStrikeKind::StandingPower
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
             return std::nullopt;
-        const bool power = kind == ESM4::MeleeStrikeKind::StandingPower;
+        const bool power = kind >= ESM4::MeleeStrikeKind::StandingPower;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
@@ -1229,7 +1299,9 @@ namespace MWMechanics
         // Do not substitute a generic TES3 hit or silently omit their effects.
         if (sneaking || integer(victim, 65) != 0)
             return std::nullopt;
-        if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
+        if (kind > ESM4::MeleeStrikeKind::StandingPower
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            return std::nullopt;
         auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
             : oblivionHandToHandContactDamage(world, attacker, victim);
         if (creatureHasSpells(attacker) || creatureHasSpells(victim))
@@ -1438,7 +1510,9 @@ namespace MWMechanics
             : service->getNonPlayerIntegerValue(victim, 65);
         if (resistance != 0)
             return std::nullopt;
-        if (kind > ESM4::MeleeStrikeKind::StandingPower) return std::nullopt;
+        if (kind > ESM4::MeleeStrikeKind::StandingPower
+            && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower)
+            return std::nullopt;
         const float incoming = weaponContactDamage(world, attacker, item, kind);
         if (creatureHasSpells(victim))
             return std::nullopt; // Do not omit Creature passive/contact-effect consequences.

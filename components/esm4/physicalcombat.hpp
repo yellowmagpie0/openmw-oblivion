@@ -260,6 +260,10 @@ namespace ESM4
         std::optional<float> transitionFrame = std::nullopt, float retirementDuration = .1f);
 
     enum class PowerAttackDirection { Standing, Forward, Backward, Left, Right };
+    // Sideways admission samples local movement and base mastery at start.
+    // Longitudinal variants are selected by their separate admission route.
+    std::optional<PowerAttackDirection> sidePowerAttackDirection(std::int32_t baseSkill,
+        float strafe, float forward, const CombatMasterySettings& mastery);
     struct PowerAttackSettings
     {
         float mBaseMultiplier;

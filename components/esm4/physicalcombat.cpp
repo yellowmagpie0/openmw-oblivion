@@ -1895,6 +1895,16 @@ namespace ESM4
         return !swimming && (combatMastery(baseAcrobatics, settings.mMastery) > CombatMastery::Apprentice
             || !airborne);
     }
+    std::optional<PowerAttackDirection> sidePowerAttackDirection(std::int32_t baseSkill,
+        float strafe, float forward, const CombatMasterySettings& mastery)
+    {
+        if (!std::isfinite(strafe) || !std::isfinite(forward))
+            throw std::invalid_argument("invalid power attack movement");
+        if (combatMastery(baseSkill, mastery) < CombatMastery::Journeyman
+            || strafe == 0 || forward != 0)
+            return std::nullopt;
+        return strafe < 0 ? PowerAttackDirection::Left : PowerAttackDirection::Right;
+    }
     float powerAttackMultiplier(std::int32_t skill, PowerAttackDirection direction,
         const PowerAttackSettings& settings, const CombatMasterySettings& mastery)
     {

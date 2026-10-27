@@ -2449,6 +2449,22 @@ namespace MWMechanics
                 interrupt();
                 return false;
             }
+            // Reaction ownership must not keep the removed carried mesh alive.
+            // The normal equipment path below is deferred until recovery, while
+            // disarm has already published its inventory and world-body change.
+            if (mPtr.getType() == ESM::REC_NPC_4)
+            {
+                auto& inventory = cls.getInventoryStore(mPtr);
+                const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                const MWWorld::Ptr equipped = right == inventory.end() ? MWWorld::Ptr{} : *right;
+                if (equipped != mWeapon)
+                {
+                    mAnimation->showWeapons(drawn);
+                    mWeapon = equipped;
+                    Log(Debug::Verbose) << "M15 reaction equipment refreshed: actor=" << actor.serialize()
+                        << " weapon=" << (equipped.isEmpty() ? "none" : equipped.getCellRef().getRefId().toString());
+                }
+            }
             try { bindOblivionMeleeReaction(); }
             catch (const std::invalid_argument& error)
             {
@@ -2478,6 +2494,7 @@ namespace MWMechanics
         ESM::FormKey weaponBase;
         float speed = 1;
         int weaponType = ESM::Weapon::HandToHand;
+        std::uint8_t powerSkill = 17;
         if (cls.hasInventoryStore(mPtr))
         {
             auto& inventory = cls.getInventoryStore(mPtr);
@@ -2514,6 +2531,7 @@ namespace MWMechanics
                     interrupt();
                     return false; // Bow/staff have their own native controller path.
                 }
+                powerSkill = record->mData.type < 2 ? 14 : 16;
                 family = record->mData.type % 2 ? "twohand" : "onehand";
                 speed = record->mData.speed;
                 weaponBase = ESM::FormKeyResolver(world->getContentFiles()).toFormKey(*form);
@@ -2661,6 +2679,20 @@ namespace MWMechanics
                 inputSettings = MWWorld::resolveOblivionMeleeInputSettings(world->getStore());
             return *inputSettings;
         };
+        const auto powerKindForInput = [&] {
+            if (!creature)
+            {
+                const int baseSkill = player ? service->getPlayerBaseValue(powerSkill)
+                    : service->getNonPlayerBaseValue(actor, powerSkill, world->getStore());
+                const auto& movement = cls.getMovementSettings(mPtr);
+                const auto direction = ESM4::sidePowerAttackDirection(baseSkill,
+                    movement.mPosition[0], movement.mPosition[1], settingsForInput().mMastery);
+                if (direction)
+                    return *direction == ESM4::PowerAttackDirection::Left
+                        ? ESM4::MeleeStrikeKind::LeftPower : ESM4::MeleeStrikeKind::RightPower;
+            }
+            return ESM4::MeleeStrikeKind::StandingPower;
+        };
         const auto airborneForInput = [&] {
             // The shared jump group spans native JumpStart/JumpLoop/JumpLand.
             // Keep that animation predicate ahead of physical state, including
@@ -2682,7 +2714,7 @@ namespace MWMechanics
         MWWorld::Ptr powerSpeaker;
         std::weak_ptr<const char> powerSpeakerIdentity;
         if (input.mQueued != ESM4::MeleeQueuedStrike::None && queueWindow)
-            selected = input.mQueued == ESM4::MeleeQueuedStrike::Power ? ESM4::MeleeStrikeKind::StandingPower
+            selected = input.mQueued == ESM4::MeleeQueuedStrike::Power ? powerKindForInput()
                 : input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
         else if (pressed)
         {
@@ -2708,7 +2740,7 @@ namespace MWMechanics
                 else if (active && saved->mStrike->mAnimationTime > 0)
                     input.mQueued = ESM4::MeleeQueuedStrike::Power;
                 else
-                    selected = ESM4::MeleeStrikeKind::StandingPower;
+                    selected = powerKindForInput();
             }
         }
         input.mInputHeld = held;
@@ -2734,7 +2766,7 @@ namespace MWMechanics
         }
         if (selected)
         {
-            // Exact sneak/directional/mastery variant selection is the next adapter step.
+            // Forward/backward and sneak admission remain separate adapter work.
             constexpr std::array suffixes = {"attackleft", "attackright", "attackpower", "attackforwardpower",
                 "attackbackpower", "attackleftpower", "attackrightpower"};
             const std::string group = family + suffixes[static_cast<unsigned>(*selected)];

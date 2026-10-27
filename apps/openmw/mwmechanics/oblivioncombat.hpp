@@ -377,6 +377,9 @@ namespace MWMechanics
         std::optional<OblivionHeldBlockEquipmentSources> mAttackerHeldEquipment{};
         std::optional<OblivionHeldBlockEquipmentSources> mVictimHeldEquipment{};
         std::optional<OblivionOrdinaryHitArguments> mOrdinaryHitArguments{};
+        // The phased hit caller publishes disarm with damage, then requests
+        // its forced Stagger after hit-speech callbacks in the owned tail.
+        bool mDeferSidePowerStagger = false;
         // Post-damage compiled default self-PARA request. Caller resolves the
         // spell/profile and current Player caster power; NPC/Creature power is
         // one. Service reads NPC/Creature AV64/AV66; Player's self range bypasses

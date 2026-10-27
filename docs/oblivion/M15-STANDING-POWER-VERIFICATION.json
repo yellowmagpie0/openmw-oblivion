@@ -275,7 +275,8 @@
   },
   "case_catalog": {
     "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
-    "sha256": "0126c97661965a3fd6807afb526542a913a38678a2bc4ff0573d570f2d682065"
+    "sha256": "0126c97661965a3fd6807afb526542a913a38678a2bc4ff0573d570f2d682065",
+    "source_revision": "d82b0d142b79e248f6164aa0acb45c056186be0b"
   },
   "retained_failures": {
     "standing-power-main-01": "Components passed; engine exposed historical hardcoded schema48 and zero-duration timing-history test expectations, corrected in main02.",
@@ -363,5 +364,23 @@
       "directly_inspected": true,
       "scope": "Rendered named upright target, stock weapon/fists and HUD. Post-save capture does not establish the exact earlier saved phase/contact frame."
     }
-  ]
+  ],
+  "side_power_checkpoint": {
+    "date": "2026-10-27",
+    "status": "Bounded sideways input/disarm/render/restart checkpoint passed; full S4 incomplete",
+    "receipt": {
+      "path": "build/oblivion-compat/m15/S4/side-power-work-01/checkpoint-verification.json",
+      "sha256": "1cc0a197fd0934c08a8f3a5ad6abd5e216ed5a69125bc1c6a21b8acc35776a16"
+    },
+    "case_catalog": {
+      "path": "scripts/data/oblivion_compat/m15_standing_power_cases.json",
+      "sha256": "b8bc8d242c19679eabaeac18fee9c0dd4bf9e2592e2d7e468a7201b569a5c333"
+    },
+    "core_pairs": 8,
+    "core_epochs": 8,
+    "core_whole_restores": 4,
+    "supplemental_generic_pairs": 4,
+    "engine_tests_each_profile": 2041,
+    "next": "Forward/backward power admission and required mastery consequences."
+  }
 }
