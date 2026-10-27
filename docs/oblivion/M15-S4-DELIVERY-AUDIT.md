@@ -8,14 +8,15 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 Current acceptance checklist (2026-10-26):
 
-- **Demonstrated:** the [combined course and all three in-flight restart windows](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass for one first-person keyboard/mouse cap15 profile, normally and under ASan/UBSan: production block, natural Stagger recovery, nonlethal return attack and separate range/wall misses. Eight engine epochs provide **48 exact save/live pairs and six whole-source fresh restores**, preserving resources, active ownership, contact identity and combat RNG. Held-block and pending-windup continuations add 20 pairs using the existing fixture/route/inspector, without another engine build. Audio and captures pass. The unchanged implementation retains the linked **2,038-test normal/SAN engine gates**, eight focused ownership checks and original component/Python evidence.
-- **Incomplete:** the required actor/weapon/directional/mastery/effect, command/query, interruption and view/device/FPS/sound matrix below, including its remaining restart crosses. Current cap15 evidence does not establish measured FPS acceptance or other views/devices.
+- **Demonstrated:** the [joined course and all three in-flight restart windows](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) pass in first- and third-person keyboard/mouse cap15 profiles, normally and under ASan/UBSan. Each view covers production block, visible Stagger/recovery, nonlethal return attack and separate range/wall misses, with matched held-block, pending-windup and recovery saves. The profiles provide **96 exact save/live pairs, 16 engine epochs and 12 whole-source fresh restores**. The third-person camera is selected by normal R input and restored from save without another toggle; body captures and a read-only mode getter verify it. A new same-pose third-person control disables only the partition and hits, adding two exact control pairs. Active ownership/resources/RNG remain strict; inactive block-cache samples use the same policy in either view. Unchanged binaries retain the linked **2,038-test normal/SAN engine gates**, eight focused ownership checks and component/Python evidence; no rebuild was repeated for these profiles.
+- **Incomplete:** gamepad, measured FPS and the remaining required actor/weapon/directional/mastery/effect, command/query, interruption and sound/HUD matrix below, including its remaining crosses. Configured cap15 does not establish measured FPS acceptance.
 - **Blocked:** none.
 
-The current-profile restart chunk is complete. Next, run the same joined course
-through the third-person Player route before pursuing further native details.
+The third-person keyboard/mouse chunk is complete. Next, take the same joined
+course through actual SDL gamepad input, extending the existing harness only
+where required. Do not substitute keyboard events or direct gameplay changes.
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
-and recipe at `da574b293a` retain their historical provenance.
+and recipe at `b1583d624f` retain their historical provenance.
 Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: select work by
 the missing gameplay behavior, use focused checks before batched integration
 gates, reuse applicable evidence, and defer unrelated discoveries.
@@ -47,11 +48,10 @@ Fatigue, armor and weapon condition, contact identity and no replay.
 
 The complete S4 course requires a named nonlethal target attacked with normal
 input, blocking its production-policy attack, misses outside reach and behind a
-wall, and recovery after stagger. The joined first-person keyboard/mouse cap15
-course now passes, including matched save/quit/fresh-process continuations during
-windup, held blocking and recovery, in normal and sanitizer processes. Complete
-the required first/third-person, keyboard/mouse/gamepad and FPS matrix, with its
-remaining restart crosses. The final gate remains input -> animation contact ->
+wall, and recovery after stagger. The joined keyboard/mouse cap15 course now passes in first and third person,
+including matched save/quit/fresh-process continuations during windup, held
+blocking and recovery, in normal and sanitizer processes. Complete the gamepad
+and measured-FPS matrix, with its remaining required crosses. The final gate remains input -> animation contact ->
 one native delta -> visible/audible reaction. Retain the plan's sanitized
 synthetic melee-course requirement. This bounded profile does not deliver S4.
 

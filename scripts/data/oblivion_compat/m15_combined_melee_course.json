@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "status": "core_course_all_three_inflight_restarts_verified_one_profile_matrix_incomplete",
+  "status": "first_and_third_keyboard_mouse_core_courses_and_restarts_verified_matrix_incomplete",
   "full_M15S4_acceptance": false,
-  "scope": "One first-person keyboard/mouse cap15 course: production block, actual Player Stagger/recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Actual held-block, pending-windup and Stagger-save fresh-process continuations pass normally and under ASan/UBSan. Complete S4 actor/weapon/mastery/effect/command/interruption and view/device/measured-FPS/sound matrices remain open.",
+  "scope": "First- and third-person keyboard/mouse cap15 joined melee profiles pass normally and under ASan/UBSan, each with matched held-block/Stagger/windup fresh continuations. Each profile covers production block, actual Stagger/natural recovery, nonlethal return attack, clear range miss and in-reach stock-partition wall miss. Other devices, measured FPS, remaining actor/weapon/mastery/effect/command/interruption and sound-HUD requirements remain incomplete.",
   "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
   "input": {
     "source": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-03/first/input-pristine.omwsave",
@@ -75,10 +75,10 @@
     "control01": "combined-wall-control-normal-01: actual hit succeeds but early standalone image entropy fails. Corrected02 captures after rendered F5 and passes."
   },
   "remaining_acceptance": [
-    "All remaining S4 actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit.",
-    "Other required view/device/FPS/sound-HUD profiles and relevant restart crosses; current proof covers only first-person keyboard/mouse with a configured cap15."
+    "Gamepad, measured FPS and remaining required view/device/FPS/sound-HUD crosses. Both current view profiles use keyboard/mouse and configured cap15 only.",
+    "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Run this same joined course through the third-person Player route, using normal camera input and the existing fixture/observer/monitor. Identify any concrete failure before investigating native engine details. Then address the remaining required input/FPS profiles and implementation branches.",
+  "next_bounded_task": "Complete the joined course through actual SDL gamepad input, reusing the existing input harness and fixture. Inspect available controller support and normal binding path; extend that harness if needed, without substituting keyboard events or direct gameplay state changes. Then measured FPS and remaining mechanics.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -141,7 +141,7 @@
     "structural": "Five-record version2 plugin reopens; exact unchanged CELL and combat records checked. Master STAT is referenced, not copied or modified; version1 reproduces its prior SHA256.",
     "compiler_world": "Actual fork runs compile and execute unchanged authored StartCombat/StopCombat source. No TES3 MCP or standalone authoring-world validation claim.",
     "semantic": "Pinned master, base/cell/placed identities, unscaled transform and actual collision bounds inspected; only NPC CSTY/SCRI links plus static placement are authored.",
-    "runtime": "Current-profile aggregate:8 distinct actual engine epochs,48 exact save/live pairs and6 whole-source fresh restores across held block, pending windup and Stagger recovery. Every continuation reaches matching native resources/active ownership/combat RNG and shared inventories, once-only expected contacts, separate range/wall miss invariants and natural full Fatigue. Audio and reviewed captures are linked; other profiles remain incomplete."
+    "runtime": "Two view profiles, each8 engine epochs/48 exact save-live pairs/6 whole fresh restores:96 joined-course pairs across16 epochs, plus their separately linked positive controls (new third-person control adds2 exact pairs). Native resources/active ownership/combat RNG and shared inventories match within each profile. Inactive cache sample clocks excluded symmetrically, source restore wholly exact. Mode getters/captures confirm third person survives load without another toggle. Full S4 matrix remains open."
   },
   "verification": {
     "normal": {
@@ -363,6 +363,67 @@
       },
       "engine_rebuilds": 0,
       "scope": "Current first-person keyboard/mouse cap15 course only; all other required crosses remain open."
+    }
+  },
+  "view_profiles": {
+    "third_person": {
+      "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+      "source": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
+      "normal_input_after_focus": [
+        {
+          "type": "key_held",
+          "value": "r",
+          "hold_seconds": 0.08,
+          "pause_seconds": 0.08
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 course view: thirdPerson=true",
+          "timeout_seconds": 120
+        }
+      ],
+      "observer_additions": {
+        "after_util_require": "local camera = require('openmw.camera')\nlocal thirdPersonAnnounced = false\n",
+        "at_onFrame_begin": " local thirdPerson = camera.getMode() == camera.MODE.ThirdPerson\n if thirdPerson and not thirdPersonAnnounced then\n  print('M15 course view: thirdPerson=true')\n  thirdPersonAnnounced = true\n elseif not thirdPerson and thirdPersonAnnounced then\n  print('M15 course view: left-third-person')\n end\n"
+      },
+      "expected_log_additions": [
+        "M15 course view: thirdPerson=true"
+      ],
+      "forbidden_log_additions": [
+        "M15 course view: left-third-person"
+      ],
+      "gates": "Same joined block/Stagger/natural recovery/nonlethal return/range/wall course. Read-only camera-mode marker plus rendered Player body proves third person; no camera setter or state mutation. Capture actual held-block/Stagger/pending-windup inputs for matched fresh continuations using identical observer files. Existing inspector, audio assay, fixture and unchanged binary gates reused. Configured cap15 is not a measured-FPS claim.",
+      "reference_run_ids": {
+        "normal": "combined-third-normal-02",
+        "sanitize": "combined-third-sanitize-01"
+      },
+      "retained_staging_failure": "combined-third-normal-01 stopped before engine launch because the private profile wrapper omitted the shutil import; original directory retained.",
+      "inactive_cache_policy": "Same policy in both views: reject any active held block, strike, reaction or retirement at the settled endpoint. Inactive held-block cache entries may remain. Compare their group/inactive/duration/pose identity, excluding only historical animation/sequence samples and retirement start clocks. Source restore remains wholly exact; released-input duration is ignored only with no held/queued/active ownership.",
+      "wall_control": {
+        "template": "build/oblivion-compat/m15/S4/combined-wall-work-01/unobstructed-control-02.json",
+        "source_reference": "combined-third-normal-02",
+        "source_snapshot_role": "wall-facing before contact5 (eighth of nine saves)",
+        "source_mutation": {
+          "reference": "content:m15stationaryopponent.esp:000882",
+          "field": "enabled",
+          "before": true,
+          "after": false
+        },
+        "changes": "Reuse template actions and identical third-person observer/config files. Require actual third-person marker and clear100/125 rays, then normal U contact5 hits, target remains alive. No actor, inventory, resource or RNG mutation. Two exact binary/live pairs; pre-hit actor poses agree with the source within0.05 units.",
+        "reason": "Third-person reference wall pose132.89 exceeds the earlier first-person control hit distance132.398604; run the existing control at the new pose instead of assuming eligibility."
+      },
+      "verification": {
+        "receipt": "build/oblivion-compat/m15/S4/combined-third-work-01/checkpoint-verification.json",
+        "sha256": "f6c725bfd8ccd6ea3f86b3bbb48b43cd31d9bdc0fa1387cfbe27862581102051",
+        "normal_and_sanitizer_pass": true,
+        "profile_epochs": 8,
+        "profile_exact_save_live_pairs": 48,
+        "whole_initial_restores": 6,
+        "extra_control_epoch": 1,
+        "extra_control_exact_pairs": 2,
+        "saved_camera_restored_without_toggle": true,
+        "no_engine_builds": true
+      }
     }
   }
 }
