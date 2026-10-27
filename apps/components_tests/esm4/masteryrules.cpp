@@ -547,3 +547,100 @@ TEST(ESM4MasteryRules, OrdinaryHitPhasesRejectMissingConsumedDrawsAndIgnoreUnuse
     input.mBlock.mAbsorbedFraction = std::numeric_limits<float>::quiet_NaN();
     EXPECT_THROW(ESM4::ordinaryHitBlockTail(input.mBlock, {}, settings, mastery), std::invalid_argument);
 }
+
+TEST(ESM4MasteryRules, DirectionalHitMasterySeparatesPhysicalConsequencesFromSpeech)
+{
+    auto input = ordinaryHitInput();
+    input.mHealthDamage = 1;
+    input.mAttackerBaseSkill = 75;
+    // Damage roll fails; the shared mastery roll succeeds for backward power.
+    const std::array<std::uint16_t, 4> stream{99, 4, 1234, 32767};
+    const auto prefix = ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Backward,
+        stream, installedKnockdown, installedPhysical, settings, mastery);
+    EXPECT_EQ(prefix, (ESM4::HitMasteryPrefixResult{2, false, true, false}));
+    unsigned cursor = prefix.mDraws;
+    // The physical owner may sample force before speech selection. The pure
+    // mastery phase must neither consume that word nor force ordinary Stagger.
+    EXPECT_EQ(stream[cursor++], 1234);
+    const auto speech = ESM4::hitSpeechDecision(input, prefix.mDamageFlag,
+        std::span(stream).subspan(cursor), {.35f, .1f});
+    EXPECT_EQ(speech, (ESM4::OrdinaryHitPrefixResult{1, false, false}));
+    EXPECT_FALSE(ESM4::ordinaryHitStaggerRequested(speech, 0, true));
+    EXPECT_EQ(cursor + speech.mDraws, stream.size());
+    const std::array<std::uint16_t, 2> nonproc{99, 5};
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Backward, nonproc,
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{2, false, false, false}));
+}
+
+TEST(ESM4MasteryRules, DirectionalHitParalysisOverridesDamageAndPhysicalKnockdown)
+{
+    auto input = ordinaryHitInput();
+    input.mAttackerBaseSkill = 100;
+    input.mFatigueDamage = 10;
+    input.mPostFatigue = 0;
+    const std::array<std::uint16_t, 1> proc{4}, nonproc{5};
+    for (auto attack : {ESM4::MasteryAttack::Forward, ESM4::MasteryAttack::Arrow})
+        EXPECT_EQ(ESM4::hitMasteryPrefix(input, attack, proc, installedKnockdown,
+            installedPhysical, settings, mastery), (ESM4::HitMasteryPrefixResult{1, false, false, true}));
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, nonproc,
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{1, true, false, false}));
+    // The existing damage flag also drives backward physical force without a
+    // successful mastery roll; it must still be cleared before hit speech.
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Backward, nonproc,
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{1, false, true, false}));
+    input.mAttackerBaseSkill = 75;
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, proc,
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{1, true, false, false}));
+}
+
+TEST(ESM4MasteryRules, DirectionalHitMasteryHonorsEligibilityAndRejectsInvalidConsumedInputs)
+{
+    auto input = ordinaryHitInput();
+    input.mAttackerBaseSkill = 74;
+    const std::array<std::uint16_t, 2> draws{99, 32768};
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, draws,
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{1, false, false, false}));
+    input.mAttackerBaseSkill = 100;
+    input.mVictimBaseSpeed = 0;
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, draws,
+        installedKnockdown, installedPhysical, settings, mastery).mDraws, 1u);
+    input.mFatigueDamage = 1;
+    input.mPostFatigue = 0;
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Backward, {},
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{0, true, false, false}));
+    input.mVictimBaseSpeed = 1;
+    input.mAttackerBaseSkill = 74;
+    EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Backward, {},
+        installedKnockdown, installedPhysical, settings, mastery),
+        (ESM4::HitMasteryPrefixResult{0, true, false, false}));
+    input = ordinaryHitInput();
+    input.mAttackerBaseSkill = 100;
+    input.mVictimBaseSpeed = 1;
+    EXPECT_THROW(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, draws,
+        installedKnockdown, installedPhysical, settings, mastery), std::invalid_argument);
+    EXPECT_THROW(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, {},
+        installedKnockdown, installedPhysical, settings, mastery), std::invalid_argument);
+    for (bool dead : {false, true})
+    {
+        input.mVictimRemainsAlive = !dead;
+        input.mDamagePath = dead;
+        EXPECT_EQ(ESM4::hitMasteryPrefix(input, ESM4::MasteryAttack::Forward, {},
+            installedKnockdown, installedPhysical, settings, mastery), ESM4::HitMasteryPrefixResult{});
+        EXPECT_EQ(ESM4::hitSpeechDecision(input, true, {}, {.35f, .1f}), ESM4::OrdinaryHitPrefixResult{});
+    }
+    input = ordinaryHitInput();
+    input.mHealthDamage = 1;
+    EXPECT_THROW(ESM4::hitSpeechDecision(input, false, {}, {.35f, .1f}), std::invalid_argument);
+    const std::array<std::uint16_t, 1> invalid{32768};
+    EXPECT_THROW(ESM4::hitSpeechDecision(input, false, invalid, {.35f, .1f}), std::invalid_argument);
+    EXPECT_EQ(ESM4::hitSpeechDecision(input, true, invalid, {.35f, .1f}),
+        (ESM4::OrdinaryHitPrefixResult{0, true, true}));
+    EXPECT_THROW(ESM4::hitMasteryPrefix(input, static_cast<ESM4::MasteryAttack>(255), {},
+        installedKnockdown, installedPhysical, settings, mastery), std::invalid_argument);
+}

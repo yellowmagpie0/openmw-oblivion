@@ -92,6 +92,25 @@ namespace ESM4
         bool mHitSpeech = false;
         friend bool operator==(const OrdinaryHitPrefixResult&, const OrdinaryHitPrefixResult&) = default;
     };
+    struct HitMasteryPrefixResult
+    {
+        unsigned mDraws = 0;
+        bool mDamageFlag = false;
+        bool mPhysicalKnockdown = false;
+        bool mParalysis = false;
+        friend bool operator==(const HitMasteryPrefixResult&, const HitMasteryPrefixResult&) = default;
+    };
+    // Resolve damage and mastery before the caller applies physical knockdown
+    // or default paralysis. Those owners run before speech and own any extra
+    // random draws. Physical knockdown clears the ordinary Stagger flag.
+    HitMasteryPrefixResult hitMasteryPrefix(const OrdinaryHitReactionInput& input, MasteryAttack attack,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const MasteryProcSettings& procs,
+        const CombatMasterySettings& mastery);
+    // Call after the consequences above, with current post-contact victim
+    // queries and the remaining raw stream. Does not advance live RNG.
+    OrdinaryHitPrefixResult hitSpeechDecision(const OrdinaryHitReactionInput& input, bool damageFlag,
+        std::span<const std::uint16_t> draws, const OrdinaryHitSpeechSettings& speech);
     struct OrdinaryHitBlockResult
     {
         unsigned mDraws = 0;

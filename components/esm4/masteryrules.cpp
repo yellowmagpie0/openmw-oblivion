@@ -126,15 +126,16 @@ namespace ESM4
             throw std::invalid_argument("invalid native ordinary hit speech settings");
     }
 
-    OrdinaryHitPrefixResult ordinaryHitPrefix(const OrdinaryHitReactionInput& input,
+    HitMasteryPrefixResult hitMasteryPrefix(const OrdinaryHitReactionInput& input, MasteryAttack attack,
         std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
-        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const PhysicalCombatSettings& physical, const MasteryProcSettings& procs,
         const CombatMasterySettings& mastery)
     {
         validateKnockdownSettings(knockdown);
         validatePhysicalCombatSettings(physical);
-        validateOrdinaryHitSpeechSettings(speech);
+        validateMasteryProcSettings(procs);
         validateCombatMasterySettings(mastery);
+        validateAttack(attack);
         if (!std::isfinite(input.mHealthDamage) || input.mHealthDamage < 0
             || !std::isfinite(input.mFatigueDamage) || input.mFatigueDamage < 0
             || !std::isfinite(input.mPostFatigueRatio)
@@ -142,31 +143,68 @@ namespace ESM4
             || input.mBlock.mAbsorbedFraction < 0 || input.mBlock.mAbsorbedFraction > 1
             || input.mBlock.mProjectile)
             throw std::invalid_argument("invalid native ordinary hit reaction input");
-        OrdinaryHitPrefixResult result;
+        HitMasteryPrefixResult result;
         const auto next = [&]() -> unsigned {
             if (result.mDraws == draws.size() || draws[result.mDraws] > 32767)
-                throw std::invalid_argument("missing or invalid native ordinary hit random draw");
+                throw std::invalid_argument("missing or invalid native hit mastery random draw");
             return draws[result.mDraws++];
         };
         if (input.mVictimRemainsAlive && input.mDamagePath)
         {
-            // The caller's integer Fatigue gate includes zero. The later
-            // float unconsciousness initialization uses a different predicate.
             result.mDamageFlag = input.mFatigueDamage > 0 && input.mPostFatigue <= 0;
             if (!result.mDamageFlag)
                 result.mDamageFlag = damageKnockdown(input.mAgility, input.mLuck, input.mPostFatigueRatio,
                     input.mPreArmorDamage, next() % 100, knockdown, physical);
-            if (combatMastery(input.mAttackerBaseSkill, mastery) >= CombatMastery::Expert
-                && input.mVictimBaseSpeed > 0)
-                next(); // Original rolls even for ordinary groups14/15.
-            // This is current integer Health, not base Health. Preserve the
-            // original ordered comparison for infinite/unordered quotients.
+            const AttackMasteryInput masteryInput{input.mAttackerBaseSkill, attack,
+                input.mVictimBaseSpeed, result.mDamageFlag};
+            auto reaction = attackMasteryReaction(masteryInput, 0, procs, mastery);
+            if (reaction.mConsumesDraw)
+                reaction = attackMasteryReaction(masteryInput, next() % 100, procs, mastery);
+            result.mParalysis = reaction.mParalysis;
+            result.mPhysicalKnockdown = reaction.mConsumesDraw && reaction.mKnockdown
+                && (attack == MasteryAttack::Backward || attack == MasteryAttack::Arrow);
+            // Original6003A4..60040B applies physical force, then clears the
+            // damage flag before speech. Paralysis already clears that flag.
+            result.mDamageFlag = reaction.mKnockdown && !result.mPhysicalKnockdown;
+        }
+        return result;
+    }
+
+    OrdinaryHitPrefixResult hitSpeechDecision(const OrdinaryHitReactionInput& input, bool damageFlag,
+        std::span<const std::uint16_t> draws, const OrdinaryHitSpeechSettings& speech)
+    {
+        validateOrdinaryHitSpeechSettings(speech);
+        if (!std::isfinite(input.mHealthDamage) || input.mHealthDamage < 0)
+            throw std::invalid_argument("invalid native hit speech damage");
+        OrdinaryHitPrefixResult result;
+        if (input.mVictimRemainsAlive && input.mDamagePath)
+        {
+            result.mDamageFlag = damageFlag;
             const bool exceedsThreshold = input.mPostHealth == 0 ? input.mHealthDamage > 0
                 : static_cast<float>(double(input.mHealthDamage) / input.mPostHealth) > speech.mDamageThreshold;
-            result.mHitSpeech = result.mDamageFlag || exceedsThreshold;
+            result.mHitSpeech = damageFlag || exceedsThreshold;
             if (!result.mHitSpeech)
-                result.mHitSpeech = double(next()) / 32767.0 <= speech.mChance;
+            {
+                if (draws.empty() || draws.front() > 32767)
+                    throw std::invalid_argument("missing or invalid native hit speech random draw");
+                result.mDraws = 1;
+                result.mHitSpeech = double(draws.front()) / 32767.0 <= speech.mChance;
+            }
         }
+        return result;
+    }
+
+    OrdinaryHitPrefixResult ordinaryHitPrefix(const OrdinaryHitReactionInput& input,
+        std::span<const std::uint16_t> draws, const KnockdownSettings& knockdown,
+        const PhysicalCombatSettings& physical, const OrdinaryHitSpeechSettings& speech,
+        const CombatMasterySettings& mastery)
+    {
+        validateOrdinaryHitSpeechSettings(speech);
+        // Ordinary attacks consume the Expert draw without a directional proc.
+        const auto prefix = hitMasteryPrefix(input, MasteryAttack::Normal, draws,
+            knockdown, physical, MasteryProcSettings{}, mastery);
+        auto result = hitSpeechDecision(input, prefix.mDamageFlag, draws.subspan(prefix.mDraws), speech);
+        result.mDraws += prefix.mDraws;
         return result;
     }
 

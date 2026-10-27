@@ -17,6 +17,18 @@ The view/device, pairwise restart and bounded sideways-disarm gaps are closed.
 Next, complete forward/backward power admission and their required mastery
 consequences in the same normal-input course. Batch those related changes before
 expensive integration gates and the final FPS/seed campaign.
+The longitudinal chunk is in progress. Its damage/mastery and hit-speech
+phases are now separate, preserving ordinary-hit behavior while exposing
+backward physical knockdown and forward paralysis before speech. Focused
+`ESM4MasteryRules.*` verification passes **24 cases in each normal and ASan/UBSan
+build** (no skips; sanitizer leak detection disabled):
+`build/oblivion-compat/m15/S4/longitudinal-prefix-focused-02/verification.json`,
+tested dirty fingerprint `055660e8cd98fb47fb3a0c2c6a7c1ca2feac112e615ab6197e7fbe1b13d5c411`.
+This is component evidence; directional admission, live consequence ownership
+and the longitudinal normal-input/restart course remain incomplete. Retained
+caller evidence at `S2/sources-01/contact-reactions.txt:6002EA..600410` establishes
+the Expert/positive-Speed guard, shared mastery roll and pre-speech flag clearing.
+
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
 and recipe at `b1583d624f` retain their historical provenance.
 Follow [AGENTS.md](../../AGENTS.md) and the updated project skills: select work by
