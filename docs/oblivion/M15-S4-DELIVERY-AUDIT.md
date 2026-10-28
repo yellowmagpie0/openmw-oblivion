@@ -41,13 +41,63 @@ the elapsed GameHour projection separately. Its pending Forward save is restored
 exactly, applies once, collapses physically and recovers without replay; scoped
 checker failures and original checker bytes remain linked in the receipt.
 
-Next, map the remaining controlling S4 requirements to combined planned runs and
-identify implementation blockers to the final FPS/seed campaigns. The observed
-extra ordinary contacts during held-power input differ between normal and SAN
-runs; resolve intended input semantics before claiming timing stability. Improve
-shared preflight checks for reachable approaches, useful camera views and valid
-pending/applied effects before more full courses. Preserve the requirements below,
-reuse unchanged evidence and avoid expanding into unrelated native dependencies.
+## Remaining acceptance to planned runs
+
+The rows below sequence the remaining S4 work; they do not waive the detailed
+requirements below or claim that every implementation branch is ready. Cover all
+discrete branches at L1, then combine compatible assertions in pairwise/high-risk
+L2/L3 runs rather than repeating every Cartesian combination.
+
+| Order / missing requirement | Implementation or fixture work needed | Smallest closing evidence / planned run |
+| --- | --- | --- |
+| P0. Reliable course setup and timing observations | Improve the existing shared fixture's reachability, useful-camera and pending/applied-effect preflights; classify held-input windows and measure actual frame/simulation timing. | Cheap positive/negative preflight checks and retained-log inspection, followed by one declared cap30/seed1 normal pilot before full campaigns. No gameplay parity claim from configured cap alone. |
+| C1. Remaining melee actor/weapon domains | Admit required two-handed, unarmed and Creature contacts through the same owner; repair only discrepancies blocking the selected case. | Focused branch tests, then paired normal-input contact/geometry cases with native resources, condition, contact identity and no duplicate delta. Reuse existing Blade/Club and restart evidence where unchanged. |
+| D2. Block/armor/mastery branches | Complete required lower Hand to Hand reactions, Player/Creature/spare equipment policies and selected-shield break reachability; inventory threshold/proc/nonproc gaps first. | Combine equipment, angle/timing, condition and mastery boundary assertions with C1 contacts; pair live break/drop cases with exact fresh continuations and relevant PCM. |
+| R3. Reaction ownership and recovery | Complete required Stagger, knockdown, Fatigue knockout and essential-unconsciousness boundaries, repeated-hit and held/released-input cases. | Combine native resource/reaction assertions, useful collapse/recovery captures and fresh recovery continuations; reuse admitted Forward/Backward source proofs. |
+| I4. Every named interruption | Verify weapon change/breakage, unequip, menu/control lock, Stagger/knockdown, death, load and mount cancellation. Implement only missing S4 transitions. | Pairwise view/device runs combining windup, held block and recovery interruption/restart, release/held behavior, no stale posture or replay. Existing joined view/device evidence retains its original provenance. |
+| Q5. Related command/query and stationary-opponent semantics | Inventory applicable S4 commands/queries and contexts against shared contact/reaction state. Resolve rejected required routes; retain explicit unsupported boundaries. | Focused service/script cases plus combined production-opponent contacts and exact callback/save continuations. Full S7 AI and general M16 magic are not automatic dependencies; assess each open boundary against the controlling S4 requirement. |
+| V6. Actual animation, sound and HUD across required domains | Complete remaining material, shield, unarmed/Creature feedback and useful camera coverage. | Add PCM/HUD/capture assertions to C1/D2/R3/I4 runs; retain raw evidence and distinguish hidden-target captures from visual proof. |
+| T7. Timing-sensitive FPS/seed coverage | Freeze input/graphics/camera/weather/clock/step policy, declare baseline deadlines and collect achieved timing. Resolve defects exposed by the pilot before expanding. | At least three fixed seeds at caps30/60/120 for the required synthetic timing cases, including sanitized melee coverage. Combine compatible resource, feedback, recovery and interruption assertions; report achieved FPS honestly. |
+| F8. Independent final acceptance and regression | All applicable preceding gaps closed; final course and dependencies frozen. | Independent clean campaigns twice at the same seed and once at a second declared seed. Retain required normal/sanitizer/regression gates; repeat expensive checks only after relevant changes, failure, or an explicit gate requirement. |
+
+The [P0 checkpoint](../../build/oblivion-compat/m15/S4/course-preflight-work-01/pilot-01-verification.json)
+now closes the shared prerequisite checks: measured approach witnesses reject the
+old Y104/close80 goals; strict Forward-source checks admit the retained normal
+applied and SAN pending sources; the camera guard observes both hidden and
+unobstructed actor anchors. Six new focused tests and **451 full Python cases**
+pass. The cap30/seed1 pilot completes the joined course and **14 exact pairs**.
+Retained timestamp/frame-count reinspection measures about **18.20FPS** over
+169.538 seconds, with no measured bin reaching29FPS. This establishes a throughput
+gap before claiming high-FPS acceptance, without identifying a gameplay defect.
+The pilot's original input-delta timing labels are retained; future observations
+use the monotonic clock, checked with a focused Lua test. Actor-anchor visibility
+is only a preliminary guard and does not establish visible physical collapse.
+No C++ changed; its broad gates and binaries remain reused with original pins.
+
+Next, close C1's missing two-handed weapon/animation route with the existing
+profile fixture, batching related weapon-family cases and focused checks before
+required live integration. Retain the measured throughput gap for T7; do not
+launch the full FPS/seed campaign or call the configured cap achieved. The
+remaining rejected actor/defense/effect and command domains still block their
+required cases and final delivery.
+
+The retained Club logs show ordinary windows6/8/10/12 starting in **both** builds;
+only normal commits their contacts before the next power starts. The controller
+intentionally selects an ordinary strike on press and queues power after the
+hold delay; the existing input-case catalog also expects ordinary then standing
+power. Thus the contact-count difference is not evidence that ordinary-on-press
+is itself wrong. Whether animation queue takeover across frame rates satisfies
+the required timing course remains open; use retained window traces and the P0
+pilot before changing gameplay or researching another original-engine detail.
+
+Verification is planned per chunk: focused development checks first, then the
+affected required integration gates after related changes are batched. Existing
+C++ binaries and broad gates remain reusable while their implementation and
+dependencies are unchanged, with hashes and original source receipts. Fixture or
+checker corrections require cheap checks and retained-raw reinspection where
+sufficient, rather than another full game run. Preserve original failures and
+underlying gameplay assertions. Reassess sequencing after two checkpoints that
+close no acceptance gap.
 
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
 and recipe at `b1583d624f` retain their historical provenance.
