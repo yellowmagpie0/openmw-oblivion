@@ -254,14 +254,20 @@ namespace EsmTool
                     if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
                 }
             }
-            if constexpr (std::is_same_v<T, ESM4::Spell>)
+            if constexpr (std::is_same_v<T, ESM4::Spell> || std::is_same_v<T, ESM4::Enchantment>)
             {
                 if (value.mData)
-                    std::cout << "\n  Spell: type=" << value.mData->mType << " cost=" << value.mData->mCost
-                              << " level=" << value.mData->mLevel << " flags=" << unsigned(value.mData->mFlags);
+                {
+                    if constexpr (std::is_same_v<T, ESM4::Spell>)
+                        std::cout << "\n  Spell: type=" << value.mData->mType << " cost=" << value.mData->mCost
+                                  << " level=" << value.mData->mLevel << " flags=" << unsigned(value.mData->mFlags);
+                    else
+                        std::cout << "\n  Enchantment: type=" << value.mData->mType << " charge=" << value.mData->mCharge
+                                  << " cost=" << value.mData->mCost << " flags=" << unsigned(value.mData->mFlags);
+                }
                 for (const auto& effect : value.mEffects)
                 {
-                    std::cout << "\n  SpellEffect: code=" << effect.mId << " magnitude=" << effect.mMagnitude
+                    std::cout << (std::is_same_v<T, ESM4::Spell> ? "\n  SpellEffect: code=" : "\n  EnchantmentEffect: code=") << effect.mId << " magnitude=" << effect.mMagnitude
                               << " area=" << effect.mArea << " duration=" << effect.mDuration
                               << " range=" << effect.mRange << " actorValue=" << effect.mActorValue;
                     if (effect.mScriptEffect)
@@ -615,7 +621,10 @@ namespace EsmTool
                     readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_ENCH:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == 0.8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::Enchantment>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_EQUP:
                     break;

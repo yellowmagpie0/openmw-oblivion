@@ -1181,6 +1181,60 @@ TEST(MWWorldStoreTest, tes4SpellsUseWinningKeysAndRemapOnlyScriptReferencesAcros
     EXPECT_NE(store.search<ESM4::Spell>(other),nullptr);
 }
 
+TEST(MWWorldStoreTest, tes4EnchantmentsUseWinningKeysAndRemapOnlyScriptReferencesAcrossReorderedMasters)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{{"base.esm",0},{"other.esm",1},{"patch.esp",2}};
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, std::uint32_t script, std::uint32_t magnitude, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900}));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8,'\0'));
+        const auto code = ESM::fourCC("SEFF");
+        const auto payload = deleted ? std::string{} : sub(ESM::fourCC("ENIT"), bytes(std::uint32_t{2}) + bytes(std::uint32_t{500}) + bytes(magnitude) + std::string(4,'\0'))
+            + sub(ESM::fourCC("EFID"), bytes(code))
+            + sub(ESM::fourCC("EFIT"), bytes(code) + bytes(magnitude) + std::string(16,'\0'))
+            + sub(ESM::fourCC("SCIT"), bytes(script) + bytes(std::uint32_t{3}) + bytes(ESM::fourCC("FIDG")));
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4,0,1,header)
+            + record(ESM4::REC_ENCH,form,deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u,payload),
+            std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream),name,nullptr,nullptr,true);
+        reader.setModIndex(indices.at(name)); reader.updateModIndices(indices);
+        store.loadESM4(reader,&dummyListener);
+    };
+    load("base.esm",{},0x800,0x810,50,false);
+    load("other.esm",{},0x800,0x811,60,false);
+    const auto base=ESM::FormKey::content("base.esm",0x800);
+    const auto other=ESM::FormKey::content("other.esm",0x800);
+    ASSERT_NE(store.search<ESM4::Enchantment>(base),nullptr);
+    ASSERT_NE(store.search<ESM4::Enchantment>(other),nullptr);
+    EXPECT_EQ(store.search<ESM4::Enchantment>(base)->mEffects[0].mMagnitude,50);
+    load("patch.esp",{"other.esm","base.esm"},0x01000800,0x00000811,100,false);
+    const auto* spell=store.search<ESM4::Enchantment>(base);
+    ASSERT_NE(spell,nullptr); ASSERT_EQ(spell->mEffects.size(),1);
+    ASSERT_TRUE(spell->mData); EXPECT_EQ(spell->mData->mType,2);
+    EXPECT_EQ(spell->mData->mCharge,500); EXPECT_EQ(spell->mData->mCost,100);
+    const auto& effect=spell->mEffects[0];
+    EXPECT_EQ(spell->mFormKey,base); EXPECT_EQ(effect.mId,ESM::fourCC("SEFF"));
+    EXPECT_EQ(effect.mMagnitude,100); ASSERT_TRUE(effect.mScriptEffect);
+    EXPECT_EQ(effect.mScriptEffect->mScript,ESM::FormKey::content("other.esm",0x811));
+    EXPECT_EQ(effect.mScriptEffect->mVisualEffect,ESM::fourCC("FIDG"));
+    EXPECT_EQ(store.search<ESM4::Enchantment>(other)->mEffects[0].mMagnitude,60);
+    load("patch.esp",{"other.esm","base.esm"},0x01000800,0,0,true);
+    EXPECT_EQ(store.search<ESM4::Enchantment>(base),nullptr);
+    EXPECT_NE(store.search<ESM4::Enchantment>(other),nullptr);
+}
+
 TEST(MWWorldStoreTest, preparedPlayerRecordPublishesNoMetadataUntilCommitAndPreservesStaticInput)
 {
     MWWorld::ESMStore store;

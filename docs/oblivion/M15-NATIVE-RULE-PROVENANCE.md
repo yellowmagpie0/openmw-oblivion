@@ -14268,15 +14268,19 @@ S2/closure-dodge-oracle-01 executes 312 original admission/selection cases,
 including all 256 direction flag combinations. Actual animation playback,
 movement and persistence remain later-stage acceptance work.
 
+The typed TES4 ENCH input layout follows the [xEdit TES4 definition](https://raw.githubusercontent.com/TES5Edit/TES5Edit/dev-4.1.6/Core/wbDefinitionsTES4.pas): type, charge and cost are uint32, followed by the no-autocalc byte and three preserved padding bytes. ENCH and SPEL share effect-list decoding. The [input checkpoint](../../build/oblivion-compat/m15/S4/enchanted-contact-work-01/input-checkpoint-verification.json) records independent raw/typed comparison, real-store remapping/overrides/deletion, and normal/sanitizer gates. Stored cost and flags are inputs, not evidence of an effective charge formula or executed effects.
+
 ### Shipped script-effect link defects
 
-`M15-DATA-EXCEPTIONS.json` binds three exact unresolved SEFF script links to
+`M15-DATA-EXCEPTIONS.json` binds four exact invalid SEFF script links to
 source record, encoded-record hash and official plugin hash. Independent raw
 record inspection confirms MS40TestSpell points to an Oblivion REFR rather
 than SCPT; Knights HolyAura and WoodlandGrace point to absent Knights forms.
-These are genuine shipped dangling script identities. Preserve and diagnose
-on effect activation; no script execution or fallback is inferred. Magic
-execution remains M16-owned. The audit retains raw link issues and removes
+The typed ENCH input audit additionally identifies shipped debug enchantment
+TestPoof (`0018c5`) pointing to LAND `000863`, not a script. All other reviewed
+inventory counts stay unchanged; the new winning ENCH count is 1,694.
+Preserve and diagnose these references on activation; no script execution or
+fallback is inferred. These script effects remain M16-owned. The audit retains raw link issues and removes
 only the exact reviewed defects from the physical data failure list. New,
 changed, deleted or ambiguous links still fail, as do stale exception entries.
 The physical audit classification does not certify gameplay or runtime rules.

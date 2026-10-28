@@ -252,6 +252,7 @@ add_component_dir (esm4
     loadcsty
     loadmgef
     loadspel
+    loadench
     loadskil
     loadfact
     ability

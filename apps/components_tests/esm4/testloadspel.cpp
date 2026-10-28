@@ -1,4 +1,5 @@
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadench.hpp>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
@@ -207,4 +208,137 @@ TEST(ESM4Spell, PreservesUnknownNumericDomainsForExplicitRuntimePolicy)
     EXPECT_EQ(spell.mData->mType, 0xffffffff); EXPECT_EQ(spell.mData->mLevel, 0xdeadbeef);
     ASSERT_EQ(spell.mEffects.size(),1);
     EXPECT_EQ(spell.mEffects[0].mRange, 0xffffffff); EXPECT_EQ(spell.mEffects[0].mActorValue, 0xffffffff);
+}
+
+namespace
+{
+    std::vector<std::uint8_t> enchantmentInfo()
+    {
+        auto data = spellInfo();
+        put(data, 0, 2); put(data, 4, 500); put(data, 8, 12);
+        return data;
+    }
+
+    std::vector<std::uint8_t> enchantmentRecord()
+    {
+        std::vector<std::uint8_t> data;
+        sub(data, "FULL", {'e', 'n', 'c', 'h', 0});
+        sub(data, "ENIT", enchantmentInfo());
+        sub(data, "EFID", {'F', 'I', 'D', 'G'});
+        sub(data, "ZZZZ", {1, 2, 3});
+        sub(data, "EFIT", effectInfo("FIDG"));
+        return data;
+    }
+
+    ESM4::Enchantment loadEnchantment(std::vector<std::uint8_t> payload, bool compressed = false,
+        std::uint32_t flags = 0, float version = 1.f)
+    {
+        return load<ESM4::Enchantment>(std::move(payload), compressed, flags, version, "ENCH");
+    }
+}
+
+TEST(ESM4Enchantment, ReadsChargeCostOrderedEffectsAndPreservesRawPaddingAndCompression)
+{
+    for (bool compressed : {false, true})
+    {
+        auto payload = enchantmentRecord();
+        sub(payload, "EFID", {'P', 'A', 'R', 'A'});
+        sub(payload, "EFIT", effectInfo("PARA"));
+        const auto value = loadEnchantment(payload, compressed);
+        ASSERT_TRUE(value.mData);
+        EXPECT_EQ(value.mData->mType, 2);
+        EXPECT_EQ(value.mData->mCharge, 500);
+        EXPECT_EQ(value.mData->mCost, 12);
+        EXPECT_EQ(value.mData->mFlags, 1);
+        EXPECT_EQ(value.mData->mPadding, (std::array<std::uint8_t, 3>{0xa5, 0xff, 0x80}));
+        EXPECT_EQ(value.mFullName, "ench");
+        ASSERT_EQ(value.mEffects.size(), 2);
+        EXPECT_EQ(value.mEffects[0].mId, ESM::fourCC("FIDG"));
+        EXPECT_EQ(value.mEffects[0].mMagnitude, 50);
+        EXPECT_EQ(value.mEffects[0].mArea, 3);
+        EXPECT_EQ(value.mEffects[0].mDuration, 7);
+        EXPECT_EQ(value.mEffects[0].mRange, 0);
+        EXPECT_EQ(value.mEffects[0].mActorValue, 9);
+        EXPECT_EQ(value.mEffects[1].mId, ESM::fourCC("PARA"));
+        ASSERT_EQ(value.mSubRecords.size(), 7);
+        EXPECT_EQ(value.mSubRecords[3].mData, (std::vector<std::uint8_t>{1, 2, 3}));
+    }
+}
+
+TEST(ESM4Enchantment, SharesScriptEffectDecodingAndKeepsNamesAndCodesDistinctFromReferences)
+{
+    for (unsigned size : {4, 12, 16})
+    {
+        auto payload = enchantmentRecord();
+        sub(payload, "EFID", {'S', 'E', 'F', 'F'});
+        sub(payload, "EFIT", effectInfo("SEFF"));
+        std::vector<std::uint8_t> script(size);
+        put(script, 0, 0x812);
+        if (size >= 12) { put(script, 4, 3); put(script, 8, ESM::fourCC("FIDG")); }
+        if (size == 16) { script[12] = 1; script[13] = 0xa5; }
+        sub(payload, "SCIT", script);
+        sub(payload, "FULL", {'s', 'c', 'r', 'i', 'p', 't', 0});
+        const auto value = loadEnchantment(payload, true);
+        EXPECT_EQ(value.mFullName, "ench");
+        ASSERT_EQ(value.mEffects.size(), 2);
+        ASSERT_TRUE(value.mEffects[1].mScriptEffect);
+        const auto& effect = *value.mEffects[1].mScriptEffect;
+        EXPECT_EQ(effect.mScript, ESM::FormKey::content("fixture.esm", 0x812));
+        EXPECT_EQ(effect.mName, "script");
+        EXPECT_EQ(effect.mSchool.has_value(), size >= 12);
+        EXPECT_EQ(effect.mVisualEffect.has_value(), size >= 12);
+        EXPECT_EQ(effect.mFlags.has_value(), size == 16);
+        if (size >= 12) EXPECT_EQ(effect.mVisualEffect, ESM::fourCC("FIDG"));
+        if (size == 16) EXPECT_EQ(effect.mPadding[0], 0xa5);
+    }
+}
+
+TEST(ESM4Enchantment, RejectsMalformedMandatoryAndEffectFieldsButAllowsEmptyDeletion)
+{
+    EXPECT_THROW(loadEnchantment({}), std::runtime_error);
+    EXPECT_FALSE(loadEnchantment({}, false, ESM4::Rec_Deleted).mData);
+    for (const auto& [tag, expected] : std::array<std::pair<const char*, unsigned>, 3>{{
+             {"ENIT", 16}, {"EFID", 4}, {"EFIT", 24}}})
+    {
+        for (unsigned size = 0; size <= 26; ++size)
+        {
+            if (size == expected) continue;
+            std::vector<std::uint8_t> payload;
+            if (std::string(tag) != "ENIT") sub(payload, "ENIT", enchantmentInfo());
+            if (std::string(tag) == "EFIT") sub(payload, "EFID", {'F', 'I', 'D', 'G'});
+            sub(payload, tag, std::vector<std::uint8_t>(size));
+            EXPECT_THROW(loadEnchantment(payload), std::runtime_error) << tag << ':' << size;
+        }
+    }
+    auto payload = enchantmentRecord(); sub(payload, "ENIT", enchantmentInfo());
+    EXPECT_THROW(loadEnchantment(payload), std::runtime_error);
+    payload = enchantmentRecord(); sub(payload, "EFID", {'F', 'I', 'D', 'G'});
+    EXPECT_THROW(loadEnchantment(payload), std::runtime_error);
+    payload.clear(); sub(payload, "ENIT", enchantmentInfo());
+    sub(payload, "EFID", {'P', 'A', 'R', 'A'}); sub(payload, "EFIT", effectInfo("FIDG"));
+    EXPECT_THROW(loadEnchantment(payload), std::runtime_error);
+    payload = enchantmentRecord(); sub(payload, "SCIT", std::vector<std::uint8_t>(8));
+    EXPECT_THROW(loadEnchantment(payload), std::runtime_error);
+    payload = enchantmentRecord(); sub(payload, "SCIT", std::vector<std::uint8_t>(4));
+    sub(payload, "SCIT", std::vector<std::uint8_t>(4));
+    EXPECT_THROW(loadEnchantment(payload), std::runtime_error);
+    EXPECT_THROW(loadEnchantment(enchantmentRecord(), false, 0, 1.7f), std::runtime_error);
+}
+
+TEST(ESM4Enchantment, PreservesUnknownTypeChargeCostFlagsAndEffectDomainsForRuntimeAdmission)
+{
+    auto info = enchantmentInfo();
+    put(info, 0, 0xffffffff); put(info, 4, 0xffffffff); put(info, 8, 0xdeadbeef); info[12] = 0x80;
+    std::vector<std::uint8_t> payload; sub(payload, "ENIT", info);
+    sub(payload, "EFID", {'Z', 'Z', 'Z', 'Z'});
+    auto effect = effectInfo("ZZZZ"); put(effect, 16, 0xffffffff); put(effect, 20, 0xffffffff);
+    sub(payload, "EFIT", effect);
+    const auto value = loadEnchantment(payload);
+    EXPECT_EQ(value.mData->mType, 0xffffffff);
+    EXPECT_EQ(value.mData->mCharge, 0xffffffff);
+    EXPECT_EQ(value.mData->mCost, 0xdeadbeef);
+    EXPECT_EQ(value.mData->mFlags, 0x80);
+    ASSERT_EQ(value.mEffects.size(), 1);
+    EXPECT_EQ(value.mEffects[0].mRange, 0xffffffff);
+    EXPECT_EQ(value.mEffects[0].mActorValue, 0xffffffff);
 }

@@ -38,6 +38,10 @@ namespace ESM4
         std::optional<SpellScriptEffect> mScriptEffect;
     };
 
+    // Shared TES4 EFID/EFIT/SCIT/FULL wire layout, with stable script keys.
+    // Does not interpret effect magnitudes, costs or execution policy.
+    void decodeMagicItemEffects(Reader& reader, RawRecord& record, std::vector<SpellEffect>& effects);
+
     // Typed TES4 inputs only. No spell execution or active-effect semantics.
     // All original subrecords, including unknown fields and padding, survive.
     struct Spell : RawRecord

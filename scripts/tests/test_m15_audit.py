@@ -105,6 +105,24 @@ class M15NativeAuditTests(unittest.TestCase):
         for code in (b'',b'FO',b'F\0SP',b'FOSPX',b'FOSP\0\0'):
             with self.assertRaises(audit.M15AuditError):decode(prefix,code)
 
+    def test_shipped_enchantment_link_review_uses_exact_record_and_does_not_waive_changed_content(self):
+        issue = dict(source='content:base.esm:000800', target='content:base.esm:000810',
+                     expected_types=['SCPT'], actual_type='LAND', deleted=False, message='wrong type')
+        catalog = dict(schema_version=1, exceptions=[dict(source=issue['source'], target=issue['target'],
+            expected_types=['SCPT'], actual_type='LAND', plugin='base.esm', plugin_sha256='a'*64,
+            record_sha256='b'*64, owner='M16', reason='Exact shipped test enchantment defect')])
+        original = dict(plugins=[dict(name='base.esm', sha256='a'*64)], spells={},
+            enchantments={issue['source']: dict(plugin='base.esm', record_sha256='b'*64)},
+            link_issues=[issue], failures=['wrong type'], data_passed=False)
+        reviewed = copy.deepcopy(original)
+        self.assertTrue(audit.classify_shipped_magic_links(reviewed, catalog)['passed'])
+        self.assertTrue(reviewed['data_passed'])
+        self.assertFalse(reviewed['shipped_magic_link_defects'][0]['activation_supported'])
+        changed = copy.deepcopy(original)
+        changed['enchantments'][issue['source']]['record_sha256'] = 'c'*64
+        self.assertFalse(audit.classify_shipped_magic_links(changed, catalog)['passed'])
+        self.assertFalse(changed['data_passed'])
+
     def test_effect_inventory_uses_stable_keys_overrides_deletes_and_reports_ambiguous_codes(self):
         def effect(form,code,data):
             return record('MGEF',form,sub('EDID',code)+sub('DATA',struct.pack('<4IiHH',0x1000072,0,data,5,-1,0,0)))
@@ -163,6 +181,55 @@ class M15NativeAuditTests(unittest.TestCase):
             self.assertEqual(result['spells']['content:other.esm:000800']['effects'][0]['magnitude'],60)
             patch.write_bytes(plugin([record('SPEL',0x01000800,b'',0x20)],['other.esm','base.esm']))
             result=audit.inventory([base,other,patch]);self.assertEqual(result['summary']['spells'],1)
+            patch.write_bytes(plugin([spell(0x01000800,100,0x00000999)],['other.esm','base.esm']))
+            self.assertFalse(audit.inventory([base,other,patch])['data_passed'])
+
+    def test_enchantment_layout_order_padding_partial_script_fields_and_name(self):
+        def decode(parts):
+            return audit.enchantment_definition(dict(plugin='base.esm', masters=['other.esm'],
+                subrecords=[dict(name=tag,payload=data) for tag,data in parts]))
+        info = struct.pack('<IIIB3s',2,500,12,1,b'\xa5\xff\x80')
+        effect = struct.pack('<4s5I',b'SEFF',50,3,7,0,9)
+        basic = [('ENIT',info),('FULL',b'spell\0'),('EFID',b'SEFF'),('ZZZZ',b'poison'),('EFIT',effect)]
+        for size in (4,12,16):
+            script = struct.pack('<IIIB3s',0x01000812,3,0x47444946,1,b'\xa5\xff\x80')[:size]
+            result = decode(basic+[('SCIT',script),('FULL',b'effect\0')])
+            self.assertEqual(result['type'],2)
+            self.assertEqual(result['charge'],500)
+            self.assertEqual(result['cost'],12)
+            self.assertEqual(result['flags'],1)
+            self.assertEqual(result['padding'],[0xa5,0xff,0x80])
+            self.assertEqual(result['full_name'],'spell')
+            parsed = result['effects'][0]['script']
+            self.assertEqual(parsed['key'],'content:base.esm:000812')
+            self.assertEqual(parsed['name'],'effect')
+            self.assertEqual(parsed['school'],3 if size>=12 else None)
+            self.assertEqual(parsed['visual'],0x47444946 if size>=12 else None)
+            self.assertEqual(parsed['flags'],1 if size==16 else None)
+        malformed = [[],[('ENIT',info[:-1])],basic+[('ENIT',info)],basic+[('EFIT',effect)],
+                     basic+[('EFID',b'FOAT')],basic+[('SCIT',bytes(8))],basic+[('SCIT',bytes(4))]*2,
+                     [('ENIT',info),('EFID',b'FOAT'),('EFIT',effect)],
+                     [('ENIT',info),('SCIT',bytes(4))]]
+        for parts in malformed:
+            with self.assertRaises(audit.M15AuditError):decode(parts)
+
+    def test_enchantment_inventory_overrides_remaps_script_links_and_deletes(self):
+        def spell(form,magnitude,script):
+            return record('ENCH',form,sub('ENIT',struct.pack('<IIIB3s',4,0,0,1,bytes(3)))
+                +sub('EFID',b'SEFF')+sub('EFIT',struct.pack('<4s5I',b'SEFF',magnitude,0,0,0,9))
+                +sub('SCIT',struct.pack('<I',script)))
+        with tempfile.TemporaryDirectory() as directory:
+            root=Path(directory);base=root/'base.esm';other=root/'other.esm';patch=root/'patch.esp'
+            base.write_bytes(plugin([spell(0x800,50,0x810),record('SCPT',0x810,b'')]))
+            other.write_bytes(plugin([spell(0x800,60,0x811),record('SCPT',0x811,b'')]))
+            patch.write_bytes(plugin([spell(0x01000800,100,0x00000811)],['other.esm','base.esm']))
+            result=audit.inventory([base,other,patch]);self.assertTrue(result['data_passed'],result['failures'])
+            effects=result['enchantments']['content:base.esm:000800']['effects']
+            self.assertEqual(effects[0]['magnitude'],100)
+            self.assertEqual(effects[0]['script']['key'],'content:other.esm:000811')
+            self.assertEqual(result['enchantments']['content:other.esm:000800']['effects'][0]['magnitude'],60)
+            patch.write_bytes(plugin([record('ENCH',0x01000800,b'',0x20)],['other.esm','base.esm']))
+            result=audit.inventory([base,other,patch]);self.assertEqual(result['summary']['enchantments'],1)
             patch.write_bytes(plugin([spell(0x01000800,100,0x00000999)],['other.esm','base.esm']))
             self.assertFalse(audit.inventory([base,other,patch])['data_passed'])
 

@@ -48,7 +48,7 @@ def classify_shipped_magic_links(result: dict, catalog: dict) -> dict:
                 or exception.get('expected_types') != ['SCPT'] or not exception.get('reason')):
             raise M15AuditError('duplicate or unsupported shipped-link exception')
         seen.add(identity)
-        spell = result['spells'].get(exception['source'])
+        spell = result['spells'].get(exception['source']) or result.get('enchantments', {}).get(exception['source'])
         matches = [issue for issue in result['link_issues']
                    if (issue['source'], issue['target']) == identity
                    and issue['expected_types'] == exception['expected_types']
@@ -98,10 +98,9 @@ def effect_definition(record: dict) -> dict[str, Any]:
                     if flags & ((1<<16)|(1<<17)|(1<<18)) else None)
 
 
-def spell_definition(record: dict) -> dict[str, Any]:
-    """Decode original TES4 SPEL bytes; effect execution is deliberately absent."""
+def _magic_item_effects(record: dict) -> dict[str, Any]:
+    """Independently decode shared TES4 effect-list bytes, without execution."""
     subs = record['subrecords']
-    kind, cost, level, flags, padding = _unpack(_one(subs, 'SPIT', True), '<IIIB3s', 'SPIT')
     effects = []
     pending = None
     name = ''
@@ -140,8 +139,19 @@ def spell_definition(record: dict) -> dict[str, Any]:
                 script['name'] = binary._decode_string(payload)
     if pending is not None:
         raise M15AuditError('EFID has no EFIT')
+    return dict(full_name=name, effects=effects)
+
+
+def spell_definition(record: dict) -> dict[str, Any]:
+    kind, cost, level, flags, padding = _unpack(_one(record['subrecords'], 'SPIT', True), '<IIIB3s', 'SPIT')
     return dict(type=kind, cost=cost, level=level, flags=flags, padding=list(padding),
-                full_name=name, effects=effects)
+                **_magic_item_effects(record))
+
+
+def enchantment_definition(record: dict) -> dict[str, Any]:
+    kind, charge, cost, flags, padding = _unpack(_one(record['subrecords'], 'ENIT', True), '<IIIB3s', 'ENIT')
+    return dict(type=kind, charge=charge, cost=cost, flags=flags, padding=list(padding),
+                **_magic_item_effects(record))
 
 
 # Struct grouping is independent of the C++ decoder's explicit byte offsets.
@@ -370,7 +380,7 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
     if len(set(masters)) != len(masters):
         raise M15AuditError(f'{path.name}: duplicate masters')
     records = []
-    wanted = {'CSTY', 'SKIL', 'SPEL', 'MGEF', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
+    wanted = {'CSTY', 'SKIL', 'SPEL', 'ENCH', 'MGEF', 'NPC_', 'CREA', 'GMST', 'FACT', 'WEAP', 'AMMO', 'ARMO', 'ACHR', 'ACRE', 'REFR', 'CONT', 'CELL'}
 
     def walk(start: int, end: int, cell: str | None = None, depth: int = 0):
         if depth > 64:
@@ -391,7 +401,7 @@ def read_plugin(path: Path) -> tuple[dict, list[dict]]:
                 key = _stable_key(path.name, ident, masters)
                 record = {'key': key, 'type': tag, 'plugin': path.name, 'flags': flags,
                           'deleted': bool(flags & binary.DELETED_FLAG), 'cell': cell, 'masters': masters}
-                if tag == 'SPEL':
+                if tag in ('SPEL', 'ENCH'):
                     record['sha256'] = hashlib.sha256(data[start:finish]).hexdigest()
                 if tag in wanted and not record['deleted']:
                     payload = binary._payload(data, start + 20, size, flags, path.name, tag)
@@ -510,7 +520,7 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             winners[key] = record
     styles, actors, settings, factions, equipment = {}, {}, {}, {}, {}
     ownership, references = {}, {}
-    skills, spells, effect_definitions = {}, {}, {}
+    skills, spells, enchantments, effect_definitions = {}, {}, {}, {}
     failures = []
     for key, record in winners.items():
         if record['deleted'] or 'subrecords' not in record:
@@ -541,6 +551,9 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             elif record['type'] == 'SPEL':
                 spells[key] = dict(spell_definition(record), editor_id=edid,
                                    record_sha256=record['sha256'], plugin=record['plugin'])
+            elif record['type'] == 'ENCH':
+                enchantments[key] = dict(enchantment_definition(record), editor_id=edid,
+                                         record_sha256=record['sha256'], plugin=record['plugin'])
             elif record['type'] == 'SKIL':
                 skills[key] = dict(skill_definition(_one(subs, 'INDX', True), _one(subs, 'DATA', True)),
                                    editor_id=edid)
@@ -645,7 +658,7 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
             check_link(key, relation['faction'], ('FACT',))
     for key, item in equipment.items():
         check_link(key, item['enchantment'], ('ENCH',))
-    for key, spell in spells.items():
+    for key, spell in list(spells.items()) + list(enchantments.items()):
         for effect in spell['effects']:
             if effect['script'] is not None:
                 check_link(key, effect['script']['key'], ('SCPT',))
@@ -700,13 +713,13 @@ def inventory(paths: list[Path], prisons: list[dict] | None = None) -> dict[str,
         failures.append('ambiguous winning MGEF effect codes')
     unresolved = [key for key, actor in actors.items() if actor['style'] == 'null']
     return {'kind': 'm15-native-data-inventory', 'plugins': plugins, 'styles': styles, 'actors': actors,
-        'settings': settings, 'skills': skills, 'spells': spells, 'effect_definitions': effect_definitions, 'factions': factions, 'equipment': equipment,
+        'settings': settings, 'skills': skills, 'spells': spells, 'enchantments': enchantments, 'effect_definitions': effect_definitions, 'factions': factions, 'equipment': equipment,
         'ownership': ownership, 'references': references, 'prisons': prison_reports, 'failures': failures,
         'link_issues': link_issues, 'data_passed': not failures,
         'skill_inventory_complete': skill_counts == collections.Counter(range(12, 33)),
         'unresolved_default_actors': unresolved, 'runtime_rules_verified': False,
         'open_gates': ['original-game default policy verification', 'independent physical/crime rule matrix'],
-        'summary': {'styles': len(styles), 'skills': len(skills), 'spells': len(spells), 'effect_definitions': len(effect_definitions), 'actors': len(actors), 'settings': len(settings),
+        'summary': {'styles': len(styles), 'skills': len(skills), 'spells': len(spells), 'enchantments': len(enchantments), 'effect_definitions': len(effect_definitions), 'actors': len(actors), 'settings': len(settings),
                     'factions': len(factions), 'equipment': len(equipment), 'owned_forms': len(ownership), 'references': len(references), 'prisons': len(prison_reports), 'default_actors': len(unresolved),
                     'style_size_distribution': dict(sorted(collections.Counter(str(s['standard_size']) for s in styles.values()).items()))},
         'passed': False} # Data inventory alone never closes the M15 rule/oracle gate.

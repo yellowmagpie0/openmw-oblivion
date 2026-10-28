@@ -41,6 +41,19 @@
       "plugin_sha256": "a0b48c54ef788fd17a3c042c24795e52aefa76050d226448b91005b36f5d681b",
       "owner": "M16",
       "reason": "Shipped script effect has a dangling script identity. Preserve it and diagnose on effect activation; no script or spell execution is inferred. These spells are outside the selected M15 physical campaigns."
+    },
+    {
+      "source": "content:oblivion.esm:0018c5",
+      "target": "content:oblivion.esm:000863",
+      "expected_types": [
+        "SCPT"
+      ],
+      "actual_type": "LAND",
+      "record_sha256": "9e369014a0e5e3709d6adc39c884079092953a08b4c13e60c90b99f19725ee84",
+      "plugin": "Oblivion.esm",
+      "plugin_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+      "owner": "M16",
+      "reason": "Shipped debug enchantment TestPoof points its script effect to LAND000863. Preserve the exact reference and diagnose unsupported activation; no script/effect execution is inferred. This exception is specific to these record and plugin hashes, not other enchanted weapon contacts."
     }
   ]
 }
