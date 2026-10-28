@@ -909,6 +909,52 @@
       },
       "power_approach_range": 110,
       "scope": "S4 item2: stock Club normal/directional attacks in existing combined course. Keep targetHealth120 and all unrelated fixture state; preserve real type2/speed.9/reach.9/weight8/damage7. Blunt100 is authored in native/base/legacy views. No contact/damage/reaction outcomes injected."
+    },
+    "stock_iron_claymore": {
+      "weapon_family": "blade",
+      "stock_weapon": "content:oblivion.esm:01c6cd",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "weapon_type": 1,
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "initial_player_weapon_condition": 168,
+      "initial_player_weapon_charge": -1,
+      "wall_approach": {
+        "maximum_x": null,
+        "maximum_y": 92,
+        "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+      },
+      "power_approach_range": 110,
+      "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+      "stock_weapon_weight": 22,
+      "expected_ordinary_fatigue_cost": 9.2,
+      "expected_power_fatigue_cost": 46.0,
+      "animation_family": "twohand",
+      "target_health": 300
+    },
+    "stock_iron_battle_axe": {
+      "weapon_family": "blunt",
+      "stock_weapon": "content:oblivion.esm:000d7f",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "weapon_type": 3,
+      "actor_value_skill": 16,
+      "legacy_skill": "blunt.base",
+      "initial_player_weapon_condition": 168,
+      "initial_player_weapon_charge": -1,
+      "wall_approach": {
+        "maximum_x": null,
+        "maximum_y": 92,
+        "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+      },
+      "power_approach_range": 110,
+      "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+      "stock_weapon_weight": 27,
+      "expected_ordinary_fatigue_cost": 9.7,
+      "expected_power_fatigue_cost": 48.5,
+      "animation_family": "twohand",
+      "target_health": 300
     }
   }
 }
