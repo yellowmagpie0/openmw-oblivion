@@ -11,8 +11,8 @@ Current acceptance checklist (2026-10-27):
 - **Demonstrated:** the historical [joined view/device course](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) covers production block, Stagger/recovery, nonlethal return hit and range/wall misses normally and under ASan/UBSan: 162 exact pairs, 26 epochs and 18 whole restores. The recipe retains original pins, section8 pairwise restart coverage, audio, captures and positive controls.
 - **Demonstrated mastery slices:** the [standing-power index](M15-STANDING-POWER-VERIFICATION.json) links Journeyman sideways disarm, Master Forward paralysis/fall/GetUp and Expert Backward physical knockdown/GetUp. Backward has 13 exact pairs across 10 epochs and 6 whole restores, including proc/nonproc controls in both builds. Final full engine gates pass **2,050 cases each** at fingerprint `df6faf58301ad415a3cd204bd7820289bceee45e7eb66932ef8cd4c22a985951`. Normal runtime retains its earlier source/binary provenance; component/Python reuse and the scoped SAN fixture reinspection are explicit in the checkpoint.
 - **Demonstrated joined mastery:** the [current course and view extension](../../scripts/data/oblivion_compat/m15_combined_melee_course.json) join block, Stagger/recovery, return hit, both geometry misses and four directional powers in first- and third-person keyboard/mouse, normally and under ASan/UBSan. Each view has **36 core pairs plus 4 supplemental Forward-view pairs, 6 epochs and 4 whole restores**: 80 pairs total, with all 76 selected captures directly reviewed. Native resources, ownership, nonlethal endpoints, reactions and block audio/no-replay checks pass. Fresh continuations cover applied Backward recovery and actual Forward effects, including the sanitizer third-person pending-before-application owner. Scope remains configured cap15, seed1 and forced proc chances.
-- **Demonstrated controller mastery:** the same joined fixture now passes with configured first-person gamepad normally and under ASan/UBSan: **36 core plus 4 supplemental pairs, 6 epochs, 4 whole restores and 38 reviewed captures**. Actual uinput/SDL receipts, resources, ownership, nonlethal endpoints and block audio/no-replay pass. Source and saved/live physics remain exact; the recipe declares a negligible residual-motion tolerance for one sanitizer repeat endpoint. Fixture/checker failures and original checker bytes are linked in its checkpoint. Unchanged engine/Python gates retain original provenance.
-- **Incomplete:** remaining actor/weapon/effect, command/query, interruption and sound/HUD domains and high-risk crosses below; the current mastery course still needs third-person controller coverage. Retain at least three fixed seeds, 30/60/120FPS caps with achieved FPS/timing, and independent final campaigns twice with the same seed plus once with a second declared seed.
+- **Demonstrated controller mastery:** the same joined fixture now passes with configured first- and third-person gamepad normally and under ASan/UBSan: **72 core plus 8 supplemental pairs, 12 epochs, 8 whole restores and 76 reviewed captures**. Actual uinput/SDL receipts, resources, ownership, nonlethal endpoints and block audio/no-replay pass. Source and saved/live physics remain exact; repeat-only numeric tolerances are declared. Third-person SAN recovery also covers a source whose Player followthrough already finished. Fixture/checker failures, original helper bytes and unchanged engine/Python gate provenance are linked in the recipe checkpoints.
+- **Incomplete:** remaining actor/weapon/effect, command/query, interruption and sound/HUD domains and high-risk crosses below. Retain at least three fixed seeds, 30/60/120FPS caps with achieved FPS/timing, and independent final campaigns twice with the same seed plus once with a second declared seed.
 - **Blocked:** none.
 
 The bounded longitudinal profiles use configured keyboard/first-person input,
@@ -38,9 +38,10 @@ the elapsed GameHour projection separately. Its pending Forward save is restored
 exactly, applies once, collapses physically and recovers without replay; scoped
 checker failures and original checker bytes remain linked in the receipt.
 
-Next bounded task: reuse the joined mastery fixture and configured gamepad inputs
-in third person, retaining fresh-recovery checks. This closes the remaining current
-mastery view/device gap; all other S4 gates stay open.
+Next bounded task: implement the required narrow enchanted-weapon contact path,
+which currently rejects these contacts. Preserve shared contact, charge/effect
+ownership and save/load correctness; reuse the joined gameplay fixture. The current
+mastery view/device gap is closed, while the other S4 gates remain open.
 
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
 and recipe at `b1583d624f` retain their historical provenance.

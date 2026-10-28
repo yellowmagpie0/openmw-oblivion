@@ -847,7 +847,29 @@
           "sha256": "3d8bcb5831d5e3f7ff5cadbd60cc83253c774ee56167cde6571eb29937b3e9e8"
         },
         "repeat_numeric_policy": "Source restoration and every saved/live physics pair remain exact. Retain existing repeat-only policies; SAN newlycreateddrop residual may be finite <=.001sceneunit/sec linear and<=.0001rad/sec angular percomponent (packedlinear<=.001/7). Normal strict-zero proof unchanged. Original failed check/checker bytes and8guards are linked in checkpoint.",
-        "limits": "Configured first-person gamepad,seed1,cap15,achievedFPSunmeasured,forcedprocchance100,MasterBlade/RustyShortsword/oneNPC. Third-person controller mastery and remaining S4 domains/matrices/campaigns remain open."
+        "limits": "Configured first-person gamepad,seed1,cap15,achievedFPSunmeasured,forcedprocchance100,MasterBlade/RustyShortsword/oneNPC. Third-person coverage is linked separately; remaining S4 domains/matrices/campaigns remain open."
+      },
+      "gamepad_third_person": {
+        "status": "PASS bounded third-person controller profile normally and under ASan/UBSan:36core+4supplemental exact pairs,6epochs,4whole restores,38reviewedcaptures. FullM15S4 remains incomplete.",
+        "requirement": "Close remaining joined mastery view/device gap.",
+        "reuse_input": "directional_mastery_extension.input_extensions.gamepad_first_person",
+        "reuse_view": "view_profiles.third_person; actual rightstick view toggle on full reference only, retain restored view in continuations.",
+        "acceptance": "Same production native contacts/resources/ownership and exact source/save-live pairs; real controller SDL receipts and retained third person.",
+        "full_M15S4_acceptance": false,
+        "reference_run_ids": {
+          "normal": "combined-mastery-gamepad-third-normal-01",
+          "sanitize": "combined-mastery-gamepad-third-sanitize-01"
+        },
+        "backward_source_wait": "Retain Player7finish wait when source strike7 is committed/active. If source has no strike, validate no reaction/retirements/held input/queued action/active blocks or first-person owners, then omit obsolete finish wait. Target natural recovery and no contact/force replay remain required.",
+        "checkpoint": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/gamepad-third-checkpoint-verification.json",
+          "sha256": "21ad108c994ee266f2f555b8841fa0f0fb29559567c30756918d3eb1c97cece5"
+        },
+        "continuation_run_ids": {
+          "normal": "combined-mastery-gamepad-third-normal-01-resume",
+          "sanitize": "combined-mastery-gamepad-third-sanitize-01-resume02"
+        },
+        "limits": "Same seed1/forcedproc100/cap15/achievedFPSunmeasured and actor/weapon bounds as first-controller profile. All four current mastery view/device profiles now pass in both builds; remaining S4 domains, matrices and final campaigns stay open."
       }
     }
   }
