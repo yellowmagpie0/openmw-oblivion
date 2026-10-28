@@ -515,6 +515,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
             raise ValueError(f"Scenario action {index} wait_log requires a non-empty pattern")
+        if action_type == "wait_log" and "after_start" in action and not isinstance(action["after_start"], bool):
+            raise ValueError(f"Scenario action {index} wait_log after_start must be a boolean")
         if action_type == "wait_log" and "poll_interval_seconds" in action:
             interval = action["poll_interval_seconds"]
             if (isinstance(interval, bool) or not isinstance(interval, (int, float))
@@ -1356,17 +1358,22 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         timeout = float(action.get("timeout_seconds", 30))
         interval = float(action.get("poll_interval_seconds", 0.1))
         log_path = output / str(action.get("path", "process.log"))
+        start_offset = log_path.stat().st_size if action.get("after_start", False) and log_path.exists() else 0
         matched = False
         while time.monotonic() - started < timeout:
-            if log_path.is_file() and pattern.search(log_path.read_text(encoding="utf-8", errors="replace")):
-                matched = True
-                break
+            if log_path.is_file():
+                with log_path.open(encoding="utf-8", errors="replace") as stream:
+                    stream.seek(start_offset)
+                    if pattern.search(stream.read()):
+                        matched = True
+                        break
             time.sleep(interval)
         return {
             "type": action_type,
             "pattern": pattern.pattern,
             "path": str(log_path),
             "poll_interval_seconds": interval,
+            "start_offset": start_offset,
             "passed": matched,
             "duration_seconds": round(time.monotonic() - started, 6),
         }

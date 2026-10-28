@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "name": "S4 combined normal-input course: block, Player Stagger/recovery, nonlethal return attack, range miss and in-reach wall miss; full acceptance matrix remains open",
+  "name": "S4 combined normal-input course with directional mastery, production block/Stagger, return attack and range/wall misses; full acceptance matrix remains open",
   "cwd": "{source}",
   "files": [
     {
       "path": "config/openmw.cfg",
-      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{stationary_fixture}\"\ncontent=Oblivion.esm\ncontent=M15StationaryOpponent.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=m15-course-observer.omwscripts\n"
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ndata=\"{stationary_fixture}\"\ncontent=Oblivion.esm\ndata=\"{mastery_fixture}\"\ncontent=M15StationaryOpponent.esp\ncontent=M15CombinedMasteryChance.esp\nstart=ImperialDungeon01::ref=0x1fc41::side=south\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=m15-course-observer.omwscripts\n"
     },
     {
       "path": "config/settings.cfg",
-      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 15\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Input]\ncamera sensitivity = 1.0\n"
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 15\n[Models]\nload unsupported nif files = true\n[Shaders]\nforce shaders = true\n[Input]\ncamera sensitivity = 0.05\n"
     },
     {
       "path": "test-data/events.txt",
@@ -17,7 +17,7 @@
     },
     {
       "path": "config/input_v3.xml",
-      "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n<Control name=\"51\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\"><KeyBinder key=\"5\" direction=\"INCREASE\" /><Channel number=\"51\" direction=\"DIRECT\" percentage=\"1\" /></Control>\n<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n<KeyBinder key=\"18\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"96\" direction=\"DECREASE\" />\n<KeyBinder key=\"12\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n<KeyBinder key=\"19\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t</Controller>"
+      "content": "<Controller>\n\t<Control name=\"0\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"41\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"6\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"0\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"1\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"1\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"2\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"69\" direction=\"INCREASE\" />\n\t\t<Channel number=\"2\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"3\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"43\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"3\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"4\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"53\" direction=\"INCREASE\" />\n\t\t<Channel number=\"4\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"5\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"4\" direction=\"INCREASE\" />\n\t\t<Channel number=\"5\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"6\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"7\" direction=\"INCREASE\" />\n\t\t<Channel number=\"6\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"7\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"26\" direction=\"INCREASE\" />\n\t\t<Channel number=\"7\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"8\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"22\" direction=\"INCREASE\" />\n\t\t<Channel number=\"8\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"9\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"44\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"9\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"10\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"10\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"24\" direction=\"INCREASE\" /></Control>\n\t<Control name=\"11\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"8\" direction=\"INCREASE\" />\n\t\t<JoystickAxisBinder axis=\"4\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"11\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"12\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"20\" direction=\"INCREASE\" />\n\t\t<Channel number=\"12\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"13\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"23\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"10\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"13\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"14\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"13\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"9\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"14\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"15\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"15\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"16\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"16\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"17\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"225\" direction=\"INCREASE\" />\n\t\t<Channel number=\"17\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"18\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"45\" direction=\"INCREASE\" />\n\t\t<Channel number=\"18\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"19\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"46\" direction=\"INCREASE\" />\n\t\t<Channel number=\"19\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"20\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"47\" direction=\"INCREASE\" />\n\t\t<Channel number=\"20\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"21\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"48\" direction=\"INCREASE\" />\n\t\t<Channel number=\"21\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"22\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"22\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"23\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"57\" direction=\"INCREASE\" />\n\t\t<Channel number=\"23\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"24\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"224\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"7\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"24\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"25\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"62\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"5\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"25\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"26\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"66\" direction=\"INCREASE\" />\n\t\t<Channel number=\"26\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"27\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<Channel number=\"27\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"28\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"9\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"28\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"29\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"6\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"29\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"30\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"21\" direction=\"INCREASE\" />\n\t\t<JoystickButtonBinder button=\"8\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"30\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"31\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"30\" direction=\"INCREASE\" />\n\t\t<Channel number=\"31\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"32\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"31\" direction=\"INCREASE\" />\n\t\t<Channel number=\"32\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"33\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"32\" direction=\"INCREASE\" />\n\t\t<Channel number=\"33\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"34\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"33\" direction=\"INCREASE\" />\n\t\t<Channel number=\"34\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"35\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"34\" direction=\"INCREASE\" />\n\t\t<Channel number=\"35\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"36\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"35\" direction=\"INCREASE\" />\n\t\t<Channel number=\"36\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"37\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"36\" direction=\"INCREASE\" />\n\t\t<Channel number=\"37\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"38\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"37\" direction=\"INCREASE\" />\n\t\t<Channel number=\"38\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"39\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"38\" direction=\"INCREASE\" />\n\t\t<Channel number=\"39\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"40\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"39\" direction=\"INCREASE\" />\n\t\t<Channel number=\"40\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"41\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"58\" direction=\"INCREASE\" />\n\t\t<Channel number=\"41\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"42\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"68\" direction=\"INCREASE\" />\n\t\t<Channel number=\"42\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"43\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"67\" direction=\"INCREASE\" />\n\t\t<Channel number=\"43\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"46\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"1\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"46\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"47\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<JoystickAxisBinder axis=\"0\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"47\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"48\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"UP\" direction=\"INCREASE\" />\n\t\t<Channel number=\"48\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"49\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<MouseWheelBinder button=\"DOWN\" direction=\"INCREASE\" />\n\t\t<Channel number=\"49\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"50\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"59\" direction=\"INCREASE\" />\n\t\t<Channel number=\"50\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n<Control name=\"51\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\"><KeyBinder key=\"5\" direction=\"INCREASE\" /><Channel number=\"51\" direction=\"DIRECT\" percentage=\"1\" /></Control>\n<Control name=\"44\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"90\" direction=\"INCREASE\" />\n<KeyBinder key=\"96\" direction=\"DECREASE\" />\n<KeyBinder key=\"12\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"3\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"44\" direction=\"DIRECT\" percentage=\"1\" />\n\t</Control>\n\t<Control name=\"45\" autoChangeDirectionOnLimitsAfterStop=\"false\" autoReverseToInitialValue=\"true\" initialValue=\"0.5\" stepSize=\"MAX\" stepsPerSeconds=\"MAX\">\n\t\t<KeyBinder key=\"94\" direction=\"INCREASE\" />\n<KeyBinder key=\"19\" direction=\"INCREASE\" />\n\t\t<KeyBinder key=\"92\" direction=\"DECREASE\" />\n\t\t<JoystickAxisBinder axis=\"2\" direction=\"INCREASE\" deviceId=\"1\" />\n\t\t<Channel number=\"45\" direction=\"DIRECT\" percentage=\"1\" />\n\t<KeyBinder key=\"18\" direction=\"DECREASE\" /></Control>\n\t</Controller>\n"
     },
     {
       "path": "config/alsoft.conf",
@@ -29,7 +29,7 @@
     },
     {
       "path": "test-data/scripts/m15_course_observer.lua",
-      "content": "local self = require('openmw.self')\nlocal nearby = require('openmw.nearby')\nlocal util = require('openmw.util')\nlocal Actor = require('openmw.types').Actor\nlocal previousFatigue = nil\nlocal debits = 0\nlocal settledAnnounced = false\nlocal timer = 0\nreturn {{engineHandlers={{onFrame=function(dt)\n local fatigue = Actor.stats.dynamic.fatigue(self)\n local current = fatigue.current\n if previousFatigue and previousFatigue-current>1 then debits=debits+1 end\n previousFatigue=current\n if debits==3 and not settledAnnounced and current>=fatigue.base+fatigue.modifier then\n  print('M15 course fatigue settled: debits=' .. tostring(debits) .. ' current=' .. tostring(current) .. ' maximum=' .. tostring(fatigue.base+fatigue.modifier))\n  settledAnnounced=true\n end\n timer=timer+dt\n if timer<0.1 then return end\n timer=0\n for _, target in ipairs(nearby.actors) do\n  if target.recordId == 'FormId:0x1025200' then\n   local p,t=self.position,target.position\n   local v=t-p\n   local forward=self.rotation:apply(util.vector3(0,1,0))\n   local distance=v:length()\n   local angle=math.deg(math.acos(math.max(-1,math.min(1,(forward.x*v.x+forward.y*v.y)/math.sqrt(v.x*v.x+v.y*v.y)))))\n   local mask=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.HeightMap+nearby.COLLISION_TYPE.Door\n   local low=nearby.castRay(p+util.vector3(0,0,100),t+util.vector3(0,0,100),{{collisionType=mask}})\n   local high=nearby.castRay(p+util.vector3(0,0,125),t+util.vector3(0,0,125),{{collisionType=mask}})\n   print(string.format('M15 course geometry: x=%.2f y=%.2f z=%.2f distance=%.2f facing=%.2f blocked100=%s blocked125=%s farFacing=%s rightLane=%s retreated=%s wallLane=%s wallAlong=%s nearWall=%s rangeLane=%s obstacle=%s',p.x,p.y,p.z,distance,angle,tostring(low.hit),tostring(high.hit),tostring(distance>200 and angle<10 and not low.hit and not high.hit),tostring(p.x>=760),tostring(p.y<=-125),tostring(p.x>=788),tostring(p.y>=65),tostring(distance<137 and angle<10 and low.hit and high.hit),tostring(p.x>=708),tostring(low.hitObject and low.hitObject.recordId)))\n  end\n end\nend}}}}\n"
+      "content": "local self = require('openmw.self')\nlocal nearby = require('openmw.nearby')\nlocal util = require('openmw.util')\nlocal Actor = require('openmw.types').Actor\nlocal previousFatigue = nil\nlocal debits = 0\nlocal timer = 0\nreturn {{engineHandlers={{onFrame=function(dt)\n local fatigue = Actor.stats.dynamic.fatigue(self)\n local current = fatigue.current\n if previousFatigue and previousFatigue-current>1 then debits=debits+1 end\n previousFatigue=current\n timer=timer+dt\n if timer<0.1 then return end\n timer=0\n if current>=fatigue.base+fatigue.modifier then\n  print('M15 course fatigue ready: current=' .. tostring(current))\n  if debits>=3 then\n   print('M15 course fatigue settled: debits=' .. tostring(debits) .. ' current=' .. tostring(current) .. ' maximum=' .. tostring(fatigue.base+fatigue.modifier))\n  end\n end\n for _, target in ipairs(nearby.actors) do\n  if target.recordId == 'FormId:0x1025200' then\n   local p,t=self.position,target.position\n   local v=t-p\n   local forward=self.rotation:apply(util.vector3(0,1,0))\n   local distance=v:length()\n   local angle=math.deg(math.acos(math.max(-1,math.min(1,(forward.x*v.x+forward.y*v.y)/math.sqrt(v.x*v.x+v.y*v.y)))))\n   local mask=nearby.COLLISION_TYPE.World+nearby.COLLISION_TYPE.HeightMap+nearby.COLLISION_TYPE.Door\n   local low=nearby.castRay(p+util.vector3(0,0,100),t+util.vector3(0,0,100),{{collisionType=mask}})\n   local high=nearby.castRay(p+util.vector3(0,0,125),t+util.vector3(0,0,125),{{collisionType=mask}})\n   print('M15 course return: lane=' .. tostring(p.x<=t.x))\n   print('M15 course aim: target=' .. tostring(angle<3) .. ' north=' .. tostring(math.abs(forward.x)<.015 and forward.y>.99))\n   print('M15 course power range: close80=' .. tostring(distance<80 and angle<10 and not low.hit and not high.hit) .. ' close110=' .. tostring(distance<110 and angle<10 and not low.hit and not high.hit))\n   print(string.format('M15 course geometry: x=%.2f y=%.2f z=%.2f distance=%.2f facing=%.2f blocked100=%s blocked125=%s farFacing=%s rightLane=%s retreated=%s wallLane=%s wallAlong=%s nearWall=%s rangeLane=%s obstacle=%s',p.x,p.y,p.z,distance,angle,tostring(low.hit),tostring(high.hit),tostring(distance>200 and angle<10 and not low.hit and not high.hit),tostring(p.x>=760),tostring(p.y<=-125),tostring(p.x>=t.x+115),tostring(p.y>=t.y),tostring(distance<137 and angle<10 and low.hit and high.hit),tostring(p.x>=708),tostring(low.hitObject and low.hitObject.recordId)))\n  end\n end\nend}}}}\n"
     }
   ],
   "command": [
@@ -47,7 +47,7 @@
     {
       "type": "wait_log",
       "pattern": "Applied TES4 runtime state:",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "sleep",
@@ -64,7 +64,7 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandidle",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "screenshot",
@@ -78,7 +78,7 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "key_down",
@@ -87,7 +87,7 @@
     {
       "type": "wait_log",
       "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "key_held",
@@ -98,7 +98,7 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "key_held",
@@ -108,7 +108,7 @@
     {
       "type": "wait_log",
       "pattern": "M15 Player reaction resources selected: actor=dynamic:player:0000000000000001 cause=2 kind=2",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "screenshot",
@@ -122,17 +122,17 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
       "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
       "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "key_up",
@@ -155,7 +155,7 @@
     {
       "type": "wait_log",
       "pattern": "M15 first-person strike bind: actor=dynamic:player:0000000000000001 id=3",
-      "timeout_seconds": 120,
+      "timeout_seconds": 600,
       "poll_interval_seconds": 0.005
     },
     {
@@ -167,12 +167,12 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "sleep",
@@ -190,7 +190,12 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=3 action=-1",
+      "timeout_seconds": 600
     },
     {
       "type": "key_down",
@@ -199,7 +204,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*rangeLane=true",
-      "timeout_seconds": 180
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "key_up",
@@ -212,7 +218,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*retreated=true",
-      "timeout_seconds": 180
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "key_up",
@@ -234,13 +241,28 @@
     },
     {
       "type": "mouse_move",
-      "x": -40,
+      "x": -800,
       "y": 0
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
     },
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*farFacing=true",
-      "timeout_seconds": 30
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "screenshot",
@@ -255,7 +277,7 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4",
-      "timeout_seconds": 60
+      "timeout_seconds": 600
     },
     {
       "type": "key_held",
@@ -264,12 +286,12 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 60
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4 action=-1",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "screenshot",
@@ -283,7 +305,7 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 120
+      "timeout_seconds": 600
     },
     {
       "type": "mouse_move",
@@ -296,9 +318,18 @@
       "y": 0
     },
     {
-      "type": "mouse_move",
-      "x": 40,
-      "y": 0
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*north=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
     },
     {
       "type": "key_down",
@@ -307,7 +338,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*wallLane=true",
-      "timeout_seconds": 180
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "key_up",
@@ -320,7 +352,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*wallAlong=true",
-      "timeout_seconds": 180
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "key_up",
@@ -338,13 +371,28 @@
     },
     {
       "type": "mouse_move",
-      "x": -400,
+      "x": -8000,
       "y": 0
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
     },
     {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*nearWall=true",
-      "timeout_seconds": 180
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "screenshot",
@@ -358,7 +406,7 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 180
+      "timeout_seconds": 600
     },
     {
       "type": "key_held",
@@ -368,17 +416,18 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=5",
-      "timeout_seconds": 180
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=5 action=-1",
-      "timeout_seconds": 180
+      "timeout_seconds": 600
     },
     {
       "type": "wait_log",
-      "pattern": "M15 course fatigue settled: debits=3",
-      "timeout_seconds": 180
+      "pattern": "M15 course fatigue settled:",
+      "timeout_seconds": 600,
+      "after_start": true
     },
     {
       "type": "key_held",
@@ -387,29 +436,472 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 180
+      "timeout_seconds": 600
     },
     {
       "type": "screenshot",
       "name": "combined-wall-settled.png",
       "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*north=true",
+      "after_start": true,
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course geometry:.*retreated=true",
+      "after_start": true,
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "key_down",
+      "value": "a"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course return: lane=true",
+      "after_start": true,
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_up",
+      "value": "a"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course power range:.*close80=true",
+      "timeout_seconds": 180,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackbackpower",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=7 fatigue_cost=39",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery body admitted: actor=content:oblivion.esm:01fc43 state=2",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-backward-power.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=.* to=0 action=-1",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=7 action=-1",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course power range:.*close110=true",
+      "timeout_seconds": 180,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackforwardpower",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=9 fatigue_cost=39",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 forward-power paralysis published: actor=content:oblivion.esm:01fc43 cause=9",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-forward-power.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=.* to=0 action=-1",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=9 action=-1",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course power range:.*close110=true",
+      "timeout_seconds": 180,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "key_down",
+      "value": "a"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackleftpower",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "mouse_move",
+      "x": 1608,
+      "y": 0
+    },
+    {
+      "type": "key_up",
+      "value": "a"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=11 fatigue_cost=39",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-left-power.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction recovered: actor=content:oblivion.esm:01fc43 cause=11 action=-1",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=11 action=-1",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 600,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "after_start": true,
+      "timeout_seconds": 240
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course power range:.*close110=true",
+      "timeout_seconds": 180,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "key_down",
+      "value": "d"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackrightpower",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "mouse_move",
+      "x": -1608,
+      "y": 0
+    },
+    {
+      "type": "key_up",
+      "value": "d"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=13 fatigue_cost=39",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-right-power.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=13 action=-1",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue settled:",
+      "after_start": true,
+      "timeout_seconds": 600
+    },
+    {
+      "type": "key_held",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600
+    },
+    {
+      "type": "screenshot",
+      "name": "combined-mastery-settled.png",
+      "minimum_entropy": 0.03
     }
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 1200,
+  "timeout_seconds": 2400,
   "expected_exit": 0,
   "expected_log": [
     "Applied TES4 runtime state:",
-    "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2",
-    "M15 Player reaction resources selected: actor=dynamic:player:0000000000000001 cause=2 kind=2",
-    "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
-    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
-    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4",
     "M15 course geometry:.*farFacing=true",
     "M15 melee hit sound requested:.*sound=WPNBlockBlade played=1",
     "M15 course geometry:.*nearWall=true.*obstacle=FormId:0x1024e74",
+    "M15 course fatigue settled:",
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4",
     "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=5",
-    "M15 course fatigue settled: debits=3"
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=7 fatigue_cost=39",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=9 fatigue_cost=39",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=11 fatigue_cost=39",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=13 fatigue_cost=39",
+    "M15 Backward-power physical hit published: actor=content:oblivion.esm:01fc43 cause=7",
+    "M15 forward-power paralysis published: actor=content:oblivion.esm:01fc43 cause=9"
   ],
   "forbidden_log": [
     "Error in frame",
@@ -432,5 +924,5 @@
     "ALSOFT_DRIVERS": "wave"
   },
   "sdl_offscreen_input": true,
-  "sdl_input_timeout_seconds": 180
+  "sdl_input_timeout_seconds": 600
 }

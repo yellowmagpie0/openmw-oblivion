@@ -601,5 +601,140 @@
       "restart_coverage": "Section8 pairwise coverage: third-person/window from unchanged third-person keyboard profile (all3windows,normal/SAN); gamepad/window from completed first-person gamepad profile (all3windows,normal/SAN). Proof links exact original receipts/hashes. Third-person gamepad references close view/device pair; no direct three-way restart claim. Add targeted high-risk cross for a concrete interaction/discrepancy.",
       "scope": "Configured cap15 and current LT-block/RT-attack layout only. FPS/seed campaigns and all remaining S4 mechanics remain incomplete."
     }
+  },
+  "historical_manifest_source_commit": "e0314f4bf076fc0f81b59f9330a56e5b67dbc7db",
+  "directional_mastery_extension": {
+    "status": "Bounded joined K/M first-person course complete in normal and ASan/UBSan builds:36 core pairs plus4 supplemental Forward-view pairs,6epochs/4whole restores. Full M15S4 incomplete.",
+    "purpose": "Join existing directional mastery with production block, Player Stagger/recovery, nonlethal return hit and range/wall misses in one normal-input course",
+    "manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+    "fixture": {
+      "source": "build/oblivion-compat/m15/S4/combined-wall-work-01/combined-wall-input-01.omwsave",
+      "source_sha256": "68c9312375c99182944bba542ab0895cccc1f9993573b2893226ea83f1ed1e89",
+      "schema": 75,
+      "staged_sha256": "77e48e1af05b57fec2cedc6ac40bfbed3c706bd20822078be72077db536a0019",
+      "plugin": "M15CombinedMasteryChance.esp",
+      "plugin_sha256": "99dd6d630b2c04514cf44ec0d7351c710f1341cb68548d56f16c0d5574b74e7c",
+      "gmst_int32_overrides": {
+        "iPerkAttackDisarmChance": 100,
+        "iPerkMarksmanKnockdownChance": 100,
+        "iPerkMarksmanParalyzeChance": 100
+      },
+      "mutations": {
+        "player_base_blade_in_av_base_legacy": 100,
+        "target": "content:oblivion.esm:01fc43",
+        "target_form_and_av_health": 120,
+        "target_equipped_rusty_shortsword_condition": 50
+      },
+      "preserved": "Initial seed1, empty action ledger next2, no controller, existing one-shot NPC attack/StopCombat script and partition. No contact/reaction/damage outcome is injected."
+    },
+    "protocol": {
+      "powers": [
+        {
+          "direction": "backward",
+          "key": "s",
+          "contact": 7
+        },
+        {
+          "direction": "forward",
+          "key": "w",
+          "contact": 9
+        },
+        {
+          "direction": "left",
+          "key": "a",
+          "contact": 11
+        },
+        {
+          "direction": "right",
+          "key": "d",
+          "contact": 13
+        }
+      ],
+      "ordinary_precursors": "Each held input can commit its distinct immediate ordinary6/8/10/12 before separate power7/9/11/13. Require unique ordered native IDs and exact per-window resource accounting. No assumed cancellation.",
+      "resources": "Fresh readonly natural fullFatigue waits before each new held sequence and after completion. Initial miss course settled minimum3 debits; final source-owner and resources checked strictly. No resource setters.",
+      "approach": "Normal O look channel45 aligns observed horizontal facing<3; W closes clear range<80 before Backward, <110 thereafter. Default alwaysRun=false is walking; no Shift held (Shift enables running). Camera sensitivity0.05, P existing right-look binding. Actual native hits mandatory.",
+      "geometry": "Existing range/wall ray, facing and distance guards retained. Relative mouse motions scale20 for camera sensitivity0.05; O corrects aim from read-only feedback. Reset heading to observed north before wall approach, then follow actual target x+115 and target y.",
+      "restart": "Actual applied Backward cause7 source is restored whole in fresh process, then natural GetUp and remaining powers through final idle/fullFatigue endpoint. No contact/force replay. Wall-checkpoint suffix is a focused development case, not final whole-course acceptance.",
+      "bounds": "Configured keyboard/first person, Master Blade and RustyShortsword, one unrestrained production NPC, cap15. Prior view/device/window profiles retain historical provenance; extension does not close the full matrix.",
+      "order": "Original block/Stagger/return and both misses4/5 first, then normal return around partition and four directional powers7/9/11/13. Final natural fullFatigue and idle ownership save. This avoids assuming the target remains at its old wall-test pose after physics.",
+      "side_aim": "Prime relative mouse motion with two existing zero-delta events before each side charge; after Left/Right power admission apply normal mouse delta+1608/-1608 (about18degrees at sensitivity0.05) to track the strafed target. Actual native contacts remain required.",
+      "repeat_numeric_comparison": {
+        "target_health_absolute_tolerance": 0.25,
+        "rationale": "Remaining powers follow immediate ordinary windows. Small frame-sampling differences in natural Fatigue regeneration change damage; max0.25Health across the remaining three powers is under0.5% of this nonlethal endpoint. Native save/live equality, whole restored source, contact IDs/counts, conditions/inventories, other resource channels and ownership remain strict. Both traces must independently account exactly for native Health deltas (six-significant-digit log tolerance2e-4), and their endpoint Health difference must equal their logged post-source contact-damage difference within5e-4. This applies only to repeated-course numeric comparison, never load fidelity."
+      }
+    },
+    "reuse": "No engine changes. Final2050 normal/SAN engine gates and component/Python/native evidence from e0314f4bf0 apply to unchanged implementation. New runtime evidence required for the joined input sequence. Historical recipe fields above refer to their original manifest/source pins.",
+    "python": {
+      "receipt": "build/oblivion-compat/m15/S4/combined-mastery-python-01/verification.json",
+      "executed": 440,
+      "source_fingerprint": "892701c75e4153252f72eae1b1770fb148b36f086e1547abd765a61e6e7017a1",
+      "scope": "All Python tests pass after optional wait_log after_start implementation and regression tests. Subsequent manifest/recipe-only changes need preflight/runtime verification, not repeated unchanged Python execution."
+    },
+    "retained_attempts": [
+      "combined-mastery-work-01/normal-01-fixture-failure.json",
+      "combined-mastery-work-01/normal-02-fixture-failure.json",
+      "combined-mastery-work-01/normal-03-fixture-failure.json",
+      "combined-mastery-work-01/normal-04-fixture-failure.json",
+      "combined-mastery-work-01/normal-05-fixture-failure.json",
+      "combined-mastery-work-01/normal-06-fixture-failure.json",
+      "combined-mastery-work-01/normal-07-resume-fixture-failure.json",
+      "combined-mastery-work-01/sanitize-01-fixture-failure.json",
+      "combined-mastery-work-01/sanitize-02-fixture-failure.json"
+    ],
+    "partial_evidence": {
+      "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/normal-05-power-prefix-verification.json",
+      "sha256": "de8b50e9348601c005227b43e95951d3b809916fbb7f81f6c0e9f37e371de70f",
+      "scope": "9 exact pairs only for completed block/Stagger/return and four walking powers in failed normal05 prefix. Later range-route failure retained. No final combined-course/restart or complete visual claim."
+    },
+    "normal_checkpoint": {
+      "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/normal-checkpoint-verification.json",
+      "sha256": "4e0e82c9d29f44fef02cf1118f2bd40a21c07298371e293320b6269100bdcd7f"
+    },
+    "endpoint_comparison_policy": "Whole native saved source and every saved/live physics snapshot stay exact. Completed inactive GetUp sample clocks and independently valid unowned blend memo may differ; completed identities/output samples stay strict. Newly created post-source sword must have identical reference/model/asset/condition/motion/scale/flags, valid matching render/physics poses, zero velocities and be settled within the room floor/bed zone; later resting position difference<=20sceneunits (roughly one walking frame). Preserve failed strict comparison and14checker guard cases. Numerical targetHealth repeat policy above remains separately accounted.",
+    "instrumented_wall_approach": {
+      "minimum_x": 795,
+      "scope": "SAN observer only, before moving north alongside partition. Source01 clipped the corner atx782.08. Identical native code, keyboard actions and final distance<137/facing<10/two blocked partition rays. Current normal08 original observer remains valid at its exact provenance; this adds a conservative SAN approach margin without changing gameplay requirements.",
+      "focused_source": "combined-mastery-sanitize-01/snapshots/save-10.omwsave",
+      "focused_source_sha256": "8e3883944edf5f466e8091022ee0ed13308a8c932ed88e4f2234cfee1bab722c",
+      "status": "Focused exact-source2pairs and fullSAN03 reference14pairs pass with declared observer overlay."
+    },
+    "instrumented_return_lane": {
+      "scope": "SAN observer only; replace p.x<=t.x with p.x<=max(708,t.x) to stop in clear corridor when target knockback places it west of reachable stone edge. Aim, distance, clear rays and actual native contacts remain required. Normal08 retains original provenance.",
+      "source": "combined-mastery-sanitize-02/snapshots/save-12.omwsave",
+      "sha256": "5ce5919c6acebaa88450aa86ccb9b881284da44073a9b49bc8d73fc5e7b4f559",
+      "status": "Focused exact-source powers suffix5pairs and fullSAN03 reference14pairs pass. Actual Backward continuation4pairs and strict owned endpoint comparison pass.",
+      "focused_receipt": "build/oblivion-compat/m15/S4/combined-mastery-work-01/combined-mastery-sanitize-02-resume-wall03-verification.json"
+    },
+    "sanitizer_observer_overlay": {
+      "apply_to": "files entry whose path ends m15_course_observer.lua",
+      "replacements": [
+        {
+          "old": "tostring(p.x>=t.x+115)",
+          "new": "tostring(p.x>=math.max(795,t.x+115))"
+        },
+        {
+          "old": "tostring(p.x<=t.x)",
+          "new": "tostring(p.x<=math.max(708,t.x))"
+        }
+      ],
+      "scope": "Read-only route observer; leave all actions and native contact/miss/resource/recovery assertions unchanged. Normal reference08 retains its original observer provenance."
+    },
+    "checkpoint": {
+      "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/checkpoint-verification.json",
+      "sha256": "068d72fffb8bfe1236ae87be40bb3ec7b8093f40a351c6b01534f60d27cd43ba"
+    },
+    "canonical_manifest_sha256": "9ff03f4e27eeaadc707519a5faf5350d82d61b80ce93a5265859e8b4fd9160f0",
+    "verified_scope": {
+      "core_pairs": 36,
+      "supplemental_view_pairs": 4,
+      "epochs": 6,
+      "whole_restores": 4,
+      "directly_reviewed_captures": 38,
+      "normal": "combined-mastery-normal-08 + actual applied-Backward08-resume; supplemental actual Forward source07-resume-forward-view02 at unchanged relevant dependencies.",
+      "sanitize": "combined-mastery-sanitize-03 + actual applied-Backward03-resume; supplemental actual Forward source03-resume-forward-view01.",
+      "block_audio": "One stock block cluster per reference; zero replay clusters per fresh Backward continuation.",
+      "gates_reused": "Full2050 engine cases each, original component gates and440 Python tests at original pins. Current Python implementation/tests and34engine files unchanged from those receipts.",
+      "full_M15S4_acceptance": false
+    }
   }
 }

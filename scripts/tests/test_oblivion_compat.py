@@ -29,6 +29,37 @@ REFERENCE_SPEC.loader.exec_module(REFERENCE)
 
 
 class OblivionCompatTests(unittest.TestCase):
+    def test_log_wait_after_start_rejects_stale_ready_marker(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            log = output / "process.log"
+            log.write_text("old pose ready\n")
+            action = {"type": "wait_log", "pattern": "pose ready", "timeout_seconds": 0.005,
+                      "poll_interval_seconds": 0.001, "after_start": True}
+            stale = MODULE._run_action(action, environment={}, output=output)
+            self.assertFalse(stale["passed"])
+            self.assertEqual(stale["start_offset"], log.stat().st_size)
+
+            def publish_new_pose(seconds):
+                with log.open("a") as stream:
+                    stream.write("new pose ready\n")
+
+            with mock.patch.object(MODULE.time, "sleep", side_effect=publish_new_pose) as sleep:
+                fresh = MODULE._run_action(dict(action, timeout_seconds=10), environment={}, output=output)
+            self.assertTrue(fresh["passed"])
+            sleep.assert_called_once()
+            # Existing manifests deliberately permit matching earlier one-shot events.
+            legacy = MODULE._run_action(dict(action, after_start=False), environment={}, output=output)
+            self.assertTrue(legacy["passed"])
+            self.assertEqual(legacy["start_offset"], 0)
+
+    def test_log_wait_after_start_validates_boolean_before_launch(self):
+        manifest = {"schema_version": 1, "name": "fresh-log-wait", "command": ["openmw"]}
+        for value in (1, 0, "true", None):
+            manifest["actions"] = [{"type": "wait_log", "pattern": "ready", "after_start": value}]
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "after_start"):
+                MODULE.validate_scenario_manifest(manifest)
+
     def test_log_polling_interval_rejects_invalid_values_before_launch(self):
         manifest = {"schema_version": 1, "name": "log-wait", "command": ["openmw"], "actions": []}
         for value in (0, -0.005, 1.01, float("nan"), float("inf"), True, "0.005"):
