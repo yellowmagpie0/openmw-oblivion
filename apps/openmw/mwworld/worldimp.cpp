@@ -5337,6 +5337,19 @@ namespace MWWorld
 
     namespace
     {
+        std::optional<float> contactEnchantmentChargeAfter(
+            const MWMechanics::OblivionPhysicalContactDeltas& deltas, const Ptr& owner, const Ptr& item)
+        {
+            std::optional<float> result;
+            for (const auto& change : deltas.mEnchantmentChargeChanges)
+                if (change.mOwner == owner && change.mItem == item)
+                {
+                    if (result) throw std::invalid_argument("duplicate dropped weapon charge request");
+                    result = change.mCharge;
+                }
+            return result;
+        }
+
         std::optional<float> disarmConditionAfterWear(
             const MWMechanics::OblivionPhysicalContactDeltas& deltas,
             const MWMechanics::OblivionPhysicalDisarm& disarm)
@@ -5401,14 +5414,16 @@ namespace MWWorld
                 if (!mRendering || !mPhysics) return nullptr;
                 auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(change.mOwner));
                 if (!animation) return nullptr;
-                drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition});
+                drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition, false,
+                    contactEnchantmentChargeAfter(deltas, change.mOwner, change.mItem)});
             }
         for (const auto& disarm : resolved.mDisarms)
         {
             if (!mRendering || !mPhysics) return nullptr;
             auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(disarm.mOwner));
             if (!animation) return nullptr;
-            drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(resolved, disarm), true});
+            drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(resolved, disarm), true,
+                contactEnchantmentChargeAfter(resolved, disarm.mOwner, disarm.mItem)});
         }
         if (!drops.empty())
             contact->mData->mDrops = prepareEquippedWeaponDrops(*this, mRendering->getObjects(), *mPhysics, drops);
@@ -5433,7 +5448,8 @@ namespace MWWorld
                 ++expected;
                 const auto count = std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
                     return drop.mActor == change.mOwner && drop.mItem == change.mItem
-                        && drop.mConditionAfterWear == std::optional<float>(0.f) && !drop.mUseDefaultPlacement;
+                        && drop.mConditionAfterWear == std::optional<float>(0.f) && !drop.mUseDefaultPlacement
+                        && drop.mEnchantmentChargeAfter == contactEnchantmentChargeAfter(deltas, change.mOwner, change.mItem);
                 });
                 if (change.mCondition != 0 || change.mOwner.isEmpty() || change.mOwner == getPlayerPtr()
                     || change.mOwner.getType() != ESM::REC_NPC_4 || count != 1)
@@ -5445,7 +5461,8 @@ namespace MWWorld
             const auto condition = disarmConditionAfterWear(resolved, disarm);
             if (std::count_if(drops.begin(), drops.end(), [&](const auto& drop) {
                     return drop.mActor == disarm.mOwner && drop.mItem == disarm.mItem
-                        && drop.mConditionAfterWear == condition && drop.mUseDefaultPlacement;
+                        && drop.mConditionAfterWear == condition && drop.mUseDefaultPlacement
+                        && drop.mEnchantmentChargeAfter == contactEnchantmentChargeAfter(resolved, disarm.mOwner, disarm.mItem);
                 }) != 1)
                 throw std::invalid_argument("native contact disarm requires one matching intact weapon drop");
         }

@@ -1,5 +1,8 @@
 #include <components/esm4/loadspel.hpp>
 #include <components/esm4/loadench.hpp>
+#include <components/esm4/weaponenchantment.hpp>
+#include <components/esm4/loadgmst.hpp>
+#include <limits>
 #include <components/esm4/loadrace.hpp>
 #include <components/esm4/common.hpp>
 #include <components/esm4/reader.hpp>
@@ -288,8 +291,8 @@ TEST(ESM4Enchantment, SharesScriptEffectDecodingAndKeepsNamesAndCodesDistinctFro
         EXPECT_EQ(effect.mSchool.has_value(), size >= 12);
         EXPECT_EQ(effect.mVisualEffect.has_value(), size >= 12);
         EXPECT_EQ(effect.mFlags.has_value(), size == 16);
-        if (size >= 12) EXPECT_EQ(effect.mVisualEffect, ESM::fourCC("FIDG"));
-        if (size == 16) EXPECT_EQ(effect.mPadding[0], 0xa5);
+        if (size >= 12) { EXPECT_EQ(effect.mVisualEffect, ESM::fourCC("FIDG")); }
+        if (size == 16) { EXPECT_EQ(effect.mPadding[0], 0xa5); }
     }
 }
 
@@ -341,4 +344,84 @@ TEST(ESM4Enchantment, PreservesUnknownTypeChargeCostFlagsAndEffectDomainsForRunt
     ASSERT_EQ(value.mEffects.size(), 1);
     EXPECT_EQ(value.mEffects[0].mRange, 0xffffffff);
     EXPECT_EQ(value.mEffects[0].mActorValue, 0xffffffff);
+}
+
+
+TEST(ESM4WeaponEnchantment, UsesIndependentNativeFireCostsRatherThanStoredAutocalcOrActorSkill)
+{
+    ESM4::WeaponEnchantmentCostSettings settings;
+    settings.mMagnitudeExponent = 1.28f;
+    ESM4::WeaponEnchantmentCostEffect effect{7.5f, 5, 0, 0, 1};
+    // Original4190A0/4151C0/413890, pinned1.2.0416; full CRT pow executed.
+    // Stored ENCH cost8 is ignored for this stock autocalculated FIDG5.
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 5);
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(8, {&effect, 1}, settings), 8);
+    effect.mMagnitude = 10;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 14);
+    effect.mMagnitude = 0;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 1);
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {}, settings), 0);
+    effect.mMagnitude = 5;
+    std::array effects{effect, effect};
+    effects[1].mMagnitude = 10;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, effects, settings), 19);
+    effects[0].mNoCost = true;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, effects, settings), 14);
+}
+
+TEST(ESM4WeaponEnchantment, CostFlagsSettingsAndMalformedInputsRemainExplicit)
+{
+    ESM4::WeaponEnchantmentCostSettings settings{.5f, 1.f, 1.f, 2.f};
+    ESM4::WeaponEnchantmentCostEffect effect{10.f, 4, 6, 3, 2};
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 720);
+    effect.mNoArea = true;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 240);
+    effect.mNoDuration = true;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 80);
+    effect.mNoMagnitude = true;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 20);
+    effect.mRange = 0;
+    EXPECT_EQ(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), 10);
+    effect.mRange = 3;
+    EXPECT_THROW(ESM4::weaponEnchantmentCost(std::nullopt, {&effect, 1}, settings), std::invalid_argument);
+    EXPECT_THROW(ESM4::weaponEnchantmentCost(0xffffffff, {}, settings), std::invalid_argument);
+    settings.mMagnitudeExponent = std::numeric_limits<float>::infinity();
+    EXPECT_THROW(ESM4::weaponEnchantmentCost(std::nullopt, {}, settings), std::invalid_argument);
+}
+
+TEST(ESM4WeaponEnchantment, WinningNativeCostSettingsUseVerifiedAbsentDefaults)
+{
+    const auto defaults = ESM4::buildWeaponEnchantmentCostSettings({});
+    EXPECT_EQ(defaults.mMagnitudeExponent, 1.25f);
+    EXPECT_EQ(defaults.mAreaMultiplier, .15f);
+    EXPECT_EQ(defaults.mDurationMultiplier, .1f);
+    EXPECT_EQ(defaults.mTargetMultiplier, 1.5f);
+    ESM4::GameSetting setting{}; setting.mEditorId = "FMAGICCOSTSCALE"; setting.mData = 1.28f;
+    std::array<const ESM4::GameSetting*, 1> inputs{&setting};
+    EXPECT_EQ(ESM4::buildWeaponEnchantmentCostSettings(inputs).mMagnitudeExponent, 1.28f);
+    setting.mData = std::int32_t{1};
+    EXPECT_THROW(ESM4::buildWeaponEnchantmentCostSettings(inputs), std::invalid_argument);
+    setting.mData = -1.f;
+    EXPECT_THROW(ESM4::buildWeaponEnchantmentCostSettings(inputs), std::invalid_argument);
+    setting.mData = 1.28f;
+    std::array<const ESM4::GameSetting*, 2> duplicates{&setting, &setting};
+    EXPECT_THROW(ESM4::buildWeaponEnchantmentCostSettings(duplicates), std::invalid_argument);
+}
+
+TEST(ESM4WeaponEnchantment, ChargeAvailabilityPreservesInsufficientExtrasAndSpendsFractionalChargeOnce)
+{
+    const auto full = ESM4::weaponEnchantmentCharge(-1, 20, 5);
+    EXPECT_TRUE(full.mAvailable); EXPECT_EQ(full.mAfter, 15);
+    const auto fractional = ESM4::weaponEnchantmentCharge(5.5f, 20, 5);
+    EXPECT_TRUE(fractional.mAvailable); EXPECT_EQ(fractional.mAfter, .5f);
+    EXPECT_EQ(ESM4::weaponEnchantmentCharge(5, 20, 5).mAfter, 0);
+    const auto insufficient = ESM4::weaponEnchantmentCharge(4.5f, 20, 5);
+    EXPECT_FALSE(insufficient.mAvailable); EXPECT_FALSE(insufficient.mAfter);
+    const auto absentInsufficient = ESM4::weaponEnchantmentCharge(-1, 4, 5);
+    EXPECT_FALSE(absentInsufficient.mAvailable); EXPECT_FALSE(absentInsufficient.mAfter);
+    EXPECT_EQ(ESM4::weaponEnchantmentCharge(0, 20, 0).mAfter, 0);
+    EXPECT_THROW(ESM4::weaponEnchantmentCharge(-2, 20, 5), std::invalid_argument);
+    EXPECT_THROW(ESM4::weaponEnchantmentCharge(5, -1, 5), std::invalid_argument);
+    EXPECT_THROW(ESM4::weaponEnchantmentCharge(5, 20, -1), std::invalid_argument);
+    EXPECT_THROW(ESM4::weaponEnchantmentCharge(std::numeric_limits<float>::quiet_NaN(), 20, 5), std::invalid_argument);
 }

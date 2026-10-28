@@ -22,6 +22,9 @@
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadweap.hpp>
+#include <components/esm4/loadench.hpp>
+#include <components/esm4/loadmgef.hpp>
+#include <components/esm4/weaponenchantment.hpp>
 #include "../mwworld/worldimp.hpp"
 #include "../mwrender/animation.hpp"
 #include <components/sceneutil/keyframe.hpp>
@@ -693,6 +696,9 @@ namespace MWMechanics
         bool blockAccepted = false;
         bool requestsAttackerRecoil = false;
         bool weaponBlockSound = false;
+        bool enchantedSound = false;
+        bool observeEnchantment = false;
+        float physicalHealth = 0, enchantmentHealth = 0;
         OblivionPhysicalContactDeltas deltas{-cost, 0, 0, 0};
         if (!contact->isEmpty())
         {
@@ -744,7 +750,12 @@ namespace MWMechanics
                     *contact, item, normalizedDifficulty, sneaking, kind);
                 if (!damage)
                     return std::nullopt;
-                result.mDamage = {damage->mHealth, 0};
+                result.mDamage = {damage->mHealth + damage->mEnchantmentHealth, 0};
+                observeEnchantment = !weapon->mEnchantment.isZeroOrUnset();
+                physicalHealth = damage->mHealth; enchantmentHealth = damage->mEnchantmentHealth;
+                if (damage->mEnchantmentChargeChange)
+                    deltas.mEnchantmentChargeChanges.push_back(*damage->mEnchantmentChargeChange);
+                enchantedSound = damage->mEnchantedSound;
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
                 deltas.mOrdinaryHitArguments = damage->mHitArguments;
@@ -794,7 +805,7 @@ namespace MWMechanics
             // path;5FFD61 uses no material even if other armor is equipped.
             // Model initialization projects Creature Actor byte104 as
             // canonical0/1; the TESCreature base type is not this sound input.
-            result.mHitSounds = ESM4::nativeMeleeHitSounds({soundWeaponType, hitArmorClass},
+            result.mHitSounds = ESM4::nativeMeleeHitSounds({soundWeaponType, hitArmorClass, -1, false, enchantedSound},
                 contact->getType() == ESM::REC_CREA4
                     ? std::optional<std::uint8_t>{contact->getRefData().getOblivionCanSpendFatigue() ? 1u : 0u}
                     : std::nullopt);
@@ -838,6 +849,16 @@ namespace MWMechanics
         // absorption. Preparation keeps this decision separate from damage.
         const bool attackerRecoil = blockHit && requestsAttackerRecoil
             && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4);
+        const auto observeCommittedEnchantment = [&] {
+            if (!observeEnchantment) return;
+            const bool spent = !deltas.mEnchantmentChargeChanges.empty();
+            Log(Debug::Verbose) << "M15 weapon enchantment contact: actor=" << actor.serialize()
+                << " id=" << std::dec << actionId << " physical_health_damage=" << physicalHealth
+                << " enchantment_health_damage=" << enchantmentHealth
+                << " total_health_damage=" << result.mDamage.mHealth
+                << " charge_written=" << static_cast<unsigned>(spent)
+                << " charge_after=" << (spent ? deltas.mEnchantmentChargeChanges.front().mCharge : 0.f);
+        };
         if (phased)
         {
             const auto draws = nativeWorld->commitOblivionPlayerNpcHit(actionId, attacker, *contact, deltas, [&] {
@@ -846,6 +867,7 @@ namespace MWMechanics
             });
             if (!draws) return std::nullopt;
             result.mRandomDraws = *draws;
+            observeCommittedEnchantment();
             return result;
         }
         auto prepared = nativeWorld->prepareOblivionPhysicalContact(
@@ -853,6 +875,7 @@ namespace MWMechanics
         if (!prepared || !prepared->commit())
             return std::nullopt;
         result.mRandomDraws = prepared->randomDraws();
+        observeCommittedEnchantment();
         return result;
     }
 
@@ -1130,7 +1153,8 @@ namespace MWMechanics
 
         std::optional<PreparedBlock> prepareOrdinaryBlock(MWBase::World& world,
             OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
-            float remaining, std::int32_t attackerWeaponType, std::span<const ESM4::GameSetting* const> settings)
+            float remaining, std::int32_t attackerWeaponType, std::span<const ESM4::GameSetting* const> settings,
+            bool enchantedSound = false)
         {
             PreparedBlock result{remaining};
             if (!oblivionBlockingPosture(world, victim) || oblivionParalyzed(world, victim))
@@ -1214,12 +1238,12 @@ namespace MWMechanics
             result.mUnarmed = item.isEmpty();
             if (shield)
                 result.mSounds = ESM4::nativeNpcMeleeHitSounds({attackerWeaponType, -1,
-                    (shield->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0});
+                    (shield->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor) ? 1 : 0, false, enchantedSound});
             else if (weapon)
             {
                 result.mWeaponBlockSound = true;
                 const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType,
-                    static_cast<std::int32_t>(weapon->mData.type));
+                    static_cast<std::int32_t>(weapon->mData.type), enchantedSound);
                 result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
             }
             else if (ESM4::combatMastery(base(15), ESM4::buildCombatMasterySettings(settings))
@@ -1268,7 +1292,7 @@ namespace MWMechanics
                             result.mSounds.reset(); // Final material is selected after projected shield removal.
                         else
                         {
-                            const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType, -1);
+                            const auto layers = ESM4::nativeMeleeBlockSounds(attackerWeaponType, -1, enchantedSound);
                             result.mSounds = std::array<std::string_view, 3>{layers[0], layers[1], {}};
                         }
                     }
@@ -1492,6 +1516,85 @@ namespace MWMechanics
         }
     }
 
+    namespace
+    {
+        struct PreparedWeaponEnchantment
+        {
+            float mHealth = 0;
+            std::optional<OblivionPhysicalEnchantmentChargeChange> mCharge;
+            bool mActive = false;
+        };
+
+        std::optional<PreparedWeaponEnchantment> prepareWeaponEnchantment(MWBase::World& world,
+            OblivionCombatService& service, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
+            const MWWorld::Ptr& item, const ESM4::Weapon& weapon, float difficulty,
+            std::span<const ESM4::GameSetting* const> settings)
+        {
+            if (weapon.mEnchantment.isZeroOrUnset()) return PreparedWeaponEnchantment{};
+            const auto& store = world.getStore();
+            const auto* enchantment = store.get<ESM4::Enchantment>().search(weapon.mEnchantment);
+            if (!enchantment || !enchantment->mData || enchantment->mData->mType != 2
+                || (enchantment->mData->mFlags & ~1u)) return std::nullopt;
+            const auto definition = [&](std::uint32_t code) -> const ESM4::EffectSetting* {
+                const ESM4::EffectSetting* result = nullptr;
+                std::set<ESM::FormId> seen;
+                for (const auto& entry : store.get<ESM4::EffectSetting>())
+                    if (seen.insert(entry.mId).second)
+                        if (const auto* effect = store.get<ESM4::EffectSetting>().search(entry.mId);
+                            effect && effect->mEffectCode == code)
+                        {
+                            if (result) return nullptr;
+                            result = effect;
+                        }
+                return result;
+            };
+            std::vector<ESM4::WeaponEnchantmentCostEffect> costs;
+            const bool manual = enchantment->mData->mFlags & 1;
+            if (!manual)
+                for (const auto& effect : enchantment->mEffects)
+                {
+                    const auto* setting = definition(effect.mId);
+                    if (!setting || !setting->mData || effect.mScriptEffect) return std::nullopt;
+                    const auto flags = setting->mData->mFlags;
+                    costs.push_back({setting->mData->mBaseCost, effect.mMagnitude, effect.mArea,
+                        effect.mDuration, effect.mRange, bool(flags & 0x100), bool(flags & 0x200),
+                        bool(flags & 0x80), bool(flags & 0x400000)});
+                }
+            const auto cost = ESM4::weaponEnchantmentCost(manual
+                    ? std::optional(enchantment->mData->mCost) : std::nullopt,
+                costs, ESM4::buildWeaponEnchantmentCostSettings(settings));
+            const auto charge = ESM4::weaponEnchantmentCharge(item.getCellRef().getEnchantmentCharge(),
+                weapon.mEnchantmentPoints, cost);
+            if (!charge.mAvailable) return PreparedWeaponEnchantment{};
+            // Narrow S4 contact effect. Do not silently treat a script, timed,
+            // area or different effect as executed. General magic stays open.
+            if (enchantment->mEffects.size() != 1) return std::nullopt;
+            const auto& effect = enchantment->mEffects.front();
+            const auto* setting = definition(effect.mId);
+            if (effect.mId != ESM::fourCC("FIDG") || effect.mScriptEffect || effect.mRange != 1
+                || effect.mArea != 0 || effect.mDuration != 0 || effect.mActorValue != 8
+                || !setting || !setting->mData || setting->mData->mAssociatedData != 8
+                || setting->mData->mResistanceActorValue != 61) return std::nullopt;
+            const auto player = world.getPlayerPtr();
+            const auto value = [&](std::uint8_t av) {
+                return victim == player ? service.getPlayerIntegerValue(av)
+                    : service.getNonPlayerIntegerValue(victim, av);
+            };
+            // These branches need their real effect/caster decisions; admitting
+            // the unresisted profile must not erase absorption or reflection.
+            if (value(61) != 0 || value(64) != 0 || value(52) != 0 || value(53) != 0)
+                return std::nullopt;
+            const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
+                : attacker == player ? ESM4::PlayerDamageRole::Attacker : ESM4::PlayerDamageRole::Unaffected;
+            PreparedWeaponEnchantment result;
+            result.mHealth = ESM4::difficultyDamage(static_cast<float>(effect.mMagnitude), difficulty,
+                ESM4::buildDifficultyDamageMultiplier(settings), role);
+            result.mCharge = captureOblivionPhysicalEnchantmentChargeChange(attacker, item, *charge.mAfter);
+            result.mActive = true;
+            return result;
+        }
+    }
+
     static float weaponContactDamage(MWBase::World& world, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& item, ESM4::MeleeStrikeKind kind);
 
@@ -1535,8 +1638,9 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), item.getCellRef().getRefId());
         const auto* weapon = world.getStore().get<ESM4::Weapon>().search(*id.getIf<ESM::FormId>());
-        if (!weapon->mEnchantment.isZeroOrUnset())
-            return std::nullopt; // Do not consume an enchanted hit before its typed M16 effect hook exists.
+        const auto enchantment = prepareWeaponEnchantment(world, *service, attacker, victim, item,
+            *weapon, normalizedDifficulty, settings);
+        if (!enchantment) return std::nullopt;
         const auto durability = ESM4::buildDurabilitySettings(settings);
         std::optional<float> condition;
         auto breakDisposition = OblivionWeaponBreakDisposition::None;
@@ -1553,7 +1657,7 @@ namespace MWMechanics
         const auto armor = ESM4::mitigateArmor(incoming, oblivionArmorRating(world, victim),
             ESM4::buildArmorRatingSettings(settings).mSkillMaximum, false);
         const auto block = prepareOrdinaryBlock(world, *service, attacker, victim,
-            armor.mHealthDamage, static_cast<std::int32_t>(weapon->mData.type), settings);
+            armor.mHealthDamage, static_cast<std::int32_t>(weapon->mData.type), settings, enchantment->mActive);
         if (!block)
             return std::nullopt;
         const auto role = victim == player ? ESM4::PlayerDamageRole::Victim
@@ -1566,12 +1670,16 @@ namespace MWMechanics
                 block->mFraction, block->mUnarmed)} : std::nullopt);
         if (!wear)
             return std::nullopt;
-        return OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
+        auto result = OblivionWeaponContactDamage{damage.mHealth, condition, std::move(wear->mConditions), wear->mRandom,
             incoming, block->mDebit, block->mFraction, block->mAccepted, block->mWeaponBlockSound, block->mSounds,
             wear->mHitArmorClass, breakDisposition, block->mRequestsAttackerRecoil,
             {block->mRemaining, 0, incoming, block->mFraction,
                 static_cast<std::uint8_t>(weapon->mData.type < 2 ? 14 : 16),
                 block->mRemaining > 0, block->mActiveBlock, block->mBareHandBlock, true}};
+        result.mEnchantmentHealth = enchantment->mHealth;
+        result.mEnchantmentChargeChange = enchantment->mCharge;
+        result.mEnchantedSound = enchantment->mActive;
+        return result;
     }
 
     static float weaponContactDamage(MWBase::World& world,

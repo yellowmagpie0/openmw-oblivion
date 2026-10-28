@@ -173,6 +173,10 @@ namespace MWMechanics
         OblivionWeaponBreakDisposition mBreakDisposition = OblivionWeaponBreakDisposition::None;
         bool mRequestsAttackerRecoil = false;
         OblivionOrdinaryHitArguments mHitArguments{};
+        // Instant narrow weapon effect, owned by the same contact publication.
+        float mEnchantmentHealth = 0;
+        std::optional<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChange{};
+        bool mEnchantedSound = false;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

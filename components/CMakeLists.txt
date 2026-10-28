@@ -253,6 +253,7 @@ add_component_dir (esm4
     loadmgef
     loadspel
     loadench
+    weaponenchantment
     loadskil
     loadfact
     ability

@@ -352,7 +352,7 @@ namespace MWWorld
             MWRender::ESM4NpcAnimation* mAnimation;
             MWRender::ESM4NpcAnimation::CarriedWeaponDrop mCarried;
             CellRef mSource, mSourceAfter, mActorBefore, mActorAfter, mDestination;
-            bool mHasWear;
+            bool mHasWear, mHasEnchantmentCharge;
             const ESM4::Npc* mNpc;
             const ESM4::Weapon* mWeapon;
             const ESM4::Cell* mCellBase;
@@ -514,6 +514,7 @@ namespace MWWorld
             for (auto& e : d.mEntries)
             {
                 if ((e.mHasWear && !e.mItem.getCellRef().swapNativeItemCondition(e.mSourceAfter))
+                    || (e.mHasEnchantmentCharge && !e.mItem.getCellRef().swapNativeEnchantmentCharge(e.mSourceAfter))
                     || !e.mRemoval->commit() || !e.mActor.getCellRef().swapNativeDropRelations(e.mActorAfter))
                     std::terminate(); // Validated participants cannot fail in this callback-free interval.
             }
@@ -645,7 +646,10 @@ namespace MWWorld
             if (!condition && source.getCharge() >= 0)
                 condition = static_cast<float>(double(source.getCharge()) + source.getChargeIntRemainder());
             if (condition) reference.setNativeItemCondition(*condition);
-            reference.setEnchantmentCharge(source.getEnchantmentCharge());
+            if (request.mEnchantmentChargeAfter
+                && (!std::isfinite(*request.mEnchantmentChargeAfter) || *request.mEnchantmentChargeAfter < 0))
+                throw std::invalid_argument("invalid dropped weapon enchantment charge");
+            reference.setEnchantmentCharge(request.mEnchantmentChargeAfter.value_or(source.getEnchantmentCharge()));
             ESM::FormId worldOwner;
             const ESM4::Npc* worldNpcOwner = nullptr;
             std::string worldModel, rawWorldModel;
@@ -673,6 +677,7 @@ namespace MWWorld
             }
             CellRef sourceAfter = source;
             if (request.mConditionAfterWear) sourceAfter.setNativeItemCondition(*request.mConditionAfterWear);
+            if (request.mEnchantmentChargeAfter) sourceAfter.setEnchantmentCharge(*request.mEnchantmentChargeAfter);
             CellRef actorAfter = actor.getCellRef();
             if (!((armor ? armor->mFlags : weapon->mFlags) & 0x400))
             {
@@ -696,7 +701,8 @@ namespace MWWorld
             poses.push_back(NifBullet::ragdollBodyWorldPoses(scaled, bones));
             PreparedEquippedWeaponDrops::Data::Entry entry{
                 actor, item, actor.getCell(), &request.mAnimation, std::move(*carried), source, std::move(sourceAfter),
-                actor.getCellRef(), std::move(actorAfter), reference, request.mConditionAfterWear.has_value(), npc, weapon, cell,
+                actor.getCellRef(), std::move(actorAfter), reference, request.mConditionAfterWear.has_value(),
+                request.mEnchantmentChargeAfter.has_value(), npc, weapon, cell,
                 store.get<ESM4::Npc>().search(ESM::RefId(cell->mOwner)),
                 store.get<ESM4::Faction>().search(ESM::RefId(cell->mOwner)), global, placed.mGlobal, cell->mOwner, cell->mOwnershipRank,
                 {}, std::move(rawWorldModel), ESM::RefId(npc->mId), ESM::RefId(placed.mBaseObj), cell->mId,

@@ -23,6 +23,8 @@ namespace MWWorld
         // Native disarm passes null position/rotation, selecting48B080's
         // actor-relative default. Breakage instead supplies the carried pose.
         bool mUseDefaultPlacement = false;
+        // Final charge from the same contact; copied to source and loose item.
+        std::optional<float> mEnchantmentChargeAfter;
     };
 
     class PreparedEquippedWeaponDrops

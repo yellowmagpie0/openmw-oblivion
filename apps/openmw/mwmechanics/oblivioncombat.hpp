@@ -299,6 +299,18 @@ namespace MWMechanics
     OblivionPhysicalConditionChange captureOblivionPhysicalConditionChange(
         const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float condition);
 
+    // Separate from durability: -1 means the instance uses its WEAP maximum.
+    // Prepared charge writes share contact consumption and equipment leases.
+    struct OblivionPhysicalEnchantmentChargeChange
+    {
+        MWWorld::Ptr mOwner;
+        MWWorld::Ptr mItem;
+        float mExpectedCharge = -1;
+        float mCharge = 0;
+    };
+    OblivionPhysicalEnchantmentChargeChange captureOblivionPhysicalEnchantmentChargeChange(
+        const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float charge);
+
     // Signed native Damage-channel deltas, already resolved by contact policy.
     // Geometry, mitigation, wear quantities and reactions are caller contracts.
     // Prepared instance conditions publish atomically with resource deltas.
@@ -389,6 +401,7 @@ namespace MWMechanics
         std::optional<float> mVictimDefaultParalysisPower{};
         // Only the committed Backward prefix may originate this saved request.
         std::optional<ESM4::RuntimePhysicalHit> mVictimPhysicalHit{};
+        std::vector<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChanges{};
     };
 
     struct OblivionPassiveEffectIdentity

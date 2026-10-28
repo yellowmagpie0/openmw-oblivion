@@ -35,6 +35,8 @@
 #include "apps/openmw/mwmechanics/spellcalculation.hpp"
 #include "apps/openmw/mwmechanics/spellutil.hpp"
 #include <components/esm4/common.hpp>
+#include <components/esm4/loadench.hpp>
+#include <components/esm4/loadmgef.hpp>
 #include <components/esm4/dropplacement.hpp>
 #include "apps/openmw/mwworld/projectilemanager.hpp"
 #include "apps/openmw/mwworld/manualref.hpp"
@@ -7555,6 +7557,47 @@ namespace
         native.mEnchantment = {0x944, 0};
         store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
         EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 0, false));
+        ESM4::Enchantment enchantment{};
+        enchantment.mId = native.mEnchantment;
+        enchantment.mFormKey = ESM::FormKey::content("headless.esm", 0x944);
+        enchantment.mData = ESM4::EnchantmentData{2, 8, 8, 0};
+        enchantment.mEffects.push_back({ESM::fourCC("FIDG"), 5, 0, 0, 1, 8, {}});
+        store.getWritable<ESM4::Enchantment>().insertStatic(enchantment, enchantment.mFormKey);
+        ESM4::EffectSetting fire{}; fire.mId = {0x945, 0};
+        fire.mFormKey = ESM::FormKey::content("headless.esm", 0x945);
+        fire.mEffectCode = ESM::fourCC("FIDG");
+        fire.mData = ESM4::EffectSettingData{553655413, 7.5f, 8, 2, 61};
+        store.getWritable<ESM4::EffectSetting>().insertStatic(fire, fire.mFormKey);
+        ESM4::GameSetting exponent{}; exponent.mId = {0x946, 0};
+        exponent.mEditorId = "fMagicCostScale"; exponent.mData = 1.28f;
+        store.getWritable<ESM4::GameSetting>().insertStatic(exponent,
+            ESM::FormKey::content("headless.esm", 0x946));
+        native.mEnchantmentPoints = 20;
+        store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        for (const auto& [attacker, target, item] : std::array{
+                 std::tuple{npc, player, source}, std::tuple{player, npc, playerSource}})
+        {
+            const auto ready = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, target, item, 0, false);
+            ASSERT_TRUE(ready); EXPECT_EQ(ready->mEnchantmentHealth, 5);
+            ASSERT_TRUE(ready->mEnchantmentChargeChange);
+            EXPECT_EQ(ready->mEnchantmentChargeChange->mExpectedCharge, -1);
+            EXPECT_EQ(ready->mEnchantmentChargeChange->mCharge, 15);
+            EXPECT_TRUE(ready->mEnchantedSound);
+            EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), -1); // Read-only preparation.
+            item.getCellRef().setEnchantmentCharge(4.5f);
+            const auto empty = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, target, item, 0, false);
+            ASSERT_TRUE(empty); EXPECT_EQ(empty->mEnchantmentHealth, 0);
+            EXPECT_FALSE(empty->mEnchantmentChargeChange); EXPECT_FALSE(empty->mEnchantedSound);
+            EXPECT_EQ(item.getCellRef().getEnchantmentCharge(), 4.5f);
+            item.getCellRef().setEnchantmentCharge(5.5f);
+            const auto last = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, target, item, 0, false);
+            ASSERT_TRUE(last); ASSERT_TRUE(last->mEnchantmentChargeChange);
+            EXPECT_EQ(last->mEnchantmentChargeChange->mCharge, .5f);
+            item.getCellRef().setEnchantmentCharge(-1);
+        }
+        enchantment.mEffects[0].mDuration = 1;
+        store.getWritable<ESM4::Enchantment>().insertStatic(enchantment, enchantment.mFormKey);
+        EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, player, source, 0, false));
         native.mEnchantment = noEnchantment;
         store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
         ASSERT_TRUE(world.toggleGodMode());
@@ -7587,6 +7630,7 @@ namespace
             return *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         };
         auto source = install(attacker, 125.5f), target = install(victim, 50.25f);
+        source.getCellRef().setEnchantmentCharge(5.5f);
         auto& service = *world.getOblivionCombatService();
         const auto snapshot = [&] {
             auto state = captureNativeActorState(fixture, attacker);
@@ -7611,6 +7655,8 @@ namespace
         deltas.mConditionChanges = {
             MWMechanics::captureOblivionPhysicalConditionChange(attacker, source, 124.25f),
             MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 50.125f)};
+        deltas.mEnchantmentChargeChanges.push_back(
+            MWMechanics::captureOblivionPhysicalEnchantmentChargeChange(attacker, source, .5f));
         const auto before = snapshot();
         const auto reject = [&](const MWMechanics::OblivionPhysicalContactDeltas& bad) {
             EXPECT_THROW(world.commitOblivionPhysicalContact(id, attacker, victim, bad), std::invalid_argument);
@@ -7624,10 +7670,28 @@ namespace
         bad = deltas; bad.mConditionChanges.back().mExpectedNativeCondition = 50.5f; reject(bad);
         bad = deltas; bad.mConditionChanges.back().mOwner = attacker; reject(bad);
         bad = deltas; bad.mConditionChanges.back().mExpectedCount = 2; reject(bad);
+        bad = deltas; bad.mEnchantmentChargeChanges[0].mExpectedCharge = 5; reject(bad);
+        bad = deltas; bad.mEnchantmentChargeChanges[0].mCharge = -1; reject(bad);
+        bad = deltas; bad.mEnchantmentChargeChanges[0].mCharge = std::numeric_limits<float>::quiet_NaN(); reject(bad);
+        bad = deltas; bad.mEnchantmentChargeChanges[0].mOwner = victim; reject(bad);
+        bad = deltas; bad.mEnchantmentChargeChanges.push_back(bad.mEnchantmentChargeChanges[0]); reject(bad);
         MWMechanics::OblivionPhysicalContactDeltas miss{-7, 0, 0, 0, deltas.mConditionChanges};
+        miss.mEnchantmentChargeChanges = deltas.mEnchantmentChargeChanges;
         EXPECT_THROW(world.commitOblivionPhysicalContact(id, attacker, {}, miss), std::invalid_argument);
         EXPECT_EQ(snapshot(), before);
+        // Charge leases participate in the same resource/condition transaction.
+        auto pending = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+        ASSERT_TRUE(pending); ASSERT_TRUE(pending->isValid());
+        source.getCellRef().setEnchantmentCharge(5);
+        EXPECT_FALSE(pending->isValid()); EXPECT_FALSE(pending->commit());
+        EXPECT_TRUE(service.isActionPending(id, attacker.getCellRef().getFormKey()));
+        EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 125.5f);
+        source.getCellRef().setEnchantmentCharge(5.5f);
+        EXPECT_EQ(snapshot(), before);
+        pending.reset();
         ASSERT_TRUE(world.commitOblivionPhysicalContact(id, attacker, victim, deltas));
+        EXPECT_EQ(source.getCellRef().getEnchantmentCharge(), .5f);
+        EXPECT_EQ(target.getCellRef().getEnchantmentCharge(), -1.f);
         EXPECT_EQ(source.getCellRef().getNativeItemCondition(), 124.25f);
         EXPECT_EQ(target.getCellRef().getNativeItemCondition(), 50.125f);
         EXPECT_EQ(source.getCellRef().getCharge(), 125);
@@ -7655,6 +7719,8 @@ namespace
         const auto orderedCommitted = snapshot();
         const auto decoded = ESM4::RuntimeState::deserializeBinary(orderedCommitted);
         ASSERT_EQ(decoded.mReferences.size(), 2u);
+        ASSERT_EQ(decoded.mReferences[0].mInventory.size(), 1u);
+        EXPECT_EQ(decoded.mReferences[0].mInventory[0].mCharge, .5f);
         ASSERT_EQ(decoded.mReferences[1].mInventory.size(), 1u);
         EXPECT_EQ(decoded.mReferences[1].mInventory[0].mCondition, second.mCondition);
         for (unsigned i = 0; i < 2; ++i)
@@ -7667,6 +7733,7 @@ namespace
             inventory.swapPreparedContents(*staged);
             (i == 0 ? source : target) = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
         }
+        EXPECT_EQ(source.getCellRef().getEnchantmentCharge(), .5f);
         service.restore(decoded, store);
         MWMechanics::OblivionPhysicalContactDeltas replay{0, 0, 0, 0, {
             MWMechanics::captureOblivionPhysicalConditionChange(victim, target, 49.f)}};
@@ -24889,6 +24956,8 @@ TEST(OblivionWorldTest, NativeContactRetainedBreaksPublishBeforeDeferredObserver
             auto change = MWMechanics::captureOblivionPhysicalConditionChange(actor, item, 0);
             change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip; deltas.mConditionChanges.push_back(change);
         }
+        deltas.mEnchantmentChargeChanges.push_back(
+            MWMechanics::captureOblivionPhysicalEnchantmentChargeChange(attacker, first, 2.25f));
         deltas.mRandomTransition = service.prepareCombatRandom(3);
         struct Observer : MWWorld::InventoryStoreListener
         {
@@ -24902,7 +24971,7 @@ TEST(OblivionWorldTest, NativeContactRetainedBreaksPublishBeforeDeferredObserver
             EXPECT_EQ(first.getCellRef().getNativeItemCondition(), 0.f);
             EXPECT_EQ(second.getCellRef().getNativeItemCondition(), 0.f);
             EXPECT_EQ(first.getCellRef().getCount(), 1); EXPECT_EQ(second.getCellRef().getCount(), 1);
-            EXPECT_EQ(first.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(first.getCellRef().getEnchantmentCharge(), 2.25f);
             EXPECT_EQ(first.getCellRef().getNativeItemScale(), .13f);
             EXPECT_EQ(service.getNonPlayerValue(attacker, 10), fatigue - 7);
             EXPECT_EQ(service.getNonPlayerValue(victim, 8), health - 3);
@@ -25445,6 +25514,7 @@ TEST(OblivionWorldTest, NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeRe
         const auto victim = prepareNativeDropContactActors(fixture);
         auto& service = *world.getOblivionCombatService();
         const float health = service.getNonPlayerValue(victim, 8), fatigue = service.getNonPlayerValue(fixture.mActor, 10);
+        fixture.mItem.getCellRef().setEnchantmentCharge(7.25f);
         const auto action = world.beginOblivionPhysicalAction(fixture.mActor);
         const auto serial = world.captureOblivionRuntimeState().mNextDynamicSerial;
         const auto revision = world.getWorldModel().getPtrRegistryRevision();
@@ -25452,13 +25522,19 @@ TEST(OblivionWorldTest, NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeRe
         auto wear = MWMechanics::captureOblivionPhysicalConditionChange(fixture.mActor, fixture.mItem, 0);
         wear.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Drop;
         deltas.mConditionChanges.push_back(wear); deltas.mRandomTransition = service.prepareCombatRandom(3);
-        const std::array<MWWorld::EquippedWeaponDrop, 1> requests{{{fixture.mActor, fixture.mItem, *fixture.mAnimation, 0.f}}};
+        deltas.mEnchantmentChargeChanges.push_back(
+            MWMechanics::captureOblivionPhysicalEnchantmentChargeChange(fixture.mActor, fixture.mItem, 2.25f));
+        const std::array<MWWorld::EquippedWeaponDrop, 1> requests{{{fixture.mActor, fixture.mItem, *fixture.mAnimation, 0.f, false, 2.25f}}};
         // No renderer is installed on this World. The explicit context uses
         // real owned scene/animation/physics assets, not a headless bypass.
         EXPECT_FALSE(world.prepareOblivionPhysicalContact(action, fixture.mActor, victim, deltas));
         auto plan = world.prepareOblivionPhysicalContactWithWeaponDrops(action, fixture.mActor, victim, deltas,
             *fixture.mObjects, *fixture.mPhysics, requests);
         ASSERT_TRUE(plan); ASSERT_TRUE(plan->isValid());
+        auto wrongCharge = requests;
+        wrongCharge[0].mEnchantmentChargeAfter = 7.25f;
+        EXPECT_THROW(world.prepareOblivionPhysicalContactWithWeaponDrops(action, fixture.mActor, victim, deltas,
+            *fixture.mObjects, *fixture.mPhysics, wrongCharge), std::invalid_argument);
         EXPECT_EQ(service.getNonPlayerValue(victim, 8), health);
         EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 50.f);
         if (outcome == 1) fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
@@ -25476,6 +25552,7 @@ TEST(OblivionWorldTest, NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeRe
             EXPECT_EQ(service.getNonPlayerValue(fixture.mActor, 10), fatigue);
             EXPECT_EQ(service.combatRandomState(), 1u);
             EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 1);
+            EXPECT_EQ(fixture.mItem.getCellRef().getEnchantmentCharge(), 7.25f);
             EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), outcome == 5 ? 49.f : 50.f);
             EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, serial);
             EXPECT_EQ(world.getWorldModel().getPtrRegistryRevision(), revision);
@@ -25489,7 +25566,8 @@ TEST(OblivionWorldTest, NativeContactOwnsWeaponDropAdmissionAndRollsBackBeforeRe
         const auto reference = world.getWorldModel().getDynamicNativePtr(ESM::FormKey::dynamic("native-reference", serial));
         ASSERT_FALSE(reference.isEmpty());
         EXPECT_EQ(reference.getCellRef().getNativeItemCondition(), 0.f);
-        EXPECT_EQ(reference.getCellRef().getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(reference.getCellRef().getEnchantmentCharge(), 2.25f);
+        EXPECT_EQ(fixture.mItem.getCellRef().getEnchantmentCharge(), 2.25f);
         EXPECT_EQ(reference.getCellRef().getScale(), 2.f);
         EXPECT_EQ(reference.getCellRef().getNativeDropRelations().mDropper, fixture.mActor.getCellRef().getFormKey());
         EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 0); EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 0.f);

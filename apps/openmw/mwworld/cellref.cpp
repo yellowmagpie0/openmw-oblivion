@@ -289,6 +289,20 @@ namespace MWWorld
         return true;
     }
 
+    bool CellRef::swapNativeEnchantmentCharge(CellRef& other) noexcept
+    {
+        if (!supportsNativeItemCondition() || !other.supportsNativeItemCondition())
+            return false;
+        const auto storage = [](CellRef& value) -> float& {
+            if (auto* item = std::get_if<ESM::CellRef>(&value.mCellRef.mVariant))
+                return item->mEnchantmentCharge;
+            return value.mNativePlacedEnchantmentCharge;
+        };
+        std::swap(storage(*this), storage(other));
+        mChanged = other.mChanged = true;
+        return true;
+    }
+
     void CellRef::resetNativeItemCondition() noexcept
     {
         if (auto* ref = std::get_if<ESM::CellRef>(&mCellRef.mVariant))

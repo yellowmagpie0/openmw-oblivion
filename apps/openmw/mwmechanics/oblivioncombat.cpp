@@ -2613,6 +2613,17 @@ namespace MWMechanics
             ref.getNativeItemScale()};
     }
 
+    OblivionPhysicalEnchantmentChargeChange captureOblivionPhysicalEnchantmentChargeChange(
+        const MWWorld::Ptr& owner, const MWWorld::Ptr& item, float charge)
+    {
+        if (item.isEmpty() || !std::isfinite(charge) || charge < 0)
+            throw std::invalid_argument("invalid native enchantment charge publication");
+        const float current = item.getCellRef().getEnchantmentCharge();
+        if (!std::isfinite(current) || (current < 0 && current != -1))
+            throw std::invalid_argument("invalid native enchantment charge snapshot");
+        return {owner, item, current, charge};
+    }
+
     OblivionCombatRandomTransition OblivionCombatService::prepareCombatRandom(unsigned draws) const
     {
         if (draws == 0 || draws > MaxPhysicalContactRandomDraws)
@@ -2761,6 +2772,7 @@ namespace MWMechanics
             MWWorld::CellRef mReference;
             bool mApply;
             OblivionWeaponBreakDisposition mBreakDisposition;
+            bool mApplyEnchantmentCharge = false;
         };
         OblivionCombatService* mOwner = nullptr;
         std::weak_ptr<const char> mIdentity;
@@ -2887,6 +2899,7 @@ namespace MWMechanics
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
+            || !deltas.mEnchantmentChargeChanges.empty()
             || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments
             || deltas.mVictimPhysicalHit)
             throw std::invalid_argument("native contact continuation cannot repeat damage, wear or knockback");
@@ -3016,7 +3029,8 @@ namespace MWMechanics
             if (!isMeleeContactPending(id, attackerKey) || getProcessAction(attackerKey) != 2
                 || deltas.mAttackerFatigue != 0
                 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0 || deltas.mVictimBlockFatigue != 0
-                || !deltas.mConditionChanges.empty() || deltas.mKnockback || deltas.mAttackerReaction
+                || !deltas.mConditionChanges.empty() || !deltas.mEnchantmentChargeChanges.empty()
+                || deltas.mKnockback || deltas.mAttackerReaction
                 || deltas.mVictimCounterRequested || deltas.mVictimCounter
                 || std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
                     [&](const auto& request) { return request.mOwner != victim; })
@@ -3282,6 +3296,38 @@ namespace MWMechanics
             }
             if (found->mApply)
                 ref.setNativeItemCondition(request.mCondition);
+        }
+        if (victim.isEmpty() && !deltas.mEnchantmentChargeChanges.empty())
+            throw std::invalid_argument("native missed swing cannot spend enchantment charge");
+        std::set<MWWorld::Ptr> chargedItems;
+        for (const auto& request : deltas.mEnchantmentChargeChanges)
+        {
+            if (request.mOwner != attacker || request.mItem.isEmpty()
+                || request.mItem.getType() != ESM::REC_WEAP
+                || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>()
+                || !std::isfinite(request.mExpectedCharge)
+                || (request.mExpectedCharge < 0 && request.mExpectedCharge != -1)
+                || !std::isfinite(request.mCharge) || request.mCharge < 0
+                || !chargedItems.insert(request.mItem).second)
+                throw std::invalid_argument("invalid native contact enchantment charge request");
+            auto& inventory = attacker.getClass().getInventoryStore(attacker);
+            const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            if (equipped == inventory.end() || *equipped != request.mItem
+                || request.mItem.getContainerStore() != &inventory || request.mItem.getCellRef().getCount() != 1
+                || !request.mItem.getCellRef().supportsNativeItemCondition()
+                || std::bit_cast<std::uint32_t>(request.mItem.getCellRef().getEnchantmentCharge())
+                    != std::bit_cast<std::uint32_t>(request.mExpectedCharge))
+                throw std::invalid_argument("stale or unowned native contact enchantment charge request");
+            auto found = std::find_if(conditions.begin(), conditions.end(),
+                [&](const auto& prepared) { return prepared.mItem == request.mItem; });
+            if (found == conditions.end())
+            {
+                conditions.push_back({request.mItem, request.mItem.getCellRef(), false,
+                    OblivionWeaponBreakDisposition::None});
+                found = std::prev(conditions.end());
+            }
+            found->mReference.setEnchantmentCharge(request.mCharge);
+            found->mApplyEnchantmentCharge = true;
         }
         std::map<ESM::FormKey, ESM4::RuntimeMeleeState> reactionStates;
         std::map<ESM::FormKey, float> reactionClocks;
@@ -3971,7 +4017,8 @@ namespace MWMechanics
             if (!unequip.mPreparation->ownerIsCurrent()
                 || !unequip.mInventory->validatePreparedUnequip(*unequip.mPreparation)) return false;
         for (const auto& condition : data->mConditions)
-            if (condition.mApply && (!condition.mItem.getCellRef().supportsNativeItemCondition()
+            if ((condition.mApply || condition.mApplyEnchantmentCharge)
+                && (!condition.mItem.getCellRef().supportsNativeItemCondition()
                 || !condition.mReference.supportsNativeItemCondition())) return false;
         if (owned != data->mOwnedActions.size()
             || ((data->mAttacker.mValues.mOwner == ESM4::ActorValueOwner::Player
@@ -4000,7 +4047,11 @@ namespace MWMechanics
             mActionOwners.swap(data.mCounterAllocation->mNextOwners);
         }
         for (auto& condition : data.mConditions)
+        {
             if (condition.mApply) condition.mItem.getCellRef().swapNativeItemCondition(condition.mReference);
+            if (condition.mApplyEnchantmentCharge)
+                condition.mItem.getCellRef().swapNativeEnchantmentCharge(condition.mReference);
+        }
         for (auto& unequip : data.mUnequips)
             if (!unequip.mInventory->commitPreparedUnequip(*unequip.mPreparation)) std::terminate();
         if (data.mRandom) mCombatRngState = data.mRandom->mNextState;

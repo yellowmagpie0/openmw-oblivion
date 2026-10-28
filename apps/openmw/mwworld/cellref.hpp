@@ -201,6 +201,8 @@ namespace MWWorld
         // Swap only the condition extra. Both supported item variants retain
         // their identity, ownership, charge, placement and all other extras.
         bool swapNativeItemCondition(CellRef& other) noexcept;
+        // Prepared item charge publication; preserve durability and other extras.
+        bool swapNativeEnchantmentCharge(CellRef& other) noexcept;
         // Restore an absent native extra without inventing a zero condition.
         void resetNativeItemCondition() noexcept;
         void setCharge(int charge);
