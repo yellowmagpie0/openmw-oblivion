@@ -1,8 +1,9 @@
 """Finite stock block-sound mixture assay (requires NumPy).
 
-The declared bank contains equal-gain pairs of three PCM assets: six aligned
-pairs and nine ordered pairs separated by one declared mixer period. Nothing
-is fitted to a recording. Clusters measure audible events, not voice counts.
+Version1 declares equal-gain pairs of three PCM assets. Version2 declares two
+disjoint asset banks and permits only cross-bank pairs. Both include aligned
+pairs and ordered pairs separated by one declared mixer period. Nothing is
+fitted to a recording. Clusters measure audible events, not voice counts.
 Keep reports from earlier single-asset criteria unchanged.
 """
 from __future__ import annotations
@@ -32,14 +33,18 @@ def pcm(path, *, mono=True):
 
 
 def templates(recipe):
-    if set(recipe) != {"schema_version", "assets", "sample_rate", "channels", "analysis_rate",
-                       "mixer_period_frames", "minimum_normalized_correlation", "cluster_gap_seconds"}:
+    version = recipe.get("schema_version")
+    fields = {"schema_version", "assets", "sample_rate", "channels", "analysis_rate",
+              "mixer_period_frames", "minimum_normalized_correlation", "cluster_gap_seconds"}
+    if version == 2:
+        fields.add("asset_banks")
+    if set(recipe) != fields:
         raise ValueError("unexpected mixture-assay recipe fields")
     if any(type(recipe[k]) is not int for k in
            ("schema_version", "sample_rate", "channels", "analysis_rate", "mixer_period_frames")):
         raise ValueError("format and mixer fields require integers")
-    if (recipe["schema_version"], recipe["sample_rate"], recipe["channels"],
-            recipe["analysis_rate"]) != (1, 48000, 2, 12000):
+    if version not in (1, 2) or (recipe["sample_rate"], recipe["channels"],
+                               recipe["analysis_rate"]) != (48000, 2, 12000):
         raise ValueError("assay requires stereo 48kHz capture and 12kHz analysis")
     if recipe["mixer_period_frames"] != 960:
         raise ValueError("this bank requires the declared 960-frame mixer period")
@@ -49,8 +54,21 @@ def templates(recipe):
     if type(recipe["cluster_gap_seconds"]) not in (int, float) or recipe["cluster_gap_seconds"] != 1:
         raise ValueError("this assay retains the one-second cluster separation")
     assets = recipe["assets"]
-    if not isinstance(assets, list) or len(assets) != 3:
-        raise ValueError("exactly three declared stock assets required")
+    if not isinstance(assets, list) or (len(assets) != 3 if version == 1 else len(assets) < 2):
+        raise ValueError("incorrect declared stock asset count")
+    if version == 1:
+        aligned = list(itertools.combinations_with_replacement(range(3), 2))
+        ordered = list(itertools.product(range(3), repeat=2))
+    else:
+        groups = recipe["asset_banks"]
+        if not isinstance(groups, list) or len(groups) != 2 or any(
+                not isinstance(group, list) or not group for group in groups):
+            raise ValueError("two nonempty declared asset banks required")
+        indices = [i for group in groups for i in group]
+        if any(type(i) is not int for i in indices) or sorted(indices) != list(range(len(assets))):
+            raise ValueError("asset banks must partition all declared assets exactly once")
+        aligned = list(itertools.product(*groups))
+        ordered = aligned + [(right, left) for left, right in aligned]
     sources, seen = [], set()
     for asset in assets:
         if not isinstance(asset, dict) or set(asset) != {"path", "sha256"} or \
@@ -70,8 +88,7 @@ def templates(recipe):
             raise ValueError("stock template has no varying signal")
         sources.append(values)
     bank = []
-    for delay, pairs in ((0, itertools.combinations_with_replacement(range(3), 2)),
-                         (240, itertools.product(range(3), repeat=2))):
+    for delay, pairs in ((0, aligned), (240, ordered)):
         for left, right in pairs:
             values = np.zeros(max(len(sources[left]), delay + len(sources[right])))
             values[:len(sources[left])] += sources[left]

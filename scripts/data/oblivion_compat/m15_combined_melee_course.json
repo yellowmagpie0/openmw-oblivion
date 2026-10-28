@@ -891,6 +891,24 @@
       "power_approach_range": 110,
       "scope": "Single unresisted instant zero-area FIDG Touch Health. Spend5 on each of the first4 actual successful Player contacts; remaining0.5 suppresses later effects, including final13. Misses4/5 preserve charge. Keep existing Health120, native resistance channels, and all other joined-fixture state unchanged.",
       "source": "Export this object to an ignored profile JSON for the existing combined-mastery-work-01 stage.py/run.py/inspect.py adapters. Executed profile03 and its fixture preflight retain their original hashes; all functional fields here match that profile."
+    },
+    "stock_club": {
+      "weapon_family": "blunt",
+      "stock_weapon": "content:oblivion.esm:03b375",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "weapon_type": 2,
+      "actor_value_skill": 16,
+      "legacy_skill": "blunt.base",
+      "initial_player_weapon_condition": 70,
+      "initial_player_weapon_charge": -1,
+      "wall_approach": {
+        "maximum_x": null,
+        "maximum_y": 92,
+        "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+      },
+      "power_approach_range": 110,
+      "scope": "S4 item2: stock Club normal/directional attacks in existing combined course. Keep targetHealth120 and all unrelated fixture state; preserve real type2/speed.9/reach.9/weight8/damage7. Blunt100 is authored in native/base/legacy views. No contact/damage/reaction outcomes injected."
     }
   }
 }

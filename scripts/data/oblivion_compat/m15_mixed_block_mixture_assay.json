@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "assets": [
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+      "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+      "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+      "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/assets/sound/fx/wpn/weaponblock/blunt/wpn_block_blunt_01.wav",
+      "sha256": "9fd40dfd903606e0c2f0f47c59d56fad142577e92133352dcacf6faf06c2aa8b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/assets/sound/fx/wpn/weaponblock/blunt/wpn_block_blunt_02.wav",
+      "sha256": "d11c86d4bc4c1f287600a2473f569373219da0031d743599fe97180f20989e27"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/assets/sound/fx/wpn/weaponblock/blunt/wpn_block_blunt_03.wav",
+      "sha256": "bd19dbb6415388c82a034b47c94422a782933497fb96909c558290d4f970db9a"
+    }
+  ],
+  "sample_rate": 48000,
+  "channels": 2,
+  "analysis_rate": 12000,
+  "mixer_period_frames": 960,
+  "minimum_normalized_correlation": 0.75,
+  "cluster_gap_seconds": 1,
+  "asset_banks": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      3,
+      4,
+      5
+    ]
+  ]
+}

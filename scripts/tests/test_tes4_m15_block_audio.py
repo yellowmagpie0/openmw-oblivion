@@ -77,6 +77,27 @@ class NativeBlockMixtureAudioTest(unittest.TestCase):
                 self.assertTrue(audio.analyse(path, self.recipe, 0)["passed"])
                 self.assertFalse(audio.analyse(path, self.recipe, 1)["passed"])
 
+    def test_two_asset_banks_accept_only_cross_family_pcm_in_both_orders(self):
+        recipe = dict(self.recipe, schema_version=2, asset_banks=[[0], [1, 2]])
+        events = [(0, 1, False), (0, 2, True), (2, 0, True)]
+        result = audio.analyse(self.capture(events, noise=True), recipe, 3)
+        self.assertTrue(result["passed"], result["clusters"])
+        self.assertEqual(len(result["templates"]), 12)
+        for cluster in result["clusters"]:
+            self.assertGreater(cluster["maximum_correlation"], .99)
+        # Two clips from one family cannot prove a mixed-family block.
+        path = self.capture([(1, 2, False), (0, 0, True)])
+        self.assertTrue(audio.analyse(path, recipe, 0)["passed"])
+        self.assertFalse(audio.analyse(path, recipe, 1)["passed"])
+
+    def test_two_asset_banks_reject_overlap_missing_assets_and_invalid_indices(self):
+        for groups in ([[0], [0, 1, 2]], [[0], [1]], [[], [0, 1, 2]],
+                       [[False], [1, 2]], [[0], [1, 3]], [[0, 1, 2]], [[0], [1, 2], []]):
+            with self.subTest(groups=groups):
+                recipe = dict(self.recipe, schema_version=2, asset_banks=groups)
+                with self.assertRaises(ValueError):
+                    audio.templates(recipe)
+
     def test_antiphase_target_cannot_pass_a_zero_replay_check(self):
         path = self.capture([(0, 1, True)], antiphase=True)
         self.assertTrue(audio.analyse(path, self.recipe, 1)["passed"])

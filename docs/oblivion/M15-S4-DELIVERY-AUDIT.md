@@ -14,6 +14,7 @@ Current acceptance checklist (2026-10-28):
 - **Demonstrated controller mastery:** the same joined fixture now passes with configured first- and third-person gamepad normally and under ASan/UBSan: **72 core plus 8 supplemental pairs, 12 epochs, 8 whole restores and 76 reviewed captures**. Actual uinput/SDL receipts, resources, ownership, nonlethal endpoints and block audio/no-replay pass. Source and saved/live physics remain exact; repeat-only numeric tolerances are declared. Third-person SAN recovery also covers a source whose Player followthrough already finished. Fixture/checker failures, original helper bytes and unchanged engine/Python gate provenance are linked in the recipe checkpoints.
 - **Demonstrated input dependency:** typed TES4 ENCH now reaches the real store and semantic audit. The [input checkpoint](../../build/oblivion-compat/m15/S4/enchanted-contact-work-01/input-checkpoint-verification.json) binds normal gates (3,201 component / 2,051 engine / 443 Python), sanitizer gates (1,030 ESM4 / 2,051 engine), and both rebuilt `esmtool` comparisons (3,008 records / 51,312 fields each) to dirty-source fingerprint `788412bc1ff973285af6077a789b96c2349b991858e8448e7a4799a63d324704`, parent `83770436aa`. The independent official inventory has 1,694 winning ENCH; all prior counts remain unchanged. This foundation closes typed-input/store validation only; the subsequent bounded charged-contact checkpoint is recorded below. ASan leak detection was disabled; retained build warnings are not suppressed.
 - **Demonstrated charged contact:** the [contact checkpoint](../../build/oblivion-compat/m15/S4/enchanted-contact-work-01/contact-checkpoint-verification.json) verifies a stock instant, unresisted Fire weapon in the existing joined course normally and under ASan/UBSan: **54 exact pairs / 10 epochs / 50 reviewed captures**, charge20.5 to0.5, physical-only depletion, resource-preserving misses and same-pose clear-path controls. Backward restart endpoints match; pending Forward applies once after exact restore and recovers without replay. Full gates pass **3,205 components / 2,051 engine** normally, **1,034 ESM4 / 2,051 engine** under sanitizers, and **443 fresh Python** cases. The receipt retains tested-source pins, unchanged parser/store audit reuse, fixture failures and visibility limits. Editable inputs are in the [existing course recipe](../../scripts/data/oblivion_compat/m15_combined_melee_course.json). This first-person profile retains cap15/seed1/forced procs; other S4 domains remain open.
+- **Demonstrated one-handed Blunt:** the [stock Club checkpoint](../../build/oblivion-compat/m15/S4/blunt-course-work-01/checkpoint-verification.json) joins normal/four-directional attacks, production block/Stagger/recovery, geometry misses and fresh continuations in normal/SAN first-person keyboard/mouse: **44 exact pairs / 8 epochs / 40 reviewed captures**. Native ownership/resources match; mixed Blade/Blunt PCM has one reference event and no restart replay. The shared assay retains its0.75 threshold and passes **445 Python cases**, including cross-bank positive/negative controls. No C++ changed or broad C++ gates were repeated. The receipt preserves a failed20-unit absolute drop-position check and the explicit corrected comparison of falls from matched saved origins, with20-unit bounds on origin and displacement. Camera limits and the observed optional ordinary contacts during held-power input remain open for final acceptance.
 - **Incomplete:** remaining actor/weapon/effect, command/query, interruption and sound/HUD domains and high-risk crosses below. Retain at least three fixed seeds, 30/60/120FPS caps with achieved FPS/timing, and independent final campaigns twice with the same seed plus once with a second declared seed.
 - **Blocked:** none.
 
@@ -40,12 +41,13 @@ the elapsed GameHour projection separately. Its pending Forward save is restored
 exactly, applies once, collapses physically and recovers without replay; scoped
 checker failures and original checker bytes remain linked in the receipt.
 
-Next bounded task after committing the charged-contact chunk: extend the existing
-combined normal-input course to a stock blunt weapon. This closes the missing
-weapon-family acceptance case; fix any required gameplay discrepancy it exposes
-and reuse the current compiled binaries while implementation stays unchanged.
-The remaining actor, defensive/mastery, command and interruption requirements
-below and the final FPS/seed campaigns remain open.
+Next, map the remaining controlling S4 requirements to combined planned runs and
+identify implementation blockers to the final FPS/seed campaigns. The observed
+extra ordinary contacts during held-power input differ between normal and SAN
+runs; resolve intended input semantics before claiming timing stability. Improve
+shared preflight checks for reachable approaches, useful camera views and valid
+pending/applied effects before more full courses. Preserve the requirements below,
+reuse unchanged evidence and avoid expanding into unrelated native dependencies.
 
 The [stock Bailey Down/GetUp checkpoint](M15-NATURAL-RECOVERY-VERIFICATION.json)
 and recipe at `b1583d624f` retain their historical provenance.
