@@ -814,8 +814,20 @@ namespace MWMechanics
         deltas.mVictimBlockFatigue = -result.mBlockFatigueDebit;
         // NPC Hit responses observe the old friend-hit count; notification
         // follows reactions. The stationary enemy path owns both stages.
+        // Low-Hand weapon blocks preserve full damage and defer the recoil
+        // chance to the existing post-damage general-hit tail. These flags
+        // were captured together by the numeric block preparation above.
+        const bool generalHitBlock = blockAccepted && deltas.mOrdinaryHitArguments
+            && deltas.mOrdinaryHitArguments->mActiveBlock
+            && deltas.mOrdinaryHitArguments->mBareHandBlock
+            && deltas.mOrdinaryHitArguments->mAttackerHasWeapon && !requestsAttackerRecoil;
+        const bool playerNpcPair = !contact->isEmpty()
+            && ((attacker == playerContact && contact->getType() == ESM::REC_NPC_4)
+                || (attacker.getType() == ESM::REC_NPC_4 && *contact == playerContact));
+        if (generalHitBlock && !playerNpcPair)
+            return std::nullopt; // The complete NPC/NPC general-hit owner remains separate.
         const bool phased = !contact->isEmpty() && deltas.mOrdinaryHitArguments
-            && (directionalPowerPair || (attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
+            && (generalHitBlock || directionalPowerPair || (attacker != playerContact && attacker.getType() == ESM::REC_NPC_4
                     && *contact == playerContact)
                 || nativeWorld->supportsOblivionEnemyHitNotification(attacker, *contact));
         // Original600528 blocked dispatch bypasses5FFF99's general-hit force,
@@ -1215,9 +1227,9 @@ namespace MWMechanics
             const auto base = [&](std::uint8_t av) { return player ? service.getPlayerBaseValue(av)
                 : service.getNonPlayerBaseValue(key, av, world.getStore()); };
             const bool reactionOnly = disposition == ESM4::BlockContactDisposition::ReactionOnly;
-            if (reactionOnly && ESM4::combatMastery(base(17), ESM4::buildCombatMasterySettings(settings))
-                    < ESM4::CombatMastery::Journeyman)
-                return std::nullopt; // Lower Hand to Hand continues through the separate general-hit branch.
+            const bool generalHitBlock = reactionOnly
+                && ESM4::combatMastery(base(17), ESM4::buildCombatMasterySettings(settings))
+                    < ESM4::CombatMastery::Journeyman;
             // Counter-first selection and immediate Master disarm join the
             // World contact after this numeric preparation and armor-wear RNG.
             double itemCondition = 0;
@@ -1258,7 +1270,7 @@ namespace MWMechanics
             result.mFraction = reactionOnly ? 0.f : ESM4::blockFraction({integer(15), integer(7),
                 ESM4::combatFatigueRatio(fatigue, base(10)), equipment},
                 ESM4::buildBlockSettings(settings), ESM4::buildPhysicalCombatSettings(settings));
-            result.mRequestsAttackerRecoil = reactionOnly || result.mFraction > 0;
+            result.mRequestsAttackerRecoil = (reactionOnly && !generalHitBlock) || result.mFraction > 0;
             const auto costs = ESM4::blockContactCosts(base(15), integer(15), remaining,
                 result.mFraction, !item.isEmpty(), ESM4::buildBlockCostSettings(settings),
                 ESM4::buildCombatMasterySettings(settings));

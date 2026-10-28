@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Choose the next missing S4 actor/weapon/power/effect behavior from the current audit and a focused normal-input variant of this fixture. Complete related implementation before the expensive final FPS/seed integration campaign; preserve all section4.5 and remaining section8 gates. Do not investigate new original-engine details without a concrete requirement/discrepancy.",
+  "next_bounded_task": "D2: demonstrate lower-Hand recoil proc/nonproc with HandToHand10 and Block50 in the existing ordinary course, including native attacker reaction ownership and feedback; reuse current C++ gates when unchanged. Remaining C1/D2/R3/I4/Q5/V6 implementation/acceptance branches and measured T7/F8 campaigns stay open in the delivery audit. No new original-engine investigation without a concrete unresolved requirement.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -955,6 +955,33 @@
       "expected_power_fatigue_cost": 48.5,
       "animation_family": "twohand",
       "target_health": 300
+    },
+    "novice_unarmed": {
+      "name": "novice unarmed defense ordinary contact course",
+      "weapon_family": "unarmed",
+      "animation_family": "handtohand",
+      "actor_value_skill": 17,
+      "base_hand_to_hand": 10,
+      "base_block": 10,
+      "expected_ordinary_fatigue_cost": 7,
+      "expected_incoming_block_fatigue_cost": 20,
+      "course_window": "ordinary",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse measured outboard lane and reachable target-side Y bound; retain named partition and two-height rays."
+      },
+      "acceptance_scope": "D2 Player lower-Hand weapon defense and C1 unarmed return, with range/wall, native ownership, normal/SAN fresh continuation. FullS4 incomplete.",
+      "source": "Export all fields except source and verification as the editable profile for the existing shared stage/run/inspect helpers. Generated plugins and outcomes are reproducible artifacts.",
+      "verification": {
+        "checkpoint": "build/oblivion-compat/m15/S4/low-hand-block-work-01/checkpoint-verification.json",
+        "sha256": "026cef29d9ec6e0d518a07e50175a0485fbd8bb6003ba3295b445941a8557405",
+        "exact_saved_live_pairs": 28,
+        "epochs": 4,
+        "whole_fresh_restores": 2,
+        "reviewed_captures": 28,
+        "scope": "First-person keyboard/mouse, configured cap15,seed1; novice defense and ordinary unarmed return only. Full S4 remains incomplete."
+      }
     }
   }
 }
