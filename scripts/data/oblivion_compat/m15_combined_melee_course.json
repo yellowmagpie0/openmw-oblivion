@@ -735,6 +735,69 @@
       "block_audio": "One stock block cluster per reference; zero replay clusters per fresh Backward continuation.",
       "gates_reused": "Full2050 engine cases each, original component gates and440 Python tests at original pins. Current Python implementation/tests and34engine files unchanged from those receipts.",
       "full_M15S4_acceptance": false
+    },
+    "view_extensions": {
+      "third_person": {
+        "status": "Bounded K/M third-person joined mastery complete in normal and ASan/UBSan builds:36corepairs+4Forwardviewpairs,6epochs/4whole restores,38selectedcaptures directly reviewed, audio1reference/0replay each. FullS4 incomplete.",
+        "purpose": "Close the current directional mastery course third-person K/M view requirement using existing fixture/launcher/monitor/inspector.",
+        "reuse_profile": "view_profiles.third_person",
+        "source": "Same authored schema75 mastery fixture as first-person reference; use normal R input after focus to switch view. Fresh continuations retain saved view and only wait for read-only marker.",
+        "observer": "Use existing view_profiles.third_person.observer_additions verbatim; require thirdPerson=true and forbid leaving third person throughout. Rendered Player body must be directly reviewed.",
+        "actions": "Same current176 canonical actions plus existing R and camera-mode wait after focus. All contact/resource/miss/recovery gates retained.",
+        "reference_run_ids": {
+          "normal": "combined-mastery-third-normal-01",
+          "sanitize": "combined-mastery-third-sanitize-01"
+        },
+        "full_M15S4_acceptance": false,
+        "inactive_cache_policy": "Reuse view_profiles.third_person.inactive_cache_policy verbatim; reject active body/first-person held blocks, strike, reaction, retirement or held/queued intent. Whole source and every saved/live snapshot remain exact.",
+        "retained_checker_failure": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-normal-01-checker-failure.json",
+        "elapsed_calendar_projection": {
+          "key": "content:oblivion.esm:000038",
+          "editor_id": "GameHour",
+          "record_type": "s",
+          "content_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+          "record_audit": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-calendar-global-record-audit.json",
+          "policy": "Repeat endpoints exclude only this elapsed-calendar projection after each saved integer equals floor of its own saved hour. All other globals, exact source restore and saved/live comparisons stay strict.",
+          "retained_failure": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-normal-01-pair-strict-globals-failure.json",
+          "focused_guards": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-calendar-guards.json"
+        },
+        "prior_checker_copy": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/executed-third-cache-only-checker.py",
+          "sha256": "eaf66fc527db6f702320600d31067b4eca270dd011225a7ea8aa2e7c34e11f14",
+          "scope": "Original inspector adapter bytes used for normal reference/continuation14+4pair proofs; retained before comparison-only calendar extension. Their original execution path was check-third.py."
+        },
+        "normal_checkpoint": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-normal-checkpoint-verification.json",
+          "sha256": "8c9abfa11d4d036de35aca08a5f9e479af78ca7c7d139eae2ee7c647a7a303df"
+        },
+        "pending_forward_source": {
+          "source_sha256": "48e5697eccf747dd3f229fdf06975f25d1fc779a1eaa58add9fe46104536e528",
+          "scope": "SAN reference captures owned cause9 effect before its first actor update: duration10/elapsed0, unapplied and not terminated/removed, scalar0/no body yet. Keep exact pending source and require fresh application once, positive mid scalar/physical body, visible fall, natural recovery and no contact/publication replay.",
+          "retained_checker_failure": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-sanitize-01-pending-forward-checker-failure.json",
+          "guards": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-pending-forward-guards.json",
+          "verification": {
+            "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-pending-forward-verification.json",
+            "sha256": "0e9f6a3c6a7a99363e99e62cacb8a438492f0668a283425fd5b9b39cbb4ce442"
+          }
+        },
+        "normal_comparison_checker_copy": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/executed-third-calendar-checker.py",
+          "sha256": "ae4c49f7c06ab165f122bfe51ffef25a491ae75a9a93c2227f3629666a70364c"
+        },
+        "checkpoint": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/third-checkpoint-verification.json",
+          "sha256": "bd8ecd8d01e443e0bb2b8333d2fc1ce749bb6ac4fad251b077a85c1d06549d83"
+        },
+        "verified_scope": {
+          "core_pairs": 36,
+          "supplemental_view_pairs": 4,
+          "epochs": 6,
+          "whole_restores": 4,
+          "reviewed_captures": 38,
+          "full_M15S4_acceptance": false,
+          "limits": "ConfiguredK/M,cap15,achievedFPSunmeasured,seed1,forcedprocchance100. Currentcontroller directions and remaining S4 domains/matrices/campaigns stay open."
+        }
+      }
     }
   }
 }
