@@ -798,6 +798,57 @@
           "limits": "ConfiguredK/M,cap15,achievedFPSunmeasured,seed1,forcedprocchance100. Currentcontroller directions and remaining S4 domains/matrices/campaigns stay open."
         }
       }
+    },
+    "input_extensions": {
+      "gamepad_first_person": {
+        "status": "PASS bounded first-person controller profile normally and under ASan/UBSan:36core+4supplemental exact pairs,6epochs,4whole restores,38directlyreviewedcaptures. FullM15S4 remains incomplete.",
+        "purpose": "Close current mastery course controller input requirement using existing uinput/SDL acknowledgement backend and source fixture.",
+        "reuse_profile": "input_profiles.gamepad_first_person",
+        "source_sha256": "77e48e1af05b57fec2cedc6ac40bfbed3c706bd20822078be72077db536a0019",
+        "bindings": "Reuse input_xml_overlay verbatim: LT block/RT attack, standard sticks; X draw, A activate. F5 remains instrumentation only. No default-layout claim.",
+        "camera_sensitivity": 1.0,
+        "movement_axes": {
+          "a": [
+            "left_x",
+            -0.35
+          ],
+          "d": [
+            "left_x",
+            0.35
+          ],
+          "s": [
+            "left_y",
+            0.35
+          ],
+          "w": [
+            "left_y",
+            -0.35
+          ]
+        },
+        "look_axes": "Replace O held target alignment by right_x=-0.24; north alignment by right_x=+0.22; stop at existing fresh read-only aim guard. Strip relative mouse actions/priming, including former side corrections: lower analog movement magnitude is actual normal input and all four native hits remain mandatory.",
+        "attacks": "Ordinary U tap ->RT1/real0.2second hold/RT0 with existing SDL acknowledgements. Held directional U ->RT1 until existing power animation marker, then releaseRT/movement as canonical course.",
+        "focus": "Reuse post-screenshot focus plus0.25second pause. Wait actual SDL Xbox controller registration after initial focus.",
+        "route_observer_overlay": "Reuse directional_mastery_extension.sanitizer_observer_overlay in both builds: minimumx795 and returnmax(708,targetx) were already verified against the identical stock geometry. Preserve all final distance/facing/two-ray miss and clear-range contact gates.",
+        "acceptance": "No gameplay keyboard or mouse actions; retain only F5/save instrumentation. Require actual SDL controller/receipt evidence, normal production contacts, exact native deltas, nonlethal endpoint and fresh recovery.",
+        "reference_run_ids": {
+          "normal": "combined-mastery-gamepad-normal-03",
+          "sanitize": "combined-mastery-gamepad-sanitize-02"
+        },
+        "full_M15S4_acceptance": false,
+        "wall_approach": "Reuse existing input_profiles.gamepad_first_person read-only geometry format/argument additions. After target-facing, move left_y=-0.35 until wallApproachRange(distance<130,two blocked rays); neutral, then require original fresh nearWall(distance<137,facing<10,two blocked rays).",
+        "first_person_observer": "Reuse view_profiles.third_person camera-mode observer with MODE.FirstPerson and gamepadFirstPerson/left-gamepad-first-person markers; getters only. Require retained first person in all accepted runs.",
+        "return_clearance": "After wall-settled north alignment, use normal left_x=0.35 to existing fresh wallLane>=max(795,targetx+115), neutral, then original left_y backward retreat. Once per return only; no added attack/contact.",
+        "close_range_reaim": "Initial Backward approach: stop at getter-only approach110 distance<110/clear2rays, neutral movement, right_x=-.22 until fresh target aim<3, neutral look, then original close80 distance<80/angle<10/clear2rays. Later original close110 power gates unchanged. Intermediate stop avoids angle drift without relaxing final gameplay contact gates.",
+        "diagnostic_ids": "Gamepad diagnostics may retain hex formatting: a/b/c/d represent10/11/12/13. Wait id/cause alternatives with token boundaries; normalize only analysis copy, preserve raw logs. Require native saved ledger/strike role IDs and available auxiliary phase-event IDs; no contact/resource gate relaxed.",
+        "forward_view": "Reuse actual committed cause9 source, including existing supported pending-owner boundary duration>0/elapsed0/scalar0. Right_y=+1 until pitch>.98 then neutral; reset right_y=-.22 until fresh pitch<=.02 crossing then neutral. Getter-only observer; require exact save/live source, actual scalar/body application once then natural recovery and no contact replay. Idle diagnostic -1/ffff accepted consistently in waits and final log patterns.",
+        "monitor_observation": "Reuse original monitor bytes through compile adapter, changing only900second observation deadline to2460 to cover existing2400second scenario. Keep exact snapshot/binary/epoch checks and terminal event required; no acceptance inferred from missing pairs.",
+        "checkpoint": {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/gamepad-checkpoint-verification.json",
+          "sha256": "3d8bcb5831d5e3f7ff5cadbd60cc83253c774ee56167cde6571eb29937b3e9e8"
+        },
+        "repeat_numeric_policy": "Source restoration and every saved/live physics pair remain exact. Retain existing repeat-only policies; SAN newlycreateddrop residual may be finite <=.001sceneunit/sec linear and<=.0001rad/sec angular percomponent (packedlinear<=.001/7). Normal strict-zero proof unchanged. Original failed check/checker bytes and8guards are linked in checkpoint.",
+        "limits": "Configured first-person gamepad,seed1,cap15,achievedFPSunmeasured,forcedprocchance100,MasterBlade/RustyShortsword/oneNPC. Third-person controller mastery and remaining S4 domains/matrices/campaigns remain open."
+      }
     }
   }
 }
