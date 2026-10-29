@@ -32705,6 +32705,95 @@ TEST(OblivionWorldTest, BrokenIncomingWeaponSkipsMasterRollAndPublishesRecoilWit
     }
 }
 
+TEST(OblivionWorldTest, CreaturePositiveBlockPreparesRecoilAndPreservesAtomicContactOwnership)
+{
+    // The automatic rendererless path proves admission; the explicit resource
+    // packet separately proves publication/restoration. Stock KF playback is a
+    // normal-input runtime gate, rather than a claim made by this fixture.
+    for (const bool resourcePacket : {false, true})
+    {
+        SCOPED_TRACE(resourcePacket);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& service = *world.getOblivionCombatService();
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::Creature creature{}; creature.mId = {0x830, 0};
+        creature.mFormKey = ESM::FormKey::content("headless.esm", 0x830);
+        creature.mAttackReach = 50; creature.mBaseConfig.tes4.levelOrOffset = 1;
+        creature.mBaseConfig.tes4.fatigue = 160; creature.mData.health = 20; creature.mData.damage = 8;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::ActorCreature reference{}; reference.mId = {0x930, 0};
+        reference.mFormKey = ESM::FormKey::content("headless.esm", 0x930);
+        reference.mBaseKey = creature.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr attacker(cell.insert(&live), &cell);
+        ASSERT_TRUE(world.activateOblivionActor(attacker));
+        // A rendererless fixture has no collision root to admit Fatigue use.
+        // The stock Dog model gate is checked separately by runtime evidence.
+        attacker.getRefData().setOblivionCanSpendFatigue(true);
+        service.initializeConstructedActorProcess(reference.mFormKey);
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        installMasterDefenderGear(fixture.mFixture, fixture.mPlayer, 1);
+        fixture.mPlayer.getClass().getCreatureStats(fixture.mPlayer).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(fixture.mPlayer, 15, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 10));
+        ASSERT_TRUE(service.beginBlocking(fixture.mPlayerKey));
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture.mFixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture.mFixture, fixture.mAttacker).mReferences.front());
+            return state;
+        };
+        const auto before = snapshot().serializeBinary();
+        const auto damage = MWMechanics::resolveOblivionUnarmedMeleeContact(world, attacker, fixture.mPlayer,
+            0, false, ESM4::MeleeStrikeKind::Left);
+        ASSERT_TRUE(damage);
+        EXPECT_TRUE(damage->mBlockAccepted);
+        EXPECT_GT(damage->mBlockAbsorbedFraction, 0);
+        EXPECT_TRUE(damage->mRequestsAttackerRecoil);
+        EXPECT_EQ(damage->mHitArguments.mUsedSkill, 255); // Do not invent a Creature Hand skill.
+        EXPECT_EQ(damage->mFatigue, 0);
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        const auto id = service.beginMeleeStrike(reference.mFormKey, ESM4::MeleeStrikeKind::Left,
+            "handtohandattackleft");
+        ASSERT_TRUE(service.bindMeleePlayback(id, reference.mFormKey));
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -damage->mHealth, 0, -damage->mBlockFatigueDebit};
+        packet.mConditionChanges = damage->mVictimConditionChanges;
+        packet.mRandomTransition = damage->mRandomTransition;
+        if (resourcePacket)
+            packet.mAttackerReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Recoil, "recoil"};
+        const float health = service.getPlayerValue(8), fatigue = service.getPlayerValue(10);
+        const auto pending = snapshot().serializeBinary();
+        auto plan = world.prepareOblivionPhysicalContact(id, attacker, fixture.mPlayer, packet, true, !resourcePacket);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(snapshot().serializeBinary(), pending);
+        ASSERT_TRUE(plan->commit());
+        EXPECT_FALSE(plan->commit());
+        EXPECT_NEAR(service.getPlayerValue(8), health - damage->mHealth, 0.0001f);
+        EXPECT_NEAR(service.getPlayerValue(10), fatigue - damage->mBlockFatigueDebit, 0.0001f);
+        EXPECT_EQ(service.getNonPlayerValue(attacker, 10), 153);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto saved = snapshot();
+        MWMechanics::OblivionCombatService restored;
+        ASSERT_NO_THROW(restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), store));
+        EXPECT_TRUE(restored.isActionConsumed(id));
+        const auto* melee = restored.findMeleeState(reference.mFormKey);
+        ASSERT_TRUE(melee);
+        EXPECT_EQ(melee->mReaction.has_value(), resourcePacket);
+        if (resourcePacket)
+        {
+            EXPECT_EQ(melee->mReaction->mKind, ESM4::MeleeReactionKind::Recoil);
+            EXPECT_EQ(melee->mReaction->mContactId, id);
+            EXPECT_EQ(melee->mReaction->mAnimationGroup, "recoil");
+        }
+        const auto after = snapshot().serializeBinary();
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, fixture.mPlayer, packet, true, !resourcePacket));
+        EXPECT_EQ(snapshot().serializeBinary(), after);
+    }
+}
+
 TEST(OblivionWorldTest, AutomaticRecoilPreparationAdmitsRetainedIncomingBreakForPlayerAndNpc)
 {
     for (const bool playerAttacker : {false, true})

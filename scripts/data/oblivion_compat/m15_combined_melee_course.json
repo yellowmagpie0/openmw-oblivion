@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "C1 ordinary Creature melee through the same normal-input course: inventory existing Creature fixtures/tests, retain actual native Creature identity/stock assets and production intent/contact ownership, then implement only missing boundaries. Focused checks precede required normal/SAN contact/resource/recovery and applicable fresh continuation runs. Reuse unchanged proof; NPC power/effect, D2/R3/I4/Q5/V6 and measured T7/F8 campaigns remain open.",
+  "next_bounded_task": "V6 Creature multipart attachment: the existing Dog is visibly missing a correctly attached head/neck even before contact. Audit winning assets and shared attachment authority, then repair the concrete scene-space defect without substituting a model or changing actor ownership. Focused model/scene checks first, then required integration and the same normal/SAN course captures/fresh sources. C1 NPC powers/effects and remaining D2/R3/I4/Q5/V6, measured T7 and frozen F8 campaigns remain open.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -119,7 +119,7 @@
     }
   },
   "sanitizer_scope": "Full2038 engine tests run with ASan/UBSan and leak detection enabled using the recovery receipt X11/Mesa environment. Rendered reference/recovery use leak detection disabled, UBSan halt/stacktrace and ASan first before the SDL hook; no rendered leak-coverage claim.",
-  "post_verification_edits": "Continuation case/evidence metadata and concise audit/handoff updates only. Runtime C++, Python harness, canonical manifests, fixture and dependencies remain unchanged from the referenced verified binaries; all derived overlays are pinned by preflight.",
+  "post_verification_edits": "Historical root/view/device receipts retain their original source/binary provenance. The Creature profile has its own new C++ gates and runtime checkpoint. Shared observer horizontal normalization and coherent recovery input/settings/mouse corrections are fixture changes; original failures and valid raw reinspection are retained. No broad rebuild for fixture metadata alone.",
   "verifier": {
     "path": "build/oblivion-compat/m15/S4/combined-restart-work-01/verify-recovery-pair.py",
     "sha256": "d9d79d72179bf7134ca4af58f3eea692b5c59a6959968f4d45129a5d146fa904",
@@ -1315,6 +1315,84 @@
         "cpp_gate_repeats": 0,
         "source_policy": "Unchanged compiled engine/publicPython; prior broad gates/games and exact test inventories reused with source/binary/dependency pins. Fixture corrections separately recorded; every runtime course passed first attempt.",
         "full_M15S4_acceptance": false
+      }
+    },
+    "creature_natural_block": {
+      "name": "Spell-free Dog natural contact against Block50 Hand10 Player",
+      "weapon_family": "unarmed",
+      "animation_family": "handtohand",
+      "actor_value_skill": 17,
+      "base_hand_to_hand": 10,
+      "base_block": 50,
+      "expected_ordinary_fatigue_cost": 7,
+      "expected_incoming_block_fatigue_cost": 0,
+      "course_window": "ordinary",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse measured outboard lane and reachable target-side Y bound; retain named partition and two-height rays."
+      },
+      "acceptance_scope": "Creature block/Recoil recovery/return/range/wall joined course; other S4 open.",
+      "expected_attacker_recoil": true,
+      "expected_reference_debits": 3,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "opponent_creature": true,
+      "opponent_actor": "content:m15stationaryopponent.esp:000802",
+      "opponent_base": "content:m15stationaryopponent.esp:000800",
+      "opponent_record_id": "FormId:0x2000800",
+      "defender_reaction_kind": 0,
+      "defender_reaction_action": 6,
+      "initial_opponent_approach": 95,
+      "expected_incoming_fatigue_cost": 7,
+      "recovery_activation_mouse_y": -1760,
+      "recovery_activation_sensitivity": 0.05,
+      "source": {
+        "builder": "scripts/tes4_m15_creature_melee_fixture.py",
+        "recipe": "scripts/data/oblivion_compat/m15_creature_melee_fixture.json",
+        "stock_template": "content:oblivion.esm:01e5f5",
+        "stationary_partition_recipe": "scripts/data/oblivion_compat/m15_stationary_partition_fixture.json",
+        "activation_script": "scripts/data/oblivion_compat/m15_recoil_aware_opponent.obscript",
+        "recipe_overrides": {
+          "position": [
+            672,
+            60,
+            -109.68916,
+            0,
+            0,
+            3.1415927
+          ],
+          "CREA": "m15stationaryopponent.esp:000800",
+          "CSTY": "m15stationaryopponent.esp:000801",
+          "ACRE": "m15stationaryopponent.esp:000802",
+          "SCRI": "m15stationaryopponent.esp:000881"
+        },
+        "assembly": "Existing shared stage plus Creature builder; append three records to existing stationary partition plugin, preserving every prior nonheader record. Clone retains stats/damage/reach/assets/inventory and removes scripts/packages/SPLO as in the prior physical Creature fixture; add the unchanged recovery-aware per-reference activation script. Disable the old NPC reference, add cold actual Creature authority and initial Player camera pitch.9. No contact/reaction/RNG outcomes injected.",
+        "reproducer": "build/oblivion-compat/m15/S4/creature-block-course-work-01/stage.py",
+        "validation_layers": {
+          "structural": "Existing builders plus exact record/readback/save checks.",
+          "compiler_world": "Actual normal/SAN game load and authored script runtime.",
+          "semantic": "32 exact saved/live pairs; two active fresh sources and26 strict endpoint fields each; partition-only controls.",
+          "runtime": "Mechanical course verified; Creature head/neck rendering is visibly defective and full visual acceptance remains open."
+        }
+      },
+      "verification": {
+        "status": "Scoped Creature block/Recoil mechanics verified normally and under ASan/UBSan; full Creature visual fidelity incomplete.",
+        "checkpoint": "build/oblivion-compat/m15/S4/creature-block-course-work-01/checkpoint-verification.json",
+        "sha256": "39e7e02ca8e8109b957080a35cd142bdf0e0fd0045581d2ad9c52e76fc9cba2c",
+        "profile_sha256": "ddbb645f0015f0242bb633843a8c7adc2e9fcc7421972bc7f7ec4a454ffdd1d4",
+        "complete_course_pairs": 32,
+        "epochs": 6,
+        "unchanged_active_fresh_restores": 2,
+        "partition_only_controls": 2,
+        "directly_reviewed_captures": 30,
+        "retained_valid_prefix_pairs": 7,
+        "normal_reference_raw_scenario_passed": false,
+        "normal_reference_correction": "build/oblivion-compat/m15/S4/creature-block-course-work-01/normal04-fur-checker-review.json",
+        "feedback": "Actual BlockHit/Recoil resources and Hand block PCM1/fresh0 both builds. Fur+Hand return sound requests. Detached head/neck is an explicit V6 defect, including precontact frames.",
+        "scope": "First-person keyboard/mouse, configuredcap15seed1. Positive block by Block50/Hand10 Player, actual natural Creature, recovery/Hand return/range/wall and no replay. Creature Counter/equipment/spell domains, other S4 requirements and measured FPS/final campaigns remain open.",
+        "full_M15S4_acceptance": false,
+        "visual_acceptance_passed": false
       }
     }
   }

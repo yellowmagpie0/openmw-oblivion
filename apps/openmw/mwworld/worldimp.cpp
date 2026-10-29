@@ -4843,7 +4843,8 @@ namespace MWWorld
             && kind != ESM4::MeleeReactionKind::Stagger) return false;
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
-        if ((!player && actor.getType() != ESM::REC_NPC_4)
+        if ((!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
+            || (actor.getType() == ESM::REC_CREA4 && kind != ESM4::MeleeReactionKind::Recoil)
             || requested || retiring || firstPerson || slot0 || firstSlot0)
             return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
@@ -5084,7 +5085,9 @@ namespace MWWorld
             const std::string group = entry->mGroups[playback.mIndex];
             Log(Debug::Verbose) << (kind == ESM4::MeleeReactionKind::Stagger
                     ? "M15 NPC Stagger resource selected: actor="
-                    : kind == ESM4::MeleeReactionKind::Recoil ? "M15 NPC recoil resource selected: actor="
+                    : kind == ESM4::MeleeReactionKind::Recoil
+                        ? (actor.getType() == ESM::REC_CREA4 ? "M15 Creature recoil resource selected: actor="
+                                                          : "M15 NPC recoil resource selected: actor=")
                     : player ? "M15 Player block resource selected: actor=" : "M15 NPC block resource selected: actor=")
                                 << key.serialize() << " cause=" << id << " native_group=" << *selected
                                 << " group=" << group << " selection_draws=" << extraDraws
@@ -5488,7 +5491,8 @@ namespace MWWorld
         if (!victim.isEmpty() && victim != getPlayerPtr()
             && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)
             return nullptr;
-        if (attackerRecoil && ((!blockHit && !previous) || (!player && attacker.getType() != ESM::REC_NPC_4)))
+        if (attackerRecoil && ((!blockHit && !previous)
+            || (!player && attacker.getType() != ESM::REC_NPC_4 && attacker.getType() != ESM::REC_CREA4)))
             return nullptr;
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential

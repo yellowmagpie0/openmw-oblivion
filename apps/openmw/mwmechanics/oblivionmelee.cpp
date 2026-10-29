@@ -860,7 +860,8 @@ namespace MWMechanics
         // Advanced unarmed weapon blocks also reach that dispatcher at zero
         // absorption. Preparation keeps this decision separate from damage.
         const bool attackerRecoil = blockHit && requestsAttackerRecoil
-            && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4);
+            && (attacker == world.getPlayerPtr() || attacker.getType() == ESM::REC_NPC_4
+                || attacker.getType() == ESM::REC_CREA4);
         const auto observeCommittedEnchantment = [&] {
             if (!observeEnchantment) return;
             const bool spent = !deltas.mEnchantmentChargeChanges.empty();
