@@ -48,11 +48,24 @@ namespace MWMechanics
             | static_cast<std::uint8_t>(ESM4::CombatStyleFlag::DisableFleeing);
         return style.mFlags == stationaryFlags && style.mAttackChance == 100
             && style.mBlockChance == 0 && style.mDodgeChance == 0 && style.mAcrobaticDodgeChance == 0
-            && style.mPowerAttackChance == 0 && style.mIdle.mMinimum == 0 && style.mIdle.mMaximum == 0
+            && (style.mPowerAttackChance == 0 || style.mPowerAttackChance == 100)
+            && style.mIdle.mMinimum == 0 && style.mIdle.mMaximum == 0
             && style.mHold.mMinimum == 0 && style.mHold.mMaximum == 0
             && style.mAttackRecoilBonus == 0 && style.mAttackUnconsciousBonus == 0 && style.mAttackUnarmedBonus == 0
             && style.mPowerAttackRecoilBonus == 0 && style.mPowerAttackUnconsciousBonus == 0
             && style.mDoNotAcquire;
+    }
+
+    ESM4::MeleeStrikeKind selectOblivionStationaryMeleeStrike(
+        const ESM4::CombatStyleStandard& style, bool preferLeft)
+    {
+        if (!isOblivionStationaryMeleeStyle(style))
+            throw std::invalid_argument("unsupported stationary melee selection style");
+        // The S4 policy admits deterministic endpoints only. A power intent
+        // starts its actual power sequence, without a preliminary ordinary hit
+        // or a fabricated held-input delay.
+        return style.mPowerAttackChance == 100 ? ESM4::MeleeStrikeKind::StandingPower
+            : preferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
     }
 
     OblivionMeleeSequenceMetadata captureOblivionMeleeSequenceMetadata(

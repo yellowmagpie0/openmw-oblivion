@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "C1 incoming NPC standing-power contact: existing fixture and production stationary CSTY require zero power chance. Extend only the needed deterministic standing-power route, then combine resource/reaction/recovery and fresh continuation in the existing course. Focused checks first; batch production changes before required normal/SAN gates. Lighting and remaining mapped requirements remain open.",
+  "next_bounded_task": "C1/I4 NPC standing-power windup loading: reuse this actor/style/course and current games. Capture an actual pending NPCpower with normal F5 beforecontact plus a useful windup pose; cheaply validate pending/applied ownership before fresh process. Compare one subsequent contact/resource/reaction with uninterrupted continuation and guard no replay. Current postcontact PlayerStagger fresh cases do not close pendingNPCwindup. Implement only observed correctness gaps; preserve remaining mapped gates.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1415,6 +1415,76 @@
         "remaining": "Over-bright lighting/white partition and other mapped V6/C1/D2/R3/I4/Q5/T7/F8 requirements remain.",
         "full_M15S4_acceptance": false,
         "visual_acceptance_passed": false
+      }
+    },
+    "npc_standing_power": {
+      "name": "Incoming NPC standing-power against Block50 Hand10 Player",
+      "weapon_family": "unarmed",
+      "animation_family": "handtohand",
+      "actor_value_skill": 17,
+      "base_hand_to_hand": 10,
+      "base_block": 50,
+      "expected_ordinary_fatigue_cost": 7,
+      "expected_incoming_block_fatigue_cost": 0,
+      "course_window": "ordinary",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse measured outboard lane and reachable target-side Y bound; retain named partition and two-height rays."
+      },
+      "acceptance_scope": "C1 incoming NPC standing-power production route, one contact/resource/reaction/recovery and exact fresh continuation; no general policy/effect claim.",
+      "hand_block_recoil_chance": 0,
+      "expected_attacker_recoil": false,
+      "expected_reference_debits": 3,
+      "opponent_power_attack_chance": 100,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "expected_incoming_fatigue_cost": 39,
+      "expected_incoming_health_bounds": [
+        2.38,
+        2.4
+      ],
+      "source": {
+        "builder": "scripts/tes4_m15_stationary_fixture.py",
+        "recipe": "scripts/data/oblivion_compat/m15_stationary_partition_fixture.json",
+        "overrides": {
+          "style.power_attack_chance": 100,
+          "script_source": "scripts/data/oblivion_compat/m15_recoil_aware_opponent.obscript"
+        },
+        "assembly": "Existing shared stage/run/inspect/compare-pair helpers. Preserve NPC/equipment/partition records; change only CSTY power chance byte52 and reviewed script SCTX. Stage PlayerBlock50/Hand10, unequip sword, targetHealth120 and lower-Hand recoil chance0 as existing lower-Hand profile. Script pauses intent after first actual resource debit; no contacts/damage/reaction/RNG outcomes injected.",
+        "reproducer": "build/oblivion-compat/m15/S4/combined-mastery-work-01/stage.py",
+        "validation_layers": {
+          "structural": "Seven focused fixture cases; actualCSTY byte52 only plus script source change, native content hashes and save readback.",
+          "compiler_world": "Current normal/SAN game load and script execution, matching broad integration receipts.",
+          "semantic": "28 exact saved/live pairs; two exact postcontact fresh sources and26 strict endpoint fields each. One39Fatigue debit,2.38825Health and one50to49.7weaponwear.",
+          "runtime": "Actual NPCpower selector/native contact, visible PlayerStagger/recovery/return/range/wall; HandblockPCM1reference/0fresh. PendingNPCpowerwindup loading and usefulwinduppose remain open; knownlighting defect retained."
+        }
+      },
+      "verification": {
+        "checkpoint": "build/oblivion-compat/m15/S4/npc-standing-power-work-01/checkpoint-verification.json",
+        "sha256": "0ce813b3debc3444f48f6dbacfd7eb057529189e3bbe72334db9e40a72815305",
+        "profile_sha256": "6bff442716d466e1962c13470930875e7d83b78a7d651e156f32273a3f52b1e8",
+        "implementation_parent_commit": "e4fca6759385cf0e35337dee998e22298838fa60",
+        "tested_source_fingerprint": "3d1fef72c1668dd16d4cb39818097a4b9a1d193b4f10b6de16ea9b6590087e3a",
+        "exact_pairs": 28,
+        "epochs": 4,
+        "postcontact_fresh_restores": 2,
+        "strict_endpoint_fields": 26,
+        "reviewed_captures": 28,
+        "normal_components": 3205,
+        "normal_engine": 2058,
+        "sanitized_ESM4": 1034,
+        "sanitized_engine": 2058,
+        "focused_cpp": 5,
+        "full_python": 452,
+        "retained_fixture_failure": "build/oblivion-compat/m15/S4/npc-standing-power-work-01/normal01-fixture-wait-failure.json",
+        "shared_fixture_guard": "build/oblivion-compat/m15/S4/npc-standing-power-work-01/reaction-wait-guard-verification.json",
+        "retained_checker_correction": "build/oblivion-compat/m15/S4/npc-standing-power-work-01/fatigue-snapshot-checker-correction.json",
+        "replay_policy": "Only invalidnormal01 course replaced. Reinspect retained snapshots after correcting elapsedFatigue-regeneration assumption. No full rebuild for private fixture/checker corrections or final metadata.",
+        "scope": "First-person keyboard/mouse configuredcap15seed1; incoming NPCstandingpower only. No generalNPCdirectionalstyle policy or fullS4 acceptance.",
+        "npc_pending_windup_runtime_acceptance": false,
+        "full_visual_acceptance": false,
+        "full_M15S4_acceptance": false
       }
     }
   }

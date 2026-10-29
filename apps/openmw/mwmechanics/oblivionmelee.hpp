@@ -44,6 +44,8 @@ namespace MWMechanics
     bool canReachOblivionMeleeTarget(MWBase::World& world, const MWWorld::Ptr& attacker,
         const MWWorld::Ptr& target, float reach);
     bool isOblivionStationaryMeleeStyle(const ESM4::CombatStyleStandard& style);
+    ESM4::MeleeStrikeKind selectOblivionStationaryMeleeStrike(
+        const ESM4::CombatStyleStandard& style, bool preferLeft);
 
     // S4's explicit deterministic stationary CSTY profile. Returns true while
     // combat owns package execution. Full movement/style policy belongs to S7.

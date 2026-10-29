@@ -19,6 +19,8 @@
 
 #include "character.hpp"
 
+#include "../mwworld/oblivioncombatdata.hpp"
+
 #include <components/esm4/loadarmo.hpp>
 
 #include "../mwsound/nativeaudioutils.hpp"
@@ -2724,7 +2726,16 @@ namespace MWMechanics
         {
             input.mHeldSeconds = 0;
             if (!active)
-                selected = input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
+            {
+                if (!player && saved && saved->mAiIntent)
+                {
+                    const auto policy = MWWorld::resolveOblivionCombatPolicy(world->getStore(),
+                        service->findActorValues(actor)->mBase, MWWorld::buildOblivionCombatDefaults(world->getStore()));
+                    selected = selectOblivionStationaryMeleeStrike(policy.mStandard, input.mPreferLeft);
+                }
+                else
+                    selected = input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
+            }
             else if (!stats.getStance(CreatureStats::Stance_Sneak) || world->isSwimming(mPtr))
                 input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
         }

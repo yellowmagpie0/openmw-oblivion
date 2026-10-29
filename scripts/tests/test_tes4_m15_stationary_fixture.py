@@ -120,6 +120,29 @@ class StationaryFixtureTests(unittest.TestCase):
         for value in ('', script+'\0', script.replace('M15StationaryOpponent','OtherScript'), script+';changed'):
             with self.assertRaises(ValueError):fixture.build(source,recipe,value)
 
+    def test_power_style_emits_actual_csty_and_preserves_npc_script_and_partition(self):
+        source, recipe, script = self.partition_inputs()
+        ordinary, _ = fixture.build(source, recipe, script)
+        recipe['style']['power_attack_chance'] = 100
+        power, report = fixture.build(source, recipe, script)
+        self.assertEqual(fixture.build(source, recipe, script), (power, report))
+        old = list(records(ordinary)); new = list(records(power))
+        self.assertEqual([(t, i) for t, i, _ in old], [(t, i) for t, i, _ in new])
+        for before, after in zip(old, new):
+            if before[0] != 'CSTY':
+                self.assertEqual(before, after)
+            else:
+                left = _subrecords(before[2], 'ordinary', 'CSTY')
+                right = _subrecords(after[2], 'power', 'CSTY')
+                a = next(x['payload'] for x in left if x['name'] == 'CSTD')
+                b = next(x['payload'] for x in right if x['name'] == 'CSTD')
+                self.assertEqual([i for i, (x, y) in enumerate(zip(a, b)) if x != y], [52])
+                self.assertEqual((a[52], b[52]), (0, 100))
+        for invalid in (-1, 1, 50, 99, 101, 256, True, 100.0):
+            recipe['style']['power_attack_chance'] = invalid
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                fixture.build(source, recipe, script)
+
     def test_duplicate_missing_ambiguous_and_truncated_source_records_are_rejected(self):
         source, recipe, script = self.inputs()
         npc = list(records(source))[1][2]

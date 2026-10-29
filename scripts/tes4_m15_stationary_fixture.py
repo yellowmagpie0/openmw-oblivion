@@ -68,7 +68,9 @@ def build(source: bytes, recipe: dict, script: str) -> tuple[bytes, dict]:
                 or any(type(x) not in (int, float) or not math.isfinite(x) for x in pos)
                 or any(abs(x) > 65536 for x in pos[:3]) or any(abs(x) > 2 * math.pi for x in pos[3:])):
             raise ValueError('invalid stationary partition transform')
-    profile = {'attack_chance': 100, 'block_chance': 0, 'dodge_chance': 0, 'power_attack_chance': 0,
+    if type(style['power_attack_chance']) is not int or style['power_attack_chance'] not in (0, 100):
+        raise ValueError('stationary fixture requires deterministic power_attack_chance 0 or 100')
+    profile = {'attack_chance': 100, 'block_chance': 0, 'dodge_chance': 0,
                'idle': [0, 0], 'hold': [0, 0], 'flags': 34, 'do_not_acquire': True}
     for key, expected in profile.items():
         value = style[key]
