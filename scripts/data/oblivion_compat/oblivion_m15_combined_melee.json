@@ -47,7 +47,8 @@
     {
       "type": "wait_log",
       "pattern": "Applied TES4 runtime state:",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "sleep",
@@ -64,12 +65,14 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandidle",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 course camera preflight: visible=true",
-      "timeout_seconds": 30
+      "timeout_seconds": 30,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -83,7 +86,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -92,7 +96,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -103,7 +108,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -113,7 +119,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 Player reaction resources selected: actor=dynamic:player:0000000000000001 cause=2 kind=2",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -127,17 +134,20 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -161,7 +171,8 @@
       "type": "wait_log",
       "pattern": "M15 first-person strike bind: actor=dynamic:player:0000000000000001 id=3",
       "timeout_seconds": 600,
-      "poll_interval_seconds": 0.005
+      "poll_interval_seconds": 0.005,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -172,12 +183,14 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "sleep",
@@ -195,12 +208,14 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=3 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -210,7 +225,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*rangeLane=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -224,7 +240,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*retreated=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -257,7 +274,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -267,7 +285,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*farFacing=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -282,7 +301,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -291,12 +311,14 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -310,7 +332,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "mouse_move",
@@ -330,7 +353,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*north=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -344,7 +368,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*wallLane=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -358,7 +383,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*wallAlong=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -387,17 +413,27 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
       "value": "o"
     },
     {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
       "type": "wait_log",
       "pattern": "M15 course geometry:.*nearWall=true",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
     },
     {
       "type": "screenshot",
@@ -411,7 +447,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -421,18 +458,21 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=5",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=5 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 course fatigue settled:",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -441,7 +481,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -456,7 +497,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*north=true",
       "after_start": true,
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -470,7 +512,8 @@
       "type": "wait_log",
       "pattern": "M15 course geometry:.*retreated=true",
       "after_start": true,
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -484,7 +527,8 @@
       "type": "wait_log",
       "pattern": "M15 course return: lane=true",
       "after_start": true,
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -494,7 +538,8 @@
       "type": "wait_log",
       "pattern": "M15 course fatigue ready: current=",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -504,7 +549,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -518,7 +564,8 @@
       "type": "wait_log",
       "pattern": "M15 course power range:.*close80=true",
       "timeout_seconds": 180,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -535,7 +582,8 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackbackpower",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -548,12 +596,14 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=7 fatigue_cost=39",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 recovery body admitted: actor=content:oblivion.esm:01fc43 state=2",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -562,7 +612,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -573,18 +624,21 @@
       "type": "wait_log",
       "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=.* to=0 action=-1",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=7 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 course fatigue ready: current=",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -594,7 +648,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -608,7 +663,8 @@
       "type": "wait_log",
       "pattern": "M15 course power range:.*close110=true",
       "timeout_seconds": 180,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -625,7 +681,8 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackforwardpower",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -638,12 +695,14 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=9 fatigue_cost=39",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 forward-power paralysis published: actor=content:oblivion.esm:01fc43 cause=9",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -652,7 +711,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -663,18 +723,21 @@
       "type": "wait_log",
       "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=.* to=0 action=-1",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=9 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 course fatigue ready: current=",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -684,7 +747,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -698,7 +762,8 @@
       "type": "wait_log",
       "pattern": "M15 course power range:.*close110=true",
       "timeout_seconds": 180,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -725,7 +790,8 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackleftpower",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "mouse_move",
@@ -743,7 +809,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=11 fatigue_cost=39",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -752,7 +819,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -762,18 +830,21 @@
     {
       "type": "wait_log",
       "pattern": "M15 reaction recovered: actor=content:oblivion.esm:01fc43 cause=11 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=11 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "wait_log",
       "pattern": "M15 course fatigue ready: current=",
       "timeout_seconds": 600,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_down",
@@ -783,7 +854,8 @@
       "type": "wait_log",
       "pattern": "M15 course aim:.*target=true",
       "after_start": true,
-      "timeout_seconds": 240
+      "timeout_seconds": 240,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -797,7 +869,8 @@
       "type": "wait_log",
       "pattern": "M15 course power range:.*close110=true",
       "timeout_seconds": 180,
-      "after_start": true
+      "after_start": true,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
@@ -824,7 +897,8 @@
     {
       "type": "wait_log",
       "pattern": "M11 animation playing: ref=\"Player\" group=onehandattackrightpower",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "mouse_move",
@@ -842,7 +916,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=13 fatigue_cost=39",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -851,7 +926,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",
@@ -861,7 +937,8 @@
     {
       "type": "wait_log",
       "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=13 action=-1",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "sleep",
@@ -871,7 +948,8 @@
       "type": "wait_log",
       "pattern": "M15 course fatigue settled:",
       "after_start": true,
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "key_held",
@@ -880,7 +958,8 @@
     {
       "type": "wait_log",
       "pattern": "Writing saved game 'Quicksave'",
-      "timeout_seconds": 600
+      "timeout_seconds": 600,
+      "abort_on_failure": true
     },
     {
       "type": "screenshot",

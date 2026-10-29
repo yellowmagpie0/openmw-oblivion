@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "C1/I4 NPC standing-power windup loading: reuse this actor/style/course and current games. Capture an actual pending NPCpower with normal F5 beforecontact plus a useful windup pose; cheaply validate pending/applied ownership before fresh process. Compare one subsequent contact/resource/reaction with uninterrupted continuation and guard no replay. Current postcontact PlayerStagger fresh cases do not close pendingNPCwindup. Implement only observed correctness gaps; preserve remaining mapped gates.",
+  "next_bounded_task": "Resume current cap30seed1 joined semantic/timing pilot with the verified outboard contract and final normal-input wall approach. Reuse actual sources and unchanged engine gates. Complete required three-seed cap30/60/120/SAN coverage after applicable behavior gaps are resolved; keep remaining C1/D2/R3/I4/Q5/V6 and F8 gates explicit.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1510,5 +1510,21 @@
         "failures": "Retained third01 camera occlusion/activation predicate,02 overhead activation miss,03 missing mouse warmup,04 recovery activation selected door. Missing full tail required SAN first-person replacement. 04 clear PNG was postcontactphase1; bounded capture before F5 closes actualwindup visibility. Never count those invalid fullcourses as acceptance."
       }
     }
+  },
+  "wall_approach_verification": {
+    "checkpoint": "build/oblivion-compat/m15/S4/course-preflight-work-01/wall-approach-checkpoint.json",
+    "sha256": "b220d8ec48a66e03bd25acebca8c22ee7c3c5e2dbe6dafc186f705e9a4d0dc73",
+    "scope": "Normal cap30 bounded wall approach/control only, from actual settledrange source. No fulltimingcourse or SAN campaign claim.",
+    "exact_pairs": 4,
+    "epochs": 2,
+    "exact_fresh_restores": 2,
+    "reviewed_pngs": 3,
+    "focused_python": 86,
+    "implementation": "After aiming at the blocked target, hold normalW until unchanged nearWall gate passes, then release. Preserve distance137/angle10/twoheight rays/namedpartition, contact/resource assertions and deadlines. Required waits opt in to abort_on_failure.",
+    "control": "Same saved pose with only partition disabled produces one nativeClubhit; enabled wall misses without resource/RNG/condition writes.",
+    "reuse": "Existing engine sources/dependencies/game unchanged, prior normal/SAN broad gates and456-tested publicPython reused with pins. 86 focused checks and bounded runtime verify fixture change; no C++rebuild.",
+    "failures": "Currentpilot02 corner atY87.89 and wall01 finalstop137.50 retained. Keep shared outboardmax795; restoring oldrelative115 was rejected. Reuse valid7-pair pilot prefix and actual range source, no startup/contact replay.",
+    "full_timing_course": false,
+    "full_M15S4_acceptance": false
   }
 }
