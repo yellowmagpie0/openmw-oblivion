@@ -1,7 +1,7 @@
 import copy
 import unittest
 
-from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage
+from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
 
 
 class FixturePreflightTests(unittest.TestCase):
@@ -58,6 +58,44 @@ class FixturePreflightTests(unittest.TestCase):
                 state['native_actor_ragdolls'] = [dict(actor='target')] * bodies
                 with self.assertRaises(ValueError):
                     forward_source_stage(state, 'target')
+
+    def power_source(self):
+        return dict(player=dict(reference='player'),
+            native_actor_values=[dict(actor='npc', process_action=2, melee_paralysis=[])],
+            native_melee_states=[dict(actor='npc', ai_intent=dict(target='player', style='style'),
+                reaction=None, strike=dict(id=2, kind=2, animation_group='onehandattackpower',
+                    contact_committed=False, power_phase=0, animation_time=.1,
+                    sequence_timing=dict(output_time=.1)))],
+            physical_actions=dict(next=3, pending=[2]), physical_action_owners=[dict(id=2, actor='npc')],
+            native_combat_engagements=[dict(first='npc', second='player')], native_actor_ragdolls=[])
+
+    def test_pending_npc_power_source_requires_real_windup_ownership(self):
+        state = self.power_source()
+        self.assertIs(pending_npc_power_source(state, 'npc', 'style'), state['native_melee_states'][0]['strike'])
+        with self.assertRaises(ValueError):
+            pending_npc_power_source(state, 'player', 'style')
+
+    def test_applied_late_foreign_or_partial_npc_power_sources_rejected(self):
+        changes = [
+            lambda s:s['native_melee_states'][0]['strike'].update(contact_committed=True),
+            lambda s:s['native_melee_states'][0]['strike'].update(power_phase=1),
+            lambda s:s['native_melee_states'][0]['strike'].update(animation_time=float('nan')),
+            lambda s:s['native_melee_states'][0]['strike'].update(kind=0),
+            lambda s:s['native_melee_states'][0]['strike'].update(sequence_timing=None),
+            lambda s:s['native_melee_states'][0]['ai_intent'].update(target='other'),
+            lambda s:s['native_melee_states'][0]['ai_intent'].update(style='other'),
+            lambda s:s['native_actor_values'][0].update(process_action=-1),
+            lambda s:s['physical_actions'].update(pending=[]),
+            lambda s:s['physical_action_owners'][0].update(actor='other'),
+            lambda s:s.update(native_combat_engagements=[]),
+            lambda s:s['native_actor_ragdolls'].append(dict(actor='npc')),
+            lambda s:s['native_actor_values'][0]['melee_paralysis'].append(dict(applied=False)),
+        ]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.power_source(); change(state)
+                with self.assertRaises(ValueError):
+                    pending_npc_power_source(state, 'npc', 'style')
 
     def geometry(self, x, y, distance=120, facing=1, blocked='true', near='false'):
         return (f'M15 course geometry: x={x} y={y} distance={distance} facing={facing} '

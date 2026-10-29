@@ -38,6 +38,36 @@ def forward_source_stage(state, actor, cause=9):
     return "pending"
 
 
+
+def pending_npc_power_source(state, actor, style, cause=2):
+    """Require a real owned NPC power windup before a fresh-process course."""
+    player = state['player']['reference']
+    rows = [v for v in state['native_melee_states'] if v['actor'] == actor]
+    values = [v for v in state['native_actor_values'] if v['actor'] == actor]
+    if actor == player or len(rows) != 1 or len(values) != 1:
+        raise ValueError('NPC power source requires distinct actor authority')
+    row, av = rows[0], values[0]
+    strike = row.get('strike')
+    if (row.get('ai_intent') != dict(target=player, style=style)
+            or not strike or strike['id'] != cause or strike['kind'] != 2
+            or strike['animation_group'] != 'onehandattackpower'
+            or strike['contact_committed'] or strike.get('power_phase') != 0
+            or not math.isfinite(strike['animation_time']) or strike['animation_time'] < 0
+            or row.get('reaction') or av['process_action'] != 2):
+        raise ValueError('NPC power source is not an uncommitted owned windup')
+    timing = strike.get('sequence_timing')
+    if not timing or not math.isfinite(timing['output_time']) or timing['output_time'] < 0:
+        raise ValueError('NPC power source lacks native sequence timing')
+    if (state['physical_actions'] != dict(next=cause + 1, pending=[cause])
+            or state['physical_action_owners'] != [dict(id=cause, actor=actor)]
+            or not any({v['first'], v['second']} == {actor, player}
+                       for v in state['native_combat_engagements'])):
+        raise ValueError('NPC power source lacks pending action/engagement ownership')
+    if av.get('melee_paralysis') or any(v['actor'] == actor for v in state['native_actor_ragdolls']):
+        raise ValueError('NPC power windup cannot substitute an incapacitated effect state')
+    return strike
+
+
 def approach_witness(log, *, wall_x, wall_y, close_range):
     """Require measured path witnesses for planned gates; never infer from timeout.
 

@@ -1457,7 +1457,7 @@
           "structural": "Seven focused fixture cases; actualCSTY byte52 only plus script source change, native content hashes and save readback.",
           "compiler_world": "Current normal/SAN game load and script execution, matching broad integration receipts.",
           "semantic": "28 exact saved/live pairs; two exact postcontact fresh sources and26 strict endpoint fields each. One39Fatigue debit,2.38825Health and one50to49.7weaponwear.",
-          "runtime": "Actual NPCpower selector/native contact, visible PlayerStagger/recovery/return/range/wall; HandblockPCM1reference/0fresh. PendingNPCpowerwindup loading and usefulwinduppose remain open; knownlighting defect retained."
+          "runtime": "Historical postcontact checkpoint: actual NPCpower selector/contact, PlayerStagger/recovery/return/range/wall; HandPCM1reference/0fresh. Pending windup source/fresh and useful precontact pose are now separately proven by pending_windup_verification. Known lighting defect remains."
         }
       },
       "verification": {
@@ -1485,6 +1485,29 @@
         "npc_pending_windup_runtime_acceptance": false,
         "full_visual_acceptance": false,
         "full_M15S4_acceptance": false
+      },
+      "pending_windup_verification": {
+        "checkpoint": "build/oblivion-compat/m15/S4/npc-power-windup-work-01/checkpoint-verification.json",
+        "sha256": "bc4d2af098cefaf9389e96cccf8ccc4d3bc18626f34224018710322acc8fc9bb",
+        "implementation_parent_commit": "4ac7af02d8350b40cb0abd3a21c73705402c2ca9",
+        "exact_pairs": 34,
+        "mechanical_epochs": 4,
+        "pose_epochs": 1,
+        "pending_fresh_restores": 2,
+        "strict_endpoint_fields": 26,
+        "reviewed_captures": 34,
+        "full_python": 456,
+        "focused_preflight": 8,
+        "focused_scenario": 78,
+        "npc_pending_windup_runtime_acceptance": true,
+        "useful_precontact_pose": true,
+        "full_visual_acceptance": false,
+        "full_M15S4_acceptance": false,
+        "protocol": "Reuse source.reproducer and existing stage/run/inspect/compare-pair helpers frozen in checkpoint. Normal and SAN first-person references: --npc-power-windup-reference; fresh: --npc-power-windup-resume --reference-run NAME. Guard unique actual uncommitted owned source before launch; exact whole load, one continued contact/no new NPC selection, strict endpoints and HandPCM1 each.",
+        "pose_protocol": "Same shared run.py: --third-person --npc-power-overhead --npc-power-windup-reference --npc-power-pose-only. 28-action capture before F5; native phase0 < actual PNG < phase1 < contact. Full third-person NPCpower recovery fixture rejected in preflight until its camera activation is corrected.",
+        "fixture_guards": "Public pending_npc_power_source rejects late/applied/foreign/unowned sources. Optional scenario abort_on_failure stops dependent actions and retains failure. Shared view-profile/mouse-warmup/full-third-recovery preflights retain negative and positive receipts.",
+        "reuse": "Engine implementation/dependencies and game hashes unchanged from prior checkpoint; reuse broad normal3205components/2058engine and SAN1034ESM4/2058engine. Python456 after four-file batch; no C++rebuild for fixture/checker/metadata changes.",
+        "failures": "Retained third01 camera occlusion/activation predicate,02 overhead activation miss,03 missing mouse warmup,04 recovery activation selected door. Missing full tail required SAN first-person replacement. 04 clear PNG was postcontactphase1; bounded capture before F5 closes actualwindup visibility. Never count those invalid fullcourses as acceptance."
       }
     }
   }

@@ -1059,6 +1059,36 @@ class OblivionCompatTests(unittest.TestCase):
             self.assertLess(result["duration_seconds"], 2.0)
             self.assertTrue(result["actions"][0]["deadline_exceeded"])
 
+    def test_failed_prerequisite_can_abort_dependent_actions_without_changing_default(self):
+        for abort in (None, False, True):
+            with self.subTest(abort=abort), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary); manifest = root / "prerequisite.json"
+                prerequisite = {"type": "wait_log", "pattern": "missing prerequisite"}
+                if abort is not None:
+                    prerequisite["abort_on_failure"] = abort
+                manifest.write_text(json.dumps({
+                    "schema_version": 1, "name": "failed-prerequisite",
+                    "command": [sys.executable, "-c", "import time; time.sleep(10)"],
+                    "actions": [prerequisite, {"type": "sleep", "seconds": 0}],
+                    "terminate_after_actions": True,
+                }))
+                with mock.patch.object(MODULE, "_run_action", side_effect=[
+                        {"type": "wait_log", "passed": False}, {"type": "sleep", "passed": True}]) as action:
+                    result = MODULE.run_scenario(manifest, root / "output", {})
+                self.assertFalse(result["passed"])
+                self.assertEqual(action.call_count, 1 if abort else 2)
+                self.assertEqual(result["actions_complete"], not abort)
+                persisted = json.loads((root / "output/scenario.json").read_text())
+                self.assertFalse(persisted["actions"][0]["passed"])
+                self.assertEqual(len(persisted["actions"]), 1 if abort else 2)
+
+    def test_abort_on_failure_rejects_non_boolean_before_launch(self):
+        for value in (0, 1, None, "true"):
+            manifest = {"schema_version": 1, "name": "prerequisite", "command": ["openmw"],
+                        "actions": [{"type": "sleep", "seconds": 0, "abort_on_failure": value}]}
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "abort_on_failure"):
+                MODULE.validate_scenario_manifest(manifest)
+
     def test_scenario_action_exception_is_retained_as_failed_evidence(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

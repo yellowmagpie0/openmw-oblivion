@@ -511,6 +511,8 @@ def validate_scenario_manifest(raw: dict[str, Any]) -> None:
         if not isinstance(action, dict) or not isinstance(action.get("type"), str):
             raise ValueError(f"Scenario action {index} must be an object with a type")
         action_type = action["type"]
+        if "abort_on_failure" in action and not isinstance(action["abort_on_failure"], bool):
+            raise ValueError(f"Scenario action {index} abort_on_failure must be a boolean")
         if action_type not in SCENARIO_ACTION_TYPES:
             raise ValueError(f"Unsupported scenario action: {action_type!r}")
         if action_type == "wait_log" and (not isinstance(action.get("pattern"), str) or not action["pattern"]):
@@ -2137,6 +2139,8 @@ def run_scenario(manifest_path: Path, output: Path, variables: dict[str, str],
                                                     m15_session=m15_session)
                         m15_session.record_action(action, action_result)
                         action_results.append(action_result)
+                    if action.get("abort_on_failure", False) and not action_results[-1]["passed"]:
+                        break
                 except _ScenarioDeadlineExceeded:
                     timed_out = True
                     action_results.append({
