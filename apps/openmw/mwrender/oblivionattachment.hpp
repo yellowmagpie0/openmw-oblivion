@@ -33,6 +33,12 @@ namespace MWRender
 
     osg::ref_ptr<osg::Node> attachOblivionRigidPart(Resource::ResourceSystem& resources,
         VFS::Path::NormalizedView model, osg::Node& skeleton);
+
+    // Creature part lists mix skinned geometry and rigid Prn attachments.
+    // Untagged parts retain their model-root attachment.
+    osg::ref_ptr<osg::Node> attachOblivionCreaturePart(const Nif::FileView& file,
+        osg::ref_ptr<const osg::Node> model, Resource::SceneManager& sceneManager,
+        osg::Group& skeleton);
 }
 
 #endif

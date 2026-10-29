@@ -5,6 +5,8 @@
 #include <components/nif/extra.hpp>
 #include <components/nif/niffile.hpp>
 #include <components/nif/node.hpp>
+#include <components/nifosg/matrixtransform.hpp>
+#include <components/sceneutil/skeleton.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/sceneutil/riggeometry.hpp>
 #include <components/sceneutil/riggeometryosgaextension.hpp>
@@ -106,6 +108,89 @@ namespace
             return MWRender::oblivionRigidAttachmentParent(Nif::FileView(mFile), mFile.mHash, overrideObject);
         }
     };
+
+    TEST(OblivionAttachmentTest, CreatureRigidPartFollowsAuthoredParentAndProjectedPose)
+    {
+        AttachmentFixture f;
+        f.mFile.mVersion = 0x0a020000; // Stock Dog head/eyes: 10.2.0.0.
+        f.mParent.mData = "Authored Creature Socket";
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+        osg::ref_ptr<NifOsg::MatrixTransform> bone = new NifOsg::MatrixTransform;
+        bone->setName(f.mParent.mData);
+        bone->setTranslation({0, 0, 40});
+        skeleton->addChild(bone);
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        model->setName("Arbitrary Part Name"); // Parent comes from Prn, not a filename.
+        model->setUserValue(Misc::OsgUserValues::sFileHash, f.mFile.mHash);
+        model->setMatrix(osg::Matrix::translate(1, 2, 3));
+        const auto node = MWRender::attachOblivionCreaturePart(Nif::FileView(f.mFile), model,
+            *resources.getSceneManager(), *skeleton);
+        ASSERT_EQ(bone->getNumChildren(), 1u);
+        EXPECT_EQ(bone->getChild(0), node);
+        EXPECT_EQ(model->getNumParents(), 0u);
+        EXPECT_EQ(node->getWorldMatrices(skeleton).front().getTrans(), osg::Vec3d(1, 2, 43));
+        const auto local = bone->getMatrix();
+        bone->setTraversalMatrix(osg::Matrixd::translate(10, 20, 60));
+        EXPECT_EQ(node->getWorldMatrices(skeleton).front().getTrans(), osg::Vec3d(11, 22, 63));
+        EXPECT_EQ(bone->getMatrix(), local); // Native projection does not rewrite controller locals.
+        EXPECT_EQ(model->getMatrix().getTrans(), osg::Vec3d(1, 2, 3));
+        MWRender::PartHolder holder(node);
+    }
+
+    TEST(OblivionAttachmentTest, CreatureUntaggedRigidPartKeepsRootButMalformedParentDoesNotFallBack)
+    {
+        AttachmentFixture f;
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+        osg::ref_ptr<osg::MatrixTransform> model = new osg::MatrixTransform;
+        model->setUserValue(Misc::OsgUserValues::sFileHash, f.mFile.mHash);
+        model->setMatrix(osg::Matrix::translate(1, 2, 3));
+        f.mRoot.mExtraList.clear();
+        auto node = MWRender::attachOblivionCreaturePart(Nif::FileView(f.mFile), model,
+            *resources.getSceneManager(), *skeleton);
+        ASSERT_EQ(skeleton->getNumChildren(), 1u);
+        EXPECT_EQ(skeleton->getChild(0), node);
+        EXPECT_EQ(node->getWorldMatrices(skeleton).front().getTrans(), osg::Vec3d(1, 2, 3));
+        skeleton->removeChild(node);
+        f.mRoot.mExtraList = { Nif::ExtraPtr(&f.mParent) };
+        f.mParent.mData.clear();
+        EXPECT_THROW(MWRender::attachOblivionCreaturePart(Nif::FileView(f.mFile), model,
+            *resources.getSceneManager(), *skeleton), std::invalid_argument);
+        EXPECT_EQ(skeleton->getNumChildren(), 0u);
+        f.mParent.mData = "Missing Authored Socket";
+        EXPECT_THROW(MWRender::attachOblivionCreaturePart(Nif::FileView(f.mFile), model,
+            *resources.getSceneManager(), *skeleton), std::invalid_argument);
+        EXPECT_EQ(skeleton->getNumChildren(), 0u);
+    }
+
+    TEST(OblivionAttachmentTest, CreatureSkinnedPartKeepsDestinationRigInsteadOfRigidParent)
+    {
+        AttachmentFixture f;
+        f.mFile.mUseSkinning = true;
+        f.mParent.mData = "Not A Skinning Parent";
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0., nullptr);
+        osg::ref_ptr<osg::Group> skeleton = new osg::Group;
+        osg::ref_ptr<SceneUtil::Skeleton> model = new SceneUtil::Skeleton;
+        osg::ref_ptr<SceneUtil::RigGeometry> geometry = new SceneUtil::RigGeometry;
+        geometry->setName("Creature Body");
+        osg::ref_ptr<osg::Geometry> source = new osg::Geometry;
+        source->setVertexArray(new osg::Vec3Array);
+        geometry->setSourceGeometry(source);
+        model->addChild(geometry);
+        auto node = MWRender::attachOblivionCreaturePart(Nif::FileView(f.mFile), model,
+            *resources.getSceneManager(), *skeleton);
+        ASSERT_TRUE(node);
+        EXPECT_NE(node, geometry);
+        EXPECT_NE(dynamic_cast<SceneUtil::RigGeometry*>(node.get()), nullptr);
+        EXPECT_EQ(node->getNumParents(), 1u);
+        EXPECT_EQ(node->getParent(0), skeleton);
+        EXPECT_EQ(geometry->getNumParents(), 1u);
+        EXPECT_EQ(geometry->getParent(0), model);
+    }
 
     TEST(OblivionAttachmentTest, ExactAuthoredParentAndOptionalOverrideMatchOriginalCaller)
     {

@@ -8,6 +8,7 @@
 #include <components/resource/niffilemanager.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/resource/scenemanager.hpp>
+#include <components/sceneutil/attach.hpp>
 #include <components/sceneutil/riggeometry.hpp>
 #include <components/sceneutil/riggeometryosgaextension.hpp>
 #include <osg/MatrixTransform>
@@ -136,7 +137,8 @@ namespace MWRender
         if (file.getHash().size() != 16 || file.getHash() != templateHash)
             throw std::invalid_argument("native attachment template and NIF identities differ");
         const auto version = file.getVersion();
-        if (version != Nif::NIFFile::VER_OB_OLD && version != 0x14000004 && version != Nif::NIFFile::VER_OB)
+        if (version != Nif::NIFFile::VER_OB_OLD && version != 0x0a020000
+            && version != 0x14000004 && version != Nif::NIFFile::VER_OB)
             throw std::invalid_argument("native attachment requires an Oblivion NIF");
         if (file.numRoots() != 1 || file.getUseSkinning())
             throw std::invalid_argument("native rigid attachment requires one unskinned model root");
@@ -177,5 +179,21 @@ namespace MWRender
         auto scene = sceneManager->getTemplate(model);
         auto file = resources.getNifFileManager()->get(model);
         return attachOblivionRigidPart(*file, std::move(scene), *sceneManager, skeleton);
+    }
+
+    osg::ref_ptr<osg::Node> attachOblivionCreaturePart(const Nif::FileView& file,
+        osg::ref_ptr<const osg::Node> model, Resource::SceneManager& sceneManager,
+        osg::Group& skeleton)
+    {
+        if (!file.getUseSkinning() && file.numRoots() != 0)
+        {
+            const auto* root = dynamic_cast<const Nif::NiObjectNET*>(file.getRoot(0));
+            if (root && parentExtra(*root))
+                return attachOblivionRigidPart(file, std::move(model), sceneManager, skeleton);
+        }
+        // Skin influences bind to the authoritative actor skeleton. Rigid
+        // parts with no authored parent keep the existing root behavior;
+        // a present but malformed Prn must not silently take that fallback.
+        return SceneUtil::attach(std::move(model), &skeleton, {}, &skeleton, &sceneManager);
     }
 }

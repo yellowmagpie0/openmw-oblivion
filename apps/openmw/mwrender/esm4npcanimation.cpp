@@ -1245,8 +1245,9 @@ namespace MWRender
             {
                 const VFS::Path::Normalized partPath = path.parent() / VFS::Path::Normalized(partModel);
                 osg::ref_ptr<const osg::Node> node = sceneManager->getTemplate(partPath);
+                const auto partFile = mResourceSystem->getNifFileManager()->get(partPath);
                 osg::ref_ptr<osg::Node> attached
-                    = SceneUtil::attach(std::move(node), mObjectRoot, {}, mObjectRoot, sceneManager);
+                    = attachOblivionCreaturePart(*partFile, std::move(node), *sceneManager, *mObjectRoot);
                 mParts.emplace_back(std::make_unique<PartHolder>(std::move(attached)));
             }
             catch (const std::exception& e)

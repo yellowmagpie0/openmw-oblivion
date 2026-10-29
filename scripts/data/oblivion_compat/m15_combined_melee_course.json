@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "V6 Creature multipart attachment: the existing Dog is visibly missing a correctly attached head/neck even before contact. Audit winning assets and shared attachment authority, then repair the concrete scene-space defect without substituting a model or changing actor ownership. Focused model/scene checks first, then required integration and the same normal/SAN course captures/fresh sources. C1 NPC powers/effects and remaining D2/R3/I4/Q5/V6, measured T7 and frozen F8 campaigns remain open.",
+  "next_bounded_task": "C1 incoming NPC standing-power contact: existing fixture and production stationary CSTY require zero power chance. Extend only the needed deterministic standing-power route, then combine resource/reaction/recovery and fresh continuation in the existing course. Focused checks first; batch production changes before required normal/SAN gates. Lighting and remaining mapped requirements remain open.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1373,7 +1373,7 @@
           "structural": "Existing builders plus exact record/readback/save checks.",
           "compiler_world": "Actual normal/SAN game load and authored script runtime.",
           "semantic": "32 exact saved/live pairs; two active fresh sources and26 strict endpoint fields each; partition-only controls.",
-          "runtime": "Mechanical course verified; Creature head/neck rendering is visibly defective and full visual acceptance remains open."
+          "runtime": "Prior block/Recoil mechanics checkpoint plus authored-parent attachment checkpoint: head/eyes follow body through actual normal/SAN course and fresh projection. Over-bright lighting remains; full visual acceptance open."
         }
       },
       "verification": {
@@ -1391,6 +1391,28 @@
         "normal_reference_correction": "build/oblivion-compat/m15/S4/creature-block-course-work-01/normal04-fur-checker-review.json",
         "feedback": "Actual BlockHit/Recoil resources and Hand block PCM1/fresh0 both builds. Fur+Hand return sound requests. Detached head/neck is an explicit V6 defect, including precontact frames.",
         "scope": "First-person keyboard/mouse, configuredcap15seed1. Positive block by Block50/Hand10 Player, actual natural Creature, recovery/Hand return/range/wall and no replay. Creature Counter/equipment/spell domains, other S4 requirements and measured FPS/final campaigns remain open.",
+        "full_M15S4_acceptance": false,
+        "visual_acceptance_passed": false
+      },
+      "attachment_verification": {
+        "status": "Authored-parent attachment accepted; full visual acceptance incomplete.",
+        "checkpoint": "build/oblivion-compat/m15/S4/creature-attachment-work-01/checkpoint-verification.json",
+        "sha256": "416f72c38754c73f5f556212808bdc11f57d43df0242b98f50d7d84436d493c9",
+        "implementation_parent_commit": "5d7df86ba1636cb50c6a4567cfc41348fb0c8238",
+        "tested_source_fingerprint": "fed2c3e263d3950c389a9619e3e419d9cfe5fd9a1599200547e6047e88c3d5f4",
+        "pairs": 28,
+        "epochs": 4,
+        "unchanged_active_fresh_restores": 2,
+        "strict_endpoint_fields": 26,
+        "directly_reviewed_captures": 28,
+        "focused_tests": 10,
+        "normal_components": 3205,
+        "normal_engine": 2057,
+        "sanitized_ESM4": 1034,
+        "sanitized_engine": 2057,
+        "fixture_changes": "None; same save/profile/assets, shared preflights and normal-input course.",
+        "historical_verification": "The verification field above retains the original mechanics checkpoint and its detached-head failure. This attachment checkpoint supersedes that defect only.",
+        "remaining": "Over-bright lighting/white partition and other mapped V6/C1/D2/R3/I4/Q5/T7/F8 requirements remain.",
         "full_M15S4_acceptance": false,
         "visual_acceptance_passed": false
       }
