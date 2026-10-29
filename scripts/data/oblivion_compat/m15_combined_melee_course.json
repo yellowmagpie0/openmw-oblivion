@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Resume current cap30seed1 joined semantic/timing pilot with the verified outboard contract and final normal-input wall approach. Reuse actual sources and unchanged engine gates. Complete required three-seed cap30/60/120/SAN coverage after applicable behavior gaps are resolved; keep remaining C1/D2/R3/I4/Q5/V6 and F8 gates explicit.",
+  "next_bounded_task": "D2 NPC spare-weapon disarm: production prepareOblivionSidePowerConsequences rejects a proc when the victim carries another weapon. Reuse the existing Player sideways-power course and reviewed proc/drop evidence. Implement one owned drop/replacement/armed-reaction transaction with save continuity; focused tests first, then combined normal-input/fresh evidence and batched required broad gates. Keep Player disarm/Creature Counter and all other mapped gaps open; no generalNPC AI dependency.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1525,6 +1525,22 @@
     "reuse": "Existing engine sources/dependencies/game unchanged, prior normal/SAN broad gates and456-tested publicPython reused with pins. 86 focused checks and bounded runtime verify fixture change; no C++rebuild.",
     "failures": "Currentpilot02 corner atY87.89 and wall01 finalstop137.50 retained. Keep shared outboardmax795; restoring oldrelative115 was rejected. Reuse valid7-pair pilot prefix and actual range source, no startup/contact replay.",
     "full_timing_course": false,
+    "full_M15S4_acceptance": false
+  },
+  "timing_baseline_verification": {
+    "checkpoint": "build/oblivion-compat/m15/S4/course-preflight-work-01/pilot03-checkpoint-verification.json",
+    "sha256": "a5074937f125492071339f24e57b79221eb58df62389253011db7b160b7fe024",
+    "scope": "Currentnormal cap30seed1 joinedsemantic/timingbaseline only; notfullFPS/seed/SANcampaign or fullvisualacceptance.",
+    "exact_pairs": 14,
+    "epochs": 1,
+    "reviewed_captures": 13,
+    "block_audio_clusters": 1,
+    "configured_fps_cap": 30,
+    "seed": 1,
+    "measured_fps": 18.25311964708263,
+    "save_free_fps": 20.01114536211183,
+    "full_timing_campaign": false,
+    "full_visual_acceptance": false,
     "full_M15S4_acceptance": false
   }
 }
