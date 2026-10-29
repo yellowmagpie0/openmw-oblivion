@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "D2: demonstrate lower-Hand recoil proc/nonproc with HandToHand10 and Block50 in the existing ordinary course, including native attacker reaction ownership and feedback; reuse current C++ gates when unchanged. Remaining C1/D2/R3/I4/Q5/V6 implementation/acceptance branches and measured T7/F8 campaigns stay open in the delivery audit. No new original-engine investigation without a concrete unresolved requirement.",
+  "next_bounded_task": "C1 remaining NPC weapon families: inventory retained coverage for stock Club, Claymore and Battle Axe, then batch only missing equipment/animation/contact cases in the existing ordinary joined fixture. Reuse unchanged engine/Python gates and restart evidence; require focused branch checks plus normal/SAN native contact/resource/geometry and applicable fresh ownership continuations. Other C1/D2/R3/I4/Q5/V6 branches and measured T7/F8 campaigns remain open.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1097,6 +1097,53 @@
         "fixture_policy": "Reuse m15_recoil_aware_opponent.obscript and existing partition. Normal W approach within60; both native reactions recover before reachable activation StopCombat/SetRestrained0. Corrected shared route retreats to y<=-80 before D; completed normal14pairs reused, failed SAN01five valid prefix pairs retained separately.",
         "numeric_policy": "Health/Fatigue bounds computed before runtime from stock inputs with .01 gameplay tolerance and pre/post attacker-debit bounds; all saved/live pairs, source restoration and native endpoint resources/ownership exact.",
         "cpp_gate_repeats": 0
+      }
+    },
+    "master_unarmed_powers": {
+      "name": "Master Player unarmed ordinary, standing and directional power course",
+      "weapon_family": "unarmed",
+      "animation_family": "handtohand",
+      "actor_value_skill": 17,
+      "base_hand_to_hand": 100,
+      "base_block": 50,
+      "expected_ordinary_fatigue_cost": 7,
+      "expected_incoming_block_fatigue_cost": 0,
+      "course_window": "full",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse measured outboard lane and reachable target-side Y bound; retain named partition and two-height rays."
+      },
+      "acceptance_scope": "C1 Master Hand-to-Hand standing/four-direction powers and D2 corresponding shared mastery path, joined defense/recovery/ordinary/geometry course. Full S4 remains incomplete.",
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "target_health": 300,
+      "expected_power_fatigue_cost": 35,
+      "include_standing_power": true,
+      "power_approach_range": 95,
+      "standing_approach_range": 110,
+      "master_counter_suppressed_by_stagger": true,
+      "source": "Export fields except source/verification for existing shared stage/run/inspect helpers. Health300 and Hand100/Block50 fixture retains original NPC RustyShortsword/style. Directional95 reserves movement; stationary110 uses a separate clear-ray guard, retaining actual hit assertions. Master Counter selection may be suppressed by Player Stagger; require actual recovery and no early disarm.",
+      "verification": {
+        "checkpoint": "build/oblivion-compat/m15/S4/unarmed-power-course-work-01/checkpoint-verification.json",
+        "sha256": "cc87127733d694779591771f4194d90ea2905ea74c28887cf858b8cbd07858e4",
+        "profile_sha256": "4938e568e6e51b6d37d4a56dafcabf3299031256bda83910be4d4e4eef10a60e",
+        "exact_saved_live_pairs": 48,
+        "epochs": 9,
+        "successful_complete_epochs": 7,
+        "fixture_reviewed_complete_epochs": 1,
+        "preserved_failed_prefix_epochs": 1,
+        "whole_unmodified_fresh_restores": 5,
+        "partition_only_controls": 2,
+        "reviewed_captures": 44,
+        "scope": "Normal/SAN first-person keyboard/mouse, configuredcap15/seed1, forced mastery procs. Five Player Hand powers joined defense/recovery/ordinary/range/wall; remaining S4 domains/campaigns incomplete.",
+        "reference_policy": "Normal9pair prefix plus6pair fresh wall-tail; original full course failed later at approach. SAN15pair full gameplay verified by retained-raw reinspection; raw scenario remainsfalse for2 fixture guards. No raw uninterrupted-reference success claim.",
+        "endpoint_policy": "AppliedBackward source and all saved/live states exact; zero targetHealthdifference. Existing inactive clocks/drop20 policies retained. SANrepeat only: unowned item residualvelocity<=.001, audited own-clock short GameHour/MS06 two ghostflags; all other native resources/scripts/quests strict.",
+        "feedback": "Hand PCM1 per reference and0 across continuations/controls, all selected captures directly reviewed. Forward core hides target; supplemental capture proves folded/recovered. Other material/feedback domains remain in V6.",
+        "cpp_gate_repeats": 0,
+        "cpp_reuse": "Unchanged source/binaries: normal3205components/2053engine; SAN1034ESM4/2053engine at tested fingerprint3b78e18eec581c765733afd02990369acd2f0aad57b0b9f89797b9133526ac36. Python451 reused unchanged.",
+        "fixture_checker_corrections": "See checkpoint pins; original failures retained. Shared stationary110 guard separated from directional95; no combat implementation change.",
+        "full_M15S4_acceptance": false
       }
     }
   }
