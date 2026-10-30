@@ -2364,6 +2364,12 @@ namespace MWGui
 
     void WindowManager::removeCurrentModal(WindowModal* input)
     {
+        // Runtime destruction closes interactive message boxes after reset()
+        // has released the selected runtime. There is no surviving modal stack
+        // or keyboard focus to update in that case.
+        if (!mRuntime)
+            return;
+
         if (!mRuntime->mCurrentModals.empty())
         {
             if (input == mRuntime->mCurrentModals.back())
@@ -2891,7 +2897,7 @@ namespace MWGui
 
     void WindowManager::updateControllerButtonsOverlay()
     {
-        if (!Settings::gui().mControllerMenus || !mRuntime->mControllerButtonsOverlay)
+        if (!mRuntime || !Settings::gui().mControllerMenus || !mRuntime->mControllerButtonsOverlay)
             return;
 
         if (mRuntime->mWindows.empty())

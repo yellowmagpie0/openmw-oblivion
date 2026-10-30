@@ -1,0 +1,326 @@
+{
+  "schema_version": 1,
+  "scope": "I4 actual fatal NPC power2 consumes pending Player claymore3; living Health1, no authored death. Death prompt preserves pre-fatal source; normal exit and fresh/in-process reload, normal FP/SAN TP. Full S4 incomplete.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "expected_power_fatigue_cost": 46.0,
+    "animation_family": "twohand",
+    "target_health": 300,
+    "name": "Player claymore windup interrupted by incoming NPC standing power",
+    "course_window": "ordinary",
+    "base_block": 100,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_attacker_recoil": false,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 1
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "source_mode": "Existing current reaction setup, only living Player Health1 declared; actual pre-fatal F5 required before fatal hit.",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "death-alive.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee frame: actor=content:oblivion.esm:01fc43 id=2 phase=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "death-dead.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "death-save-attempt.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "M15 death observer: dead=true",
+    "M15 native death callback:.*actor=dynamic:player:0000000000000001"
+  ],
+  "reference_expected_log": [
+    "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2"
+  ],
+  "forbidden_log": [
+    "M15 melee (?:hit|miss) committed: actor=dynamic:player:0000000000000001 id=3",
+    "M15 melee action: actor=dynamic:player:0000000000000001 id=4",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "SUMMARY: AddressSanitizer"
+  ],
+  "verification": "Reference5/fresh3 saved-live pairs each build; sourceexact, pending Player3 consumed into passive3 with contactfalse, only NPC2 then explicit Player4 hit. Compare active ownership/resources/equipment and scoped restart endpoint. Existing held-block Stagger proof retains original provenance; no broad builds if code/deps unchanged.",
+  "current_source_sha256": "32536706a47a4bd31d7d51e33a6388793f4882e1a9d3d060bea1bf357c08cad6",
+  "current_source_setup": "reaction-interruption-normal-setup-01; exact save/live and actual draw/camera; no combat outcomes",
+  "timing_preflight": "Attack text-key lookups are nil until groups load. Existing stock claymore speed .8 versus NPC sword1.2, NPC phase0 then Player press; actual passive3/contactfalse source and event order must prove overlap, not inferred timing.",
+  "opponent_completion": "Existing recoil-aware script restrains after one debit; native NPC2 playback cleared after accepted contact. Require Player recovery, actual StopCombat, no extra NPC contact and empty final owners; no finished-log wait.",
+  "startup_deadline_seconds": 600,
+  "camera_policy": "Finite normal mouse motions at pinned sensitivity .05: observe pitch>=1.4 after down motion before raising by6400 units; require fresh actual target ray/visibility/range. No held look-key release overshoot, no camera setters. Existing normal evidence remains valid.",
+  "declared_player_initial_health": 1,
+  "death_interruption": true,
+  "reload_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "death-alive.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee frame: actor=content:oblivion.esm:01fc43 id=2 phase=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "death-dead.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "death-save-attempt.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Tab",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "screenshot",
+      "name": "death-focused-yes.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Return",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "(?s)\"event\":\"load-complete\".*\"event\":\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=false finished=false health=1",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "path": "events.jsonl",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "screenshot",
+      "name": "death-restored.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "protocol": "Actual F5 while alive, actual NPC power2 and Player ordinary3 before fatal contact. Read-only isDead and native callback acknowledge death. Attempt normal F5, retain death prompt; no forced dead save. Reference exits with prompt open (teardown regression). Reload run starts from exact retained pre-fatal F5 in a fresh process, repeats actual death once, focuses the first prompt button with Tab, captures Yes focus, and accepts with Return, verifies exact in-process source and living resave without stale contact. Controller menus enabled to exercise both callbacks during modal teardown; keyboard/mouse gameplay input unchanged.",
+  "controller_menus": true
+}
