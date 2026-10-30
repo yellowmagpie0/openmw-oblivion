@@ -1,0 +1,20 @@
+scn M15StationaryOpponent
+short fighting
+
+; The existing post-return source is staged with fighting=6. Each ordinary activation
+; advances exactly one interruption/release step; no combat result is authored.
+Begin OnActivate
+    if fighting == 6
+        Player.EquipItem WeapIronShortswordRusty
+        set fighting to 7
+    elseif fighting == 7
+        Player.EquipItem WeapClub
+        set fighting to 8
+    elseif fighting == 8
+        Player.EquipItem WeapIronShortswordRusty
+        set fighting to 9
+    elseif fighting == 9
+        Player.EquipItem WeapClub
+        set fighting to 10
+    endif
+End

@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "Inventory remaining I4 named transitions against existing evidence, then close the smallest missing transition preventing the combined normal-input course. Declare implementation and focused/reused/integration evidence before running.",
+  "next_bounded_task": "I4 in-process load while windup/held block is active: verify outgoing action/renderer ownership retires and incoming saved ownership restores without replay. Reuse existing fresh-process evidence; extend shared monitor/course only as needed. Other mapped actor/equipment/reaction/query/visual and T7/F8 gaps remain.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1638,5 +1638,24 @@
     "gates": "Normal3207 components/2060 engine; SAN1036 ESM4/2060 engine; fullPython461. Full C++ gates ran once for stable batch. Later Python-only input batching has its own fullPython gate; unchanged normal runtime/game/hook/libraries reused with original provenance.",
     "fixture_corrections": "Shared SDL batches Use+Activate to reach actual pending4/5 cancellation under SAN. Retain latency failure. Valid nonresident intermediate block fade and printed-condition precision corrected in checker; complete raw reinspected without gameplay replay. Final owners remain strictly inactive.",
     "remaining": "Other named I4 interruptions and view/device/held crosses; mapped C1/D2/R3/Q5/V6 and all required T7/F8 campaigns. Cap30 is not measured FPS."
+  },
+  "weapon_swap_interruption_checkpoint": {
+    "status": "Bounded I4 direct weapon swap demonstrated; full S4 incomplete",
+    "case": "scripts/data/oblivion_compat/m15_weapon_swap_interruption_course.json",
+    "script": "scripts/data/oblivion_compat/m15_weapon_swap_opponent.obscript",
+    "receipt": "build/oblivion-compat/m15/S4/weapon-swap-interruption-work-01/checkpoint-verification.json",
+    "implementation_commit": "3d228904241484c12f084b26e0f62878e75e58cd",
+    "scope": "I4 actual direct Club->RustyShortsword change at pending ordinary windup and held block. Zero cancelled contact/resource/RNG/wear; persisted held Use release gate, normal-input release/re-equip Club and return5. Normal FP/SAN TP cap30seed1 only.",
+    "evidence": {
+      "exact_saved_live_pairs": 26,
+      "raw_exact_whole_sources": 4,
+      "matched_fresh_continuations": 2,
+      "strict_fields_per_pair": 26,
+      "reviewed_PNG": 26,
+      "PCM_runs_without_block_replay": 4
+    },
+    "reuse": "No C++/Python implementation, game, SDL hook or linked dependency changes. Broad normal3207components/2060engine, SAN1036ESM4/2060engine, Python461 reused with original pins; four existing equipment/cancellation cases pass from current normal binary.",
+    "fixture_policy": "Extends the pinned shared command course, omits accepted control-lock prefix. Authored one unequipped stock RustyShortsword condition50 and derived encumbrance8; script local2->6. SCPT-only plugin difference; no outcomes authored. Shared manifest guard rejects expected/forbidden contradictions. Original normal01 retained; missing derived encumbrance made its source invalid, requiring corrected normal02. Full raw source/ownership checks retained.",
+    "remaining": "Other I4 named transitions/view/device/held crosses; mapped C1/D2/R3/Q5/V6 and all T7/F8. Existing overbright partition remains, no full visual/timing acceptance."
   }
 }

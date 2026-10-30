@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "extends": "scripts/data/oblivion_compat/m15_command_interruption_course.json",
+  "extends_sha256": "aee799b8e302a43c91ec83a43532f5068446885dcaf01cc45fb8adf37d9f17f0",
+  "scope": "I4 direct Club-to-RustyShortsword change during pending windup and held block, release/re-equip Club and successful return; actual activation, no authored contact/outcome. Normal/SAN and held-input fresh continuation required.",
+  "omit_control_lock_prefix": true,
+  "cancelled_action_id": 4,
+  "return_action_id": 5,
+  "held_source_snapshot_index": 1,
+  "held_next_action": 5,
+  "staged_source": "build/oblivion-compat/m15/S4/weapon-swap-interruption-work-01/input.omwsave",
+  "source_preflight": "build/oblivion-compat/m15/S4/weapon-swap-interruption-work-01/source-preflight.json",
+  "stationary_fixture": "build/oblivion-compat/m15/S4/weapon-swap-interruption-work-01/stationary",
+  "script": "scripts/data/oblivion_compat/m15_weapon_swap_opponent.obscript",
+  "authored_player_weapon": {
+    "base": "content:oblivion.esm:090615",
+    "editor_id": "WeapIronShortswordRusty",
+    "condition": 50.0,
+    "derived_encumbrance": 8.0
+  },
+  "source_fighting": 6,
+  "staged_source_sha256": "3f8548c0af7d2c61b894ab1718e5338379c03e913ea077f102cd3c371171b123"
+}
