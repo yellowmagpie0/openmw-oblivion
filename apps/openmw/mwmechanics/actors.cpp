@@ -1959,6 +1959,9 @@ namespace MWMechanics
 
             if (playerCharacter)
             {
+                if (nativeWorld)
+                    if (auto* ai = nativeWorld->getOblivionAiService())
+                        ai->updatePlayerMountedAttachment();
                 MWBase::Environment::get().getWorld()->applyDeferredPreviewRotationToPlayer(duration);
                 playerCharacter->update(duration);
                 playerCharacter->setVisibility(1.f);

@@ -1,0 +1,877 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "scope": "I4 actual horse mount during Player unarmed windup and held block, mounted Use/Block suppression, release/dismount and on-foot air-attack return; strict rider/horse reciprocity and save ownership. One pinned current source at cap30; not a T7 seed campaign.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "historical_source": "build/oblivion-compat/m14-e2e-20260902/horse/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+  "historical_source_sha256": "890c83ab7f8f79dfb400ab4b251e6f5a0876599351759250216ca33794df8046",
+  "horse": "content:oblivion.esm:068451",
+  "horse_base": "content:oblivion.esm:01f11e",
+  "horse_lua_record": "FormId:0x101f11e",
+  "bootstrap_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Starting a new game",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach:.*backoff=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 1800
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-bootstrap.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "bootstrap_expected_log": [
+    "Starting a new game",
+    "Writing saved game 'Quicksave'"
+  ],
+  "bootstrap_policy": "Existing M14 stock start at same stock horse/location yields a real current-engine F5 source. Historical schema5 source remains immutable; it failed current load with uninitialized native player values and is retained separately. No legacy source is loaded or counted as an exact restore in bootstrap; no outcomes authored.",
+  "bootstrap_source_mode": "stock-start",
+  "bootstrap_stock_start": "4,16::ref=0x68451::side=east",
+  "bootstrap_geometry": "Normal backward input to >=160 root distance; require range140..200, visible actor anchor and actual renderer center ray hitting stock horse. No position/camera setters.",
+  "horse_lua_id": "0x1068451",
+  "current_source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/mount-interruption-normal-bootstrap-04/snapshots/save-29.omwsave",
+  "current_source_sha256": "b8647336778341d55602f48558e968e9f7a665d688648cd07b2f24808fb11857",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "f",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-baseline.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "key_down",
+      "value": "space"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "key_up",
+      "value": "space"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee interrupt: actor=dynamic:player:0000000000000001 id=1",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-windup-mounted.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 4500
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount ray: aimed=true down=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"horse-dismount\",\"actor\":\"dynamic:player:0000000000000001\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "ai-events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount detachment: onFoot=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach:.*backoff=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount foot move: active=backward observed=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "key_down",
+      "value": "i"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "i"
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-held-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "i"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "timeout_seconds": 30,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "i"
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block release: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-block-mounted.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount held attempt: simulatedSeconds=",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-mounted-inputs.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 4500
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount ray: aimed=true down=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"horse-dismount\",\"actor\":\"dynamic:player:0000000000000001\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "ai-events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount detachment: onFoot=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount away: safe=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount foot move: active=forward observed=true",
+      "after_start": true,
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 4500
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount ray: aimed=true down=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"horse-dismount\",\"actor\":\"dynamic:player:0000000000000001\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "ai-events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount detachment: onFoot=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach:.*backoff=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount foot move: active=backward observed=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "key_down",
+      "value": "i"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "i"
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-held-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "i"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount reach: setup=true",
+      "timeout_seconds": 30,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "i"
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block release: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-block-mounted.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount held attempt: simulatedSeconds=",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-mounted-inputs.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 4500
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount ray: aimed=true down=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"horse-dismount\",\"actor\":\"dynamic:player:0000000000000001\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "ai-events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount detachment: onFoot=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount away: safe=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount foot move: active=forward observed=true",
+      "after_start": true,
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 mount endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-mount-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "held_source_snapshot_index": 1,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 melee interrupt: actor=dynamic:player:0000000000000001 id=1",
+    "M15 block begin: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+    "M15 block release: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+    "M15 mount held attempt: simulatedSeconds=",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=2",
+    "M15 mount endpoint: settled=true"
+  ],
+  "forbidden_log": [
+    "M15 melee hit committed:",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=1 "
+  ],
+  "planned_evidence": "Perbuild reference6 +actual-mounted-source fresh4 save/live pairs, two whole source loads, one matched on-foot endpoint. Both actual mount/dismount cycles, >=1 simulation second physically held U+B while mounted, no cancelled resource/RNG writes, final intentional clear-air miss2 cost7 then fullFatigue/empty owners. NormalFP/SANTP,20pairs/4processes/20PNG/4PCM0 total. No contact-return claim for this isolated horse input-policy course; unchanged joined normal NPC contact course retains separate provenance.",
+  "geometry_policy": "Setup80..240 root units with actual center-render hit; secondary backoff target140 leaves room for input-release latency. Explicit Player displacement>=24 after each actual dismount proves walking/gravity control resumes; no position/camera setters.",
+  "physics_policy": "Native mount owner drives existing attachment, suppresses a second actor walking/gravity simulation while retaining collision/hit body. Derived projection flag reapplied from persisted mMount, cleared on dismount and unmounted Player frame; no new saved ownership/schema.",
+  "camera_preflight": "Renderer center ray must hit exact horse, visible anchor, root range80..240 and pitch<=.45 to reject animated legs. Recheck after held-block capture before activation. Both down-ray waits require new periodic observations; every dismount waits for current spatial detachment>=64 before further input.",
+  "resume_expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 block begin: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+    "M15 block release: actor=dynamic:player:0000000000000001 group=handtohandblockidle",
+    "M15 mount held attempt: simulatedSeconds=",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=2",
+    "M15 mount endpoint: settled=true"
+  ]
+}

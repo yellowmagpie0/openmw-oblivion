@@ -1,4 +1,6 @@
 #include <components/esmterrain/gridsampling.hpp>
+#include <components/esmterrain/storage.hpp>
+#include <components/esm4/loadland.hpp>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -488,4 +490,19 @@ namespace ESMTerrain
                     CellSample{ .mCellX = 0, .mCellY = 0, .mSrcRow = 0, .mSrcCol = 1, .mDstRow = 4, .mDstCol = 4 }));
         }
     }
+}
+
+TEST(ESMTerrainLandObject, DefaultTes4LayerCopiesMapsWithoutInventingMaterialFlags)
+{
+    ESM4::Land land{};
+    land.mDefaultDiffuseMap = VFS::Path::NormalizedView("textures/land/default.dds");
+    land.mDefaultNormalMap = VFS::Path::NormalizedView("textures/land/default_n.dds");
+    const osg::ref_ptr<ESMTerrain::LandObject> object(new ESMTerrain::LandObject(land, 0));
+    // Terrain preloading copies this layer before creating rendering passes.
+    const Terrain::LayerInfo layer = object->getEsm4DefaultLayerInfo();
+    EXPECT_EQ(layer.mDiffuseMap, VFS::Path::Normalized("textures/land/default.dds"));
+    EXPECT_EQ(layer.mNormalMap, VFS::Path::Normalized("textures/land/default_n.dds"));
+    EXPECT_FALSE(layer.mParallax);
+    EXPECT_FALSE(layer.mSpecular);
+    EXPECT_TRUE(layer.requiresShaders());
 }

@@ -64,6 +64,11 @@ namespace MWPhysics
         void suspendCollision(bool suspended);
         bool isCollisionSuspended() const { return mCollisionSuspended; }
 
+        // An attachment owns position while the hit/collision body remains
+        // available. This projection is derived from the saved mount owner.
+        void setMovementSuspended(bool suspended) { mMovementSuspended = suspended; }
+        bool isMovementSuspended() const { return mMovementSuspended; }
+
         void updateScale();
         void setRotation(osg::Quat quat);
 
@@ -210,6 +215,7 @@ namespace MWPhysics
         bool mInternalCollisionMode;
         bool mExternalCollisionMode;
         bool mCollisionSuspended = false;
+        bool mMovementSuspended = false;
         bool mActive;
 
         PhysicsTaskScheduler* mTaskScheduler;

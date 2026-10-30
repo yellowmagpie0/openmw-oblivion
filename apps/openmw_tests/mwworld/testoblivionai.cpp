@@ -11,6 +11,11 @@
 
 #include <array>
 
+#include "oblivionworldfixture.hpp"
+#include "apps/openmw/mwclass/npc.hpp"
+#include "apps/openmw/mwmechanics/oblivionai.hpp"
+#include <components/esm4/runtimestate.hpp>
+
 #include <components/esm4/aipackagedata.hpp>
 #include <components/esm4/aiphase.hpp>
 #include <components/esm4/aiselection.hpp>
@@ -699,4 +704,31 @@ TEST(OblivionAiTest, EmptyPackageQueueRestoreRetiresCallbackBatchAndAllowsFreshE
     });
     EXPECT_EQ(calls, 2);
     EXPECT_TRUE(queue.capture().empty());
+}
+
+TEST(OblivionAiTest, UnmountedPlayerAttachmentDoesNotCreateAiOrAdvancePackages)
+{
+    TestingOpenMW::NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    auto& ai = *world.getOblivionAiService();
+    ESM4::RuntimeState before, after;
+    ai.capture(before);
+    EXPECT_FALSE(ai.updatePlayerMountedAttachment());
+    ai.capture(after);
+    EXPECT_EQ(after.mActorAi, before.mActorAi);
+    EXPECT_EQ(after.mMounts, before.mMounts);
+    EXPECT_EQ(after.mAiRngState, before.mAiRngState);
+
+    MWClass::Npc::registerSelf();
+    world.setupPlayer();
+    ASSERT_FALSE(world.getPlayerPtr().isEmpty());
+    ai.capture(before);
+    const auto position = world.getPlayerPtr().getRefData().getPosition().asVec3();
+    EXPECT_FALSE(ai.updatePlayerMountedAttachment());
+    ai.capture(after);
+    EXPECT_EQ(after.mActorAi, before.mActorAi);
+    EXPECT_EQ(after.mMounts, before.mMounts);
+    EXPECT_EQ(after.mPendingPackageDone, before.mPendingPackageDone);
+    EXPECT_EQ(after.mAiRngState, before.mAiRngState);
+    EXPECT_EQ(world.getPlayerPtr().getRefData().getPosition().asVec3(), position);
 }

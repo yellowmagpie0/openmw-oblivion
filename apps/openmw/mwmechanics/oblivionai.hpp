@@ -100,6 +100,9 @@ namespace MWMechanics
         bool isHorse(const MWWorld::ConstPtr& actor) const;
         bool mountHorse(const MWWorld::Ptr& rider, const MWWorld::Ptr& horse);
         bool dismountHorse(const MWWorld::Ptr& rider);
+        // Player movement does not run package AI, but must still project an
+        // existing rider relationship through the same attachment owner.
+        bool updatePlayerMountedAttachment();
 
         bool setPathPoint(const ESM::FormKey& pathgrid, std::uint32_t node, bool enabled);
         bool hasLinkedPathPoints(const ESM::FormKey& object) const;

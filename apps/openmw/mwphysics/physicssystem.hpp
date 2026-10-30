@@ -612,6 +612,10 @@ namespace MWPhysics
         /// be overwritten. Valid until the next call to stepSimulation
         void queueObjectMovement(const MWWorld::Ptr& ptr, const osg::Vec3f& velocity);
 
+        // Keep an externally positioned actor's collision body, without
+        // applying a second walking/gravity controller to its position.
+        void setActorMovementSuspended(const MWWorld::Ptr& ptr, bool suspended);
+
         /// Clear the queued movements list without applying.
         void clearQueuedMovement();
 

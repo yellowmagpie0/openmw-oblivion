@@ -91,6 +91,7 @@ namespace ESMTerrain
 
     LandObject::LandObject(const ESM4::Land& land, int loadFlags)
         : mData(land, loadFlags)
+        , mEsm4DefaultLayerInfo{}
     {
         mEsm4DefaultLayerInfo.mDiffuseMap = land.mDefaultDiffuseMap;
         mEsm4DefaultLayerInfo.mNormalMap = land.mDefaultNormalMap;

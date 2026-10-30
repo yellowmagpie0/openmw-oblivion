@@ -5022,6 +5022,8 @@ namespace MWMechanics
 
     bool OblivionAiService::updateMountedAttachment(const MWWorld::Ptr& rider, LiveActor& live, bool highProcess)
     {
+        if (mWorld.mPhysics)
+            mWorld.mPhysics->setActorMovementSuspended(rider, !live.mState.mMount.isNull());
         if (live.mState.mMount.isNull())
             return false;
 
@@ -6384,6 +6386,24 @@ namespace MWMechanics
         return true;
     }
 
+    bool OblivionAiService::updatePlayerMountedAttachment()
+    {
+        requireMutableRuntime();
+        const auto player = mWorld.getPlayerPtr();
+        if (player.isEmpty())
+            return false;
+        const auto found = mActors.find(actorKey(player));
+        if (mWorld.mPhysics && (found == mActors.end() || found->second.mState.mMount.isNull()))
+            mWorld.mPhysics->setActorMovementSuspended(player, false);
+        if (found == mActors.end() || found->second.mState.mMount.isNull()
+            || player.getClass().getCreatureStats(player).isDead())
+            return false;
+        // Synchronize the cell before attachment so crossing a boundary
+        // dismounts instead of applying the old horse's coordinates there.
+        synchronizeIdentity(found->second, player);
+        return updateMountedAttachment(player, found->second, true);
+    }
+
     bool OblivionAiService::dismountHorse(const MWWorld::Ptr& rider)
     {
         requireMutableRuntime();
@@ -6393,6 +6413,9 @@ namespace MWMechanics
         const ESM::FormKey horseKey = riderState.mState.mMount;
         if (horseKey.isNull())
             return false;
+
+        if (mWorld.mPhysics)
+            mWorld.mPhysics->setActorMovementSuspended(rider, false);
 
         const MWWorld::Ptr horse = ptrFor(horseKey);
         if (!horse.isEmpty() && horse.isInCell() && rider.isInCell() && cellKey(horse) == cellKey(rider))

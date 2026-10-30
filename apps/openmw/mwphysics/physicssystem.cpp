@@ -1437,13 +1437,27 @@ namespace MWPhysics
         }
     }
 
+    void PhysicsSystem::setActorMovementSuspended(const MWWorld::Ptr& ptr, bool suspended)
+    {
+        if (auto* actor = getActor(ptr))
+        {
+            actor->setMovementSuspended(suspended);
+            if (suspended)
+            {
+                actor->setVelocity(osg::Vec3f());
+                actor->setInertialForce(osg::Vec3f());
+            }
+        }
+    }
+
     void PhysicsSystem::prepareSimulation(bool willSimulate, std::vector<Simulation>& simulations)
     {
         assert(simulations.empty());
         simulations.reserve(mActors.size() + mProjectiles.size());
         for (const auto& [ref, physicActor] : mActors)
         {
-            if (!physicActor->isActive() || physicActor->isCollisionSuspended())
+            if (!physicActor->isActive() || physicActor->isCollisionSuspended()
+                || physicActor->isMovementSuspended())
                 continue;
 
             auto ptr = physicActor->getPtr();
