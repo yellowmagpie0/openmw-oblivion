@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "extends": "scripts/data/oblivion_compat/m15_command_interruption_course.json",
+  "extends_sha256": "aee799b8e302a43c91ec83a43532f5068446885dcaf01cc45fb8adf37d9f17f0",
+  "load_interruption": true,
+  "scope": "I4 actual F9 in-process load during Player ordinary windup and held block; exact incoming saved sources, no outgoing contact/debit or stale ownership, released inputs and one return4. Normal/SAN cap30seed1; existing fresh-process proofs remain separate.",
+  "prefix_through_screenshot": "i4-command-baseline.png",
+  "reference_tail": [
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "key_down",
+      "value": "F9"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "key_up",
+      "value": "F9"
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-load-after-windup-load.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-load-outgoing-held-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "F9"
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "key_up",
+      "value": "F9"
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-load-after-block-load.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-load-return-hit.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 endpoint settled: simulationSinceDebit=",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-load-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+    "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+    "M15 I4 endpoint settled: simulationSinceDebit="
+  ],
+  "forbidden_log": [
+    "M15 melee miss committed:",
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43"
+  ],
+  "protocol": "F9 down immediately after acknowledged Use down, then release Use/F9; no log wait in the bounded windup. Require real outgoing action4 before load and no pre-load contact. Held block gets a real native begin log and rendered capture before F9; release Block/F9. Both incoming live load states must equal the actual latest saved snapshot wholly. No source file rewrite or authored outcomes.",
+  "snapshots": [
+    "baseline",
+    "after_windup_load",
+    "after_block_load",
+    "return_hit",
+    "recovered"
+  ],
+  "required_loads_per_process": 3,
+  "required_saves_per_process": 5
+}

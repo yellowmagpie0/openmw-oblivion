@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "I4 in-process load while windup/held block is active: verify outgoing action/renderer ownership retires and incoming saved ownership restores without replay. Reuse existing fresh-process evidence; extend shared monitor/course only as needed. Other mapped actor/equipment/reaction/query/visual and T7/F8 gaps remain.",
+  "next_bounded_task": "I4 mount transition and vanilla mounted melee restriction through existing M14 rider/horse ownership: identify the actual controller gate, repair only the missing cancellation/input policy, then focused checks and shared runtime evidence. Remaining reaction/death/breakage crosses, actor/equipment/query/visual and T7/F8 remain.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1657,5 +1657,24 @@
     "reuse": "No C++/Python implementation, game, SDL hook or linked dependency changes. Broad normal3207components/2060engine, SAN1036ESM4/2060engine, Python461 reused with original pins; four existing equipment/cancellation cases pass from current normal binary.",
     "fixture_policy": "Extends the pinned shared command course, omits accepted control-lock prefix. Authored one unequipped stock RustyShortsword condition50 and derived encumbrance8; script local2->6. SCPT-only plugin difference; no outcomes authored. Shared manifest guard rejects expected/forbidden contradictions. Original normal01 retained; missing derived encumbrance made its source invalid, requiring corrected normal02. Full raw source/ownership checks retained.",
     "remaining": "Other I4 named transitions/view/device/held crosses; mapped C1/D2/R3/Q5/V6 and all T7/F8. Existing overbright partition remains, no full visual/timing acceptance."
+  },
+  "inprocess_load_interruption_checkpoint": {
+    "status": "Bounded I4 in-process load interruption demonstrated; full S4 incomplete",
+    "case": "scripts/data/oblivion_compat/m15_load_interruption_course.json",
+    "receipt": "build/oblivion-compat/m15/S4/load-interruption-work-01/checkpoint-verification.json",
+    "implementation_commit": "3d228904241484c12f084b26e0f62878e75e58cd",
+    "scope": "I4 same-process F9 load cancellation of actual Player ordinary windup4 and held block. Outgoing worlds commit no contacts; both incoming saved snapshots restore wholly and only final generation returns contact4. Normal FP/SAN TP cap30seed1 only.",
+    "evidence": {
+      "exact_saved_live_pairs": 10,
+      "raw_exact_whole_loads": 6,
+      "internal_F9_loads": 4,
+      "actual_processes": 2,
+      "reviewed_PNG": 12,
+      "PCM_runs_without_block_replay": 2
+    },
+    "ownership": "Each process: outgoing ordinary4 starts but commits no contact before first F9; next generation holds block and commits no contact before second F9; both actual latest saved sources load wholly exact. Only final generation commits return4. Saved post-load views/inputs/owners inactive, settled endpoint empty. Action IDs interpreted within load generations, not globally.",
+    "reuse": "Existing monitor handles all generations unchanged. Shared run/inspect adapters extend the pinned command fixture; no new source mutation or authored outcomes. No gameplay/Python implementation or dependency changes; normal3207/2060, SAN1036/2060 and Python461 retain original provenance. One runtime course per build, no retries or broad rebuilds.",
+    "fresh_process_scope": "This same-process proof complements separately pinned command/weapon-swap actual fresh processes; it does not replace fresh-restart acceptance.",
+    "remaining": "Other named I4 transitions/view-device/held crosses, mapped C1/D2/R3/Q5/V6, all T7/F8 campaigns. Overbright partition/fullV6 and achieved timing remain open."
   }
 }
