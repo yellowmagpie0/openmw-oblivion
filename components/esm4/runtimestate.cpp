@@ -1399,7 +1399,8 @@ namespace ESM4
     void RuntimeMeleeInput::validate() const
     {
         if (!std::isfinite(mHeldSeconds) || mHeldSeconds < 0
-            || static_cast<unsigned>(mQueued) > static_cast<unsigned>(MeleeQueuedStrike::Power))
+            || static_cast<unsigned>(mQueued) > static_cast<unsigned>(MeleeQueuedStrike::Power)
+            || (mRequireRelease && (!mInputHeld || mHeldSeconds != 0 || mQueued != MeleeQueuedStrike::None)))
             throw std::runtime_error("Invalid TES4 melee input state");
     }
 
@@ -1680,6 +1681,10 @@ namespace ESM4
     {
         validateHeldBlocks(mHeldBlocks, mRetiringSequences);
         mInput.validate();
+        if (mInput.mRequireRelease
+            && ((mStrike && mStrike->mKind != MeleeStrikeKind::Counter)
+                || (mFirstPerson && mFirstPerson->mStrike && mFirstPerson->mStrike->mKind != MeleeStrikeKind::Counter)))
+            throw std::runtime_error("Release-required TES4 melee input owns a Use strike");
         if (mStrike) mStrike->validate();
         if (mAiIntent) mAiIntent->validate();
         if (mReaction) mReaction->validate();
@@ -2295,6 +2300,8 @@ namespace ESM4
         for (const auto& [actor, melee] : mNativeMeleeStates)
         {
             melee.validate();
+            if (mVersion < 76 && melee.mInput.mRequireRelease)
+                throw std::runtime_error("Release-required TES4 melee input requires schema76");
             const auto life = lives.find(actor);
             if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive)
                 throw std::runtime_error("Dangling or incapacitated TES4 melee state owner");
@@ -3252,6 +3259,8 @@ namespace ESM4
                 writer.integer<std::uint8_t>(melee.mInput.mInputHeld);
                 writer.integer<std::uint8_t>(melee.mInput.mPreferLeft);
                 writer.integer<std::uint8_t>(static_cast<std::uint8_t>(melee.mInput.mQueued));
+                if (mVersion >= 76)
+                    writer.integer<std::uint8_t>(melee.mInput.mRequireRelease);
                 writer.integer<std::uint8_t>(melee.mStrike.has_value());
                 const auto writeStrike = [&](const RuntimeMeleeStrike& strike) {
                     writer.integer(strike.mActionId);
@@ -4361,6 +4370,8 @@ namespace ESM4
                 melee.mInput.mInputHeld = boolean();
                 melee.mInput.mPreferLeft = boolean();
                 melee.mInput.mQueued = static_cast<MeleeQueuedStrike>(reader.integer<std::uint8_t>());
+                if (result.mVersion >= 76)
+                    melee.mInput.mRequireRelease = boolean();
                 const auto readStrike = [&]() {
                     RuntimeMeleeStrike strike;
                     strike.mActionId = reader.integer<std::uint64_t>();
@@ -5636,7 +5647,10 @@ namespace ESM4
                 stream << ",\"input\":{\"held_seconds\":" << std::setprecision(17) << melee.mInput.mHeldSeconds
                     << ",\"input_held\":" << (melee.mInput.mInputHeld ? "true" : "false")
                     << ",\"prefer_left\":" << (melee.mInput.mPreferLeft ? "true" : "false")
-                    << ",\"queued\":" << static_cast<unsigned>(melee.mInput.mQueued) << "},\"strike\":";
+                    << ",\"queued\":" << static_cast<unsigned>(melee.mInput.mQueued);
+                if (mVersion >= 76)
+                    stream << ",\"require_release\":" << (melee.mInput.mRequireRelease ? "true" : "false");
+                stream << "},\"strike\":";
                 const auto writeStrikeJson = [&](const std::optional<RuntimeMeleeStrike>& owned) {
                     if (!owned) stream << "null";
                     else

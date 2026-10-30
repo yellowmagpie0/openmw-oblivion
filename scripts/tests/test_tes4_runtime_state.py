@@ -2549,6 +2549,59 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "animation_time": .5, "contact_committed": False}}]
         return state
 
+    def test_melee_v76_release_requirement_roundtrip_and_legacy_promotion(self):
+        old = self.melee_state()
+        entry = old["native_melee_states"][0]
+        entry["strike"] = None
+        entry["input"].update(held_seconds=0, input_held=True, queued=0)
+        payload = state_io.encode_payload(old)
+        body = struct.pack("<4sII", b"VERS", 4, 21) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        with tempfile.TemporaryDirectory() as directory:
+            source, target = Path(directory) / "old.omwsave", Path(directory) / "new.omwsave"
+            source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+            state_io.write_save(source, target, old)
+            promoted = state_io.load_save(target)
+        self.assertEqual(promoted["schema_version"], 76)
+        control = promoted["native_melee_states"][0]["input"]
+        self.assertFalse(control["require_release"])
+        control["require_release"] = True
+        wire = state_io.encode_payload(promoted)
+        self.assertEqual(state_io.decode_payload(wire), promoted)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(old_payload := payload)), old_payload)
+        for version in (21, 75):
+            bad = copy.deepcopy(promoted); bad["schema_version"] = version
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+            with self.assertRaises(state_io.RuntimeStateError): state_io._upgrade_melee_input_release(bad)
+        for field, value in (("require_release", 1), ("input_held", False), ("held_seconds", .1), ("queued", 1)):
+            bad = copy.deepcopy(promoted); bad["native_melee_states"][0]["input"][field] = value
+            with self.subTest(field=field), self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(bad)
+
+    def test_melee_v76_use_release_gate_allows_independently_triggered_counter(self):
+        state = self.first_person_strike_state()
+        state_io._upgrade_passive_melee(state)
+        state["schema_version"] = 60
+        actor = state["player"]["reference"]
+        melee = state["native_melee_states"][0]
+        for view in (melee, melee["first_person"]):
+            view["strike"].update(kind=7, animation_group="handtohandblockattack", playback_speed=1,
+                                 contact_committed=False, ordinary_phase=0, power_phase=0,
+                                 retirement=None, inactive=False)
+        next(v for v in state["native_actor_values"] if v["actor"] == actor)["process_action"] = 2
+        state["physical_actions"]["pending"].append(3)
+        state["physical_actions"]["pending"].sort()
+        state["physical_action_owners"].append({"id": 3, "actor": actor})
+        state["physical_action_owners"].sort(key=lambda v: v["id"])
+        payload = state_io.encode_payload(state)
+        body = struct.pack("<4sII", b"VERS", 4, 60) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        with tempfile.TemporaryDirectory() as directory:
+            source, target = Path(directory) / "old.omwsave", Path(directory) / "new.omwsave"
+            source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+            state_io.write_save(source, target, state)
+            promoted = state_io.load_save(target)
+        promoted["native_melee_states"][0]["input"].update(
+            held_seconds=0, input_held=True, queued=0, require_release=True)
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(promoted)), promoted)
+
     def test_melee_v21_exact_wire_and_all_kinds_queues_commit_continuation(self):
         state = self.melee_state()
         entry = state["native_melee_states"][0]
@@ -2875,6 +2928,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         state_io._upgrade_first_person_melee(migrated)
         state_io._upgrade_passive_melee(migrated)
         state_io._upgrade_held_blocks(migrated)
+        state_io._upgrade_melee_input_release(migrated)
         migrated["schema_version"] = state_io.CURRENT_VERSION
         migrated = state_io.decode_payload(state_io.encode_payload(migrated))
         self.assertEqual(migrated["schema_version"], state_io.CURRENT_VERSION)

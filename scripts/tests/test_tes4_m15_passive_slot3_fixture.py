@@ -21,6 +21,7 @@ class PassiveSlot3FixtureTests(unittest.TestCase):
         if idle_player:
             idle = copy.deepcopy(recipe['melee_state'])
             idle.pop('held_blocks', None)
+            idle['input'].pop('require_release')  # The source remains schema59.
             idle.update(reaction=None, first_person=None, passive_sequence=None)
             state['native_melee_states'] = [idle]
         state['physical_actions'] = copy.deepcopy(recipe['physical_actions'])

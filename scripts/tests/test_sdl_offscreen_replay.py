@@ -9,6 +9,38 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_batched_keys_validate_before_delivery(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send_many = mock.Mock()
+        for values in [None, "u space", [], [24], ["u", "U"], ["u", "quit"], ["a"] * 17]:
+            action = dict(type="keys_down", values=values)
+            with self.subTest(values=values):
+                with self.assertRaises(ValueError): replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+                with self.assertRaises(ValueError): control.action(action)
+        control.send_many.assert_not_called()
+        with self.assertRaises(ValueError): replay.validate(dict(actions=[dict(type="keys_down", values=["u", "space"])]))
+
+    def test_batched_keys_write_together_and_wait_for_every_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            control = object.__new__(replay.Replay)
+            control.path = Path(directory) / "input"
+            control.path.write_bytes(b"")
+            control.sequence, control.expected = 0, b""
+            control.receipt_timeout_seconds = 10
+            receipt = Path(str(control.path) + ".delivered")
+            expected = b"1 down 24\n2 down 44\n"
+            sleeps = []
+            def deliver(_):
+                self.assertEqual(control.path.read_bytes(), expected)
+                sleeps.append(True)
+                receipt.write_bytes(b"1 down 24\n" if len(sleeps) == 1 else expected)
+            with mock.patch.object(replay.time, "sleep", side_effect=deliver):
+                result = control.action(dict(type="keys_down", values=["u", "space"]))
+            self.assertEqual(len(sleeps), 2)
+            self.assertEqual((result['first_input_sequence'], result['last_input_sequence']), (1, 2))
+            self.assertEqual(receipt.read_bytes(), expected)
+
     def test_controller_receipts_use_sdl_controller_enums_and_check_dpad_neutral(self):
         control = object.__new__(replay.Replay)
         control.send = mock.Mock()

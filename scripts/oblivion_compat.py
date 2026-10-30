@@ -46,7 +46,7 @@ import sdl_offscreen_replay  # noqa: E402
 SCHEMA_VERSION = 1
 
 SCENARIO_ACTION_TYPES = {
-    "sleep", "wait_log", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "key_up", "key_held",
+    "sleep", "wait_log", "gamepad_button", "gamepad_axis", "screenshot", "key", "key_down", "keys_down", "key_up", "key_held",
     "key_hold", "type_held", "type", "mouse_move", "mouse_move_absolute", "mouse_click", "mouse_down",
     "mouse_up", "focus_window", "command", "assert_file", "m14_checkpoint", "m14_assert_events",
     "m14_observe", "m14_actor_distance", "m14_actor_state_delta", "m14_advance_clock",

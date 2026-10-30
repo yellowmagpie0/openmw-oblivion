@@ -23,7 +23,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (not isinstance(recipe, dict) or set(recipe) != fields
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
-            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75)
+            or recipe['target_schema'] != runtime.CURRENT_VERSION or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76)
             or recipe['actor'] != actor or type(recipe['process_action']) is not int or recipe['process_action'] != 8
             or type(recipe['shared_player_draw_state']) is not int or recipe['shared_player_draw_state'] != 1
             or type(recipe['camera_first_person']) is not bool
@@ -70,6 +70,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     state['native_melee_states'] = [v for v in state['native_melee_states'] if v['actor'] != actor]
     state['native_melee_states'].append(copy.deepcopy(recipe['melee_state']))
     output.parent.mkdir(parents=True, exist_ok=True)
+    runtime._upgrade_melee_input_release(state)
     runtime.write_save(source, output, state)
     # Shared World::write emits CAM_/FIRS as one bool byte. Keep this explicit
     # fixture mutation separate from the decoded native actor state.

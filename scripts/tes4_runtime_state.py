@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 75
+CURRENT_VERSION = 76
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -2096,12 +2096,25 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
                     or tuple(sorted((actor, target))) not in seen_engagements):
                 raise RuntimeStateError("Dangling or invalid TES4 melee AI target")
         control = entry["input"]
-        if not isinstance(control, dict) or set(control) != {"held_seconds", "input_held", "prefer_left", "queued"}:
+        control_fields = {"held_seconds", "input_held", "prefer_left", "queued"}
+        if version >= 76:
+            control_fields.add("require_release")
+        if not isinstance(control, dict) or set(control) != control_fields:
             raise RuntimeStateError("Invalid TES4 melee input")
         if (native_float(control["held_seconds"]) < 0 or type(control["input_held"]) is not bool
                 or type(control["prefer_left"]) is not bool or type(control["queued"]) is not int
                 or not 0 <= control["queued"] <= 2):
             raise RuntimeStateError("Invalid TES4 melee input state")
+        if version >= 76:
+            required = control["require_release"]
+            if type(required) is not bool:
+                raise RuntimeStateError("Invalid TES4 release-required melee input")
+            if required:
+                views = (entry["strike"], (entry.get("first_person") or {}).get("strike"))
+                use_strike = any(strike is not None and
+                                 (not isinstance(strike, dict) or strike.get("kind") != 7) for strike in views)
+                if not control["input_held"] or control["held_seconds"] != 0 or control["queued"] != 0 or use_strike:
+                    raise RuntimeStateError("Invalid TES4 release-required melee input")
         strike = entry["strike"]
         reaction = entry.get("reaction")
         if reaction is not None:
@@ -2778,6 +2791,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             entry = {"actor": reader.string(), "input": {
                 "held_seconds": reader.unpack("<f"), "input_held": melee_boolean(),
                 "prefer_left": melee_boolean(), "queued": reader.unpack("<B")}, "strike": None}
+            if version >= 76: entry["input"]["require_release"] = melee_boolean()
             if melee_boolean(): entry["strike"] = read_melee_strike()
             if version >= 28:
                 entry["ai_intent"] = {"target": reader.string(), "style": reader.string()} if melee_boolean() else None
@@ -3558,8 +3572,10 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(entry["actor"])
             control, strike = entry["input"], entry["strike"]
             writer.pack("<f", control["held_seconds"])
-            for value in (int(control["input_held"]), int(control["prefer_left"]), control["queued"], int(strike is not None)):
+            for value in (int(control["input_held"]), int(control["prefer_left"]), control["queued"]):
                 writer.pack("<B", value)
+            if version >= 76: writer.pack("<B", int(control["require_release"]))
+            writer.pack("<B", int(strike is not None))
             if strike is not None: write_melee_strike(strike)
             if version >= 28:
                 intent = entry["ai_intent"]
@@ -4173,6 +4189,14 @@ def _upgrade_melee_paralysis(state: dict[str, Any]) -> None:
         raise RuntimeStateError("Legacy state cannot contain melee paralysis ownership")
 
 
+def _upgrade_melee_input_release(state: dict[str, Any]) -> None:
+    for melee in state.get("native_melee_states", []):
+        control = melee["input"]
+        if state.get("schema_version", 1) < 76 and control.get("require_release", False):
+            raise RuntimeStateError("Legacy TES4 save cannot carry release-required melee input")
+        control.setdefault("require_release", False)
+
+
 def _upgrade_combat_controllers(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 68 and state.get("combat_controllers"):
         raise RuntimeStateError("Legacy runtime schema cannot contain combat controllers")
@@ -4207,6 +4231,7 @@ def write_save(source: Path, destination: Path, state: dict[str, Any]) -> None:
     _upgrade_friend_hit_counters(state)
     _upgrade_combat_controllers(state)
     _upgrade_melee_paralysis(state)
+    _upgrade_melee_input_release(state)
     # v1/v2 did not carry character-generation fields.  Promote them with
     # stable Oblivion defaults before encoding v5; without this step a real
     # legacy save could be decoded but not rewritten by the migration tool.
@@ -4295,6 +4320,7 @@ def mutate_for_acceptance(state: dict[str, Any], label: str) -> dict[str, Any]:
     _upgrade_friend_hit_counters(result)
     _upgrade_combat_controllers(result)
     _upgrade_melee_paralysis(result)
+    _upgrade_melee_input_release(result)
     result["schema_version"] = CURRENT_VERSION
     result.setdefault("native_crime", crime_io.empty_state())
     result.setdefault("script_event_sequence", 0)

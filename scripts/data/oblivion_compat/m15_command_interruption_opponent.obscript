@@ -1,0 +1,32 @@
+scn M15StationaryOpponent
+short fighting
+
+; The existing post-return source has fighting=2. Each ordinary activation
+; advances exactly one interruption/release step; no combat result is authored.
+Begin OnActivate
+    if fighting == 2
+        DisablePlayerControls 0 1 0 0
+        set fighting to 3
+    elseif fighting == 3
+        EnablePlayerControls 0 1 0 0
+        set fighting to 4
+    elseif fighting == 4
+        DisablePlayerControls 0 1 0 0
+        set fighting to 5
+    elseif fighting == 5
+        EnablePlayerControls 0 1 0 0
+        set fighting to 6
+    elseif fighting == 6
+        Player.UnequipItem WeapClub
+        set fighting to 7
+    elseif fighting == 7
+        Player.EquipItem WeapClub
+        set fighting to 8
+    elseif fighting == 8
+        Player.UnequipItem WeapClub
+        set fighting to 9
+    elseif fighting == 9
+        Player.EquipItem WeapClub
+        set fighting to 10
+    endif
+End

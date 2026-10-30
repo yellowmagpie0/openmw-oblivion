@@ -49,6 +49,12 @@ int main() {
             std::cout << "state " << SDL_GameControllerGetAxis(controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT)
                       << " " << static_cast<int>(SDL_GameControllerGetButton(controller, SDL_CONTROLLER_BUTTON_A))
                       << std::endl;
+        } else if (line == "drain") {
+            int downs = 0;
+            while (SDL_PollEvent(&e)) if (e.type == SDL_KEYDOWN) ++downs;
+            const auto* keys = SDL_GetKeyboardState(nullptr);
+            std::cout << "batch " << downs << " " << static_cast<int>(keys[SDL_SCANCODE_U])
+                      << " " << static_cast<int>(keys[SDL_SCANCODE_SPACE]) << std::endl;
         } else if (line == "push") {
             e = {}; e.type = SDL_USEREVENT; SDL_PushEvent(&e);
             std::cout << "pushed" << std::endl;
@@ -146,6 +152,14 @@ int main() {
         self.assertEqual(self.event(process)[1:7], [769, 4, 97, 1, 0, 1])
         self.assertEqual(self.event(process)[4:7], [0, 0, 0])
         self.assertEqual(Path(str(self.input) + ".delivered").read_text(), self.input.read_text())
+
+    def test_batch_is_consumed_in_one_native_event_drain(self):
+        process = self.launch()
+        self.append("1 down 24\n2 down 44\n")
+        self.assertEqual(self.command(process, 'drain'), 'batch 2 1 1')
+        self.append("3 up 24\n4 up 44\n")
+        self.assertEqual(self.command(process, 'drain'), 'batch 0 0 0')
+        self.assertEqual(Path(str(self.input) + '.delivered').read_text(), self.input.read_text())
 
     def test_controller_barriers_wait_for_real_device_state_and_preserve_native_events(self):
         process = self.launch()

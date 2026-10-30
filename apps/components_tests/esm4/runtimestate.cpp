@@ -1888,6 +1888,59 @@ namespace
         return state;
     }
 
+    TEST(ESM4RuntimeState, meleeEquipmentReleaseRequirementPersistsWithoutChangingLegacyWire)
+    {
+        auto state = meleeState();
+        const auto actor = state.mReferences.front().mKey;
+        auto& melee = state.mNativeMeleeStates.at(actor);
+        melee.mStrike.reset();
+        melee.mInput = {0, true, false, ESM4::MeleeQueuedStrike::None};
+        state.mVersion = 75;
+        const auto legacy = state.serializeBinary();
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeMeleeStates.at(actor).mInput.mRequireRelease);
+        state.mVersion = 76;
+        melee.mInput.mRequireRelease = true;
+        const auto bytes = state.serializeBinary();
+        EXPECT_EQ(bytes.size(), legacy.size() + 1);
+        const auto loaded = ESM4::RuntimeState::deserializeBinary(bytes);
+        EXPECT_TRUE(loaded.mNativeMeleeStates.at(actor).mInput.mRequireRelease);
+        EXPECT_EQ(loaded.mNativeMeleeStates, state.mNativeMeleeStates);
+        EXPECT_EQ(loaded.serializeBinary(), bytes);
+        EXPECT_EQ(loaded.canonicalJson(), state.canonicalJson());
+        EXPECT_NE(loaded.canonicalJson().find("\"require_release\":true"), std::string::npos);
+        for (const auto version : {21u, 75u})
+        {
+            state.mVersion = version;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        }
+        state.mVersion = 75; melee.mInput.mRequireRelease = false;
+        EXPECT_EQ(state.serializeBinary(), legacy);
+    }
+
+    TEST(ESM4RuntimeState, meleeEquipmentReleaseRequirementRejectsActionAndQueuedOrTimedInput)
+    {
+        ESM4::RuntimeMeleeState state;
+        state.mInput = {0, true, false, ESM4::MeleeQueuedStrike::None, true};
+        EXPECT_NO_THROW(state.validate());
+        for (int field = 0; field != 3; ++field)
+        {
+            auto bad = state;
+            if (field == 0) bad.mInput.mInputHeld = false;
+            if (field == 1) bad.mInput.mHeldSeconds = .1f;
+            if (field == 2) bad.mInput.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
+            EXPECT_THROW(bad.validate(), std::runtime_error);
+        }
+        state.mStrike = ESM4::RuntimeMeleeStrike{1, ESM4::MeleeStrikeKind::Right,
+            {}, "handtohandattackright", 1, 0, false};
+        EXPECT_THROW(state.validate(), std::runtime_error);
+        // A defensive Counter has its own trigger; the Use release gate must
+        // not reject it while the player holds both inputs after unequipping.
+        state.mStrike->mKind = ESM4::MeleeStrikeKind::Counter;
+        state.mStrike->mPowerPhase = ESM4::PowerMeleePhase::Start;
+        state.mStrike->mSequenceTiming.emplace();
+        EXPECT_NO_THROW(state.validate());
+    }
+
     TEST(ESM4RuntimeState, meleeStateVersionTwentyOneExactWireAndCommittedFollowThrough)
     {
         auto state = meleeState();

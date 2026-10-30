@@ -58,7 +58,8 @@ namespace ESM4
     // v70 retains melee-owned paralysis timers and once-only modifier lifecycle flags.
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
     // v74 retains pending GetUp request sources and outstanding load ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 75;
+    // v76 retains the Use release required after Player equipment cancellation.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 76;
 
     struct RuntimeContentIdentity
     {
@@ -583,6 +584,7 @@ namespace ESM4
         bool mInputHeld = false;
         bool mPreferLeft = true;
         MeleeQueuedStrike mQueued = MeleeQueuedStrike::None;
+        bool mRequireRelease = false;
         void validate() const;
         friend bool operator==(const RuntimeMeleeInput&, const RuntimeMeleeInput&) = default;
     };

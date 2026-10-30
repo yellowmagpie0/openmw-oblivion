@@ -48,6 +48,7 @@
 #include "../mwrender/oblivionmeleeprojection.hpp"
 
 #include "../mwbase/environment.hpp"
+#include "../mwbase/inputmanager.hpp"
 #include "../mwbase/luamanager.hpp"
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/soundmanager.hpp"
@@ -2316,6 +2317,17 @@ namespace MWMechanics
             return true;
         };
         const auto interrupt = [&] { cancelOblivionCombatInput(); };
+        // Scripts can lock combat between input sampling and contact. Withdraw
+        // the pending action before dispatch and reject input while locked.
+        if (player)
+        {
+            const auto input = MWBase::Environment::get().getInputManager();
+            if (!input->getControlSwitch("playercontrols") || !input->getControlSwitch("playerfighting"))
+            {
+                interrupt();
+                return false;
+            }
+        }
         if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
         {
             interrupt();
@@ -2333,8 +2345,9 @@ namespace MWMechanics
         // activated; interpreting their default controls would manufacture a
         // release on load. Zero-duration renderer refreshes also supply no input.
         const auto* localScripts = mPtr.getRefData().getLuaScripts();
+        const auto* initialMelee = service->findMeleeState(actor);
         if ((duration == 0 || (localScripts && !localScripts->isActive()))
-            && hasResidentHeld(service->findMeleeState(actor)))
+            && (hasResidentHeld(initialMelee) || (initialMelee && initialMelee->mInput.mRequireRelease)))
         {
             Log(Debug::Verbose) << "M15 held initialization: actor=" << actor.serialize() << " input deferred";
             return false;
@@ -2619,6 +2632,15 @@ namespace MWMechanics
         persistOblivionMeleeProgress();
         const auto* saved = service->findMeleeState(actor);
         auto input = saved ? saved->mInput : ESM4::RuntimeMeleeInput{};
+        if (player && equipmentChanged && hadEquippedState)
+        {
+            // The same held key must not turn a cancelled weapon strike into
+            // an ordinary or power punch. Retain that release requirement in
+            // the native input owner so a save cannot discard it.
+            input.mRequireRelease = input.mRequireRelease || getAttackingOrSpell();
+            input.mHeldSeconds = 0;
+            input.mQueued = ESM4::MeleeQueuedStrike::None;
+        }
         bool active = saved && saved->mStrike;
         bool power = active && saved->mStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower;
         bool queueWindow = !active;
@@ -2713,13 +2735,14 @@ namespace MWMechanics
             return ESM4::nativeAttackAirborne(jumpGroup, motion);
         };
         const bool held = getAttackingOrSpell();
-        const bool pressed = held && !input.mInputHeld;
+        if (!held) input.mRequireRelease = false;
+        const bool pressed = held && !input.mInputHeld && !input.mRequireRelease;
         std::optional<ESM4::MeleeStrikeKind> selected;
         bool powerSpeechSelected = false;
         bool powerSpeechStarted = false;
         MWWorld::Ptr powerSpeaker;
         std::weak_ptr<const char> powerSpeakerIdentity;
-        if (input.mQueued != ESM4::MeleeQueuedStrike::None && queueWindow)
+        if (!input.mRequireRelease && input.mQueued != ESM4::MeleeQueuedStrike::None && queueWindow)
             selected = input.mQueued == ESM4::MeleeQueuedStrike::Power ? powerKindForInput()
                 : input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
         else if (pressed)
@@ -2739,7 +2762,7 @@ namespace MWMechanics
             else if (!stats.getStance(CreatureStats::Stance_Sneak) || world->isSwimming(mPtr))
                 input.mQueued = ESM4::MeleeQueuedStrike::Ordinary;
         }
-        else if (held)
+        else if (held && !input.mRequireRelease)
         {
             if (!power && input.mQueued != ESM4::MeleeQueuedStrike::Power)
                 input.mHeldSeconds = static_cast<float>(double(input.mHeldSeconds) + duration);

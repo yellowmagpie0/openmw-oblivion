@@ -10,7 +10,7 @@ import subprocess
 import time
 
 
-INPUT_ACTIONS = frozenset({"key", "key_down", "key_up", "key_hold", "key_held",
+INPUT_ACTIONS = frozenset({"key", "key_down", "keys_down", "key_up", "key_hold", "key_held",
                           "type", "type_held", "focus_window", "screenshot", "mouse_move",
                           "mouse_click", "mouse_down", "mouse_up"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
@@ -46,6 +46,15 @@ def receipt_timeout(value):
     return float(value)
 
 
+def chord_scancodes(values):
+    if not isinstance(values, list) or not 1 <= len(values) <= 16:
+        raise ValueError("Batched keys require one through sixteen key names")
+    codes = [scancode(value) for value in values]
+    if len(set(codes)) != len(codes):
+        raise ValueError("Batched keys must have distinct scancodes")
+    return codes
+
+
 def mouse_delta(value):
     if type(value) is not int or not -(2 ** 31) <= value < 2 ** 31:
         raise ValueError("Relative mouse motion requires signed 32-bit integers")
@@ -68,6 +77,8 @@ def validate(manifest):
     if type(manifest.get("sdl_offscreen_input", False)) is not bool:
         raise ValueError("sdl_offscreen_input must be a boolean")
     if not manifest.get("sdl_offscreen_input", False):
+        if any(a.get("type") == "keys_down" for a in manifest.get("actions", []) if isinstance(a, dict)):
+            raise ValueError("Batched keys require SDL offscreen input")
         return
     if manifest.get("xvfb") or "m14" in manifest or "m15" in manifest:
         raise ValueError("SDL offscreen controls currently support isolated diagnostic scenarios only")
@@ -80,7 +91,9 @@ def validate(manifest):
             continue
         if action.get("type") not in INPUT_ACTIONS | PASSIVE_ACTIONS:
             raise ValueError(f"Unsupported offscreen action: {action.get('type')!r}")
-        if action["type"].startswith("key"):
+        if action["type"] == "keys_down":
+            chord_scancodes(action.get("values"))
+        elif action["type"].startswith("key"):
             scancode(action["value"])
         elif action["type"] == "mouse_move":
             mouse_delta(action.get("x"))
@@ -124,11 +137,16 @@ class Replay:
         (self.output / "sdl-input-provenance.json").write_text(json.dumps(self.provenance, indent=2) + "\n")
 
     def send(self, operation, argument=None, timeout=None):
+        return self.send_many([(operation, argument)], timeout)
+
+    def send_many(self, operations, timeout=None):
         if timeout is None:
             timeout = self.receipt_timeout_seconds
-        self.sequence += 1
-        line = f"{self.sequence} {operation}" + (f" {argument}" if argument is not None else "") + "\n"
-        data = line.encode("ascii")
+        lines = []
+        for operation, argument in operations:
+            self.sequence += 1
+            lines.append(f"{self.sequence} {operation}" + (f" {argument}" if argument is not None else "") + "\n")
+        data = "".join(lines).encode("ascii")
         with self.path.open("ab") as output:
             output.write(data)
         self.expected += data
@@ -184,6 +202,8 @@ class Replay:
                 raise ValueError("Offscreen text requires printable ASCII")
             for offset in range(0, len(text), 31):
                 self.send("text", text[offset:offset + 31].encode("ascii").hex())
+        elif kind == "keys_down":
+            self.send_many([("down", code) for code in chord_scancodes(action.get("values"))])
         elif kind in ("key_down", "key_up"):
             self.send("down" if kind == "key_down" else "up", scancode(action["value"]))
         elif kind.startswith("key"):

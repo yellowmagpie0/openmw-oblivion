@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "I4 control-lock and actual UnequipItem cancellation in existing pending windup/held-block windows. Menu interruption now has a bounded course; keep other named interruptions and actor/equipment/effect/query/V6 gaps open before freezing T7/F8. Reuse shared fixtures and hooks, implement only observed ownership failures; focused checks then combined normal/SAN and fresh evidence.",
+  "next_bounded_task": "Inventory remaining I4 named transitions against existing evidence, then close the smallest missing transition preventing the combined normal-input course. Declare implementation and focused/reused/integration evidence before running.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1619,5 +1619,24 @@
     "reuse": "Unchanged C++ and dependencies: normal3205 components/2060 engine, SAN1034 ESM4/2060 engine and game hashes reused with original provenance. Normal settled endpoints reinspected from retained raw after fixture correction; invalid SAN endpoints rerun.",
     "fixture_corrections": "Keep base startup600 deadline. Wait >=4 actual simulation seconds since return-hit debit and require empty native knockback, rather than using wall-clock sleep. Original failures retained; strict gameplay assertions unchanged.",
     "remaining": "Control lock and actual UnequipItem plus other mapped I4, C1/D2/R3/Q5/V6 and all required T7/F8 campaign gaps."
+  },
+  "command_interruption_checkpoint": {
+    "status": "Bounded I4 control-lock and actual UnequipItem demonstrated; full S4 incomplete",
+    "case": "scripts/data/oblivion_compat/m15_command_interruption_course.json",
+    "script": "scripts/data/oblivion_compat/m15_command_interruption_opponent.obscript",
+    "receipt": "build/oblivion-compat/m15/S4/command-interruption-work-01/checkpoint-verification.json",
+    "scope": "Pending ordinary windup and held block cancellation, no cancelled debit/contact, release/re-enable/re-equip and return6; normal FP/SAN TP, cap30 seed1. Fresh locked and held-Use sources; held Use stays suppressed for >=1 simulation second until release.",
+    "implementation": "Controller rejects fighting-control locks before contact; schema76 persists Use-release requirement after equipment changes. Legacy<=75 wire remains unchanged and promotes false defaults.",
+    "evidence": {
+      "exact_saved_live_pairs": 48,
+      "raw_exact_whole_sources": 6,
+      "matched_fresh_continuations": 4,
+      "strict_endpoint_fields_per_pair": 26,
+      "reviewed_accepted_PNG": 48,
+      "PCM_runs_without_block_replay": 6
+    },
+    "gates": "Normal3207 components/2060 engine; SAN1036 ESM4/2060 engine; fullPython461. Full C++ gates ran once for stable batch. Later Python-only input batching has its own fullPython gate; unchanged normal runtime/game/hook/libraries reused with original provenance.",
+    "fixture_corrections": "Shared SDL batches Use+Activate to reach actual pending4/5 cancellation under SAN. Retain latency failure. Valid nonresident intermediate block fade and printed-condition precision corrected in checker; complete raw reinspected without gameplay replay. Final owners remain strictly inactive.",
+    "remaining": "Other named I4 interruptions and view/device/held crosses; mapped C1/D2/R3/Q5/V6 and all required T7/F8 campaigns. Cap30 is not measured FPS."
   }
 }
