@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "D2 NPC spare-weapon disarm: production prepareOblivionSidePowerConsequences rejects a proc when the victim carries another weapon. Reuse the existing Player sideways-power course and reviewed proc/drop evidence. Implement one owned drop/replacement/armed-reaction transaction with save continuity; focused tests first, then combined normal-input/fresh evidence and batched required broad gates. Keep Player disarm/Creature Counter and all other mapped gaps open; no generalNPC AI dependency.",
+  "next_bounded_task": "I4 named interruptions: demonstrate weapon unequip and menu/control-lock cancellation in existing pending windup/held-block windows. Reuse current fixtures and cancellation hooks; implement only observed ownership failures, then combine normal/SAN no-resource-debit/no-replay and fresh checks. These gaps prevent freezing the final course; keep other Player/Creature drop, R3/Q5/V6 and T7/F8 requirements open.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1542,5 +1542,64 @@
     "full_timing_campaign": false,
     "full_visual_acceptance": false,
     "full_M15S4_acceptance": false
+  },
+  "npc_spare_disarm_checkpoint": {
+    "status": "NPC spare-weapon disarm demonstrated; fullS4 incomplete",
+    "receipt": "build/oblivion-compat/m15/S4/npc-spare-disarm-work-01/checkpoint-verification.json",
+    "profile_base": "weapon_profiles.stock_club",
+    "profile_overrides": {
+      "scope": "D2 NPC spareweapon disarm via existing Player Club Left/Right course:3 authored unequipped backups, actual drops/replacements/armed reactions and fresh ownership; no newNPCpolicy.",
+      "opponent_spare_count": 3,
+      "opponent_spare_condition": 25.75,
+      "expected_side_disarm_actions": [
+        11,
+        13
+      ]
+    },
+    "export": "JSON dump with indent2 and trailing newline of {**weapon_profiles.stock_club, **profile_overrides}; feed the existing stage/run adapters. No outcome injection. The profile scope leaves stationary-opponent attack selection unchanged; this implementation adds replacement equipment policy.",
+    "profile_sha256": "ccc244fbfb20f4e1ae0c72f4e3f76b99e5624021738309482fc967185d6ed725",
+    "fixture_sha256": "f4a18cd99f79f8bf9f3cbf5c952b18f7c38af7e6ded585988ca70e647c028eb5",
+    "implementation": "Prepare one replacement and any stack remainder privately; commit drop/inventory/registry/reaction together. Condition-adjusted physical damage rate approximates preference; exact native AI/enchantment utility is not claimed. Alive NPC outside an actual combat controller only; active combat owns later selection.",
+    "runtime": "Normal third-person and SAN first-person, cap30seed1; each full14pair course -> actualpostLeft fresh2pairs -> strict26field endpoint. Two drops, two replacements, four conserved swords, armedStagger, no contact replay.32 exact saved/live pairs; one raw-exact fresh source and one audited source projection.",
+    "source_projection": "SAN raw source differs only by one float32 ULP (2.9802322387695312e-8 sceneunits/sec) in redundant world-unit velocity Y. Native packed velocity and every other source field exact. Explicit --packed-velocity-projection checks loaded spatial value equals unchanged packedY * nativeLengthScale roundedfloat32 and bounds source difference to1ULP; raw_exact remains false. Eight positive/negative guard checks pass. Current AGENTS numeric policy applies; no physics change.",
+    "verification": "Focused16; normal3205components/2060engine; SAN1034ESM4/2060engine. Broad gates once for this C++batch; both games rebuilt. PCM1/reference,0/fresh in each mode.30 accepted PNGs plus2 retained failed-endpoint PNGs reviewed; fullV6/lighting remain open.",
+    "fixture_corrections": "Use the selected postLeft source for all recovery guards; preflight requires backup1+stack2, one drop and active armedStagger. Wait10sec after fullFatigue for the second physical drop to settle; keep .001 velocity/20unit rest-position bounds. Reuse valid full normal reference; rerun only insufficiently settled fresh01 asfresh02. Preserve all raw/checker failures.",
+    "native_wrapper_oracle_manifest": {
+      "original_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+      "entry": "0x005fc5de",
+      "stop": "0x005fc674",
+      "matrix": {
+        "role": [
+          "npc",
+          "creature",
+          "player"
+        ],
+        "life": [
+          0,
+          1,
+          2,
+          6
+        ],
+        "busy": [
+          false,
+          true
+        ],
+        "spare": [
+          false,
+          true
+        ],
+        "extra": [
+          false,
+          true
+        ]
+      },
+      "cases": 96,
+      "expected": "Only NPC/alive/notbusy selects(-1); a found entry equipsone with firstExtraData, releases and frees entry before callerreturn.",
+      "boundaries": "Base/life getters execute original instructions. Busy predicate, selector, equip and cleanup are explicit recording boundaries. Does not establish ranking/full drop/gameplay.",
+      "runner": "build/oblivion-compat/m15/S4/npc-spare-disarm-work-01/replacement-order-probe.py",
+      "runner_sha256": "d695e7396c884716f3a37a0177e87a4d1a9bca00ccb4bf7bba034f36179f4f33",
+      "receipt": "build/oblivion-compat/m15/S4/npc-spare-disarm-work-01/replacement-order-verification.json"
+    },
+    "remaining": "Player/Creature equipment policies and other mapped C1/D2/R3/I4/Q5/V6; full T7/F8. No measured30FPS or full timing campaign claim."
   }
 }

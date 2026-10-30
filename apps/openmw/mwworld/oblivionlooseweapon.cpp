@@ -169,7 +169,7 @@ namespace MWWorld
     }
 
     std::unique_ptr<WorldModel::PreparedLooseWeaponAdmission> WorldModel::prepareLooseWeaponAdmissions(
-        std::span<const LooseWeaponAdmission> admissions)
+        std::span<const LooseWeaponAdmission> admissions, std::span<const Ptr> inventoryInsertions)
     {
         if (admissions.empty()) throw std::invalid_argument("loose weapon group must not be empty");
         auto data = std::make_unique<PreparedLooseWeaponAdmission::Data>();
@@ -235,7 +235,16 @@ namespace MWWorld
         }
         // Assign all local RefNums from one private registry copy, preserving
         // public counters and all original caller references on cancellation.
-        data->mRegistry = std::make_unique<PreparedPtrReplacement>(preparePtrReplacement({}, data->mReferences));
+        // Disarm may split a spare stack while equipping one instance. Publish
+        // those private inventory nodes in the same registry swap as the drop.
+        std::vector<Ptr> inserted = data->mReferences;
+        for (const auto& item : inventoryInsertions)
+        {
+            if (item.isEmpty() || !item.getContainerStore() || item.isInCell())
+                throw std::invalid_argument("loose drop inventory insertion requires a detached inventory item");
+            inserted.push_back(item);
+        }
+        data->mRegistry = std::make_unique<PreparedPtrReplacement>(preparePtrReplacement({}, inserted));
         for (std::size_t i = 0; i < admissions.size(); ++i)
         {
             const auto& admission = admissions[i];

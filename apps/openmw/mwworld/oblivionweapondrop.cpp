@@ -6,6 +6,7 @@
 #include "class.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/luamanager.hpp"
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwrender/esm4npcanimation.hpp"
 #include "../mwrender/looseobjectscenebinding.hpp"
 #include "../mwrender/objects.hpp"
@@ -378,6 +379,26 @@ namespace MWWorld
             const ESM4::Npc* mWorldNpcOwner = nullptr;
             const ESM4::Faction* mWorldFactionOwner = nullptr;
             std::uint32_t mWorldOwnerFlags = 0;
+            struct SelectionDefinition
+            {
+                ESM::RefId mId;
+                const ESM4::Weapon* mRecord;
+                std::uint32_t mType, mDamage, mHealth;
+                float mSpeed;
+            };
+            std::vector<SelectionDefinition> mSelectionDefinitions;
+
+            bool selectionDefinitionsCurrent(const ESMStore& store) const
+            {
+                for (const auto& before : mSelectionDefinitions)
+                {
+                    const auto* weapon = store.get<ESM4::Weapon>().search(before.mId);
+                    if (weapon != before.mRecord || (weapon && (weapon->mData.type != before.mType
+                        || weapon->mData.damage != before.mDamage || weapon->mData.health != before.mHealth
+                        || !sameFloat(weapon->mData.speed, before.mSpeed)))) return false;
+                }
+                return true;
+            }
 
             bool destinationBaseCurrent(const Ptr& reference) const
             {
@@ -476,7 +497,7 @@ namespace MWWorld
                     || mWorld->getWorldModel().getPtr(e.mActor.getCellRef().getRefNum()) != e.mActor
                     || e.mActor.get<ESM4::Npc>()->mBase != e.mNpc
                     || store.get<ESM4::Npc>().search(e.mNpcId) != e.mNpc
-                    || !e.baseCurrent(store)
+                    || !e.baseCurrent(store) || !e.selectionDefinitionsCurrent(store)
                     || store.get<ESM4::Cell>().search(e.mCellId) != e.mCellBase
                     || e.mCellBase->mOwner != e.mCellOwner || e.mCellBase->mOwnershipRank != e.mCellRank
                     || store.get<ESM4::Npc>().search(ESM::RefId(e.mCellOwner)) != e.mCellNpcOwner
@@ -613,7 +634,10 @@ namespace MWWorld
                 || !baseKey || !baseKey->isContent() || !npc || !cell || !cellKey
                 || !cellKey->isContent() || !carried || !carried->mBody.mDefinition)
                 throw std::invalid_argument("equipment drop cannot resolve its winning records or bound carried NIF");
-            auto removal = std::shared_ptr<InventoryStore::PreparedEquippedWeaponRemoval>(inventory.prepareEquippedWeaponRemoval(slot));
+            const Ptr replacement = request.mUseDefaultPlacement && !shield
+                ? MWMechanics::selectOblivionDisarmReplacement(world, actor, item) : Ptr{};
+            auto removal = std::shared_ptr<InventoryStore::PreparedEquippedWeaponRemoval>(
+                inventory.prepareEquippedWeaponRemoval(slot, replacement));
             if (!removal || !removal->isValid())
                 throw std::invalid_argument("weapon drop cannot prepare its exact source debit");
             auto notification = world.prepareOblivionEquipmentNotification([removal] { removal->notify(); });
@@ -720,6 +744,16 @@ namespace MWWorld
                 entry.mMaleWorldModel = armor->mModelMaleWorld.getOriginal();
                 entry.mFemaleWorldModel = armor->mModelFemaleWorld.getOriginal();
             }
+            if (request.mUseDefaultPlacement && !shield)
+                for (auto candidate = inventory.begin(ContainerStore::Type_Weapon); candidate != inventory.end(); ++candidate)
+                {
+                    const auto native = OblivionProfileServices::nativeItemId(store, candidate->getCellRef().getRefId());
+                    const auto* definition = store.get<ESM4::Weapon>().search(native);
+                    entry.mSelectionDefinitions.push_back({native, definition,
+                        definition ? definition->mData.type : 0,
+                        static_cast<std::uint32_t>(definition ? definition->mData.damage : 0),
+                        definition ? definition->mData.health : 0, definition ? definition->mData.speed : 0});
+                }
             for (const auto& faction : npc->mFactions) entry.mFactions.emplace_back(faction.faction, faction.rank);
             data->mEntries.push_back(std::move(entry));
         }
@@ -736,7 +770,11 @@ namespace MWWorld
                 MWPhysics::CollisionType_World | MWPhysics::CollisionType_LooseObject,
                 MWPhysics::CollisionType_AnyPhysical});
         }
-        data->mAdmission = world.getWorldModel().prepareLooseWeaponAdmissions(admissions);
+        std::vector<Ptr> inventoryInsertions;
+        for (const auto& entry : data->mEntries)
+            if (const auto remainder = entry.mRemoval->replacementRemainder(); !remainder.isEmpty())
+                inventoryInsertions.push_back(remainder);
+        data->mAdmission = world.getWorldModel().prepareLooseWeaponAdmissions(admissions, inventoryInsertions);
         // Native REFR.mId is also the engine-local RefNum. The registry
         // reservation assigns it on the private nodes, independently of the
         // stable dynamic key; guard that assigned identity from this point.

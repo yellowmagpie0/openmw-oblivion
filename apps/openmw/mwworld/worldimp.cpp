@@ -4871,8 +4871,8 @@ namespace MWWorld
             ESM4::NativeNpcBlockHitGroupInput groupInput;
             groupInput.mWeaponDrawn115 = weaponDrawn;
             const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
-            // Equipment removal precedes the incoming reaction. Both disarm
-            // and breakage must query the projected empty right-hand slot.
+            // Disarm can equip a spare before the incoming reaction. Breakage
+            // still projects an empty slot; both queries remain read-only.
             const bool removed = right != inventory.end()
                 && (std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
                         [&](const auto& request) { return request.mOwner == actor && request.mItem == *right; })
@@ -4881,9 +4881,13 @@ namespace MWWorld
                             return change.mOwner == actor && change.mItem == *right
                                 && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None;
                         }));
-            if (!removed && right != inventory.end() && right->getType() == ESM::REC_WEAP)
+            Ptr projectedRight = !removed && right != inventory.end() ? *right : Ptr{};
+            if (removed && std::any_of(deltas.mDisarms.begin(), deltas.mDisarms.end(),
+                    [&](const auto& request) { return request.mOwner == actor; }))
+                projectedRight = MWMechanics::selectOblivionDisarmReplacement(*this, actor, *right);
+            if (!projectedRight.isEmpty() && projectedRight.getType() == ESM::REC_WEAP)
             {
-                const auto item = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
+                const auto item = OblivionProfileServices::nativeItemId(mStore, projectedRight.getCellRef().getRefId());
                 const auto* form = item.getIf<ESM::FormId>();
                 const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
                 if (!weapon || weapon->mData.type > 5) return false;

@@ -42,6 +42,47 @@
 
 namespace MWMechanics
 {
+    MWWorld::Ptr selectOblivionDisarmReplacement(
+        MWBase::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& removed)
+    {
+        auto* nativeWorld = dynamic_cast<MWWorld::World*>(&world);
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        if (!service || actor.isEmpty() || actor == world.getPlayerPtr()
+            || actor.getType() != ESM::REC_NPC_4) return {};
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* life = service->findActorLife(key);
+        // The NPC drop wrapper performs this immediate equip outside its
+        // combat package. An active combat controller owns its later choice.
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || nativeWorld->hasOblivionCombatController(key).value_or(false)) return {};
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        MWWorld::Ptr selected;
+        double best = -1;
+        for (auto item = inventory.begin(); item != inventory.end(); ++item)
+        {
+            if (*item == removed || item->getType() != ESM::REC_WEAP
+                || item->getCellRef().getCount() <= 0) continue;
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                world.getStore(), item->getCellRef().getRefId());
+            const auto* weapon = world.getStore().get<ESM4::Weapon>().search(id);
+            if (!weapon || weapon->mData.type > 5) continue; // Includes projected ammunition.
+            const auto& ref = item->getCellRef();
+            const double condition = ref.getNativeItemCondition().value_or(
+                ref.getCharge() < 0 ? float(weapon->mData.health)
+                                    : float(ref.getCharge()) + ref.getChargeIntRemainder());
+            if (!std::isfinite(condition) || condition < 0 || !std::isfinite(weapon->mData.speed)
+                || weapon->mData.speed <= 0 || (weapon->mData.health && condition == 0)) continue;
+            const double ratio = weapon->mData.health ? condition / weapon->mData.health : 1;
+            const double rating = weapon->mData.damage * ratio * weapon->mData.speed;
+            if (rating > best)
+            {
+                best = rating;
+                selected = *item;
+            }
+        }
+        return selected;
+    }
+
     bool isOblivionStationaryMeleeStyle(const ESM4::CombatStyleStandard& style)
     {
         constexpr auto stationaryFlags = static_cast<std::uint8_t>(ESM4::CombatStyleFlag::ChooseAttackChance)
@@ -408,11 +449,6 @@ namespace MWMechanics
             // Player centering and Creature drop policy require their own
             // native implementation; do not consume a selected proc without it.
             if (victim == player) return std::nullopt;
-            // NPC5FC440 can select replacement equipment before the caller
-            // requests Stagger. Until that native selection joins the packet,
-            // reject spare weapons rather than project an unarmed resource.
-            for (auto item = targetInventory.begin(); item != targetInventory.end(); ++item)
-                if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return std::nullopt;
             deltas.mDisarms.push_back({victim, *targetRight});
         }
         if (!nativeWorld->prepareOblivionStaggerReaction(actionId, victim, deltas)) return std::nullopt;
@@ -519,11 +555,8 @@ namespace MWMechanics
             }
             if (disarm.mTriggered)
             {
-                // Player bound-centering and native spare-weapon replacement
-                // remain separate drop policies, as in Counter phase1.
+                // Player bound-centering remains a separate drop policy.
                 if (attacker == player) return std::nullopt;
-                for (auto item = targetInventory.begin(); item != targetInventory.end(); ++item)
-                    if (item->getType() == ESM::REC_WEAP && *item != *targetRight) return std::nullopt;
                 candidate.mDisarms.push_back({attacker, *targetRight});
             }
         }
@@ -592,8 +625,6 @@ namespace MWMechanics
         {
             // Same explicit drop-policy boundary as Counter and defensive disarm.
             if (victim == player || victim.getType() != ESM::REC_NPC_4) return std::nullopt;
-            for (auto item = inventory.begin(); item != inventory.end(); ++item)
-                if (item->getType() == ESM::REC_WEAP && *item != *right) return std::nullopt;
             candidate.mDisarms.push_back({victim, *right});
             candidate.mKnockback.reset();
         }

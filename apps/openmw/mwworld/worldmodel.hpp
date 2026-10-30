@@ -199,7 +199,7 @@ namespace MWWorld
         // One registry reservation and one final publication hook for all drops
         // caused by a contact, including a weapon and shield in the same managed cell.
         std::unique_ptr<PreparedLooseWeaponAdmission> prepareLooseWeaponAdmissions(
-            std::span<const LooseWeaponAdmission> admissions);
+            std::span<const LooseWeaponAdmission> admissions, std::span<const Ptr> inventoryInsertions = {});
 
         WorldModel(const WorldModel&) = delete;
         WorldModel& operator=(const WorldModel&) = delete;

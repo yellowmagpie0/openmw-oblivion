@@ -140,6 +140,7 @@ namespace MWWorld
             bool isValid() const noexcept;
             bool commit() noexcept;
             bool notify();
+            Ptr replacementRemainder() const;
             PreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval&&) noexcept;
             PreparedEquippedWeaponRemoval& operator=(PreparedEquippedWeaponRemoval&&) noexcept;
             PreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval&) = delete;
@@ -150,7 +151,8 @@ namespace MWWorld
         // world reference, rendering and physics have been admitted. The caller
         // validates item extras and commits wear before this callback-free debit.
         // Removal preserves the item extras and all unrelated inventory pointers.
-        std::unique_ptr<PreparedEquippedWeaponRemoval> prepareEquippedWeaponRemoval(int slot = Slot_CarriedRight);
+        std::unique_ptr<PreparedEquippedWeaponRemoval> prepareEquippedWeaponRemoval(
+            int slot = Slot_CarriedRight, const Ptr& replacement = {});
         bool validatePreparedEquippedWeaponRemoval(const PreparedEquippedWeaponRemoval& removal) const noexcept;
         bool commitPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal) noexcept;
         bool notifyPreparedEquippedWeaponRemoval(PreparedEquippedWeaponRemoval& removal);

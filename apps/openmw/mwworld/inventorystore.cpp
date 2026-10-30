@@ -1073,14 +1073,45 @@ bool MWWorld::InventoryStore::notifyPreparedAmmunitionDebit(PreparedAmmunitionDe
 
 struct MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::Impl
 {
+    struct Candidate
+    {
+        Ptr mItem;
+        int mCount;
+        CellRef mExpected;
+
+        bool current(const ConstPtr& item) const
+        {
+            const auto& ref = item.getCellRef();
+            return item == mItem && ref.getCount(false) == mCount
+                && ref.getRefId() == mExpected.getRefId() && ref.getOwner() == mExpected.getOwner()
+                && ref.getNativeOwnershipRank() == mExpected.getNativeOwnershipRank()
+                && ref.getNativeOwnershipGlobal() == mExpected.getNativeOwnershipGlobal()
+                && ref.getFaction() == mExpected.getFaction() && ref.getFactionRank() == mExpected.getFactionRank()
+                && ref.getSoul() == mExpected.getSoul()
+                && ref.getNativeItemCondition() == mExpected.getNativeItemCondition()
+                && ref.hasNativeItemScale(mExpected.getNativeItemScale())
+                && ref.getCharge() == mExpected.getCharge()
+                && ref.getChargeIntRemainder() == mExpected.getChargeIntRemainder()
+                && ref.getEnchantmentCharge() == mExpected.getEnchantmentCharge();
+        }
+    };
     InventoryStore* mOwner = nullptr;
     std::shared_ptr<const char> mIdentity;
     std::weak_ptr<const char> mStorageIdentity;
     Ptr mItem;
     int mSlot = Slot_CarriedRight;
     std::optional<float> mExtraScale;
+    std::vector<Candidate> mCandidates;
+    TSlots mSlots;
+    ContainerStoreIterator mReplacement;
+    int mReplacementCount = 0;
+    std::unique_ptr<InventoryStore> mSplitStore;
+    Ptr mRemainder;
+    std::optional<Candidate> mRemainderBefore;
     bool mCommitted = false;
     bool mNotified = false;
+
+    explicit Impl(InventoryStore& owner) : mSlots(owner.mSlots), mReplacement(owner.end()) {}
 };
 
 MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::PreparedEquippedWeaponRemoval(std::unique_ptr<Impl> impl)
@@ -1112,8 +1143,13 @@ bool MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::notify()
     return ownerIsCurrent() && mImpl->mOwner->notifyPreparedEquippedWeaponRemoval(*this);
 }
 
+MWWorld::Ptr MWWorld::InventoryStore::PreparedEquippedWeaponRemoval::replacementRemainder() const
+{
+    return ownerIsCurrent() ? mImpl->mRemainder : Ptr{};
+}
+
 std::unique_ptr<MWWorld::InventoryStore::PreparedEquippedWeaponRemoval>
-MWWorld::InventoryStore::prepareEquippedWeaponRemoval(int slotIndex)
+MWWorld::InventoryStore::prepareEquippedWeaponRemoval(int slotIndex, const Ptr& replacement)
 {
     if (slotIndex != Slot_CarriedRight && slotIndex != Slot_CarriedLeft)
         throw std::invalid_argument("prepared equipment removal requires a carried slot");
@@ -1127,7 +1163,7 @@ MWWorld::InventoryStore::prepareEquippedWeaponRemoval(int slotIndex)
     for (int i = 0; i < Slots; ++i)
         if (i != slotIndex && mSlots[i] != end() && *mSlots[i] == item)
             throw std::invalid_argument("prepared equipment removal cannot clear another slot");
-    auto impl = std::make_unique<PreparedEquippedWeaponRemoval::Impl>();
+    auto impl = std::make_unique<PreparedEquippedWeaponRemoval::Impl>(*this);
     if (!mPreparedAmmunitionIdentity) mPreparedAmmunitionIdentity = std::make_shared<const char>();
     impl->mOwner = this;
     impl->mIdentity = mPreparedAmmunitionIdentity;
@@ -1135,6 +1171,35 @@ MWWorld::InventoryStore::prepareEquippedWeaponRemoval(int slotIndex)
     impl->mItem = item;
     impl->mSlot = slotIndex;
     impl->mExtraScale = item.getCellRef().getNativeItemScale();
+    impl->mSlots = mSlots;
+    impl->mReplacement = end();
+    for (auto candidate = begin(ContainerStore::Type_Weapon); candidate != end(); ++candidate)
+    {
+        if (*candidate == item) continue; // This contact may commit wear to the dropped item.
+        const auto& ref = candidate->getCellRef();
+        impl->mCandidates.push_back({*candidate, ref.getCount(false), ref});
+        if (*candidate == replacement) impl->mReplacement = candidate;
+    }
+    if (!replacement.isEmpty())
+    {
+        if (slotIndex != Slot_CarriedRight || impl->mReplacement == end()
+            || replacement.getContainerStore() != this || isEquipped(replacement))
+            throw std::invalid_argument("disarm replacement requires a distinct unequipped inventory weapon");
+        impl->mReplacementCount = replacement.getCellRef().getCount(false);
+        if (impl->mReplacementCount < 1)
+            throw std::invalid_argument("disarm replacement requires a positive stack");
+        if (impl->mReplacementCount > 1)
+        {
+            impl->mSplitStore = std::make_unique<InventoryStore>();
+            impl->mRemainder = *impl->mSplitStore->addNewStack(replacement, impl->mReplacementCount - 1);
+            impl->mRemainder.getCellRef().unsetRefNum();
+            impl->mRemainder.getRefData().setLuaScripts(nullptr);
+            impl->mRemainder.mRef->mWorldModel = nullptr;
+            impl->mRemainder.setContainerStore(this);
+            impl->mRemainderBefore.emplace(PreparedEquippedWeaponRemoval::Impl::Candidate{
+                impl->mRemainder, impl->mReplacementCount - 1, impl->mRemainder.getCellRef()});
+        }
+    }
     return std::unique_ptr<PreparedEquippedWeaponRemoval>(new PreparedEquippedWeaponRemoval(std::move(impl)));
 }
 
@@ -1153,6 +1218,15 @@ bool MWWorld::InventoryStore::validatePreparedEquippedWeaponRemoval(
     for (int i = 0; i < Slots; ++i)
         if (i != value->mSlot && mSlots[i] != end() && *mSlots[i] == value->mItem)
             return false;
+    if (mSlots != value->mSlots) return false;
+    std::size_t index = 0;
+    for (auto candidate = cbegin(ContainerStore::Type_Weapon); candidate != cend(); ++candidate)
+    {
+        if (*candidate == value->mItem) continue;
+        if (index == value->mCandidates.size() || !value->mCandidates[index++].current(*candidate)) return false;
+    }
+    if (index != value->mCandidates.size()) return false;
+    if (value->mRemainderBefore && !value->mRemainderBefore->current(value->mRemainder)) return false;
     return true;
 }
 
@@ -1167,6 +1241,16 @@ bool MWWorld::InventoryStore::commitPreparedEquippedWeaponRemoval(PreparedEquipp
     cell.mChanged = true;
     if (mSelectedEnchantItem == mSlots[value.mSlot]) mSelectedEnchantItem = end();
     mSlots[value.mSlot] = end();
+    if (value.mReplacement != end())
+    {
+        if (value.mSplitStore)
+        {
+            movePreparedStack(value.mRemainder, value.mReplacementCount - 1, *value.mSplitStore);
+            std::get<ESM::CellRef>(value.mReplacement->getCellRef().mCellRef.mVariant).mCount = 1;
+            value.mReplacement->getCellRef().mChanged = true;
+        }
+        mSlots[value.mSlot] = value.mReplacement;
+    }
     ContainerStore::flagAsModified();
     value.mCommitted = true;
     return true;

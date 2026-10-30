@@ -14,6 +14,12 @@ namespace MWRender { class Animation; }
 
 namespace MWMechanics
 {
+    // NPC disarm replacement uses condition-adjusted physical damage rate as
+    // a practical weapon preference, not the original AI utility's exact math.
+    // The drop transaction owns publication and guards the candidate inventory.
+    MWWorld::Ptr selectOblivionDisarmReplacement(
+        MWBase::World& world, const MWWorld::Ptr& actor, const MWWorld::Ptr& removed);
+
     // Shared raw KF timing/Blend inputs for contact preparation and playback.
     OblivionMeleeSequenceMetadata captureOblivionMeleeSequenceMetadata(
         MWRender::Animation& animation, std::string_view group, bool reaction);
