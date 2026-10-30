@@ -78,7 +78,7 @@
     "FPS/seed campaign and any remaining identified high-risk crosses: >=3fixed seeds,30/60/120caps and independent final campaign repeats (section4.5). Measure achieved FPS/timing honestly. All four view/device pairs and view/window/device/window pairwise course coverage now pass normal/SAN; no default controller-layout claim.",
     "All remaining actor/weapon/directional/mastery/effect, command/query and safe-interruption requirements in the controlling plan and delivery audit."
   ],
-  "next_bounded_task": "I4 named interruptions: demonstrate weapon unequip and menu/control-lock cancellation in existing pending windup/held-block windows. Reuse current fixtures and cancellation hooks; implement only observed ownership failures, then combine normal/SAN no-resource-debit/no-replay and fresh checks. These gaps prevent freezing the final course; keep other Player/Creature drop, R3/Q5/V6 and T7/F8 requirements open.",
+  "next_bounded_task": "I4 control-lock and actual UnequipItem cancellation in existing pending windup/held-block windows. Menu interruption now has a bounded course; keep other named interruptions and actor/equipment/effect/query/V6 gaps open before freezing T7/F8. Reuse shared fixtures and hooks, implement only observed ownership failures; focused checks then combined normal/SAN and fresh evidence.",
   "audio_assay": {
     "recipe": "scripts/data/oblivion_compat/m15_block_mixture_assay.json",
     "minimum_correlation": 0.75,
@@ -1601,5 +1601,23 @@
       "receipt": "build/oblivion-compat/m15/S4/npc-spare-disarm-work-01/replacement-order-verification.json"
     },
     "remaining": "Player/Creature equipment policies and other mapped C1/D2/R3/I4/Q5/V6; full T7/F8. No measured30FPS or full timing campaign claim."
+  },
+  "menu_interruption_checkpoint": {
+    "status": "Bounded I4 menu interruption demonstrated; full S4 incomplete",
+    "case": "scripts/data/oblivion_compat/m15_menu_interruption_course.json",
+    "receipt": "build/oblivion-compat/m15/S4/menu-interruption-work-01/checkpoint-verification.json",
+    "implementation_commit": "cbcccac283bf40c83e846dcfc61960c802804d50",
+    "scope": "Actual Escape during pending ordinary windup and held block, release input in menu, zero cancelled debit/contact, successful return and postcancel fresh continuation; normal first person and SAN third person, cap30 seed1.",
+    "evidence": {
+      "exact_saved_live_pairs": 20,
+      "raw_exact_whole_sources": 4,
+      "matched_fresh_continuations": 2,
+      "strict_endpoint_fields_per_pair": 26,
+      "reviewed_accepted_PNG": 26,
+      "PCM_runs_without_block_replay": 4
+    },
+    "reuse": "Unchanged C++ and dependencies: normal3205 components/2060 engine, SAN1034 ESM4/2060 engine and game hashes reused with original provenance. Normal settled endpoints reinspected from retained raw after fixture correction; invalid SAN endpoints rerun.",
+    "fixture_corrections": "Keep base startup600 deadline. Wait >=4 actual simulation seconds since return-hit debit and require empty native knockback, rather than using wall-clock sleep. Original failures retained; strict gameplay assertions unchanged.",
+    "remaining": "Control lock and actual UnequipItem plus other mapped I4, C1/D2/R3/Q5/V6 and all required T7/F8 campaign gaps."
   }
 }

@@ -1,0 +1,497 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "scope": "I4 real Escape-menu cancellation during pending ordinary windup and heldblock, release inputs inside menu, return hit, and post-windup-cancel fresh continuation. Control-lock commands and actual UnequipItem remain separate.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "source_run": "npc-spare-disarm-normal-reference-01",
+  "source_sha256": "34f9b525ab5ee2bbb6055a53c329cb23260c07c7bfb67ff7d310dc5a822bd7fd",
+  "source_requirements": "Actual settled post-return3 save: ledger4/pendingempty, idle owners, NPC alive, no loose bodies or ragdolls. No source mutation. Wait for natural fullFatigue before baseline.",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course camera preflight: visible=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: ready=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready:",
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-baseline.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=1 paused=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee interrupt: actor=dynamic:player:0000000000000001 id=4",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause checked: transition=1 simulationUnchanged=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-windup-menu.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=2 paused=false",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-windup-cancelled.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-held-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=3 paused=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block release: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause checked: transition=3 simulationUnchanged=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-block-menu.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=4 paused=false",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-block-cancelled.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=5 fatigue_cost=7.8",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-return-hit.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=5 action=-1",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 endpoint settled: simulationSinceDebit=",
+      "after_start": true,
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course camera preflight: visible=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: ready=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-held-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=1 paused=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block release: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause checked: transition=1 simulationUnchanged=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-block-menu.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Escape",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 pause state: transition=2 paused=false",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-block-cancelled.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "o"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course aim:.*target=true",
+      "timeout_seconds": 120,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "o"
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=5 fatigue_cost=7.8",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-return-hit.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=5 action=-1",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 I4 endpoint settled: simulationSinceDebit=",
+      "after_start": true,
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "i4-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_saved_pairs": {
+    "reference": 6,
+    "resume": 4
+  },
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 block begin: actor=dynamic:player:0000000000000001 group=onehandblockidle",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=5 fatigue_cost=7.8",
+    "M15 I4 pause checked: transition=1 simulationUnchanged=true"
+  ],
+  "forbidden_log": [
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4 ",
+    "M15 melee miss committed: actor=dynamic:player:0000000000000001 id=4 "
+  ],
+  "source_snapshot_index": 4,
+  "endpoint": "After return5, observe >=4 simulation seconds since actual Fatigue debit and fullFatigue before finalF5. Native knockback must be empty; wall-clock sleep is not a settling proof."
+}
