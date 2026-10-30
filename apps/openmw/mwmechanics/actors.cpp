@@ -2044,7 +2044,13 @@ namespace MWMechanics
                 // Play dying words
                 // Note: It's not known whether the soundgen tags scream, roar, and moan are reliable
                 // for NPCs since some of the npc death animation files are missing them.
-                if (actor.getPtr().getType() != ESM::REC_NPC_4 && actor.getPtr().getType() != ESM::REC_CREA4)
+                // The native Player is projected through a TES3 NPC facade.
+                // It has no Morrowind "hit" dialogue, just like native NPCs.
+                MWBase::World* const world = MWBase::Environment::get().getWorld();
+                const bool nativePlayer = actor.getPtr() == getPlayer()
+                    && world->getGameProfile() == ESM::GameProfile::Oblivion;
+                if (!nativePlayer && actor.getPtr().getType() != ESM::REC_NPC_4
+                    && actor.getPtr().getType() != ESM::REC_CREA4)
                     MWBase::Environment::get().getDialogueManager()->say(
                         actor.getPtr(), ESM::RefId::stringRefId("hit"));
 

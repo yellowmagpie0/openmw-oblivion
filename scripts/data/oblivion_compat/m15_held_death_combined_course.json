@@ -295,7 +295,8 @@
   "forbidden_log": [
     "M15 melee miss committed:",
     "ERROR: AddressSanitizer",
-    "runtime error:"
+    "runtime error:",
+    "Error in frame:"
   ],
   "resume_actions": [
     {
