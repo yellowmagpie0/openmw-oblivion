@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "expected_power_fatigue_cost": 46.0,
+    "animation_family": "twohand",
+    "target_health": 300,
+    "name": "Player claymore windup interrupted by incoming NPC standing power",
+    "course_window": "ordinary",
+    "base_block": 100,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_attacker_recoil": false,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 1
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "scope": "I4/D2 actual attacking Player claymore2 wears positive0.125 to0; retained unequipped item and cleared body/FP ownership. Exact fresh broken-source continuation, explicit unarmed3 return and full resources. NormalFP/SANTP, fullS4 incomplete.",
+  "weapon_break": true,
+  "initial_player_weapon_condition": 0.125,
+  "current_source_sha256": "e244884c41750e5c15c021b9cf20c2de670732ca8eacf283b781f5dcae5b89cd",
+  "source_mode": "Current actual reaction setup F5; only low positive weapon condition and restrained opponent declared.",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-alive.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=2 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-contact.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "M15 reaction endpoint: settled=true"
+  ],
+  "reference_expected_log": [
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 "
+  ],
+  "forbidden_log": [
+    "M15 melee selection: actor=content:oblivion.esm:01fc43",
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43",
+    "M15 melee miss committed:",
+    "ERROR: AddressSanitizer",
+    "runtime error:"
+  ],
+  "resume_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-restored.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-unarmed-return.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "break-return-settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_expected_log": [
+    "M15 reaction endpoint: settled=true",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 "
+  ],
+  "protocol": "Producer actual F5 before ordinary2; actual wear reaches0, native unequip/cancel, released input and full resources saved. Fresh run uses exact settled actual F5 without rewrite, resaves clear broken state, selects only explicit unarmed3 and settles. Compare fresh broken baseline ownership/resources with producer settled endpoint; return separately verified, no matched uninterrupted return-trajectory claim. Historical defensive NI5 break course retains original provenance.",
+  "expected_unarmed_fatigue_cost": 7
+}
