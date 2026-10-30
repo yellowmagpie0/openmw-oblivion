@@ -1,0 +1,613 @@
+{
+  "schema_version": 1,
+  "scope": "I4/R3 actual incoming NPC standing power cancels contact authority of pending Player claymore ordinary3; native passive visual continuation, exact active-reaction fresh continuation, natural recovery and explicit return4. Full S4 incomplete.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "expected_power_fatigue_cost": 46.0,
+    "animation_family": "twohand",
+    "target_health": 300,
+    "name": "Player claymore windup interrupted by incoming NPC standing power",
+    "course_window": "ordinary",
+    "base_block": 100,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_attacker_recoil": false,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 1
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "source_mode": "Actual current setup F5 from existing shared staged fixture; only initial equipment/stats/CSTY declared, no outcomes authored.",
+  "bootstrap_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "f",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 16000
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction camera: down=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": -6400
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-setup.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-baseline.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee frame: actor=content:oblivion.esm:01fc43 id=2 phase=0",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "poll_interval_seconds": 0.01
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-passive.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 16000
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction camera: down=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": -6400
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction resources: full=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-recovered.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4 action=-1",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-return.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 16000
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction camera: down=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": -6400
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction resources: full=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-recovered.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4 action=-1",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-return.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "M15 reaction setup: ready=true",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+    "M15 reaction endpoint: settled=true"
+  ],
+  "reference_expected_log": [
+    "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2"
+  ],
+  "forbidden_log": [
+    "M15 melee (?:hit|miss) committed: actor=dynamic:player:0000000000000001 id=3",
+    "M15 melee action: actor=dynamic:player:0000000000000001 id=5",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "SUMMARY: AddressSanitizer"
+  ],
+  "verification": "Reference5/fresh3 saved-live pairs each build; sourceexact, pending Player3 consumed into passive3 with contactfalse, only NPC2 then explicit Player4 hit. Compare active ownership/resources/equipment and scoped restart endpoint. Existing held-block Stagger proof retains original provenance; no broad builds if code/deps unchanged.",
+  "current_source_sha256": "2438d164321dcb4919dc746ec6681b435c5c48ca877230c1bab4e9b5b518a3e0",
+  "current_source_setup": "reaction-interruption-normal-setup-01; exact save/live and actual draw/camera; no combat outcomes",
+  "timing_preflight": "Attack text-key lookups are nil until groups load. Existing stock claymore speed .8 versus NPC sword1.2, NPC phase0 then Player press; actual passive3/contactfalse source and event order must prove overlap, not inferred timing.",
+  "opponent_completion": "Existing recoil-aware script restrains after one debit; native NPC2 playback cleared after accepted contact. Require Player recovery, actual StopCombat, no extra NPC contact and empty final owners; no finished-log wait.",
+  "startup_deadline_seconds": 600,
+  "camera_policy": "Finite normal mouse motions at pinned sensitivity .05: observe pitch>=1.4 after down motion before raising by6400 units; require fresh actual target ray/visibility/range. No held look-key release overshoot, no camera setters. Existing normal evidence remains valid.",
+  "camera_preflight_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 16000
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction camera: down=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": -6400
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "after_start": true,
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "reaction-camera.png",
+      "minimum_entropy": 0.03
+    }
+  ]
+}
