@@ -27081,8 +27081,11 @@ TEST(OblivionWorldTest, LaterSelectedShieldWearMergesBreakAndPreservesEarlierSou
             const auto base = ESM::FormKey::content("Oblivion.esm", 7);
             ESM4::Npc npc{}; npc.mId = {7, 1}; npc.mFormKey = base;
             npc.mIsTES4 = true; npc.mData.health = 100;
+            // Native Player Health derives from Endurance, not authored health.
+            npc.mData.attribs.endurance = 50;
             store.getWritable<ESM4::Npc>().insertStatic(npc, base);
             ASSERT_TRUE(world.initializeOblivionPlayerActor());
+            ASSERT_EQ(world.getOblivionCombatService()->getPlayerValue(8), 100);
             victim = world.getPlayerPtr();
         }
         else
@@ -32136,6 +32139,57 @@ TEST(OblivionWorldTest, EquipmentBreakAtomicallyUsesNativeHeldGateFadeOrShieldRe
         }
         auto& inventory = owner.getClass().getInventoryStore(owner);
         EXPECT_FALSE(inventory.isEquipped(item)); EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, FatalEquipmentBreakCannotRepublishHeldOwnershipAfterLifeCancellation)
+{
+    for (unsigned view = 0; view != 3; ++view)
+    for (unsigned phase = 0; phase != 5; ++phase)
+    for (const bool shield : {false, true})
+    {
+        SCOPED_TRACE(view);
+        SCOPED_TRACE(phase);
+        SCOPED_TRACE(shield);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const bool player = view != 0, firstActive = view == 2;
+        const auto victim = player ? fixture.mPlayer : fixture.mAttacker;
+        const auto attacker = player ? fixture.mAttacker : fixture.mPlayer;
+        const auto actor = player ? fixture.mPlayerKey : victim.getCellRef().getFormKey();
+        const auto item = installHeldBreakItem(fixture, victim, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto resources = prepareHeldEquipmentTestState(service, actor, player, firstActive, phase);
+        const auto id = world.beginOblivionPhysicalAction(attacker);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(victim, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas deltas{0, -1000, 0};
+        deltas.mConditionChanges.push_back(change);
+        deltas.mVictimHeldEquipment = resources;
+        const auto before = fixture.snapshot();
+        auto plan = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        ASSERT_TRUE(plan->commit());
+        EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        EXPECT_FALSE(victim.getClass().getInventoryStore(victim).isEquipped(item));
+        EXPECT_EQ(service.findActorLife(actor)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_EQ(service.getProcessAction(actor), -1);
+        // Equipment release is staged before life publication. It must not
+        // resurrect either view's held cache after fatal cancellation.
+        EXPECT_EQ(service.findMeleeState(actor), nullptr);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto death = service.takeNextDeathEvent();
+        ASSERT_TRUE(death);
+        EXPECT_EQ(death->mActor, actor);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        const auto after = fixture.snapshot();
+        EXPECT_FALSE(after.mNativeMeleeStates.contains(actor));
+        EXPECT_TRUE(after.mPhysicalActions.mPending.empty());
+        EXPECT_TRUE(after.mPhysicalActionOwners.empty());
         service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
         EXPECT_EQ(fixture.snapshot().serializeBinary(), after.serializeBinary());
     }

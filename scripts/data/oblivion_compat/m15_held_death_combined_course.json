@@ -1,0 +1,552 @@
+{
+  "schema_version": 1,
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "expected_power_fatigue_cost": 46.0,
+    "animation_family": "twohand",
+    "target_health": 300,
+    "name": "Player claymore windup interrupted by incoming NPC standing power",
+    "course_window": "ordinary",
+    "base_block": 100,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_attacker_recoil": false,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 1
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "death_interruption": true,
+  "controller_menus": true,
+  "declared_player_initial_health": 1,
+  "scope": "Combined I4 held-block death and defensive break, actual normal prompt reload/release, attacking break and unarmed return, exact active-held fresh continuation normalFP/SANTP. FullS4 incomplete.",
+  "held_death_course": true,
+  "initial_player_weapon_condition": 0.125,
+  "current_source_sha256": "216612c9cef8b8b003257af81fd53c0d69a1daab34cb289afee27b0adb8e9990",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=twohandblockidle",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-dead.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-prompt.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Tab",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-focused-yes.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Return",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"load-complete\".*\"event\":\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=false finished=false health=1",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-released.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=2 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-broken.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 helddeath endpoint: debits=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+    "M15 death observer: dead=true",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+    "M15 helddeath item: base=FormId:0x101c6cd count=1 condition=0 equipped=false dead=true"
+  ],
+  "reference_expected_log": [
+    "M15 block begin: actor=dynamic:player:0000000000000001 group=twohandblockidle"
+  ],
+  "forbidden_log": [
+    "M15 melee miss committed:",
+    "ERROR: AddressSanitizer",
+    "runtime error:"
+  ],
+  "resume_actions": [
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-restored-block.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-dead.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-prompt.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Tab",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-focused-yes.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "Return",
+      "hold_seconds": 0.12,
+      "pause_seconds": 0.12
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"load-complete\".*\"event\":\"load-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 death observer: dead=false finished=false health=1",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-released.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=2 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-broken.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction endpoint: settled=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 helddeath endpoint: debits=2",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 600,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "held-death-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_expected_log": [
+    "M15 native death callback:.*actor=dynamic:player:0000000000000001",
+    "M15 death observer: dead=true",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+    "M15 helddeath item: base=FormId:0x101c6cd count=1 condition=0 equipped=false dead=true"
+  ],
+  "protocol": "Initial living Health1/positiveclaymore0.125 only. Actual B and NPC power2 cause blocked fatal contact/defensivebreak, then B release and normal death-prompt Tab/Return. Reference actual F5 held source must reload wholly. Fresh uses that exact source with actual B held before load, no new held begin or firstF5; same normal prompt reloads input source. Then natural release, PC2 breaks restored weapon, PC3 returns unarmed; full resources. No authored broken/dead outcomes or dead-save bypass.",
+  "block_audio_assay": {
+    "path": "scripts/data/oblivion_compat/m15_blade_hand_block_mixture_assay.json",
+    "sha256": "72422516ba27ebf930e737387059f9bc670f0f9bee5d823cbda4394fdfe98692",
+    "expected_clusters": 1,
+    "scope": "Actual Blade+Hand voices; stockcrossbank assay with unchanged0.75threshold/960mixerperiod. Preserve originalwrongBlade-onlyanalysis and reinspectraw."
+  },
+  "source_mode": {
+    "actual_seed_f5": {
+      "path": "build/oblivion-compat/m15/S4/reaction-interruption-work-01/fixture-02/input.omwsave",
+      "sha256": "2438d164321dcb4919dc746ec6681b435c5c48ca877230c1bab4e9b5b518a3e0"
+    },
+    "native_schema": 76,
+    "writer": "scripts/tes4_runtime_state.py::write_save",
+    "mutations": [
+      "Native Player values[8][3]0->-79; matching player.actor_values.health.current80->1; base80/lifecycleAlive unchanged.",
+      "Existing equipped stock claymore condition168->positive0.125; count1/charge-1/equipped65536 unchanged."
+    ],
+    "procedure": "Load the actual seed F5, deepcopy native state, apply only these three declared fields, write_save preserving external records, and require exact reinspection plus current_source_sha256. No block, contact, broken-item or death outcome authored."
+  }
+}

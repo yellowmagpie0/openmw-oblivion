@@ -3905,6 +3905,16 @@ namespace MWMechanics
                 receiving->validate();
             }
         }
+        if (receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive)
+        {
+            // Life publication cancels melee ownership. Equipment preparation
+            // may already have staged a held release; discard that playback
+            // before committing the wear and unequip consequences.
+            reactionStates.erase(victimKey);
+            reactionClocks.erase(victimKey);
+            if (receiving->mProcessAction)
+                receiving->mProcessAction = -1;
+        }
         prepareView(attacker, attacking, findActorLife(attackerKey), attackerView);
         if (receiving)
             prepareView(victim, *receiving, &*receivingLife, victimView);

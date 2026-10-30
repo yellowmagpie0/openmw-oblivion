@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "assets": [
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_01.wav",
+      "sha256": "83dcc5a411c163a62bd21f8d9641ac877785b1af5541a58f8e97335863d44642"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_02.wav",
+      "sha256": "e17d88b57f6a2a8e453582028cd1cfd66cde9f174b5dd9ed5407d70f3fd0b269"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/block-sound-oracle-01/assets/wpn_block_blade_03.wav",
+      "sha256": "11d67d495c654ac0dadd771e0dc86632b0c6f7ef181e71489bbda3d33c21806d"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/lower-hand-recoil-work-01/assets/sound/fx/wpn/weaponblock/hand/wpn_block_hand_01.wav",
+      "sha256": "1a7f2b8ff37a127c911e363d5dc46b1db828f8b0e22080a16667d30de248e9f5"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/lower-hand-recoil-work-01/assets/sound/fx/wpn/weaponblock/hand/wpn_block_hand_02.wav",
+      "sha256": "e61d9b1ccc07e021ef4369d1fc8d6f9586ac016a021d2b4ca9e0174dbd7cc8d2"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/lower-hand-recoil-work-01/assets/sound/fx/wpn/weaponblock/hand/wpn_block_hand_03.wav",
+      "sha256": "c4138c8ad6e01b549ce2e4a6a23f96416348509dff44536d418115b29db60282"
+    }
+  ],
+  "sample_rate": 48000,
+  "channels": 2,
+  "analysis_rate": 12000,
+  "mixer_period_frames": 960,
+  "minimum_normalized_correlation": 0.75,
+  "cluster_gap_seconds": 1,
+  "asset_banks": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      3,
+      4,
+      5
+    ]
+  ]
+}

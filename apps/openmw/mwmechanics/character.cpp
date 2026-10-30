@@ -2562,6 +2562,11 @@ namespace MWMechanics
             interrupt();
         const bool hadEquippedState = mUpperBodyState != UpperBodyState::None;
         const bool equipmentChanged = weapon != mWeapon || weaponType != mWeaponType || !hadEquippedState;
+        // Construction seeds the type before the first native item binding.
+        // Binding that same item must retain a saved held block; later item
+        // and animation-family changes still withdraw the old block.
+        const bool initialEquipmentBinding = mWeapon.isEmpty() && !weapon.isEmpty()
+            && mWeaponType == weaponType;
         mWeapon = weapon;
         mWeaponType = weaponType;
         mUpperBodyState = UpperBodyState::WeaponEquipped;
@@ -2572,7 +2577,7 @@ namespace MWMechanics
         const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
         // Original5E5690 forces prefix0 for worn-shield groups27/28.
         const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
-        if ((equipmentChanged && hadEquippedState)
+        if ((equipmentChanged && hadEquippedState && !initialEquipmentBinding)
             || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
         {
             if (hasResidentHeld(service->findMeleeState(actor)))
