@@ -7332,7 +7332,7 @@ namespace MWWorld
         writer.endRecord(ESM::REC_ENAB);
 
         writer.startRecord(ESM::REC_CAM_);
-        writer.writeHNT("FIRS", isFirstPerson());
+        writer.writeHNT("FIRS", mRendering->getCamera()->getModeForSave() == MWRender::Camera::Mode::FirstPerson);
         writer.endRecord(ESM::REC_CAM_);
     }
 

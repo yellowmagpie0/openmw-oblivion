@@ -53,7 +53,11 @@ namespace MWRender
         void updateCamera(osg::Camera* cam);
 
         /// Reset to defaults
-        void reset() { setMode(Mode::FirstPerson); }
+        void reset()
+        {
+            mNativeRecoveryRestoreMode.reset();
+            setMode(Mode::FirstPerson);
+        }
 
         void rotateCameraToTrackingPtr();
 
@@ -99,6 +103,13 @@ namespace MWRender
 
         bool isVanityOrPreviewModeEnabled() const { return mMode == Mode::Vanity || mMode == Mode::Preview; }
         Mode getMode() const { return mMode; }
+        // A temporary recovery view must not replace the saved view preference.
+        Mode getModeForSave() const
+        {
+            return mMode == Mode::ThirdPerson && mNativeRecoveryRestoreMode ? *mNativeRecoveryRestoreMode : mMode;
+        }
+        void setNativeRecoveryView(bool active);
+        void updateNativeRecoveryView();
         std::optional<Mode> getQueuedMode() const { return mQueuedMode; }
         void setMode(Mode mode, bool force = true);
 
@@ -130,6 +141,7 @@ namespace MWRender
         bool mFirstPersonView;
 
         Mode mMode;
+        std::optional<Mode> mNativeRecoveryRestoreMode;
         std::optional<Mode> mQueuedMode;
         bool mVanityAllowed;
         bool mDeferredRotationAllowed;

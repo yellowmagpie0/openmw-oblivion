@@ -424,16 +424,12 @@
   },
   "fatigue_knockout": true,
   "disable_idle_vanity": true,
-  "camera_policy": "Normal third-person toggle; disable only automatic idle vanity through the existing control switch during this declared long low-regeneration course. No camera teleport or gameplay outcome setters.",
+  "camera_policy": "Original Player FP knockout temporarily uses TP body view, then automatically restores FP after GetUp. Existing third-person preference stays TP. Actual stable Player-ID render ray and on-screen body required before down captures; save CAM/FIRS retains preferred view. Idle vanity alone disabled. Require2consecutive visible-body observer samples before capture.",
   "observer_execution_preflight": {
-    "path": "build/oblivion-compat/m15/S4/held-fatigue-ko-work-01/check-observer.lua",
-    "sha256": "ec6058539eddee0f66a0dbf188e0003a130f4df19d642c6f2440a15a6f8159a2"
+    "path": "build/oblivion-compat/m15/S4/player-ko-camera-work-01/check-observer.lua",
+    "sha256": "5080df88b764ae878c6bf57b7ce2e56354c1037bb6ee31eb16e50d653ba8bb8b"
   },
   "ko_camera_actions": [
-    {
-      "type": "key_down",
-      "value": "b"
-    },
     {
       "type": "wait_log",
       "pattern": "Applied TES4 runtime state:",
@@ -445,18 +441,10 @@
       "name": "OpenMW"
     },
     {
-      "type": "key_down",
-      "value": "b"
-    },
-    {
       "type": "wait_log",
-      "pattern": "M15 KO state: fatigue=-",
-      "timeout_seconds": 60,
+      "pattern": "M15 KO body camera: ready=true mode=2",
+      "timeout_seconds": 30,
       "abort_on_failure": true
-    },
-    {
-      "type": "sleep",
-      "seconds": 2
     },
     {
       "type": "key_held",
@@ -477,7 +465,6 @@
       "minimum_entropy": 0.03
     }
   ],
-  "endpoint_settle_seconds_after_return_animation": 1.1,
   "protocol": "Space starts real stationary combat; pause120GameModecallbacks after first spend, release, restrain after second spend below100. Existing100%standing-power style. No authored result. FirstKO F5 before second contact; secondKO F5; natural recovery/reblock/release/ordinaryPlayer4 return; inspect actual endpoint physics.",
   "source_mode": {
     "previous_course": "dc279e9ffc3746226f5061716a904b0dd3cb170d:scripts/data/oblivion_compat/m15_held_fatigue_knockout_course.json",
@@ -518,6 +505,13 @@
       "abort_on_failure": true
     }
   ],
-  "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts.",
-  "repeated_fatigue_knockout": true
+  "endpoint_policy": "Wait120 read-only observer samples after return animation stops, then require actual physical impulse0 and inactive ownership in saved/live state. This replaces separate no-input expiry-tail processes for this updated course. Return contact still spends only available positive Fatigue below its9.2 cost.",
+  "repeated_fatigue_knockout": true,
+  "native_recovery_camera": true,
+  "endpoint_settle_observer_samples": 120,
+  "original_view_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Isolated original-game console ModAV Fatigue stimulus; FP0/raw0 ->TP1/raw4/3 ->FP0/raw0. Not normal-input melee acceptance.",
+    "evidence": "build/oblivion-compat/m15/S4/player-ko-camera-work-01/original-01/view-policy-verification.json"
+  }
 }

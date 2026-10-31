@@ -80,6 +80,7 @@
 #include "mwworld/class.hpp"
 #include "mwworld/datetimemanager.hpp"
 #include "mwworld/worldimp.hpp"
+#include "mwrender/camera.hpp"
 
 #include "mwrender/vismask.hpp"
 #include "mwrender/runtimeviewer.hpp"
@@ -264,6 +265,9 @@ bool OMW::Engine::frame(unsigned frameNumber, float& frametime)
             ScopedProfile<UserStatsType::LuaSyncUpdate> profile(frameStart, frameNumber, *timer, *stats);
             // Should be called after input manager update and before any change to the game world.
             // It applies to the game world queued changes from the previous frame.
+            // Native recovery may temporarily change FP to TP. Lua must see
+            // that mode before it configures this frame's camera placement.
+            mWorld->getCamera()->updateNativeRecoveryView();
             mLuaManager->synchronizedUpdate();
         }
 

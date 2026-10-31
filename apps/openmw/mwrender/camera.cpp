@@ -15,6 +15,7 @@
 #include "../mwworld/refdata.hpp"
 
 #include "../mwmechanics/movement.hpp"
+#include "../mwmechanics/creaturestats.hpp"
 
 #include "../mwphysics/raycasting.hpp"
 
@@ -310,6 +311,41 @@ namespace MWRender
     void Camera::toggleViewMode(bool force)
     {
         setMode(mFirstPersonView ? Mode::ThirdPerson : Mode::FirstPerson, force);
+    }
+
+    void Camera::updateNativeRecoveryView()
+    {
+        MWBase::World* world = MWBase::Environment::get().getWorld();
+        bool active = false;
+        if (world->getGameProfile() == ESM::GameProfile::Oblivion && !mTrackingPtr.isEmpty()
+            && mTrackingPtr == world->getPlayerPtr())
+        {
+            const auto& stats = mTrackingPtr.getClass().getCreatureStats(mTrackingPtr);
+            active = !stats.isDead() && stats.getKnockedDown();
+        }
+        setNativeRecoveryView(active);
+    }
+
+    void Camera::setNativeRecoveryView(bool active)
+    {
+        if (active)
+        {
+            // Original Player Fatigue knockout temporarily changes FP to TP;
+            // its recovery restores FP. Keep this separate from user view state.
+            if (mMode == Mode::FirstPerson)
+            {
+                if (!mNativeRecoveryRestoreMode)
+                    mNativeRecoveryRestoreMode = mMode;
+                setMode(Mode::ThirdPerson, true);
+            }
+        }
+        else if (mNativeRecoveryRestoreMode)
+        {
+            const auto restore = *mNativeRecoveryRestoreMode;
+            mNativeRecoveryRestoreMode.reset();
+            if (mMode == Mode::ThirdPerson)
+                setMode(restore, true);
+        }
     }
 
     bool Camera::toggleVanityMode(bool enable)

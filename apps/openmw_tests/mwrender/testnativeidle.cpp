@@ -9,6 +9,7 @@
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include "apps/openmw/mwmechanics/creaturestats.hpp"
 #include "apps/openmw/mwrender/animation.hpp"
+#include "apps/openmw/mwrender/camera.hpp"
 #include <components/esm4/loadidle.hpp>
 #include <components/esm4/loadnpc.hpp>
 #include <components/esm4/loadrefr.hpp>
@@ -22,6 +23,7 @@
 #include <components/vfs/filesystemarchive.hpp>
 #include <gtest/gtest.h>
 #include <osg/FrameStamp>
+#include <osg/Camera>
 #include <osgUtil/UpdateVisitor>
 #include <fstream>
 #include <future>
@@ -30,6 +32,52 @@
 #include <components/esm4/loadcell.hpp>
 #include <components/files/hash.hpp>
 #include "apps/openmw/mwworld/player.hpp"
+
+TEST(NativeRecoveryCameraTest, FirstPersonKnockoutShowsBodyAndRestoresSavedPreference)
+{
+    osg::ref_ptr<osg::Camera> view = new osg::Camera;
+    MWRender::Camera camera(view);
+    camera.setNativeRecoveryView(true);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::ThirdPerson);
+    EXPECT_EQ(camera.getModeForSave(), MWRender::Camera::Mode::FirstPerson);
+    camera.setNativeRecoveryView(true);
+    camera.setNativeRecoveryView(false);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::FirstPerson);
+    EXPECT_EQ(camera.getModeForSave(), MWRender::Camera::Mode::FirstPerson);
+}
+
+TEST(NativeRecoveryCameraTest, ThirdPersonPreferenceAndExplicitStaticCameraSurviveRecovery)
+{
+    osg::ref_ptr<osg::Camera> view = new osg::Camera;
+    MWRender::Camera camera(view);
+    camera.setMode(MWRender::Camera::Mode::ThirdPerson);
+    camera.setNativeRecoveryView(true);
+    EXPECT_EQ(camera.getModeForSave(), MWRender::Camera::Mode::ThirdPerson);
+    camera.setNativeRecoveryView(false);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::ThirdPerson);
+    camera.setMode(MWRender::Camera::Mode::FirstPerson);
+    camera.setNativeRecoveryView(true);
+    camera.setMode(MWRender::Camera::Mode::Static);
+    camera.setNativeRecoveryView(false);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::Static);
+}
+
+TEST(NativeRecoveryCameraTest, ResetDiscardsOutgoingRecoveryAndFreshSavedViewReconstructsIt)
+{
+    osg::ref_ptr<osg::Camera> view = new osg::Camera;
+    MWRender::Camera camera(view);
+    camera.setNativeRecoveryView(true);
+    const auto saved = camera.getModeForSave();
+    camera.reset();
+    camera.setMode(MWRender::Camera::Mode::ThirdPerson);
+    camera.setNativeRecoveryView(false);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::ThirdPerson);
+    camera.setMode(saved);
+    camera.setNativeRecoveryView(true);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::ThirdPerson);
+    camera.setNativeRecoveryView(false);
+    EXPECT_EQ(camera.getMode(), MWRender::Camera::Mode::FirstPerson);
+}
 
 namespace
 {
