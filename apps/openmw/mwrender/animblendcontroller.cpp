@@ -298,8 +298,9 @@ namespace MWRender
         SceneUtil::NodeCallback<BoneAnimBlendController, osgAnimation::Bone*>::traverse(node, nv);
     }
 
-    NativeSequenceController::NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest)
-        : mTracks(std::move(tracks)), mThreshold(threshold), mOnlyHighest(onlyHighest)
+    NativeSequenceController::NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest,
+        osg::Vec3f accumulate)
+        : mTracks(std::move(tracks)), mThreshold(threshold), mOnlyHighest(onlyHighest), mAccumulate(accumulate)
     {
         for (const auto& track : mTracks)
             if ((!track.mController && !track.mPose) || (track.mController && track.mPose) || !track.mFrame)
@@ -314,7 +315,7 @@ namespace MWRender
 
     NativeSequenceController::NativeSequenceController(const NativeSequenceController& other, const osg::CopyOp& copy)
         : SceneUtil::NodeCallback<NativeSequenceController, NifOsg::MatrixTransform*>(other, copy)
-        , mThreshold(other.mThreshold), mOnlyHighest(other.mOnlyHighest)
+        , mThreshold(other.mThreshold), mOnlyHighest(other.mOnlyHighest), mAccumulate(other.mAccumulate)
     {
         for (const auto& track : other.mTracks)
         {
@@ -379,6 +380,12 @@ namespace MWRender
             node->setTranslation(osg::Vec3f(value[0], value[1], value[2]));
         }
         if (pose.mScale) node->setScale(*pose.mScale);
+        // The ordinary reset callback runs before this projection. Preserve
+        // its accumulated-axis policy after the native blend overwrites it.
+        auto translation = node->getControllerTransform().mTranslation;
+        for (unsigned axis = 0; axis < 3; ++axis)
+            if (mAccumulate[axis] != 0) translation[axis] = 0;
+        node->setTranslation(translation);
         traverse(node, visitor);
     }
 

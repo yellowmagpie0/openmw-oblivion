@@ -1860,7 +1860,7 @@ namespace
     {
         using Layer = MWRender::Animation::NativeSequenceLayer;
         std::unique_ptr<MWRender::Animation::PreparedNativeSequenceLayers> prepare(
-            IdleAnimation& actor, std::string_view path, float time = .5f)
+            IdleAnimation& actor, std::string_view path, float time = .5f, bool accumulateRootMotion = false)
         {
             const auto resource = actor.acquireNativeIdleResource(path);
             if (!resource) throw std::runtime_error("projection fixture resource acquisition failed");
@@ -1868,6 +1868,7 @@ namespace
             auto batch = actor.prepareNativeIdleSources(resources);
             if (!batch) throw std::runtime_error("projection fixture source preparation failed");
             Layer layer; layer.mGroup = batch->group(0); layer.mTime = time; layer.mExposeSampleTime = true;
+            layer.mAccumulateRootMotion = accumulateRootMotion;
             return actor.prepareNativeSequenceLayers(std::span(&layer, 1), std::move(batch));
         }
         void update(IdleAnimation& actor)
@@ -2018,6 +2019,26 @@ TEST_F(NativeIdleProjectionTest, OrdinaryAndAdditionalCallbacksKeepTheirOrderAcr
     auto release = actor->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
     EXPECT_EQ(actor->mBuilds, builds); EXPECT_EQ(actor->mBone->getUpdateCallback(), original);
     update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0); // ordinary root accumulation remains active
+}
+
+TEST_F(NativeIdleProjectionTest, StandingMeleeProjectionDoesNotReapplyAccumulatedRootTranslation)
+{
+    osg::ref_ptr<CallbackOrderAnimation> actor = new CallbackOrderAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources);
+    actor->ordinary();
+    auto prepared = prepare(*actor, "one/same.kf", .5f, true);
+    ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit());
+    update(*actor); ASSERT_FALSE(actor->mObserve->mSamples.empty());
+    EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0);
+    // Captured transition poses must agree with the displayed root, so
+    // restoring a reaction cannot reintroduce the extracted displacement.
+    auto pose = actor->captureNativeSequencePose(actor->projectedGroup(), .5f);
+    ASSERT_TRUE(pose); ASSERT_FALSE(pose->mTracks.empty());
+    EXPECT_EQ(pose->mTracks.front().mTranslation.at(0), 0);
+    prepared = prepare(*actor, "one/same.kf", .5f, false);
+    ASSERT_TRUE(prepared); ASSERT_TRUE(prepared->commit());
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 9);
+    auto release = actor->prepareNativeSequenceLayers({}); ASSERT_TRUE(release); ASSERT_TRUE(release->commit());
+    update(*actor); EXPECT_FLOAT_EQ(actor->mObserve->mSamples.back(), 0);
 }
 
 TEST_F(NativeIdleProjectionTest, NativeFirstSequenceRootRemainsDistinctFromOrdinaryAccumulation)

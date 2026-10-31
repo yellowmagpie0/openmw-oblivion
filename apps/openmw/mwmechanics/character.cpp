@@ -1851,6 +1851,7 @@ namespace MWMechanics
                     strike->mRetirement ? retirementEase(*strike->mRetirement)
                         : strike->mSequenceTiming ? activationEase(*strike->mSequenceTiming) : 1.f);
             }
+            for (auto& layer : layers) layer.mAccumulateRootMotion = true;
             return layers;
         };
         auto bodyLayers = project(*mAnimation, next.mReaction, next.mRetiringSequences,

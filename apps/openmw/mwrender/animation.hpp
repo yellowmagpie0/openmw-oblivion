@@ -156,6 +156,9 @@ namespace MWRender
             bool mExposeSampleTime = false;
             // Authored asset locals supply channels absent from recovery clips.
             std::shared_ptr<const ESM4::RuntimeMeleePoseSnapshot> mDefaultPose = nullptr;
+            // Standing melee event tracks already send accumulated motion to
+            // actor physics. Do not also apply it as a skeleton-local offset.
+            bool mAccumulateRootMotion = false;
         };
 
         struct NativeReactionResources

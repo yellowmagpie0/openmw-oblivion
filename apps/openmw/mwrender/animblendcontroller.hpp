@@ -44,7 +44,8 @@ namespace MWRender
             std::optional<ESM4::SequenceBlendPose> mDefaults = std::nullopt;
         };
         NativeSequenceController() = default;
-        NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest);
+        NativeSequenceController(std::vector<Track> tracks, float threshold, bool onlyHighest,
+            osg::Vec3f accumulate = osg::Vec3f());
         NativeSequenceController(const NativeSequenceController& other, const osg::CopyOp& copy);
         META_Object(MWRender, NativeSequenceController)
         void operator()(NifOsg::MatrixTransform* node, osg::NodeVisitor* visitor);
@@ -53,6 +54,7 @@ namespace MWRender
         std::vector<Track> mTracks;
         float mThreshold = 0;
         bool mOnlyHighest = false;
+        osg::Vec3f mAccumulate;
     };
 
     typedef float (*EasingFn)(float);

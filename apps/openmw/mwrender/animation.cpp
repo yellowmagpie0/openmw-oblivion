@@ -2484,7 +2484,8 @@ namespace MWRender
             same = layers[i].mGroup == mNativeSequenceLayers[i].mGroup
                 && layers[i].mBlendMask == mNativeSequenceLayers[i].mBlendMask
                 && layers[i].mPoseSnapshot == mNativeSequenceLayers[i].mPoseSnapshot
-                && layers[i].mDefaultPose == mNativeSequenceLayers[i].mDefaultPose;
+                && layers[i].mDefaultPose == mNativeSequenceLayers[i].mDefaultPose
+                && layers[i].mAccumulateRootMotion == mNativeSequenceLayers[i].mAccumulateRootMotion;
         plan->mSame = same;
         if (same) return plan;
         auto& frames = plan->mFrames;
@@ -2570,7 +2571,10 @@ namespace MWRender
             node->getUserValue("nativeSequenceBlendOnlyHighest", highest);
             node->getUserValue("nativeSequenceBlendAmbiguous", ambiguous);
             if (ambiguous) return nullptr;
-            controllers.emplace_back(node, new NativeSequenceController(std::move(nodeTracks), threshold, highest));
+            const bool accumulated = node == mAccumRoot && std::any_of(layers.begin(), layers.end(),
+                [](const auto& layer) { return layer.mAccumulateRootMotion; });
+            controllers.emplace_back(node, new NativeSequenceController(std::move(nodeTracks), threshold, highest,
+                accumulated ? mAccumulate : osg::Vec3f()));
         }
         return plan;
     }
