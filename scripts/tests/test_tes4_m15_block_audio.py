@@ -155,3 +155,86 @@ class NativeBlockMixtureAudioTest(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("FileExistsError", result.stderr)
         self.assertEqual(output.read_text(), "historical failure\n")
+
+
+class NativeHitFingerprintAudioTest(unittest.TestCase):
+    """Independent analytic 44.1k sources and 48k capture, including controls."""
+    write = NativeBlockMixtureAudioTest.write
+
+    def setUp(self):
+        NativeBlockMixtureAudioTest.setUp(self)
+        import math
+        self.functions = []
+        assets = []
+        for index in range(3):
+            rng = random.Random(417 + index)
+            tones = [(rng.uniform(300, 4800), rng.uniform(0, 2 * math.pi)) for _ in range(12)]
+            def signal(t, tones=tones):
+                return sum(150 * math.sin(2 * math.pi * f * t + phase) for f, phase in tones)
+            self.functions.append(signal)
+            path = self.write(f"analytic-{index}.wav", [round(signal(i / 44100)) for i in range(17640)],
+                              rate=44100, channels=1)
+            assets.append(dict(path=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
+        self.fingerprint_recipe = dict(self.recipe, schema_version=3, assets=assets,
+                                       asset_banks=[[0], [1, 2]], asset_static_attenuation=[485, 661, 661])
+
+    def analytic_capture(self, events, *, envelope=False):
+        rng = random.Random(644)
+        signal = [rng.randrange(-2, 3) for _ in range(48000 * (2 * len(events) + 1))]
+        for event, (left, right, delay) in enumerate(events):
+            for source, offset in [(left, 0), (right, delay)]:
+                gain = 10 ** (-self.fingerprint_recipe['asset_static_attenuation'][source] / 2000)
+                for i in range(19200):
+                    # Analytic time-domain capture does not use template interpolation.
+                    scale = (2 if i < 7680 else .35) if envelope else 1
+                    at = (1 + 2 * event) * 48000 + offset + i
+                    signal[at] += round(self.functions[source](i / 48000) * gain * scale)
+        return self.write('analytic-capture.wav', signal)
+
+    def test_v3_independent_rates_both_orders_and_changing_level(self):
+        recipe = self.fingerprint_recipe
+        for events, envelope in [([(0, 1, 0)], True),
+                                 ([(0, 2, 960), (1, 0, 960)], False)]:
+            with self.subTest(events=events, envelope=envelope):
+                path = self.analytic_capture(events, envelope=envelope)
+                result = audio.analyse(path, recipe, len(events))
+                self.assertTrue(result['passed'], result['clusters'])
+                for cluster in result['clusters']:
+                    self.assertGreaterEqual(min(cluster['per_bank_energy_coverage']), .9)
+                    self.assertGreaterEqual(len(cluster['matched_sections_seconds']), 3)
+                self.assertFalse(audio.analyse(path, recipe, 0)['passed'], 'Audible replay must fail absence')
+
+    def test_v3_changing_relative_level_may_leave_insufficient_coverage(self):
+        # A discontinuous envelope on independently delayed clips changes the
+        # relative mixture inside fingerprint sections. Keep this limitation
+        # explicit: acceptance must fail rather than relax the 90% criterion.
+        path = self.analytic_capture([(0, 2, 960)], envelope=True)
+        self.assertFalse(audio.analyse(path, self.fingerprint_recipe, 1)['passed'])
+
+    def test_v3_single_bank_and_unrelated_sound_cannot_prove_mixture(self):
+        for events in [[(0, 0, 0)], [(1, 2, 960)], []]:
+            path = self.analytic_capture(events)
+            result = audio.analyse(path, self.fingerprint_recipe, 0)
+            self.assertTrue(result['passed'], result['clusters'])
+            self.assertFalse(audio.analyse(path, self.fingerprint_recipe, 1)['passed'])
+
+    def test_v3_inaudible_bank_cannot_be_skipped_as_silence(self):
+        path = self.analytic_capture([(0, 0, 0)])
+        for attenuation in [3000, 65535]:
+            recipe = dict(self.fingerprint_recipe, asset_static_attenuation=[0, attenuation, attenuation])
+            self.assertTrue(audio.analyse(path, recipe, 0)['passed'])
+
+    def test_v3_requires_whole_clip_energy_and_multiple_sections(self):
+        path = self.analytic_capture([(0, 1, 0)])
+        # Keep a recognizable 80ms excerpt; it cannot satisfy 90% energy/three sections.
+        values, _, _ = audio.pcm(path, mono=False)
+        values[48000 + 3840:] = 0
+        path = self.write('excerpt.wav', values[:, 0].astype(int).tolist())
+        self.assertTrue(audio.analyse(path, self.fingerprint_recipe, 0)['passed'])
+
+    def test_v3_gain_metadata_is_strict_and_legacy_schema_stays_strict(self):
+        for value in [[], [485, 661], [True, 661, 661], [-1, 661, 661], [485., 661, 661], [65536, 0, 0]]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                audio.templates(dict(self.fingerprint_recipe, asset_static_attenuation=value))
+        with self.assertRaises(ValueError):
+            audio.templates(dict(self.recipe, asset_static_attenuation=[0, 0, 0]))
