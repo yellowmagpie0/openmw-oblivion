@@ -1,10 +1,76 @@
 import copy
+import json
+from pathlib import Path
 import unittest
 
 from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
+from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def side_source(self):
+        return dict(player=dict(reference='player'),
+            physical_actions=dict(next=12, pending=[]), physical_action_owners=[], native_actor_ragdolls=[],
+            native_melee_states=[dict(actor='player', strike=dict(id=11, kind=5,
+                contact_committed=True, power_phase=1)),
+                dict(actor='target', reaction=dict(contact_id=11, kind=2, inactive=False))])
+
+    def test_applied_side_source_rejects_pending_or_mixed_ownership(self):
+        state = self.side_source()
+        self.assertEqual(applied_side_power_source(state, 'target')['stage'], 'applied-contact')
+        changes = [lambda s: s['physical_actions'].update(next=13),
+            lambda s: s['physical_actions']['pending'].append(11),
+            lambda s: s['physical_action_owners'].append(dict(id=11)),
+            lambda s: s['native_actor_ragdolls'].append(dict(actor='target')),
+            lambda s: s['native_melee_states'][0]['strike'].update(contact_committed=False),
+            lambda s: s['native_melee_states'][0]['strike'].update(power_phase=0),
+            lambda s: s['native_melee_states'][1]['reaction'].update(contact_id=9),
+            lambda s: s['native_melee_states'][1]['reaction'].update(inactive=True)]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.side_source()
+                change(state)
+                with self.assertRaises(ValueError):
+                    applied_side_power_source(state, 'target')
+
+    def right_setup(self):
+        root = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((root / 'oblivion_m15_combined_melee.json').read_text())
+        recipe = json.loads((root / 'm15_right_power_setup.json').read_text())
+        return manifest, recipe
+
+    def test_right_setup_preserves_gameplay_assertions_and_prior_course(self):
+        manifest, recipe = self.right_setup()
+        before = copy.deepcopy(manifest)
+        corrected = right_power_spacing_setup(manifest, recipe)
+        self.assertEqual(manifest, before)
+        for key in ['expected_log', 'forbidden_log']:
+            self.assertEqual(corrected[key], manifest[key])
+        left = next(i for i, a in enumerate(manifest['actions'])
+                    if a.get('name') == 'combined-left-power.png')
+        self.assertEqual(corrected['actions'][:left + 1], manifest['actions'][:left + 1])
+        right = next(i for i, a in enumerate(manifest['actions'])
+                     if a.get('pattern', '').endswith('group=onehandattackrightpower'))
+        corrected_right = next(i for i, a in enumerate(corrected['actions'])
+                     if a.get('pattern', '').endswith('group=onehandattackrightpower'))
+        tail = copy.deepcopy(manifest['actions'][right:])
+        self.assertEqual(tail[1], dict(type='mouse_move', x=-1608, y=0))
+        tail[1] = dict(type='mouse_move', x=recipe['windup_mouse_x'], y=0)
+        self.assertEqual(corrected['actions'][corrected_right:], tail)
+        patterns = [a.get('pattern', '') for a in corrected['actions'][left:corrected_right]]
+        self.assertIn('M15 course right spacing: retreated=true ready=true', patterns)
+
+    def test_invalid_right_setup_does_not_mutate_source(self):
+        manifest, recipe = self.right_setup()
+        for change in [dict(retreat_distance=float('nan')), dict(minimum_distance=150),
+                       dict(maximum_angle=10), dict(maximum_distance=105),
+                       dict(windup_mouse_x=-1608), dict(windup_mouse_x=True)]:
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                right_power_spacing_setup(manifest, {**recipe, **change})
+        corrected = right_power_spacing_setup(manifest, recipe)
+        with self.assertRaises(ValueError):
+            right_power_spacing_setup(corrected, recipe)
+
     def state(self):
         return dict(
             player=dict(reference='player'),

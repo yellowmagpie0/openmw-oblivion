@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "scope": "Shared stock Club Right-power fixture setup; normal input only, no gameplay outcome substitution.",
+  "weapon_family": "blunt",
+  "retreat_distance": 105,
+  "minimum_distance": 100,
+  "maximum_distance": 140,
+  "maximum_angle": 5,
+  "windup_mouse_x": 0,
+  "reason": "The prior close approach and fixed steering allowed Right animation displacement to leave the target off axis at contact. Retreat, re-aim, verify visible clear geometry and preserve that aim during windup."
+}
