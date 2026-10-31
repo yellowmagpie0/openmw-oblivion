@@ -39,5 +39,25 @@
       "timeout_seconds": 30,
       "abort_on_failure": true
     }
-  ]
+  ],
+  "joined_course": {
+    "scope": "First-person keyboard/mouse stock Club course; retain original saves and gameplay assertions. Normal/SAN runtime acceptance required separately.",
+    "right_capture_distance": 160,
+    "left_backstep_seconds": 0.3,
+    "captures": [
+      [
+        "combined-forward-power.png",
+        9
+      ],
+      [
+        "combined-left-power.png",
+        11
+      ],
+      [
+        "combined-right-power.png",
+        13
+      ]
+    ],
+    "mouse_radians_per_unit": 0.0001953125
+  }
 }

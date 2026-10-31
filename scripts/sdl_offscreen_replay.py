@@ -4,6 +4,7 @@ from pathlib import Path
 import hashlib
 import json
 import math
+import re
 import shlex
 import shutil
 import subprocess
@@ -69,6 +70,51 @@ def mouse_delta(value):
     return value
 
 
+def observed_motion_pattern(source):
+    if not isinstance(source, dict) or set(source) != {'path', 'pattern'}:
+        raise ValueError('Observed motion needs a log path and pattern')
+    if (not isinstance(source['path'], str) or not source['path']
+            or Path(source['path']).is_absolute() or '..' in Path(source['path']).parts):
+        raise ValueError('Observed motion needs a relative scenario log path')
+    pattern = re.compile(source['pattern'], re.MULTILINE)
+    if set(pattern.groupindex) != {'x', 'y'}:
+        raise ValueError('Observed motion needs named x/y integer groups')
+    return pattern
+
+
+def observed_mouse_motion(action, output):
+    """Resolve measured deltas into ordinary input; never write gameplay state.
+
+    Callers wait for a fresh observer sample before this action. Keep the
+    selected sample and byte offset in the receipt for later reinspection.
+    """
+    source = action['from_log']
+    if action['type'] != 'mouse_move':
+        raise ValueError('Observed motion needs a mouse action and a log pattern')
+    pattern = observed_motion_pattern(source)
+    path = (output / source['path']).resolve()
+    if not path.is_relative_to(output.resolve()):
+        raise ValueError('Observed motion log must be inside the scenario output')
+    with path.open('rb') as stream:
+        stream.seek(max(0, path.stat().st_size - 65536))
+        offset = stream.tell()
+        text = stream.read().decode('utf-8', errors='surrogateescape')
+    complete_end = text.rfind('\n')
+    matches = [match for match in pattern.finditer(text) if match.end() <= complete_end]
+    if not matches:
+        raise ValueError('No recent complete mouse observation')
+    match = matches[-1]
+    values = {}
+    for axis in ('x', 'y'):
+        raw = match[axis]
+        if not re.fullmatch(r'-?\d+', raw) or abs(int(raw)) > 8192:
+            raise ValueError('Observed mouse delta exceeds the bounded input step')
+        values[axis] = int(raw)
+    resolved = dict(action, **values)
+    return resolved, dict(path=str(path), sample=match[0],
+        byte_offset=offset + len(text[:match.start()].encode('utf-8', errors='surrogateescape')), **values)
+
+
 def mouse_button(value):
     if type(value) is not int or not 1 <= value <= 5:
         raise ValueError("Mouse button must be an SDL button from 1 through 5")
@@ -109,6 +155,8 @@ def validate(manifest):
         elif action["type"] == "mouse_move":
             mouse_delta(action.get("x"))
             mouse_delta(action.get("y"))
+            if 'from_log' in action:
+                observed_motion_pattern(action['from_log'])
         elif action["type"] in ("mouse_click", "mouse_down", "mouse_up"):
             mouse_button(action.get("button", 1))
             if action["type"] == "mouse_click":

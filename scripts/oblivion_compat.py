@@ -1342,8 +1342,13 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         return m15_session.snapshot(action)
     action_type = action.get("type")
     started = time.monotonic()
+    observed_motion = None
+    if action_type == 'mouse_move' and 'from_log' in action:
+        action, observed_motion = sdl_offscreen_replay.observed_mouse_motion(action, output)
     if offscreen_input is not None and action_type in sdl_offscreen_replay.INPUT_ACTIONS:
         result = offscreen_input.action(action)
+        if observed_motion is not None:
+            result['motion_from_log'] = observed_motion
         result["duration_seconds"] = round(time.monotonic() - started, 6)
         if action_type == "screenshot" and action.get("inspect", True):
             result["image_inspection"] = inspect_image(
@@ -2011,6 +2016,8 @@ def _run_action(action: dict[str, Any], *, environment: dict[str, str], output: 
         "duration_seconds": round(time.monotonic() - started, 6),
         "passed": completed.returncode == int(action.get("expected_exit", 0)),
     }
+    if observed_motion is not None:
+        result['motion_from_log'] = observed_motion
     if action_type == "screenshot" and result["passed"] and action.get("inspect", True):
         result["image_inspection"] = inspect_image(
             destination,

@@ -1284,6 +1284,22 @@ class OblivionCompatTests(unittest.TestCase):
                     output=output,
                 )
 
+    def test_observed_mouse_motion_delivers_normal_input_with_provenance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / 'process.log').write_text('motion x=-4 y=12\n')
+            action = dict(type='mouse_move', x=0, y=0, from_log=dict(path='process.log',
+                pattern=r'motion x=(?P<x>-?\d+) y=(?P<y>-?\d+)$'))
+            control = mock.Mock()
+            control.action.return_value = dict(type='mouse_move', passed=True)
+            result = MODULE._run_action(action, environment={}, output=output, offscreen_input=control)
+            sent = control.action.call_args.args[0]
+            self.assertEqual((sent['x'], sent['y']), (-4, 12))
+            self.assertEqual(result['motion_from_log']['sample'], 'motion x=-4 y=12')
+            with mock.patch.object(MODULE.shutil, 'which', return_value='/bin/true'):
+                result = MODULE._run_action(action, environment={}, output=output)
+            self.assertEqual(result['command'], ['/bin/true', 'mousemove_relative', '--', '-4', '12'])
+
     def test_normal_input_actions_have_deterministic_xdotool_commands(self):
         cases = [
             ({"type": "key_down", "value": "w"}, ["/bin/true", "keydown", "w"]),

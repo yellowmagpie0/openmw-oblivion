@@ -172,3 +172,89 @@ def approach_witness(log, *, wall_x, wall_y, close_range):
         raise ValueError("Planned approach lacks ordered wall/clear-power reachability witnesses")
     return dict(wall_lane_line=reached[0], wall_along_line=reached[1],
                 blocked_wall_line=reached[2], clear_power_line=reached[3])
+
+
+def joined_power_capture_setup(manifest, recipe, probe_source):
+    """Use observed geometry to frame the existing saves with normal mouse input."""
+    distance, backstep, step = (recipe[k] for k in
+        ('right_capture_distance', 'left_backstep_seconds', 'mouse_radians_per_unit'))
+    if (type(distance) not in (int, float) or not math.isfinite(distance) or not 140 <= distance <= 180
+            or type(backstep) not in (int, float) or not math.isfinite(backstep) or not 0 < backstep <= .5
+            or step != 1 / 5120):
+        raise ValueError('Invalid joined-course camera input profile')
+    if recipe['captures'] != [['combined-forward-power.png', 9], ['combined-left-power.png', 11],
+                               ['combined-right-power.png', 13]]:
+        raise ValueError('Invalid joined-course capture identities')
+    result = copy.deepcopy(manifest)
+    actions = result['actions']
+    settings = next(f['content'] for f in result['files'] if f['path'] == 'config/settings.cfg')
+    if 'camera sensitivity = 0.05' not in settings:
+        raise ValueError('Measured mouse profile requires the declared sensitivity')
+    result['files'].append(dict(path='test-data/scripts/m15_forward_capture_guard.lua',
+        content=probe_source.replace('{', '{{').replace('}', '}}')))
+    def wait(pattern, seconds=30, fresh=True):
+        return dict(type='wait_log', pattern=pattern, after_start=fresh,
+            timeout_seconds=seconds, abort_on_failure=True)
+    def key(kind, value):
+        return dict(type=kind, value=value)
+    def mouse(y=0):
+        return dict(type='mouse_move', x=0, y=y)
+    def measured(mode):
+        pattern = 'M15 joined motion ' + mode + r': x=(?P<x>-?\d+) y=(?P<y>-?\d+)$'
+        return [mouse(), mouse(), wait('M15 joined motion ' + mode + ':'),
+            dict(type='mouse_move', x=0, y=0,
+                from_log=dict(path='process.log', pattern=pattern))]
+    # Restore reach before the existing minimum-spacing correction.
+    left = next(i for i, a in enumerate(actions) if a.get('name') == 'combined-left-power.png')
+    retreat = next(i for i in range(left, len(actions)) if actions[i] == key('key_down', 's'))
+    actions[retreat:retreat] = [key('key_down', 'w'),
+        wait('M15 course power range:.*close110=true', 180), key('key_up', 'w')]
+    # Correct the actual stopped heading, including slow-frame key-up latency.
+    ready = next(i for i in range(retreat, len(actions))
+        if actions[i].get('pattern') == 'M15 course right spacing: retreated=true ready=true')
+    actions[ready:ready] = measured('aim')
+    observer = next(f for f in result['files'] if f['path'].endswith('m15_course_observer.lua'))
+    anchor = 'local previousFatigue = nil\n'
+    if observer['content'].count(anchor) != 1:
+        raise ValueError('Missing unique shared observer import anchor')
+    observer['content'] = observer['content'].replace(anchor,
+        anchor + "local joinedCameraProbe=require('scripts.m15_forward_capture_guard')\n")
+    anchor = "   print('M15 course return: lane='"
+    if observer['content'].count(anchor) != 1:
+        raise ValueError('Missing unique shared camera observer anchor')
+    witness = (f"   print('M15 joined camera spacing: ready=' .. tostring(distance>{distance}"
+        " and angle<10 and not low.hit and not high.hit))\n"
+        "   local joinedFirst=camera.getMode()==camera.MODE.FirstPerson\n"
+        "   print('M15 joined camera: first=' .. tostring(joinedFirst) .. ' visible=' .. "
+        "tostring(joinedFirst and joinedCameraProbe.visible(target,screen)))\n"
+        "   print('M15 joined forward: applied=' .. tostring(Actor.isParalyzed(target)))\n"
+        "   for _,mode in ipairs({{'frame','upper','aim','level'}}) do\n"
+        f"    local mx,my=joinedCameraProbe.motion(target,mode,{step})\n"
+        "    print(string.format('M15 joined motion %s: x=%d y=%d',mode,mx,my))\n"
+        "   end\n")
+    observer['content'] = observer['content'].replace(anchor, witness + anchor)
+    for capture, cause in recipe['captures']:
+        matches = [i for i, a in enumerate(actions) if a.get('name') == capture]
+        if not matches:
+            continue
+        i = matches[0]
+        if len(matches) != 1 or actions[i-2].get('value') != 'F5':
+            raise ValueError('Capture no longer follows its original save')
+        before = []
+        if cause == 11:
+            before.append(dict(type='key_held', value='s', hold_seconds=backstep))
+        if cause == 13:
+            before += [key('key_down', 's'), wait('M15 joined camera spacing: ready=true'),
+                key('key_up', 's')]
+        if cause != 11:
+            before.append(wait('M15 melee finished: actor=dynamic:player:0000000000000001 id='
+                + str(cause) + ' action=-1', 60, False))
+        if cause == 9:
+            before.append(wait('M15 joined forward: applied=true', 60))
+        before += measured('upper' if cause == 11 else 'frame') + [wait('M15 joined camera: first=true visible=true')]
+        # Observe a rendered frame after saving, before taking the photograph.
+        actions[i:i] = [wait('M15 joined camera: first=true visible=true')]
+        actions[i+2:i+2] = measured('level')
+        actions[i-2:i-2] = before
+    result['expected_log'].append('M15 joined camera: first=true visible=true')
+    return result

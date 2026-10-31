@@ -6,19 +6,43 @@ import unittest
 
 from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
+from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_joined_framing_preserves_original_save_and_gameplay_requirements(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        original = copy.deepcopy(manifest)
+        spaced = right_power_spacing_setup(manifest, json.loads((data / 'm15_right_power_setup.json').read_text()))
+        recipe = json.loads((data / 'm15_forward_capture.json').read_text())['joined_course']
+        framed = joined_power_capture_setup(spaced, recipe, (data / 'm15_forward_capture_guard.lua').read_text())
+        self.assertEqual(manifest, original)
+        saves = lambda value: [a for a in value['actions'] if a.get('value') == 'F5']
+        self.assertEqual(saves(framed), saves(original))
+        backsteps = [a for a in framed['actions'] if a['type'] == 'key_held' and a.get('value') == 's']
+        self.assertEqual(backsteps, [dict(type='key_held', value='s', hold_seconds=recipe['left_backstep_seconds'])])
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(framed['expected_log']))
+        broken = copy.deepcopy(spaced)
+        broken['files'] = [f for f in broken['files'] if not f['path'].endswith('m15_course_observer.lua')]
+        with self.assertRaises((ValueError, StopIteration)):
+            joined_power_capture_setup(broken, recipe, '')
+
     def camera_guard(self, checks):
         module = Path(__file__).resolve().parents[1] / 'data/oblivion_compat/m15_forward_capture_guard.lua'
         setup = r'''
-local now, pixelX, pixelY, depth, hitId, calls = 0, 20, 20, -1, 42, 0
+local now, pixelX, pixelY, depth, hitId, calls, blocked = 0, 20, 20, -1, 42, 0, false
 local vectorMeta = {}
 local function vector(x,y,z) return setmetatable({x=x,y=y,z=z},vectorMeta) end
 vectorMeta.__add=function(a,b) return vector(a.x+b.x,a.y+b.y,a.z+b.z) end
 local self = {}
 local target = setmetatable({}, {
- __index=function(_,k) if k=='id' then return 42 elseif k=='position' then return vector(0,0,0) end end,
+ __index=function(_,k)
+  if k=='id' then return 42
+  elseif k=='getBoundingBox' then return function() return {center=vector(4,5,6),halfSize=vector(20,30,70)} end
+  elseif k=='position' then error('Visibility must follow rendered bounds, not the actor foot anchor') end
+ end,
  __newindex=function() error('Camera probe must not mutate the actor') end})
 package.loaded['openmw.self']=self
 package.loaded['openmw.util']={vector3=vector}
@@ -27,7 +51,10 @@ package.loaded['openmw.camera']={
  worldToViewportVector=function() return {x=pixelX,y=pixelY} end,
  getViewTransform=function() return {apply=function() return {z=depth} end} end,
  getPosition=function() return vector(0,0,0) end}
-package.loaded['openmw.nearby']={castRenderingRay=function(_,_,options)
+package.loaded['openmw.nearby']={
+ COLLISION_TYPE={World=1,HeightMap=2,Door=4},
+ castRay=function(_,_,options) assert(options.collisionType==7);return {hit=blocked} end,
+ castRenderingRay=function(_,_,options)
  assert(options.ignore==self);calls=calls+1
  return {hitObject=hitId and {id=hitId} or nil} end}
 local module=assert(loadfile(arg[1]))()
@@ -41,6 +68,9 @@ local screen={x=1280,y=720}
         self.camera_guard(r'''
 local guard=module.new(2)
 local visible, active=guard(target,screen);assert(visible and active)
+blocked=true;calls=0;visible,active=guard(target,screen)
+assert(not visible and active and calls==0) -- A displaced mesh behind a wall is not visible.
+blocked=false
 for _,id in ipairs({43,false}) do
  hitId=id;visible,active=guard(target,screen);assert(not visible and active)
 end
@@ -61,6 +91,25 @@ now=-1;visible,active=guard(target,screen);assert(not visible and not active)
 for _,window in ipairs({0,-1,math.huge,0/0,'2',true}) do
  assert(not pcall(module.new,window))
 end
+''')
+
+    def test_measured_camera_motion_uses_view_geometry_and_actual_pitch(self):
+        self.camera_guard(r'''
+local api=package.loaded['openmw.camera']
+api.getPitch=function() return .25 end
+api.getViewTransform=function() return {apply=function() return vector(1,1,-1) end} end
+local x,y=module.motion(target,'frame',1/5120)
+assert(x==4021 and y==-3151)
+x,y=module.motion(target,'level',1/5120);assert(x==0 and y==-1280)
+local observed={position=vector(0,0,0),getBoundingBox=function()
+ return {center=vector(0,0,0),halfSize=vector(30,40,20)} end}
+x,y=module.motion(observed,'aim',1/5120);assert(x==4021 and y==0)
+self.position=vector(0,0,0)
+self.rotation={apply=function() return vector(0,1,0) end}
+api.getPosition=function() return vector(0,0,120) end
+observed.position=vector(0,100,0)
+x,y=module.motion(observed,'upper',1/5120);assert(x==0 and y==-269)
+assert(not pcall(module.motion,target,'unknown',1/5120))
 ''')
 
     def side_source(self):

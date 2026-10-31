@@ -9,6 +9,30 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_observed_motion_uses_latest_complete_bounded_sample(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            log = output / 'process.log'
+            log.write_text('é\nmotion x=20 y=30\nmotion x=-4 y=12\nmotion x=99 y=5')
+            action = dict(type='mouse_move', x=0, y=0, from_log=dict(path='process.log',
+                pattern=r'motion x=(?P<x>-?\d+) y=(?P<y>-?\d+)$'))
+            resolved, receipt = replay.observed_mouse_motion(action, output)
+            self.assertEqual((resolved['x'], resolved['y']), (-4, 12))
+            self.assertEqual(action['x'], 0)
+            self.assertEqual(receipt['sample'], 'motion x=-4 y=12')
+            self.assertEqual(log.read_bytes()[receipt['byte_offset']:].splitlines()[0], b'motion x=-4 y=12')
+            log.write_text('motion x=8193 y=0\n')
+            with self.assertRaises(ValueError):
+                replay.observed_mouse_motion(action, output)
+            action['from_log']['path'] = '../outside.log'
+            with self.assertRaises(ValueError):
+                replay.observed_mouse_motion(action, output)
+            for source in [dict(path='../outside.log', pattern=action['from_log']['pattern']),
+                           dict(path='process.log', pattern=r'motion (\d+) (\d+)'), None]:
+                action['from_log'] = source
+                with self.assertRaises(ValueError):
+                    replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+
     def test_key_transition_rejects_invalid_or_overlapping_keys_before_delivery(self):
         control = object.__new__(replay.Replay)
         control.sequence = 0
