@@ -12,6 +12,17 @@ Current acceptance checklist (2026-10-31):
 - **Incomplete:** C1/D2 actor/equipment/mastery branches; R3 remaining physical-knockdown interruption, essential/reaction/repeated-hit contexts; remaining I4 held-input/view/device crosses; Q5 contexts; V6 other reaction/view feedback, body/hair appearance, essential-hit PCM sample matching and other feedback. Measured T7 and frozen independent F8 remain required. The table below maps these to planned runs; a configured cap is not achieved FPS.
 - **Blocked:** no external blocker. Gameplay/feedback gaps prevent final course freeze; required timing/step coverage remains unproven.
 
+The [partial-resistance checkpoint](../../build/oblivion-compat/m15/S4/weapon-resistance-work-01/checkpoint-verification.json)
+closes normal-input weapon contacts at target AV65=50: normal/SAN joined courses
+pass 28 exact saved/live pairs and both first hits deal 2.82384 with unchanged
+weapon wear. The immutable rule applies before armor/block; weapon-flag and
+supported ENCH bypasses have focused World evidence, including depleted charge.
+Normal gates pass 3,213 component/2,069 engine cases; SAN passes 1,039 native
+component/2,069 engine cases. The 56 original branches plus the depleted return and
+focused checks retain their receipts. Ordinary full-immunity notification,
+unarmed resistance and other C1 domains remain open. The SAN Forward image
+still does not demonstrate settled-prone collapse; V6/T7/F8 remain open.
+
 Essential-hit PCM identity remains **open V6**: the [audio investigation](../../build/oblivion-compat/m15/S4/essential-hit-audio-work-01/checkpoint-verification.json) retains its original failures, two normal reference captures and conservative checker controls. Disabling Doppler/delaying camera movement did not establish identity; the stronger checker rejects the retained gameplay capture. No fresh/SAN audio campaign is justified yet.
 
 The material fix resolves the winning diffuse path, loads its stock TES4 `_n.dds` companion and uses the normal texture's alpha for specular intensity. The authored wood mask averages 4.5/255; previously the renderer used the full material specular value. Separate shader permutations keep specular alpha distinct from parallax height and ordinary normal maps, including inherited-material replacement. No asset, geometry or collision substitution was made. Focused checks preceded one coherent normal/SAN integration checkpoint and two existing short runtime prefixes. Prior full recovery/restart ownership proof is reused only for unchanged combat/save code, with original provenance. Hit-sample PCM identity and remaining body/hair/material feedback stay open V6.
@@ -100,8 +111,9 @@ gates, reuse applicable evidence, and defer unrelated discoveries.
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` selects the first directed target from persistent controller state; graph membership alone does not authorize an attack. It sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Normal and sanitizer input courses now create the controller through authored StartCombat, receive one blocked NPC contact, and recover across a fresh mid-reaction restart without contact replay. Complete the remaining required actor/view/input/FPS matrix. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. Journeyman sideways disarm now publishes one intact NPC drop and unarmed Stagger, removes the carried mesh during reaction, and restores without replay in normal/SAN courses. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Single unresisted instant zero-area Fire Damage contacts now share the existing charge/effect/physical transaction and fresh-recovery proof. Timed/scripted/multiple effects and resistance/absorption/reflection remain explicitly unsupported; complete other narrowly required combat hooks without claiming general M16 magic. |
 
-Other deliberate ordinary-contact restrictions include sneaking, nonzero normal
-weapon resistance, negative incoming damage, and remaining breakage branches.
+Other deliberate ordinary-contact restrictions include sneaking, unarmed normal
+weapon resistance, ordinary full-immunity notification, negative incoming damage,
+and remaining breakage branches.
 They need their reviewed native branches before broader contact acceptance.
 Removing a rejection without its complete consequences does not deliver a branch.
 

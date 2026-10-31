@@ -766,6 +766,15 @@ namespace ESM4
         const CombatMasterySettings& mastery, bool bypassMastery = false);
 
 
+    struct NormalWeaponResistance
+    {
+        float mHealthDamage;
+        bool mImmune;
+    };
+    // AV65 applies before armor/block. Negative resistance does not amplify.
+    // The caller owns the separate immune-contact notification path.
+    NormalWeaponResistance resistNormalWeapon(float damage, std::int32_t resistance, bool bypass);
+
     struct ArmorMitigation
     {
         float mHealthDamage;

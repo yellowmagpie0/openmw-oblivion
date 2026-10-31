@@ -14278,6 +14278,23 @@ Another **15 cases** execute shared melee charge comparison/subtraction `5E4768.
 
 The runtime path stages a single unresisted, instant, zero-area FIDG Touch Health effect and charge with the existing contact transaction. Physical hit arguments remain separate. Charge survives wear, retained break and compound drop; miss/continuation/replay paths cannot spend again. Timed, scripted, multi-effect and resistance/absorption/reflection branches remain explicitly unsupported. [Seven focused world cases](../../build/oblivion-compat/m15/S4/enchanted-contact-focused-engine-normal-01/verification.json) pass at fingerprint `b497264c2609bdc44b150f1540950f01cb3291164188ba6fc64191159b3d7745`; [12 parser/cost cases](../../build/oblivion-compat/m15/S4/enchanted-cost-focused-normal-01/verification.json) retain their earlier pin. The [contact checkpoint](../../build/oblivion-compat/m15/S4/enchanted-contact-work-01/contact-checkpoint-verification.json) now binds normal/sanitizer joined gameplay, depletion, misses and fresh recovery: **54 exact save/live pairs across 10 processes**, 50 directly reviewed captures, block audio/no-replay and the required broad gates. The sanitizer pending Forward owner restores exactly, applies once into one scalar/body, then recovers. Fixture/checker failures and reused evidence keep their original provenance. Cap15/seed1 and the declared effect domain remain bounded; full S4 is incomplete.
 
+### S4 normal-weapon resistance: bounded weapon domain
+
+The [editable cases](../../scripts/data/oblivion_compat/m15_weapon_resistance_cases.json)
+and [original-instruction receipt](../../build/oblivion-compat/m15/S4/weapon-resistance-work-01/verification.json)
+cover 56 weapon admission/reduction cases and the actual depleted-enchantment
+return. AV65 values 1..99 scale physical damage before armor/block; negative/zero
+values leave it unchanged. Weapon DATA bit0 and an ENCH bypass resistance.
+Insufficient charge suppresses its effect but retains the physical bypass.
+The earlier charge oracle supplies comparison/subtraction evidence; integer AV
+and enchantment dispatch returns are explicit admission boundaries. Ordinary
+resistance>=100 takes a separate notification exit, still unsupported in this
+production adapter. Projectile, poison/cached enchantment and unarmed branches
+remain outside this chunk. Tests use a 1e-5 damage tolerance; no bit parity claim. The
+[contact checkpoint](../../build/oblivion-compat/m15/S4/weapon-resistance-work-01/checkpoint-verification.json)
+binds focused World bypass/armor/wear checks and normal/SAN joined resistance50
+courses. It does not claim full-immunity or full S4 acceptance.
+
 ### S4 one-handed Blunt course
 
 The [Club checkpoint](../../build/oblivion-compat/m15/S4/blunt-course-work-01/checkpoint-verification.json) binds raw winning WEAP03b375 and its stock mesh to the existing joined course. Only Player equipment and native/base/legacy Blunt100 change; target Health120 and unrelated state remain unchanged. Normal/SAN courses verify all four powers, misses, resource/condition ownership and exact fresh recovery. The [mixed block recipe](../../scripts/data/oblivion_compat/m15_mixed_block_mixture_assay.json) declares disjoint Blade/Blunt sample banks before capture analysis; same-family mixtures cannot prove the mixed block. Legacy three-sample recipes remain unchanged. The receipt links retained failures, eight comparison-policy guard cases and the origin-relative post-source item-physics check; it does not claim the failed absolute20-unit position guard passed. No new original-executable rule investigation or C++ change was needed. Full S4 remains incomplete.

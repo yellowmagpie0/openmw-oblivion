@@ -1677,16 +1677,14 @@ namespace MWMechanics
         else (void)service->getNonPlayerValue(victim, 8);
         const auto resistance = victim == player ? service->getPlayerIntegerValue(65)
             : service->getNonPlayerIntegerValue(victim, 65);
-        if (resistance != 0)
-            return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower
             && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
             && kind != ESM4::MeleeStrikeKind::ForwardPower && kind != ESM4::MeleeStrikeKind::BackwardPower)
             return std::nullopt;
-        const float incoming = weaponContactDamage(world, attacker, item, kind);
+        const float rawIncoming = weaponContactDamage(world, attacker, item, kind);
         if (creatureHasSpells(victim))
             return std::nullopt; // Do not omit Creature passive/contact-effect consequences.
-        if (incoming < 0)
+        if (rawIncoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
@@ -1698,6 +1696,14 @@ namespace MWMechanics
         const auto enchantment = prepareWeaponEnchantment(world, *service, attacker, victim, item,
             *weapon, normalizedDifficulty, settings);
         if (!enchantment) return std::nullopt;
+        // Original5FF108 uses WEAP DATA bit0 (silver).5E46C0 returns true
+        // even after insufficient charge clears the selected ENCH effect:
+        // depletion suppresses magic damage, not the physical bypass.
+        const auto resisted = ESM4::resistNormalWeapon(rawIncoming, resistance,
+            (weapon->mData.flags & 1u) || !weapon->mEnchantment.isZeroOrUnset());
+        if (resisted.mImmune)
+            return std::nullopt; // Separate immune feedback/notification path remains unsupported.
+        const float incoming = resisted.mHealthDamage;
         const auto durability = ESM4::buildDurabilitySettings(settings);
         std::optional<float> condition;
         auto breakDisposition = OblivionWeaponBreakDisposition::None;

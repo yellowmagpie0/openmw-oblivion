@@ -1,0 +1,61 @@
+{
+  "requirement": "S4 C1 weapon contacts against nonzero native normal-weapon resistance AV65",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_points": {
+    "admission": "5FF0CA..5FF187/5FF1E6",
+    "reduction": "5FF55E..5FF598",
+    "depleted_enchantment_tail": "5E4801..5E48C5"
+  },
+  "inputs": {
+    "weapon_flags": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "enchantment_virtual_return": [
+      false,
+      true
+    ],
+    "integer_resistance": [
+      -50,
+      0,
+      1,
+      50,
+      99,
+      100,
+      150
+    ],
+    "incoming_health": 20
+  },
+  "boundaries": [
+    "IntegerAV65 getter",
+    "Attacker enchantment virtual return in admission; charge oracle reused independently",
+    "No projectile, no poison/cached enchantment, equipped melee weapon context"
+  ],
+  "expectations": {
+    "normal_negative_or_zero": "Unchanged health",
+    "normal_partial": "Health*(1-resistance/100), before armor/block; weapon wear still base damage",
+    "normal_at_least_100": "Immune early exit; production notification path remains open",
+    "weapon_flags_bit0": "Bypass",
+    "weapon_enchantment": "Physical bypass persists after charge depletion; magic effect suppressed"
+  },
+  "tolerance": 1e-05,
+  "evidence": "build/oblivion-compat/m15/S4/weapon-resistance-work-01/verification.json",
+  "charge_evidence": "build/oblivion-compat/m15/S4/enchanted-contact-work-01/charge-rules-01/verification.json",
+  "scope": "56 admission/reduction cases and1 actual depleted tail; not runtime or full S4 acceptance",
+  "runtime_fixture": {
+    "base": "build/oblivion-compat/m15/S4/blunt-course-work-01/fixture-01/input.omwsave",
+    "base_sha256": "54009663a6dfd9e2d23990cda379ba30b63a82f3fad4f5ca6526e623ae981ce2",
+    "compatibility": "Existing runtime-state writer upgrades schema75->76 and input require_release=false.",
+    "target": "content:oblivion.esm:01fc43",
+    "allowed_gameplay_change": "Target native AV65 base50 only; no contact/effect/outcome injection.",
+    "staged_sha256": "26b33fe2ba5595c22fb52af344968cac2c88a86a543dc5b35f1ebda7a7a9f100",
+    "profile": "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-club-profile-01.json",
+    "expected_first_hit_health": 2.82384,
+    "health_tolerance": 0.0002,
+    "expected_first_weapon_condition": 69.4606,
+    "condition_tolerance": 0.0001,
+    "evidence": "build/oblivion-compat/m15/S4/weapon-resistance-work-01/checkpoint-verification.json"
+  }
+}

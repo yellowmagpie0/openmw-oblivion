@@ -1856,6 +1856,16 @@ namespace ESM4
         return remaining < 1.f ? 0.f : remaining;
     }
 
+    NormalWeaponResistance resistNormalWeapon(float damage, std::int32_t resistance, bool bypass)
+    {
+        nonnegative(damage);
+        if (bypass || resistance <= 0)
+            return {damage, false};
+        if (resistance >= 100)
+            return {0, true};
+        return {rounded(double(damage) * (1.0 - double(resistance) / 100.0)), false};
+    }
+
     ArmorMitigation mitigateArmor(float damage, float rating, float maximumFraction, bool bypass)
     {
         nonnegative(damage);

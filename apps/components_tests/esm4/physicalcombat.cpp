@@ -6498,3 +6498,21 @@ TEST(ESM4PhysicalCombat, LongitudinalPowerInputRequiresPureMovementAndBaseMaster
     EXPECT_THROW(ESM4::longitudinalPowerAttackDirection(100, 0,
         std::numeric_limits<float>::quiet_NaN(), mastery), std::invalid_argument);
 }
+
+TEST(ESM4PhysicalCombat, NormalWeaponResistanceBoundariesAndBypasses)
+{
+    for (const auto resistance : {-50, 0, 1, 50, 99, 100, 150})
+    {
+        const auto normal = ESM4::resistNormalWeapon(20, resistance, false);
+        EXPECT_EQ(normal.mImmune, resistance >= 100);
+        EXPECT_NEAR(normal.mHealthDamage, resistance <= 0 ? 20.f
+            : resistance >= 100 ? 0.f : 20.f * (1 - resistance / 100.f), .00001f);
+        const auto bypass = ESM4::resistNormalWeapon(20, resistance, true);
+        EXPECT_FALSE(bypass.mImmune);
+        EXPECT_EQ(bypass.mHealthDamage, 20);
+    }
+    EXPECT_EQ(ESM4::resistNormalWeapon(0, 50, false).mHealthDamage, 0);
+    for (const auto bad : {-1.f, std::numeric_limits<float>::infinity(),
+             std::numeric_limits<float>::quiet_NaN()})
+        EXPECT_THROW(ESM4::resistNormalWeapon(bad, 50, false), std::invalid_argument);
+}

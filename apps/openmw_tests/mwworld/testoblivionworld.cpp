@@ -7451,6 +7451,42 @@ namespace
             saved.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences[0]);
             return saved.serializeBinary();
         };
+        // AV65 is owned native state, not a projected TES3 magic-effect value.
+        for (const auto resistance : {-50, 0, 1, 50, 99, 100, 150})
+        {
+            auto resistedState = state;
+            for (auto& values : resistedState.mNativeActorValues)
+                if (values.mActor == victim.getCellRef().getFormKey())
+                {
+                    values.mValues[65] = {}; values.mValues[65].mBase = resistance;
+                    values.mValues[43] = {}; values.mValues[43].mBase = 25;
+                }
+            service.restore(resistedState, store);
+            const auto unchanged = snapshot();
+            const auto hit = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+            if (resistance >= 100)
+                EXPECT_FALSE(hit); // Immune-contact notification is a separate open branch.
+            else
+            {
+                ASSERT_TRUE(hit);
+                const float expected = 16.625f * (resistance <= 0 ? 1.f : 1 - resistance / 100.f);
+                EXPECT_NEAR(hit->mPreArmorDamage, expected, .00001f);
+                EXPECT_NEAR(hit->mHealth, expected * .75f, .00001f);
+                EXPECT_EQ(hit->mConditionAfterWear, 994.f); // Weapon wear uses base damage.
+                EXPECT_NEAR(hit->mHitArguments.mPreArmorDamage, expected, .00001f);
+            }
+            EXPECT_EQ(snapshot(), unchanged); // Preparation cannot spend health, condition or RNG.
+            native.mData.flags = 1; // Silver bypass, including an otherwise immune target.
+            store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+            const auto silver = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 0, false);
+            ASSERT_TRUE(silver);
+            EXPECT_NEAR(silver->mHealth, 16.625f * .75f, .00001f);
+            EXPECT_EQ(silver->mConditionAfterWear, 994.f);
+            EXPECT_EQ(snapshot(), unchanged);
+            native.mData.flags = 0;
+            store.getWritable<ESM4::Weapon>().insertStatic(native, weaponBase);
+        }
+        service.restore(state, store);
         const auto before = snapshot();
         const auto prepared = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, npc, victim, source, 1, false);
         ASSERT_TRUE(prepared);
@@ -7577,6 +7613,8 @@ namespace
         for (const auto& [attacker, target, item] : std::array{
                  std::tuple{npc, player, source}, std::tuple{player, npc, playerSource}})
         {
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(target, 65, ESM4::ActorValueCommand::Mod,
+                ESM4::ActorValueCommandSource::Script, 100));
             const auto ready = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, target, item, 0, false);
             ASSERT_TRUE(ready); EXPECT_EQ(ready->mEnchantmentHealth, 5);
             ASSERT_TRUE(ready->mEnchantmentChargeChange);
@@ -7593,7 +7631,11 @@ namespace
             const auto last = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, target, item, 0, false);
             ASSERT_TRUE(last); ASSERT_TRUE(last->mEnchantmentChargeChange);
             EXPECT_EQ(last->mEnchantmentChargeChange->mCharge, .5f);
+            EXPECT_NEAR(empty->mPreArmorDamage, ready->mPreArmorDamage, .00001f);
+            EXPECT_NEAR(empty->mHealth, ready->mHealth, .00001f);
             item.getCellRef().setEnchantmentCharge(-1);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(target, 65, ESM4::ActorValueCommand::Mod,
+                ESM4::ActorValueCommandSource::Script, -100));
         }
         enchantment.mEffects[0].mDuration = 1;
         store.getWritable<ESM4::Enchantment>().insertStatic(enchantment, enchantment.mFormKey);
