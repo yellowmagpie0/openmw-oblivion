@@ -9570,7 +9570,7 @@ namespace MWWorld
 
     bool World::isFirstPerson() const
     {
-        return mRendering->getCamera()->getMode() == MWRender::Camera::Mode::FirstPerson;
+        return mRendering && mRendering->getCamera()->getMode() == MWRender::Camera::Mode::FirstPerson;
     }
 
     bool World::isPreviewModeEnabled() const

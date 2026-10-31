@@ -10,6 +10,7 @@
 #include "../mwbase/mechanicsmanager.hpp"
 #include "../mwbase/environment.hpp"
 #include "../mwbase/soundmanager.hpp"
+#include "../mwbase/windowmanager.hpp"
 #include "../mwsound/nativeaudioutils.hpp"
 #include <components/debug/debuglog.hpp>
 #include "../mwbase/world.hpp"
@@ -38,6 +39,7 @@
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <variant>
 #include <vector>
 
 namespace MWMechanics
@@ -755,6 +757,7 @@ namespace MWMechanics
                     *contact, normalizedDifficulty, sneaking, kind);
                 if (!damage)
                     return std::nullopt;
+                result.mImmune = damage->mImmune;
                 result.mDamage = {damage->mHealth, damage->mFatigue};
                 result.mBlockFatigueDebit = damage->mBlockFatigueDebit;
                 result.mBlockAbsorbedFraction = damage->mBlockAbsorbedFraction;
@@ -794,6 +797,7 @@ namespace MWMechanics
                     *contact, item, normalizedDifficulty, sneaking, kind);
                 if (!damage)
                     return std::nullopt;
+                result.mImmune = damage->mImmune;
                 result.mDamage = {damage->mHealth + damage->mEnchantmentHealth, 0};
                 observeEnchantment = !weapon->mEnchantment.isZeroOrUnset();
                 physicalHealth = damage->mHealth; enchantmentHealth = damage->mEnchantmentHealth;
@@ -824,6 +828,36 @@ namespace MWMechanics
                 deltas.mRandomTransition = damage->mRandomTransition;
                 preArmorDamage = damage->mPreArmorDamage;
             }
+        }
+        if (result.mImmune)
+        {
+            // Original5FF187..5FF1B7 exits before damage, wear, hit sounds,
+            // reactions and hit speech. Attack expenditure still belongs to
+            // the caller's once-only contact window, including power attacks.
+            const bool notify = attacker == playerContact;
+            auto* windows = MWBase::Environment::get().getWindowManagerOrNull();
+            if (notify && !windows) return std::nullopt;
+            std::string message = "Your attack has no effect.";
+            if (notify)
+                for (const auto* setting : settings)
+                    if (Misc::StringUtils::ciEqual(setting->mEditorId, "sNormalWeaponsResisted"))
+                    {
+                        const auto* text = std::get_if<std::string>(&setting->mData);
+                        if (!text) throw std::invalid_argument("incorrect native immunity message type");
+                        message = *text;
+                        break;
+                    }
+            const OblivionPhysicalContactDeltas immune{-cost, 0};
+            auto prepared = nativeWorld->prepareOblivionPhysicalContact(actionId, attacker, *contact, immune);
+            if (!prepared || !prepared->commit()) return std::nullopt;
+            result.mHitSounds = std::array<std::string_view, 3>{};
+            const auto victim = *contact == playerContact ? ESM::FormKey::dynamic("player", 1)
+                : contact->getCellRef().getFormKey();
+            Log(Debug::Verbose) << "M15 immune melee contact committed: actor=" << actor.serialize()
+                << " id=" << actionId << " victim=" << victim.serialize()
+                << " notified=" << notify;
+            if (notify) windows->messageBox(message);
+            return result;
         }
         if (weaponBlockSound)
         {
@@ -1412,7 +1446,11 @@ namespace MWMechanics
                 : service->getNonPlayerBaseValue(attacker.getCellRef().getFormKey(), 17, world.getStore());
             if (ESM4::combatMastery(hand, ESM4::buildCombatMasterySettings(settings))
                 < ESM4::CombatMastery::Journeyman)
-                return std::nullopt; // Full immunity still needs its notification path.
+            {
+                OblivionUnarmedContactDamage immune{0, 0};
+                immune.mImmune = true;
+                return immune;
+            }
         }
         // Original5FF576 skips partial reduction when both weapon and
         // projectile are null. Bare-hand Health and Fatigue stay unchanged;
@@ -1714,7 +1752,11 @@ namespace MWMechanics
         const auto resisted = ESM4::resistNormalWeapon(rawIncoming, resistance,
             (weapon->mData.flags & 1u) || !weapon->mEnchantment.isZeroOrUnset());
         if (resisted.mImmune)
-            return std::nullopt; // Separate immune feedback/notification path remains unsupported.
+        {
+            OblivionWeaponContactDamage immune{};
+            immune.mImmune = true;
+            return immune;
+        }
         const float incoming = resisted.mHealthDamage;
         const auto durability = ESM4::buildDurabilitySettings(settings);
         std::optional<float> condition;

@@ -69,6 +69,7 @@ namespace MWMechanics
         std::optional<std::array<std::string_view, 3>> mHitSounds{};
         std::optional<std::array<float, 3>> mHitSoundPosition{};
         bool mHitSoundsEmitted = false;
+        bool mImmune = false; // Accepted geometry/window, without damage, wear or hit reactions.
     };
     // Shared M10 hit layers. The phased caller emits after preflight and
     // before damage/speech; legacy callers emit after their contact commits.
@@ -155,6 +156,7 @@ namespace MWMechanics
         std::int32_t mHitArmorClass = -1; // Native contact-selected material, independent of condition writes.
         bool mRequestsAttackerRecoil = false;
         OblivionOrdinaryHitArguments mHitArguments{};
+        bool mImmune = false;
     };
     std::optional<OblivionUnarmedContactDamage> resolveOblivionOrdinaryUnarmedContact(
         MWBase::World& world, const MWWorld::Ptr& attacker, const MWWorld::Ptr& victim,
@@ -185,6 +187,7 @@ namespace MWMechanics
         float mEnchantmentHealth = 0;
         std::optional<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChange{};
         bool mEnchantedSound = false;
+        bool mImmune = false;
     };
     // Read-only ordinary weapon contact preparation. Armor selection, equipped
     // blocking, broken-item reactions and enchantment hooks gate admission.

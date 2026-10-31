@@ -19,8 +19,8 @@ weapon wear. The immutable rule applies before armor/block; weapon-flag and
 supported ENCH bypasses have focused World evidence, including depleted charge.
 Normal gates pass 3,213 component/2,069 engine cases; SAN passes 1,039 native
 component/2,069 engine cases. The 56 original branches plus the depleted return and
-focused checks retain their receipts. Ordinary full-immunity notification,
-Creature resistance policy and other C1 domains remain open. The SAN Forward image
+focused checks retain their receipts. Full-immunity notification is closed by the
+checkpoint below; Creature resistance policy and other C1 domains remain open. The SAN Forward image
 still does not demonstrate settled-prone collapse; V6/T7/F8 remain open.
 
 The [bare-hand resistance checkpoint](../../build/oblivion-compat/m15/S4/unarmed-resistance-work-01/checkpoint-verification.json)
@@ -33,10 +33,24 @@ all first hand hits retain **1.42 Health / 1.71 Fatigue** damage. Both full engi
 suites pass **2,071 tests**. Unchanged component/public-Python evidence is reused.
 The accidentally selected obsolete opponent fixture and its failed run remain
 retained; the shared launcher now rejects that policy in preflight. No rebuild
-followed that fixture correction. Full-immunity notification and Creature
-resistance policy remain open. The [editable recipe](../../scripts/data/oblivion_compat/m15_unarmed_resistance_cases.json)
+followed that fixture correction. Creature resistance policy remains open.
+The [editable recipe](../../scripts/data/oblivion_compat/m15_unarmed_resistance_cases.json)
 records the supported scope; Journeyman bypass has World, not runtime, coverage.
-Next close the full-immunity contact/feedback path before freezing the final course.
+
+The [full-immunity checkpoint](../../build/oblivion-compat/m15/S4/normal-immunity-work-01/checkpoint-verification.json)
+closes accepted immune contacts and Player-only native feedback. The existing
+contact owner spends attack Fatigue once while preserving defender resources,
+condition, reactions and combat RNG. Eight World contexts cover armed/bare-hand,
+Player/NPC and ordinary/power contacts, message overrides and saved-ledger replay.
+Both full engine gates pass **2,072 tests**. Normal/SAN novice-hand courses at
+AV65=100 pass **28 exact saved/live pairs**, two fresh restores, **26-field
+endpoints**, **32 reviewed captures** with visible native text, and block PCM
+without fresh replay. The stale legacy assertion required corrected full gates;
+the fresh checker correction reused retained gameplay without another run or build.
+Unchanged component/Python/oracle evidence retains its provenance. The
+[editable recipe](../../scripts/data/oblivion_compat/m15_normal_weapon_immunity_cases.json)
+records the bounded scope. Next resolve the remaining Creature resistance policy
+in the existing contact course; other S4 gaps and T7/F8 remain open.
 
 The [head-material checkpoint](../../build/oblivion-compat/m15/S4/npc-appearance-work-01/checkpoint-verification.json)
 makes the winning NPC hair tint replace cached cyan vertex colors and gives

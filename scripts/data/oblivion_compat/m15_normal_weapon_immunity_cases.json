@@ -1,0 +1,39 @@
+{
+  "requirement": "S4 C1 full normal-weapon immunity finishes a contact and supplies Player feedback.",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "reused_admission": [
+    "scripts/data/oblivion_compat/m15_weapon_resistance_cases.json",
+    "scripts/data/oblivion_compat/m15_unarmed_resistance_cases.json"
+  ],
+  "message": {
+    "editor_id": "sNormalWeaponsResisted",
+    "compiled_default": "Your attack has no effect.",
+    "constructor": "9EA270..9EA284 binds name/default toB37208",
+    "branch": "5FF187..6005B1: Player-only message, early exit before ordinary damage/wear/reaction/sound",
+    "provenance": "build/oblivion-compat/m15/S4/normal-immunity-work-01/message-name-provenance.json",
+    "independent_branch_evidence": "build/oblivion-compat/m15/S4/normal-immunity-work-01/message-branch-verification.json",
+    "boundaries": "UI call stubbed; actual frame/UI and caller expenditure require gameplay/integration evidence."
+  },
+  "implementation_contract": [
+    "Immunity is an accepted typed zero-damage result, distinct from unavailable/unsupported preparation.",
+    "The existing prepared contact consumes its window and caller attack expenditure once.",
+    "Preserve victim Health/Fatigue, condition, reaction and combat RNG; no ordinary hit layers or mastery tail.",
+    "Publish winning typed native message (compiled default if absent) only for Player attacker, after commit.",
+    "Keep silver/ENCH/depleted-charge and Journeyman bare-hand bypasses."
+  ],
+  "focused_test": "OblivionWorldTest.ImmuneMeleeContactConsumesOncePreservesDefenderAndPublishesOnlyPlayerMessage",
+  "focused_contexts": 8,
+  "runtime_profile": "build/oblivion-compat/m15/S4/normal-immunity-work-01/profile.json",
+  "runtime_plan": "build/oblivion-compat/m15/S4/normal-immunity-work-01/live-comparison-plan.json",
+  "runtime_fixture": "build/oblivion-compat/m15/S4/normal-immunity-work-01/fixture-100",
+  "preflight": "build/oblivion-compat/m15/S4/normal-immunity-work-01/fixture-preflight.json",
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/normal-immunity-work-01/checkpoint-verification.json",
+  "limits": "Runtime scope: novice bare-hand first-person keyboard/mouse normal/SAN course and exact active-stagger fresh continuation. Armed/NPC/power/default/override covered by World tests. No full S4/V6/T7/F8 claim; Creature resistance policy remains separate.",
+  "runtime_results": {
+    "exact_saved_live_pairs": 28,
+    "process_epochs": 4,
+    "exact_fresh_restores": 2,
+    "strict_endpoint_fields": 26,
+    "reviewed_captures": 32
+  }
+}
