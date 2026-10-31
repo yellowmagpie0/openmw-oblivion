@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "scope": "First-person keyboard/mouse Forward9 photo continuation from a genuine pending/applied Club contact. Read-only visibility guards and normal camera/movement input; no gameplay outcome substitution. Joined-course capture integration remains separate.",
+  "stock_player_weapon": "content:oblivion.esm:03b375",
+  "probe_module": "scripts/data/oblivion_compat/m15_forward_capture_guard.lua",
+  "minimum_source_remaining": 3,
+  "source_window_margin": 0.25,
+  "active_mouse_y": 6000,
+  "recovery_framing_actions": [
+    {
+      "type": "key_down",
+      "value": "s"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course geometry:.*farFacing=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "s"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 500
+    },
+    {
+      "type": "screenshot",
+      "name": "forward-recovery-preflight.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 forward recovery camera: visible=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 import copy
 import json
 from pathlib import Path
+import subprocess
 import unittest
 
 from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
@@ -8,6 +9,60 @@ from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def camera_guard(self, checks):
+        module = Path(__file__).resolve().parents[1] / 'data/oblivion_compat/m15_forward_capture_guard.lua'
+        setup = r'''
+local now, pixelX, pixelY, depth, hitId, calls = 0, 20, 20, -1, 42, 0
+local vectorMeta = {}
+local function vector(x,y,z) return setmetatable({x=x,y=y,z=z},vectorMeta) end
+vectorMeta.__add=function(a,b) return vector(a.x+b.x,a.y+b.y,a.z+b.z) end
+local self = {}
+local target = setmetatable({}, {
+ __index=function(_,k) if k=='id' then return 42 elseif k=='position' then return vector(0,0,0) end end,
+ __newindex=function() error('Camera probe must not mutate the actor') end})
+package.loaded['openmw.self']=self
+package.loaded['openmw.util']={vector3=vector}
+package.loaded['openmw.core']={getSimulationTime=function() return now end}
+package.loaded['openmw.camera']={
+ worldToViewportVector=function() return {x=pixelX,y=pixelY} end,
+ getViewTransform=function() return {apply=function() return {z=depth} end} end,
+ getPosition=function() return vector(0,0,0) end}
+package.loaded['openmw.nearby']={castRenderingRay=function(_,_,options)
+ assert(options.ignore==self);calls=calls+1
+ return {hitObject=hitId and {id=hitId} or nil} end}
+local module=assert(loadfile(arg[1]))()
+local screen={x=1280,y=720}
+'''
+        result = subprocess.run(['luajit', '-', str(module)], input=setup + checks,
+                                text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_forward_camera_requires_projected_target_mesh_and_live_window(self):
+        self.camera_guard(r'''
+local guard=module.new(2)
+local visible, active=guard(target,screen);assert(visible and active)
+for _,id in ipairs({43,false}) do
+ hitId=id;visible,active=guard(target,screen);assert(not visible and active)
+end
+hitId=42
+for _,x in ipairs({-1,1280}) do
+ pixelX=x;calls=0;visible,active=guard(target,screen)
+ assert(not visible and active and calls==0)
+end
+pixelX=20;depth=1;calls=0;assert(not guard(target,screen) and calls==0)
+depth=-1;now=2;calls=0;visible,active=guard(target,screen)
+assert(not visible and not active and calls==0)
+assert(module.visible(target,screen)) -- Recovery visibility is independent of effect lifetime.
+now=-1;visible,active=guard(target,screen);assert(not visible and not active)
+''')
+
+    def test_forward_camera_rejects_nonfinite_or_empty_source_windows(self):
+        self.camera_guard(r'''
+for _,window in ipairs({0,-1,math.huge,0/0,'2',true}) do
+ assert(not pcall(module.new,window))
+end
+''')
+
     def side_source(self):
         return dict(player=dict(reference='player'),
             physical_actions=dict(next=12, pending=[]), physical_action_owners=[], native_actor_ragdolls=[],
