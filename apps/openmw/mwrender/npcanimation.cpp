@@ -696,6 +696,10 @@ namespace MWRender
                 osg::ref_ptr<osg::Node> node = bone.empty()
                     ? attachOblivionRigidPart(*mResourceSystem, path, *mObjectRoot)
                     : attach(path, bone, {}, false, attitude);
+                // Match native NPC parts: independently loaded geometry and
+                // head-correction wrappers follow the rig, but are not its
+                // physical nodes when the Player falls or gets up.
+                node->setUserValue("openmwNativeActorAttachment", true);
                 isolateTes4ActorGeometry(*node);
                 filterOblivionBodyParts(*node, mViewMode == VM_FirstPerson);
                 if (!texture.empty())

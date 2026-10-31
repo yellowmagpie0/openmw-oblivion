@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "Actual NPC unarmed standing-power contact into equipped Player Block5/Fatigue1; .05/0 regeneration retains an observable KO interval. Ordinary Player return requests9.2 and spends only available nonnegative Fatigue. No authored outcomes.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "animation_family": "twohand",
+    "target_health": 300,
+    "name": "Held block interrupted by actual unarmed Fatigue knockout",
+    "course_window": "ordinary",
+    "base_block": 5,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_reference_debits": 1,
+    "opponent_unarmed": true,
+    "initial_unarmed_approach": 90,
+    "fatigue_regeneration": {
+      "fFatigueReturnBase": 0.05,
+      "fFatigueReturnMult": 0.0
+    }
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "scope": "R3/I4 held-block Fatigue knockout: actual unarmed contact, natural physical collapse/GetUp, held reblock/release and capped ordinary return, exact active-body fresh continuation. NormalTP/SANFP; fullS4 remains incomplete.",
+  "initial_player_weapon_condition": 168,
+  "current_source_sha256": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course unarmed approach: reachable=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=twohandblockidle",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-held-before.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "space",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO state: fatigue=-",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery body admitted: actor=dynamic:player:0000000000000001 state=4",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-active.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0.*M15 block begin: actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-recovered-held.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0.*M15 block release: actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO endpoint: settled=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "M15 KO state: fatigue=-",
+    "M15 recovery body admitted: actor=dynamic:player:0000000000000001 state=4",
+    "M15 KO endpoint: settled=true",
+    "M15 KO camera: vanity=false",
+    "M15 KO block animation: playing=false"
+  ],
+  "reference_expected_log": [],
+  "forbidden_log": [
+    "Error in frame:",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "M15 native death callback:",
+    "M15 melee miss committed:",
+    "Lua error:"
+  ],
+  "resume_actions": [
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO state: fatigue=-",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-restored.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0.*M15 block begin: actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-recovered-held.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_up",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0.*M15 block release: actor=dynamic:player:0000000000000001",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO endpoint: settled=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_expected_log": [
+    "M15 KO state: fatigue=-",
+    "M15 KO endpoint: settled=true",
+    "M15 KO camera: vanity=false",
+    "M15 KO block animation: playing=false"
+  ],
+  "block_audio_assay": {
+    "path": "scripts/data/oblivion_compat/m15_blade_hand_block_mixture_assay.json",
+    "sha256": "72422516ba27ebf930e737387059f9bc670f0f9bee5d823cbda4394fdfe98692",
+    "expected_clusters": 1,
+    "scope": "Actual Blade+Hand block voices with unchanged0.75threshold/960mixerperiod. Reference one cluster; exact active-KO fresh continuation zero clusters (no incoming-contact replay).",
+    "expected_fresh_clusters": 0
+  },
+  "fatigue_knockout": true,
+  "disable_idle_vanity": true,
+  "camera_policy": "Normal third-person toggle; disable only automatic idle vanity through the existing control switch during this declared long low-regeneration course. No camera teleport or gameplay outcome setters.",
+  "observer_execution_preflight": {
+    "path": "build/oblivion-compat/m15/S4/held-fatigue-ko-work-01/check-observer.lua",
+    "sha256": "ec6058539eddee0f66a0dbf188e0003a130f4df19d642c6f2440a15a6f8159a2"
+  },
+  "ko_camera_actions": [
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_down",
+      "value": "b"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO state: fatigue=-",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "ko-settled.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "endpoint_settle_seconds_after_return_animation": 1.1,
+  "protocol": "Initial living Health80/Fatigue1/Block5 and equipped stock claymore only; opponent unarmed. Two explicit regeneration GMSTs .05/0 keep KO observable. Actual B/Space contact causes negative Fatigue and body admission, never authored knockout. Save actual state4/body; fresh holds B before exact load. Native4->3->5->6->0, held reblock then release and explicit ordinary3. Wait1.1Lua simulation seconds after return animation ends, then save. Inspect actual physics impulse; use exact no-input endpoint tail when still active. Require zero impulse in final compared endpoint. No full140 Fatigue-pool claim.",
+  "source_mode": {
+    "actual_seed_f5": {
+      "path": "build/oblivion-compat/m15/S4/reaction-interruption-work-01/fixture-02/input.omwsave",
+      "sha256": "2438d164321dcb4919dc746ec6681b435c5c48ca877230c1bab4e9b5b518a3e0"
+    },
+    "writer": "scripts/tes4_runtime_state.py::write_save",
+    "GMST_writer": "scripts/tes4_m15_fixture.py::{record,sub,group,string}",
+    "mutations": [
+      "Player Fatigue damage0->-139 and matching legacy current140->1; base/max140 unchanged.",
+      "Player Block25->5 in AV/base/legacy projections.",
+      "Remove only NPC carried RustyShortsword; clothing and all other fields remain.",
+      "Append winning-master float GMST overrides fFatigueReturnBase=.05/fFatigueReturnMult=0 to existing mastery plugin, preserving existing3chance records; update only its content fingerprint."
+    ],
+    "current_source_sha256": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
+    "exact_declared_leaf_changes": 7,
+    "non_runtime_save_records_exact": true,
+    "no_authored_outcomes": true,
+    "fixture_helper": "build/oblivion-compat/m15/S4/held-fatigue-ko-work-01/setup.py"
+  },
+  "endpoint_tail_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 KO endpoint tail: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    }
+  ],
+  "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts."
+}

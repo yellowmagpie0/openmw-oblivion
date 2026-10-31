@@ -3688,6 +3688,16 @@ namespace MWMechanics
                     mSkipAnim && !isScriptedAnimPlaying() ? 0.f : duration);
                 if (nativeRecovery)
                 {
+                    if (!mOblivionRecoveryActive)
+                    {
+                        // Physical admission has already withdrawn native
+                        // ownership. Retire the controller's rendered groups
+                        // too, including the independent first-person view.
+                        const auto interruptedWeapon = mCurrentWeapon;
+                        cancelOblivionCombatInput();
+                        if (!interruptedWeapon.empty())
+                            mAnimation->disable(interruptedWeapon, MWRender::Animation::PlaybackScope::ThisView);
+                    }
                     mHitState = CharState_KnockOut;
                     cls.getCreatureStats(mPtr).setKnockedDown(true);
                 }
