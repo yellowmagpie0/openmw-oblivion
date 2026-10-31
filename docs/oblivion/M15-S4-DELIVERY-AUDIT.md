@@ -20,8 +20,23 @@ supported ENCH bypasses have focused World evidence, including depleted charge.
 Normal gates pass 3,213 component/2,069 engine cases; SAN passes 1,039 native
 component/2,069 engine cases. The 56 original branches plus the depleted return and
 focused checks retain their receipts. Ordinary full-immunity notification,
-unarmed resistance and other C1 domains remain open. The SAN Forward image
+Creature resistance policy and other C1 domains remain open. The SAN Forward image
 still does not demonstrate settled-prone collapse; V6/T7/F8 remain open.
+
+The [bare-hand resistance checkpoint](../../build/oblivion-compat/m15/S4/unarmed-resistance-work-01/checkpoint-verification.json)
+admits hand contacts at negative/partial AV65 without reducing Health or Fatigue;
+Journeyman mastery also bypasses full immunity. **35 original-engine cases** and
+focused Player/NPC, mastery, power and armor checks support the branch. Normal/SAN
+first-person keyboard/mouse courses at AV65=50 pass **28 exact saved/live pairs**,
+two exact fresh restores, both **26-field endpoints**, and block PCM without replay;
+all first hand hits retain **1.42 Health / 1.71 Fatigue** damage. Both full engine
+suites pass **2,071 tests**. Unchanged component/public-Python evidence is reused.
+The accidentally selected obsolete opponent fixture and its failed run remain
+retained; the shared launcher now rejects that policy in preflight. No rebuild
+followed that fixture correction. Full-immunity notification and Creature
+resistance policy remain open. The [editable recipe](../../scripts/data/oblivion_compat/m15_unarmed_resistance_cases.json)
+records the supported scope; Journeyman bypass has World, not runtime, coverage.
+Next close the full-immunity contact/feedback path before freezing the final course.
 
 The [head-material checkpoint](../../build/oblivion-compat/m15/S4/npc-appearance-work-01/checkpoint-verification.json)
 makes the winning NPC hair tint replace cached cyan vertex colors and gives
@@ -136,8 +151,8 @@ gates, reuse applicable evidence, and defer unrelated discoveries.
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` selects the first directed target from persistent controller state; graph membership alone does not authorize an attack. It sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Normal and sanitizer input courses now create the controller through authored StartCombat, receive one blocked NPC contact, and recover across a fresh mid-reaction restart without contact replay. Complete the remaining required actor/view/input/FPS matrix. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. Journeyman sideways disarm now publishes one intact NPC drop and unarmed Stagger, removes the carried mesh during reaction, and restores without replay in normal/SAN courses. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Single unresisted instant zero-area Fire Damage contacts now share the existing charge/effect/physical transaction and fresh-recovery proof. Timed/scripted/multiple effects and resistance/absorption/reflection remain explicitly unsupported; complete other narrowly required combat hooks without claiming general M16 magic. |
 
-Other deliberate ordinary-contact restrictions include sneaking, unarmed normal
-weapon resistance, ordinary full-immunity notification, negative incoming damage,
+Other deliberate ordinary-contact restrictions include sneaking, Creature natural-weapon
+resistance, ordinary full-immunity notification, negative incoming damage,
 and remaining breakage branches.
 They need their reviewed native branches before broader contact acceptance.
 Removing a rejection without its complete consequences does not deliver a branch.

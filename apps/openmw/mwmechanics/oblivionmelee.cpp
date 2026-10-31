@@ -1384,9 +1384,10 @@ namespace MWMechanics
             return ptr == player ? service->getPlayerIntegerValue(av)
                 : service->getNonPlayerIntegerValue(ptr, av);
         };
-        // These branches require sneak/mastery, block or gear-wear policy.
-        // Do not substitute a generic TES3 hit or silently omit their effects.
-        if (sneaking || integer(victim, 65) != 0)
+        const auto resistance = integer(victim, 65);
+        // Creature natural-weapon flags and immune-contact feedback remain
+        // separate from the reviewed bare-hand mastery branch below.
+        if (sneaking || (creature && resistance != 0))
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower
             && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
@@ -1405,6 +1406,17 @@ namespace MWMechanics
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        if (!creature && resistance >= 100)
+        {
+            const auto hand = attacker == player ? service->getPlayerBaseValue(17)
+                : service->getNonPlayerBaseValue(attacker.getCellRef().getFormKey(), 17, world.getStore());
+            if (ESM4::combatMastery(hand, ESM4::buildCombatMasterySettings(settings))
+                < ESM4::CombatMastery::Journeyman)
+                return std::nullopt; // Full immunity still needs its notification path.
+        }
+        // Original5FF576 skips partial reduction when both weapon and
+        // projectile are null. Bare-hand Health and Fatigue stay unchanged;
+        // Journeyman mastery also bypasses the earlier full-immunity branch.
         const float multiplier = creature ? 1.f
             : contactPowerMultiplier(world, *service, attacker, 17, kind, settings);
         // Native5FF46C stores Health and Fatigue separately after the complete

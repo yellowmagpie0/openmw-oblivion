@@ -1,0 +1,63 @@
+{
+  "requirement": "S4 C1 bare-hand contacts against nonzero ResistNormalWeapons AV65",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_points": {
+    "admission": "5FF0CA..5FF187/5FF1E6",
+    "partial_reduction": "5FF55E..5FF598"
+  },
+  "inputs": {
+    "mastery_rank": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "integer_resistance": [
+      -50,
+      0,
+      1,
+      50,
+      99,
+      100,
+      150
+    ],
+    "incoming_health": 20,
+    "weapon": null,
+    "projectile": null,
+    "cached_enchantment": null
+  },
+  "expectations": {
+    "rank_below_Journeyman": "Full immunity at AV65>=100; its production notification path remains open. Negative and partial resistance leave Health/Fatigue unchanged.",
+    "Journeyman_or_above": "Bypass full immunity; preserve Health/Fatigue damage.",
+    "partial_reduction": "Original5FF576 skips weapon reduction when both weapon and projectile are null; do not apply the weapon formula to bare hands."
+  },
+  "boundaries": [
+    "Integer AV65 getter stubbed",
+    "Reviewed mastery-rank getter stubbed; current production selects rank from base skill and winning mastery thresholds",
+    "Attacker enchantment virtual return stubbed false for empty bare hands",
+    "No Creature natural-weapon flag, immunity message or game-process claim from the oracle"
+  ],
+  "tolerance": 1e-05,
+  "cases": 35,
+  "oracle_evidence": "build/oblivion-compat/m15/S4/unarmed-resistance-work-01/verification.json",
+  "runtime_plan": "build/oblivion-compat/m15/S4/unarmed-resistance-work-01/live-comparison-plan.json",
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/unarmed-resistance-work-01/checkpoint-verification.json",
+  "full_M15S4_acceptance": false,
+  "runtime_fixture": {
+    "base": "build/oblivion-compat/m15/S4/lower-hand-recoil-work-01/fixture-proc-aware04/input.omwsave",
+    "fixture": "build/oblivion-compat/m15/S4/unarmed-resistance-work-01/fixture-aware-50",
+    "input_sha256": "83b2ddd45d78b2bee9a0385be780cd6192706e8ff8d0d397722b84cdd116fe32",
+    "profile": "build/oblivion-compat/m15/S4/lower-hand-recoil-work-01/proc-aware-profile.json",
+    "allowed_change": "Target native AV65 base50 plus existing schema compatibility only; no outcomes injected.",
+    "required_policy": "Natural NPC Recoil must use accepted AI-pause/activation profile and embedded source matching scripts/data/oblivion_compat/m15_recoil_aware_opponent.obscript. Shared launcher rejects superseded natural03 in preflight.",
+    "preflight": "build/oblivion-compat/m15/S4/unarmed-resistance-work-01/opponent-policy-preflight-verification.json",
+    "first_hit": {
+      "health": 1.42,
+      "fatigue": 1.71,
+      "attack_fatigue_cost": 7,
+      "tolerance": 0.0002
+    },
+    "bounds": "First-person keyboard/mouse existing seed/configuration. Journeyman full-immunity bypass has World coverage; no full-immunity runtime feedback or T7/F8 claim."
+  }
+}

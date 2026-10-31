@@ -6643,6 +6643,68 @@ namespace
         EXPECT_THROW(MWMechanics::oblivionHandToHandContactDamage(world, actor, player), std::invalid_argument);
     }
 
+    TEST(OblivionWorldTest, BareHandResistancePreservesPartialDamageAndUsesBaseMasteryForImmunityBypass)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf(); world.setupPlayer();
+        ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+        native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7); native.mData.health = 100;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr(), npc = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        auto& service = *world.getOblivionCombatService();
+        unsigned id = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", 0.f},
+            {"fHandHealthMin", 20.f}, {"fHandHealthMax", 20.f},
+            {"fHandFatigueDamageBase", 10.f}, {"fHandFatigueDamageMult", 0.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {id, 0}; setting.mEditorId = name; setting.mData = value;
+            world.getStore().getWritable<ESM4::GameSetting>().insertStatic(setting,
+                ESM::FormKey::content("headless.esm", id++));
+        }
+        const auto set = [&](const MWWorld::Ptr& actor, unsigned av, int value) {
+            return world.executeOblivionActorValueCommand(actor, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, value);
+        };
+        for (const bool playerAttacks : {false, true})
+        for (const int skill : {49, 50})
+        for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+        {
+            const auto attacker = playerAttacks ? player : npc, victim = playerAttacks ? npc : player;
+            ASSERT_TRUE(set(attacker, 17, skill)); ASSERT_TRUE(set(victim, 43, 25));
+            ASSERT_TRUE(set(victim, 65, 0));
+            const auto baseline = MWMechanics::resolveOblivionUnarmedMeleeContact(world, attacker, victim, 0, false, kind);
+            ASSERT_TRUE(baseline);
+            if (kind == ESM4::MeleeStrikeKind::Left)
+            {
+                EXPECT_NEAR(baseline->mHealth, 15.f, .0001f);
+                EXPECT_NEAR(baseline->mFatigue, 7.5f, .0001f);
+            }
+            for (const int resistance : {-50, 1, 50, 99, 100, 150})
+            {
+                SCOPED_TRACE(::testing::Message() << playerAttacks << ':' << skill << ':' << int(kind) << ':' << resistance);
+                ASSERT_TRUE(set(victim, 65, resistance));
+                const auto source = *service.findActorValues(playerAttacks ? ESM::FormKey::dynamic("player", 1) : npc.getCellRef().getFormKey());
+                const auto target = *service.findActorValues(playerAttacks ? npc.getCellRef().getFormKey() : ESM::FormKey::dynamic("player", 1));
+                const auto random = service.combatRandomState();
+                const auto result = MWMechanics::resolveOblivionUnarmedMeleeContact(world, attacker, victim, 0, false, kind);
+                if (resistance >= 100 && skill < 50) EXPECT_FALSE(result);
+                else
+                {
+                    ASSERT_TRUE(result);
+                    EXPECT_NEAR(result->mHealth, baseline->mHealth, .0001f);
+                    EXPECT_NEAR(result->mFatigue, baseline->mFatigue, .0001f);
+                    EXPECT_NEAR(result->mHitArguments.mPreArmorDamage, baseline->mHitArguments.mPreArmorDamage, .0001f);
+                }
+                EXPECT_EQ(*service.findActorValues(source.mActor), source);
+                EXPECT_EQ(*service.findActorValues(target.mActor), target);
+                EXPECT_EQ(service.combatRandomState(), random);
+            }
+        }
+    }
+
     TEST(OblivionWorldTest, CreatureNaturalContactUsesNativeWordAndIndependentFatigueDamage)
     {
         NativeWorldFixture fixture;
