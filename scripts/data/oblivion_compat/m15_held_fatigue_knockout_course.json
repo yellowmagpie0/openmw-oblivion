@@ -23,7 +23,7 @@
     "expected_ordinary_fatigue_cost": 9.2,
     "animation_family": "twohand",
     "target_health": 300,
-    "name": "Held block interrupted by actual unarmed Fatigue knockout",
+    "name": "Repeated real unarmed hit during held FatigueKO",
     "course_window": "ordinary",
     "base_block": 5,
     "natural_recoil_opponent": true,
@@ -35,12 +35,13 @@
     "fatigue_regeneration": {
       "fFatigueReturnBase": 0.05,
       "fFatigueReturnMult": 0.0
-    }
+    },
+    "repeated_fatigue_knockout": true
   },
   "stock_player_weapon": "content:oblivion.esm:01c6cd",
-  "scope": "R3/I4 held-block Fatigue knockout: actual unarmed contact, natural physical collapse/GetUp, held reblock/release and capped ordinary return, exact active-body fresh continuation. NormalTP/SANFP; fullS4 remains incomplete.",
+  "scope": "R3/I4 held-block FatigueKO and repeated actual unarmed contact: preserve physical/recovery ownership, Health retained/Fatigue suppressed on knocked victim, natural recovery/reblock/release/ordinary return and exact post-second-hit fresh continuation. FullS4 remains incomplete.",
   "initial_player_weapon_condition": 168,
-  "current_source_sha256": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
+  "current_source_sha256": "52d6311851d00d81734fa78438b2439d1e178807d1f47ada20981038a6bea408",
   "reference_actions": [
     {
       "type": "wait_log",
@@ -140,6 +141,30 @@
       "path": "events.jsonl"
     },
     {
+      "type": "screenshot",
+      "name": "ko-first-contact.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=3 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "path": "events.jsonl",
+      "timeout_seconds": 60,
+      "abort_on_failure": true
+    },
+    {
       "type": "sleep",
       "seconds": 2
     },
@@ -162,7 +187,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
       "timeout_seconds": 180,
       "abort_on_failure": true,
       "path": "events.jsonl"
@@ -190,7 +215,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
       "timeout_seconds": 180,
       "abort_on_failure": true,
       "path": "events.jsonl"
@@ -201,7 +226,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
       "timeout_seconds": 180,
       "abort_on_failure": true
     },
@@ -211,7 +236,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4 ",
       "timeout_seconds": 180,
       "abort_on_failure": true
     },
@@ -229,7 +254,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
       "timeout_seconds": 180,
       "abort_on_failure": true,
       "path": "events.jsonl"
@@ -247,7 +272,9 @@
     "M15 KO camera: vanity=false",
     "M15 KO block animation: playing=false"
   ],
-  "reference_expected_log": [],
+  "reference_expected_log": [
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=3 "
+  ],
   "forbidden_log": [
     "Error in frame:",
     "ERROR: AddressSanitizer",
@@ -343,7 +370,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
       "timeout_seconds": 180,
       "abort_on_failure": true
     },
@@ -353,7 +380,7 @@
     },
     {
       "type": "wait_log",
-      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4 ",
       "timeout_seconds": 180,
       "abort_on_failure": true
     },
@@ -451,25 +478,18 @@
     }
   ],
   "endpoint_settle_seconds_after_return_animation": 1.1,
-  "protocol": "Initial living Health80/Fatigue1/Block5 and equipped stock claymore only; opponent unarmed. Two explicit regeneration GMSTs .05/0 keep KO observable. Actual B/Space contact causes negative Fatigue and body admission, never authored knockout. Save actual state4/body; fresh holds B before exact load. Native4->3->5->6->0, held reblock then release and explicit ordinary3. Wait1.1Lua simulation seconds after return animation ends, then save. Inspect actual physics impulse; use exact no-input endpoint tail when still active. Require zero impulse in final compared endpoint. No full140 Fatigue-pool claim.",
+  "protocol": "Space starts real stationary combat; pause120GameModecallbacks after first spend, release, restrain after second spend below100. Existing100%standing-power style. No authored result. FirstKO F5 before second contact; secondKO F5; natural recovery/reblock/release/ordinaryPlayer4 return; inspect actual endpoint physics.",
   "source_mode": {
-    "actual_seed_f5": {
-      "path": "build/oblivion-compat/m15/S4/reaction-interruption-work-01/fixture-02/input.omwsave",
-      "sha256": "2438d164321dcb4919dc746ec6681b435c5c48ca877230c1bab4e9b5b518a3e0"
-    },
-    "writer": "scripts/tes4_runtime_state.py::write_save",
-    "GMST_writer": "scripts/tes4_m15_fixture.py::{record,sub,group,string}",
-    "mutations": [
-      "Player Fatigue damage0->-139 and matching legacy current140->1; base/max140 unchanged.",
-      "Player Block25->5 in AV/base/legacy projections.",
-      "Remove only NPC carried RustyShortsword; clothing and all other fields remain.",
-      "Append winning-master float GMST overrides fFatigueReturnBase=.05/fFatigueReturnMult=0 to existing mastery plugin, preserving existing3chance records; update only its content fingerprint."
-    ],
-    "current_source_sha256": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
-    "exact_declared_leaf_changes": 7,
-    "non_runtime_save_records_exact": true,
-    "no_authored_outcomes": true,
-    "fixture_helper": "build/oblivion-compat/m15/S4/held-fatigue-ko-work-01/setup.py"
+    "previous_course": "dc279e9ffc3746226f5061716a904b0dd3cb170d:scripts/data/oblivion_compat/m15_held_fatigue_knockout_course.json",
+    "previous_source_sha256": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
+    "current_source_sha256": "52d6311851d00d81734fa78438b2439d1e178807d1f47ada20981038a6bea408",
+    "changed_record": "SCPT000881 SCTX only; input save only matching content fingerprint",
+    "script": "scripts/data/oblivion_compat/m15_repeated_ko_opponent.obscript",
+    "producer": "Space starts real stationary combat; pause120GameModecallbacks after first spend, release, restrain after second spend below100. Existing100%standing-power style. No authored result.",
+    "script_sha256": "a58c3575b7763c62c738762fb89923b4d6b456013a25f30863eb6313cb460fb0",
+    "single_hit_history": "dc279e9ffc3746226f5061716a904b0dd3cb170d:scripts/data/oblivion_compat/m15_held_fatigue_knockout_course.json",
+    "writer": "scripts/tes4_m15_fixture.py::{record,group,sub}; scripts/tes4_runtime_state.py::write_save",
+    "fixture_helper": "build/oblivion-compat/m15/S4/repeated-fatigue-ko-work-01/setup.py"
   },
   "endpoint_tail_actions": [
     {
@@ -498,5 +518,6 @@
       "abort_on_failure": true
     }
   ],
-  "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts."
+  "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts.",
+  "repeated_fatigue_knockout": true
 }
