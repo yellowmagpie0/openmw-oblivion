@@ -513,5 +513,43 @@
     "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
     "scope": "Isolated original-game console ModAV Fatigue stimulus; FP0/raw0 ->TP1/raw4/3 ->FP0/raw0. Not normal-input melee acceptance.",
     "evidence": "build/oblivion-compat/m15/S4/player-ko-camera-work-01/original-01/view-policy-verification.json"
+  },
+  "gamepad_input_profile": {
+    "source_recipe": "scripts/data/oblivion_compat/m15_combined_melee_course.json",
+    "selector": "input_profiles.gamepad_first_person",
+    "delivery": "Configured SDL virtual Xbox 360 controller through the existing input/controller path; no gameplay state injection.",
+    "translation": {
+      "w": "left_y=-0.35 on press, 0 on release",
+      "b": "left_trigger=1 on press, 0 on release",
+      "u": "right_trigger=1 on press, 0 on release",
+      "space": "button A",
+      "F5": "unchanged keyboard instrumentation"
+    },
+    "source_restore_order": [
+      "Wait for Detected game controller: Xbox 360 Controller",
+      "Hold left trigger before Applied TES4 runtime state",
+      "Retain held trigger through GetUp; release then explicit right-trigger return"
+    ],
+    "camera_policy": "Use the existing native recovery observer: preferred first person, temporary third person while knocked, automatic first-person recovery; preserve CAM/FIRS in every save. The generic fixed-view observer must permit the temporary recovery view.",
+    "shared_fixture_policy": "Preserve weapon profile separately from input profile. Apply the existing gamepad converter after specialized course actions are installed; reuse the existing neutral registration wait for the KO source route.",
+    "reference_flags": [
+      "--gamepad"
+    ],
+    "continuation_flags": [
+      "--gamepad",
+      "--ko-source-run",
+      "REFERENCE_RUN"
+    ],
+    "verification": {
+      "receipt": "build/oblivion-compat/m15/S4/held-ko-gamepad-work-01/checkpoint-verification.json",
+      "exact_saved_live_pairs": 18,
+      "whole_exact_loads": 4,
+      "matched_fresh_endpoints": 2,
+      "strict_owned_groups_per_endpoint": 23,
+      "reviewed_captures": 16,
+      "block_pcm_checks": 4,
+      "normal_and_sanitizer": true
+    },
+    "scope": "Preferred first person, configured cap15/seed1 virtual controller only; physical devices, default layout, achieved FPS and full S4/T7/F8 remain outside this checkpoint."
   }
 }
