@@ -10,7 +10,7 @@ import subprocess
 import time
 
 
-INPUT_ACTIONS = frozenset({"key", "key_down", "keys_down", "key_up", "key_hold", "key_held",
+INPUT_ACTIONS = frozenset({"key", "key_down", "keys_down", "keys_transition", "key_up", "key_hold", "key_held",
                           "type", "type_held", "focus_window", "screenshot", "mouse_move",
                           "mouse_click", "mouse_down", "mouse_up"})
 PASSIVE_ACTIONS = frozenset({"sleep", "wait_log", "assert_file"})
@@ -55,6 +55,14 @@ def chord_scancodes(values):
     return codes
 
 
+def transition_scancodes(action):
+    release = chord_scancodes(action.get("release"))
+    press = chord_scancodes(action.get("press"))
+    if len(release) + len(press) > 16 or set(release) & set(press):
+        raise ValueError("Key transitions require at most sixteen distinct scancodes")
+    return release, press
+
+
 def mouse_delta(value):
     if type(value) is not int or not -(2 ** 31) <= value < 2 ** 31:
         raise ValueError("Relative mouse motion requires signed 32-bit integers")
@@ -77,7 +85,8 @@ def validate(manifest):
     if type(manifest.get("sdl_offscreen_input", False)) is not bool:
         raise ValueError("sdl_offscreen_input must be a boolean")
     if not manifest.get("sdl_offscreen_input", False):
-        if any(a.get("type") == "keys_down" for a in manifest.get("actions", []) if isinstance(a, dict)):
+        if any(a.get("type") in ("keys_down", "keys_transition")
+               for a in manifest.get("actions", []) if isinstance(a, dict)):
             raise ValueError("Batched keys require SDL offscreen input")
         return
     if manifest.get("xvfb") or "m14" in manifest or "m15" in manifest:
@@ -93,6 +102,8 @@ def validate(manifest):
             raise ValueError(f"Unsupported offscreen action: {action.get('type')!r}")
         if action["type"] == "keys_down":
             chord_scancodes(action.get("values"))
+        elif action["type"] == "keys_transition":
+            transition_scancodes(action)
         elif action["type"].startswith("key"):
             scancode(action["value"])
         elif action["type"] == "mouse_move":
@@ -204,6 +215,11 @@ class Replay:
                 self.send("text", text[offset:offset + 31].encode("ascii").hex())
         elif kind == "keys_down":
             self.send_many([("down", code) for code in chord_scancodes(action.get("values"))])
+        elif kind == "keys_transition":
+            release, press = transition_scancodes(action)
+            # Queue releases and presses together, without a receipt/frame wait
+            # between them (e.g. release attack before pressing quicksave).
+            self.send_many([("up", code) for code in release] + [("down", code) for code in press])
         elif kind in ("key_down", "key_up"):
             self.send("down" if kind == "key_down" else "up", scancode(action["value"]))
         elif kind.startswith("key"):

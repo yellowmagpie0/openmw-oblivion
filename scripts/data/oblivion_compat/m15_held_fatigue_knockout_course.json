@@ -551,5 +551,386 @@
       "normal_and_sanitizer": true
     },
     "scope": "Preferred first person, configured cap15/seed1 virtual controller only; physical devices, default layout, achieved FPS and full S4/T7/F8 remain outside this checkpoint."
+  },
+  "contexts": {
+    "pending_strike": {
+      "scope": "I4 pending Player3 strike interrupted by actual unarmed NPC2 FatigueKO; no late3 contact/debit, native body/GetUp/return4, exact activeKO fresh continuation. FullS4 incomplete.",
+      "profile_overrides": {
+        "name": "Pending Player strike interrupted by real unarmed FatigueKO",
+        "fatigue_regeneration": {
+          "fFatigueReturnBase": 0.25,
+          "fFatigueReturnMult": 0.0
+        },
+        "repeated_fatigue_knockout": false,
+        "pending_strike_fatigue_knockout": true
+      },
+      "current_source_sha256": "5e699541ad8105bcf53ccda4216e08278cdd439f66194798df920fc1c645d823",
+      "reference_actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Applied TES4 runtime state:",
+          "timeout_seconds": 600,
+          "abort_on_failure": true
+        },
+        {
+          "type": "focus_window",
+          "name": "OpenMW"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 reaction stance: weapon=true",
+          "timeout_seconds": 180,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_down",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 course unarmed approach: reachable=true",
+          "timeout_seconds": 180,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_up",
+          "value": "w"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 reaction setup: ready=true",
+          "timeout_seconds": 180,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-before.png",
+          "minimum_entropy": 0.03
+        },
+        {
+          "type": "key_held",
+          "value": "space",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee frame: actor=content:oblivion.esm:01fc43 id=2 phase=0",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_down",
+          "value": "u"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "keys_transition",
+          "release": [
+            "u"
+          ],
+          "press": [
+            "F5"
+          ]
+        },
+        {
+          "type": "key_up",
+          "value": "F5"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 ",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-active.png",
+          "minimum_entropy": 0.03
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0",
+          "timeout_seconds": 600,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 reaction setup: ready=true",
+          "after_start": true,
+          "timeout_seconds": 60,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_held",
+          "value": "space",
+          "hold_seconds": 0.2,
+          "pause_seconds": 0.1
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 windup KO NPC resources: full=true",
+          "timeout_seconds": 600,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-recovered.png",
+          "minimum_entropy": 0.03
+        },
+        {
+          "type": "key_down",
+          "value": "u"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "u"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4 ",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 KO endpoint: settled=true",
+          "timeout_seconds": 600,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-return.png",
+          "minimum_entropy": 0.03
+        }
+      ],
+      "resume_actions": [
+        {
+          "type": "wait_log",
+          "pattern": "Applied TES4 runtime state:",
+          "timeout_seconds": 600,
+          "abort_on_failure": true
+        },
+        {
+          "type": "focus_window",
+          "name": "OpenMW"
+        },
+        {
+          "type": "key_up",
+          "value": "u"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-restored.png",
+          "minimum_entropy": 0.03
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 recovery transition: actor=dynamic:player:0000000000000001 from=6 to=0",
+          "timeout_seconds": 600,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 reaction setup: ready=true",
+          "after_start": true,
+          "timeout_seconds": 60,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_held",
+          "value": "space",
+          "hold_seconds": 0.2,
+          "pause_seconds": 0.1
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 windup KO NPC resources: full=true",
+          "timeout_seconds": 600,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-recovered.png",
+          "minimum_entropy": 0.03
+        },
+        {
+          "type": "key_down",
+          "value": "u"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=4 action=2",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "key_up",
+          "value": "u"
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4 ",
+          "timeout_seconds": 120,
+          "abort_on_failure": true
+        },
+        {
+          "type": "wait_log",
+          "pattern": "M15 KO endpoint: settled=true",
+          "timeout_seconds": 600,
+          "abort_on_failure": true,
+          "after_start": true
+        },
+        {
+          "type": "key_held",
+          "value": "F5",
+          "hold_seconds": 0.02,
+          "pause_seconds": 0.02
+        },
+        {
+          "type": "wait_log",
+          "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+          "timeout_seconds": 60,
+          "abort_on_failure": true,
+          "path": "events.jsonl"
+        },
+        {
+          "type": "screenshot",
+          "name": "windup-return.png",
+          "minimum_entropy": 0.03
+        }
+      ],
+      "reference_expected_log": [
+        "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+        "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 "
+      ],
+      "repeated_fatigue_knockout": false,
+      "pending_strike_fatigue_knockout": true,
+      "protocol": "One-shot production opponent from existing reaction-interruption fixture. Player1positiveFatigue/Block5; declared GMST.25/0. ActualNPC2 begins, normalPlayer3 starts, then real pending-action F5 before incoming hit; no Player3contact/debit admitted. SavephysicalKO/emptyPlayermeleeauthority,next4, then nativeGetUp andactualStopCombat/return4. No authored outcomes.",
+      "source_mode": {
+        "base": "held-fatigue-ko-work-01/fixture/input.omwsave",
+        "mutations": "Only fFatigueReturnBase .05->.25 and corresponding plugin fingerprint; no state/ownership/outcome changes.",
+        "source_preflight": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/windup-fatigue-ko-work-01/source-preflight.json"
+      },
+      "forbidden_log": [
+        "Error in frame:",
+        "ERROR: AddressSanitizer",
+        "runtime error:",
+        "M15 native death callback:",
+        "M15 melee miss committed:",
+        "Lua error:",
+        "M15 melee (?:hit|miss) committed: actor=dynamic:player:0000000000000001 id=3 ",
+        "M15 block begin: actor=dynamic:player:0000000000000001"
+      ],
+      "body_capture_minimum_seconds": 4.0,
+      "observer_execution_preflight": {
+        "path": "build/oblivion-compat/m15/S4/windup-fatigue-ko-work-01/check-observer-delay.lua",
+        "sha256": "441655fc1ee16d1c048aa45033eefb752b58937005cddd9a1da88f0d9af60e7e",
+        "arguments": [
+          4
+        ]
+      },
+      "pending_snapshot_input_policy": "ReleaseU thenpressF5 in oneexisting SDLsend_many batch; identical primitive up/down order, no intervening receipt/frame wait. No inputheld promotion or gameplay state injection."
+    }
   }
 }

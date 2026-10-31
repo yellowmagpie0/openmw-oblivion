@@ -9,6 +9,46 @@ import sdl_offscreen_replay as replay
 
 
 class SdlOffscreenReplayTest(unittest.TestCase):
+    def test_key_transition_rejects_invalid_or_overlapping_keys_before_delivery(self):
+        control = object.__new__(replay.Replay)
+        control.sequence = 0
+        control.send_many = mock.Mock()
+        for release, press in [(None, ["F5"]), (["u"], []), ([], ["F5"]),
+                               (["u", "U"], ["F5"]), (["U"], ["u"]),
+                               ([24], ["F5"]), (["u"], ["quit"]),
+                               (list("abcdefghijklmnop"), ["q"])]:
+            action = dict(type="keys_transition", release=release, press=press)
+            with self.subTest(action=action):
+                with self.assertRaises(ValueError):
+                    replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+                with self.assertRaises(ValueError):
+                    control.action(action)
+        control.send_many.assert_not_called()
+        with self.assertRaises(ValueError):
+            replay.validate(dict(actions=[dict(type="keys_transition", release=["u"], press=["F5"])]))
+
+    def test_release_and_press_share_one_batch_and_wait_for_all_receipts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            control = object.__new__(replay.Replay)
+            control.path = Path(directory) / "input"
+            control.path.write_bytes(b"")
+            control.sequence, control.expected = 0, b""
+            control.receipt_timeout_seconds = 10
+            receipt = Path(str(control.path) + ".delivered")
+            expected = b"1 up 24\n2 down 62\n"
+            sleeps = []
+            def deliver(_):
+                self.assertEqual(control.path.read_bytes(), expected)
+                sleeps.append(True)
+                receipt.write_bytes(b"1 up 24\n" if len(sleeps) == 1 else expected)
+            action = dict(type="keys_transition", release=["u"], press=["F5"])
+            replay.validate(dict(sdl_offscreen_input=True, actions=[action]))
+            with mock.patch.object(replay.time, "sleep", side_effect=deliver):
+                result = control.action(action)
+            self.assertEqual(len(sleeps), 2)
+            self.assertEqual((result['first_input_sequence'], result['last_input_sequence']), (1, 2))
+            self.assertEqual(receipt.read_bytes(), expected)
+
     def test_batched_keys_validate_before_delivery(self):
         control = object.__new__(replay.Replay)
         control.sequence = 0
