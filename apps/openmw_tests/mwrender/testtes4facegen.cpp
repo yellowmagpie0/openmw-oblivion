@@ -1,6 +1,13 @@
 #include <gtest/gtest.h>
 
 #include "../../openmw/mwrender/tes4facegen.hpp"
+#include "../../openmw/mwrender/tes4hair.hpp"
+#include <components/resource/resourcesystem.hpp>
+#include <components/resource/scenemanager.hpp>
+#include <components/testing/util.hpp>
+#include <components/vfs/manager.hpp>
+#include <osg/Material>
+#include <fstream>
 
 #include <osg/Group>
 #include <osg/StateSet>
@@ -37,6 +44,54 @@ namespace MWRender
         (*isolatedVertices)[0].x() = 99.f;
         EXPECT_FLOAT_EQ((*templateVertices)[0].x(), 1.f);
         EXPECT_EQ(second->getChild(0), templateGeometry);
+    }
+
+    TEST(Tes4FaceGen, HairTintRefreshesCachedVertexColorModeWithoutChangingSharedTemplate)
+    {
+        VFS::Manager vfs;
+        Resource::ResourceSystem resources(&vfs, 0, nullptr);
+        auto& scenes = *resources.getSceneManager();
+        const auto directory = TestingOpenMW::outputFilePathWithSubDir("tes4-hair");
+        std::filesystem::create_directories(directory / "compatibility");
+        for (const auto extension : {".vert", ".frag"})
+        {
+            std::ofstream file(directory / "compatibility" / (std::string("objects") + extension));
+            file << "#version 120\nvoid main(){"
+                 << (std::string_view(extension) == ".vert" ? "gl_Position" : "gl_FragColor") << "=vec4(1);}";
+        }
+        scenes.setShaderPath(directory);
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+        const osg::Vec3f vertices[] = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}};
+        const osg::Vec4f colors[] = {{0, 1, 1, 1}};
+        geometry->setVertexArray(new osg::Vec3Array(3, vertices));
+        geometry->setColorArray(new osg::Vec4Array(1, colors), osg::Array::BIND_OVERALL);
+        geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLES, 0, 3));
+        osg::ref_ptr<osg::Material> authored = new osg::Material;
+        authored->setColorMode(osg::Material::AMBIENT_AND_DIFFUSE);
+        geometry->getOrCreateStateSet()->setAttribute(authored);
+        model->addChild(geometry);
+        scenes.recreateShaders(model);
+        int mode = -1;
+        ASSERT_NE(geometry->getStateSet()->getUniform("colorMode"), nullptr);
+        ASSERT_TRUE(geometry->getStateSet()->getUniform("colorMode")->get(mode));
+        ASSERT_EQ(mode, 2); // The cached template uses the authored cyan vertices.
+        osg::ref_ptr<osg::Group> actor = new osg::Group(*model, osg::CopyOp::SHALLOW_COPY);
+        ASSERT_EQ(isolateTes4ActorGeometry(*actor), 1u);
+        const osg::Vec4f gray(126.f / 255, 126.f / 255, 126.f / 255, 1);
+        applyTes4HairTint(*actor, gray, scenes);
+        auto* hair = dynamic_cast<osg::Geometry*>(actor->getChild(0));
+        ASSERT_NE(hair, nullptr);
+        ASSERT_NE(hair, geometry);
+        ASSERT_NE(hair->getStateSet()->getUniform("colorMode"), nullptr);
+        ASSERT_TRUE(hair->getStateSet()->getUniform("colorMode")->get(mode));
+        EXPECT_EQ(mode, 0); // The actor material, not authoring vertices, now supplies tint.
+        const auto* material = dynamic_cast<const osg::Material*>(actor->getStateSet()->getAttribute(osg::StateAttribute::MATERIAL));
+        ASSERT_NE(material, nullptr);
+        EXPECT_EQ(material->getDiffuse(osg::Material::FRONT), gray);
+        ASSERT_TRUE(geometry->getStateSet()->getUniform("colorMode")->get(mode));
+        EXPECT_EQ(mode, 2); // A second actor's template must remain unchanged.
+        EXPECT_EQ(authored->getColorMode(), osg::Material::AMBIENT_AND_DIFFUSE);
     }
 
     TEST(Tes4FaceGen, AppliesEgmBasePrefixWhenStatMorphVerticesFollow)

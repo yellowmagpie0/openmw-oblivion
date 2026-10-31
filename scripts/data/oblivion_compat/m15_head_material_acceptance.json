@@ -1,0 +1,46 @@
+{
+  "requirement": "S4 V6 stock head/hair material correctness",
+  "stock": {
+    "npc": "content:oblivion.esm:025200",
+    "hair_rgb": [
+      126,
+      126,
+      126
+    ],
+    "hair_model": "meshes/characters/hair/darkelfmane.nif",
+    "hair_diffuse": "textures/characters/hair/grey.dds",
+    "ear_model": "meshes/characters/darkelf/earsdarkelf.nif",
+    "ear_diffuse": "textures/characters/darkelf/earsdarkelf.dds",
+    "ear_normal": "textures/characters/darkelf/earsdarkelf_n.dds"
+  },
+  "rules": [
+    "Actor hair material replaces cached authoring vertex-color mode; templates remain isolated.",
+    "Stock legacy10.0.1.0/10.0.1.2 NIFs use companion normal alpha as specular intensity; Morrowind stays excluded.",
+    "Each model explicitly restores zero embedded-light uniforms; preserve authored local values so lights cannot leak across shared GLSL programs."
+  ],
+  "archive_sha256": {
+    "Oblivion - Meshes.bsa": "d05bb62f933856105536beb06c26bcdf5fa37f685152a39ece587e7f26b4e99b",
+    "Oblivion - Textures - Compressed.bsa": "d6e6a2155bea688052862df471c631e93572d525fb81b4358da328bd34760bd2"
+  },
+  "asset_sha256": {
+    "grey.dds": "cdb31a8ab218dd183299edfdc574c8711a0fcdc9b5d7dd0e1649933d0cf069fe",
+    "darkelfmane.nif": "1ab2485016a7e99498d621cf1e228ec130a5a9b14c8e2ac9aa83a7b42ec07f7e",
+    "earsdarkelf.nif": "a9d810af778d8ebee4e311804b78de65e504abebfb470eeb788aa2b3e0752af2",
+    "earsdarkelf.dds": "2ec7792e462d9acc8155d7ab63d038cdd6fa58e8e807ae3ff305b5a10dc17d46",
+    "earsdarkelf_n.dds": "58f48b8268854e07979e1b251c5e4ba5b7ad9b57a4ae57b287430572ef2877f9"
+  },
+  "runtime": {
+    "base_manifest": "build/oblivion-compat/m15/S4/combined-mastery-work-01/joined-camera-normal-left-12.json",
+    "base_manifest_sha256": "a6e3767a360103275d29abad869c301981773bf89ec5c2d97d4e6f6369f2f611",
+    "source": "build/oblivion-compat/m15/S4/joined-camera-normal-left-12/input-pristine.omwsave",
+    "source_sha256": "d060bd92a3301d4a274978cdaafcbbc92ac0cd72c27fc8e24f37d38f97528475",
+    "actions": 10,
+    "assertions": [
+      "Exact whole-source restoration and one exact saved/live pair",
+      "No new/replayed contact; unchanged Health/inventory/combatRNG/ledger",
+      "Useful close appearance capture; unrelated models keep local lighting"
+    ]
+  },
+  "evidence": "build/oblivion-compat/m15/S4/npc-appearance-work-01/checkpoint-verification.json",
+  "scope": "Verified hair shader tint, legacy companion-normal binding and model-local light isolation. Native local ear/skin lighting quality, Creature attachments, other views/feedback and fullV6/S4/T7/F8 remain open."
+}

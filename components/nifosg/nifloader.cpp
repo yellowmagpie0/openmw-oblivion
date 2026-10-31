@@ -2904,7 +2904,10 @@ namespace NifOsg
             // overriding a parent NiTexturingProperty, so remove what was previously bound
             clearBoundTextures(stateset, boundTextures);
 
-            const bool oblivion = mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB;
+            // Stock TES4 head parts also retain the older NetImmerse versions
+            // (for example EarsDarkElf10.0.1.0). They use the same _n alpha mask.
+            const bool oblivion = mVersion == 0x0a000100 || mVersion == Nif::NIFFile::VER_OB_OLD
+                || mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB;
 
             // If this loop is changed such that the base texture isn't guaranteed to end up in texture unit 0, the
             // shadow casting shader will need to be updated accordingly.

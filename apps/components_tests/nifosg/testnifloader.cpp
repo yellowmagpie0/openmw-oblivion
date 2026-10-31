@@ -1369,7 +1369,8 @@ namespace
         word(92, 0xff); word(96, 0xff00); word(100, 0xff0000); word(104, 0xff000000);
         word(108, 0x1000); word(128, 0x40ff8080);
         TestingOpenMW::VFSTestFile diffuse(dds), normal(dds);
-        for (const auto version : {0x14000004u, unsigned(Nif::NIFFile::VER_OB), unsigned(Nif::NIFFile::VER_MW)})
+        for (const auto version : {0x0a000100u, unsigned(Nif::NIFFile::VER_OB_OLD), 0x14000004u,
+                 unsigned(Nif::NIFFile::VER_OB), unsigned(Nif::NIFFile::VER_MW)})
         for (const bool companion : {false, true})
         {
             SCOPED_TRACE(version);

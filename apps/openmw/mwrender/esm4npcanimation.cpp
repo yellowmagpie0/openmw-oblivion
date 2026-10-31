@@ -1,4 +1,5 @@
 #include "esm4npcanimation.hpp"
+#include "tes4hair.hpp"
 #include "oblivionattachment.hpp"
 
 #include <array>
@@ -505,6 +506,20 @@ namespace MWRender
             cache.emplace(path.value(), result);
             return result;
         }
+    }
+
+    void applyTes4HairTint(osg::Node& node, const osg::Vec4f& color, Resource::SceneManager& scenes)
+    {
+        scenes.reinstateRemovedState(&node);
+        osg::ref_ptr<osg::Material> material = new osg::Material;
+        material->setColorMode(osg::Material::OFF);
+        material->setAmbient(osg::Material::FRONT_AND_BACK, color);
+        material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
+        node.getOrCreateStateSet()->setAttributeAndModes(
+            material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+        // Templates were compiled before this per-actor material existed.
+        // Retaining their colorMode=2 would keep the mesh's cyan vertex colors.
+        scenes.recreateShaders(&node);
     }
 
     std::size_t isolateTes4ActorGeometry(osg::Node& node)
@@ -1112,15 +1127,9 @@ namespace MWRender
                 {
                     applyTes4FaceGen(hair->mModel.getOriginal(), *node, traits, *race, isFemale, {}, false,
                         mResourceSystem, mFaceMorphs);
-                    osg::ref_ptr<osg::Material> material = new osg::Material;
-                    const float red = traits.mHairColour.red / 255.f;
-                    const float green = traits.mHairColour.green / 255.f;
-                    const float blue = traits.mHairColour.blue / 255.f;
-                    material->setColorMode(osg::Material::OFF);
-                    material->setAmbient(osg::Material::FRONT_AND_BACK, osg::Vec4f(red, green, blue, 1.f));
-                    material->setDiffuse(osg::Material::FRONT_AND_BACK, osg::Vec4f(red, green, blue, 1.f));
-                    node->getOrCreateStateSet()->setAttributeAndModes(
-                        material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+                    const osg::Vec4f color(traits.mHairColour.red / 255.f, traits.mHairColour.green / 255.f,
+                        traits.mHairColour.blue / 255.f, 1.f);
+                    applyTes4HairTint(*node, color, *mResourceSystem->getSceneManager());
                 }
             }
             else

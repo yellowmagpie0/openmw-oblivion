@@ -8,8 +8,8 @@ checkpoints in the milestone ledger do not establish complete live gameplay.
 
 Current acceptance checklist (2026-10-31):
 
-- **Demonstrated:** the [joined capture checkpoint](../../build/oblivion-compat/m15/S4/joined-camera-work-01/checkpoint-verification.json) passes **28 exact saved/live pairs**, both settled endpoints, **2 block-PCM matches** and **6 reviewed power captures** across normal/SAN first-person keyboard/mouse Club courses. Forward owns applied cause9 paralysis and 18 bodies; Left owns active Stagger11. The SAN Forward image shows a fall in progress, with lower body outside frame; its retained physical state corroborates downward motion, not a settled-prone claim. Fresh full engine gates pass **2,069 cases per build**, with **478 Python cases** and a final **15-case affected fixture recheck**. Historical source-window, Right-setup and component receipts retain their original scopes through the checkpoint links.
-- **Incomplete:** C1/D2 actor/equipment/mastery branches; R3 remaining physical-knockdown interruption, essential/reaction/repeated-hit contexts; remaining I4 held-input/view/device crosses; Q5 contexts; V6 other reaction/view feedback, body/hair appearance, essential-hit PCM sample matching and other feedback. Measured T7 and frozen independent F8 remain required. The table below maps these to planned runs; a configured cap is not achieved FPS.
+- **Demonstrated:** the [joined capture checkpoint](../../build/oblivion-compat/m15/S4/joined-camera-work-01/checkpoint-verification.json) passes **28 exact saved/live pairs**, both settled endpoints, **2 block-PCM matches** and **6 reviewed power captures** across normal/SAN first-person keyboard/mouse Club courses. Forward owns applied cause9 paralysis and 18 bodies; Left owns active Stagger11. The SAN Forward image shows a fall in progress, with lower body outside frame; its retained physical state corroborates downward motion, not a settled-prone claim. Its historical full engine gates pass **2,069 cases per build**, with **478 Python cases** and a final **15-case affected fixture recheck**. Historical source-window, Right-setup and component receipts retain their original scopes through the checkpoint links.
+- **Incomplete:** C1/D2 actor/equipment/mastery branches; R3 remaining physical-knockdown interruption, essential/reaction/repeated-hit contexts; remaining I4 held-input/view/device crosses; Q5 contexts; V6 other reaction/view feedback, remaining head/body appearance, essential-hit PCM sample matching and other feedback. Measured T7 and frozen independent F8 remain required. The table below maps these to planned runs; a configured cap is not achieved FPS.
 - **Blocked:** no external blocker. Gameplay/feedback gaps prevent final course freeze; required timing/step coverage remains unproven.
 
 The [partial-resistance checkpoint](../../build/oblivion-compat/m15/S4/weapon-resistance-work-01/checkpoint-verification.json)
@@ -22,6 +22,19 @@ component/2,069 engine cases. The 56 original branches plus the depleted return 
 focused checks retain their receipts. Ordinary full-immunity notification,
 unarmed resistance and other C1 domains remain open. The SAN Forward image
 still does not demonstrate settled-prone collapse; V6/T7/F8 remain open.
+
+The [head-material checkpoint](../../build/oblivion-compat/m15/S4/npc-appearance-work-01/checkpoint-verification.json)
+makes the winning NPC hair tint replace cached cyan vertex colors and gives
+models explicit local-light defaults so shared shaders cannot brighten unrelated
+objects. Stock legacy NIFs also load their companion specular masks. Normal/SAN
+close captures verify gray hair, stable scene lighting, two exact fresh-source
+restores and two saved/live pairs without new contacts. Normal gates pass 3,214
+component/2,070 engine cases; SAN passes 96 affected component/2,070 engine cases.
+Unchanged numerical/Python evidence retains its provenance. The initial lighting
+regression and its red/green test are retained. Local ear/skin lighting quality,
+Creature attachments and other views/feedback remain open; this is not full V6.
+The [editable asset/acceptance recipe](../../scripts/data/oblivion_compat/m15_head_material_acceptance.json)
+records the stock inputs and bounded assertions.
 
 Essential-hit PCM identity remains **open V6**: the [audio investigation](../../build/oblivion-compat/m15/S4/essential-hit-audio-work-01/checkpoint-verification.json) retains its original failures, two normal reference captures and conservative checker controls. Disabling Doppler/delaying camera movement did not establish identity; the stronger checker rejects the retained gameplay capture. No fresh/SAN audio campaign is justified yet.
 

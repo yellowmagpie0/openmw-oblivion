@@ -1,5 +1,7 @@
 #include <components/testing/util.hpp>
 #include <osg/Group>
+#include <osg/StateSet>
+#include <osg/Uniform>
 #include <osgDB/Registry>
 #include <osgDB/ReaderWriter>
 #include <sstream>
@@ -116,5 +118,45 @@ namespace
         auto fallback = scenes->getTemplate(bad, false);
         ASSERT_TRUE(fallback);
         EXPECT_THROW(scenes->getTemplate(bad, false, true), std::runtime_error);
+    }
+}
+
+namespace
+{
+    TEST(ResourceResourceSystem, EmbeddedLightsHaveModelLocalDefaultsAndKeepAuthoredValues)
+    {
+        const char* names[] = {"nifEmbeddedLightAmbient", "nifEmbeddedLightDiffuse",
+            "nifEmbeddedLightSpecular", "nifEmbeddedLightDirection"};
+        const osg::Vec4f light(.25f, .5f, .75f, 1.f);
+        osg::ref_ptr<osg::Group> lit = new osg::Group, plain = new osg::Group;
+        for (const auto* name : names)
+            lit->getOrCreateStateSet()->addUniform(new osg::Uniform(name, light));
+        auto* writer = osgDB::Registry::instance()->getReaderWriterForExtension("osgt");
+        ASSERT_NE(writer, nullptr);
+        std::ostringstream litBytes, plainBytes;
+        ASSERT_TRUE(writer->writeNode(*lit, litBytes).success());
+        ASSERT_TRUE(writer->writeNode(*plain, plainBytes).success());
+        TestingOpenMW::VFSTestFile litFile(litBytes.str()), plainFile(plainBytes.str());
+        auto vfs = TestingOpenMW::createTestVFS({
+            {VFS::Path::NormalizedView("lit.osgt"), &litFile},
+            {VFS::Path::NormalizedView("plain.osgt"), &plainFile}});
+        Resource::ResourceSystem resources(vfs.get(), 0., nullptr);
+        configureTemplateTestScene(resources);
+        auto* scenes = resources.getSceneManager();
+        auto first = scenes->getTemplate(VFS::Path::NormalizedView("lit.osgt"), false, true);
+        auto next = scenes->getTemplate(VFS::Path::NormalizedView("plain.osgt"), false, true);
+        for (const auto* name : names)
+        {
+            SCOPED_TRACE(name);
+            ASSERT_NE(first->getStateSet(), nullptr);
+            ASSERT_NE(first->getStateSet()->getUniform(name), nullptr);
+            osg::Vec4f actual;
+            ASSERT_TRUE(first->getStateSet()->getUniform(name)->get(actual));
+            EXPECT_EQ(actual, light); // Authored lighting still overrides the baseline.
+            ASSERT_NE(next->getStateSet(), nullptr);
+            ASSERT_NE(next->getStateSet()->getUniform(name), nullptr);
+            ASSERT_TRUE(next->getStateSet()->getUniform(name)->get(actual));
+            EXPECT_EQ(actual, osg::Vec4f()); // Do not reuse the previous model's GLSL values.
+        }
     }
 }

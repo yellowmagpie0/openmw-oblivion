@@ -969,6 +969,15 @@ namespace Resource
 
             loaded->setUserValue("openmw.resource.loadFailed", failed);
 
+            // GLSL uniform values persist on shared programs. Every model must
+            // restore a zero embedded-light baseline instead of inheriting the
+            // last drawn NIF's light; authored local uniforms still take precedence.
+            auto* state = loaded->getOrCreateStateSet();
+            for (const auto* name : {"nifEmbeddedLightAmbient", "nifEmbeddedLightDiffuse",
+                     "nifEmbeddedLightSpecular", "nifEmbeddedLightDirection"})
+                if (!state->getUniform(name))
+                    state->addUniform(new osg::Uniform(name, osg::Vec4f()));
+
             // set filtering settings
             SetFilterSettingsVisitor setFilterSettingsVisitor(mMinFilter, mMagFilter, mMaxAnisotropy);
             loaded->accept(setFilterSettingsVisitor);

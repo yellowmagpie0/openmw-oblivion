@@ -1,3 +1,4 @@
+#include "tes4hair.hpp"
 #include "npcanimation.hpp"
 #include "oblivionattachment.hpp"
 
@@ -800,14 +801,9 @@ namespace MWRender
                     if (const osg::ref_ptr<osg::Node> node
                         = attachPart(hair->mModel.getOriginal(), "Bip01 Head", hair->mIcon, true, false, true))
                     {
-                        osg::ref_ptr<osg::Material> material = new osg::Material;
                         const osg::Vec4f color(player->mHairColour.red / 255.f, player->mHairColour.green / 255.f,
                             player->mHairColour.blue / 255.f, 1.f);
-                        material->setColorMode(osg::Material::OFF);
-                        material->setAmbient(osg::Material::FRONT_AND_BACK, color);
-                        material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
-                        node->getOrCreateStateSet()->setAttributeAndModes(
-                            material, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+                        applyTes4HairTint(*node, color, *mResourceSystem->getSceneManager());
                     }
         }
 
