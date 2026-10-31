@@ -1,0 +1,480 @@
+{
+  "schema_version": 1,
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:01c6cd",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 1,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 168,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "Essential target Health1/base300, Player fullFatigue140, unchanged Block5/claymore/unarmed NPC; NPC AI restrained for isolated contact/recovery. Existing .05/0 regen. Real Player ordinary2 causes unconsciousness, not authored.",
+    "stock_weapon_weight": 22,
+    "expected_ordinary_fatigue_cost": 9.2,
+    "animation_family": "twohand",
+    "target_health": 1,
+    "name": "Essential NPC unconsciousness from actual Player contact",
+    "course_window": "ordinary",
+    "base_block": 5,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_reference_debits": 2,
+    "opponent_unarmed": true,
+    "initial_unarmed_approach": 90,
+    "fatigue_regeneration": {
+      "fFatigueReturnBase": 0.05,
+      "fFatigueReturnMult": 0.0
+    },
+    "essential_recovery": true
+  },
+  "stock_player_weapon": "content:oblivion.esm:01c6cd",
+  "scope": "R3 essential NPC unconsciousness from real fatal ordinary contact, native timer wake/GetUp and explicit ordinary return; applicable exact active-unconscious fresh continuation. FullS4 remains incomplete.",
+  "initial_player_weapon_condition": 168,
+  "current_source_sha256": "c74d03c3d73e90b354034bf6fb04a47d0839a043bfbfe89c6cd567e61b3fd1bf",
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction stance: weapon=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_down",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course unarmed approach: reachable=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 reaction setup: ready=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-before.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=2 action=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery body admitted: actor=content:oblivion.esm:01fc43 state=4",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 2400,
+      "y": 1200
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential body camera: visible=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-unconscious.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": -2400,
+      "y": -1200
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential recovery completed: actor=content:oblivion.esm:01fc43 phase=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=6 to=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-recovered.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential endpoint: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "expected_log": [
+    "M15 essential recovery completed: actor=content:oblivion.esm:01fc43 phase=0",
+    "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=6 to=0",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+    "M15 essential endpoint: ready=true"
+  ],
+  "reference_expected_log": [
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+    "M15 recovery body admitted: actor=content:oblivion.esm:01fc43 state=4"
+  ],
+  "forbidden_log": [
+    "Error in frame:",
+    "Lua error:",
+    "ERROR: AddressSanitizer",
+    "runtime error:",
+    "M15 native death callback:",
+    "M15 melee miss committed:",
+    "M15 melee hit committed: actor=content:oblivion.esm:01fc43"
+  ],
+  "resume_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential observer: down=true",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 2400,
+      "y": 1200
+    },
+    {
+      "type": "sleep",
+      "seconds": 2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential body camera: visible=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-restored.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "mouse_move",
+      "x": -2400,
+      "y": -1200
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential recovery completed: actor=content:oblivion.esm:01fc43 phase=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=6 to=0",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-recovered.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_down",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "u"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 essential endpoint: ready=true",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.02,
+      "pause_seconds": 0.02
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 60,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "essential-return.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "resume_expected_log": [
+    "M15 essential recovery completed: actor=content:oblivion.esm:01fc43 phase=0",
+    "M15 recovery transition: actor=content:oblivion.esm:01fc43 from=6 to=0",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+    "M15 essential endpoint: ready=true"
+  ],
+  "disable_idle_vanity": true,
+  "camera_policy": "Normal mouse look x2400 during unconscious capture, inverse afterward (measured x40 only0.45degree). Lower-body viewport/render ray witness uses first observed fall position, since actor capsule moves with knockback while ragdoll is separate. Does not ignore Player occlusion. Actual PNG review still required; no position setters. Disable only automatic idle vanity for slow sanitizer recovery; normal POV controls remain available. FP capture adds downward normal look y1200 and inverse to bring lower-body anchors into viewport; cheap FPsource camera-only preflight before fullSANrerun. Rendering rays ignore the hidden Player world body only in FirstPerson; ThirdPerson/Preview retain Player occlusion. Require explicit first-person mode in the diagnostic (Preview need not emit a ThirdPerson transition).",
+  "observer_execution_preflight": {
+    "path": "build/oblivion-compat/m15/S4/essential-recovery-work-01/check-observer.lua",
+    "sha256": "23c37ce8d013adfc5f3c1a60e2648122633e1bc50c3397fc8f0c280b8e27e964"
+  },
+  "protocol": "Initial essential NPC Health1/base300, PlayerFatigue140, NPC AI restrained; all living/native pending state exact. OrdinaryPlayer2 actual contact produces unconsciousness and Health recovery adjustment. Save activeNPCbody; timer is advanced only positive raw1/3 frames; native GetUp6->0. ExplicitPlayer3 return then120read-only observer samples to allowphysics expiry; actual finalsavedpulse0 mandatory.",
+  "source_mode": {
+    "base_source": "742f3eb324dbb94a18925a73977e52cc008f32fd273d4cee6be2b0a16b0ee96d",
+    "current_source_sha256": "c74d03c3d73e90b354034bf6fb04a47d0839a043bfbfe89c6cd567e61b3fd1bf",
+    "mutations": "NPC_ACBS essentialbit; NPC initialHealth1, PlayerFatigue140, restrainedNPC andmatchingpluginfingerprint only.",
+    "fixture_helper": "build/oblivion-compat/m15/S4/essential-recovery-work-01/setup.py",
+    "no_authored_outcomes": true,
+    "exact_save_differences": [
+      [
+        "/content/2/fingerprint",
+        "sha256:f8575d8007501f113c5e8269a36c864f762f0468778352a034bbd55d665191a1",
+        "sha256:348a3b9e97f8c9d66bbb4135c6bc3754375dcf5f26f4461ae145f52ae92b04bf"
+      ],
+      [
+        "/player/actor_values/fatigue.current",
+        1.0,
+        140.0
+      ],
+      [
+        "/actor_ai/796/restrained",
+        false,
+        true
+      ],
+      [
+        "/native_actor_values/1/values/8/3",
+        null,
+        -299.0
+      ],
+      [
+        "/native_actor_values/8/values/10/3",
+        -139.0,
+        0.0
+      ]
+    ],
+    "content_mutation": {
+      "record": "NPC025200.ACBS.flags",
+      "essential_bit": 2,
+      "other_record_bytes_exact": true
+    }
+  },
+  "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts.",
+  "essential_recovery": true,
+  "audio_status": "Unarmored-hit sample matching remains openV6: inherited low-hand equal-gain mixture assay failed on retained normal PCM. Native sound dispatch logs show PHYDamageFlesh+WPNHitBladeFlesh played1 percontact; do not claim PCM acceptance or lowerthreshold.",
+  "recovery_settings": {
+    "fEssentialDeathTime": {
+      "name": "fEssentialDeathTime",
+      "value": 10.0,
+      "compiled_default": "components/esm4/combatsettings.cpp::buildEssentialRecoverySettings"
+    },
+    "fEssentialHealthPercentReGain": {
+      "name": "fEssentialHealthPercentReGain",
+      "value": 0.3,
+      "compiled_default": "components/esm4/combatsettings.cpp::buildEssentialRecoverySettings"
+    }
+  },
+  "endpoint_observer_samples_after_return": 120,
+  "essential_camera_diagnostics": false
+}

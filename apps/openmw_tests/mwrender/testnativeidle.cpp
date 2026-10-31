@@ -1107,6 +1107,35 @@ TEST_F(NativeGetUpSwimmingTest, DryWorldSwimmingConditionSkipsSwimIdleBeforeGetU
     EXPECT_EQ(snapshot(), before);
 }
 
+TEST_F(NativeGetUpRequestTest, EssentialRecoveryFrameAdvancesTimerAndQueuesGetUpWithoutDeathOrRestoreTick)
+{
+    auto& world = mFixture.mWorld;
+    const auto baseKey = combat().findActorValues(key())->mBase;
+    auto base = *mActor.get<ESM4::Npc>()->mBase;
+    base.mBaseConfig.tes4.flags |= ESM4::Npc::TES4_Essential;
+    world.getStore().getWritable<ESM4::Npc>().insertStatic(base, baseKey);
+    ASSERT_TRUE(mActor.getClass().isEssential(mActor));
+    ASSERT_TRUE(combat().killNonPlayer(mActor, ESM::FormKey::dynamic("player", 1), true, {.5f, .5f}));
+    combat().advanceAnimationClock(key(), 0);
+    const auto before = snapshot();
+    EXPECT_TRUE(world.updateOblivionActorRecovery(*mAnimation, mActor, 0));
+    EXPECT_EQ(snapshot(), before);
+    EXPECT_TRUE(world.updateOblivionActorRecovery(*mAnimation, mActor, .25f));
+    ASSERT_EQ(combat().findActorLife(key())->mPhase, ESM4::ActorLifePhase::EssentialUnconscious);
+    EXPECT_FLOAT_EQ(combat().findActorLife(key())->mRecoveryRemaining, .25f);
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 3);
+    EXPECT_TRUE(world.updateOblivionActorRecovery(*mAnimation, mActor, .25f));
+    const auto* life = combat().findActorLife(key());
+    ASSERT_EQ(life->mPhase, ESM4::ActorLifePhase::Alive);
+    EXPECT_EQ(life->mRecoveryRemaining, 0);
+    EXPECT_TRUE(life->mKiller.isNull());
+    EXPECT_EQ(combat().getProcessKnockedState(key()), 5);
+    ASSERT_TRUE(combat().getUpPlayback(key()));
+    EXPECT_FALSE(combat().getUpPlayback(key())->mPendingRequests.empty());
+    EXPECT_FALSE(combat().takeNextDeathEvent());
+    EXPECT_EQ(combat().getDeadCount(baseKey), 0);
+}
+
 TEST_F(NativeGetUpLoadTest, QueuedRequestPlaysGetUpAndCompletesWithoutReplayingContactOrSelection)
 {
     write(kf(9, "Bip01", false, false, "SpecialIdle_GetUp")); mFixture.mResources.clearCache();

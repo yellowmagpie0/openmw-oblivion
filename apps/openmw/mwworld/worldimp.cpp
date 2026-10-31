@@ -3734,6 +3734,18 @@ namespace MWWorld
                     && ESM4::physicalHitRootHeightReady(height)))
                 service.setProcessKnockedState(key, 3); // Existing selector observes native GetUp state3.
         }
+        if (duration > 0 && (raw == 1 || raw == 3)
+            && life->mPhase == ESM4::ActorLifePhase::EssentialUnconscious)
+        {
+            const bool essential = actor.getClass().isEssential(actor);
+            const auto settings = resolveOblivionEssentialRecoverySettings(mStore);
+            const bool recovered = actor == getPlayerPtr()
+                ? service.advancePlayerEssentialRecovery(*mPlayer, duration, raw, essential, settings, getGodModeState())
+                : service.advanceNonPlayerEssentialRecovery(actor, duration, raw, essential, settings);
+            if (recovered)
+                Log(Debug::Verbose) << "M15 essential recovery completed: actor=" << key.serialize()
+                                    << " phase=" << unsigned(service.findActorLife(key)->mPhase);
+        }
         if (advanceOblivionGetUpPlayback(animation, actor, duration)) return true;
         service.advanceAnimationClock(key, duration);
         return true;
