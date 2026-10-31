@@ -259,7 +259,7 @@ namespace Shader
         if (std::find(std::begin(defaultTextures), std::end(defaultTextures), name) != std::end(defaultTextures))
             return true;
         else
-            return name == "normalHeightMap";
+            return name == "normalHeightMap" || name == "normalSpecularMap";
     }
 
     void ShaderVisitor::applyStateSet(osg::ref_ptr<osg::StateSet> stateset, osg::Node& node)
@@ -294,11 +294,10 @@ namespace Shader
                         if ((texName.empty() || !isTextureNameRecognized(texName)) && unit == 0)
                             texName = "diffuseMap";
 
-                        if (texName == "normalHeightMap")
-                        {
-                            mRequirements.back().mNormalHeight = true;
+                        const bool normalSpecular = texName == "normalSpecularMap";
+                        const bool normalHeight = texName == "normalHeightMap";
+                        if (normalSpecular || normalHeight)
                             texName = "normalMap";
-                        }
 
                         if (!texName.empty())
                         {
@@ -306,6 +305,8 @@ namespace Shader
                             if (texName == "normalMap")
                             {
                                 mRequirements.back().mTexStageRequiringTangents = unit;
+                                mRequirements.back().mNormalSpecular = normalSpecular;
+                                mRequirements.back().mNormalHeight = normalHeight;
                                 normalMap = texture;
                             }
                             else if (texName == "diffuseMap")
@@ -582,6 +583,7 @@ namespace Shader
 
         defineMap["diffuseParallax"] = reqs.mDiffuseHeight ? "1" : "0";
         defineMap["parallax"] = reqs.mNormalHeight ? "1" : "0";
+        defineMap["normalMapSpecular"] = reqs.mNormalSpecular ? "1" : "0";
         defineMap["reconstructNormalZ"] = reqs.mReconstructNormalZ ? "1" : "0";
 
         writableStateSet->addUniform(new osg::Uniform("colorMode", reqs.mColorMode));

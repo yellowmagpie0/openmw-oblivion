@@ -18,6 +18,7 @@
 // resource
 #include <components/debug/debuglog.hpp>
 #include <components/misc/constants.hpp>
+#include <components/vfs/manager.hpp>
 #include <components/misc/osguservalues.hpp>
 #include <components/misc/resourcehelpers.hpp>
 #include <components/misc/strings/algorithm.hpp>
@@ -2903,6 +2904,8 @@ namespace NifOsg
             // overriding a parent NiTexturingProperty, so remove what was previously bound
             clearBoundTextures(stateset, boundTextures);
 
+            const bool oblivion = mVersion == 0x14000004 || mVersion == Nif::NIFFile::VER_OB;
+
             // If this loop is changed such that the base texture isn't guaranteed to end up in texture unit 0, the
             // shadow casting shader will need to be updated accordingly.
             for (size_t i = 0; i < texprop->mTextures.size(); ++i)
@@ -2954,8 +2957,31 @@ namespace NifOsg
                         }
 
                         if (!tex.mSourceTexture.empty())
+                        {
                             attachNiSourceTexture(textureName, tex.mSourceTexture.getPtr(), tex.wrapS(), tex.wrapT(),
                                 tex.mUVSet, stateset, boundTextures);
+                            // TES4 stores tangent-space normals and specular intensity
+                            // together in the companion _n texture, outside the NIF's
+                            // texture slots. Its alpha is not a parallax height map.
+                            if (oblivion && i == Nif::NiTexturingProperty::BaseTexture && mImageManager
+                                && tex.mSourceTexture->mExternal)
+                            {
+                                const auto* vfs = mImageManager->getVFS();
+                                std::string normalPath(Misc::ResourceHelpers::correctTexturePath(
+                                    VFS::Path::toNormalized(tex.mSourceTexture->mFile), *vfs).value());
+                                const auto extension = normalPath.find_last_of('.');
+                                if (extension != std::string::npos)
+                                {
+                                    normalPath.replace(extension, std::string::npos, "_n.dds");
+                                    const VFS::Path::Normalized path(normalPath);
+                                    if (vfs->exists(path))
+                                    {
+                                        attachExternalTexture("normalSpecularMap", path, tex.wrapS(), tex.wrapT(),
+                                            tex.mUVSet, stateset, boundTextures);
+                                    }
+                                }
+                            }
+                        }
                         else
                             attachTexture(
                                 textureName, nullptr, tex.wrapS(), tex.wrapT(), tex.mUVSet, stateset, boundTextures);

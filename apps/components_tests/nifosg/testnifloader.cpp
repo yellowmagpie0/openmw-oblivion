@@ -4,6 +4,9 @@
 #include <components/nif/extra.hpp>
 #include <components/sceneutil/keyframe.hpp>
 #include <components/nif/property.hpp>
+#include <components/nif/texture.hpp>
+#include <components/testing/util.hpp>
+#include <components/sceneutil/util.hpp>
 #include <components/nif/physics.hpp>
 #include <components/nifosg/matrixtransform.hpp>
 #include <components/nifosg/nifloader.hpp>
@@ -1348,4 +1351,78 @@ namespace
         EXPECT_EQ(root.mFlags, 16u);
     }
 
+}
+
+namespace
+{
+    TEST_F(NifOsgLoaderTest, OblivionCompanionNormalUsesAlphaForSpecularWithSourceUvAndWrap)
+    {
+        // One uncompressed RGBA DDS texel. Alpha64 distinguishes the authored
+        // specular mask from both opaque fallback and a parallax height map.
+        std::string dds(132, '\0');
+        const auto word = [&](unsigned offset, unsigned value) {
+            for (unsigned i = 0; i < 4; ++i) dds[offset + i] = static_cast<char>(value >> (i * 8));
+        };
+        dds.replace(0, 4, "DDS ");
+        word(4, 124); word(8, 0x100f); word(12, 1); word(16, 1); word(20, 4);
+        word(76, 32); word(80, 0x41); word(88, 32);
+        word(92, 0xff); word(96, 0xff00); word(100, 0xff0000); word(104, 0xff000000);
+        word(108, 0x1000); word(128, 0x40ff8080);
+        TestingOpenMW::VFSTestFile diffuse(dds), normal(dds);
+        for (const auto version : {0x14000004u, unsigned(Nif::NIFFile::VER_OB), unsigned(Nif::NIFFile::VER_MW)})
+        for (const bool companion : {false, true})
+        {
+            SCOPED_TRACE(version);
+            SCOPED_TRACE(companion);
+            VFS::FileMap files{{VFS::Path::Normalized("textures/wood.dds"), &diffuse}};
+            if (companion) files.emplace(VFS::Path::Normalized("textures/wood_n.dds"), &normal);
+            auto vfs = TestingOpenMW::createTestVFS(std::move(files));
+            Resource::ImageManager images(vfs.get(), 0);
+            Nif::NiSourceTexture source{}; init(source); source.mExternal = 1;
+            // Resolve the winning diffuse path before deriving the companion.
+            source.mFile = "Textures\\Wood.tga";
+            Nif::NiTexturingProperty property{}; init(property); property.mRecordType = Nif::RC_NiTexturingProperty;
+            property.mTextures.resize(1); auto& tex = property.mTextures.front();
+            tex.mEnabled = true; tex.mSourceTexture = &source; tex.mUVSet = 1; tex.mClamp = 2;
+            Nif::NiTriShape shape{}; init(shape); shape.mShaderProperty = nullptr; shape.mAlphaProperty = nullptr;
+            shape.mProperties.emplace_back(&property);
+            Nif::NiTriShapeData data{}; data.mRecordType = Nif::RC_NiTriShapeData;
+            data.mNumVertices = 3; data.mNumTriangles = 1;
+            data.mVertices = {{0,0,0},{1,0,0},{0,1,0}}; data.mTriangles = {0,1,2};
+            data.mNormals = {{0,0,1},{0,0,1},{0,0,1}};
+            data.mUVList = {{{0,0},{1,0},{0,1}}, {{.2f,.3f},{.7f,.3f},{.2f,.8f}}};
+            shape.mData = &data;
+            Nif::NIFFile file(testNif); file.mVersion = version; file.mRoots.push_back(&shape);
+            auto loaded = Loader::load(file, &images, &mMaterialManager);
+            struct Inspect : osg::NodeVisitor
+            {
+                unsigned normals = 0;
+                explicit Inspect() : NodeVisitor(TRAVERSE_ALL_CHILDREN) {}
+                void apply(osg::Node& node) override
+                {
+                    if (auto* state = node.getStateSet())
+                    for (unsigned unit = 0; unit < state->getTextureAttributeList().size(); ++unit)
+                    {
+                        auto* texture = dynamic_cast<osg::Texture2D*>(state->getTextureAttribute(unit, osg::StateAttribute::TEXTURE));
+                        if (!texture || SceneUtil::getTextureType(*state, *texture, unit) != "normalSpecularMap") continue;
+                        ++normals;
+                        ASSERT_NE(texture->getImage(), nullptr);
+                        EXPECT_EQ(texture->getImage()->getFileName(), "textures/wood_n.dds");
+                        EXPECT_NEAR(texture->getImage()->getColor(0,0).a(), 64.f/255, 1e-6);
+                        EXPECT_EQ(texture->getWrap(osg::Texture::WRAP_S), osg::Texture::REPEAT);
+                        EXPECT_EQ(texture->getWrap(osg::Texture::WRAP_T), osg::Texture::CLAMP_TO_EDGE);
+                        // The normal texture follows the base texture's UV1,
+                        // even though they occupy different texture units.
+                        auto* group = node.asGroup(); ASSERT_NE(group, nullptr);
+                        auto* geometry = dynamic_cast<osg::Geometry*>(group->getChild(0)); ASSERT_NE(geometry, nullptr);
+                        auto* uv = dynamic_cast<osg::Vec2Array*>(geometry->getTexCoordArray(unit)); ASSERT_NE(uv, nullptr);
+                        EXPECT_EQ(uv->front(), osg::Vec2f(.2f,.3f));
+                    }
+                    traverse(node);
+                }
+            } inspect;
+            loaded->accept(inspect);
+            EXPECT_EQ(inspect.normals, companion && version != Nif::NIFFile::VER_MW ? 1u : 0u);
+        }
+    }
 }

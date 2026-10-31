@@ -225,6 +225,9 @@ vec2 screenCoords = gl_FragCoord.xy / screenRes;
     float shininess = gl_FrontMaterial.shininess;
     vec3 specularColor = getSpecularColor().xyz;
 #endif
+#if @normalMap && @normalMapSpecular
+    specularColor *= normalTex.a;
+#endif
     vec3 diffuseLight, ambientLight, specularLight;
 
     doLighting(gl_FragCoord.xy, passViewPos, viewNormal, shininess, shadowing, diffuseLight, ambientLight, specularLight);

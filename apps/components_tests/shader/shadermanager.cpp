@@ -1,5 +1,10 @@
 #include <components/files/conversion.hpp>
 #include <components/shader/shadermanager.hpp>
+#include <components/shader/shadervisitor.hpp>
+#include <components/resource/imagemanager.hpp>
+#include <components/sceneutil/texturetype.hpp>
+#include <osg/Geometry>
+#include <osg/Texture2D>
 #include <components/testing/util.hpp>
 
 #include <fstream>
@@ -230,5 +235,60 @@ namespace
         withShaderFile(content, [&](const std::filesystem::path& templateName) {
             EXPECT_FALSE(mManager.getShader(Files::pathToUnicodeString(templateName), mDefines));
         });
+    }
+}
+
+namespace
+{
+    TEST_F(ShaderManagerTest, NormalSpecularAndHeightPermutationsStayDistinctAcrossSiblings)
+    {
+        const auto directory = TestingOpenMW::outputFilePathWithSubDir("normal-material");
+        std::filesystem::create_directories(directory / "compatibility");
+        for (const auto extension : {".vert", ".frag"})
+        {
+            std::ofstream file(directory / "compatibility" / (std::string("material") + extension));
+            file << "#version 120\nvoid main(){" << (std::string_view(extension) == ".vert" ? "gl_Position" : "gl_FragColor")
+                 << "=vec4(@normalMap,@normalMapSpecular,@parallax,1);}";
+        }
+        mManager.setShaderPath(directory);
+        VFS::Manager vfs;
+        Resource::ImageManager images(&vfs, 0);
+        ShaderVisitor visitor(mManager, images, "material");
+        osg::ref_ptr<osg::Group> root = new osg::Group;
+        // Each child replaces a parent height texture. Neither the specular
+        // mask nor the ordinary normal map may inherit its parallax flag.
+        root->getOrCreateStateSet()->setTextureAttribute(0, new osg::Texture2D, osg::StateAttribute::ON);
+        root->getStateSet()->setTextureAttribute(0, new SceneUtil::TextureType("normalHeightMap"), osg::StateAttribute::ON);
+        const std::array<std::pair<const char*, const char*>, 3> cases{{
+            {"normalSpecularMap", "vec4(1,1,0,1)"},
+            {"normalHeightMap", "vec4(1,0,1,1)"},
+            {"normalMap", "vec4(1,0,0,1)"}}};
+        for (const auto& [type, expected] : cases)
+        {
+            osg::ref_ptr<osg::Geometry> geometry = new osg::Geometry;
+            const osg::Vec3f vertices[] = {{0,0,0},{1,0,0},{0,1,0}};
+            const osg::Vec3f normals[] = {{0,0,1},{0,0,1},{0,0,1}};
+            const osg::Vec2f uv[] = {{0,0},{1,0},{0,1}};
+            geometry->setVertexArray(new osg::Vec3Array(3, vertices));
+            geometry->setNormalArray(new osg::Vec3Array(3, normals), osg::Array::BIND_PER_VERTEX);
+            geometry->setTexCoordArray(0, new osg::Vec2Array(3, uv));
+            geometry->addPrimitiveSet(new osg::DrawArrays(GL_TRIANGLES,0,3));
+            auto* state = geometry->getOrCreateStateSet();
+            state->setTextureAttribute(0, new osg::Texture2D, osg::StateAttribute::ON);
+            state->setTextureAttribute(0, new SceneUtil::TextureType(type), osg::StateAttribute::ON);
+            root->addChild(geometry);
+        }
+        root->accept(visitor);
+        for (unsigned i = 0; i < cases.size(); ++i)
+        {
+            auto* state = root->getChild(i)->getStateSet(); ASSERT_NE(state, nullptr);
+            auto* program = dynamic_cast<osg::Program*>(state->getAttribute(osg::StateAttribute::PROGRAM));
+            ASSERT_NE(program, nullptr); ASSERT_GE(program->getNumShaders(), 2u);
+            for (unsigned j = 0; j < program->getNumShaders(); ++j)
+                EXPECT_NE(program->getShader(j)->getShaderSource().find(cases[i].second), std::string::npos);
+            int unit = -1;
+            ASSERT_NE(state->getUniform("normalMap"), nullptr);
+            ASSERT_TRUE(state->getUniform("normalMap")->get(unit)); EXPECT_EQ(unit, 0);
+        }
     }
 }
