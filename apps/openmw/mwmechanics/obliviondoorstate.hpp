@@ -1,8 +1,11 @@
 #ifndef OPENMW_MWMECHANICS_OBLIVIONDOORSTATE_H
 #define OPENMW_MWMECHANICS_OBLIVIONDOORSTATE_H
 
+#include <algorithm>
 #include <optional>
+#include <span>
 #include <stdexcept>
+#include <vector>
 
 #include <components/esm/refid.hpp>
 #include <components/esm4/runtimestate.hpp>
@@ -11,6 +14,39 @@
 
 namespace MWMechanics
 {
+    // A read-only view for one low-process pass, before package callbacks run.
+    // Index identities, not values: in-place state edits remain authoritative.
+    // Insertion, removal, reordering or key edits require a new view.
+    class OblivionSavedReferenceIndex
+    {
+        std::span<const ESM4::RuntimeReferenceState> mSource;
+        std::vector<const ESM4::RuntimeReferenceState*> mIndex;
+
+    public:
+        explicit OblivionSavedReferenceIndex(std::span<const ESM4::RuntimeReferenceState> references)
+            : mSource(references)
+        {
+            mIndex.reserve(references.size());
+            for (const auto& reference : references)
+                mIndex.push_back(&reference);
+            const auto less = [](const auto* left, const auto* right) { return left->mKey < right->mKey; };
+            if (!std::is_sorted(mIndex.begin(), mIndex.end(), less))
+                std::stable_sort(mIndex.begin(), mIndex.end(), less);
+        }
+
+        bool matches(std::span<const ESM4::RuntimeReferenceState> references) const
+        {
+            return references.data() == mSource.data() && references.size() == mSource.size();
+        }
+
+        const ESM4::RuntimeReferenceState* find(const ESM::FormKey& key) const
+        {
+            const auto found = std::lower_bound(mIndex.begin(), mIndex.end(), key,
+                [](const auto* reference, const ESM::FormKey& wanted) { return reference->mKey < wanted; });
+            return found != mIndex.end() && (*found)->mKey == key ? *found : nullptr;
+        }
+    };
+
     inline bool isOblivionDoorInterruption(const ESM4::RuntimeActorAiState& state)
     {
         return state.mPhase == ESM4::PackagePhase::Interrupted && !state.mDoor.isNull()

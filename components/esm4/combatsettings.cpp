@@ -4,7 +4,9 @@
 
 #include <bit>
 #include <cmath>
-#include <map>
+#include <unordered_map>
+
+#include <components/misc/strings/algorithm.hpp>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -13,34 +15,29 @@ namespace ESM4
 {
     namespace
     {
-        std::string key(std::string_view name)
-        {
-            std::string result(name);
-            for (char& c : result)
-                if (c >= 'A' && c <= 'Z')
-                    c += 'a' - 'A';
-            return result;
-        }
-
         class Inputs
         {
-            std::map<std::string, const GameSetting*, std::less<>> mValues;
+            // Winning records outlive this builder call. Borrow their names
+            // rather than allocating a normalized string for every lookup.
+            std::unordered_map<std::string_view, const GameSetting*,
+                Misc::StringUtils::CiHash, Misc::StringUtils::CiEqual> mValues;
 
         public:
             explicit Inputs(std::span<const GameSetting* const> settings)
             {
+                mValues.reserve(settings.size());
                 for (const auto* setting : settings)
                 {
                     if (!setting || setting->mEditorId.empty())
                         throw std::invalid_argument("native combat settings include a null or unnamed record");
-                    if (!mValues.emplace(key(setting->mEditorId), setting).second)
+                    if (!mValues.emplace(std::string_view(setting->mEditorId), setting).second)
                         throw std::invalid_argument("ambiguous winning native setting: " + setting->mEditorId);
                 }
             }
 
             template <typename T> T number(std::string_view name, T fallback) const
             {
-                const auto found = mValues.find(key(name));
+                const auto found = mValues.find(name);
                 if (found == mValues.end())
                     return fallback;
                 if (const T* value = std::get_if<T>(&found->second->mData))

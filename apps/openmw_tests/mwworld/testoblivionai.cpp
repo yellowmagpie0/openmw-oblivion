@@ -732,3 +732,65 @@ TEST(OblivionAiTest, UnmountedPlayerAttachmentDoesNotCreateAiOrAdvancePackages)
     EXPECT_EQ(after.mAiRngState, before.mAiRngState);
     EXPECT_EQ(world.getPlayerPtr().getRefData().getPosition().asVec3(), position);
 }
+
+namespace
+{
+    TEST(OblivionAiTest, SavedReferenceIndexMatchesLinearLookupWithoutReorderingTheSnapshot)
+    {
+        std::vector<ESM4::RuntimeReferenceState> references(257);
+        std::vector<ESM::FormKey> order;
+        for (std::size_t i = 0; i < references.size(); ++i)
+        {
+            references[i].mKey = key((i * 37) % references.size() + 1);
+            order.push_back(references[i].mKey);
+        }
+        const MWMechanics::OblivionSavedReferenceIndex index(references);
+        EXPECT_TRUE(index.matches(references));
+        for (std::uint32_t id = 1; id <= 259; ++id)
+        {
+            const auto wanted = key(id);
+            const auto original = std::find_if(references.begin(), references.end(),
+                [&](const auto& reference) { return reference.mKey == wanted; });
+            EXPECT_EQ(index.find(wanted), original == references.end() ? nullptr : &*original);
+        }
+        EXPECT_EQ(index.find(ESM::FormKey::dynamic("player", 1)), nullptr);
+        for (std::size_t i = 0; i < references.size(); ++i)
+            EXPECT_EQ(references[i].mKey, order[i]);
+    }
+
+    TEST(OblivionAiTest, SavedReferenceIndexReadsCurrentValuesAndRejectsChangedStorage)
+    {
+        std::vector<ESM4::RuntimeReferenceState> references(2);
+        references[0].mKey = key(2);
+        references[1].mKey = key(1);
+        references[1].mEnabled = false;
+        references[1].mInventory.emplace_back();
+        references[1].mInventory.back().mBase = key(9);
+        references[1].mInventory.back().mCount = 1;
+        MWMechanics::OblivionSavedReferenceIndex index(references);
+        const auto* saved = index.find(key(1));
+        ASSERT_EQ(saved, &references[1]);
+        const MWMechanics::OblivionDoorState authored{true, true, {}, key(10)};
+        EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, saved, std::nullopt).mAvailable);
+        references[1].mEnabled = true;
+        references[1].mCustomState["locked"] = false;
+        references[1].mInventory.clear();
+        EXPECT_TRUE(MWMechanics::resolveOblivionDoorState(authored, saved, std::nullopt).mAvailable);
+        EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, saved, std::nullopt).mLocked);
+        EXPECT_TRUE(index.find(key(1))->mInventory.empty());
+        // Resident state still wins over the indexed saved reference.
+        const MWMechanics::OblivionDoorState resident{false, true, {}, key(11)};
+        EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, saved, resident).mAvailable);
+        auto replacement = references;
+        EXPECT_FALSE(index.matches(replacement));
+        references.emplace_back().mKey = key(3);
+        EXPECT_FALSE(index.matches(references));
+        // A fresh pass sees insertion/reordering from scripts or restoration;
+        // no saved-value or identity cache survives the old pass.
+        std::reverse(references.begin(), references.end());
+        MWMechanics::OblivionSavedReferenceIndex nextPass(references);
+        ASSERT_NE(nextPass.find(key(3)), nullptr);
+        EXPECT_EQ(nextPass.find(key(3))->mKey, key(3));
+        EXPECT_TRUE(nextPass.find(key(1))->mInventory.empty());
+    }
+}

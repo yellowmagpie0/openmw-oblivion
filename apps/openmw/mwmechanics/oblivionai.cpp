@@ -4438,6 +4438,20 @@ namespace MWMechanics
         requireMutableRuntime();
         if (!std::isfinite(duration) || duration <= 0.f)
             return;
+        // The state-only executor queues package callbacks; it does not invoke
+        // scripts which could replace reference identities during this pass.
+        // Rebuild after every pass, so save/load, scripts and cell transitions
+        // cannot leave a persistent door/inventory cache behind.
+        std::optional<OblivionSavedReferenceIndex> references;
+        if (mWorld.mOblivionRuntimeState)
+            references.emplace(std::span<const ESM4::RuntimeReferenceState>(mWorld.mOblivionRuntimeState->mReferences));
+        struct ResetIndex
+        {
+            const OblivionSavedReferenceIndex*& mSlot;
+            const OblivionSavedReferenceIndex* mPrevious;
+            ~ResetIndex() { mSlot = mPrevious; }
+        } reset{mLowProcessReferenceIndex, mLowProcessReferenceIndex};
+        mLowProcessReferenceIndex = references ? &*references : nullptr;
         const float elapsed = std::clamp(duration, 0.f, 5.f);
         for (auto& [_, live] : mActors)
         {
@@ -4668,6 +4682,18 @@ namespace MWMechanics
             && canUseUnloadedDoor(live, mUnloadedLocations[indexed->second], locked);
     }
 
+    const ESM4::RuntimeReferenceState* OblivionAiService::savedReferenceState(const ESM::FormKey& key) const
+    {
+        if (!mWorld.mOblivionRuntimeState)
+            return nullptr;
+        const auto& references = mWorld.mOblivionRuntimeState->mReferences;
+        if (mLowProcessReferenceIndex && mLowProcessReferenceIndex->matches(references))
+            return mLowProcessReferenceIndex->find(key);
+        const auto found = std::find_if(references.begin(), references.end(),
+            [&](const auto& reference) { return reference.mKey == key; });
+        return found != references.end() ? &*found : nullptr;
+    }
+
     OblivionDoorState OblivionAiService::currentDoorState(const UnloadedLocation& door) const
     {
         const OblivionDoorState authored{ door.mEnabled, door.mLocked, door.mKey, door.mOwner };
@@ -4687,15 +4713,9 @@ namespace MWMechanics
             }
             return resolveOblivionDoorState(authored, nullptr, resident);
         }
-        else if (mWorld.mOblivionRuntimeState)
+        else if (const auto* savedDoor = savedReferenceState(door.mReference))
         {
-            const auto savedDoor = std::find_if(mWorld.mOblivionRuntimeState->mReferences.begin(),
-                mWorld.mOblivionRuntimeState->mReferences.end(),
-                [&door](const ESM4::RuntimeReferenceState& reference) {
-                    return reference.mKey == door.mReference;
-                });
-            if (savedDoor != mWorld.mOblivionRuntimeState->mReferences.end())
-                return resolveOblivionDoorState(authored, &*savedDoor, std::nullopt);
+            return resolveOblivionDoorState(authored, savedDoor, std::nullopt);
         }
         return authored;
     }
@@ -4756,19 +4776,11 @@ namespace MWMechanics
                 return item.mCount > 0 && item.mBase == key;
             });
         };
-        if (mWorld.mOblivionRuntimeState)
+        if (const auto* saved = savedReferenceState(live.mState.mActor))
         {
-            const auto saved = std::find_if(mWorld.mOblivionRuntimeState->mReferences.begin(),
-                mWorld.mOblivionRuntimeState->mReferences.end(),
-                [&live](const ESM4::RuntimeReferenceState& reference) {
-                    return reference.mKey == live.mState.mActor;
-                });
-            if (saved != mWorld.mOblivionRuntimeState->mReferences.end())
-            {
-                const bool hasKey = containsKey(saved->mInventory);
-                locked = !hasKey;
-                return hasKey;
-            }
+            const bool hasKey = containsKey(saved->mInventory);
+            locked = !hasKey;
+            return hasKey;
         }
 
         if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(live.mState.mBase))

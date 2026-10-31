@@ -238,6 +238,7 @@ namespace MWMechanics
         };
 
         MWWorld::World& mWorld;
+        const OblivionSavedReferenceIndex* mLowProcessReferenceIndex = nullptr;
         std::map<ESM::FormKey, LiveActor> mActors;
         OblivionPackageDoneQueue mPendingPackageDone;
         std::vector<UnloadedLocation> mUnloadedLocations;
@@ -260,6 +261,7 @@ namespace MWMechanics
         ESM::FormKey actorKey(const MWWorld::ConstPtr& actor) const;
         ESM::FormKey baseKey(const MWWorld::ConstPtr& actor) const;
         ESM::FormKey cellKey(const MWWorld::ConstPtr& actor) const;
+        const ESM4::RuntimeReferenceState* savedReferenceState(const ESM::FormKey& key) const;
 
         LiveActor& ensure(const MWWorld::ConstPtr& actor);
         static void setPhase(LiveActor& live, ESM4::PackagePhase phase);

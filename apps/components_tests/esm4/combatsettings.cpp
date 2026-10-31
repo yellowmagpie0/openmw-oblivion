@@ -590,3 +590,54 @@ TEST(ESM4CombatSettings, PhysicalMasteryForceUsesWinningDeathForceCurve)
     damage.mData = 0.f;
     EXPECT_THROW(ESM4::buildMasteryKnockdownForceSettings(settings), std::invalid_argument);
 }
+
+TEST(ESM4CombatSettings, WinningNameViewsPreserveUnrelatedRecordsAndObserveChangesBetweenCalls)
+{
+    std::vector<ESM4::GameSetting> records(258);
+    std::vector<const ESM4::GameSetting*> settings;
+    std::vector<std::string> names;
+    for (std::size_t i = 0; i < records.size(); ++i)
+    {
+        auto& record = records[i];
+        record.mEditorId = "sUnrelatedSettingWithALongMixedCaseName" + std::to_string(i);
+        record.mData = std::string("unrelated display text");
+        settings.push_back(&record);
+    }
+    records.back().mEditorId = "FFRIENDhitTIMER";
+    records.back().mData = 17.5f;
+    for (const auto& record : records) names.push_back(record.mEditorId);
+    EXPECT_EQ(ESM4::buildFriendHitTimer(settings), 17.5f);
+    for (std::size_t i = 0; i < records.size(); ++i) EXPECT_EQ(records[i].mEditorId, names[i]);
+    records.back().mData = -3.f;
+    EXPECT_EQ(ESM4::buildFriendHitTimer(settings), -3.f);
+    records.back().mData = std::int32_t{3};
+    EXPECT_THROW(ESM4::buildFriendHitTimer(settings), std::invalid_argument);
+    records.back().mEditorId = "sRenamedUnrelatedSetting";
+    records.back().mData = std::string("not a numeric setting");
+    EXPECT_EQ(ESM4::buildFriendHitTimer(settings), 10.f);
+    records[1].mEditorId = records[0].mEditorId;
+    // Ambiguity in an unrelated record must still reject the whole input.
+    EXPECT_THROW(ESM4::buildFriendHitTimer(settings), std::invalid_argument);
+}
+
+TEST(ESM4CombatSettings, WinningNameViewsRetainAsciiOnlyFoldingAndFirstInvalidInput)
+{
+    ESM4::GameSetting first{}, second{}, timer{};
+    first.mEditorId = std::string("sUnrelated") + char(0xc4);
+    second.mEditorId = std::string("sUnrelated") + char(0xe4);
+    first.mData = second.mData = std::string("text");
+    timer.mEditorId = "fFriendHitTimer"; timer.mData = 12.f;
+    std::array<const ESM4::GameSetting*, 3> settings{&first, &second, &timer};
+    EXPECT_EQ(ESM4::buildFriendHitTimer(settings), 12.f);
+    second.mEditorId = first.mEditorId;
+    settings[2] = nullptr;
+    try
+    {
+        (void)ESM4::buildFriendHitTimer(settings);
+        FAIL() << "Expected the earlier duplicate to reject before the null record";
+    }
+    catch (const std::invalid_argument& error)
+    {
+        EXPECT_EQ(std::string(error.what()), "ambiguous winning native setting: " + second.mEditorId);
+    }
+}
