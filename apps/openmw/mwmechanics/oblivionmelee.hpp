@@ -202,6 +202,7 @@ namespace MWMechanics
         const MWWorld::Ptr& attacker, const MWWorld::Ptr& item);
 
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor);
+    float oblivionInventoryWeight(MWBase::World& world, const MWWorld::Ptr& actor);
 
 }
 #endif

@@ -1872,6 +1872,47 @@ namespace MWMechanics
         return weaponContactDamage(world, attacker, item, ESM4::MeleeStrikeKind::Left);
     }
 
+    float oblivionInventoryWeight(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion || actor.isEmpty())
+            throw std::invalid_argument("native inventory weight requires a native actor");
+        auto* nativeWorld = dynamic_cast<MWWorld::World*>(&world);
+        auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        const bool player = actor == world.getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        const bool hasValues = service && service->findActorValues(key);
+        auto& inventory = actor.getClass().getInventoryStore(actor);
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        if (hasValues)
+            for (const auto& record : world.getStore().get<ESM4::GameSetting>())
+                if (seen.insert(record.mId).second)
+                    settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
+        const auto mastery = ESM4::buildCombatMasterySettings(settings);
+        const auto armorMastery = ESM4::buildArmorMasterySettings(settings);
+        double result = 0;
+        for (auto iterator = inventory.begin(); iterator != inventory.end(); ++iterator)
+        {
+            const MWWorld::Ptr item = *iterator;
+            const auto count = item.getCellRef().getCount();
+            if (count <= 0) continue;
+            const float weight = item.getClass().getWeight(item);
+            result += double(weight) * count;
+            if (!hasValues || item.getType() != ESM::REC_ARMO || !inventory.isEquipped(item)) continue;
+            const auto id = MWWorld::OblivionProfileServices::nativeItemId(
+                world.getStore(), item.getCellRef().getRefId());
+            const auto* armor = world.getStore().get<ESM4::Armor>().search(id);
+            if (!armor) continue;
+            const bool heavy = armor->mGeneralFlags & ESM4::Armor::TES4_HeavyArmor;
+            const auto skill = player ? service->getPlayerBaseValue(heavy ? 18 : 27)
+                : service->getNonPlayerBaseValue(key, heavy ? 18 : 27, world.getStore());
+            // Only the worn instance receives the perk, never spare copies or
+            // the stored item weight. Recompute from live slots after unequip/load.
+            result += ESM4::wornArmorWeight(weight, heavy, skill, true, armorMastery, mastery) - weight;
+        }
+        return std::max(0.f, static_cast<float>(result));
+    }
+
     float oblivionArmorRating(MWBase::World& world, const MWWorld::Ptr& actor)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion

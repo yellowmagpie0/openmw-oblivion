@@ -11,6 +11,7 @@
 #include "../mwmechanics/creaturestats.hpp"
 #include "../mwmechanics/magiceffects.hpp"
 #include "../mwmechanics/movement.hpp"
+#include "../mwmechanics/oblivionmelee.hpp"
 #include "../mwmechanics/spellcasting.hpp"
 
 #include "../mwphysics/physicssystem.hpp"
@@ -51,6 +52,9 @@ namespace MWClass
     float Actor::getEncumbrance(const MWWorld::Ptr& ptr) const
     {
         float weight = getContainerStore(ptr).getWeight();
+        auto& world = *MWBase::Environment::get().getWorld();
+        if (world.getGameProfile() == ESM::GameProfile::Oblivion && ptr.getType() == ESM::REC_NPC_4)
+            weight = MWMechanics::oblivionInventoryWeight(world, ptr);
         const MWMechanics::MagicEffects& effects = getCreatureStats(ptr).getMagicEffects();
         weight -= effects.getOrDefault(MWMechanics::EffectKey(ESM::MagicEffect::Feather)).getMagnitude();
         if (ptr != MWMechanics::getPlayer() || !MWBase::Environment::get().getWorld()->getGodModeState())

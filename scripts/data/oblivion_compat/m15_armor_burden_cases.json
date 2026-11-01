@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-ARMOR-BURDEN-001",
+  "requirements": [
+    "M15-MASTERY-LIGHTARMOR-03",
+    "M15-MASTERY-HEAVYARMOR-03",
+    "M15-MASTERY-HEAVYARMOR-04"
+  ],
+  "full_M15S4_acceptance": false,
+  "problem": "The reviewed wornArmorWeight rule had no production caller. Player/NPC movement used full item weight despite armor mastery.",
+  "implementation": {
+    "helper": "MWMechanics::oblivionInventoryWeight",
+    "owners": [
+      "World::getOblivionPlayerInventoryWeight (Player)",
+      "Actor::getEncumbrance (native NPC)"
+    ],
+    "policy": "Read live equipment and native base skill, with winning mastery/weight settings. Discount only one worn instance; preserve spare counts, item definition weight, condition, ownership and inventory/save metadata. Unworn items receive full weight; TES3 actor path unchanged."
+  },
+  "fixture": {
+    "base_source": {
+      "path": "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/light/fixture/input.omwsave",
+      "sha256": "f72a44ac3fb4c9fde7d08a361949cc6cdc1afcd82274af3f10b7c10905956b82"
+    },
+    "stock_record_facts": "scripts/data/oblivion_compat/m15_light_armor_mastery_cases.json#fixture.records",
+    "player_initial_base_skills": {
+      "LightArmor": 75,
+      "HeavyArmor": 75
+    },
+    "base_skill_authoring": "Synchronize native actor values, native shared Player base entries and legacy base projections. All movement/contact/resource/effect outcomes remain unauthored. Initial derived encumbrance is rebuilt from live inventory; exact fresh proofs use actual captured saves.",
+    "player_added_worn": [
+      {
+        "base": "content:oblivion.esm:024768",
+        "name": "FurHelmet",
+        "weight": 1,
+        "condition": 50,
+        "native_slots": 2
+      },
+      {
+        "base": "content:oblivion.esm:024766",
+        "name": "FurCuirass",
+        "weight": 5,
+        "condition": 100,
+        "native_slots": 4
+      },
+      {
+        "base": "content:oblivion.esm:01c6cf",
+        "name": "IronBoots",
+        "weight": 9,
+        "condition": 150,
+        "native_slots": 32
+      }
+    ],
+    "player_spares": [
+      {
+        "base": "content:oblivion.esm:024766",
+        "count": 1,
+        "condition": 99,
+        "equipped_slots": 0
+      },
+      {
+        "base": "content:oblivion.esm:01c6cf",
+        "count": 2,
+        "condition": 149,
+        "equipped_slots": 0
+      }
+    ],
+    "other_player_items": "Retain all source items; old body clothing stays in inventory unequipped. Sword remains condition50; no attack actions.",
+    "npc": "content:oblivion.esm:01fc43",
+    "normal_npc": "Source all-Fur outfit, LightArmor100/HeavyArmor5.",
+    "sanitizer_npc": "Pairwise variation: replace worn FurBoots by healthy IronBoots; LightArmor100/HeavyArmor100. Same Player outfit and movement/restart protocol.",
+    "profiles": {
+      "normal": {
+        "path": "build/oblivion-compat/m15/S4/armor-burden-work-01/profile.json",
+        "sha256": "763d7065f638c6376516e3e05c74df5cd7e42bc473224835f3963bb5b62019ac"
+      },
+      "sanitize": {
+        "path": "build/oblivion-compat/m15/S4/armor-burden-work-01/sanitize-profile.json",
+        "sha256": "ffba1bf9bc35838e5cc2c2fa0eacd6ce8a5ee26099f2929a4d5fd826ea717d68"
+      }
+    }
+  },
+  "normal_input": {
+    "initial": "Load valid initial source; focus, F draw, shared approach/camera/worn guards; actual F5 baseline save.",
+    "movement": {
+      "key": "d",
+      "hold_seconds": 0.4,
+      "pause_seconds": 0.15,
+      "terminal": "Actual F5 save and capture; no contacts or effects."
+    },
+    "fresh": "Actual before-move save -> new D movement; actual after-move save -> A return along prior traversed corridor. Each fresh process first saves its restored baseline, then moves and saves. Exact whole-source restore required.",
+    "movement_bounds": "Horizontal displacement >5 and <200 world units; vertical difference <3. No equal trajectory/timestep or achieved FPS claim."
+  },
+  "expected": {
+    "player_raw_weight": 92,
+    "player_adjusted_burden": 81.5,
+    "basis": "Only worn FurHelmet1+Cuirass5 become weightless at Light75; worn IronBoots9 becomes4.5 at Heavy75. Spare cuirass5/two boots18 remain full weight. Total discount10.5.",
+    "normal_npc": {
+      "raw_weight": 21.5,
+      "burden": 10,
+      "basis": "All worn Fur weight11.5 becomes zero at Light100; unrelated inventory remains full weight."
+    },
+    "sanitizer_npc": {
+      "raw_weight": 29,
+      "burden": 10,
+      "basis": "Worn mixed armor19 becomes zero at Light/Heavy100; unrelated inventory remains full weight."
+    },
+    "player_walk_speed": 88.722,
+    "player_run_speed_approx": 266.166,
+    "query_tolerances": {
+      "burden_absolute": 0.0001,
+      "walk_absolute": 0.001,
+      "run_absolute": 0.003
+    },
+    "ownership": "Complete inventory item dictionaries compare as multisets; every item/count/condition/slot/owner field strict. No contact ledger, RNG, Health, active effect, force or dropped item changes."
+  },
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/armor-burden-work-01/verification-plan.json",
+    "focused_test": "OblivionWorldTest.NativeArmorBurdenUsesBaseMasteryLiveSlotsAndWinningSettings",
+    "focused_scope": "Player/NPC below/at/above75/100, mixed worn/unworn, spare copies, base versus modified skill, winning setting and foreign-profile boundaries. Existing component rule coverage reused.",
+    "integration": "Full2080engine plus current game in each normal/SAN build; one coherent checkpoint because movement owner changed.",
+    "reused": "build/oblivion-compat/m15/S4/armor-burden-work-01/reused-evidence.json",
+    "runtime_checker": "Existing combined-mastery run.py/inspect.py/compare-pair.py with burden profile/flags; no new harness.",
+    "status": "PASS: 12 exact save/live pairs across6epochs,4 exact actual before/after-movement fresh restores,4x15native fields+8observations comparisons,12 directly reviewed captures. Focused1 and full2080engine per normal/SAN pass.",
+    "checkpoint": "build/oblivion-compat/m15/S4/armor-burden-work-01/checkpoint-verification.json",
+    "sanitizer_scope": "Engine ASan/UBSan with leak checks as recorded; rendered runtime uses detect_leaks=0, not rendered leak coverage.",
+    "results": {
+      "armor-burden-normal-02": {
+        "pairs": 2,
+        "displacement": 13.2308349609375,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 21.5,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 685.230835,
+          "y": -40.0,
+          "z": -109.404053
+        }
+      },
+      "armor-burden-normal-before-01": {
+        "pairs": 2,
+        "displacement": 13.2308349609375,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 21.5,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 685.230835,
+          "y": -40.0,
+          "z": -109.404053
+        }
+      },
+      "armor-burden-normal-after-02": {
+        "pairs": 2,
+        "displacement": 20.0028076171875,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 21.5,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 665.228027,
+          "y": -40.0,
+          "z": -109.708496
+        }
+      },
+      "armor-burden-sanitize-01": {
+        "pairs": 2,
+        "displacement": 6.6676025390625,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 29.0,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 678.667603,
+          "y": -40.0,
+          "z": -109.689156
+        }
+      },
+      "armor-burden-sanitize-before-01": {
+        "pairs": 2,
+        "displacement": 6.6676025390625,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 29.0,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 678.667603,
+          "y": -40.0,
+          "z": -109.689156
+        }
+      },
+      "armor-burden-sanitize-after-01": {
+        "pairs": 2,
+        "displacement": 6.6676025390625,
+        "observed": {
+          "playerRaw": 92.0,
+          "player": 81.5,
+          "npcRaw": 29.0,
+          "npc": 10.0,
+          "walk": 88.722,
+          "run": 266.166016,
+          "speed": 40.0,
+          "capacity": 200.0,
+          "x": 672.0,
+          "y": -40.0,
+          "z": -109.689156
+        }
+      }
+    }
+  },
+  "preflight": "Shared base-snapshot guard rejects retained mismatched source. Original approach/render-ray, worn identity and pending/effect guards retained. Fresh movement-only requires visible actor and clear world/door rays; crosshair activation is unnecessary. Shared recorded-corridor guard rejects repeated D at table-edge source and accepts A return; negative/positive controls retained.",
+  "retained_failures": [
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/retained-fixture-failure.json",
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/shared-base-preflight-controls.json",
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/inventory-order-checker-correction.json",
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/optional-effect-checker-correction.json",
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/after-move-fixture-failure.json",
+    "build/oblivion-compat/m15/S4/armor-burden-work-01/recorded-corridor-preflight-controls.json"
+  ],
+  "limits": [
+    "First-person configured keyboard runtime pairing, Player Expert mixed armor and NPC Master armor. Other movement/device/actor crosses retain separate evidence; no full S4 closure.",
+    "Actual source/save/live ownership strict; inventory iteration order is not item identity. Derived initial encumbrance rebuild is distinguished from exact actual-source restart.",
+    "No new audio family identity, swim/jump trajectory, matched timestep/FPS campaign or full appearance claim. T7/F8 and remaining combined-course requirements stay open."
+  ]
+}

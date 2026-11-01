@@ -6372,16 +6372,8 @@ namespace MWWorld
 
     float World::getOblivionPlayerInventoryWeight() const
     {
-        float result = 0.f;
         const Ptr player = const_cast<World*>(this)->getPlayerPtr();
-        const ContainerStore& inventory = player.getClass().getContainerStore(player);
-        for (auto iterator = inventory.cbegin(); iterator != inventory.cend(); ++iterator)
-        {
-            const ConstPtr item = *iterator;
-            if (item.getCellRef().getCount() > 0)
-                result += item.getClass().getWeight(item) * item.getCellRef().getCount();
-        }
-        return std::max(0.f, result);
+        return MWMechanics::oblivionInventoryWeight(*const_cast<World*>(this), player);
     }
 
     namespace

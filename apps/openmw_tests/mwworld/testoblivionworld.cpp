@@ -7012,6 +7012,88 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, NativeArmorBurdenUsesBaseMasteryLiveSlotsAndWinningSettings)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        auto& store = world.getStore();
+        MWClass::Armor::registerSelf();
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        ESM4::Npc native{};
+        native.mId = {7, 1}; native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        native.mIsTES4 = true; native.mData.health = 100;
+        store.getWritable<ESM4::Npc>().insertStatic(native, ESM::FormKey::content("Oblivion.esm", 7));
+        ASSERT_TRUE(world.initializeOblivionPlayerActor());
+        const auto player = world.getPlayerPtr();
+        const auto npc = addNativeNpc(fixture, 0x801);
+        ASSERT_TRUE(world.activateOblivionActor(npc));
+        const auto armor = [&](std::uint32_t id, bool heavy, int type, float weight) {
+            ESM4::Armor value{};
+            value.mId = {id, 0};
+            value.mArmorFlags = heavy ? ESM4::Armor::TES4_Feet : ESM4::Armor::TES4_UpperBody;
+            value.mGeneralFlags = ESM4::Armor::TYPE_TES4 | (heavy ? ESM4::Armor::TES4_HeavyArmor : 0);
+            value.mData.weight = weight; value.mData.health = 100;
+            store.getWritable<ESM4::Armor>().insertStatic(value, ESM::FormKey::content("headless.esm", id));
+            ESM::Armor projected; projected.blank(); projected.mId = ESM::RefId(value.mId);
+            projected.mData.mType = type; projected.mData.mHealth = 100; projected.mData.mWeight = weight;
+            store.insertStatic(projected);
+        };
+        armor(0x940, false, ESM::Armor::Cuirass, 20);
+        armor(0x941, true, ESM::Armor::Boots, 30);
+        ESM4::RuntimeInventoryItem body;
+        body.mBase = ESM::FormKey::content("headless.esm", 0x940); body.mCount = 1;
+        body.mCondition = 100; body.mEquippedSlots = ESM4::Armor::TES4_UpperBody;
+        auto spare = body; spare.mCount = 2; spare.mEquippedSlots = 0; spare.mCondition = 99;
+        auto boots = body; boots.mBase = ESM::FormKey::content("headless.esm", 0x941);
+        boots.mEquippedSlots = ESM4::Armor::TES4_Feet;
+        for (const auto& actor : {player, npc})
+        {
+            const auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, ESM::FormKeyResolver({"headless.esm"}), {body, spare, boots});
+            auto staged = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            inventory.swapPreparedContents(*staged);
+            const auto set = [&](std::uint8_t av, int value) {
+                ASSERT_TRUE(world.executeOblivionActorValueCommand(actor, av, ESM4::ActorValueCommand::Set,
+                    ESM4::ActorValueCommandSource::Script, value));
+            };
+            const auto burden = [&] { return actor == player ? world.getOblivionPlayerInventoryWeight()
+                : actor.getClass().getEncumbrance(actor); };
+            for (int light : {74, 75, 76, 99, 100, 101})
+                for (int heavy : {74, 75, 76, 99, 100, 101})
+                {
+                    SCOPED_TRACE(std::to_string(light) + "/" + std::to_string(heavy));
+                    set(27, light); set(18, heavy);
+                    const float expected = 40 + (light < 75 ? 20 : 0) + (heavy < 75 ? 30 : heavy < 100 ? 15 : 0);
+                    EXPECT_FLOAT_EQ(burden(), expected);
+                    EXPECT_FLOAT_EQ(inventory.getWeight(), 90); // Spare copies/raw inventory are untouched.
+                }
+            set(27, 74); set(18, 74);
+            ASSERT_TRUE(world.requestOblivionStatModifier(actor, 27, false, 26));
+            EXPECT_FLOAT_EQ(burden(), 90); // Fortify does not unlock base-skill mastery.
+            ASSERT_TRUE(world.requestOblivionStatModifier(actor, 27, false, -26));
+            set(27, 100); set(18, 100);
+            ESM4::GameSetting setting{};
+            setting.mId = {0x950, 0}; setting.mEditorId = "fPerkLightArmorExpertSpeedMult"; setting.mData = .25f;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", 0x950));
+            EXPECT_FLOAT_EQ(burden(), 45);
+            setting.mData = 0.f;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", 0x950));
+            // Replacing live slots with an unworn copy immediately restores full weight.
+            for (auto* item : {&body, &boots}) item->mEquippedSlots = 0;
+            auto unworn = MWWorld::OblivionProfileServices::stageActorInventory(
+                MWWorld::OblivionProfileServices::prepareActorInventory(
+                    store, ESM::FormKeyResolver({"headless.esm"}), {body, spare, boots}));
+            inventory.swapPreparedContents(*unworn);
+            EXPECT_FLOAT_EQ(burden(), 90);
+            body.mEquippedSlots = ESM4::Armor::TES4_UpperBody;
+            boots.mEquippedSlots = ESM4::Armor::TES4_Feet;
+        }
+        MWWorld::World legacy(nullptr, -1, "", {}, ESM::GameProfile::Morrowind);
+        EXPECT_THROW(MWMechanics::oblivionInventoryWeight(legacy, player), std::invalid_argument);
+    }
+
     TEST(OblivionWorldTest, NativeArmorQueryReadsDefenseAuthorityWithoutProjectedItemRatings)
     {
         NativeWorldFixture fixture;
