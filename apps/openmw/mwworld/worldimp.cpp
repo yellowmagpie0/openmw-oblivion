@@ -4540,7 +4540,13 @@ namespace MWWorld
             std::vector<std::uint16_t> available;
             for (const auto& entry : activeCatalog) available.push_back(entry.mNativeGroup);
             const auto selected = ESM4::resolveNativeCounterSequenceGroup(requested, available);
-            if (!selected) return true; // The proc still consumed its roll; no new action is issued.
+            if (!selected)
+            {
+                // The proc still consumed its roll; no new action is issued.
+                Log(Debug::Verbose) << "M15 Counter resource unavailable: actor=" << key.serialize()
+                    << " requested=" << requested;
+                return true;
+            }
             const auto find = [&](const auto& catalog) {
                 return std::find_if(catalog.begin(), catalog.end(), [&](const auto& entry) {
                     return entry.mNativeGroup == *selected;

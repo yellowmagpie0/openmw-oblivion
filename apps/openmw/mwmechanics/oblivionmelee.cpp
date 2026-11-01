@@ -394,7 +394,8 @@ namespace MWMechanics
         auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
         const auto player = world.getPlayerPtr();
         if (!service || attacker.isEmpty()
-            || (attacker != player && attacker.getType() != ESM::REC_NPC_4)) return std::nullopt;
+            || (attacker != player && attacker.getType() != ESM::REC_NPC_4
+                && attacker.getType() != ESM::REC_CREA4)) return std::nullopt;
         const auto source = attacker == player ? ESM::FormKey::dynamic("player", 1)
             : attacker.getCellRef().getFormKey();
         const auto* state = service->findMeleeState(source);
@@ -438,7 +439,7 @@ namespace MWMechanics
             targetWeapon && (targetWeapon->mFlags & ESM4::Rec_Persistent),
             victim == player && world.getGodModeState()};
         const auto draw = ESM4::combatRandomDraw(service->combatRandomState());
-        const auto disarm = ESM4::blockMasteryDisarm(mastery, true, target,
+        const auto disarm = ESM4::blockMasteryDisarm(mastery, attacker.getType() != ESM::REC_CREA4, target,
             attacker.getClass().getCreatureStats(attacker).getDrawState() == DrawState::Weapon,
             draw.mValue % 100, ESM4::buildMasteryProcSettings(settings), ESM4::buildCombatMasterySettings(settings));
         if (disarm.mConsumesDraw) deltas.mRandomTransition = service->prepareCombatRandom(1);
@@ -544,7 +545,7 @@ namespace MWMechanics
                 targetWeapon && (targetWeapon->mFlags & ESM4::Rec_Persistent),
                 attacker == player && world.getGodModeState()};
             const auto next = ESM4::combatRandomDraw(random.mNextState);
-            const auto disarm = ESM4::blockMasteryDisarm(input, true, target,
+            const auto disarm = ESM4::blockMasteryDisarm(input, defender.getType() != ESM::REC_CREA4, target,
                 defender.getClass().getCreatureStats(defender).getDrawState() == DrawState::Weapon,
                 next.mValue % 100, ESM4::buildMasteryProcSettings(settings), mastery);
             if (disarm.mConsumesDraw)

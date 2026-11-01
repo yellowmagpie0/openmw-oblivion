@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-CREATURE-COUNTER-SOURCE-001",
+  "full_M15S4_acceptance": false,
+  "requirements": [
+    "C1/D2 valid Creature Counter source contact and NPC-only defensive disarm identity",
+    "Advanced Creature missing Counter resource commits incoming contact without substituted playback",
+    "I4 exact held-source continuation, release/recovery and ordinary return"
+  ],
+  "problem": "Creature Counter sources were rejected. Both defensive disarm callsites falsely treated every source as NPC, so Master Creature nonproc defense could select an illegal disarm and discard an incoming Player contact.",
+  "implementation": "Admit Creature Counter source; pass actual source identity to disarm rule. Existing native Counter resource fallback is preserved, with a diagnostic when none is available.",
+  "world_tests": {
+    "CreatureCounterSourceCommitsWithoutNpcOnlyDisarmOrResourceCosts": 4,
+    "CreatureMasterNonprocDefenseDoesNotRollNpcOnlyDisarm": 2
+  },
+  "native_reference": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/native-source-policy-verification.json",
+  "stock_resource_reference": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/stock-counter-resource-preflight.json",
+  "authoring": {
+    "source": "Existing m15_creature_defense_cases.json cold Goblin defender fixture and public-control Lua; same model, parts, geometry and policy.",
+    "edits": {
+      "winning_CREATURE_DATA_combat": 100,
+      "initial_Goblin_reference_inventory": [],
+      "combat_rng_seed": 1,
+      "iPerkBlockStaggerChance": {
+        "nonproc": 0,
+        "proc": 100
+      }
+    },
+    "policy": "Only initial parameters are authored. No contact, damage, reaction, pose or drop injection. Chance0 has inclusive semantics; actual nonproc is asserted.",
+    "recipe": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/prepare.py",
+    "profiles": {
+      "nonproc": {
+        "path": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/nonproc/profile.json",
+        "sha256": "98424166a775f1c9236ab7552d988b1f4bb68d46dd56f33d1d806572d60ef7ad"
+      },
+      "proc": {
+        "path": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/proc/profile.json",
+        "sha256": "fc588ce1f1e52852cd9451de40976611f3802ded71bedc6d785fd27bfd38c521"
+      }
+    }
+  },
+  "course": [
+    "Actual Player weapon draw/approach/visibility and Goblin public block intent; F5 actual held source.",
+    "Player ordinary attack2: unarmed Creature absorbs0; native Health debit matches save/live delta, no block Fatigue or Creature inventory writes.",
+    "Nonproc: native BlockHit/Player Recoil, no disarm; natural recovery, release and ordinary return3.",
+    "Proc control: actual Counter resource unavailable, no Counter action or fallback Recoil; legitimate contact/release/return still completes.",
+    "Normal/SAN nonproc held-source fresh processes compare exact sources and29 owned endpoint fields."
+  ],
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/checkpoint-verification.json",
+    "focused_tests": 6,
+    "full_engine_per_build": 2084,
+    "reused": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/reused-evidence.json",
+    "retained_fixture_failure": "build/oblivion-compat/m15/S4/creature-counter-source-work-01/test-fixture-capture-correction.json",
+    "status": "PASS bounded checkpoint:18 exact pairs/5 processes/2 exact held-source continuations/2x29-field comparisons/18 reviewed PNG. Full S4 incomplete."
+  },
+  "limits": [
+    "Actual Counter contact/source state has World integration coverage; stock Goblin56rootKFs have no Counter identifier. Runtime proves native missing-resource behavior, not invented Creature Counter playback.",
+    "World context includes armed/unarmed target and75/100 source plus Master shield/unarmed defense. Runtime is unarmed Master Goblin, first-person keyboard/mouse; no blanket actor/equipment/view/device coverage.",
+    "Ordinary impulse magnitude/direction and owned state use existing declared comparison policy; no matched trajectory/step or new PCM-family identity claim.",
+    "Selected Player/Creature target drops and remaining S4 feedback/timing/F8 campaigns stay open."
+  ]
+}

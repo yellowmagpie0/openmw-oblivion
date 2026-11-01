@@ -33597,6 +33597,93 @@ TEST(OblivionWorldTest, CounterContactStaggersNaturalCreatureWithoutDamageWearOr
     }
 }
 
+TEST(OblivionWorldTest, CreatureCounterSourceCommitsWithoutNpcOnlyDisarmOrResourceCosts)
+{
+    for (int rank : {75, 100})
+    for (bool armedTarget : {false, true})
+    {
+        SCOPED_TRACE(rank);
+        SCOPED_TRACE(armedTarget);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto source = addEquipmentCreature(fixture.mFixture), target = fixture.mAttacker;
+        ASSERT_TRUE(world.activateOblivionActor(source));
+        const auto key = source.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(source, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, rank));
+        source.getClass().getCreatureStats(source).setDrawState(MWMechanics::DrawState::Weapon);
+        target.getClass().getCreatureStats(target).setDrawState(MWMechanics::DrawState::Weapon);
+        if (armedTarget) installMasterTargetWeapon(fixture.mFixture, target);
+        setMasterDispatchChances(world, 100, 100);
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture.mFixture, source);
+            state.mReferences.push_back(captureNativeActorState(fixture.mFixture, target).mReferences.front());
+            return state;
+        };
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        EXPECT_FALSE(MWMechanics::prepareOblivionCounterContactDeltas(world, id, source, target));
+        const std::array<float, 3> keys{0, .5f, 1};
+        for (float dt : {0.f, .25f, .25f, .25f})
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, dt, 1, 0, 1, keys));
+        const auto before = snapshot().serializeBinary();
+        auto packet = MWMechanics::prepareOblivionCounterContactDeltas(world, id, source, target);
+        ASSERT_TRUE(packet);
+        EXPECT_FALSE(packet->mRandomTransition); EXPECT_TRUE(packet->mDisarms.empty());
+        EXPECT_EQ(packet->mAttackerFatigue, 0); EXPECT_EQ(packet->mVictimHealth, 0);
+        EXPECT_EQ(packet->mVictimFatigue, 0); EXPECT_EQ(packet->mVictimBlockFatigue, 0);
+        EXPECT_TRUE(packet->mConditionChanges.empty()); EXPECT_FALSE(packet->mKnockback);
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        packet->mVictimReaction = ESM4::RuntimeMeleeReaction{id, ESM4::MeleeReactionKind::Stagger, "stagger"};
+        auto plan = world.prepareOblivionPhysicalContact(id, source, target, *packet);
+        ASSERT_TRUE(plan); EXPECT_EQ(snapshot().serializeBinary(), before);
+        ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+        EXPECT_EQ(service.getProcessAction(key), 6);
+        EXPECT_EQ(service.getProcessAction(target.getCellRef().getFormKey()), 8);
+        const auto saved = snapshot().serializeBinary();
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved), world.getStore());
+        EXPECT_EQ(snapshot().serializeBinary(), saved);
+        EXPECT_FALSE(MWMechanics::prepareOblivionCounterContactDeltas(world, id, source, target));
+    }
+}
+
+TEST(OblivionWorldTest, CreatureMasterNonprocDefenseDoesNotRollNpcOnlyDisarm)
+{
+    for (bool shield : {false, true})
+    {
+        SCOPED_TRACE(shield);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto defender = addEquipmentCreature(fixture.mFixture), attacker = fixture.mAttacker;
+        ASSERT_TRUE(world.activateOblivionActor(defender));
+        const auto key = defender.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        installMasterTargetWeapon(fixture.mFixture, attacker);
+        installMasterDefenderGear(fixture.mFixture, defender, shield ? 2 : 0);
+        for (auto av : {15, 17})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 100));
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        defender.getClass().getCreatureStats(defender).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(service.beginBlocking(key));
+        setMasterDispatchChances(world, 0, 100); // Seed1 first percentile41 is a nonproc.
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture.mFixture, defender);
+            state.mReferences.push_back(captureNativeActorState(fixture.mFixture, attacker).mReferences.front());
+            return state;
+        };
+        const auto before = snapshot().serializeBinary();
+        ASSERT_TRUE(MWMechanics::prepareOblivionDefensiveBlockConsequences(world, attacker, defender, packet));
+        ASSERT_TRUE(packet.mRandomTransition); EXPECT_EQ(packet.mRandomTransition->mDraws, 1u);
+        EXPECT_FALSE(packet.mVictimCounterRequested); EXPECT_TRUE(packet.mDisarms.empty());
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+    }
+}
+
 TEST(OblivionWorldTest, AutomaticRecoilPreparationAdmitsRetainedIncomingBreakForPlayerAndNpc)
 {
     for (const bool playerAttacker : {false, true})
