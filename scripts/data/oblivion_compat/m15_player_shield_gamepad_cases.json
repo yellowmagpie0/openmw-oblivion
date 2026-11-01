@@ -1,0 +1,579 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-PLAYER-SHIELD-GAMEPAD-001",
+  "requirement": "D2/I4 Player shield break retains the item unequipped; actual third-person controller hold/release clears owned posture and permits ordinary return, including exact active-held fresh continuation.",
+  "full_M15S4_acceptance": false,
+  "implementation": "Existing production equipment/action owners; no C++ change. Reuse shared combined-mastery fixture/launcher/inspector and comparison.",
+  "profile": {
+    "weapon_family": "blade",
+    "stock_weapon": "content:oblivion.esm:090615",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "weapon_type": 0,
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "initial_player_weapon_condition": 50,
+    "initial_player_weapon_charge": -1,
+    "wall_approach": {
+      "maximum_x": null,
+      "maximum_y": 92,
+      "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+    },
+    "power_approach_range": 110,
+    "scope": "Player-held stock shield break and retention through actual third-person gamepad input, natural release/recovery/ordinary return and exact held-source restart. Full S4 remains incomplete.",
+    "stock_weapon_weight": 8,
+    "expected_ordinary_fatigue_cost": 7.8,
+    "expected_power_fatigue_cost": 39,
+    "animation_family": "onehand",
+    "target_health": 300,
+    "name": "Player Apprentice shield break/retention through third-person gamepad input",
+    "course_window": "ordinary",
+    "base_block": 25,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_power_attack_chance": 100,
+    "expected_attacker_recoil": false,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 1,
+    "stock_weapon_health": 56
+  },
+  "course": {
+    "schema_version": 1,
+    "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+    "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+    "profile": {
+      "weapon_family": "blade",
+      "stock_weapon": "content:oblivion.esm:090615",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "weapon_type": 0,
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "initial_player_weapon_condition": 50,
+      "initial_player_weapon_charge": -1,
+      "wall_approach": {
+        "maximum_x": null,
+        "maximum_y": 92,
+        "reason": "Reuse reachable Y92 setup; retain blocked rays, facing, actual wall identity and same-pose clear-path control."
+      },
+      "power_approach_range": 110,
+      "scope": "S4 two-handed normal/directional powers through shared fixture; actual stock type/speed/reach/weight/damage. Declared targetHealth300 for nonlethal stronger-weapon course before any run; no outcome injection. FullS4 remains incomplete.",
+      "stock_weapon_weight": 8,
+      "expected_ordinary_fatigue_cost": 7.8,
+      "expected_power_fatigue_cost": 39,
+      "animation_family": "onehand",
+      "target_health": 300,
+      "name": "Player Apprentice shield break/retention through third-person gamepad input",
+      "course_window": "ordinary",
+      "base_block": 25,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "opponent_power_attack_chance": 100,
+      "expected_attacker_recoil": false,
+      "expected_incoming_block_fatigue_cost": 0,
+      "expected_reference_debits": 1,
+      "stock_weapon_health": 56
+    },
+    "stock_player_weapon": "content:oblivion.esm:090615",
+    "initial_player_weapon_condition": 50,
+    "current_source_sha256": "5e759efb7f11a005248163d106a16064144a2247e45e2eda6601967ed135a74b",
+    "scope": "D2/I4 Player Apprentice shield breaks/retains unequipped during actual third-person gamepad-held block; release/recovery and ordinaryreturn3, exact actualheldfresh. FullS4 incomplete.",
+    "player_shield_break": true,
+    "native_recovery_camera": true,
+    "reference_actions": [
+      {
+        "type": "wait_log",
+        "pattern": "Applied TES4 runtime state:",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "focus_window",
+        "name": "OpenMW"
+      },
+      {
+        "type": "key_held",
+        "value": "f",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction stance: weapon=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction setup: ready=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_down",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=blockidle",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-held.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_held",
+        "value": "space",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield: broken=true worn=false",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-broken-held.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_up",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield release: animationClear=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction recovered: actor=content:oblivion.esm:01fc43 cause=2 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction setup: ready=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "space",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield resources: full=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-released.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_down",
+        "value": "u"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_up",
+        "value": "u"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=3 action=-1",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction endpoint: settled=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-return.png",
+        "minimum_entropy": 0.03
+      }
+    ],
+    "resume_actions": [
+      {
+        "type": "key_down",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Applied TES4 runtime state:",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "focus_window",
+        "name": "OpenMW"
+      },
+      {
+        "type": "key_down",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction setup: ready=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-restored-held.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_held",
+        "value": "space",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield: broken=true worn=false",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-broken-held.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_up",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield release: animationClear=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction recovered: actor=content:oblivion.esm:01fc43 cause=2 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction setup: ready=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "space",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M7 ObScript: stopcombat actor=content:oblivion.esm:01fc43",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 player shield resources: full=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-released.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_down",
+        "value": "u"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee action: actor=dynamic:player:0000000000000001 id=3 action=2",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_up",
+        "value": "u"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=3 action=-1",
+        "timeout_seconds": 600,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction endpoint: settled=true",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+        "timeout_seconds": 600,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-return.png",
+        "minimum_entropy": 0.03
+      }
+    ],
+    "expected_log": [
+      "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 ",
+      "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "M15 player shield: broken=true worn=false"
+    ],
+    "reference_expected_log": [
+      "M15 block begin: actor=dynamic:player:0000000000000001 group=blockidle"
+    ],
+    "resume_expected_log": [
+      "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=2 ",
+      "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+      "M15 player shield: broken=true worn=false"
+    ],
+    "forbidden_log": [
+      "M15 melee miss committed:",
+      "M15 melee hit committed: actor=content:oblivion.esm:01fc43 id=(?:3|4) ",
+      "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 "
+    ],
+    "protocol": "LT held through real shield break, then released. Preserve a legal weapon-block fallback while held if production selects it; every owned held posture must be inactive after release. Healthy sword/retainedshield and exact source ownership stay strict. Gameplay via configured controller, F5 instrumentation only.",
+    "bootstrap_actions": [
+      {
+        "type": "wait_log",
+        "pattern": "Applied TES4 runtime state:",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "focus_window",
+        "name": "OpenMW"
+      },
+      {
+        "type": "key_held",
+        "value": "f",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction stance: weapon=true",
+        "timeout_seconds": 45,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction setup: ready=true",
+        "timeout_seconds": 45,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_down",
+        "value": "b"
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 block begin: actor=dynamic:player:0000000000000001 group=blockidle",
+        "timeout_seconds": 45,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.12,
+        "pause_seconds": 0.1
+      },
+      {
+        "type": "wait_log",
+        "pattern": "(?s)\"event\":\"save-complete\"",
+        "timeout_seconds": 45,
+        "abort_on_failure": true,
+        "path": "events.jsonl"
+      },
+      {
+        "type": "screenshot",
+        "name": "player-shield-held.png",
+        "minimum_entropy": 0.03
+      }
+    ]
+  },
+  "initial_state_generator": "from pathlib import Path\nimport sys,json,hashlib,copy\nsys.path.insert(0,'scripts');import tes4_runtime_state as runtime\nw=Path('build/oblivion-compat/m15/S4/player-shield-gamepad-work-01');f=w/'fixture';source=f/'input.omwsave';original=f/'before-player-shield.omwsave';\nif not original.exists():source.rename(original)\ns=runtime.load_save(original)\np=s['player']['reference'];a=next(v for v in s['native_actor_values'] if v['actor']==p);base=next(v for v in s['native_actor_bases'] if v['base']==a['base'])\na['values'][15][0]=25;next(v for v in base['values'] if v[0]==15)[2]=25;s['player']['actor_values']['block.base']=25\nweapon=next(v for v in s['player']['inventory'] if v['equipped_slots'] & 65536);assert weapon['base']=='content:oblivion.esm:090615' and weapon['condition']==50\nassert not any(v['equipped_slots'] & 8192 for v in s['player']['inventory']);shields=[v for v in s['player']['inventory'] if v['base']=='content:oblivion.esm:0352c1'];assert len(shields)==1;shield=shields[0];assert shield['condition']==100 and shield['equipped_slots']==0;shield.update(condition=.125,equipped_slots=8192)\nassert s['physical_actions']==dict(next=2,pending=[]) and not s['physical_action_owners'];health=sum(v or 0 for v in a['values'][8]);assert health>=80\nassert not any(v.get('melee_paralysis') for v in s['native_actor_values'])\nruntime.write_save(original,source,s);assert runtime.load_save(source)==s\nsha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()\nfor name in ['staging.json','weapon-expectation-preflight.json']:\n q=f/name;d=json.loads(q.read_text());d['staged_sha256']=sha(source)\n if name=='staging.json':d['mutations']=[m for m in d['mutations'] if not m.startswith('Player base Block25')]+['Player base Block25 in nativeAV/base/legacy projections; equip existing stock IronShield condition0.125 left. Healthy sword50 and living resources retained; no contacts/actions/reactions/outcomes authored.']\n q.write_text(json.dumps(d,indent=2)+'\\n')\nproof=dict(passed=True,source_sha256=sha(source),profile_sha256=sha(w/'profile.json'),player=p,base_block=25,initial_health=health,initial_fatigue=sum(v or 0 for v in a['values'][10]),shield=shield['base'],shield_condition=.125,right_weapon=weapon['base'],right_condition=50,empty_pending_ledger=True,no_pending_applied_paralysis=True,source_policy='Existing production stationary standing-power opponent; initial shield/Block only, actual gamepad controls cause contact/break/retention/release/return.')\n(w/'fixture-preflight.json').write_text(json.dumps(proof,indent=2)+'\\n');print(json.dumps(proof))\n",
+  "read_only_observer": "   local types=require('openmw.types')\n   for _,item in ipairs(Actor.inventory(self):getAll(types.Armor)) do\n    if item.recordId:sub(-5)=='352c1' then\n     local condition=types.Item.itemData(item).condition\n     print('M15 player shield: broken=' .. tostring(condition<=0) .. ' worn=' .. tostring(Actor.hasEquipped(self,item)) .. ' condition=' .. tostring(condition) .. ' count=' .. tostring(item.count))\n    end\n   end\n   local released=not animation.isPlaying(self,'blockidle') and not animation.isPlaying(self,'onehandblockidle')\n   print('M15 player shield release: animationClear=' .. tostring(released))\n   print('M15 player shield resources: full=' .. tostring(bothFull))\n",
+  "shared_fixture_corrections": [
+    "Reuse the existing unworn stock shield; reject duplicate or ambiguous selected instance.",
+    "A cold actor may lack a melee row; active-held restart must have an actual row/action6/blockidle.",
+    "Observe ready=true before a cold third-person controller view-toggle tap; preserve saved third-person camera on fresh load.",
+    "Register the controller and hold LT before loading the held source. Reject replayed shield blockidle begin; permit legal later onehandblockidle fallback until real release."
+  ],
+  "verification": {
+    "development": "Shared source/geometry/effect preflights, actual camera prefix, exact binary/live saves and scoped contact/resource/item/posture assertions.",
+    "integration": "Reuse shield-defense normal/SAN2078engine and final490Python receipts: no production/helper/dependency changes. No broad rebuild for this case metadata.",
+    "runtime": "Normal and sanitizer reference plus exact active-held fresh, separately reviewed captures and retained routed PCM. No new quantitative sound-family claim.",
+    "checkpoint": "build/oblivion-compat/m15/S4/player-shield-gamepad-work-01/checkpoint-verification.json",
+    "endpoint": "29 owned semantic fields including actor values/life/items, action ownership, combat RNG and scripts. Completed inactive Player cache elapsed clocks (including offset) recorded and excluded; no active/source tolerance. Both naturally settled return endpoints require no knockback owner."
+  },
+  "retained_failures": [
+    "double-shield-preflight-failure.json and pristine erroneous fixture retained; rejected before gameplay.",
+    "Cold missing melee row guard corrected; no gameplay defect.",
+    "camera-normal-01: startup view tap preceded observer-ready frame, no combat. Shared ready barrier fixes setup; camera-normal-02 passes.",
+    "Initial inspector assumed absent optional melee_paralysis key existed. Retained raw gameplay suffices; get(empty) correction, no rerun.",
+    "Pair checker initially imported active return-force policy from the NPC shield course; this course waits for natural settlement. Both ends require empty force. Two inactive clock-origin offsets also differ; samples retained and completed inactive elapsed-clock policy applied, source exact. See checker-corrections.json and normal-pair-cache-failure.json."
+  ],
+  "limits": [
+    "This scoped course does not close other mastery/effect/material or timing cases.",
+    "Completed inactive Player held-cache elapsed samples (including sequence clock-origin offsets) may differ at later endpoints; identities, retirement duration and all active/source state remain exact. Both naturally settled endpoints require no knockback owner.",
+    "T7 >=3fixed seeds at caps30/60/120 and F8 clean campaigns remain required."
+  ],
+  "profile_source": "Exact runtime profile is embedded in course.profile; the outer profile scope text is clarified for this case."
+}
