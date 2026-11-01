@@ -383,3 +383,60 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
         actions[i-2:i-2] = before
     result['expected_log'].append('M15 joined camera: first=true visible=true')
     return result
+
+
+def standing_capture_setup(manifest, recipe, probe_source):
+    """Frame existing standing photos with measured normal input and restore aim.
+
+    Preserve all saves/contact requirements. This is a fixture correction;
+    visible mesh checks and final image review remain required at runtime.
+    """
+    step, pitch = recipe['mouse_radians_per_unit'], recipe['restore_pitch']
+    if step != 1 / 5120 or not isinstance(pitch, (int, float)) or not math.isfinite(pitch) or abs(pitch) > 1.5:
+        raise ValueError('Invalid standing camera profile')
+    captures = recipe['captures']
+    if not captures or len(set(captures)) != len(captures):
+        raise ValueError('Invalid standing capture identities')
+    result = copy.deepcopy(manifest)
+    observer = next(f for f in result['files'] if f['path'].endswith('m15_course_observer.lua'))
+    anchor = 'local previousFatigue = nil\n'
+    if observer['content'].count(anchor) != 1:
+        raise ValueError('Missing unique shared observer import anchor')
+    observer['content'] = observer['content'].replace(anchor,
+        anchor + "local standingCamera=require('scripts.m15_forward_capture_guard')\nlocal standingFrames=0\n")
+    anchor = "   print('M15 course return: lane='"
+    if observer['content'].count(anchor) != 1:
+        raise ValueError('Missing unique shared camera observer anchor')
+    observer['content'] = observer['content'].replace(anchor,
+        "   if not Actor.getKnockedDown(target) then\n"
+        f"    local mx,my=standingCamera.motion(target,'upper',{step})\n"
+        "    print(string.format('M15 standing motion: x=%d y=%d',mx,my))\n"
+        f"    local restore=math.floor(({pitch}-camera.getPitch())/{step}+0.5)\n"
+        "    print(string.format('M15 standing restore: x=0 y=%d',restore))\n"
+        "    local framed=camera.getMode()==camera.MODE.FirstPerson and standingCamera.upperVisible(target,screen) and math.abs(mx)<=50 and math.abs(my)<=50\n"
+        "    standingFrames=framed and standingFrames+1 or 0\n"
+        "    print('M15 standing camera: visible=' .. tostring(standingFrames>=2))\n"
+        "   else standingFrames=0 end\n" + anchor)
+    path = 'test-data/scripts/m15_forward_capture_guard.lua'
+    existing = [f for f in result['files'] if f['path'] == path]
+    content = probe_source.replace('{', '{{').replace('}', '}}')
+    if existing:
+        if len(existing) != 1 or existing[0]['content'] != content:
+            raise ValueError('Conflicting shared camera module')
+    else:
+        result['files'].append(dict(path=path, content=content))
+    def measured(kind):
+        pattern = 'M15 standing ' + kind + r': x=(?P<x>-?\d+) y=(?P<y>-?\d+)$'
+        return [dict(type='mouse_move', x=0, y=0), dict(type='mouse_move', x=0, y=0),
+            dict(type='wait_log', pattern='M15 standing ' + kind + ':', after_start=True,
+                 timeout_seconds=30, abort_on_failure=True),
+            dict(type='mouse_move', x=0, y=0, from_log=dict(path='process.log', pattern=pattern))]
+    for name in captures:
+        matches = [i for i, a in enumerate(result['actions']) if a.get('name') == name]
+        if len(matches) != 1:
+            raise ValueError('Missing unique standing capture: ' + name)
+        i = matches[0]
+        result['actions'][i:i+1] = measured('motion') + [
+            dict(type='wait_log', pattern='M15 standing camera: visible=true', after_start=True,
+                 timeout_seconds=30, abort_on_failure=True), result['actions'][i]] + measured('restore')
+    return result

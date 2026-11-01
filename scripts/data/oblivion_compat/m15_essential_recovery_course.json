@@ -418,7 +418,7 @@
   "camera_policy": "Normal mouse look x2400 during unconscious capture, inverse afterward (measured x40 only0.45degree). Lower-body viewport/render ray witness uses first observed fall position, since actor capsule moves with knockback while ragdoll is separate. Does not ignore Player occlusion. Actual PNG review still required; no position setters. Disable only automatic idle vanity for slow sanitizer recovery; normal POV controls remain available. FP capture adds downward normal look y1200 and inverse to bring lower-body anchors into viewport; cheap FPsource camera-only preflight before fullSANrerun. Rendering rays ignore the hidden Player world body only in FirstPerson; ThirdPerson/Preview retain Player occlusion. Require explicit first-person mode in the diagnostic (Preview need not emit a ThirdPerson transition).",
   "observer_execution_preflight": {
     "path": "build/oblivion-compat/m15/S4/essential-recovery-work-01/check-observer.lua",
-    "sha256": "23c37ce8d013adfc5f3c1a60e2648122633e1bc50c3397fc8f0c280b8e27e964"
+    "sha256": "122fd28c9c3873521f990093122563b2005c895a5a2a5af8f261f6ea1b29963e"
   },
   "protocol": "Initial essential NPC Health1/base300, PlayerFatigue140, NPC AI restrained; all living/native pending state exact. OrdinaryPlayer2 actual contact produces unconsciousness and Health recovery adjustment. Save activeNPCbody; timer is advanced only positive raw1/3 frames; native GetUp6->0. ExplicitPlayer3 return then120read-only observer samples to allowphysics expiry; actual finalsavedpulse0 mandatory.",
   "source_mode": {
@@ -525,5 +525,17 @@
       "reviewed_images": 14
     },
     "limits": "Old full-music mix still rejected. Selected clips differ, so music cause is not controlled. Shiny cloth/bright arms and cropped recovery views remain separate V6 appearance/framing gaps; T7/F8 remain required."
+  },
+  "standing_capture": {
+    "mouse_radians_per_unit": 0.0001953125,
+    "restore_pitch": 0.4203128516674042,
+    "captures": [
+      "essential-before.png",
+      "essential-recovered.png",
+      "essential-return.png"
+    ],
+    "module": "scripts/data/oblivion_compat/m15_forward_capture_guard.lua",
+    "setup": "scripts/tes4_m15_fixture_preflight.py::standing_capture_setup",
+    "scope": "Existing captures: measured normal upper-body look from actor placement (reuse shared upper mode to avoid transient prior-ragdoll bounds), two converged head/torso visibility samples and 16px top margin; restore original attack pitch. No position/outcome setters. Raw image review required."
   }
 }

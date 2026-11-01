@@ -54,6 +54,30 @@ local function visible(target, screen)
     return false
 end
 
+-- Require both the head and upper torso inside the viewport, rather than
+-- accepting one low-body anchor while the head is cropped above the screen.
+local function upperVisible(target, screen)
+    local bounds = target:getBoundingBox()
+    local top = bounds.center + util.vector3(0, 0, 1.05 * bounds.halfSize.z)
+    local projectedTop = camera.worldToViewportVector(top)
+    if camera.getViewTransform():apply(top).z >= 0 or projectedTop.x < 16
+        or projectedTop.x >= screen.x - 16 or projectedTop.y < 16 or projectedTop.y >= screen.y - 16 then
+        return false
+    end
+    for _, height in ipairs({0.85, 0.35}) do
+        local anchor = bounds.center + util.vector3(0, 0, height * bounds.halfSize.z)
+        local pixel = camera.worldToViewportVector(anchor)
+        if camera.getViewTransform():apply(anchor).z >= 0
+            or pixel.x < 0 or pixel.x >= screen.x or pixel.y < 0 or pixel.y >= screen.y
+            or nearby.castRay(camera.getPosition(), anchor, {collisionType = worldMask}).hit then
+            return false
+        end
+        local hit = nearby.castRenderingRay(camera.getPosition(), anchor, {ignore = self}).hitObject
+        if not hit or hit.id ~= target.id then return false end
+    end
+    return true
+end
+
 local function new(window)
     assert(type(window) == 'number' and window == window and window > 0 and window < math.huge,
         'Forward capture needs a finite positive source window')
@@ -67,4 +91,4 @@ local function new(window)
     end
 end
 
-return {new = new, visible = visible, motion = motion}
+return {new = new, visible = visible, motion = motion, upperVisible = upperVisible}

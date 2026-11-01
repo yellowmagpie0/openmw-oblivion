@@ -8,7 +8,7 @@ from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
-from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits
+from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup
 
 
 class FixturePreflightTests(unittest.TestCase):
@@ -109,6 +109,43 @@ assert(not visible and not active and calls==0)
 assert(module.visible(target,screen)) -- Recovery visibility is independent of effect lifetime.
 now=-1;visible,active=guard(target,screen);assert(not visible and not active)
 ''')
+
+    def test_standing_guard_rejects_cropped_head_even_with_visible_torso(self):
+        self.camera_guard(r'''
+assert(module.upperVisible(target,screen))
+pixelY=15;assert(not module.upperVisible(target,screen))
+pixelY=20
+local api=package.loaded['openmw.camera']
+api.worldToViewportVector=function(anchor) return {x=20,y=anchor.z>50 and -1 or 20} end
+assert(not module.upperVisible(target,screen))
+api.worldToViewportVector=function() return {x=20,y=20} end
+blocked=true;assert(not module.upperVisible(target,screen))
+blocked=false;hitId=43;assert(not module.upperVisible(target,screen))
+''')
+
+    def test_standing_capture_preserves_contacts_saves_and_restores_pitch(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        course = json.loads((data / 'm15_essential_recovery_course.json').read_text())
+        manifest['actions'] = course['reference_actions']
+        original = copy.deepcopy(manifest)
+        recipe = dict(mouse_radians_per_unit=1/5120, restore_pitch=.4203128516674042,
+                      captures=['essential-before.png', 'essential-recovered.png', 'essential-return.png'])
+        framed = standing_capture_setup(manifest, recipe, (data / 'm15_forward_capture_guard.lua').read_text())
+        self.assertEqual(manifest, original)
+        original_actions = iter(original['actions'])
+        for expected in original_actions:
+            self.assertIn(expected, framed['actions'])
+        self.assertEqual([a for a in framed['actions'] if a.get('value') == 'F5'],
+                         [a for a in original['actions'] if a.get('value') == 'F5'])
+        self.assertEqual(framed['expected_log'], original['expected_log'])
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        for name in recipe['captures']:
+            i = next(i for i,a in enumerate(framed['actions']) if a.get('name') == name)
+            self.assertEqual(framed['actions'][i-1]['pattern'], 'M15 standing camera: visible=true')
+            self.assertIn('standing restore:', framed['actions'][i+3]['pattern'])
+        with self.assertRaises(ValueError):
+            standing_capture_setup(manifest, dict(recipe, restore_pitch=float('nan')), '')
 
     def test_forward_camera_rejects_nonfinite_or_empty_source_windows(self):
         self.camera_guard(r'''
