@@ -462,7 +462,7 @@
   },
   "endpoint_policy": "Lua elapsed time is a preliminary return wait, not physics expiry. Verify actual saved knockback; if still active use the declared no-input endpoint tail from exact return save, wait120 observer samples and save again. Require actual zero impulse, unchanged ownership and no new contacts.",
   "essential_recovery": true,
-  "audio_status": "Unarmored-hit sample matching remains openV6: inherited low-hand equal-gain mixture assay failed on retained normal PCM. Native sound dispatch logs show PHYDamageFlesh+WPNHitBladeFlesh played1 percontact; do not claim PCM acceptance or lowerthreshold.",
+  "audio_status": "Scoped native impact PCM identity and fresh no-replay now pass the declared music0/Doppler0 measurement in normal/SAN. Existing full-music failures remain recorded; no full-music waveform identity or blanket V6 closure. See audio_identity_measurement.",
   "recovery_settings": {
     "fEssentialDeathTime": {
       "name": "fEssentialDeathTime",
@@ -476,5 +476,54 @@
     }
   },
   "endpoint_observer_samples_after_return": 120,
-  "essential_camera_diagnostics": false
+  "essential_camera_diagnostics": false,
+  "audio_identity_measurement": {
+    "base_course_revision": "6200b7fce1cc7b0e2fb9150feaef5a716ef7889f",
+    "course_overrides": {
+      "disable_audio_doppler": true,
+      "isolate_impact_music": true
+    },
+    "settings_overrides": {
+      "Sound": {
+        "music volume": 0,
+        "doppler factor": 0
+      }
+    },
+    "reference_action_insert": {
+      "after": {
+        "type": "wait_log",
+        "pattern": "M15 recovery body admitted: actor=content:oblivion.esm:01fc43 state=4",
+        "timeout_seconds": 90,
+        "abort_on_failure": true
+      },
+      "actions": [
+        {
+          "type": "sleep",
+          "seconds": 1.3
+        }
+      ]
+    },
+    "source_recipe": "build/oblivion-compat/m15/S4/essential-hit-audio-work-02/music-isolated-course.json",
+    "checker": "scripts/tes4_m15_block_audio.py",
+    "recipe": "build/oblivion-compat/m15/S4/essential-hit-audio-work-01/hit-fingerprint-assay.json",
+    "criterion": "Unchanged V3 .75 mixed/partial correlation, >1% residual energy,90%energy each bank and>=3joint40ms sections. Energy credits each bank independently, including quiet companion intros; no gain/pitch/event-time fitting.",
+    "expected_events": {
+      "reference": 2,
+      "fresh": 1
+    },
+    "actual_source_checks": "Template assets equal logged selected filenames; each PHYDamageFlesh/WPNHitBladeFlesh cue once percontact, id2 absent afterfresh, interevent PCM/log spacing<=40ms (two20ms mixer periods).",
+    "checkpoint": "build/oblivion-compat/m15/S4/essential-hit-audio-work-02/checkpoint-verification.json",
+    "results": {
+      "focused_audio_tests": 18,
+      "full_python_tests": 491,
+      "reused_engine_tests_per_build": 2089,
+      "exact_saved_live_pairs": 12,
+      "fresh_processes": 2,
+      "endpoint_comparisons": "2x23fields",
+      "audible_events": 6,
+      "played_bank_cues": 12,
+      "reviewed_images": 14
+    },
+    "limits": "Old full-music mix still rejected. Selected clips differ, so music cause is not controlled. Shiny cloth/bright arms and cropped recovery views remain separate V6 appearance/framing gaps; T7/F8 remain required."
+  }
 }
