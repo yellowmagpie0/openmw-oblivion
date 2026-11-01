@@ -1,0 +1,94 @@
+{
+  "schema_version": 4,
+  "assets": [
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_block_shield_l_01.wav",
+      "sha256": "f202d8a44448d9a8cb57762dd20345e1c7754e41a6cad08ab8596e32cc7baadb"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_block_shield_l_02.wav",
+      "sha256": "b10e2bb40cbbd5f38ec0007c1068fc5a785716287a5b19583ed82c4c02d7cf6a"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_block_shield_l_03.wav",
+      "sha256": "a0c6a248d7563e627b8e6c72d7edd29aa6ce6dbcc1532f72ffc29aa1b7009784"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/phy_dmgflesh_01.wav",
+      "sha256": "e8a36f39bad96295cfdf52c2c5c31fc3939069bb17afff4e45b216d8d3d4001b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/phy_dmgflesh_02.wav",
+      "sha256": "b1a299fb6e133014865863dc88f370c783b52252083dac67389c925e305df3f8"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/phy_dmgflesh_03.wav",
+      "sha256": "fae8baa883ebf642e403baadf8b4cd9dbccfea967e5be40cd133a476d2396c84"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/phy_dmgflesh_04.wav",
+      "sha256": "1797985f60e7f4fea2eb40ac73b2ff1a4108377b89bbc74a13c0276ece5f8f79"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/phy_dmgflesh_05.wav",
+      "sha256": "78a0e9583d920e6dee5da6ad129cf4b3c4e903538f45f03a987dbd92c4020e40"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_hit_blade_01.wav",
+      "sha256": "1f12ceb6e84285104a0cefc1201c30a6c8df72ed47fbdfe3e3ba83d97e4118d1"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_hit_blade_02.wav",
+      "sha256": "91275cc2a4a853cf786fa5d318d2e6242032a1c1778a9d4ea167eb47b5bea56b"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_hit_blade_03.wav",
+      "sha256": "bf227ad8832ade9260c32f3fd693ac169dbc083ae3b844f6912c1ed70d5023ea"
+    },
+    {
+      "path": "build/oblivion-compat/m15/S4/light-shield-work-01/assets/wpn_hit_blade_04.wav",
+      "sha256": "4558d82179e1f9a429893466fdf1aeeaa91aebb2ed897984b6639f024d3ca012"
+    }
+  ],
+  "sample_rate": 48000,
+  "channels": 2,
+  "analysis_rate": 12000,
+  "mixer_period_frames": 960,
+  "minimum_normalized_correlation": 0.75,
+  "cluster_gap_seconds": 1,
+  "asset_banks": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    [
+      8,
+      9,
+      10,
+      11
+    ]
+  ],
+  "asset_static_attenuation": [
+    485,
+    485,
+    485,
+    485,
+    485,
+    485,
+    485,
+    485,
+    308,
+    308,
+    308,
+    308
+  ],
+  "required_asset_bank": 0
+}

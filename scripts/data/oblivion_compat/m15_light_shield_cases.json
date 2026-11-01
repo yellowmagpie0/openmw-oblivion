@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-LIGHT-SHIELD-001",
+  "requirement": "V6 stock light-shield visible/audible normal-input block and natural recovery. Combine D2 stock inventory break/drop, withdrawal and ordinary return; exact active-held continuation.",
+  "full_M15S4_acceptance": false,
+  "base_case": "m15_shield_defense_cases.json",
+  "fixture": {
+    "generator": "Reuse combined-mastery fixture and shared external shield-defense course. Replace the one NPC carried IronShield identity with stock FurShield025056; condition2.5,slot8192. No gameplay outcomes authored.",
+    "actor": "content:oblivion.esm:01fc43",
+    "shield": "content:oblivion.esm:025056",
+    "armor_class": 0,
+    "model": "Armor/Fur/Shield.NIF",
+    "initial_condition": 2.5,
+    "block": 25,
+    "control_source": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal announced,released=false,false\nreturn {engineHandlers={onUpdate=function()\n if self.contentFile~='oblivion.esm' or self.recordId:sub(-5)~='25200' then return end\n self:enableAI(false)\n self.type.setStance(self,self.type.STANCE.Weapon)\n local carried=Actor.getEquipment(self)[Actor.EQUIPMENT_SLOT.CarriedLeft]\n self.controls.block=carried~=nil\n if carried and not announced then print('M15 shield defender intent: held=true');announced=true end\n if not carried and not released then print('M15 shield defender intent: held=false');released=true end\nend}}\n",
+    "source_transform": "item=next(i for i in npc['inventory'] if i['equipped_slots']==8192)\nassert item['base']=='content:oblivion.esm:0352c1'\nitem.update(base='content:oblivion.esm:025056',condition=2.5)",
+    "wear_reachability_preflight": {
+      "debit": 0.9457483291625977,
+      "broken_below": 1,
+      "condition": 2.5,
+      "assertions": [
+        "condition-debit>=1",
+        "condition-2*debit<1"
+      ],
+      "provenance": "Actual retained light-shield-normal-01 first contact. Existing condition owner maps remainders<1 to0; no new precision/parity requirement."
+    }
+  },
+  "profile": {
+    "name": "Stock FurShield Apprentice NPC visible/audible block, break and recovery",
+    "weapon_family": "blade",
+    "animation_family": "onehand",
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "stock_weapon": "content:oblivion.esm:090615",
+    "stock_enchantment": null,
+    "stock_charge_maximum": 0,
+    "stock_weapon_health": 56,
+    "stock_weapon_weight": 8,
+    "initial_player_weapon_condition": 50,
+    "initial_player_weapon_charge": -1,
+    "base_block": 50,
+    "course_window": "ordinary",
+    "expected_ordinary_fatigue_cost": 7.8,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_reference_debits": 3,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "expected_attacker_recoil": true,
+    "opponent_actor": "content:oblivion.esm:01fc43",
+    "opponent_base": "content:oblivion.esm:025200",
+    "defender_shield": true,
+    "wall_approach": {
+      "maximum_x": 795,
+      "maximum_y": 92,
+      "reason": "Reuse accepted combined fixture geometry."
+    },
+    "initial_shield_condition": 2.5,
+    "shield_base": "content:oblivion.esm:025056",
+    "shield_model": "meshes/armor/fur/shield.nif",
+    "shield_sound": "WPNBlockShieldLight",
+    "shield_armor_class": 0
+  },
+  "course": {
+    "name": "S4 stock light shield visible/audible block, break/recovery and return",
+    "profile_sha256": "7685a5b273af36e6a4697fe0aa6168d1e1980a60c066db32cffe4e8a0363ed0f",
+    "fixture_preflight": "build/oblivion-compat/m15/S4/light-shield-work-01/fixture-preflight.json",
+    "fixture_preflight_sha256": "da49bbf5e72e0337289272f4aa6f40ccc07401a3e9a580c22a34ccf0bf50cad3",
+    "stationary_fixture": "build/oblivion-compat/m15/S4/light-shield-work-01/fixture/stationary",
+    "policy_script": "build/oblivion-compat/m15/S4/light-shield-work-01/defender-control.lua",
+    "policy_script_sha256": "325200925ab78440ba5a7818b1fa8baef9dbb4a158fe4c8d4ed7f52b43f0b398",
+    "actions": [
+      {
+        "type": "wait_log",
+        "pattern": "Applied TES4 runtime state:",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "focus_window",
+        "name": "OpenMW"
+      },
+      {
+        "type": "key_held",
+        "value": "f",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 block begin: actor=content:oblivion.esm:01fc43 group=blockidle",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 overlap activation: reachable=true",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Writing saved game 'Quicksave'",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "screenshot",
+        "name": "defender-held.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "key_held",
+        "value": "u",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Writing saved game 'Quicksave'",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "screenshot",
+        "name": "defender-blockhit.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "sleep",
+        "seconds": 3
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Writing saved game 'Quicksave'",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "screenshot",
+        "name": "defender-recovered.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 course fatigue ready: current=",
+        "timeout_seconds": 180,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "u",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 reaction recovered: actor=dynamic:player:0000000000000001 cause=3 action=-1",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 shield defender intent: held=false",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 course fatigue ready: current=",
+        "timeout_seconds": 180,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Writing saved game 'Quicksave'",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "screenshot",
+        "name": "defender-break.png",
+        "minimum_entropy": 0.03
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 course fatigue ready: current=",
+        "timeout_seconds": 180,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "u",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=4 action=-1",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "wait_log",
+        "pattern": "M15 course fatigue ready: current=",
+        "timeout_seconds": 180,
+        "abort_on_failure": true,
+        "after_start": true
+      },
+      {
+        "type": "key_held",
+        "value": "F5",
+        "hold_seconds": 0.08,
+        "pause_seconds": 0.08
+      },
+      {
+        "type": "wait_log",
+        "pattern": "Writing saved game 'Quicksave'",
+        "timeout_seconds": 180,
+        "abort_on_failure": true
+      },
+      {
+        "type": "screenshot",
+        "name": "defender-return.png",
+        "minimum_entropy": 0.03
+      }
+    ],
+    "expected_log": [
+      "M15 block begin: actor=content:oblivion.esm:01fc43 group=blockidle",
+      "M15 NPC block resource selected: actor=content:oblivion.esm:01fc43",
+      "M15 shield defender intent: held=false",
+      "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=4"
+    ],
+    "forbidden_log": [
+      "M15 melee hit committed: actor=content:oblivion.esm:01fc43",
+      "M15 melee miss committed:"
+    ],
+    "timeout_seconds": 900,
+    "normal_activation_reaim": false,
+    "actor_control_script": "build/oblivion-compat/m15/S4/light-shield-work-01/defender-control.lua",
+    "actor_control_script_sha256": "325200925ab78440ba5a7818b1fa8baef9dbb4a158fe4c8d4ed7f52b43f0b398",
+    "recoil_contact_waits": [
+      {
+        "actor": "dynamic:player:0000000000000001",
+        "cause": 2
+      },
+      {
+        "actor": "dynamic:player:0000000000000001",
+        "cause": 3
+      }
+    ]
+  },
+  "audio": {
+    "recipe": "m15_light_shield_mixture_assay.json",
+    "required_stock_sound": "WPNBlockShieldLight",
+    "source_record": "Oblivion.esm:058f18",
+    "static_attenuation": 485,
+    "policy": "Existing V4 whole-capture finite three-bank assay. Fullclip and required LightShield partial correlation>=.75; target residual energy>1% after projecting out declared concurrent banks. No independent identity acceptance for nuisance layers.",
+    "preflight": "12 stock assets /420 fixed templates admitted before gameplay."
+  },
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/light-shield-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/light-shield-work-01/checkpoint-verification.json",
+    "broad_reuse": "Current2078engine normal/SAN and490Python original source-linked receipts; no production/dependency change.",
+    "shared_checkers": "Existing shared shield inspector parameters use explicit profile initial condition/model/sound; existing semantic comparator takes course-work and recorded shield identity. No parallel harness.",
+    "reference_scene_projection": "Explicit inspector --reference-scene-tolerance0.01 world unit for moving dropped-reference versus scene-root projection. Actual max errors recorded; body/root remains1e-3, save/live and freshsource exact. Normal03 retains old1e-3 checker failure and reuses sufficient raw evidence.",
+    "wear_preflight": "Shared launcher rejects a declared first-survives/second-breaks interval unless condition-debit>=1 and condition-2*debit<1. Invalid-interval control fails before game; current source passes.",
+    "runtime_state": "Normal and SAN references plus exact actual-held fresh; first-person keyboard/mouse context. Full view/device/FPS crosses retain their separate requirements.",
+    "runtime_results": "Normal/SAN references and exact held fresh:18 exact save/live pairs,4epochs,2exact held sources,2x30field endpoints,18directly reviewed captures,one LightShield PCM event perrun.",
+    "expensive_reruns": "Normal01 condition3 misses second break; normal02 condition1.5 breaks first. Corrected initial2.5 needs new gameplay because intended first/second break endpoints are absent. Shared wear-window preflight now accounts for below1 cutoff. Scene projection checker correction reinspects raw normal03, no gameplay rerun. No C++/Python broad rebuild; production/dependencies unchanged."
+  },
+  "retained_failures": [
+    {
+      "run": "light-shield-normal-01",
+      "kind": "Fixture: condition3 survives two hits; wait for break times out. First three save/live pairs retained.",
+      "correction": "Initial3 has no second-contact break. Condition1.5 also fails by breaking immediately: below1 remainders clamp to0. Final2.5 includes that existing threshold, preserves both assertions; both failed sources/runs retained."
+    },
+    {
+      "run": "light-shield-normal-02",
+      "kind": "Fixture: first block breaks at condition1.5; inherited wait for second-hit Recoil fails.",
+      "correction": "Include below1 condition cutoff in source reachability preflight; final2.5. No production change."
+    }
+  ],
+  "limits": [
+    "Scope is one stock light-shield NPC block/recovery/break/return context, not all shield/armor/mastery/view branches.",
+    "Moving dropped body identity/ownership is strict; no settled or matched trajectory claim. Existing impulse magnitude/horizontal-heading policy and open physical timing gates retained.",
+    "All T7 fixed-seed/cap campaigns and F8 independent clean/regression/compiler gates remain required.",
+    "This reuses public defensive block input with AI disabled, as declared in the base shield case; it does not claim autonomous S7 defense. Other joined courses retain the production stationary attack policy."
+  ]
+}
