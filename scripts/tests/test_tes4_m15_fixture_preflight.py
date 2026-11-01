@@ -6,6 +6,8 @@ import unittest
 
 from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
+from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
+from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup
 
 
@@ -266,6 +268,110 @@ assert(not pcall(module.motion,target,'unknown',1/5120))
                 state = self.power_source(); change(state)
                 with self.assertRaises(ValueError):
                     pending_npc_power_source(state, 'npc', 'style')
+
+    def backward_overlap(self):
+        state = self.power_source()
+        victim = state['native_melee_states'][0]
+        victim['strike'].update(id=4, kind=0, animation_group='onehandattackleft',
+                                power_phase=None, ordinary_phase=0)
+        victim['input'] = dict(input_held=True, require_release=False)
+        player = copy.deepcopy(victim)
+        player.update(actor='player', ai_intent=None)
+        player['strike'].update(id=3, kind=4, animation_group='onehandattackbackpower', power_phase=0)
+        state['native_melee_states'].append(player)
+        av = copy.deepcopy(state['native_actor_values'][0]); av['actor'] = 'player'
+        state['native_actor_values'].append(av)
+        state['physical_actions'] = dict(next=5, pending=[3, 4])
+        state['physical_action_owners'] = [dict(id=3, actor='player'), dict(id=4, actor='npc')]
+        return state
+
+    def test_backward_overlap_requires_two_pending_owners_and_victim_input(self):
+        proof = pending_backward_overlap_source(self.backward_overlap(), 'npc', 'style')
+        self.assertEqual(proof, dict(stage='pending-backward-and-victim', cause=3,
+                                     interrupted=4, victim_input_held=True))
+
+    def test_backward_overlap_rejects_late_foreign_or_incapacitated_sources(self):
+        changes = [
+            lambda s:s['physical_actions'].update(pending=[3]),
+            lambda s:s['physical_action_owners'][1].update(actor='other'),
+            lambda s:s['native_melee_states'][0]['strike'].update(contact_committed=True),
+            lambda s:s['native_melee_states'][0]['strike'].update(ordinary_phase=1),
+            lambda s:s['native_melee_states'][0]['input'].update(input_held=False),
+            lambda s:s['native_melee_states'][0]['ai_intent'].update(target='other'),
+            lambda s:s['native_melee_states'][1]['strike'].update(power_phase=1),
+            lambda s:s['native_actor_values'][0].update(process_knocked_state=2),
+            lambda s:s['native_actor_ragdolls'].append(dict(actor='npc')),
+        ]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.backward_overlap(); change(state)
+                with self.assertRaises(ValueError):
+                    pending_backward_overlap_source(state, 'npc', 'style')
+
+    def backward_interruption(self):
+        state = self.backward_overlap()
+        state['physical_actions'] = dict(next=5, pending=[])
+        state['physical_action_owners'] = []
+        state['native_melee_states'] = []
+        state['native_actor_values'][0]['process_knocked_state'] = 1
+        state['native_getup_playback'] = [dict(actor='npc', physical_hit=dict(cause=3, applied=True, force=85))]
+        state['native_actor_ragdolls'] = [dict(actor='npc', bodies=[{} for _ in range(18)])]
+        state['native_actor_life'] = [dict(actor='npc', phase=0)]
+        state['actor_ai'] = [dict(actor='npc', restrained=True)]
+        return state
+
+    def test_applied_backward_interruption_requires_withdrawal_and_real_body(self):
+        proof = applied_backward_interruption_source(self.backward_interruption(), 'npc')
+        self.assertTrue(proof['victim_contact_withdrawn'])
+        self.assertEqual(proof['body_count'], 18)
+
+    def test_applied_backward_interruption_rejects_pending_foreign_and_unapplied_sources(self):
+        changes = [
+            lambda s:s['physical_actions'].update(pending=[4]),
+            lambda s:s['native_getup_playback'][0]['physical_hit'].update(cause=4),
+            lambda s:s['native_getup_playback'][0]['physical_hit'].update(applied=False),
+            lambda s:s['native_actor_ragdolls'][0]['bodies'].pop(),
+            lambda s:s['native_actor_values'][0].update(process_knocked_state=0),
+            lambda s:s['native_actor_life'][0].update(phase=2),
+            lambda s:s['actor_ai'][0].update(restrained=False),
+            lambda s:s['native_melee_states'].append(self.backward_overlap()['native_melee_states'][0]),
+        ]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.backward_interruption(); change(state)
+                with self.assertRaises(ValueError):
+                    applied_backward_interruption_source(state, 'npc')
+
+    def pending_physical_backward(self):
+        state = self.backward_overlap()
+        state['physical_actions'] = dict(next=5, pending=[4])
+        state['physical_action_owners'] = [dict(id=4, actor='npc')]
+        state['native_melee_states'][1]['strike'].update(contact_committed=True, power_phase=1)
+        state['native_actor_values'][0]['process_knocked_state'] = 2
+        state['native_actor_life'] = [dict(actor='npc', phase=0)]
+        state['native_getup_playback'] = [dict(actor='npc', physical_hit=dict(cause=3, applied=False, force=85))]
+        return state
+
+    def test_pending_physical_backward_distinguishes_committed_damage_from_body_application(self):
+        proof = pending_physical_backward_interruption_source(self.pending_physical_backward(), 'npc')
+        self.assertTrue(proof['damage_committed'])
+        self.assertFalse(proof['body_applied'])
+
+    def test_pending_physical_backward_rejects_replay_mixed_stages_and_foreign_owners(self):
+        changes = [
+            lambda s:s['native_melee_states'][1]['strike'].update(contact_committed=False),
+            lambda s:s['native_melee_states'][0]['strike'].update(contact_committed=True),
+            lambda s:s['physical_action_owners'][0].update(actor='other'),
+            lambda s:s['native_getup_playback'][0]['physical_hit'].update(cause=4),
+            lambda s:s['native_getup_playback'][0]['physical_hit'].update(applied=True),
+            lambda s:s['native_actor_ragdolls'].append(dict(actor='npc', bodies=[{}]*18)),
+            lambda s:s['native_actor_life'][0].update(phase=2),
+        ]
+        for change in changes:
+            with self.subTest(change=change):
+                state = self.pending_physical_backward(); change(state)
+                with self.assertRaises(ValueError):
+                    pending_physical_backward_interruption_source(state, 'npc')
 
     def geometry(self, x, y, distance=120, facing=1, blocked='true', near='false'):
         return (f'M15 course geometry: x={x} y={y} distance={distance} facing={facing} '

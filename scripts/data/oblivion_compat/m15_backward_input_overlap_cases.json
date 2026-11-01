@@ -1,0 +1,29 @@
+{
+  "requirement": "S4 R3/I4 physical Backward knockdown cancels victim-owned pending attack and held AI input; natural recovery and fresh KO continuation without replay.",
+  "scope": {
+    "player": "First-person keyboard/mouse; Blade100, stock Rusty Iron Shortsword speed1.2",
+    "victim": "Valen Dreth stationary native opponent; synthetic NPC-only IronLongsword speed0.1; no stock-speed timing claim",
+    "policy": "Canonical receiving-health pause: normal<110, SAN<115; separate fixture hashes preserve both. Activation releases pause through StopCombat. No authored contacts, damage or KO.",
+    "course": "Player warmup2, Backward3, normal activation starts NPC4 before3 contact. Save pending stage, applied KO, recovered and ordinary return5. Normal reference begins at actual dual-windup save; SAN reference starts cold and retains queued-physical snapshot.",
+    "limits": "No full S4, view/device matrix, settled-prone, new PCM identity, T7 or F8 claim."
+  },
+  "implementation": [
+    "pending_backward_overlap_source",
+    "pending_physical_backward_interruption_source",
+    "applied_backward_interruption_source"
+  ],
+  "checks": {
+    "focused": "21 fixture-preflight tests; six new valid/malformed-stage cases",
+    "python": "484 full Python tests: build/oblivion-compat/m15/S4/backward-input-overlap-python-03/verification.json",
+    "reused": "build/oblivion-compat/m15/S4/backward-input-overlap-work-01/reused-engine-evidence.json: unchanged11CPP/game hashes;2075engine tests per normal/SAN build and six relevant reset/physical-hit cases",
+    "runtime": "Exact binary/live pairs and whole fresh source restore; no victim4 contact/cost/wear or receiving Player damage; no3 replay.29 endpoint fields under existing ownership/GetUp policies. Return5 force direction checked against each actual contact frame and equal magnitude tolerance1e-4.",
+    "tolerances": "Resource accounting2e-4 and condition1e-4; own-frame direction1e-4. State ownership and source restore remain exact."
+  },
+  "evidence": "build/oblivion-compat/m15/S4/backward-input-overlap-work-01/checkpoint-verification.json",
+  "reuse": {
+    "launcher": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py --input-overlap-course COURSE --profile PROFILE --fixture-dir FIXTURE --integration-receipt RECEIPT",
+    "saved_live": "Existing combined-restart-work-01/verify-recovery-pair.py inventory/binary/library/epoch checks",
+    "comparison": "combined-mastery-work-01/compare-pair.py --backward-input-overlap --receipt RECEIPT"
+  },
+  "failures": "Original timing, camera, pause-policy and checker failures retained in work directory; sufficient raw evidence reinspected after checker correction. No C++ changes/rebuilds in this chunk."
+}

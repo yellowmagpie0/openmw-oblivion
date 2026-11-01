@@ -135,6 +135,109 @@ def pending_npc_power_source(state, actor, style, cause=2):
     return strike
 
 
+def pending_backward_overlap_source(state, actor, style, cause=3, interrupted=4):
+    """Require two real pending attacks, including the victim's held AI input."""
+    player = state['player']['reference']
+    if actor == player or interrupted != cause + 1:
+        raise ValueError('Backward overlap requires distinct ordered action owners')
+    owners = [dict(id=cause, actor=player), dict(id=interrupted, actor=actor)]
+    if (state['physical_actions'] != dict(next=interrupted + 1, pending=[cause, interrupted])
+            or state['physical_action_owners'] != owners
+            or not any({v['first'], v['second']} == {actor, player}
+                       for v in state['native_combat_engagements'])):
+        raise ValueError('Backward overlap lacks both pending action owners')
+    for key, action, kinds in [(player, cause, (4,)), (actor, interrupted, (0, 1))]:
+        rows = [v for v in state['native_melee_states'] if v['actor'] == key]
+        values = [v for v in state['native_actor_values'] if v['actor'] == key]
+        if len(rows) != 1 or len(values) != 1:
+            raise ValueError('Backward overlap lacks distinct actor authority')
+        row, av = rows[0], values[0]
+        strike = row.get('strike')
+        if (not strike or strike['id'] != action or strike['kind'] not in kinds
+                or strike['contact_committed'] or row.get('reaction')
+                or av['process_action'] != 2 or av.get('process_knocked_state', 0)
+                or av.get('melee_paralysis')
+                or any(v['actor'] == key for v in state['native_actor_ragdolls'])):
+            raise ValueError('Backward overlap cannot substitute an applied or incapacitated actor')
+        time = strike['animation_time']
+        timing = strike.get('sequence_timing')
+        if (not math.isfinite(time) or time < 0 or not timing
+                or not math.isfinite(timing['output_time']) or timing['output_time'] < 0):
+            raise ValueError('Backward overlap lacks native sequence timing')
+        if key == player:
+            if strike.get('power_phase') != 0 or not strike['animation_group'].endswith('attackbackpower'):
+                raise ValueError('Backward overlap requires the pre-contact Backward power')
+        elif (row.get('ai_intent') != dict(target=player, style=style)
+                or strike.get('ordinary_phase') != 0
+                or not row['input']['input_held'] or row['input']['require_release']):
+            raise ValueError('Backward overlap requires the victim held-input owner')
+    return dict(stage='pending-backward-and-victim', cause=cause, interrupted=interrupted,
+                victim_input_held=True)
+
+
+def pending_physical_backward_interruption_source(state, actor, cause=3, interrupted=4):
+    """Require committed damage with the physical KO and victim withdrawal pending."""
+    player = state['player']['reference']
+    if (actor == player or interrupted != cause + 1
+            or state['physical_actions'] != dict(next=interrupted + 1, pending=[interrupted])
+            or state['physical_action_owners'] != [dict(id=interrupted, actor=actor)]):
+        raise ValueError('Pending physical interruption lacks the victim contact owner')
+    rows = {key: [v for v in state['native_melee_states'] if v['actor'] == key]
+            for key in (player, actor)}
+    if any(len(v) != 1 for v in rows.values()):
+        raise ValueError('Pending physical interruption lacks distinct combat states')
+    source, victim = rows[player][0].get('strike'), rows[actor][0].get('strike')
+    if (not source or source['id'] != cause or source['kind'] != 4
+            or not source['contact_committed'] or source.get('power_phase') != 1
+            or not victim or victim['id'] != interrupted or victim['kind'] not in (0, 1)
+            or victim['contact_committed'] or victim.get('ordinary_phase') != 0):
+        raise ValueError('Pending physical interruption mixes damage and contact stages')
+    values = [v for v in state['native_actor_values'] if v['actor'] == actor]
+    life = [v for v in state['native_actor_life'] if v['actor'] == actor]
+    graphs = [v for v in state['native_getup_playback'] if v['actor'] == actor]
+    if (len(values) != 1 or values[0]['process_knocked_state'] != 2
+            or values[0].get('melee_paralysis') or len(life) != 1 or life[0]['phase'] != 0
+            or len(graphs) != 1 or any(v['actor'] == actor for v in state['native_actor_ragdolls'])):
+        raise ValueError('Pending physical interruption cannot substitute an applied body')
+    hit = graphs[0].get('physical_hit')
+    if (not hit or hit['cause'] != cause or hit['applied']
+            or not math.isfinite(hit['force']) or hit['force'] <= 0):
+        raise ValueError('Pending physical interruption lacks its unapplied physical cause')
+    return dict(stage='pending-physical-backward-interruption', cause=cause,
+                interrupted=interrupted, damage_committed=True, body_applied=False)
+
+
+def applied_backward_interruption_source(state, actor, cause=3, interrupted=4):
+    """Require the real applied KO after withdrawal of the interrupted attack."""
+    if (state['physical_actions'] != dict(next=interrupted + 1, pending=[])
+            or state['physical_action_owners']):
+        raise ValueError('Backward interruption still owns a pending contact')
+    values = [v for v in state['native_actor_values'] if v['actor'] == actor]
+    graphs = [v for v in state['native_getup_playback'] if v['actor'] == actor]
+    bodies = [v for v in state['native_actor_ragdolls'] if v['actor'] == actor]
+    life = [v for v in state['native_actor_life'] if v['actor'] == actor]
+    if (len(values) != 1 or values[0]['process_knocked_state'] not in (1, 2, 3, 4)
+            or values[0].get('melee_paralysis') or len(life) != 1 or life[0]['phase'] != 0
+            or len(graphs) != 1 or len(bodies) != 1 or len(bodies[0]['bodies']) != 18):
+        raise ValueError('Backward interruption lacks its alive knocked actor and physical body')
+    hit = graphs[0].get('physical_hit')
+    if (not hit or hit['cause'] != cause or not hit['applied']
+            or not math.isfinite(hit['force']) or hit['force'] <= 0):
+        raise ValueError('Backward interruption lacks its applied physical cause')
+    rows = [v for v in state['native_melee_states'] if v['actor'] == actor]
+    for row in rows:
+        if (row.get('strike') or row.get('reaction') or row.get('passive_sequence')
+                or row['input']['input_held'] or row['input']['queued']
+                or row.get('retiring_sequences')
+                or any(not h['inactive'] for h in row.get('held_blocks', []))):
+            raise ValueError('Backward interruption retains victim combat ownership')
+    ai = [v for v in state['actor_ai'] if v['actor'] == actor]
+    if len(ai) != 1 or not ai[0]['restrained']:
+        raise ValueError('Backward interruption course lacks its post-hit AI pause')
+    return dict(stage='applied-backward-interruption', cause=cause, interrupted=interrupted,
+                body_count=18, victim_contact_withdrawn=True)
+
+
 def approach_witness(log, *, wall_x, wall_y, close_range):
     """Require measured path witnesses for planned gates; never infer from timeout.
 
