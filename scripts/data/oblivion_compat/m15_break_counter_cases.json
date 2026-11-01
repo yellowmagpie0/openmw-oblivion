@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-BREAK-COUNTER-001",
+  "full_M15S4_acceptance": false,
+  "requirements": [
+    "D2 accepted blocked contact survives defensive equipment break and selects Counter using resulting gear",
+    "I4 held/equipment/Counter ownership, natural recovery/release/return and exact active-source continuation"
+  ],
+  "problem": "Projected equipment-loss Counter selection rejected a valid incoming hit. Resource preparation also read the old weapon, equipment sources conflicted with Counter, and controller equipment-group cleanup could cancel the new Counter.",
+  "implementation": [
+    "Query projected gear without rejecting selected Counter after break.",
+    "Bind Counter to retained weapon; reject a broken weapon binding.",
+    "Allow owned equipment-source packets, preserve staged held reset/fade and acquire Counter after equipment withdraws the block.",
+    "Keep a correctly bound Counter while the independent old held group retires; ordinary weapon-change binding checks remain."
+  ],
+  "world_tests": {
+    "OrdinaryBlockingWeaponBreakAdmitsProjectedExpertDefenseWithoutLosingContact": "2 real ordinary-wear proc/nonproc contexts; source preparation read-only, accepted damage/wear once.",
+    "DefensiveBreakSelectsUnarmedCounterAndPreservesEquipmentHeldTransition": "24 contexts: NPC/Player-body/Player-FP x weapon/shield x NI5/steady x absent/explicit playback; projected selection, stale condition authority, invalid binding, held caches, once-only commit, notifications and exact roundtrip."
+  },
+  "authoring": {
+    "recipe": "build/oblivion-compat/m15/S4/break-counter-work-01/prepare.py",
+    "editable_course": "build/oblivion-compat/m15/S4/break-counter-work-01/reference-course.json",
+    "source": "Existing armed-Goblin/disarm fixture, combined Counter course and production basic-attack opponent policy.",
+    "initial": {
+      "player_weapon": "content:oblivion.esm:090615",
+      "player_weapon_condition": 1.000100016593933,
+      "player_shield_equipped": false,
+      "player_base_block": 5,
+      "player_base_hand_to_hand": 75,
+      "opponent": "content:m15stationaryopponent.esp:000802",
+      "opponent_weapon_condition": 50,
+      "combat_seed": 1,
+      "proc_chance_override": 100
+    },
+    "scope": "Initial gear/skills/seed only; no authored contacts, effects, poses, reactions or outcomes."
+  },
+  "course": [
+    "Normal-input sword block; actual Goblin attack2 commits damage/fatigue/weapon wear once, retains broken Player sword unequipped and issues unarmed Counter3.",
+    "Body/FP handtohandblockattack owns Counter; zero Counter cost/damage and real Goblin Stagger, natural recovery, physical held release and ordinary unarmed return4.",
+    "Exact active post-break Counter/Stagger saves restart in fresh processes; typed held-recovery F5 precedes release, no replay,29 owned endpoint fields compare."
+  ],
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/break-counter-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/break-counter-work-01/checkpoint-verification.json",
+    "focused_tests": 6,
+    "full_engine_per_build": 2089,
+    "exact_saved_live_pairs": 18,
+    "gameplay_process_epochs": 4,
+    "exact_active_source_fresh_restores": 2,
+    "endpoint_comparisons": "2x29 fields",
+    "reviewed_images": 14,
+    "reused": "build/oblivion-compat/m15/S4/break-counter-work-01/reused-evidence.json",
+    "shared_fixture": "Existing combined runner/inspect/compare/monitor; eligibility reads actual pinned fresh source; post-break completion preflight; canonical typed held-recovery checker."
+  },
+  "retained_failures": {
+    "focused": "build/oblivion-compat/m15/S4/break-counter-work-01/retained-failures.json",
+    "fixture": "Normal01 wrong recovery-action wait retained two exact partial pairs; missing release/return required normal02. Fresh01 source-selection preflight failed before game.",
+    "checker": "build/oblivion-compat/m15/S4/break-counter-work-01/checker-corrections.json",
+    "scope": "Checker corrections reinspected existing raw; no gameplay reruns for them. Full integration gates ran once per build after focused corrections."
+  },
+  "limits": [
+    "Runtime is first-person keyboard Player weapon break against armed Goblin; NPC/Player view and shield variations above are typed transaction coverage, not a blanket runtime Cartesian claim.",
+    "Normal02 contact capture crops the Goblin; unchanged-implementation normal01 partial contact and SAN capture supply clear reaction views. All14 reviewed images retain their individual scope.",
+    "Routed PCM retained without a new sound-family identity claim. Runtime seed1/cap30 does not close measured timing/step,3seed x30/60/120 or independent final campaigns.",
+    "Other S4 actor/equipment/effect/query/interruption/feedback requirements remain open. No new combat formula, save schema or original-executable probe."
+  ]
+}

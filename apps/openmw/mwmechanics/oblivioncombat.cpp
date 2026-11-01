@@ -3042,8 +3042,7 @@ namespace MWMechanics
             || (deltas.mVictimCounterRequested && (victim.isEmpty() || deltas.mVictimReaction
                 || deltas.mVictimFirstPerson || deltas.mVictimRetiringSequence || deltas.mVictimSlot0Source
                 || deltas.mVictimFirstPersonSlot0Source || deltas.mAttackerReaction || !deltas.mDisarms.empty()
-                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty()
-                || deltas.mAttackerHeldEquipment || deltas.mVictimHeldEquipment)))
+                || !deltas.mAttackerHeldSources.empty() || !deltas.mVictimHeldSources.empty())))
             throw std::invalid_argument("native defensive Counter cannot also request BlockHit/Recoil");
         if (findActorLife(attackerKey)->mPhase != ESM4::ActorLifePhase::Alive && !continuation)
             return nullptr;
@@ -3881,10 +3880,23 @@ namespace MWMechanics
                 throw std::invalid_argument("native defensive Counter requires an active blocking owner");
             if (deltas.mVictimCounter)
             {
+                // Equipment loss may withdraw the old block before Counter
+                // acquires slot3. It must not discard the accepted incoming hit.
+                const bool equipmentReleasedBlock = equipmentOwners.contains(victimKey)
+                    && receiving->mProcessAction == -1;
                 if (receivingLife->mPhase != ESM4::ActorLifePhase::Alive
-                    || (continuation ? receiving->mProcessAction == 8 : receiving->mProcessAction != 6))
-                    throw std::invalid_argument("native Counter cannot survive this contact's incapacitation/equipment change");
+                    || (continuation ? receiving->mProcessAction == 8
+                        : receiving->mProcessAction != 6 && !equipmentReleasedBlock))
+                    throw std::invalid_argument("native Counter cannot survive this contact's incapacitation");
                 const auto& request = *deltas.mVictimCounter;
+                const bool brokenWeapon = std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
+                    [&](const auto& change) {
+                        return change.mOwner == victim && change.mItem.getType() == ESM::REC_WEAP
+                            && change.mBreakDisposition != OblivionWeaponBreakDisposition::None
+                            && !(playerGodMode && receiving->mOwner == ESM4::ActorValueOwner::Player);
+                    });
+                if (brokenWeapon && !request.mBody.mWeaponBase.isNull())
+                    throw std::invalid_argument("native Counter retained its broken weapon binding");
                 auto candidate = prepareMeleeStrikeState(victimKey, ESM4::MeleeStrikeKind::Counter,
                     request.mBody.mAnimationGroup, 1, request.mBody.mWeaponBase, request);
                 counterAllocation.emplace(PreparedPhysicalContact::Impl::CounterAllocation{
@@ -3897,6 +3909,14 @@ namespace MWMechanics
                 candidate.mStrike->mActionId = counterId;
                 if (candidate.mFirstPerson && candidate.mFirstPerson->mStrike)
                     candidate.mFirstPerson->mStrike->mActionId = counterId;
+                // Retain the equipment transaction's independent slot1 reset
+                // or fade rather than resurrecting its pre-break held sources.
+                if (const auto staged = reactionStates.find(victimKey); staged != reactionStates.end())
+                {
+                    candidate.mHeldBlocks = staged->second.mHeldBlocks;
+                    if (candidate.mFirstPerson && staged->second.mFirstPerson)
+                        candidate.mFirstPerson->mHeldBlocks = staged->second.mFirstPerson->mHeldBlocks;
+                }
                 candidate.mInput = {};
                 candidate.mAiIntent.reset(); // Counter acquires its own target at phase1.
                 candidate.validate();

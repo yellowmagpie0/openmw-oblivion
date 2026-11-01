@@ -32646,6 +32646,163 @@ TEST(OblivionWorldTest, EquipmentBreakAtomicallyUsesNativeHeldGateFadeOrShieldRe
     }
 }
 
+TEST(OblivionWorldTest, OrdinaryBlockingWeaponBreakAdmitsProjectedExpertDefenseWithoutLosingContact)
+{
+    for (const bool proc : {false, true})
+    {
+        SCOPED_TRACE(proc);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto source = addNativeNpc(fixture, 0x801), defender = addNativeNpc(fixture, 0x802);
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(defender));
+        auto& service = *world.getOblivionCombatService();
+        configureNativeDefensiveBreakRules(fixture, defender);
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(defender, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 75));
+        const auto weaponKey = addEquipmentWeapon(fixture);
+        auto weapon = *world.getStore().search<ESM4::Weapon>(weaponKey); weapon.mFlags |= ESM4::Rec_Persistent;
+        world.getStore().getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+        ESM4::RuntimeInventoryItem item;
+        item.mBase = weaponKey; item.mCount = 1; item.mCondition = 1.125f;
+        item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, defender, {item});
+        defender.getClass().getCreatureStats(defender).setDrawState(MWMechanics::DrawState::Weapon);
+        ASSERT_TRUE(service.beginBlocking(defender.getCellRef().getFormKey()));
+        ESM4::GameSetting chance{}; chance.mId = {0x990, 0}; chance.mEditorId = "iPerkBlockStaggerChance";
+        chance.mData = std::int32_t(proc ? 100 : 0);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance,
+            ESM::FormKey::content("headless.esm", 0x990));
+        const auto id = world.beginOblivionPhysicalAction(source);
+        const auto damage = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, source, defender, 0, false);
+        ASSERT_TRUE(damage); ASSERT_TRUE(damage->mBlockAccepted);
+        ASSERT_EQ(damage->mVictimConditionChanges.size(), 1u);
+        EXPECT_EQ(damage->mVictimConditionChanges[0].mBreakDisposition,
+            MWMechanics::OblivionWeaponBreakDisposition::Unequip);
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -damage->mHealth, -damage->mFatigue,
+            -damage->mBlockFatigueDebit, damage->mVictimConditionChanges, damage->mRandomTransition};
+        const auto health = service.getNonPlayerValue(defender, 8);
+        const auto before = contactSnapshot(fixture, {source, defender});
+        auto plan = world.prepareOblivionPhysicalContact(id, source, defender, packet, true, true);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(contactSnapshot(fixture, {source, defender}), before);
+        ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+        EXPECT_NEAR(service.getNonPlayerValue(defender, 8), health - damage->mHealth, .0001f);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_EQ(service.getProcessAction(defender.getCellRef().getFormKey()), -1);
+        EXPECT_EQ(defender.getClass().getInventoryStore(defender).getSlot(MWWorld::InventoryStore::Slot_CarriedRight),
+            defender.getClass().getInventoryStore(defender).end());
+    }
+}
+
+TEST(OblivionWorldTest, DefensiveBreakSelectsUnarmedCounterAndPreservesEquipmentHeldTransition)
+{
+    for (unsigned view = 0; view != 3; ++view)
+    for (unsigned phase : {1u, 4u})
+    for (const bool shield : {false, true})
+    for (const bool playback : {false, true})
+    {
+        SCOPED_TRACE(view);
+        SCOPED_TRACE(phase);
+        SCOPED_TRACE(shield);
+        SCOPED_TRACE(playback);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const bool player = view != 0, firstActive = view == 2;
+        const auto owner = player ? fixture.mPlayer : fixture.mAttacker;
+        const auto other = player ? fixture.mAttacker : fixture.mPlayer;
+        const auto actor = player ? fixture.mPlayerKey : owner.getCellRef().getFormKey();
+        const auto item = installHeldBreakItem(fixture, owner, shield);
+        seedHeldBlockOwner(fixture, actor);
+        const auto resources = prepareHeldEquipmentTestState(service, actor, player, firstActive, phase);
+        owner.getClass().getCreatureStats(owner).setDrawState(MWMechanics::DrawState::Weapon);
+        for (const auto [av, value] : {std::pair{15, 10}, {17, 100}})
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(owner, av, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, value));
+        ESM4::GameSetting chance{}; chance.mId = {0x990, 0}; chance.mEditorId = "iPerkBlockStaggerChance";
+        chance.mData = std::int32_t(100);
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(chance,
+            ESM::FormKey::content("headless.esm", 0x990));
+        const auto id = world.beginOblivionPhysicalAction(other);
+        auto change = MWMechanics::captureOblivionPhysicalConditionChange(owner, item, 0);
+        change.mBreakDisposition = MWMechanics::OblivionWeaponBreakDisposition::Unequip;
+        MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
+        packet.mConditionChanges.push_back(change);
+        packet.mVictimHeldEquipment = resources;
+        const auto before = fixture.snapshot();
+        const auto outcome = MWMechanics::prepareOblivionDefensiveBlockConsequences(world, other, owner, packet);
+        ASSERT_TRUE(outcome);
+        EXPECT_TRUE(outcome->mCounterSelected);
+        EXPECT_TRUE(packet.mVictimCounterRequested);
+        ASSERT_TRUE(packet.mRandomTransition);
+        EXPECT_EQ(packet.mRandomTransition->mDraws, 1u);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        if (playback)
+        {
+            ESM4::RuntimeMeleeStrike counter{1, ESM4::MeleeStrikeKind::Counter, {}, "handtohandblockattack"};
+            counter.mSequenceTiming.emplace(); counter.mPowerPhase = ESM4::PowerMeleePhase::Start;
+            packet.mVictimCounter = MWMechanics::OblivionMeleeStrikeViews{counter};
+            if (player) packet.mVictimCounter->mFirstPerson = ESM4::RuntimeFirstPersonMeleeState{
+                service.findMeleeState(actor)->mFirstPerson->mClock, {}, counter};
+        }
+        if (playback && !shield)
+        {
+            auto wrong = packet;
+            wrong.mVictimCounter->mBody.mWeaponBase = ESM::FormKey::content("headless.esm", 0x940);
+            if (player) wrong.mVictimCounter->mFirstPerson->mStrike->mWeaponBase = wrong.mVictimCounter->mBody.mWeaponBase;
+            EXPECT_THROW(world.prepareOblivionPhysicalContact(id, other, owner, wrong), std::invalid_argument);
+            EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        }
+        auto plan = world.prepareOblivionPhysicalContact(id, other, owner, packet);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before.serializeBinary());
+        item.getCellRef().setNativeItemCondition(2.f);
+        EXPECT_FALSE(plan->isValid()); EXPECT_FALSE(plan->commit());
+        EXPECT_TRUE(owner.getClass().getInventoryStore(owner).isEquipped(item));
+        item.getCellRef().setNativeItemCondition(1.125f);
+        plan = world.prepareOblivionPhysicalContact(id, other, owner, packet);
+        ASSERT_TRUE(plan); ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+        const auto saved = fixture.snapshot();
+        const auto* result = service.findMeleeState(actor); ASSERT_TRUE(result);
+        const auto& original = before.mNativeMeleeStates.at(actor);
+        const bool deferred = !shield && phase == 1;
+        const auto checkHeld = [&](const auto& old, const auto& now, bool first) {
+            ASSERT_EQ(now.size(), old.size());
+            for (std::size_t i = 0; i < old.size(); ++i)
+            {
+                auto expected = old[i];
+                if (shield || (!deferred && firstActive && !first)) expected = nativeZeroHeldEquipment(expected);
+                else if (!deferred)
+                {
+                    const float duration = firstActive ? 1.f : .3f;
+                    expected.mRetirement = ESM4::RuntimeReactionRetirement{duration, {}};
+                    expected.mSequenceTiming.mEaseStart.reset();
+                    expected.mSequenceTiming.mEaseEnd = duration;
+                    expected.mSequenceTiming.mEasing = false;
+                }
+                EXPECT_EQ(now[i], expected);
+            }
+        };
+        checkHeld(original.mHeldBlocks, result->mHeldBlocks, false);
+        if (player) checkHeld(original.mFirstPerson->mHeldBlocks, result->mFirstPerson->mHeldBlocks, true);
+        EXPECT_EQ(service.getProcessAction(actor), playback ? 2 : deferred ? 6 : -1);
+        EXPECT_EQ(result->mStrike.has_value(), playback);
+        if (playback)
+        {
+            EXPECT_TRUE(result->mStrike->mWeaponBase.isNull());
+            EXPECT_EQ(result->mStrike->mActionId, before.mPhysicalActions.mNext);
+            EXPECT_TRUE(service.isActionPending(result->mStrike->mActionId, actor));
+        }
+        auto& inventory = owner.getClass().getInventoryStore(owner);
+        EXPECT_FALSE(inventory.isEquipped(item)); EXPECT_EQ(item.getCellRef().getNativeItemCondition(), 0);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
+        EXPECT_EQ(service.getProcessAction(actor), playback ? 2 : deferred ? 6 : -1);
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), world.getStore());
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), saved.serializeBinary());
+    }
+}
+
 TEST(OblivionWorldTest, FatalEquipmentBreakCannotRepublishHeldOwnershipAfterLifeCancellation)
 {
     for (unsigned view = 0; view != 3; ++view)

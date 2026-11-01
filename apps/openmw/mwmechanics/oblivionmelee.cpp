@@ -503,10 +503,6 @@ namespace MWMechanics
             || service->getProcessAction(key) == 8;
         if ((deltas.mVictimReaction && !stagger) || deltas.mAttackerReaction || !deltas.mDisarms.empty())
             return std::nullopt;
-        if (proc.mTriggered && !stagger && std::any_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(),
-                [&](const auto& change) { return change.mOwner == defender
-                    && change.mBreakDisposition != OblivionWeaponBreakDisposition::None; }))
-            return std::nullopt; // Projected equipment-change Counter activation needs its own resource packet.
         const auto random = service->prepareCombatRandom((deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
         if (random.mNextState != draw.mNextState) return std::nullopt;
         auto candidate = deltas;

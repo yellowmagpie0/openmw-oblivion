@@ -4545,7 +4545,12 @@ namespace MWWorld
             ESM::FormKey weaponBase;
             auto& inventory = actor.getClass().getInventoryStore(actor);
             if (const auto right = inventory.getSlot(InventoryStore::Slot_CarriedRight);
-                right != inventory.end() && right->getType() == ESM::REC_WEAP)
+                right != inventory.end() && right->getType() == ESM::REC_WEAP
+                    && std::none_of(deltas.mConditionChanges.begin(), deltas.mConditionChanges.end(), [&](const auto& change) {
+                        return change.mOwner == actor && change.mItem == *right
+                            && change.mBreakDisposition != MWMechanics::OblivionWeaponBreakDisposition::None
+                            && !(player && getGodModeState());
+                    }))
             {
                 const auto item = OblivionProfileServices::nativeItemId(mStore, right->getCellRef().getRefId());
                 const auto* form = item.getIf<ESM::FormId>();

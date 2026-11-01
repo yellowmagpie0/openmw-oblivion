@@ -2600,8 +2600,14 @@ namespace MWMechanics
         const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
         // Original5E5690 forces prefix0 for worn-shield groups27/28.
         const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
-        if ((equipmentChanged && hadEquippedState && !initialEquipmentBinding)
-            || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup))
+        const auto* blockState = service->findMeleeState(actor);
+        const bool counterActive = blockState && blockState->mStrike
+            && blockState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
+        // A newly selected Counter already binds the post-break weapon state.
+        // Its independent old slot1 cache may still be fading or in NI5.
+        // Ordinary weapon swaps still fail the strike-binding checks above.
+        if (!counterActive && ((equipmentChanged && hadEquippedState && !initialEquipmentBinding)
+            || (!mOblivionBlockGroup.empty() && mOblivionBlockGroup != blockGroup)))
         {
             if (hasResidentHeld(service->findMeleeState(actor)))
             {
@@ -2617,9 +2623,6 @@ namespace MWMechanics
             }
             else releaseBlock();
         }
-        const auto* blockState = service->findMeleeState(actor);
-        const bool counterActive = blockState && blockState->mStrike
-            && blockState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
         bool blockAccepted = false;
         if (!counterActive && controls && controls->mBlock && mAnimation->hasAnimation(blockGroup))
         {
