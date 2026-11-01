@@ -1,0 +1,56 @@
+{
+  "requirement": "S4 C1 Creature natural contact against nonzero ResistNormalWeapons AV65",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "original_branch": {
+    "creature_enchantment_dispatch": "Creature vtable A710F4+2D4 -> 5E46C0; empty weapon/projectile returns false",
+    "admission": "5FF0CA..5FF187/5FF1E6 with actual 5F23B0/5F1910/56A300 mastery",
+    "reduction": "5FF55E..5FF598: empty weapon/projectile skips partial reduction",
+    "cases": 28,
+    "boundaries": "Base-form HTH/Combat read at 5EAD00 and defender integer AV65 stubbed; no UI/runtime claim from this oracle"
+  },
+  "expectations": {
+    "negative_and_partial": "Preserve natural Health/Fatigue damage",
+    "full_immunity": "Accepted immune result below base HTH Journeyman; reuse once-only expenditure and no receiving consequences. NPC attacker does not publish Player immunity text.",
+    "mastery": "Base HTH/Creature Combat group at Journeyman bypasses full immunity; fortification does not change base rank.",
+    "flags": "No natural-weapon flag is consulted by these empty-weapon paths."
+  },
+  "world_test": "OblivionWorldTest.CreatureNaturalContactUsesNativeWordAndIndependentFatigueDamage",
+  "world_contexts": 112,
+  "fixture": "build/oblivion-compat/m15/S4/creature-resistance-work-01/fixture-50",
+  "runtime_plan": "build/oblivion-compat/m15/S4/creature-resistance-work-01/live-comparison-plan.json",
+  "oracle_evidence": "build/oblivion-compat/m15/S4/creature-resistance-work-01/verification.json",
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/creature-resistance-work-01/checkpoint-verification.json",
+  "limits": "Runtime covers the existing first-person keyboard/mouse Dog course at defenderAV65=50, normal/SAN and exact active BlockHit/Recoil fresh continuation. Full-immunity and baseCombat mastery have focused World coverage. ArmedCreature, spells/contact effects and nonpositive contacts remain separate. No full S4/V6/T7/F8 claim.",
+  "runtime_results": {
+    "exact_saved_live_pairs": 28,
+    "process_epochs": 4,
+    "exact_fresh_restores": 2,
+    "strict_endpoint_fields": 26,
+    "reviewed_captures": 28
+  },
+  "inputs": {
+    "base_combat": [
+      0,
+      49,
+      50,
+      100
+    ],
+    "resistance": [
+      -50,
+      0,
+      1,
+      50,
+      99,
+      100,
+      150
+    ],
+    "world_fortify_combat": [
+      0,
+      100
+    ],
+    "world_strikes": [
+      "ordinary",
+      "standing power"
+    ]
+  }
+}

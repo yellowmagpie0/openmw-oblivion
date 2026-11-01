@@ -6776,6 +6776,43 @@ namespace
             }
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
         }
+        // Natural contacts share the original empty-weapon resistance path.
+        // Partial/negative resistance does not reduce damage; full immunity
+        // consults base HTH (the Creature Combat group), not fortified skill.
+        for (const int combat : {0, 49, 50, 100})
+        for (const int modifier : {0, 100})
+        for (const int resistance : {-50, 0, 1, 50, 99, 100, 150})
+        {
+            SCOPED_TRACE(::testing::Message() << combat << ':' << modifier << ':' << resistance);
+            auto values = *service.findActorValues(reference.mFormKey);
+            for (unsigned av = 12; av <= 18; ++av)
+                values.mValues[av] = {float(combat), {0.f, 0.f, 0.f}};
+            values.mValues[12].mModifiers[1] = float(modifier);
+            values.mValues[10] = {160, {0.f, 0.f, 0.f}};
+            service.publishNonPlayerValues(actor, values);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 65, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, resistance));
+            EXPECT_EQ(service.getNonPlayerBaseValue(reference.mFormKey, 17, store), combat);
+            EXPECT_EQ(service.getNonPlayerIntegerValue(actor, 17), combat + modifier);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            const auto random = service.combatRandomState();
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                const auto contact = MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false, kind);
+                ASSERT_TRUE(contact);
+                const bool immune = resistance >= 100 && combat < 50;
+                EXPECT_EQ(contact->mImmune, immune);
+                EXPECT_EQ(contact->mHealth, immune ? 0 : 10);
+                EXPECT_EQ(contact->mFatigue, 0);
+                EXPECT_EQ(contact->mBlockFatigueDebit, 0);
+                EXPECT_TRUE(contact->mVictimConditionChanges.empty());
+                EXPECT_FALSE(contact->mRandomTransition);
+            }
+            EXPECT_EQ(service.combatRandomState(), random);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        }
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 65, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 0));
         auto values = *service.findActorValues(reference.mFormKey);
         values.mValues[10] = {160, {0.f, 0.f, 0.f}};
         service.publishNonPlayerValues(actor, values);

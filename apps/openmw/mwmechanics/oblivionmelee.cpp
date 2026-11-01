@@ -1419,9 +1419,7 @@ namespace MWMechanics
                 : service->getNonPlayerIntegerValue(ptr, av);
         };
         const auto resistance = integer(victim, 65);
-        // Creature natural-weapon flags and immune-contact feedback remain
-        // separate from the reviewed bare-hand mastery branch below.
-        if (sneaking || (creature && resistance != 0))
+        if (sneaking)
             return std::nullopt;
         if (kind > ESM4::MeleeStrikeKind::StandingPower
             && kind != ESM4::MeleeStrikeKind::LeftPower && kind != ESM4::MeleeStrikeKind::RightPower
@@ -1440,7 +1438,7 @@ namespace MWMechanics
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())
             if (seen.insert(record.mId).second)
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
-        if (!creature && resistance >= 100)
+        if (resistance >= 100)
         {
             const auto hand = attacker == player ? service->getPlayerBaseValue(17)
                 : service->getNonPlayerBaseValue(attacker.getCellRef().getFormKey(), 17, world.getStore());
@@ -1453,8 +1451,9 @@ namespace MWMechanics
             }
         }
         // Original5FF576 skips partial reduction when both weapon and
-        // projectile are null. Bare-hand Health and Fatigue stay unchanged;
-        // Journeyman mastery also bypasses the earlier full-immunity branch.
+        // projectile are null, including Creature natural contacts. Health
+        // and Fatigue stay unchanged; base HTH mastery (Creature Combat group)
+        // at Journeyman also bypasses the earlier full-immunity branch.
         const float multiplier = creature ? 1.f
             : contactPowerMultiplier(world, *service, attacker, 17, kind, settings);
         // Native5FF46C stores Health and Fatigue separately after the complete

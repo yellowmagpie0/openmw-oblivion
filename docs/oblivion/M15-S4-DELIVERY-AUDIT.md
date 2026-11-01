@@ -20,7 +20,7 @@ supported ENCH bypasses have focused World evidence, including depleted charge.
 Normal gates pass 3,213 component/2,069 engine cases; SAN passes 1,039 native
 component/2,069 engine cases. The 56 original branches plus the depleted return and
 focused checks retain their receipts. Full-immunity notification is closed by the
-checkpoint below; Creature resistance policy and other C1 domains remain open. The SAN Forward image
+checkpoint below; natural Creature resistance is also closed below. Other C1 domains remain open. The SAN Forward image
 still does not demonstrate settled-prone collapse; V6/T7/F8 remain open.
 
 The [bare-hand resistance checkpoint](../../build/oblivion-compat/m15/S4/unarmed-resistance-work-01/checkpoint-verification.json)
@@ -33,7 +33,7 @@ all first hand hits retain **1.42 Health / 1.71 Fatigue** damage. Both full engi
 suites pass **2,071 tests**. Unchanged component/public-Python evidence is reused.
 The accidentally selected obsolete opponent fixture and its failed run remain
 retained; the shared launcher now rejects that policy in preflight. No rebuild
-followed that fixture correction. Creature resistance policy remains open.
+followed that fixture correction. Natural Creature resistance is closed below.
 The [editable recipe](../../scripts/data/oblivion_compat/m15_unarmed_resistance_cases.json)
 records the supported scope; Journeyman bypass has World, not runtime, coverage.
 
@@ -49,8 +49,22 @@ without fresh replay. The stale legacy assertion required corrected full gates;
 the fresh checker correction reused retained gameplay without another run or build.
 Unchanged component/Python/oracle evidence retains its provenance. The
 [editable recipe](../../scripts/data/oblivion_compat/m15_normal_weapon_immunity_cases.json)
-records the bounded scope. Next resolve the remaining Creature resistance policy
-in the existing contact course; other S4 gaps and T7/F8 remain open.
+records the bounded scope; other S4 gaps and T7/F8 remain open.
+
+The [Creature resistance checkpoint](../../build/oblivion-compat/m15/S4/creature-resistance-work-01/checkpoint-verification.json)
+removes the blanket nonzero-AV65 rejection for natural attacks. Partial resistance
+preserves damage; base Hand-to-Hand mastery (the Creature Combat group) bypasses
+full immunity at Journeyman. **28 original cases** and **112 World contexts** cover
+these branches and distinguish fortified skill from base mastery. Both full engine
+gates pass **2,072 tests**. The existing normal/SAN Dog course at Player AV65=50
+passes **28 exact pairs**, two fresh restores, **26-field endpoints**, **28 reviewed
+captures** and block PCM without replay. All gates passed without gameplay retries;
+unchanged component/Python evidence is reused. The
+[editable recipe](../../scripts/data/oblivion_compat/m15_creature_resistance_cases.json)
+limits runtime coverage to partial resistance; full immunity/mastery have World
+coverage. Armed Creature, spells/contact effects and nonpositive contacts remain
+separate boundaries. Next select the missing required interruption/view/input case
+from the existing R3/I4 evidence before expanding implementation or native probes.
 
 The [head-material checkpoint](../../build/oblivion-compat/m15/S4/npc-appearance-work-01/checkpoint-verification.json)
 makes the winning NPC hair tint replace cached cyan vertex colors and gives
@@ -165,8 +179,8 @@ gates, reuse applicable evidence, and defer unrelated discoveries.
 | 7. Minimal production stationary opponent | `updateOblivionStationaryMeleeAi` selects the first directed target from persistent controller state; graph membership alone does not authorize an attack. It sets attack intent after production reach/LOS checks; authored deterministic CSTY fixture and prior runtime matrices exist. | Normal and sanitizer input courses now create the controller through authored StartCombat, receive one blocked NPC contact, and recover across a fresh mid-reaction restart without contact replay. Complete the remaining required actor/view/input/FPS matrix. Full S7 movement/style policy remains outside this item. |
 | 8. Mastery, dropped items and narrow effects | S2 pure rules and prepared inventory/resource primitives exist. Journeyman sideways disarm now publishes one intact NPC drop and unarmed Stagger, removes the carried mesh during reaction, and restores without replay in normal/SAN courses. | Ordinary attacking-NPC weapon breaks now have physical/render restart evidence. Retained Player defensive weapon breaks now have normal-input and fresh-restart evidence; ordinary NPC defensive drops have World/render/physics integration coverage. Normal-input ordinary NPC defensive drops now have physical/render restart evidence. Body-armor wear to zero now has bounded ordinary-NPC normal-input and fresh-process evidence. Ordinary blocking-shield breaks now have bounded normal-input and physical restart evidence. Pickup now atomically removes its reference from the dropper list and has normal-input/completed-pickup fresh-process evidence in both build profiles. Later selected-shield break publication now has bounded original-instruction and World/render/physics integration evidence; its normal-input reachability and mastery drop/effect consequences remain open. Wire every melee/block/armor mastery branch to live contacts, dropped-item identities and required timed effects. Single unresisted instant zero-area Fire Damage contacts now share the existing charge/effect/physical transaction and fresh-recovery proof. Timed/scripted/multiple effects and resistance/absorption/reflection remain explicitly unsupported; complete other narrowly required combat hooks without claiming general M16 magic. |
 
-Other deliberate ordinary-contact restrictions include sneaking, Creature natural-weapon
-resistance, ordinary full-immunity notification, negative incoming damage,
+Other deliberate ordinary-contact restrictions include sneaking, armed Creature
+and Creature spell/contact effects, negative incoming damage,
 and remaining breakage branches.
 They need their reviewed native branches before broader contact acceptance.
 Removing a rejection without its complete consequences does not deliver a branch.
