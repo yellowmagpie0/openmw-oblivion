@@ -137,7 +137,7 @@ namespace MWRender
         if (file.getHash().size() != 16 || file.getHash() != templateHash)
             throw std::invalid_argument("native attachment template and NIF identities differ");
         const auto version = file.getVersion();
-        if (version != Nif::NIFFile::VER_OB_OLD && version != 0x0a020000
+        if (version != Nif::NIFFile::VER_OB_OLD && version != 0x0a01006a && version != 0x0a020000
             && version != 0x14000004 && version != Nif::NIFFile::VER_OB)
             throw std::invalid_argument("native attachment requires an Oblivion NIF");
         if (file.numRoots() != 1 || file.getUseSkinning())

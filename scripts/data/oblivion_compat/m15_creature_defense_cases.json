@@ -86,7 +86,21 @@
   "limits": [
     "Runtime is stock Goblin Journeyman weapon block; lower-rank cost/wear, shield and Counter branches have focused coverage, not blanket runtime acceptance.",
     "General Creature hit/effect/other actor/input/view requirements remain in the audit; public defensive intent is not autonomous S7 AI.",
-    "Goblin facial/head appearance remains V6; no full Creature appearance claim.",
+    "Original checkpoint lacked Goblin head appearance. The scoped head-attachment follow-up below closes the missing head; complete facial/material/view coverage remains V6.",
     "Configured cap/seed does not prove timing campaigns. Complete T7/F8 and remaining S4 gates before claiming delivery."
-  ]
+  ],
+  "appearance_followup": {
+    "requirement": "V6 stock Goblin head must attach and be visible in the existing held-block view.",
+    "observed_defect": "Original normal/SAN captures omit the head; retained logs reject GoblinHead.NIF as a non-Oblivion attachment.",
+    "stock_head": {
+      "path": "meshes/creatures/goblin/goblinhead.nif",
+      "sha256": "865e251e934293828c98e281e1373db204ac51f55048ea46f007e215eddf017d",
+      "nif_version": "10.1.0.106"
+    },
+    "implementation": "Admit10.1.0.106 in explicit attachment version list. Preserve template hash, single unskinned root and authored Prn validation; no geometry or fixture substitution.",
+    "fixture": "Same stock02a81c MODL/NIFZ fields and existing Creature defender fixture. Prefix through actual approach/visibility, held block, F5 save and rendered capture.",
+    "checks": "Existing authored-parent/pose test covers Goblin10.1.0.106 and Dog10.2.0.0; ten attachment tests then full normal/SAN engine+games. Short visual prefix perbuild; underlying combat/restart proof reused with its original binary provenance.",
+    "evidence": "build/oblivion-compat/m15/S4/goblin-head-work-01/checkpoint-verification.json",
+    "limits": "Head attachment view only; complete materials/facial animation, other reaction/view feedback and T7/F8 still required."
+  }
 }
