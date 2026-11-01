@@ -1,6 +1,7 @@
 #ifndef OPENMW_MWRENDER_TES4FACEGEN_H
 #define OPENMW_MWRENDER_TES4FACEGEN_H
 
+#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -47,6 +48,13 @@ namespace MWRender
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
         const ESM4::Race& race, bool isFemale, std::string_view texture, bool bodyTexture,
         Resource::ResourceSystem* resourceSystem, std::vector<Tes4FaceMorph>& morphs);
+    // Replace only body skin embedded in worn meshes. The resolver supplies an
+    // actor's race texture with EGT colour applied; cloth and companion maps retain
+    // their authored state. Call after isolateTes4ActorGeometry.
+    std::size_t replaceTes4ClothingSkin(osg::Node& node, const ESM4::Race& race, bool female,
+        const std::function<osg::ref_ptr<osg::Image>(std::size_t)>& resolve);
+    void applyTes4ClothingSkin(osg::Node& node, const ESM4::Npc& traits,
+        const ESM4::Race& race, bool female, Resource::ResourceSystem& resources);
     float getTes4FaceMorphWeight(std::string_view name, std::string_view active, std::string_view next,
         float visemeBlend, float speechWeight, float blink);
     void animateTes4FaceGen(std::vector<Tes4FaceMorph>& morphs, float faceTime, bool speaking,

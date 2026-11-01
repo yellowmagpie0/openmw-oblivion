@@ -12,6 +12,7 @@
 #include <osg/Image>
 #include <osg/Material>
 #include <osg/StateSet>
+#include <osg/Texture2D>
 #include <components/esm4/loadarma.hpp>
 #include <components/esm4/loadarmo.hpp>
 #include <components/esm4/loadclot.hpp>
@@ -700,6 +701,113 @@ namespace MWRender
         return true;
     }
 
+    std::size_t replaceTes4ClothingSkin(osg::Node& node, const ESM4::Race& race, bool female,
+        const std::function<osg::ref_ptr<osg::Image>(std::size_t)>& resolve)
+    {
+        struct SkinVisitor : osg::NodeVisitor
+        {
+            const ESM4::Race& mRace;
+            bool mFemale;
+            const std::function<osg::ref_ptr<osg::Image>(std::size_t)>& mResolve;
+            std::size_t mCount = 0;
+
+            SkinVisitor(const ESM4::Race& race, bool female,
+                const std::function<osg::ref_ptr<osg::Image>(std::size_t)>& resolve)
+                : osg::NodeVisitor(TRAVERSE_ALL_CHILDREN)
+                , mRace(race)
+                , mFemale(female)
+                , mResolve(resolve)
+            {
+                setNodeMaskOverride(~0u);
+            }
+
+            void apply(osg::Node& part) override
+            {
+                const osg::StateSet* state = part.getStateSet();
+                const auto* texture = state ? dynamic_cast<const osg::Texture2D*>(
+                    state->getTextureAttribute(0, osg::StateAttribute::TEXTURE)) : nullptr;
+                const osg::Image* image = texture ? texture->getImage() : nullptr;
+                if (image)
+                {
+                    const VFS::Path::Normalized path(image->getFileName());
+                    const auto& body = mFemale ? mRace.mBodyPartsFemale : mRace.mBodyPartsMale;
+                    static constexpr std::array<std::string_view, 4> names = {"upperbody", "leg", "hand", "foot"};
+                    for (std::size_t index = 0; index < std::min<std::size_t>(body.size(), ESM4::Race::NumBodyParts); ++index)
+                    {
+                        const VFS::Path::Normalized racePath(body[index].texture.empty()
+                                || VFS::Path::Normalized(body[index].texture).view().starts_with("textures/")
+                            ? body[index].texture : "textures/" + body[index].texture);
+                        const bool raceSkin = !racePath.empty() && path == racePath;
+                        // Stock outfits reference Imperial skin even on other
+                        // races. Do not classify arbitrary clothing by basename.
+                        const bool stockSkin = index < names.size() && path.view().starts_with("textures/characters/")
+                            && (path.stem() == std::string(names[index]) + "male"
+                                || path.stem() == std::string(names[index]) + "female");
+                        if (!raceSkin && !stockSkin)
+                            continue;
+                        if (osg::ref_ptr<osg::Image> skin = mResolve(index))
+                        {
+                            osg::ref_ptr<osg::Texture2D> replacement
+                                = new osg::Texture2D(*texture, osg::CopyOp::SHALLOW_COPY);
+                            replacement->setImage(std::move(skin));
+                            osg::ref_ptr<osg::StateSet> changed
+                                = new osg::StateSet(*state, osg::CopyOp::SHALLOW_COPY);
+                            changed->setTextureAttribute(0, replacement,
+                                state->getTextureAttributePair(0, osg::StateAttribute::TEXTURE)->second);
+                            part.setStateSet(std::move(changed));
+                            ++mCount;
+                        }
+                        break;
+                    }
+                }
+                traverse(part);
+            }
+        } visitor(race, female, resolve);
+        node.accept(visitor);
+        return visitor.mCount;
+    }
+
+    void applyTes4ClothingSkin(osg::Node& node, const ESM4::Npc& traits,
+        const ESM4::Race& race, bool female, Resource::ResourceSystem& resources)
+    {
+        const auto& body = female ? race.mBodyPartsFemale : race.mBodyPartsMale;
+        std::array<osg::ref_ptr<osg::Image>, ESM4::Race::NumBodyParts> images;
+        std::array<bool, ESM4::Race::NumBodyParts> resolved{};
+        replaceTes4ClothingSkin(node, race, female, [&](std::size_t index) -> osg::ref_ptr<osg::Image> {
+            if (resolved[index])
+                return images[index];
+            resolved[index] = true;
+            if (body[index].texture.empty())
+                return {};
+            try
+            {
+                const auto path = Misc::ResourceHelpers::correctTexturePath(
+                    VFS::Path::Normalized(body[index].texture), *resources.getVFS());
+                const auto base = resources.getImageManager()->getImage(path);
+                if (!base)
+                    return {};
+                images[index] = base;
+                const VFS::Path::Normalized egtPath(index == ESM4::Race::UpperBody
+                        ? (female ? "meshes/characters/_male/upperbodyhumanfemale.egt"
+                                  : "meshes/characters/_male/upperbodyhumanmale.egt")
+                        : "meshes/characters/_male/body.egt");
+                if (const auto egt = loadCachedFaceGen<ESM4::FaceGenEgt, ESM4::loadFaceGenEgt>(
+                        *resources.getVFS(), egtPath))
+                {
+                    const auto& coefficients = female && !race.mSymTextureModeCoeffFemale.empty()
+                        ? race.mSymTextureModeCoeffFemale : race.mSymTextureModeCoefficients;
+                    if (auto tinted = applyTes4FaceGenEgt(*base, *egt, coefficients, traits.mSymTextureModeCoefficients))
+                        images[index] = std::move(tinted);
+                }
+            }
+            catch (const std::exception& e)
+            {
+                Log(Debug::Warning) << "Unable to apply clothed TES4 skin " << body[index].texture << ": " << e.what();
+            }
+            return images[index];
+        });
+    }
+
     void applyTes4FaceGen(std::string_view model, osg::Node& node, const ESM4::Npc& traits,
         const ESM4::Race& race, bool isFemale, std::string_view texture, bool bodyTexture,
         Resource::ResourceSystem* resourceSystem, std::vector<Tes4FaceMorph>& morphs)
@@ -1097,10 +1205,10 @@ namespace MWRender
                     Log(Debug::Warning) << "Unable to attach ESM4 carried shield " << path << ": " << e.what();
                 }
             }
-            else
-                insertPart(item.mModel, (item.mSlots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair))
-                        ? "Bip01 Head"
-                        : std::string_view{});
+            else if (auto node = insertPart(item.mModel,
+                         (item.mSlots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair))
+                             ? "Bip01 Head" : std::string_view{}))
+                applyTes4ClothingSkin(*node, traits, *race, isFemale, *mResourceSystem);
             covered |= item.mSlots;
         }
 

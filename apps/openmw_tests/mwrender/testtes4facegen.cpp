@@ -8,9 +8,11 @@
 #include <components/vfs/manager.hpp>
 #include <osg/Material>
 #include <fstream>
+#include <array>
 
 #include <osg/Group>
 #include <osg/StateSet>
+#include <osg/Texture2D>
 
 #include <components/esm4/facegen.hpp>
 #include <components/esm4/loadrace.hpp>
@@ -92,6 +94,90 @@ namespace MWRender
         ASSERT_TRUE(geometry->getStateSet()->getUniform("colorMode")->get(mode));
         EXPECT_EQ(mode, 2); // A second actor's template must remain unchanged.
         EXPECT_EQ(authored->getColorMode(), osg::Material::AMBIENT_AND_DIFFUSE);
+    }
+
+    TEST(Tes4FaceGen, ColorsOnlyEmbeddedBodySkinAndPreservesAuthoredStateAndOtherActors)
+    {
+        ESM4::Race race;
+        race.mBodyPartsMale.resize(ESM4::Race::NumBodyParts);
+        race.mBodyPartsFemale.resize(ESM4::Race::NumBodyParts);
+        race.mBodyPartsMale[ESM4::Race::UpperBody].texture = "textures/characters/darkelf/male/upperbodymale.dds";
+        osg::ref_ptr<osg::Group> model = new osg::Group;
+        const std::array<const char*, 6> paths = {
+            "Textures\\Characters\\Imperial\\Male\\UpperBodyMale.dds",
+            "textures/characters/imperial/male/legmale.dds",
+            "textures/characters/imperial/male/handmale.dds",
+            "textures/characters/imperial/male/footmale.dds",
+            "textures/clothes/upperbodymale.dds", // A similarly named cloth is not skin.
+            "textures/clothes/lowerclass/jailshirtm.dds"};
+        osg::ref_ptr<osg::Texture2D> normal = new osg::Texture2D;
+        osg::ref_ptr<osg::Material> material = new osg::Material;
+        material->setShininess(osg::Material::FRONT_AND_BACK, 25);
+        material->setSpecular(osg::Material::FRONT_AND_BACK, osg::Vec4f(1, 1, 1, 1));
+        for (const auto path : paths)
+        {
+            osg::ref_ptr<osg::Geometry> shape = new osg::Geometry;
+            osg::ref_ptr<osg::Image> image = new osg::Image;
+            image->setFileName(path);
+            osg::ref_ptr<osg::Texture2D> diffuse = new osg::Texture2D(image);
+            diffuse->setWrap(osg::Texture::WRAP_S, osg::Texture::MIRROR);
+            diffuse->setWrap(osg::Texture::WRAP_T, osg::Texture::REPEAT);
+            auto* state = shape->getOrCreateStateSet();
+            state->setTextureAttribute(0, diffuse, osg::StateAttribute::PROTECTED);
+            state->setTextureAttribute(1, normal);
+            state->setAttribute(material);
+            model->addChild(shape);
+        }
+        osg::ref_ptr<osg::Group> actor = new osg::Group(*model, osg::CopyOp::SHALLOW_COPY);
+        ASSERT_EQ(isolateTes4ActorGeometry(*actor), paths.size());
+        std::vector<std::size_t> selected;
+        osg::ref_ptr<osg::Image> colored = new osg::Image;
+        EXPECT_EQ(replaceTes4ClothingSkin(*actor, race, false, [&](std::size_t index) {
+            selected.push_back(index);
+            return colored;
+        }), 4u);
+        EXPECT_EQ(selected, (std::vector<std::size_t>{0, 1, 2, 3}));
+        for (std::size_t i = 0; i < paths.size(); ++i)
+        {
+            const auto* state = actor->getChild(i)->getStateSet();
+            const auto* diffuse = dynamic_cast<const osg::Texture2D*>(state->getTextureAttribute(0, osg::StateAttribute::TEXTURE));
+            const auto* original = dynamic_cast<const osg::Texture2D*>(model->getChild(i)->getStateSet()->getTextureAttribute(0, osg::StateAttribute::TEXTURE));
+            ASSERT_NE(diffuse, nullptr);
+            ASSERT_NE(original, nullptr);
+            EXPECT_NE(original->getImage(), colored);
+            EXPECT_EQ(diffuse->getImage(), i < 4 ? colored.get() : original->getImage());
+            EXPECT_EQ(diffuse->getWrap(osg::Texture::WRAP_S), osg::Texture::MIRROR);
+            EXPECT_EQ(diffuse->getWrap(osg::Texture::WRAP_T), osg::Texture::REPEAT);
+            EXPECT_EQ(state->getTextureAttributePair(0, osg::StateAttribute::TEXTURE)->second, osg::StateAttribute::PROTECTED);
+            EXPECT_EQ(state->getTextureAttribute(1, osg::StateAttribute::TEXTURE), normal);
+            EXPECT_EQ(state->getAttribute(osg::StateAttribute::MATERIAL), material);
+        }
+    }
+
+    TEST(Tes4FaceGen, RecognizesFemaleAndCustomRaceSkinWithoutTouchingUnresolvedTextures)
+    {
+        ESM4::Race race;
+        race.mBodyPartsMale.resize(ESM4::Race::NumBodyParts);
+        race.mBodyPartsFemale.resize(ESM4::Race::NumBodyParts);
+        race.mBodyPartsFemale[ESM4::Race::UpperBody].texture = "custom/skin.dds";
+        for (const auto path : {"textures/characters/imperial/female/upperbodyfemale.dds", "textures/custom/skin.dds"})
+        {
+            osg::ref_ptr<osg::Group> node = new osg::Group;
+            osg::ref_ptr<osg::Image> image = new osg::Image;
+            image->setFileName(path);
+            osg::ref_ptr<osg::Texture2D> texture = new osg::Texture2D(image);
+            node->getOrCreateStateSet()->setTextureAttribute(0, texture);
+            const auto* original = node->getStateSet();
+            std::size_t calls = 0;
+            EXPECT_EQ(replaceTes4ClothingSkin(*node, race, true, [&](std::size_t index) -> osg::ref_ptr<osg::Image> {
+                ++calls;
+                EXPECT_EQ(index, ESM4::Race::UpperBody);
+                return {}; // Missing skin leaves the authored state intact.
+            }), 0u);
+            EXPECT_EQ(calls, 1u);
+            EXPECT_EQ(node->getStateSet(), original);
+            EXPECT_EQ(texture->getImage(), image);
+        }
     }
 
     TEST(Tes4FaceGen, AppliesEgmBasePrefixWhenStatMorphVerticesFollow)
