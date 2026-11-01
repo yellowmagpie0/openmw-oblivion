@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-CREATURE-COUNTER-001",
+  "requirements": [
+    "C1/D2 natural Creature incoming contact against advanced defense, proc and nonproc",
+    "M15-MASTERY-HANDTOHAND-06 actual Counter response and invalid unarmed disarm target",
+    "I4 actual held and active Counter/Stagger fresh continuation, release and ordinary return"
+  ],
+  "full_M15S4_acceptance": false,
+  "problem": "Advanced defensive queries discarded Creature contacts, including nonproc. Counter victim admission and Stagger resource preparation also rejected Creature. An actual active-Counter restart exposed a missing body event track before native frames advanced.",
+  "implementation": {
+    "contact": "Admit Creature to the existing defensive query and Counter victim path; use the common Actor Stagger resource/ownership path. Selected Player/Creature disarm remains explicitly guarded.",
+    "restore": "Bind a missing body paired/Counter event track at saved metadata/time before native frames. Present uninterrupted tracks are left unchanged; contact ownership prevents replay.",
+    "files": [
+      "apps/openmw/mwmechanics/oblivionmelee.cpp",
+      "apps/openmw/mwworld/worldimp.cpp",
+      "apps/openmw/mwmechanics/character.cpp"
+    ],
+    "world_tests": [
+      "CreatureIncomingAdvancedDefenseKeepsProcAndNonprocContactsAtomic",
+      "CounterContactStaggersNaturalCreatureWithoutDamageWearOrDisarmRoll"
+    ],
+    "world_contexts": {
+      "defense": 16,
+      "counter_target": 2
+    }
+  },
+  "fixture": {
+    "source": "Accepted Creature block course actual ready save; scripts/data/oblivion_compat/m15_creature_resistance_cases.json retains the underlying spell-free Dog fixture provenance.",
+    "source_recipe": "build/oblivion-compat/m15/S4/creature-counter-work-01/prepare.py",
+    "actor": "content:m15stationaryopponent.esp:000802",
+    "base": "content:m15stationaryopponent.esp:000800",
+    "source_policy": "Initial Player Hand base75/100 synchronized across native/shared/legacy fields, RNG15, declared winning iPerkBlockStaggerChance100/0 in existing MasteryChance plugin. No contacts, reactions, poses, health deltas or drops authored. Legacy initial source uses the shared current-schema projection; actual restart proofs use accepted captured saves.",
+    "player_block_base": 50,
+    "variants": {
+      "proc": {
+        "profile": "build/oblivion-compat/m15/S4/creature-counter-work-01/proc/profile.json",
+        "sha256": "a1abb5ad2aaa5551ec8fa1b3e08bf8d45e061205436f422f38fead064459ce80",
+        "base_hand": 75,
+        "expected_counter": true
+      },
+      "master": {
+        "profile": "build/oblivion-compat/m15/S4/creature-counter-work-01/master/profile.json",
+        "sha256": "e776e5c00169fe4de52e81b3829f15c5748f4d59ec20b1d842e14152091645ec",
+        "base_hand": 100,
+        "expected_counter": true
+      },
+      "nonproc": {
+        "profile": "build/oblivion-compat/m15/S4/creature-counter-work-01/nonproc/profile.json",
+        "sha256": "16018f7d5aecb8f75d22a1b9999b24306274a7f9674858ddc4ade584a9158ba7",
+        "base_hand": 75,
+        "expected_counter": false
+      }
+    },
+    "nonproc_policy": "Chance0 retains native inclusive semantics: draw0 could trigger. The recorded actual control must have no Counter; no false0%-chance claim.",
+    "opponent_policy": "Existing m15_recoil_aware_opponent.obscript: real StartCombat production intent/contact; pause subsequent AI selection after expenditure, allowing native recovery. No injected combat outcome.",
+    "stock_animation_preflight": "build/oblivion-compat/m15/S4/creature-counter-work-01/stock-animation-preflight.json"
+  },
+  "normal_input_course": [
+    "Normal W approach with shared camera/reach guards; actual held B and F5 baseline.",
+    "Space activates the production Creature opponent; exactly one incoming contact2.",
+    "Proc: Player Counter3 causes stock Creature Stagger with zero health/fatigue/wear/disarm consequences. Nonproc: native BlockHit/Recoil instead.",
+    "Wait native recovery into held block, release B, then ordinary Player return4 (proc) or3 (control).",
+    "Save actual baseline/contact/released/returned states; fresh continuations use exact held or active Counter/Stagger sources.",
+    "Use existing measured normal mouse framing after legitimate root motion moves the Dog onto the bed. No actor/camera outcome injection."
+  ],
+  "expected": {
+    "incoming": "Creature spends7 Fatigue; Player loses7 Health at block_fraction.125, no block Fatigue.",
+    "counter": "One contact, zero resources/condition writes, no disarm/no target-weapon roll, actual Creature Stagger kind2/groupstagger/native31; interrupt its outgoing attack and recover naturally.",
+    "return": "One ordinary Player contact and7 Fatigue cost; logged Health debit agrees with exact saved/live delta within2e-4; no duplicate Counter/contact or item mutation.",
+    "restart": "Exact whole source, same game/libraries per final reference/restart pair; strict owned native resources, inventory, effects, actions, scripts and RNG at endpoint.",
+    "force_policy": "Actual complete ordinary-return force samples retained. Existing positive<=1 timer and horizontal contact-heading/magnitude1e-4 comparison policy; no matched physical timestep/trajectory claim.",
+    "release_policy": "No active posture after release. A first-person cache may have a valid positive retirement interval at the immediate released save; final caches must be inactive."
+  },
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/creature-counter-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/creature-counter-work-01/checkpoint-verification.json",
+    "focused_tests": 6,
+    "final_full_engine_per_build": 2082,
+    "required_rerun_reason": "The actual active-source E2E failure required CharacterController restoration code to change. Focused game check and exact failing-save retry passed before final broad normal/SAN gates; final positive reference/restart pairs use those binaries.",
+    "reused_component_python": "build/oblivion-compat/m15/S4/creature-counter-work-01/reused-evidence.json",
+    "historical_master_evidence": "build/oblivion-compat/m15/S4/creature-counter-work-01/master-recovery-evidence-reconciliation.json",
+    "helpers": "Existing combined-mastery run.py/inspect.py/compare-pair.py plus existing owned projection and camera probe; no new runtime harness.",
+    "status": "PASS bounded checkpoint:24 exact pairs/7 processes/4 fresh continuations/4x29-field comparisons; full S4 remains incomplete.",
+    "capture_limit": "All24 captures reviewed; three sanitizer release images clip the head top, with useful full-Dog paired return views. No blanket V6 closure."
+  },
+  "retained_failures": [
+    "build/oblivion-compat/m15/S4/creature-counter-work-01/counter-body-restore-defect.json",
+    "build/oblivion-compat/m15/S4/creature-counter-work-01/held-owner-checker-correction.json",
+    "build/oblivion-compat/m15/S4/creature-counter-work-01/release-fade-checker-correction.json",
+    "creature-counter-focused-normal-01: same-line SCOPED_TRACE compilation mistake, corrected before test execution.",
+    "creature-counter-focused-normal-02: both original admission guards fail the new tests.",
+    "proc-attempt01-schema-roundtrip: missing supported legacy projection rejected by cheap readback, before gameplay.",
+    "Original normal reference01 late pictures clip the head after stepping onto the bed; measured framing added to subsequent runs. Original gameplay/source evidence retained."
+  ],
+  "limits": [
+    "Runtime is configured first-person keyboard/mouse, natural unarmed Creature source/target; World tests additionally cover Player/NPC defenders and shield gear. No blanket Creature/actor/view/device closure.",
+    "Armed Creature selected disarm and Creature Counter-caster routes retain explicit boundaries/unverified policies; this case does not claim them.",
+    "Captures and routed PCM retained; no new material/sound-family identity or complete V6 claim.",
+    "Required T7 FPS/seed/step coverage, F8 independent campaigns and remaining S4 acceptance gaps remain open."
+  ]
+}

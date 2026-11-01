@@ -404,8 +404,9 @@ namespace MWMechanics
             || service->getProcessAction(source) != 2) return std::nullopt;
         OblivionPhysicalContactDeltas deltas;
         if (victim.isEmpty()) return deltas; // A miss consumes phase1 without any draw or cost.
-        if (victim == attacker || (victim != player && victim.getType() != ESM::REC_NPC_4))
-            return std::nullopt; // Creature Stagger resources are not admitted yet.
+        if (victim == attacker || (victim != player && victim.getType() != ESM::REC_NPC_4
+                && victim.getType() != ESM::REC_CREA4))
+            return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
@@ -445,7 +446,7 @@ namespace MWMechanics
         {
             // Player centering and Creature drop policy require their own
             // native implementation; do not consume a selected proc without it.
-            if (victim == player) return std::nullopt;
+            if (victim == player || victim.getType() == ESM::REC_CREA4) return std::nullopt;
             deltas.mDisarms.push_back({victim, *targetRight});
         }
         if (!nativeWorld->prepareOblivionStaggerReaction(actionId, victim, deltas)) return std::nullopt;
@@ -496,8 +497,9 @@ namespace MWMechanics
         const auto proc = ESM4::blockMasteryStagger(input, draw.mValue % 100,
             ESM4::buildMasteryProcSettings(settings), mastery);
         if (!proc.mConsumesDraw) return OblivionDefensiveBlockConsequences{};
-        if (attacker != player && attacker.getType() != ESM::REC_NPC_4)
-            return std::nullopt; // Creature Counter-target Stagger/Recoil is not admitted.
+        if (attacker != player && attacker.getType() != ESM::REC_NPC_4
+            && attacker.getType() != ESM::REC_CREA4)
+            return std::nullopt;
         const bool stagger = (deltas.mVictimReaction
             && deltas.mVictimReaction->mKind == ESM4::MeleeReactionKind::Stagger)
             || service->getProcessAction(key) == 8;
@@ -553,8 +555,9 @@ namespace MWMechanics
             }
             if (disarm.mTriggered)
             {
-                // Player bound-centering remains a separate drop policy.
-                if (attacker == player) return std::nullopt;
+                // Selected Player/Creature disarm needs its verified drop
+                // policy; unarmed Creature contacts require no such drop.
+                if (attacker == player || attacker.getType() == ESM::REC_CREA4) return std::nullopt;
                 candidate.mDisarms.push_back({attacker, *targetRight});
             }
         }

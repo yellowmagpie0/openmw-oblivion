@@ -4856,7 +4856,6 @@ namespace MWWorld
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
         if ((!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
-            || (actor.getType() == ESM::REC_CREA4 && kind == ESM4::MeleeReactionKind::Stagger)
             || requested || retiring || firstPerson || slot0 || firstSlot0)
             return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
@@ -5100,7 +5099,8 @@ namespace MWWorld
             }
             const std::string group = entry->mGroups[playback.mIndex];
             Log(Debug::Verbose) << (kind == ESM4::MeleeReactionKind::Stagger
-                    ? "M15 NPC Stagger resource selected: actor="
+                    ? (actor.getType() == ESM::REC_CREA4 ? "M15 Creature Stagger resource selected: actor="
+                                                       : "M15 NPC Stagger resource selected: actor=")
                     : kind == ESM4::MeleeReactionKind::Recoil
                         ? (actor.getType() == ESM::REC_CREA4 ? "M15 Creature recoil resource selected: actor="
                                                           : "M15 NPC recoil resource selected: actor=")

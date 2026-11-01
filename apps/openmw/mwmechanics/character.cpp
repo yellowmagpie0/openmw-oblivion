@@ -1573,6 +1573,34 @@ namespace MWMechanics
             mOblivionFirstPersonRenderedStrike = 0;
             mOblivionFirstPersonStrikeGroup.clear();
         }
+        // Native paired/Counter frames advance before the ordinary weapon
+        // update. A restored body needs its event track as well as pose layers;
+        // the uninterrupted contact path already installed this track.
+        const auto bodyStrike = state ? state->mStrike : std::nullopt;
+        const bool bodyFinished = bodyStrike && (bodyStrike->mKind == ESM4::MeleeStrikeKind::Counter
+            ? bodyStrike->mInactive : bodyStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower
+                ? bodyStrike->mPowerPhase == ESM4::PowerMeleePhase::End
+                : bodyStrike->mOrdinaryPhase == ESM4::OrdinaryMeleePhase::End);
+        if (bodyStrike && !bodyFinished && (firstStrike || bodyStrike->mKind == ESM4::MeleeStrikeKind::Counter)
+            && !mAnimation->getInfo(bodyStrike->mAnimationGroup))
+        {
+            const auto playback = nativeMeleePlayback(*mAnimation, bodyStrike->mAnimationGroup,
+                bodyStrike->mKind >= ESM4::MeleeStrikeKind::StandingPower,
+                bodyStrike->mKind == ESM4::MeleeStrikeKind::Counter);
+            if (!playback || bodyStrike->mAnimationTime < playback->mTimelineBegin
+                || bodyStrike->mAnimationTime > playback->mTimelineEnd)
+                throw std::invalid_argument("native body strike cannot bind saved metadata/time");
+            const float fraction = (bodyStrike->mAnimationTime - playback->mTimelineBegin)
+                / (playback->mTimelineEnd - playback->mTimelineBegin);
+            mAnimation->play(bodyStrike->mAnimationGroup, Priority_Weapon, MWRender::BlendMask_All,
+                false, 0.f, "start", "stop", fraction, 0, false, MWRender::Animation::PlaybackScope::ThisView,
+                bodyStrike->mKind == ESM4::MeleeStrikeKind::Counter ? std::string_view(mOblivionBlockGroup)
+                    : std::string_view{});
+            mOblivionRenderedStrike = bodyStrike->mActionId;
+            mCurrentWeapon = bodyStrike->mAnimationGroup;
+            Log(Debug::Verbose) << "M15 body strike bind: actor=" << actor.serialize()
+                << " id=" << bodyStrike->mActionId << " time=" << bodyStrike->mAnimationTime;
+        }
         if (firstStrike && !firstFinished && (mOblivionFirstPersonRenderedStrike != firstStrike->mActionId
                 || !peer->getInfo(firstStrike->mAnimationGroup)))
         {
