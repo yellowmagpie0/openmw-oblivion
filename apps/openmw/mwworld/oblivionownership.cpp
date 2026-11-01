@@ -27,6 +27,9 @@ namespace MWWorld
         }
     }
 
+    const ESM4::Npc& oblivionPlayerBase(const ESMStore& store)
+    { return nativePlayerBase(store); }
+
     ESM::FormId oblivionBipedReferenceOwner(World& world, const ConstPtr& reference)
     {
         if (world.getGameProfile() != ESM::GameProfile::Oblivion || reference.isEmpty()

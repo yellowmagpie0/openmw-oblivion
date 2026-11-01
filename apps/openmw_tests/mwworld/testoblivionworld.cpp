@@ -33060,7 +33060,7 @@ TEST(OblivionWorldTest, MasterDefensiveQueryKeepsCounterFirstAndAppendsCondition
         MWMechanics::OblivionPhysicalContactDeltas packet{-7, -3, 0};
         if (row.prior) packet.mRandomTransition = service.prepareCombatRandom(row.prior);
         const auto before = fixture.snapshot().serializeBinary();
-        const bool accepted = !row.drop || playerDefender; // Selected Player drops remain explicit unsupported policy.
+        const bool accepted = true; // Player and NPC target drops share atomic publication.
         EXPECT_EQ(MWMechanics::prepareOblivionDefensiveBlockConsequences(world, attacker, defender, packet).has_value(), accepted);
         EXPECT_EQ(packet.mVictimCounterRequested, accepted && row.counterProc);
         const unsigned draws = row.prior + (accepted ? row.added : 0);
@@ -33681,6 +33681,132 @@ TEST(OblivionWorldTest, CreatureMasterNonprocDefenseDoesNotRollNpcOnlyDisarm)
         ASSERT_TRUE(packet.mRandomTransition); EXPECT_EQ(packet.mRandomTransition->mDraws, 1u);
         EXPECT_FALSE(packet.mVictimCounterRequested); EXPECT_TRUE(packet.mDisarms.empty());
         EXPECT_EQ(snapshot().serializeBinary(), before);
+    }
+}
+
+TEST(OblivionWorldTest, MasterCounterSelectsPlayerDisarmWithoutPublishingAndHonorsSuppression)
+{
+    for (unsigned policy = 0; policy != 3; ++policy)
+    {
+        SCOPED_TRACE(policy);
+        PlayerReactionViewsFixture fixture;
+        auto& world = fixture.mFixture.mWorld;
+        auto& service = *world.getOblivionCombatService();
+        const auto weapon = installMasterTargetWeapon(fixture.mFixture, fixture.mPlayer, policy == 1);
+        if (policy == 2) ASSERT_TRUE(world.toggleGodMode());
+        ASSERT_TRUE(world.executeOblivionActorValueCommand(fixture.mAttacker, 17, ESM4::ActorValueCommand::Set,
+            ESM4::ActorValueCommandSource::Script, 100));
+        fixture.mPlayer.getClass().getCreatureStats(fixture.mPlayer).setDrawState(MWMechanics::DrawState::Weapon);
+        fixture.mAttacker.getClass().getCreatureStats(fixture.mAttacker).setDrawState(MWMechanics::DrawState::Weapon);
+        setMasterDispatchChances(world, 100, 100);
+        const auto source = fixture.mAttacker.getCellRef().getFormKey();
+        const auto id = service.beginMeleeStrike(source, ESM4::MeleeStrikeKind::Counter, "handtohandblockattack");
+        ASSERT_TRUE(service.bindMeleePlayback(id, source));
+        const std::array<float, 3> keys{0, .5f, 1};
+        for (float dt : {0.f, .25f, .25f, .25f})
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, source, dt, 1, 0, 1, keys));
+        const auto before = fixture.snapshot().serializeBinary();
+        const auto packet = MWMechanics::prepareOblivionCounterContactDeltas(world, id, fixture.mAttacker, fixture.mPlayer);
+        ASSERT_TRUE(packet);
+        EXPECT_EQ(packet->mDisarms.size(), policy == 0 ? 1u : 0u);
+        EXPECT_EQ(packet->mRandomTransition.has_value(), policy == 0);
+        if (!packet->mDisarms.empty()) EXPECT_EQ(packet->mDisarms.front().mItem, weapon);
+        EXPECT_EQ(packet->mVictimHealth, 0); EXPECT_EQ(packet->mAttackerFatigue, 0);
+        EXPECT_EQ(fixture.snapshot().serializeBinary(), before);
+        EXPECT_TRUE(service.isMeleeContactPending(id, source));
+    }
+}
+
+TEST(OblivionWorldTest, PlayerDefaultDisarmCentersOwnedDropAndRollsBackFailures)
+{
+    struct PlayerDropAnimation : MWRender::Animation
+    {
+        PlayerDropAnimation(const MWWorld::Ptr& actor, Resource::ResourceSystem* resources)
+            : MWRender::Animation(actor, new osg::Group, resources) {}
+    };
+    for (unsigned failure = 0; failure != 3; ++failure)
+    {
+        SCOPED_TRACE(failure);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+        auto& world = fixture.mWorld;
+        const auto player = setupCommonHitPlayer(fixture);
+        auto nativePlayer = *world.getStore().get<ESM4::Npc>().search(ESM::FormKey::content("Oblivion.esm", 7));
+        nativePlayer.mEditorId = "Player";
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(nativePlayer, nativePlayer.mFormKey);
+        world.getPlayer().setCell(fixture.mActor.getCell());
+        ESM4::RuntimeState metadata; metadata.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+        prepareNativeSnapshotPlayer(fixture, metadata);
+        auto& service = *world.getOblivionCombatService();
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        service.initializeConstructedActorProcess(playerKey);
+        auto position = player.getRefData().getPosition();
+        position.pos[0] = 100; position.pos[1] = 20; position.pos[2] = 30;
+        player.getRefData().setPosition(position);
+        player.getClass().getCreatureStats(player).setDrawState(MWMechanics::DrawState::Weapon);
+        ESM4::RuntimeInventoryItem item; item.mBase = ESM::FormKey::content("headless.esm", 0x940);
+        item.mCount = 1; item.mCondition = 50; item.mCharge = 7.25f; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        auto spare = item; spare.mCondition = 49; spare.mEquippedSlots = 0;
+        installEquipmentInventory(fixture, player, {item, spare});
+        auto& inventory = player.getClass().getInventoryStore(player);
+        const auto carried = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        // The owned NIF fixture has collision but no drawable. Supply an explicit
+        // visible bound to exercise the independent Player centering operation.
+        auto model = fixture.mResources.getSceneManager()->getTemplate(VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+        const_cast<osg::Node*>(model.get())->setInitialBound(osg::BoundingSpheref({4, 5, 6}, 2));
+        PlayerDropAnimation animation(player, &fixture.mResources);
+        const std::array<MWWorld::EquippedWeaponDrop, 1> requests{{{player, carried, animation, {}, true}}};
+        auto drop = MWWorld::prepareEquippedWeaponDrops(world, *fixture.mObjects, *fixture.mPhysics, requests);
+        ASSERT_TRUE(drop); ASSERT_TRUE(drop->isValid());
+        EXPECT_EQ(carried.getCellRef().getCount(), 1);
+        EXPECT_TRUE(player.getCellRef().getNativeDropRelations().empty());
+        drop.reset(); // Publication below belongs to the contact transaction.
+        const auto source = prepareNativeDropContactActors(fixture);
+        const auto action = world.beginOblivionPhysicalAction(source);
+        const auto before = world.captureOblivionRuntimeState();
+        const auto health = service.getPlayerValue(8);
+        MWMechanics::OblivionPhysicalContactDeltas packet{0, -1, 0};
+        packet.mDisarms.push_back({player, carried});
+        auto contact = world.prepareOblivionPhysicalContactWithWeaponDrops(action, source, player, packet,
+            *fixture.mObjects, *fixture.mPhysics, requests);
+        ASSERT_TRUE(contact);
+        if (failure == 1) fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
+        if (failure == 2) carried.getCellRef().setNativeItemCondition(48);
+        if (failure)
+        {
+            if (failure == 1) EXPECT_THROW(contact->commit(), std::exception);
+            else { EXPECT_FALSE(contact->isValid()); EXPECT_FALSE(contact->commit()); }
+            EXPECT_EQ(service.getPlayerValue(8), health);
+            EXPECT_TRUE(service.isActionPending(action, source.getCellRef().getFormKey()));
+            EXPECT_EQ(carried.getCellRef().getCount(), 1);
+            EXPECT_TRUE(player.getCellRef().getNativeDropRelations().empty());
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+            continue;
+        }
+        ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
+        EXPECT_EQ(service.getPlayerValue(8), health - 1);
+        EXPECT_TRUE(service.isActionConsumed(action));
+        const auto placed = world.getWorldModel().getDynamicNativePtr(
+            ESM::FormKey::dynamic("native-reference", before.mNextDynamicSerial));
+        ASSERT_FALSE(placed.isEmpty());
+        EXPECT_NEAR(placed.getRefData().getPosition().pos[0], 96, .0001f);
+        EXPECT_NEAR(placed.getRefData().getPosition().pos[1], 65, .0001f);
+        EXPECT_NEAR(placed.getRefData().getPosition().pos[2], 54, .0001f);
+        EXPECT_EQ(placed.getCellRef().getNativeItemCondition(), 50);
+        EXPECT_EQ(placed.getCellRef().getEnchantmentCharge(), 7.25f);
+        EXPECT_EQ(placed.getCellRef().getNativeDropRelations().mDropper, playerKey);
+        ASSERT_TRUE(player.getCellRef().getNativeDropRelations().mItems);
+        EXPECT_EQ(*player.getCellRef().getNativeDropRelations().mItems, std::vector{placed.getCellRef().getFormKey()});
+        EXPECT_EQ(carried.getCellRef().getCount(), 0);
+        EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+        EXPECT_TRUE(fixture.mPhysics->hasLooseObject(placed));
+        const auto saved = world.captureOblivionRuntimeState();
+        const auto envelope = std::find_if(saved.mReferences.begin(), saved.mReferences.end(),
+            [&](const auto& ref) { return ref.mKey == playerKey; });
+        ASSERT_NE(envelope, saved.mReferences.end());
+        EXPECT_EQ(envelope->mDropRelations, player.getCellRef().getNativeDropRelations());
+        const auto roundtrip = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        EXPECT_EQ(roundtrip, saved);
+        EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications());
     }
 }
 
@@ -37718,6 +37844,7 @@ TEST(OblivionWorldTest, GetUpPublishesActualSceneRootSetupAndSavedOwnerTogether)
 TEST(OblivionWorldTest, SidePowerDisarmUsesBaseSkillAndProjectedEligibleWeaponWithoutMutation)
 {
     struct Row { int rank, modifier; unsigned variation, prior; bool roll, drop; };
+    for (const bool playerSource : {false, true})
     for (const auto kind : {ESM4::MeleeStrikeKind::LeftPower, ESM4::MeleeStrikeKind::RightPower})
     for (const auto row : {Row{49, 51, 0, 0, false, false}, Row{50, -50, 0, 0, true, true},
              Row{100, 0, 0, 2, true, true}, Row{50, 0, 1, 0, false, false},
@@ -37730,7 +37857,9 @@ TEST(OblivionWorldTest, SidePowerDisarmUsesBaseSkillAndProjectedEligibleWeaponWi
         PlayerReactionViewsFixture fixture;
         auto& world = fixture.mFixture.mWorld;
         auto& service = *world.getOblivionCombatService();
-        const auto source = fixture.mPlayer, target = fixture.mAttacker;
+        SCOPED_TRACE(playerSource);
+        const auto source = playerSource ? fixture.mPlayer : fixture.mAttacker;
+        const auto target = playerSource ? fixture.mAttacker : fixture.mPlayer;
         MWWorld::Ptr item;
         if (row.variation != 3) item = installMasterTargetWeapon(fixture.mFixture, target, row.variation == 1);
         source.getClass().getCreatureStats(source).setDrawState(row.variation == 4

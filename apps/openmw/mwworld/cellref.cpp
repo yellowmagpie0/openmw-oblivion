@@ -218,8 +218,11 @@ namespace MWWorld
 
     void CellRef::setNativeDropRelations(ESM4::DropRelations relations)
     {
-        if ((!getNativeReference() && !getNativeActor())
-            || (relations.mDropper && !getNativeReference()) || (relations.mItems && !getNativeActor()))
+        // The Oblivion Player uses the compatibility NPC CellRef; its native
+        // identity and drop-list persistence are supplied by World's Player adapter.
+        const bool player = getRefId() == ESM::RefId::stringRefId("Player");
+        if ((!getNativeReference() && !getNativeActor() && !player)
+            || (relations.mDropper && !getNativeReference()) || (relations.mItems && !getNativeActor() && !player))
             throw std::invalid_argument("Native drop relation extra has the wrong reference category");
         relations.validate();
         if (relations == mNativeDropRelations) return;
@@ -229,7 +232,9 @@ namespace MWWorld
 
     bool CellRef::swapNativeDropRelations(CellRef& prepared) noexcept
     {
-        if ((!getNativeReference() && !getNativeActor())
+        const bool player = getRefId() == ESM::RefId::stringRefId("Player");
+        if ((!getNativeReference() && !getNativeActor() && !player)
+            || (player && prepared.getRefId() != getRefId())
             || bool(getNativeReference()) != bool(prepared.getNativeReference())
             || bool(getNativeActor()) != bool(prepared.getNativeActor()))
             return false;

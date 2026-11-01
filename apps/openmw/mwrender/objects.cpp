@@ -86,6 +86,12 @@ namespace MWRender
     Objects::PreparedModel::~PreparedModel() = default;
     bool Objects::PreparedModel::hasLiveOwner() const noexcept
     { return mData && !mData->mIdentity.expired(); }
+    osg::Vec3f Objects::PreparedModel::worldBoundCenter() const
+    {
+        if (!hasLiveOwner() || !mData->mInsert->getBound().valid())
+            throw std::invalid_argument("prepared native model has no valid world bound");
+        return mData->mInsert->getBound().center();
+    }
     std::shared_ptr<const LooseObjectSceneBinding> Objects::PreparedModel::looseSceneBinding() const noexcept
     { return mData ? mData->mSceneBinding : nullptr; }
 

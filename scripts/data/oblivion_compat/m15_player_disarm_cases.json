@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-PLAYER-DISARM-001",
+  "full_M15S4_acceptance": false,
+  "requirements": [
+    "C1/D2 selected Player weapon disarm commits legitimate contact and one owned native drop",
+    "I4 actual weapon withdrawal, natural reaction recovery, unarmed return and exact active-drop restart"
+  ],
+  "problem": "Selected Player disarms were rejected by query/contact/drop admission; compatibility Player had no persisted native dropped-list adapter.",
+  "implementation": "Admit Player query/World contact; atomically publish winning world weapon model and native physical reference; center using actual prepared model bound; preserve dynamic Player drop-list authority in existing reference envelope. Player metadata lookup remains separate from dynamic actor-value base.",
+  "world_tests": {
+    "MasterCounterSelectsPlayerDisarmWithoutPublishingAndHonorsSuppression": 3,
+    "PlayerDefaultDisarmCentersOwnedDropAndRollsBackFailures": 3,
+    "MasterDefensiveQueryKeepsCounterFirstAndAppendsCondition": "Existing matrix now admits selected Player targets",
+    "SidePowerDisarmUsesBaseSkillAndProjectedEligibleWeaponWithoutMutation": "Both Player/NPC target orientations"
+  },
+  "native_reference": "build/oblivion-compat/m15/S4/player-disarm-work-01/native-centering-reference.json",
+  "authoring": {
+    "recipe": "build/oblivion-compat/m15/S4/player-disarm-work-01/prepare.py",
+    "source": "Existing shield-defense fixture, public NPC block intent",
+    "initial_parameters": "NPC Hand100, Player Hand10; NPC weapon/shield unequipped but retained, Player sword50. Counter/disarm GMST chances100, combat seed1. No contacts/reactions/drops/outcomes authored.",
+    "profile": {
+      "path": "build/oblivion-compat/m15/S4/player-disarm-work-01/profile.json",
+      "sha256": "a7737e60ccd65dbda9a00e49efed29bda45cb5a117a97ea33ccd3c3778d1b850"
+    }
+  },
+  "course": [
+    "Normal draw/actual held NPC block; shared reach and visibility preflight; F5 baseline.",
+    "Actual Player attack2 triggers NPC Counter3, zero Counter damage/cost, Player Stagger and one physical intact weapon drop.",
+    "Save active drop/reactions; naturally recover, release NPC block, make ordinary unarmed return4.",
+    "Fresh process restores exact active source, then recovers and returns without replaying attack2/Counter3; compare31 owned fields.",
+    "Camera-only continuation from accepted source uses actual backstep/measured mouse input to show targetable loose sword."
+  ],
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/player-disarm-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/player-disarm-work-01/checkpoint-verification.json",
+    "focused_tests": 8,
+    "full_engine_per_build": 2086,
+    "reused": "build/oblivion-compat/m15/S4/player-disarm-work-01/reused-evidence.json",
+    "checker_corrections": [
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/counter-release-fixture-correction.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/fatigue-timing-checker-correction.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/fresh-peer-stage-correction.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/normal-drop-visual-verification.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/scene-projection-checker-correction.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/camera-startup-fixture-correction.json",
+      "build/oblivion-compat/m15/S4/player-disarm-work-01/sanitize-drop-visual-verification.json"
+    ],
+    "status": "PASS bounded checkpoint:12 exact pairs/4 gameplay processes/2 exact active-source restarts/2x31 fields/14 directly reviewed images; two accepted camera-only continuations separately scoped. Full S4 incomplete."
+  },
+  "limits": [
+    "Runtime selected Counter is NPC-to-Player, first-person keyboard/mouse; immediate defensive and side-power target orientations have World checks, no blanket view/device Cartesian claim.",
+    "Player break retains unequipped item. Creature target selected disarm remains guarded; no automatic Player spare replacement.",
+    "Renderer model bound supplies geometry for native centering translation, without bit-identical original sphere-fit claim.",
+    "Ordinary return delayed Fatigue snapshots may fully regenerate; exact immediate cost and unchanged application evidence are distinguished in reused-evidence receipt.",
+    "No new PCM-family identity or matched physical trajectory/step claim; full S4/T7/F8 remain incomplete."
+  ]
+}

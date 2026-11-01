@@ -3446,10 +3446,10 @@ namespace MWMechanics
         {
             if (victim.isEmpty() || (request.mOwner != attacker && request.mOwner != victim)
                 || request.mOwner.isEmpty() || request.mItem.isEmpty()
-                || request.mOwner == (player ? player->getPlayer() : MWWorld::Ptr{})
-                || request.mOwner.getType() != ESM::REC_NPC_4 || request.mItem.getType() != ESM::REC_WEAP
+                || (request.mOwner != (player ? player->getPlayer() : MWWorld::Ptr{})
+                    && request.mOwner.getType() != ESM::REC_NPC_4) || request.mItem.getType() != ESM::REC_WEAP
                 || !request.mItem.getCellRef().getRefId().getIf<ESM::FormId>())
-                throw std::invalid_argument("native disarm requires a participant's equipped NPC weapon");
+                throw std::invalid_argument("native disarm requires a participant's equipped Player or NPC weapon");
             const auto owner = actorKey(request.mOwner);
             equipmentOwners.insert(owner);
             if (!disarmedOwners.insert(owner).second || mBowStates.contains(owner))

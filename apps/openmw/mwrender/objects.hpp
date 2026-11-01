@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <osg/Quat>
+#include <osg/Vec3f>
 #include <string>
 #include <vector>
 
@@ -96,6 +97,8 @@ namespace MWRender
         public:
             ~PreparedModel();
             bool hasLiveOwner() const noexcept;
+            // Bound after native world-model preparation, including scabbard removal.
+            osg::Vec3f worldBoundCenter() const;
             std::shared_ptr<const LooseObjectSceneBinding> looseSceneBinding() const noexcept;
             PreparedModel(const PreparedModel&) = delete;
             PreparedModel& operator=(const PreparedModel&) = delete;

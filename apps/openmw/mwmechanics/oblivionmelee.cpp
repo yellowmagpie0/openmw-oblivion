@@ -445,9 +445,8 @@ namespace MWMechanics
         if (disarm.mConsumesDraw) deltas.mRandomTransition = service->prepareCombatRandom(1);
         if (disarm.mTriggered)
         {
-            // Player centering and Creature drop policy require their own
-            // native implementation; do not consume a selected proc without it.
-            if (victim == player || victim.getType() == ESM::REC_CREA4) return std::nullopt;
+            // Creature target drop policy remains a separate admission boundary.
+            if (victim.getType() == ESM::REC_CREA4) return std::nullopt;
             deltas.mDisarms.push_back({victim, *targetRight});
         }
         if (!nativeWorld->prepareOblivionStaggerReaction(actionId, victim, deltas)) return std::nullopt;
@@ -556,9 +555,8 @@ namespace MWMechanics
             }
             if (disarm.mTriggered)
             {
-                // Selected Player/Creature disarm needs its verified drop
-                // policy; unarmed Creature contacts require no such drop.
-                if (attacker == player || attacker.getType() == ESM::REC_CREA4) return std::nullopt;
+                // Creature target drop policy remains separate; natural attacks have no item to drop.
+                if (attacker.getType() == ESM::REC_CREA4) return std::nullopt;
                 candidate.mDisarms.push_back({attacker, *targetRight});
             }
         }
@@ -626,7 +624,7 @@ namespace MWMechanics
         if (proc.mTriggered)
         {
             // Same explicit drop-policy boundary as Counter and defensive disarm.
-            if (victim == player || victim.getType() != ESM::REC_NPC_4) return std::nullopt;
+            if (victim != player && victim.getType() != ESM::REC_NPC_4) return std::nullopt;
             candidate.mDisarms.push_back({victim, *right});
             candidate.mKnockback.reset();
         }

@@ -12,6 +12,7 @@
 #include <components/resource/niffilemanager.hpp>
 #include "../mwclass/esm4npc.hpp"
 #include "oblivionweapondrop.hpp"
+#include "oblivionownership.hpp"
 #include "oblivioncombatdata.hpp"
 #include "savedreference.hpp"
 #include "../mwphysics/oblivionragdoll.hpp"
@@ -2351,6 +2352,31 @@ namespace MWWorld
             if (mOblivionCombat->playerReputation())
                 state.mPlayer.mActorValues.erase("infamy");
             mOblivionCombat->capture(state);
+        }
+        const auto& playerDrops = player.getCellRef().getNativeDropRelations();
+        auto playerReference = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+            [&](const auto& reference) { return reference.mKey == state.mPlayer.mReference; });
+        if (!playerDrops.empty() || playerReference != state.mReferences.end())
+        {
+            if (playerReference == state.mReferences.end())
+            {
+                ESM4::RuntimeReferenceState reference;
+                reference.mKey = state.mPlayer.mReference;
+                const auto values = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                    [&](const auto& entry) { return entry.mActor == state.mPlayer.mReference; });
+                if (values == state.mNativeActorValues.end())
+                    throw std::invalid_argument("Player dropped list has no native actor authority");
+                reference.mBase = values->mBase;
+                reference.mEnabled = player.getRefData().isEnabled();
+                reference.mCell = state.mPlayer.mCell;
+                reference.mPosition = state.mPlayer.mPosition;
+                state.mReferences.push_back(std::move(reference));
+                playerReference = std::prev(state.mReferences.end());
+            }
+            playerReference->mDropRelations = playerDrops;
+            std::sort(state.mReferences.begin(), state.mReferences.end(), [](const auto& a, const auto& b) {
+                return a.mKey < b.mKey;
+            });
         }
         captureOblivionPhysicalState(state, player);
         std::map<ESM::FormKey, const ESM4::RuntimeReferenceState*> physicalReferences;
@@ -5398,9 +5424,9 @@ namespace MWWorld
         for (const auto& request : deltas.mDisarms)
         {
             if (request.mOwner.isEmpty() || request.mItem.isEmpty()
-                || request.mOwner == getPlayerConstPtr() || request.mOwner.getType() != ESM::REC_NPC_4
+                || (request.mOwner != getPlayerConstPtr() && request.mOwner.getType() != ESM::REC_NPC_4)
                 || request.mItem.getType() != ESM::REC_WEAP || !owners.insert(request.mOwner).second)
-                throw std::invalid_argument("native disarm requires distinct NPC weapon owners");
+                throw std::invalid_argument("native disarm requires distinct Player or NPC weapon owners");
             const auto id = OblivionProfileServices::nativeItemId(mStore, request.mItem.getCellRef().getRefId());
             const auto* form = id.getIf<ESM::FormId>();
             const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
@@ -5445,7 +5471,7 @@ namespace MWWorld
         for (const auto& disarm : resolved.mDisarms)
         {
             if (!mRendering || !mPhysics) return nullptr;
-            auto* animation = dynamic_cast<MWRender::ESM4EquipmentAnimation*>(mRendering->getAnimation(disarm.mOwner));
+            auto* animation = mRendering->getAnimation(disarm.mOwner);
             if (!animation) return nullptr;
             drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(resolved, disarm), true,
                 contactEnchantmentChargeAfter(resolved, disarm.mOwner, disarm.mItem)});
@@ -6426,7 +6452,11 @@ namespace MWWorld
                     throw std::invalid_argument("Native dropper relation requires a takeable item and actor");
                 if (relations.mItems)
                 {
-                    if (!relationActor(reference.mBase))
+                    const auto playerValues = std::find_if(state.mNativeActorValues.begin(), state.mNativeActorValues.end(),
+                        [&](const auto& values) { return values.mActor == state.mPlayer.mReference; });
+                    const bool player = reference.mKey == state.mPlayer.mReference
+                        && playerValues != state.mNativeActorValues.end() && reference.mBase == playerValues->mBase;
+                    if (!player && !relationActor(reference.mBase))
                         throw std::invalid_argument("Native dropped-list extra requires an actor reference");
                     for (const auto& item : *relations.mItems)
                         if (!relationItemTarget(item))
@@ -6660,11 +6690,34 @@ namespace MWWorld
             std::optional<ESM::AnimationState> mAnimation;
             std::optional<CellRef> mItemCellRef;
         };
+        std::optional<CellRef> preparedPlayerDropRelations;
+        if (state.mVersion >= 47)
+        {
+            ESM4::DropRelations relations;
+            if (const auto saved = std::find_if(state.mReferences.begin(), state.mReferences.end(),
+                    [&](const auto& entry) { return entry.mKey == state.mPlayer.mReference; }); saved != state.mReferences.end())
+            {
+                if (saved->mDropRelations.mItems)
+                {
+                    const auto* values = preparedCombat ? preparedCombat->findActorValues(state.mPlayer.mReference) : nullptr;
+                    // Older reference envelopes may name the content Player
+                    // NPC instead of its independent dynamic actor-value base.
+                    const auto* contentBase = mStore.get<ESM4::Npc>().search(saved->mBase);
+                    const bool legacy = contentBase && contentBase == &oblivionPlayerBase(mStore);
+                    if (!values || (saved->mBase != values->mBase && !legacy))
+                        throw std::invalid_argument("Player dropped-list envelope disagrees with native base authority");
+                }
+                relations = saved->mDropRelations;
+            }
+            preparedPlayerDropRelations.emplace(getPlayerPtr().getCellRef());
+            preparedPlayerDropRelations->setNativeDropRelations(std::move(relations));
+        }
         std::vector<PreparedReferenceBinding> preparedReferences;
         std::vector<std::unique_ptr<PreparedSavedNativeReference>> reconstructed;
         preparedReferences.reserve(state.mReferences.size());
         for (const auto& reference : state.mReferences)
         {
+            if (reference.mKey == state.mPlayer.mReference) continue;
             auto found = references.find(reference.mKey);
             if (found == references.end() && reference.mKey.isDynamic()
                 && reference.mKey.mNamespace == "native-reference")
@@ -7113,6 +7166,8 @@ namespace MWWorld
             }
         }
 
+        if (preparedPlayerDropRelations
+            && !getPlayerPtr().getCellRef().swapNativeDropRelations(*preparedPlayerDropRelations)) std::terminate();
         for (auto& binding : preparedReferences)
         {
             const auto& reference = *binding.mState;

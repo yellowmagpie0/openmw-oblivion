@@ -3,8 +3,13 @@
 
 #include <components/esm/formid.hpp>
 
+namespace ESM4 { struct Npc; }
+
 namespace MWWorld
 {
+    class ESMStore;
+    // Winning native Player metadata; actor-value overrides keep their independent dynamic base.
+    const ESM4::Npc& oblivionPlayerBase(const ESMStore& store);
     class World;
     class Ptr;
     class ConstPtr;
