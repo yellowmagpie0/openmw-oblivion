@@ -371,11 +371,6 @@ namespace MWMechanics
         if (const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             equipped != inventory.end())
         {
-            if (creature)
-            {
-                combat->clearMeleeAiIntent(key);
-                throw std::runtime_error("native stationary Creature weapon contact is not admitted");
-            }
             const auto id = MWWorld::OblivionProfileServices::nativeItemId(world.getStore(), equipped->getCellRef().getRefId());
             const auto* form = id.getIf<ESM::FormId>();
             const auto* weapon = form ? world.getStore().get<ESM4::Weapon>().search(*form) : nullptr;
@@ -672,8 +667,6 @@ namespace MWMechanics
             return std::nullopt;
         const auto kind = service->findMeleeState(actor)->mStrike->mKind;
         const bool creature = attacker.getType() == ESM::REC_CREA4;
-        if (creature && !service->findMeleeState(actor)->mStrike->mWeaponBase.isNull())
-            return std::nullopt; // Armed Creature multipliers/wear remain a separate caller.
         if (kind == ESM4::MeleeStrikeKind::Counter)
         {
             std::vector<const ESM4::GameSetting*> settings;
@@ -1718,7 +1711,8 @@ namespace MWMechanics
             return !ptr.isEmpty() && (ptr == player || ptr.getType() == ESM::REC_NPC_4);
         };
         const bool creatureVictim = !victim.isEmpty() && victim.getType() == ESM::REC_CREA4;
-        if (!service || !eligible(attacker) || (!eligible(victim) && !creatureVictim)
+        const bool creatureAttacker = !attacker.isEmpty() && attacker.getType() == ESM::REC_CREA4;
+        if (!service || (!eligible(attacker) && !creatureAttacker) || (!eligible(victim) && !creatureVictim)
             || attacker == victim || sneaking)
             return std::nullopt;
         // Validate authority before class queries can initialize shared caches.
@@ -1731,7 +1725,7 @@ namespace MWMechanics
             && kind != ESM4::MeleeStrikeKind::ForwardPower && kind != ESM4::MeleeStrikeKind::BackwardPower)
             return std::nullopt;
         const float rawIncoming = weaponContactDamage(world, attacker, item, kind);
-        if (creatureHasSpells(victim))
+        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
             return std::nullopt; // Do not omit Creature passive/contact-effect consequences.
         if (rawIncoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.
@@ -1805,9 +1799,10 @@ namespace MWMechanics
             ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
         auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
         const auto player = world.getPlayerPtr();
-        if (!service || attacker.isEmpty() || (attacker != player && attacker.getType() != ESM::REC_NPC_4)
+        if (!service || attacker.isEmpty()
+            || (attacker != player && attacker.getType() != ESM::REC_NPC_4 && attacker.getType() != ESM::REC_CREA4)
             || item.isEmpty() || item.getType() != ESM::REC_WEAP)
-            throw std::invalid_argument("native ordinary weapon query requires a Player/NPC and equipped weapon");
+            throw std::invalid_argument("native ordinary weapon query requires a native actor and equipped weapon");
         // Reject absent or mismatched authority before the shared class can
         // lazily construct its inventory/custom-data cache.
         if (attacker == player)
@@ -1851,7 +1846,9 @@ namespace MWMechanics
                 settings.push_back(world.getStore().get<ESM4::GameSetting>().search(record.mId));
         const float damage = ESM4::weaponDamage({integer(weapon->mData.type < 2 ? 14 : 16), integer(7),
             integer(0), weapon->mData.damage, ratio, ESM4::combatFatigueRatio(current(10), baseFatigue),
-            contactPowerMultiplier(world, *service, attacker, weapon->mData.type < 2 ? 14 : 16, kind, settings)},
+            // Original5FF4B4..5FF4F1 skips the power multiplier for CREA.
+            attacker.getType() == ESM::REC_CREA4 ? 1.f
+                : contactPowerMultiplier(world, *service, attacker, weapon->mData.type < 2 ? 14 : 16, kind, settings)},
             ESM4::buildPhysicalCombatSettings(settings));
         const auto bonus = attacker == player ? service->getPlayerIntegerValue(42)
             : service->getNonPlayerIntegerValue(attacker, 42);

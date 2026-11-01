@@ -1475,8 +1475,6 @@ namespace MWMechanics
         osg::Vec3f scale(placed, placed, placed);
         mPtr.getClass().adjustScale(mPtr, scale, true);
         const bool creature = mPtr.getType() == ESM::REC_CREA4;
-        if (creature && weapon)
-            return; // Armed Creature contact has a separate native multiplier path.
         const auto* natural = creature ? mPtr.get<ESM4::Creature>()->mBase : nullptr;
         if (natural && !natural->mAttackReach)
             return;
@@ -2531,11 +2529,6 @@ namespace MWMechanics
             auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
             if (equipped != inventory.end())
             {
-                if (creature)
-                {
-                    interrupt();
-                    return false;
-                }
                 weapon = *equipped;
                 const auto id = MWWorld::OblivionProfileServices::nativeItemId(
                     world->getStore(), weapon.getCellRef().getRefId());

@@ -1,6 +1,8 @@
 #include "obliviondropplacement.hpp"
 
 #include "../mwclass/esm4npc.hpp"
+#include "../mwclass/esm4interactive.hpp"
+#include <components/esm4/loadcrea.hpp>
 #include "../mwworld/esmstore.hpp"
 #include <components/esm4/npcplacement.hpp>
 #include <components/nif/nativetransform.hpp>
@@ -15,10 +17,24 @@
 
 namespace MWRender
 {
-    std::optional<Nif::NiTransform> resolveOblivionNpcDropPlacement(
+    std::optional<Nif::NiTransform> resolveOblivionActorDropPlacement(
         const MWWorld::ConstPtr& actor, const MWWorld::ESMStore& store) noexcept
     {
-        if (actor.isEmpty() || actor.getType() != ESM::REC_NPC_4) return std::nullopt;
+        if (actor.isEmpty()) return std::nullopt;
+        if (actor.getType() == ESM::REC_CREA4)
+        {
+            if (!dynamic_cast<const MWClass::ESM4CreatureCustomData*>(actor.getRefData().getCustomData()))
+                return std::nullopt;
+            const auto* placed = actor.getCellRef().getNativeActor();
+            const auto* reference = actor.getCellRef().getNativeReference();
+            if (!placed && !reference) return std::nullopt;
+            const auto* base = store.search<ESM4::Creature>(placed ? placed->mBaseKey : reference->mBaseKey);
+            if (!base || base->mId != (placed ? placed->mBaseObj : reference->mBaseObj)
+                || actor.get<ESM4::Creature>()->mBase != base) return std::nullopt;
+            const auto scale = ESM4::creaturePlacementScale(actor.getCellRef().getScale(), base->mBaseScale);
+            return scale ? ESM4::npcPlacementRoot(actor.getRefData().getPosition(), *scale, {}) : std::nullopt;
+        }
+        if (actor.getType() != ESM::REC_NPC_4) return std::nullopt;
         const auto* data = dynamic_cast<const MWClass::ESM4NpcCustomData*>(actor.getRefData().getCustomData());
         if (!data) return std::nullopt;
         const auto* placed = actor.getCellRef().getNativeActor();

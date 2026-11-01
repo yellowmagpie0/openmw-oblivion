@@ -19,12 +19,11 @@ namespace ESM4
 
 namespace MWRender
 {
-    class ESM4NpcAnimation : public Animation
+    // Shared native carried-weapon identity, attachment and drop preparation.
+    // NPC body/face assembly and Creature body assembly remain separate.
+    class ESM4EquipmentAnimation : public Animation
     {
     public:
-        ESM4NpcAnimation(
-            const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem);
-
         struct CarriedWeaponPose
         {
             MWWorld::ConstPtr mItem;
@@ -75,28 +74,20 @@ namespace MWRender
             const CarriedWeaponDrop& drop, const MWWorld::ESMStore& store) const noexcept;
 
 
-        osg::Vec3f runAnimation(float timepassed) override;
-        void refreshEquipment();
+        virtual void refreshEquipment();
         void showWeapons(bool showWeapon) override;
         void attachArrow() override;
         void detachArrow() override;
 
-    private:
+    protected:
+        ESM4EquipmentAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
+            Resource::ResourceSystem* resourceSystem);
         osg::ref_ptr<osg::Node> insertPart(
             std::string_view model, std::string_view attachBone = {}, std::string_view texture = {},
             bool correctHeadPartOrientation = true, std::vector<PartHolderPtr>* parts = nullptr,
             std::string* sourceHash = nullptr);
         void updateWeapon();
         void updateWeaponParts();
-        std::size_t applyRagdollPose();
-
-        // Works for FO3/FONV/TES5
-        void insertHeadParts(const std::vector<ESM::FormId>& partIds, std::set<uint32_t>& usedHeadPartTypes);
-
-        void updateParts();
-        void updatePartsTES4(const ESM4::Npc& traits);
-        void updatePartsTES5(const ESM4::Npc& traits);
-
         std::vector<PartHolderPtr> mParts;
         // Carried objects have their own lifetime: sheathing must not detach
         // the actor's body or invalidate the face morph geometry.
@@ -115,6 +106,22 @@ namespace MWRender
         std::shared_ptr<const char> mShieldBindingIdentity;
         std::weak_ptr<const char> mCarriedShieldStorageIdentity;
         bool mShowWeapon = false;
+    };
+
+    class ESM4NpcAnimation : public ESM4EquipmentAnimation
+    {
+    public:
+        ESM4NpcAnimation(const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode,
+            Resource::ResourceSystem* resourceSystem);
+        osg::Vec3f runAnimation(float timepassed) override;
+        void refreshEquipment() override;
+
+    private:
+        std::size_t applyRagdollPose();
+        void insertHeadParts(const std::vector<ESM::FormId>& partIds, std::set<uint32_t>& usedHeadPartTypes);
+        void updateParts();
+        void updatePartsTES4(const ESM4::Npc& traits);
+        void updatePartsTES5(const ESM4::Npc& traits);
         std::vector<Tes4FaceMorph> mFaceMorphs;
         float mFaceAnimationTime = 0.f;
         VFS::Path::Normalized mVoiceFile;
@@ -123,7 +130,7 @@ namespace MWRender
 
     /// Animation adapter for native ESM4 creatures. Oblivion stores one group
     /// per KF alongside the creature skeleton rather than in skeleton.kf.
-    class ESM4CreatureAnimation : public Animation
+    class ESM4CreatureAnimation : public ESM4EquipmentAnimation
     {
     public:
         ESM4CreatureAnimation(const MWWorld::Ptr& ptr, std::string_view model,
@@ -132,7 +139,6 @@ namespace MWRender
 
     private:
         std::size_t applyRagdollPose();
-        std::vector<PartHolderPtr> mParts;
     };
 }
 

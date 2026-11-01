@@ -1872,7 +1872,7 @@ namespace MWWorld
                 {
                     if (!actor.isEmpty() && mWorld.mRendering != nullptr)
                         if (auto* animation
-                            = dynamic_cast<MWRender::ESM4NpcAnimation*>(mWorld.mRendering->getAnimation(actor)))
+                            = dynamic_cast<MWRender::ESM4EquipmentAnimation*>(mWorld.mRendering->getAnimation(actor)))
                             animation->refreshEquipment();
                 }
             }

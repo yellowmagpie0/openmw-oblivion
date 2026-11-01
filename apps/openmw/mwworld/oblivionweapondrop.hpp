@@ -7,7 +7,7 @@
 #include <optional>
 #include <span>
 
-namespace MWRender { class ESM4NpcAnimation; class Objects; }
+namespace MWRender { class ESM4EquipmentAnimation; class Objects; }
 namespace MWPhysics { class PhysicsSystem; }
 namespace MWWorld
 {
@@ -16,7 +16,7 @@ namespace MWWorld
     {
         Ptr mActor;
         Ptr mItem;
-        MWRender::ESM4NpcAnimation& mAnimation;
+        MWRender::ESM4EquipmentAnimation& mAnimation;
         // Final wear is prepared on source and reference together. A compound
         // contact may also publish the same condition before the source debit.
         std::optional<float> mConditionAfterWear;
@@ -44,7 +44,7 @@ namespace MWWorld
         Ptr commit(const WorldModel::LooseWeaponPublicationHooks& hooks = {});
     };
 
-    // Actual equipped native ACHR/NPC weapons and carried-left shields require
+    // Actual equipped native actor weapons and NPC carried-left shields require
     // a currently bound carried NIF and an identified native world body. Explicit render context permits owned-asset
     // integration tests; physics must be the supplied World's current owner.
     std::unique_ptr<PreparedEquippedWeaponDrops> prepareEquippedWeaponDrops(

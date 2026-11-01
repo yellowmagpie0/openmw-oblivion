@@ -3136,7 +3136,7 @@ namespace MWWorld
             placement = ESM4::creaturePlacementRoot(resident.getRefData().getPosition(),
                 resident.getCellRef().getScale(), resident.get<ESM4::Creature>()->mBase->mBaseScale);
         else if (resident.getType() == ESM::REC_NPC_4)
-            placement = MWRender::resolveOblivionNpcDropPlacement(resident, mStore);
+            placement = MWRender::resolveOblivionActorDropPlacement(resident, mStore);
         else if (player)
         {
             const auto authored = getOblivionReferenceBaseKey(key);
@@ -3438,7 +3438,7 @@ namespace MWWorld
         }
         if (actor.getType() == ESM::REC_NPC_4)
         {
-            const auto placement = MWRender::resolveOblivionNpcDropPlacement(actor, mStore);
+            const auto placement = MWRender::resolveOblivionActorDropPlacement(actor, mStore);
             if (placement) return *placement;
         }
         if (mPlayer && actor == mPlayer->getPlayer())
@@ -5431,7 +5431,7 @@ namespace MWWorld
             if (change.mBreakDisposition == MWMechanics::OblivionWeaponBreakDisposition::Drop)
             {
                 if (!mRendering || !mPhysics) return nullptr;
-                auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(change.mOwner));
+                auto* animation = dynamic_cast<MWRender::ESM4EquipmentAnimation*>(mRendering->getAnimation(change.mOwner));
                 if (!animation) return nullptr;
                 drops.push_back({change.mOwner, change.mItem, *animation, change.mCondition, false,
                     contactEnchantmentChargeAfter(deltas, change.mOwner, change.mItem)});
@@ -5439,7 +5439,7 @@ namespace MWWorld
         for (const auto& disarm : resolved.mDisarms)
         {
             if (!mRendering || !mPhysics) return nullptr;
-            auto* animation = dynamic_cast<MWRender::ESM4NpcAnimation*>(mRendering->getAnimation(disarm.mOwner));
+            auto* animation = dynamic_cast<MWRender::ESM4EquipmentAnimation*>(mRendering->getAnimation(disarm.mOwner));
             if (!animation) return nullptr;
             drops.push_back({disarm.mOwner, disarm.mItem, *animation, disarmConditionAfterWear(resolved, disarm), true,
                 contactEnchantmentChargeAfter(resolved, disarm.mOwner, disarm.mItem)});
@@ -5471,8 +5471,8 @@ namespace MWWorld
                         && drop.mEnchantmentChargeAfter == contactEnchantmentChargeAfter(deltas, change.mOwner, change.mItem);
                 });
                 if (change.mCondition != 0 || change.mOwner.isEmpty() || change.mOwner == getPlayerPtr()
-                    || change.mOwner.getType() != ESM::REC_NPC_4 || count != 1)
-                    throw std::invalid_argument("native contact drop requires one matching broken NPC weapon");
+                    || (change.mOwner.getType() != ESM::REC_NPC_4 && change.mOwner.getType() != ESM::REC_CREA4) || count != 1)
+                    throw std::invalid_argument("native contact drop requires one matching broken actor weapon");
             }
         for (const auto& disarm : resolved.mDisarms)
         {

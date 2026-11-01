@@ -1,0 +1,90 @@
+{
+  "requirement": "S4 C1 equipped Creature production melee, carried weapon and actual broken-item drop with fresh continuity",
+  "original_executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "independent_checks": {
+    "caller": {
+      "cases": 8,
+      "path": "5FF487..5FF519; actual Creature vtable A710F4+170 ->4D9B40; base form type24;4BB060 skill mapping",
+      "expectation": "Weapon types0..3 use Blade/Blunt aliases; ordinary and standing-power multiplier1, bypassing NPC power helper.",
+      "boundaries": "Initialized multiplier1 supplied;484F80 damage query stubbed20. Existing1152 weapon-entry cases retain arithmetic scope.",
+      "evidence": "build/oblivion-compat/m15/S4/armed-creature-work-01/caller-verification.json"
+    },
+    "final_owner": {
+      "cases": 6,
+      "path": "4902FC..4903D1 with actual Creature actor/type24",
+      "expectation": "Preserve explicit owner; unclaimed owned cell fallback uses actual Creature base.",
+      "boundaries": "Retained post-transfer owner slice; cell claim/allocation/change-mark boundaries declared. Not original full inventory/runtime.",
+      "evidence": "build/oblivion-compat/m15/S4/armed-creature-work-01/owner-probe/verification.json"
+    },
+    "reused": [
+      "native-weapon-entry-oracle-02/report.json:1152 original arithmetic cases",
+      "drop-followup-routing-05/verification.json:192 NPC/Creature follow-up cases; Creature bypasses NPC replacement branch"
+    ]
+  },
+  "focused_world_tests": [
+    "CreatureWeaponQueryUsesCombatAliasesAndPreservesWearAndImmunityAcrossPowerKinds",
+    "CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost",
+    "CreatureWeaponFactoryUsesSharedAttachmentAndAtomicallyPublishesOrRejectsBreak"
+  ],
+  "query_inputs": {
+    "weapon_types": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "condition": [
+      50,
+      100
+    ],
+    "fatigue": [
+      0,
+      35
+    ],
+    "strikes": [
+      "ordinary",
+      "standing power"
+    ],
+    "combat_alias": 10,
+    "decoy_blade_blunt": 99,
+    "numeric_tolerance": 0.0001,
+    "additional_cases": [
+      "quest/nonquest break",
+      "full normal immunity",
+      "duplicate consumption before/after binary restore",
+      "successful publication",
+      "stale Creature scale rejection",
+      "scene rejection rollback",
+      "Creature owned-cell fallback"
+    ]
+  },
+  "runtime_fixture": {
+    "template": "Oblivion.esm:02a81c TestCreatureGoblin1handed",
+    "carried_weapon": "Oblivion.esm:000c0c IronLongsword",
+    "condition": 0.1,
+    "player_weapon": "Oblivion.esm:090615 RustyShortsword condition50",
+    "player_block": 50,
+    "policy": "Existing canonical recoil-aware OnActivate stationary script; production intent/controller/contact only. No outcome injection.",
+    "builder": "build/oblivion-compat/m15/S4/armed-creature-work-01/stage.py",
+    "profile": "build/oblivion-compat/m15/S4/armed-creature-work-01/profile.json"
+  },
+  "runtime_expectations": [
+    "One Creature hit2 spends Fatigue9 and wears source weapon to0; actual loose body/reference published once.",
+    "Player Journeyman weapon block costs0 and preserves blocking item; BlockHit and Creature Recoil recover.",
+    "Player return3 costs7.8, applies one native Health/condition delta. Range4 and named-partition5 misses preserve receiving resources, gear and combat RNG.",
+    "Fresh starts from actual active reaction with existing falling sword; no old contact/wear/drop/audio replay.",
+    "Each binary/live snapshot exact. Authoritative packed source velocity exact; only existing audited redundant world velocity1ULP projection permitted.",
+    "Settled dropped-item endpoint uses existing20-unit rest-pose and <=.001 jitter policy; intrinsic body/asset/reference/owner/condition identities remain strict."
+  ],
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/armed-creature-work-01/checkpoint-verification.json",
+  "limits": "Spell-free first-person keyboard/mouse stock Goblin course. Creature shield/counter/general-hit and other effect branches remain separate. Active BlockHit/Recoil capture has unclassified thin geometry lines; broader Goblin appearance and V6 remain open. No T7/F8 or full S4 claim.",
+  "runtime_results": {
+    "exact_saved_live_pairs": 28,
+    "process_epochs": 4,
+    "fresh_source_restorations": 2,
+    "strict_endpoint_fields": 25,
+    "settled_loose_policy": "Existing20scene-unit rest-pose bound and <=.001 resting jitter; source nativepacked exact, redundant velocity projection <=1float32ULP",
+    "reviewed_captures": 28,
+    "engine_tests_per_build": 2075
+  }
+}

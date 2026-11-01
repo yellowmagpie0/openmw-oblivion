@@ -7243,6 +7243,93 @@ namespace
         EXPECT_FALSE(service.isOrdinaryMeleeContactPending(queued, key));
     }
 
+    TEST(OblivionWorldTest, CreatureWeaponQueryUsesCombatAliasesAndPreservesWearAndImmunityAcrossPowerKinds)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        const auto actor = addEquipmentCreature(fixture), victim = addNativeNpc(fixture, 0x901);
+        auto base = *actor.get<ESM4::Creature>()->mBase;
+        base.mBaseConfig.tes4.flags |= ESM4::Creature::TES4_WeapAndShield;
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        ASSERT_TRUE(world.activateOblivionActor(actor)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Weapon);
+        auto& service = *world.getOblivionCombatService();
+        unsigned settingId = 0x950;
+        for (auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", .5f},
+            {"fDamageWeaponMult", .5f}, {"fDamageSkillBase", .2f}, {"fDamageSkillMult", 1.5f},
+            {"fDamageWeaponConditionBase", .5f}, {"fDamageWeaponConditionMult", .5f},
+            {"fDamageStrengthBase", .75f}, {"fDamageStrengthMult", .5f}, {"fActorLuckSkillMult", .4f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {settingId, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", settingId++));
+        }
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, actor);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+            return state.serializeBinary();
+        };
+        for (unsigned type = 0; type < 4; ++type)
+        {
+            const auto weaponKey = addEquipmentWeapon(fixture, 0x940 + type);
+            auto weapon = *store.search<ESM4::Weapon>(weaponKey);
+            weapon.mData.type = type; weapon.mData.damage = 100;
+            store.getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+            ESM4::RuntimeInventoryItem entry; entry.mBase = weaponKey; entry.mCount = 1;
+            entry.mCondition = 100; entry.mEquippedSlots = ESM4::InventorySlotWeapon;
+            installEquipmentInventory(fixture, actor, {entry});
+            auto& inventory = actor.getClass().getInventoryStore(actor);
+            const auto item = *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+            for (const float condition : {50.f, 100.f})
+            for (const float fatigue : {0.f, 35.f})
+            {
+                SCOPED_TRACE(::testing::Message() << type << ':' << condition << ':' << fatigue);
+                item.getCellRef().setNativeItemCondition(condition);
+                auto values = *service.findActorValues(actor.getCellRef().getFormKey());
+                values.mValues[0] = {40, {}}; values.mValues[7] = {50, {}};
+                values.mValues[12] = {10, {}}; values.mValues[14] = values.mValues[16] = {99, {}};
+                values.mValues[10] = {35, {0, 0, fatigue - 35}};
+                service.publishNonPlayerValues(actor, values);
+                EXPECT_EQ(service.getNonPlayerValue(actor, type < 2 ? 14 : 16), 10);
+                // Original weapon-entry control at skill10/Luck50/Strength40:
+                // 100 * .5 * (.2 + .1 * 1.5) * (.75 + .4 * .5) =16.625.
+                const float expected = 16.625f * (condition == 50 ? .75f : 1.f) * (fatigue == 0 ? .5f : 1.f);
+                const auto before = snapshot();
+                EXPECT_NEAR(MWMechanics::oblivionOrdinaryWeaponContactDamage(world, actor, item), expected, .0001f);
+                for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+                {
+                    const auto contact = MWMechanics::resolveOblivionWeaponMeleeContact(world, actor, victim, item, 0, false, kind);
+                    ASSERT_TRUE(contact); EXPECT_FALSE(contact->mImmune);
+                    EXPECT_NEAR(contact->mHealth, expected, .0001f);
+                    ASSERT_TRUE(contact->mConditionAfterWear);
+                    EXPECT_LT(*contact->mConditionAfterWear, condition);
+                    EXPECT_EQ(contact->mBreakDisposition, MWMechanics::OblivionWeaponBreakDisposition::None);
+                }
+                EXPECT_EQ(snapshot(), before);
+            }
+            for (const bool quest : {false, true})
+            {
+                weapon.mFlags = quest ? ESM4::Rec_Persistent : 0;
+                store.getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+                item.getCellRef().setNativeItemCondition(.01f);
+                const auto before = snapshot();
+                const auto hit = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, actor, victim, item, 0, false);
+                ASSERT_TRUE(hit); EXPECT_EQ(hit->mConditionAfterWear, 0.f);
+                EXPECT_EQ(hit->mBreakDisposition, quest ? MWMechanics::OblivionWeaponBreakDisposition::Unequip
+                    : MWMechanics::OblivionWeaponBreakDisposition::Drop);
+                EXPECT_EQ(snapshot(), before);
+            }
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 65, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 100));
+            const auto before = snapshot();
+            const auto immune = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, actor, victim, item, 0, false);
+            ASSERT_TRUE(immune); EXPECT_TRUE(immune->mImmune); EXPECT_EQ(immune->mHealth, 0);
+            EXPECT_FALSE(immune->mConditionAfterWear); EXPECT_FALSE(immune->mRandomTransition);
+            EXPECT_EQ(snapshot(), before);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 65, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, 0));
+        }
+    }
+
     TEST(OblivionWorldTest, NativeOrdinaryWeaponQueryMatchesOriginalEntryOnPlayerAndNpcBindings)
     {
         NativeWorldFixture fixture;
@@ -12792,7 +12879,7 @@ TEST(OblivionWorldTest, NativeNpcDropPlacementUsesWinningRaceSexAndRejectsColdOr
         NativeWorldFixture fixture;
         const auto actor = addNativeNpc(fixture, 0x900);
         auto& store = fixture.mWorld.getStore();
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store));
         EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
         ESM4::Race race{}; race.mId = {0x860, 0};
         const auto raceKey = ESM::FormKey::content("headless.esm", 0x860);
@@ -12809,12 +12896,12 @@ TEST(OblivionWorldTest, NativeNpcDropPlacementUsesWinningRaceSexAndRejectsColdOr
         position.pos[0] = 12.25f; position.pos[1] = -9.5f; position.pos[2] = 1001.125f;
         position.rot[0] = .7f; position.rot[1] = -.9f; position.rot[2] = 0;
         actor.getRefData().setPosition(position); actor.getCellRef().setScale(.75f);
-        auto result = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        auto result = MWRender::resolveOblivionActorDropPlacement(actor, store);
         ASSERT_TRUE(result);
         EXPECT_EQ(result->mTranslation, position.asVec3());
         EXPECT_EQ(result->mScale, .75f);
         actor.getCellRef().setScale(-.75f);
-        auto negativeScale = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        auto negativeScale = MWRender::resolveOblivionActorDropPlacement(actor, store);
         ASSERT_TRUE(negativeScale); EXPECT_EQ(negativeScale->mScale, .75f);
         osg::Vec3f renderedScale(-.75f,-.75f,-.75f);
         actor.getClass().adjustScale(actor, renderedScale, true);
@@ -12825,34 +12912,34 @@ TEST(OblivionWorldTest, NativeNpcDropPlacementUsesWinningRaceSexAndRejectsColdOr
         EXPECT_EQ(result->mRotation.mValues[1][1], female ? 1.1f : .8f);
         EXPECT_EQ(result->mRotation.mValues[2][2], female ? .9f : 1.2f);
         position.rot[2] = -1.1f; actor.getRefData().setPosition(position);
-        result = MWRender::resolveOblivionNpcDropPlacement(actor, store);
+        result = MWRender::resolveOblivionActorDropPlacement(actor, store);
         ASSERT_TRUE(result);
         EXPECT_EQ(result->mScale, .75f);
         EXPECT_LT(result->mRotation.mValues[0][1], 0);
         auto* placed = const_cast<ESM4::ActorCharacter*>(actor.getCellRef().getNativeActor());
         ASSERT_NE(placed, nullptr);
         const auto baseId = placed->mBaseObj; placed->mBaseObj = {0xdead, 0};
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); placed->mBaseObj = baseId;
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store)); placed->mBaseObj = baseId;
         MWWorld::ESMStore unrelated;
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, unrelated));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, unrelated));
         auto* data = dynamic_cast<MWClass::ESM4NpcCustomData*>(actor.getRefData().getCustomData());
         ASSERT_NE(data, nullptr);
         data->mIsFemale = !female;
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store));
         data->mIsFemale = female;
         const auto* traits = data->mTraits; data->mTraits = nullptr;
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mTraits = traits;
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store)); data->mTraits = traits;
         const auto* nativeBase = data->mBaseData; data->mBaseData = nullptr;
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mBaseData = nativeBase;
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store)); data->mBaseData = nativeBase;
         const auto* cachedRace = data->mRace; data->mRace = &race;
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); data->mRace = cachedRace;
-        EXPECT_TRUE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store)); data->mRace = cachedRace;
+        EXPECT_TRUE(MWRender::resolveOblivionActorDropPlacement(actor, store));
         ASSERT_TRUE(store.getWritable<ESM4::Race>().eraseStatic(ESM::RefId(race.mId)));
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store)); // Do not borrow erased race.
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store)); // Do not borrow erased race.
         actor.getRefData().setCustomData(nullptr);
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement(actor, store));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement(actor, store));
         EXPECT_EQ(actor.getRefData().getCustomData(), nullptr);
-        EXPECT_FALSE(MWRender::resolveOblivionNpcDropPlacement({}, store));
+        EXPECT_FALSE(MWRender::resolveOblivionActorDropPlacement({}, store));
     }
 }
 
@@ -22783,6 +22870,8 @@ TEST(OblivionWorldTest, CompoundTwoWeaponBreakPublicationConsumesOneContactOrPre
 
 namespace
 {
+    std::string nativeGetUpActorNif(std::string_view helperName = "Helper");
+
     struct NativeWeaponFactoryFixture : NativeWorldFixture
     {
         struct Windows : TestingOpenMW::InventoryWindowManager
@@ -22809,18 +22898,31 @@ namespace
         osg::ref_ptr<CompoundWeaponSceneRoot> mRoot = new CompoundWeaponSceneRoot;
         std::unique_ptr<MWRender::Objects> mObjects;
         MWPhysics::PhysicsSystem* mPhysics;
-        std::unique_ptr<MWRender::ESM4NpcAnimation> mAnimation;
+        std::unique_ptr<MWRender::ESM4EquipmentAnimation> mAnimation;
         explicit NativeWeaponFactoryFixture(bool childTarget = false, std::uint16_t collisionFlags = 1,
-            bool rotatedRoot = false, bool scabbard = false, bool shield = false, bool wornShield = true)
+            bool rotatedRoot = false, bool scabbard = false, bool shield = false, bool wornShield = true,
+            bool creature = false)
             : NativeWorldFixture(false,false,false,{},TestingOpenMW::currentTestDirPath()/"lua_libs")
         {
             auto& store = mWorld.getStore();
-            const auto draft = addNativeNpc(*this, 0x900);
+            if (creature && shield) throw std::invalid_argument("Creature shield assembly is outside weapon fixture");
+            const auto draft = creature ? addEquipmentCreature(*this) : addNativeNpc(*this, 0x900);
             mActor = draft.getCell()->moveTo(draft, mResident.getCell());
-            auto npc = *mActor.get<ESM4::Npc>()->mBase;
-            const char* skeletonModel=shield ? "factory-shield-skeleton.osgt" : "factory-skeleton.osgt";
-            npc.mModel = skeletonModel;
-            store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+            ESM4::Npc npc{};
+            const char* skeletonModel = creature ? "factory-creature-skeleton.nif"
+                : shield ? "factory-shield-skeleton.osgt" : "factory-skeleton.osgt";
+            if (creature)
+            {
+                auto base = *mActor.get<ESM4::Creature>()->mBase;
+                base.mModel = skeletonModel; base.mBaseScale = 1.f;
+                base.mBaseConfig.tes4.flags |= ESM4::Creature::TES4_WeapAndShield;
+                store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+            }
+            else
+            {
+                npc = *mActor.get<ESM4::Npc>()->mBase; npc.mModel = skeletonModel;
+                store.getWritable<ESM4::Npc>().insertStatic(npc, npc.mFormKey);
+            }
             auto weapon = *mResident.get<ESM4::Weapon>()->mBase;
             weapon.mModel = "factory-weapon.nif";
             if (shield) weapon.mData.type=0;
@@ -22862,7 +22964,14 @@ namespace
                     anchor->setName(name); anchor->setDataVariance(osg::Object::DYNAMIC);
                     anchor->setMatrix(osg::Matrix::translate(translation)); skeleton->addChild(anchor);
                 }
-            if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes" / skeletonModel).string()))
+            if (creature)
+            {
+                const auto bytes = nativeGetUpActorNif("Weapon");
+                std::ofstream file(mDirectory / "meshes" / skeletonModel, std::ios::binary);
+                file.write(bytes.data(), bytes.size());
+                if (!file) throw std::runtime_error("cannot write owned Creature skeleton");
+            }
+            else if (!osgDB::writeNodeFile(*skeleton, (mDirectory / "meshes" / skeletonModel).string()))
                 throw std::runtime_error("cannot write owned factory skeleton");
             {
                 const auto bytes = nativeCarriedWeaponNif(.5f, childTarget, collisionFlags, rotatedRoot, scabbard);
@@ -22908,7 +23017,9 @@ namespace
             mActor.getRefData().setPosition(position);
             osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
             placement->setPosition(position.asVec3()); mActor.getRefData().setBaseNode(placement);
-            mAnimation = std::make_unique<MWRender::ESM4NpcAnimation>(mActor,placement,&mResources);
+            if (creature)
+                mAnimation = std::make_unique<MWRender::ESM4CreatureAnimation>(mActor, skeletonModel, placement, &mResources);
+            else mAnimation = std::make_unique<MWRender::ESM4NpcAnimation>(mActor,placement,&mResources);
             mAnimation->showWeapons(true);
             mObjects = std::make_unique<MWRender::Objects>(&mResources,mRoot,mUnref);
             mPhysics = &mWorld.initializePhysics(new osg::Group);
@@ -22991,6 +23102,130 @@ TEST(OblivionWorldTest, NativeWeaponFactoryPublishesBoundNifSourceWearIdentityRe
     EXPECT_TRUE(world.dispatchOblivionEquipmentNotifications()); EXPECT_EQ(listener.mCalls,1);
     EXPECT_TRUE(plan->commit().isEmpty());
     inventory.setContListener(nullptr);
+}
+
+TEST(OblivionWorldTest, CreatureArmedContactConsumesOrdinaryAndPowerWindowsOnceWithNativeFatigueCost)
+{
+    for (const bool power : {false, true})
+    {
+        SCOPED_TRACE(power);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, false, true, true);
+        auto& world = fixture.mWorld; auto& service = *world.getOblivionCombatService();
+        const auto source = fixture.mActor;
+        const auto draft = addNativeNpc(fixture, 0x901, 100, 0x802);
+        const auto victim = draft.getCell()->moveTo(draft, source.getCell());
+        ASSERT_TRUE(world.activateOblivionActor(source)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        source.getRefData().setOblivionCanSpendFatigue(true);
+        source.getClass().getCreatureStats(source).setDrawState(MWMechanics::DrawState::Weapon);
+        auto weapon = *world.getStore().search<ESM4::Weapon>(ESM::FormKey::content("headless.esm", 0x940));
+        weapon.mData.type = 0; weapon.mData.damage = 10; weapon.mEnchantment = {};
+        world.getStore().getWritable<ESM4::Weapon>().insertStatic(weapon, ESM::FormKey::content("headless.esm", 0x940));
+        for (const auto actor : {source, victim})
+        {
+            auto position = actor.getRefData().getPosition();
+            position.pos[0] = 100; position.pos[1] = actor == source ? 20 : 60; position.pos[2] = 30;
+            position.rot[2] = actor == source ? 0 : osg::PI;
+            actor.getRefData().setPosition(position);
+            osg::ref_ptr<SceneUtil::PositionAttitudeTransform> node = new SceneUtil::PositionAttitudeTransform;
+            node->setPosition(position.asVec3()); actor.getRefData().setBaseNode(node);
+            fixture.mPhysics->addActor(actor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+        }
+        const auto key = source.getCellRef().getFormKey();
+        service.initializeConstructedActorProcess(key);
+        const auto id = service.beginMeleeStrike(key,
+            power ? ESM4::MeleeStrikeKind::StandingPower : ESM4::MeleeStrikeKind::Left,
+            power ? "onehandattackpower" : "onehandattackleft", 1, ESM::FormKey::content("headless.esm", 0x940));
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        if (power)
+        {
+            const std::array<float, 3> keys{0, .2f, 1};
+            service.advanceAnimationClock(key, 0);
+            ASSERT_TRUE(service.setMeleeSequenceTiming(id, key, {}));
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, 0, 1, 0, 1, keys));
+            ASSERT_TRUE(service.advancePowerMeleeSequence(id, key, .3f, 1, 0, 1, keys));
+        }
+        else ASSERT_TRUE(service.advanceOrdinaryMeleePhase(id, key, 0, .3f, {0, .2f, .6f, 1}));
+        const auto expected = MWMechanics::resolveOblivionWeaponMeleeContact(world, source, victim,
+            fixture.mItem, 0, false, power ? ESM4::MeleeStrikeKind::StandingPower : ESM4::MeleeStrikeKind::Left);
+        ASSERT_TRUE(expected);
+        const auto health = service.getNonPlayerValue(victim, 8), fatigue = service.getNonPlayerValue(source, 10);
+        const auto hit = MWMechanics::commitOblivionMeleeContact(world, id, source, victim, 64, 10, 0, false);
+        ASSERT_TRUE(hit); EXPECT_EQ(hit->mVictim, victim);
+        EXPECT_NEAR(hit->mDamage.mHealth, expected->mHealth, .0001f);
+        EXPECT_NEAR(service.getNonPlayerValue(victim, 8), health - expected->mHealth, .0001f);
+        EXPECT_NEAR(service.getNonPlayerValue(source, 10), fatigue - 9, .0001f); // CREA power does not multiply expenditure.
+        EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), expected->mConditionAfterWear);
+        EXPECT_TRUE(service.isActionConsumed(id));
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, source);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+            return state;
+        };
+        const auto saved = snapshot().serializeBinary();
+        EXPECT_FALSE(MWMechanics::commitOblivionMeleeContact(world, id, source, victim, 64, 10, 0, false));
+        EXPECT_EQ(snapshot().serializeBinary(), saved);
+        service.restore(ESM4::RuntimeState::deserializeBinary(saved), world.getStore());
+        EXPECT_FALSE(MWMechanics::commitOblivionMeleeContact(world, id, source, victim, 64, 10, 0, false));
+        EXPECT_EQ(snapshot().serializeBinary(), saved);
+    }
+}
+
+TEST(OblivionWorldTest, CreatureWeaponFactoryUsesSharedAttachmentAndAtomicallyPublishesOrRejectsBreak)
+{
+    for (const int outcome : {0, 1, 2, 3})
+    {
+        SCOPED_TRACE(outcome);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, false, true, true);
+        auto& world = fixture.mWorld;
+        auto& inventory = fixture.mActor.getClass().getInventoryStore(fixture.mActor);
+        ASSERT_TRUE(fixture.mAnimation->captureCarriedWeaponPose(fixture.mItem));
+        if (outcome == 3)
+        {
+            ESM4::Faction faction{}; faction.mId = {0x850, 0};
+            auto& store = world.getStore();
+            store.getWritable<ESM4::Faction>().insertStatic(faction, ESM::FormKey::content("headless.esm", 0x850));
+            auto cell = *store.get<ESM4::Cell>().find(fixture.mActor.getCell()->getCell()->getId());
+            cell.mOwner = faction.mId;
+            store.getWritable<ESM4::Cell>().insertStatic(cell, cell.mFormKey);
+        }
+        const auto serial = world.captureOblivionRuntimeState().mNextDynamicSerial;
+        auto plan = fixture.prepare(); ASSERT_TRUE(plan->isValid());
+        if (outcome == 1)
+        {
+            auto* base = const_cast<ESM4::Creature*>(fixture.mActor.get<ESM4::Creature>()->mBase);
+            base->mBaseScale = 2.f;
+            EXPECT_FALSE(plan->isValid()); EXPECT_TRUE(plan->commit().isEmpty());
+        }
+        else if (outcome == 2)
+        {
+            fixture.mRoot->mFailure = CompoundWeaponSceneRoot::Failure::Reject;
+            EXPECT_THROW(plan->commit(), std::runtime_error);
+        }
+        else
+        {
+            const auto reference = plan->commit(); ASSERT_FALSE(reference.isEmpty());
+            EXPECT_EQ(reference.getCellRef().getNativeItemCondition(), 0.f);
+            EXPECT_EQ(reference.getCellRef().getEnchantmentCharge(), 7.25f);
+            EXPECT_EQ(reference.getCellRef().getPosition().asVec3(), osg::Vec3f(100,20,30));
+            EXPECT_EQ(reference.getCellRef().getNativeDropRelations().mDropper, fixture.mActor.getCellRef().getFormKey());
+            EXPECT_EQ(reference.getCellRef().getOwner(), outcome == 3
+                ? ESM::RefId(fixture.mActor.get<ESM4::Creature>()->mBase->mId) : ESM::RefId{});
+            EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 0);
+            EXPECT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+            EXPECT_EQ(fixture.mPhysics->looseObjectOwners(), std::vector<MWWorld::Ptr>{reference});
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, serial + 1);
+            EXPECT_TRUE(plan->commit().isEmpty());
+        }
+        if (outcome == 1 || outcome == 2)
+        {
+            EXPECT_EQ(fixture.mItem.getCellRef().getCount(), 1);
+            EXPECT_EQ(fixture.mItem.getCellRef().getNativeItemCondition(), 50.f);
+            EXPECT_EQ(*inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), fixture.mItem);
+            EXPECT_TRUE(fixture.mPhysics->looseObjectOwners().empty());
+            EXPECT_TRUE(fixture.mActor.getCellRef().getNativeDropRelations().empty());
+            EXPECT_EQ(world.captureOblivionRuntimeState().mNextDynamicSerial, serial);
+        }
+    }
 }
 
 TEST(OblivionWorldTest, NativeWeaponFactoryRejectsLateSourcesAndRollsBackSceneBeforeAnyDebit)
@@ -36944,7 +37179,7 @@ TEST(OblivionWorldTest, NativePackageQueriesDistinguishAuthoredProgressAndConstr
 
 namespace
 {
-    std::string nativeGetUpActorNif()
+    std::string nativeGetUpActorNif(std::string_view helperName)
     {
         const auto bytes = [](const auto& value) {
             return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
@@ -36987,7 +37222,7 @@ namespace
         data += bytes(std::int32_t{-1}) + bytes(std::uint16_t{0xd})
             + bytes(1.f) + bytes(0.f) + bytes(0.f) + bytes(1.f) + bytes(std::int32_t{2})
             + bytes(std::uint32_t{2}) + bytes(0.f) + bytes(1.f) + bytes(1.f) + bytes(1.f) + bytes(1.f) + bytes(1.f);
-        data += node("Helper", 8, {});
+        data += node(helperName, 8, {});
         return data + bytes(std::uint32_t{1}) + bytes(std::int32_t{0});
     }
 }

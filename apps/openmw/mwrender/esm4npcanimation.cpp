@@ -57,9 +57,20 @@ namespace MWRender
         return ESM4::bipedModelForSex(rec->mModelMale, rec->mModelFemale, isFemale).getOriginal();
     }
 
+    ESM4EquipmentAnimation::ESM4EquipmentAnimation(const MWWorld::Ptr& ptr,
+        osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
+        : Animation(ptr, std::move(parentNode), resourceSystem)
+    {
+    }
+
+    void ESM4EquipmentAnimation::refreshEquipment()
+    {
+        updateWeapon();
+    }
+
     ESM4NpcAnimation::ESM4NpcAnimation(
         const MWWorld::Ptr& ptr, osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
-        : Animation(ptr, std::move(parentNode), resourceSystem)
+        : ESM4EquipmentAnimation(ptr, std::move(parentNode), resourceSystem)
     {
         const std::string skeleton = mPtr.getClass().getCorrectedModel(mPtr);
         setObjectRoot(skeleton, true, true, false);
@@ -119,23 +130,23 @@ namespace MWRender
         updateWeapon();
     }
 
-    void ESM4NpcAnimation::showWeapons(bool showWeapon)
+    void ESM4EquipmentAnimation::showWeapons(bool showWeapon)
     {
         mShowWeapon = showWeapon;
         updateWeapon();
     }
 
-    void ESM4NpcAnimation::attachArrow()
+    void ESM4EquipmentAnimation::attachArrow()
     {
         attachOblivionArrow();
     }
 
-    void ESM4NpcAnimation::detachArrow()
+    void ESM4EquipmentAnimation::detachArrow()
     {
         detachOblivionArrow();
     }
 
-    void ESM4NpcAnimation::updateWeapon()
+    void ESM4EquipmentAnimation::updateWeapon()
     {
         detachOblivionArrow();
         mWeaponBindingIdentity.reset();
@@ -150,11 +161,19 @@ namespace MWRender
         refreshAnimationBindings();
     }
 
-    void ESM4NpcAnimation::updateWeaponParts()
+    void ESM4EquipmentAnimation::updateWeaponParts()
     {
-        const ESM4::Npc* traits = MWClass::ESM4Npc::getTraitsRecord(mPtr);
-        if (!mShowWeapon || mObjectRoot == nullptr || traits == nullptr || !traits->mIsTES4)
-            return;
+        if (!mShowWeapon || mObjectRoot == nullptr) return;
+        if (mPtr.getType() == ESM::REC_CREA4)
+        {
+            if (!(mPtr.get<ESM4::Creature>()->mBase->mBaseConfig.tes4.flags & ESM4::Creature::TES4_WeapAndShield))
+                return;
+        }
+        else
+        {
+            const ESM4::Npc* traits = MWClass::ESM4Npc::getTraitsRecord(mPtr);
+            if (!traits || !traits->mIsTES4) return;
+        }
 
         // Read the same live item instance used by the contact dispatcher.
         // Selecting a second item from the saved native inventory would hide
@@ -188,7 +207,7 @@ namespace MWRender
         }
     }
 
-    std::optional<ESM4NpcAnimation::CarriedWeaponPose> ESM4NpcAnimation::captureCarriedWeaponPose(
+    std::optional<ESM4EquipmentAnimation::CarriedWeaponPose> ESM4EquipmentAnimation::captureCarriedWeaponPose(
         const MWWorld::ConstPtr& item) const
     {
         if (!mShowWeapon || !mWeaponBindingIdentity || mCarriedWeaponSourceHash.size() != 16
@@ -212,7 +231,7 @@ namespace MWRender
         return result;
     }
 
-    bool ESM4NpcAnimation::isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept
+    bool ESM4EquipmentAnimation::isCurrentCarriedWeaponPose(const CarriedWeaponPose& pose) const noexcept
     {
         try
         {
@@ -240,7 +259,7 @@ namespace MWRender
         }
     }
 
-    std::optional<ESM4NpcAnimation::CarriedShieldPose> ESM4NpcAnimation::captureCarriedShieldPose(
+    std::optional<ESM4EquipmentAnimation::CarriedShieldPose> ESM4EquipmentAnimation::captureCarriedShieldPose(
         const MWWorld::ConstPtr& item) const
     {
         if (!mShieldBindingIdentity || mCarriedShieldStorageIdentity.expired() || item.isEmpty() || item != mCarriedShield
@@ -257,7 +276,7 @@ namespace MWRender
         return result;
     }
 
-    bool ESM4NpcAnimation::isCurrentCarriedShieldPose(const CarriedShieldPose& pose) const noexcept
+    bool ESM4EquipmentAnimation::isCurrentCarriedShieldPose(const CarriedShieldPose& pose) const noexcept
     {
         try
         {
@@ -291,7 +310,7 @@ namespace MWRender
         catch (...) { return false; }
     }
 
-    std::optional<ESM4NpcAnimation::CarriedWeaponBody> ESM4NpcAnimation::captureCarriedWeaponBody(
+    std::optional<ESM4EquipmentAnimation::CarriedWeaponBody> ESM4EquipmentAnimation::captureCarriedWeaponBody(
         const MWWorld::ConstPtr& item) const
     {
         auto pose = captureCarriedWeaponPose(item);
@@ -310,13 +329,13 @@ namespace MWRender
         return result;
     }
 
-    bool ESM4NpcAnimation::isCurrentCarriedWeaponBody(const CarriedWeaponBody& body) const noexcept
+    bool ESM4EquipmentAnimation::isCurrentCarriedWeaponBody(const CarriedWeaponBody& body) const noexcept
     {
         return body.mDefinition && body.mDefinition->mSourceHash == body.mPose.mSourceHash
             && isCurrentCarriedWeaponPose(body.mPose);
     }
 
-    std::optional<ESM4NpcAnimation::CarriedWeaponDrop> ESM4NpcAnimation::captureCarriedWeaponDrop(
+    std::optional<ESM4EquipmentAnimation::CarriedWeaponDrop> ESM4EquipmentAnimation::captureCarriedWeaponDrop(
         const MWWorld::ConstPtr& item, const Nif::NiTransform& placement) const
     {
         auto body = captureCarriedWeaponBody(item);
@@ -339,7 +358,7 @@ namespace MWRender
         return result;
     }
 
-    bool ESM4NpcAnimation::isCurrentCarriedWeaponDrop(
+    bool ESM4EquipmentAnimation::isCurrentCarriedWeaponDrop(
         const CarriedWeaponDrop& drop, const Nif::NiTransform& placement) const noexcept
     {
         if (!isCurrentCarriedWeaponBody(drop.mBody) || !mNodeMapCreated
@@ -353,22 +372,22 @@ namespace MWRender
             && drop.mAnchor.matchesCurrentScene(placement);
     }
 
-    std::optional<ESM4NpcAnimation::CarriedWeaponDrop> ESM4NpcAnimation::captureCarriedWeaponDrop(
+    std::optional<ESM4EquipmentAnimation::CarriedWeaponDrop> ESM4EquipmentAnimation::captureCarriedWeaponDrop(
         const MWWorld::ConstPtr& item, const MWWorld::ESMStore& store) const
     {
-        const auto placement = resolveOblivionNpcDropPlacement(mPtr, store);
+        const auto placement = resolveOblivionActorDropPlacement(mPtr, store);
         return placement ? captureCarriedWeaponDrop(item, *placement) : std::nullopt;
     }
 
-    bool ESM4NpcAnimation::isCurrentCarriedWeaponDrop(
+    bool ESM4EquipmentAnimation::isCurrentCarriedWeaponDrop(
         const CarriedWeaponDrop& drop, const MWWorld::ESMStore& store) const noexcept
     {
         if (!isCurrentCarriedWeaponBody(drop.mBody)) return false;
-        const auto placement = resolveOblivionNpcDropPlacement(mPtr, store);
+        const auto placement = resolveOblivionActorDropPlacement(mPtr, store);
         return placement && isCurrentCarriedWeaponDrop(drop, *placement);
     }
 
-    osg::ref_ptr<osg::Node> ESM4NpcAnimation::insertPart(
+    osg::ref_ptr<osg::Node> ESM4EquipmentAnimation::insertPart(
         std::string_view model, std::string_view attachBone, std::string_view texture,
         bool correctHeadPartOrientation, std::vector<PartHolderPtr>* parts, std::string* sourceHash)
     {
@@ -1233,7 +1252,7 @@ namespace MWRender
 
     ESM4CreatureAnimation::ESM4CreatureAnimation(const MWWorld::Ptr& ptr, std::string_view model,
         osg::ref_ptr<osg::Group> parentNode, Resource::ResourceSystem* resourceSystem)
-        : Animation(ptr, std::move(parentNode), resourceSystem)
+        : ESM4EquipmentAnimation(ptr, std::move(parentNode), resourceSystem)
     {
         mPtr.getRefData().setOblivionCanSpendFatigue(false);
         const VFS::Path::Normalized source(model);
