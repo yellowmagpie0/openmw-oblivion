@@ -172,6 +172,10 @@ namespace
             write("meshes/missingroot.kf", kf(2, "Missing"));
             write("meshes/duplicate.kf", kf(3, "Bip01", true));
             write("meshes/empty.kf", kf(0, "Bip01", false, true));
+            indexFiles();
+        }
+        void indexFiles()
+        {
             mFixture.mVfs.addArchive(std::make_unique<VFS::FileSystemArchive>(mFixture.mDirectory));
             mFixture.mVfs.buildIndex();
         }
@@ -185,6 +189,49 @@ namespace
         osg::ref_ptr<IdleAnimation> animation()
         { return new IdleAnimation(mFixture.mWorld.getPlayerPtr(), mFixture.mResources); }
     };
+}
+
+TEST_F(NativeIdleResourceTest, CreatureBlockFilesExposeCanonicalHeldGroupsWithoutChangingOriginalSources)
+{
+    unsigned value = 0;
+    for (const auto name : {"block", "onehandblock", "twohandblock", "handtohandblock"})
+        write(std::string("meshes/") + name + ".kf", kf(++value));
+    indexFiles();
+    auto a = animation(); a->directory();
+    value = 0;
+    for (const auto name : {"block", "onehandblock", "twohandblock", "handtohandblock"})
+    {
+        SCOPED_TRACE(name);
+        const std::string original = name, canonical = original + "idle";
+        ASSERT_TRUE(a->hasAnimation(original)); ASSERT_TRUE(a->hasAnimation(canonical));
+        const auto* metadata = a->getControllerSequenceMetadata(canonical);
+        ASSERT_NE(metadata, nullptr);
+        EXPECT_EQ(metadata->mStartTime, 10); EXPECT_EQ(metadata->mStopTime, 12);
+        EXPECT_EQ(metadata->mFrequency, 1); EXPECT_EQ(metadata->mCycleType, 2u);
+        const float start = a->getTextKeyTimeInGroup(canonical, canonical + ": start");
+        EXPECT_GE(start, 0);
+        EXPECT_GT(a->getTextKeyTimeInGroup(canonical, canonical + ": stop"), start);
+        a->sample(canonical);
+        EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), ++value);
+        EXPECT_GE(a->getTextKeyTimeInGroup(original, original + ": start"), 0);
+        a->sample(original);
+        EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), value);
+    }
+}
+
+TEST_F(NativeIdleResourceTest, ExplicitCanonicalBlockFileWinsAndMissingFamiliesStayUnavailable)
+{
+    write("meshes/onehandblock.kf", kf(3));
+    write("meshes/onehandblockidle.kf", kf(9));
+    indexFiles();
+    auto a = animation(); a->directory();
+    ASSERT_TRUE(a->hasAnimation("onehandblockidle"));
+    a->sample("onehandblockidle");
+    EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 9);
+    a->sample("onehandblock");
+    EXPECT_FLOAT_EQ(a->mBone->getControllerTransform().mTranslation.x(), 3);
+    EXPECT_FALSE(a->hasAnimation("twohandblockidle"));
+    EXPECT_FALSE(a->hasAnimation("blockidle"));
 }
 
 TEST_F(NativeIdleResourceTest, NativeCacheSharesCaseOnlyKeysButKeepsSlashAliasesDistinct)

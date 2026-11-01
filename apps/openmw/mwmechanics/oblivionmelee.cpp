@@ -461,7 +461,8 @@ namespace MWMechanics
         auto* service = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
         const auto player = world.getPlayerPtr();
         if (!service || attacker.isEmpty() || defender.isEmpty() || attacker == defender
-            || (defender != player && defender.getType() != ESM::REC_NPC_4)
+            || (defender != player && defender.getType() != ESM::REC_NPC_4
+                && defender.getType() != ESM::REC_CREA4)
             || (!cachedDispatch && !oblivionBlockingPosture(world, defender)) || deltas.mVictimCounterRequested || deltas.mVictimCounter)
             return std::nullopt;
         std::vector<const ESM4::GameSetting*> settings;
@@ -924,7 +925,8 @@ namespace MWMechanics
             }
         }
         const bool blockHit = blockAccepted && !contact->isEmpty()
-            && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4);
+            && (*contact == world.getPlayerPtr() || contact->getType() == ESM::REC_NPC_4
+                || contact->getType() == ESM::REC_CREA4);
         // Original600528..60056A requests nonprojectile Recoil after a
         // Counter miss even when earlier wear removed the incoming weapon.
         // Resource discovery uses the projected empty Right slot in that case.
@@ -1243,8 +1245,6 @@ namespace MWMechanics
             PreparedBlock result{remaining};
             if (!oblivionBlockingPosture(world, victim) || oblivionParalyzed(world, victim))
                 return result;
-            if (victim.getType() == ESM::REC_CREA4)
-                return std::nullopt; // Creature defensive posture/equipment policy needs its native caller.
             // Original5FF7E6/5FF81D cache these before the facing gate.
             // Read presence first: definitions and supported mitigation policy
             // are needed only after facing accepts the contact.

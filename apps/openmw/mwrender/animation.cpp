@@ -783,6 +783,12 @@ namespace MWRender
         alias("swimrunleft", "swimfastleft");
         alias("swimrunright", "swimfastright");
         alias("sneakback", "sneakbackward");
+        // Creature files use Block where the held-input controller requests
+        // BlockIdle. Preserve explicit canonical files and the original names.
+        alias("blockidle", "block");
+        alias("onehandblockidle", "onehandblock");
+        alias("twohandblockidle", "twohandblock");
+        alias("handtohandblockidle", "handtohandblock");
         alias("death1", files.contains("death") ? "death"
                 : (files.contains("deathidle") ? "deathidle" : "stagger"));
         mSupportedDirections.clear();

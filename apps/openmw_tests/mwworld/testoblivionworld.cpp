@@ -6990,8 +6990,18 @@ namespace
             EXPECT_EQ(snapshot(), protectedCreature);
             ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 43, ESM4::ActorValueCommand::Set,
                 ESM4::ActorValueCommandSource::Script, 0));
+            const auto unblocked = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false);
+            ASSERT_TRUE(unblocked);
             ASSERT_TRUE(service.beginBlocking(reference.mFormKey));
-            EXPECT_FALSE(MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false));
+            const auto blocking = snapshot();
+            const auto blocked = MWMechanics::resolveOblivionOrdinaryUnarmedContact(world, player, victim, 0, false);
+            ASSERT_TRUE(blocked);
+            EXPECT_TRUE(blocked->mBlockAccepted);
+            // This fixture's Creature has Combat/Block0, so the accepted
+            // bare-hand block absorbs nothing under the native defaults.
+            EXPECT_EQ(blocked->mBlockAbsorbedFraction, 0);
+            EXPECT_EQ(blocked->mHealth, unblocked->mHealth);
+            EXPECT_EQ(snapshot(), blocking);
             EXPECT_TRUE(service.endBlocking(reference.mFormKey));
             creature.mSpell.push_back({0x999, 0});
             store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
@@ -33214,6 +33224,92 @@ TEST(OblivionWorldTest, BrokenIncomingWeaponSkipsMasterRollAndPublishesRecoilWit
         EXPECT_TRUE(service.isActionConsumed(id));
         service.restore(ESM4::RuntimeState::deserializeBinary(after.serializeBinary()), world.getStore());
         EXPECT_EQ(world.captureOblivionRuntimeState().serializeBinary(), after.serializeBinary());
+    }
+}
+
+TEST(OblivionWorldTest, CreatureDefenderBlocksThroughSharedEquipmentPolicyAndCommitsExactlyOnce)
+{
+    // Original5FF7F5..5FF914: Creature Block10/Luck50/full Fatigue uses
+    // the same weapon(.25), shield(.5), or bare-hand weapon-contact(0)
+    // fraction as an NPC. Rendererless publication is distinct from runtime.
+    for (const unsigned gear : {0u, 1u, 3u})
+    for (const int rank : {10, 25, 50, 75, 100})
+    for (const bool facing : {false, true})
+    for (const bool canSpendFatigue : {false, true})
+    {
+        SCOPED_TRACE(::testing::Message() << gear << ':' << rank << ':' << facing << ':' << canSpendFatigue);
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        const auto attacker = addNativeNpc(fixture, 0x901), victim = addEquipmentCreature(fixture);
+        auto creature = *victim.get<ESM4::Creature>()->mBase;
+        creature.mData.health = 500; creature.mData.combat = rank;
+        creature.mData.attribs = {50, 50, 50, 50, 50, 50, 50, 50};
+        creature.mBaseConfig.tes4.fatigue = 200;
+        creature.mBaseConfig.tes4.flags |= ESM4::Creature::TES4_WeapAndShield;
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ASSERT_TRUE(world.activateOblivionActor(attacker)); ASSERT_TRUE(world.activateOblivionActor(victim));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = victim.getCellRef().getFormKey();
+        // A rendererless Creature has no collision-root fatigue permission.
+        // Test both the absent-model boundary and the admitted stock-model state.
+        victim.getRefData().setOblivionCanSpendFatigue(canSpendFatigue);
+        installMasterDefenderGear(fixture, victim, gear);
+        const auto source = installMasterTargetWeapon(fixture, attacker, true);
+        auto weapon = *store.search<ESM4::Weapon>(ESM::FormKey::content("headless.esm", 0x940));
+        weapon.mData.damage = 20;
+        store.getWritable<ESM4::Weapon>().insertStatic(weapon, ESM::FormKey::content("headless.esm", 0x940));
+        unsigned settingId = 0x950;
+        for (const auto [name, value] : {std::pair{"fFatigueBase", 1.f}, {"fFatigueMult", 0.f},
+            {"fDamageWeaponMult", 1.f}, {"fDamageSkillBase", 1.f}, {"fDamageSkillMult", 0.f},
+            {"fDamageStrengthBase", 1.f}, {"fDamageStrengthMult", 0.f},
+            {"fDamageWeaponConditionBase", 1.f}, {"fDamageWeaponConditionMult", 0.f},
+            {"fDamageToWeaponPercentage", 0.f}, {"fBlockSkillBase", .5f}, {"fBlockSkillMult", 0.f},
+            {"fBlockAmountWeaponMult", .5f}, {"fFatigueBlockBase", 0.f}, {"fFatigueBlockMult", 1.f},
+            {"fFatigueBlockSkillBase", 20.f}, {"fFatigueBlockSkillMult", 0.f}})
+        {
+            ESM4::GameSetting setting{}; setting.mId = {settingId, 0}; setting.mEditorId = name; setting.mData = value;
+            store.getWritable<ESM4::GameSetting>().insertStatic(setting, ESM::FormKey::content("headless.esm", settingId++));
+        }
+        victim.getClass().getCreatureStats(victim).setDrawState(MWMechanics::DrawState::Weapon);
+        attacker.getClass().getCreatureStats(attacker).setDrawState(MWMechanics::DrawState::Weapon);
+        auto position = attacker.getRefData().getPosition();
+        position.pos[1] = facing ? 10 : -10; attacker.getRefData().setPosition(position);
+        service.setProcessAction(key, 6);
+        const auto snapshot = [&] {
+            auto state = captureNativeActorState(fixture, attacker);
+            state.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+            return state;
+        };
+        const auto id = world.beginOblivionPhysicalAction(attacker);
+        const auto before = snapshot().serializeBinary();
+        const auto contact = MWMechanics::resolveOblivionOrdinaryWeaponContact(world, attacker, victim, source, 0, false);
+        ASSERT_TRUE(contact);
+        EXPECT_EQ(contact->mBlockAccepted, facing);
+        const float fraction = !facing || !gear ? 0 : gear & 2 ? .5f : .25f;
+        EXPECT_NEAR(contact->mBlockAbsorbedFraction, fraction, .0001f);
+        EXPECT_NEAR(contact->mHealth, 20 * (1 - fraction), .0001f);
+        EXPECT_NEAR(contact->mBlockFatigueDebit, facing && rank < 25 ? 20 + fraction : 0, .0001f);
+        EXPECT_EQ(contact->mVictimConditionChanges.empty(), !facing || !gear || rank >= 50);
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        MWMechanics::OblivionPhysicalContactDeltas deltas{-1, -contact->mHealth, 0, -contact->mBlockFatigueDebit};
+        deltas.mConditionChanges = contact->mVictimConditionChanges;
+        deltas.mRandomTransition = contact->mRandomTransition;
+        auto plan = world.prepareOblivionPhysicalContact(id, attacker, victim, deltas,
+            contact->mBlockAccepted, contact->mRequestsAttackerRecoil);
+        ASSERT_TRUE(plan);
+        EXPECT_EQ(snapshot().serializeBinary(), before);
+        const float health = service.getNonPlayerValue(victim, 8), fatigue = service.getNonPlayerValue(victim, 10);
+        ASSERT_TRUE(plan->commit()); EXPECT_FALSE(plan->commit());
+        EXPECT_NEAR(service.getNonPlayerValue(victim, 8), health - contact->mHealth, .0001f);
+        EXPECT_NEAR(service.getNonPlayerValue(victim, 10), fatigue - (canSpendFatigue ? contact->mBlockFatigueDebit : 0), .0001f);
+        for (const auto& change : contact->mVictimConditionChanges)
+            EXPECT_EQ(change.mItem.getCellRef().getNativeItemCondition(), change.mCondition);
+        const auto after = snapshot().serializeBinary();
+        service.restore(ESM4::RuntimeState::deserializeBinary(after), store);
+        EXPECT_EQ(snapshot().serializeBinary(), after);
+        EXPECT_FALSE(world.prepareOblivionPhysicalContact(id, attacker, victim, deltas,
+            contact->mBlockAccepted, contact->mRequestsAttackerRecoil));
+        EXPECT_EQ(snapshot().serializeBinary(), after);
     }
 }
 

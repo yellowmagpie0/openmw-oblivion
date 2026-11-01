@@ -2362,7 +2362,8 @@ namespace MWMechanics
         // used to manufacture another authority transition here.
         if (const auto* state = service->findMeleeState(actor);
             state && state->mReaction && state->mReaction->mKind == ESM4::MeleeReactionKind::BlockHit
-            && mOblivionBlockGroup.empty() && !player && mPtr.getType() == ESM::REC_NPC_4 && drawn
+            && mOblivionBlockGroup.empty() && !player
+            && (mPtr.getType() == ESM::REC_NPC_4 || mPtr.getType() == ESM::REC_CREA4) && drawn
             && service->getProcessAction(actor) == 6
             && !isScriptedAnimPlaying() && !isKnockedOut() && !isKnockedDown() && !isRecovery()
             && oblivionKnockedState(*world, mPtr) == 0 && !oblivionParalyzed(*world, mPtr) && !mSkipAnim)
@@ -2592,8 +2593,7 @@ namespace MWMechanics
         const bool counterActive = blockState && blockState->mStrike
             && blockState->mStrike->mKind == ESM4::MeleeStrikeKind::Counter;
         bool blockAccepted = false;
-        if (!counterActive && controls && controls->mBlock && mPtr.getType() != ESM::REC_CREA4
-            && mAnimation->hasAnimation(blockGroup))
+        if (!counterActive && controls && controls->mBlock && mAnimation->hasAnimation(blockGroup))
         {
             const bool resident = hasResidentHeld(service->findMeleeState(actor));
             if (resident && service->getProcessAction(actor) == 6)

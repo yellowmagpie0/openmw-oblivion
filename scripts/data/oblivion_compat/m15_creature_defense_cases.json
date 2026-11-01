@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "requirement": "M15S4 C1/D2: production contact against a blocking armed Creature, correct mitigation/mastery, visible feedback/release/recovery and held/recovery save continuity.",
+  "full_M15S4_acceptance": false,
+  "fixture": {
+    "base_recipe": "m15_armed_creature_cases.json",
+    "generator": "scripts/tes4_m15_creature_melee_fixture.py",
+    "stock_template": "content:oblivion.esm:02a81c",
+    "actor": "content:m15stationaryopponent.esp:000802",
+    "base": "content:m15stationaryopponent.esp:000800",
+    "player_weapon": "content:oblivion.esm:090615",
+    "creature_weapon": "content:oblivion.esm:000c0c",
+    "initial_creature_weapon_condition": 50,
+    "creature_combat_block": 50,
+    "creature_health_fatigue": [
+      100,
+      100
+    ],
+    "authoring": "Clone the accepted cold armed-Goblin fixture and replace only initial carried-weapon condition0.1 with50. Production initializes native Creature authority. No contacts, damage, actions, reactions or outcomes authored.",
+    "public_control_source": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal announced, released=false,false\nreturn {engineHandlers={onUpdate=function()\n if self.contentFile~='m15stationaryopponent.esp' or self.recordId:sub(-5)~='00800' then return end\n self:enableAI(false)\n self.type.setStance(self,self.type.STANCE.Weapon)\n local health=Actor.stats.dynamic.health(self).current\n self.controls.block=health>=100\n if self.controls.block and not announced then print('M15 Creature defender intent: held=true');announced=true end\n if not self.controls.block and not released then print('M15 Creature defender intent: held=false');released=true end\nend}}\n"
+  },
+  "stock_animation": {
+    "source": "meshes/creatures/goblin/onehandblock.kf",
+    "sha256": "bbc173eaa66883e99272386463e3af1140e896693112d3b3449ea0d6707aa507",
+    "sequence": "BlockIdle_OneHand",
+    "cycle": 0,
+    "start": 0,
+    "stop": 1.5,
+    "canonical_group": "onehandblockidle",
+    "registration": "Canonical BlockIdle aliases use actual Block files only. Explicit canonical files win; original names and shared cached tracks remain intact."
+  },
+  "independent_caller": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "range": "5FF7F5..5FF914 facing;5FFBE3 nonfacing",
+    "cases": 6,
+    "controls": {
+      "Block": 10,
+      "Luck": 50,
+      "FatigueRatio": 1,
+      "incoming": 20,
+      "fBlockSkillBase": 0.5,
+      "fBlockSkillMult": 0,
+      "fBlockAmountWeaponMult": 0.5,
+      "fBlockAmountHandToHandMult": 0.25,
+      "fBlockMax": 0.75
+    },
+    "expectations": "Facing Creature uses shared weapon.25/shield.5 fraction; bare-hand block of weapon has0 absorption. Facing rejection preserves full20 Health input.",
+    "boundaries": "Actual Creature vtable getter address verified; AV values, equipment entries, facing and full Fatigue supplied. Shared5474A0 and Health arithmetic execute. Attacker virtual3B4 captures arguments; no whole reaction/wear/gameplay claim.",
+    "evidence": "build/oblivion-compat/m15/S4/creature-defense-work-01/block-caller-verification.json",
+    "reused": "Existing equipped-block wear/cost/mastery and Counter-first recipes retain their original provenance."
+  },
+  "focused": {
+    "world_matrix": "60 contexts: gear none/weapon/weapon+shield xCombat10/25/50/75/100 xfacing xmodel Fatigue permission; one contact, state ownership and binary restore.",
+    "zero_skill_regression": "Combat0 accepts block with0 absorption; compare a fresh unblocked query at the same current Fatigue and keep preparation read-only. Spell-bearing Creature rejection remains explicit.",
+    "animation": "Parsed original/aliased tracks, canonical-file precedence, and missing-family controls."
+  },
+  "runtime": {
+    "input": "First-person keyboard/mouse Player actions; public Lua Creature block intent with AI disabled. Existing shared launcher/verifiers reused.",
+    "course": [
+      "Actual held block save",
+      "Player ordinary2: positive mitigation, Goblin BlockHit and Player Recoil",
+      "Health-triggered release transfers BlockHit to a passive visual sequence and fades held cache",
+      "Natural recovery with released input and no stale posture",
+      "Player ordinary return3 with no block",
+      "Exact fresh continuation from actual held save",
+      "Exact fresh continuation from released-BlockHit visual lease and active Player Recoil"
+    ],
+    "assertions": [
+      "Unique contacts2/3, or only3 after recovery restart; no Creature contacts or Player receiving damage",
+      "Stock Journeyman Creature block charges0 Fatigue and preserves weapon50",
+      "Player attack spending/condition and target Health reconcile with logged native deltas",
+      "Every saved/live pair and incoming fresh source exact",
+      "Complete resource/item/owner/input/recovery/RNG and related script endpoint comparison; no active strike/reaction/passive/queued input",
+      "Block PCM1 reference/1 held fresh/0 recovery fresh; directly review each capture"
+    ],
+    "impulse_policy": "Old force absent before intentional return. New force direction checked against each actual precontact frame and magnitudes compared within1e-4; positive remaining timers<=1 are recorded. Differently timed endpoints do not claim residual-timer/trajectory equality. Required T7/F8 timing/step gates remain open."
+  },
+  "verification": {
+    "normal_engine": "creature-defense-integration-normal-03:2078 full tests and current game",
+    "sanitizer_engine": "creature-defense-integration-sanitize-02:2078 full tests and current game; unit-process leak checking enabled",
+    "unchanged": "Component numerical/parser and484 Python evidence reused with original hashes/provenance; no production component/Python change.",
+    "checkpoint": "build/oblivion-compat/m15/S4/creature-defense-work-01/checkpoint-verification.json",
+    "runtime_results": "Normal/SAN reference plus held/recovery fresh:18 exact saved/live pairs,6 process epochs,4 exact incoming fresh sources,4 endpoint comparisons of29 scoped fields,18 reviewed captures; PCM1/1/0 perbuild. See checkpoint for qualified impulse/timing policy."
+  },
+  "retained_failures": "Original obsolete-rejection/zero-skill test expectations, stale VFS test inventory, missing production alias runtime, and source/comparison checker failures remain in their original directories. Valid raw evidence reinspected after checker corrections; no documentation-only engine rebuild.",
+  "limits": [
+    "Runtime is stock Goblin Journeyman weapon block; lower-rank cost/wear, shield and Counter branches have focused coverage, not blanket runtime acceptance.",
+    "General Creature hit/effect/other actor/input/view requirements remain in the audit; public defensive intent is not autonomous S7 AI.",
+    "Goblin facial/head appearance remains V6; no full Creature appearance claim.",
+    "Configured cap/seed does not prove timing campaigns. Complete T7/F8 and remaining S4 gates before claiming delivery."
+  ]
+}

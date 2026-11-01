@@ -4505,7 +4505,7 @@ namespace MWWorld
         if (!mOblivionCombat || actor.isEmpty() || !deltas.mVictimCounterRequested || deltas.mVictimCounter)
             return false;
         const bool player = actor == getPlayerPtr();
-        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4) return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
         if (!animation) return true; // No live AnimData: the numerical block still commits.
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
@@ -4645,7 +4645,7 @@ namespace MWWorld
     {
         if (!mOblivionCombat || actor.isEmpty() || group.empty()) return false;
         const bool player = actor == getPlayerPtr();
-        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4) return false;
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
         if (!animation) return false;
@@ -4697,7 +4697,7 @@ namespace MWWorld
     {
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
-        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4) return false;
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const auto* state = mOblivionCombat->findMeleeState(key);
         if (!state || mOblivionCombat->getProcessAction(key) != 6) return false;
@@ -4790,7 +4790,7 @@ namespace MWWorld
     {
         if (!mOblivionCombat || actor.isEmpty() || heldGroup.empty()) return false;
         const bool player = actor == getPlayerPtr();
-        if (!player && actor.getType() != ESM::REC_NPC_4) return false;
+        if (!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4) return false;
         const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
         const auto* state = mOblivionCombat->findMeleeState(key);
         if (!state || !state->mStrike || state->mStrike->mKind != ESM4::MeleeStrikeKind::Counter
@@ -4856,7 +4856,7 @@ namespace MWWorld
         if (!mOblivionCombat || actor.isEmpty()) return false;
         const bool player = actor == getPlayerPtr();
         if ((!player && actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4)
-            || (actor.getType() == ESM::REC_CREA4 && kind != ESM4::MeleeReactionKind::Recoil)
+            || (actor.getType() == ESM::REC_CREA4 && kind == ESM4::MeleeReactionKind::Stagger)
             || requested || retiring || firstPerson || slot0 || firstSlot0)
             return false;
         auto* animation = const_cast<MWRender::Animation*>(static_cast<const World&>(*this).getAnimation(actor));
@@ -5513,7 +5513,8 @@ namespace MWWorld
         const bool essential = !victim.isEmpty() && victim.getClass().isEssential(victim);
         const auto recovery = essential
             ? resolveOblivionEssentialRecoverySettings(mStore) : ESM4::EssentialRecoverySettings{};
-        if (blockHit && (victim.isEmpty() || (victim != getPlayerPtr() && victim.getType() != ESM::REC_NPC_4)))
+        if (blockHit && (victim.isEmpty() || (victim != getPlayerPtr()
+                && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)))
             return nullptr;
         auto preparedDeltas = deltas;
         const auto prepareHeldCancellation = [&](const Ptr& actor, const auto& request, auto& sources) {
