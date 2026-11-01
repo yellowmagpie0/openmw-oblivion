@@ -440,3 +440,50 @@ def standing_capture_setup(manifest, recipe, probe_source):
             dict(type='wait_log', pattern='M15 standing camera: visible=true', after_start=True,
                  timeout_seconds=30, abort_on_failure=True), result['actions'][i]] + measured('restore')
     return result
+
+
+def recovery_query_setup(manifest, recipe):
+    """Add read-only native query observations around an actual recovery.
+
+    These observe existing state. They cannot schedule mutations or supply
+    contact/reaction outcomes, and leave all gameplay actions/assertions intact.
+    """
+    times = recipe['times']
+    if (len(times) != 2 or any(type(t) not in (int, float) or not math.isfinite(t) for t in times)
+            or not 0 < times[0] < 1 or not 30 <= times[1] <= 120):
+        raise ValueError('Invalid recovery query times')
+    queries = recipe['queries']
+    allowed = {'GetKnockedState', 'GetDead', 'IsWeaponOut', 'GetWeaponAnimType'}
+    actors = {'player': 'dynamic:player:0000000000000001',
+              'content:oblivion.esm:01fc43': 'content:oblivion.esm:01fc43'}
+    if len(queries) != 4:
+        raise ValueError('Recovery observation requires four read-only queries')
+    signatures = set()
+    for query in queries:
+        signature = (query['actor'], query['command'])
+        if (query['actor'] not in actors or query['command'] not in allowed
+                or signature in signatures or len(query['expected']) != 2
+                or any(type(value) is not int or not 0 <= value <= 3 for value in query['expected'])):
+            raise ValueError('Invalid read-only recovery query')
+        signatures.add(signature)
+    if queries[0] != dict(actor='content:oblivion.esm:01fc43', command='GetKnockedState', expected=[1, 0]):
+        raise ValueError('Recovery query must observe actual Down then recovery')
+    result = copy.deepcopy(manifest)
+    events = next(f for f in result['files'] if f['path'] == 'test-data/events.txt')
+    patterns = []
+    for phase, time in enumerate(times):
+        for query in queries:
+            events['content'] += f"at {time} command {query['actor']} {query['command']}\n"
+            patterns.append(re.escape('acceptance-command actor=' + actors[query['actor']]
+                + ' name=' + query['command'] + ' result=' + str(query['expected'][phase])) + r'(?=\s|$)')
+    # The ordered sequence cannot be satisfied by a standing-only query trace.
+    pattern = '(?s)' + '.*'.join(patterns)
+    actions = result['actions']
+    returns = [i for i, a in enumerate(actions[:-1]) if a == dict(type='key_down', value='u')
+               and 'id=3 action=2' in actions[i+1].get('pattern', '')]
+    if len(returns) != 1:
+        raise ValueError('Missing unique ordinary return after recovery')
+    actions.insert(returns[0], dict(type='wait_log', pattern=pattern,
+        timeout_seconds=600, abort_on_failure=True))
+    result['expected_log'].append(pattern)
+    return result

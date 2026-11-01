@@ -8,7 +8,7 @@ from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
-from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup
+from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
 
 
 class FixturePreflightTests(unittest.TestCase):
@@ -52,6 +52,45 @@ class FixturePreflightTests(unittest.TestCase):
         broken['files'] = [f for f in broken['files'] if not f['path'].endswith('m15_course_observer.lua')]
         with self.assertRaises((ValueError, StopIteration)):
             joined_power_capture_setup(broken, recipe, '')
+
+    def recovery_manifest(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        course = json.loads((data / 'm15_essential_recovery_course.json').read_text())
+        manifest['actions'] = course['resume_actions']
+        return manifest, course['recovery_query_observation']
+
+    def test_recovery_queries_are_read_only_and_preserve_original_return(self):
+        manifest, recipe = self.recovery_manifest()
+        original = copy.deepcopy(manifest)
+        observed = recovery_query_setup(manifest, recipe)
+        self.assertEqual(manifest, original)
+        events = next(f['content'] for f in observed['files'] if f['path'] == 'test-data/events.txt')
+        self.assertIn('at 0.1 command content:oblivion.esm:01fc43 GetKnockedState', events)
+        self.assertIn('at 60 command player GetWeaponAnimType', events)
+        added = [a for a in observed['actions'] if a not in original['actions']]
+        self.assertEqual(len(added), 1)
+        self.assertEqual(added[0]['type'], 'wait_log')
+        self.assertIn('result=1', added[0]['pattern'])
+        self.assertIn('result=0', added[0]['pattern'])
+        self.assertEqual([a for a in observed['actions'] if a not in added], original['actions'])
+        self.assertEqual(observed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(observed['expected_log']))
+
+    def test_recovery_query_setup_rejects_mutations_and_invalid_windows(self):
+        manifest, recipe = self.recovery_manifest()
+        for command in ['DamageAV', 'SetAV', 'Kill', 'StartCombat', 'SetPos']:
+            invalid = copy.deepcopy(recipe)
+            invalid['queries'][1]['command'] = command
+            with self.subTest(command=command), self.assertRaises(ValueError):
+                recovery_query_setup(manifest, invalid)
+        for times in [[0,60], [.1,2], [.1,float('inf')], [True,60]]:
+            with self.subTest(times=times), self.assertRaises(ValueError):
+                recovery_query_setup(manifest, dict(recipe, times=times))
+        invalid = copy.deepcopy(recipe)
+        invalid['queries'][0]['expected'] = [0,0]
+        with self.assertRaises(ValueError):
+            recovery_query_setup(manifest, invalid)
 
     def camera_guard(self, checks):
         module = Path(__file__).resolve().parents[1] / 'data/oblivion_compat/m15_forward_capture_guard.lua'

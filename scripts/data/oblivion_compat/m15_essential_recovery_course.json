@@ -537,5 +537,48 @@
     "module": "scripts/data/oblivion_compat/m15_forward_capture_guard.lua",
     "setup": "scripts/tes4_m15_fixture_preflight.py::standing_capture_setup",
     "scope": "Existing captures: measured normal upper-body look from actor placement (reuse shared upper mode to avoid transient prior-ragdoll bounds), two converged head/torso visibility samples and 16px top margin; restore original attack pitch. No position/outcome setters. Raw image review required."
+  },
+  "recovery_query_observation": {
+    "scope": "Read-only M7 query observations during actual loaded essential collapse and later recovery, before explicit ordinary return. Enable existing fixture --recovery-queries. Actual contact source and all native save/load assertions remain required.",
+    "times": [
+      0.1,
+      60
+    ],
+    "queries": [
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "command": "GetKnockedState",
+        "expected": [
+          1,
+          0
+        ]
+      },
+      {
+        "actor": "content:oblivion.esm:01fc43",
+        "command": "GetDead",
+        "expected": [
+          0,
+          0
+        ]
+      },
+      {
+        "actor": "player",
+        "command": "IsWeaponOut",
+        "expected": [
+          1,
+          1
+        ]
+      },
+      {
+        "actor": "player",
+        "command": "GetWeaponAnimType",
+        "expected": [
+          2,
+          2
+        ]
+      }
+    ],
+    "independent_basis": "M15-NATIVE-REACTION-QUERY-VERIFICATION.json and M15-NATIVE-RECOVERY-QUERY-VERIFICATION.json; actual source raw3/4 and alive essential life owner; stock IronClaymore native type1, drawn Player weapon.",
+    "deferred_boundary": "GetWeaponSkillType109 and IsShieldOut103 appear in stock dodge/intimidation/yield/social IDLEs, not S4 GetUp routes. S7/S10/S12 boundaries remain explicit, not approximated."
   }
 }
