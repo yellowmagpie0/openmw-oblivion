@@ -8,10 +8,32 @@ from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
-from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup
+from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_recoil_wait_guard_accepts_recovery_and_preserves_manifest(self):
+        manifest = dict(recoil_contact_waits=[dict(actor='player', cause=3)], actions=[
+            dict(type='wait_log', pattern='M15 reaction recovered: actor=player cause=3 action=-1'),
+            dict(type='wait_log', pattern='M15 melee finished: actor=npc id=3 action=-1')])
+        original = copy.deepcopy(manifest)
+        self.assertEqual(validate_recoil_contact_waits(manifest), 1)
+        self.assertEqual(manifest, original)
+        self.assertEqual(validate_recoil_contact_waits(dict(actions=[])), 0)
+
+    def test_recoil_wait_guard_rejects_retained_wrong_completion_event(self):
+        manifest = dict(recoil_contact_waits=[dict(actor='player', cause=3)], actions=[
+            dict(type='wait_log', pattern='M15 melee finished: actor=player id=3 action=-1')])
+        with self.assertRaisesRegex(ValueError, 'Recoil contact cannot await ordinary completion: 3'):
+            validate_recoil_contact_waits(manifest)
+
+    def test_recoil_wait_guard_rejects_malformed_actor_cause_metadata(self):
+        for declarations in [None, {}, [None], [dict(actor='', cause=3)],
+                             [dict(actor='player', cause=True)], [dict(actor='player', cause=0)],
+                             [dict(actor='player', cause=2**64)], [dict(actor='player')]]:
+            with self.subTest(declarations=declarations), self.assertRaises(ValueError):
+                validate_recoil_contact_waits(dict(actions=[], recoil_contact_waits=declarations))
+
     def test_joined_framing_preserves_original_save_and_gameplay_requirements(self):
         data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
         manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())

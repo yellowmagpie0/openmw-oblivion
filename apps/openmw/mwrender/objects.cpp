@@ -432,7 +432,8 @@ namespace MWRender
         {
             osg::ref_ptr<ESM4NpcAnimation> anim(
                 new ESM4NpcAnimation(ptr, osg::ref_ptr<osg::Group>(ptr.getRefData().getBaseNode()), mResourceSystem));
-            mObjects.emplace(ptr.mRef, anim);
+            if (mObjects.emplace(ptr.mRef, anim).second)
+                ptr.getClass().getInventoryStore(ptr).setInvListener(anim.get());
         }
         else
         {

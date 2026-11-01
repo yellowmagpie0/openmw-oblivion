@@ -56,6 +56,52 @@ class NativeBlockMixtureAudioTest(unittest.TestCase):
                         signal[start + offset + i * 4 + frame] += value
         return self.write("capture.wav", signal, antiphase=antiphase)
 
+    def three_bank_recipe(self, target=0):
+        return dict(self.recipe, schema_version=4, asset_banks=[[0], [1], [2]],
+                    asset_static_attenuation=[0, 120, 240], required_asset_bank=target)
+
+    def three_bank_capture(self, included, offsets):
+        # Independent capture-rate construction; never use the assay bank or
+        # correlation implementation to manufacture the expected waveform.
+        rng = random.Random(8241)
+        signal = [rng.randrange(-3, 4) for _ in range(96000)]
+        for source in included:
+            gain = 10 ** (-[0, 120, 240][source] / 2000)
+            for i, value in enumerate(self.sources[source]):
+                for frame in range(4):
+                    signal[24000 + offsets[source] + i * 4 + frame] += round(value * gain)
+        return self.write("three-bank.wav", signal)
+
+    def test_three_bank_target_accepts_independent_mixture_and_required_component(self):
+        for offsets in [(0, 0, 0), (0, 960, 0), (960, 0, 960)]:
+            for target in range(3):
+                with self.subTest(offsets=offsets, target=target):
+                    report = audio.analyse(self.three_bank_capture([0, 1, 2], offsets),
+                                           self.three_bank_recipe(target), 1)
+                    self.assertTrue(report["passed"], report["clusters"])
+                    event = report["clusters"][0]
+                    self.assertAlmostEqual(event["best"], .5, places=4)
+                    self.assertGreater(event["maximum_correlation"], .99)
+                    self.assertGreater(event["bank_checks"][target]["partial_correlation"], .99)
+                    self.assertGreater(event["bank_checks"][target]["residual_energy_fraction"], .01)
+
+    def test_three_bank_target_rejects_missing_target_even_with_other_layers(self):
+        for target in range(3):
+            others = [i for i in range(3) if i != target]
+            for included in [[], others[:1], others[1:], others]:
+                with self.subTest(target=target, included=included):
+                    path = self.three_bank_capture(included, (0, 960, 0))
+                    self.assertTrue(audio.analyse(path, self.three_bank_recipe(target), 0)["passed"])
+                    self.assertFalse(audio.analyse(path, self.three_bank_recipe(target), 1)["passed"])
+
+    def test_three_bank_target_validates_required_bank_and_partition(self):
+        for target in [None, True, -1, 3, "0"]:
+            with self.subTest(target=target), self.assertRaises(ValueError):
+                audio.templates(self.three_bank_recipe(target))
+        for banks in [[[0], [1, 2]], [[0], [1], [1, 2]], [[0], [], [1, 2]]]:
+            with self.subTest(banks=banks), self.assertRaises(ValueError):
+                audio.templates(dict(self.three_bank_recipe(), asset_banks=banks))
+
     def test_independent_pcm_contains_every_pair_and_one_period_order(self):
         events = [(a, b, False) for a, b in itertools.combinations_with_replacement(range(3), 2)]
         events += [(a, b, True) for a, b in itertools.product(range(3), repeat=2)]

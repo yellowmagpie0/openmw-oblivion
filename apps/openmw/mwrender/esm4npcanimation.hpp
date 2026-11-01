@@ -2,6 +2,7 @@
 #define GAME_RENDER_ESM4NPCANIMATION_H
 
 #include "animation.hpp"
+#include "../mwworld/inventorystore.hpp"
 #include "tes4facegen.hpp"
 #include "util.hpp"
 #include "obliviondropplacement.hpp"
@@ -21,7 +22,7 @@ namespace MWRender
 {
     // Shared native carried-weapon identity, attachment and drop preparation.
     // NPC body/face assembly and Creature body assembly remain separate.
-    class ESM4EquipmentAnimation : public Animation
+    class ESM4EquipmentAnimation : public Animation, public MWWorld::InventoryStoreListener
     {
     public:
         struct CarriedWeaponPose
@@ -74,6 +75,7 @@ namespace MWRender
             const CarriedWeaponDrop& drop, const MWWorld::ESMStore& store) const noexcept;
 
 
+        void equipmentChanged() override;
         virtual void refreshEquipment();
         void showWeapons(bool showWeapon) override;
         void attachArrow() override;

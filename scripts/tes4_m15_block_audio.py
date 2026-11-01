@@ -6,7 +6,10 @@ pairs and ordered pairs separated by one declared mixer period. Nothing is
 fitted to a recording. Clusters measure audible events, not voice counts.
 Version3 adds audited SOUN static gains and fixed40ms fingerprints covering at
 least90% of each bank, retaining .75 correlation. Fullclip .5 only nominates
-neighborhoods; it cannot accept an event. Keep earlier reports unchanged.
+neighborhoods; it cannot accept an event. Version4 identifies one declared
+target bank in a fixed three-layer mixture: fullclip and target partial
+correlation>=.75, target residual energy>1%. Concurrent banks are nuisance
+waveforms, not independent acceptance claims. Keep earlier reports unchanged.
 """
 from __future__ import annotations
 
@@ -38,16 +41,20 @@ def templates(recipe):
     version = recipe.get("schema_version")
     fields = {"schema_version", "assets", "sample_rate", "channels", "analysis_rate",
               "mixer_period_frames", "minimum_normalized_correlation", "cluster_gap_seconds"}
-    if version in (2, 3):
+    if version in (2, 3, 4):
         fields.add("asset_banks")
-    if version == 3:
+    if version in (3, 4):
         fields.add("asset_static_attenuation")
+    if version == 4:
+        fields.add("required_asset_bank")
+        if type(recipe.get("required_asset_bank")) is not int or not 0 <= recipe["required_asset_bank"] < 3:
+            raise ValueError("target bank requires an index from0 through2")
     if set(recipe) != fields:
         raise ValueError("unexpected mixture-assay recipe fields")
     if any(type(recipe[k]) is not int for k in
            ("schema_version", "sample_rate", "channels", "analysis_rate", "mixer_period_frames")):
         raise ValueError("format and mixer fields require integers")
-    if version not in (1, 2, 3) or (recipe["sample_rate"], recipe["channels"],
+    if version not in (1, 2, 3, 4) or (recipe["sample_rate"], recipe["channels"],
                                recipe["analysis_rate"]) != (48000, 2, 12000):
         raise ValueError("assay requires stereo 48kHz capture and 12kHz analysis")
     if recipe["mixer_period_frames"] != 960:
@@ -65,16 +72,16 @@ def templates(recipe):
         ordered = list(itertools.product(range(3), repeat=2))
     else:
         groups = recipe["asset_banks"]
-        if not isinstance(groups, list) or len(groups) != 2 or any(
+        if not isinstance(groups, list) or len(groups) != (3 if version == 4 else 2) or any(
                 not isinstance(group, list) or not group for group in groups):
-            raise ValueError("two nonempty declared asset banks required")
+            raise ValueError("declared nonempty asset banks required")
         indices = [i for group in groups for i in group]
         if any(type(i) is not int for i in indices) or sorted(indices) != list(range(len(assets))):
             raise ValueError("asset banks must partition all declared assets exactly once")
         aligned = list(itertools.product(*groups))
-        ordered = aligned + [(right, left) for left, right in aligned]
+        ordered = [] if version == 4 else aligned + [(right, left) for left, right in aligned]
     attenuation = recipe.get("asset_static_attenuation")
-    if version == 3 and (not isinstance(attenuation, list) or len(attenuation) != len(assets) or
+    if version in (3, 4) and (not isinstance(attenuation, list) or len(attenuation) != len(assets) or
                          any(type(v) is not int or not 0 <= v <= 65535 for v in attenuation)):
         raise ValueError("one unsigned SOUN static attenuation required per asset")
     sources, seen = [], set()
@@ -94,10 +101,21 @@ def templates(recipe):
                            np.arange(len(values)), values)
         if len(values) < 2 or not np.any(values != values[0]):
             raise ValueError("stock template has no varying signal")
-        if version == 3:
+        if version in (3, 4):
             values *= 10 ** (-attenuation[len(sources)] / 2000)
         sources.append(values)
     bank = []
+    if version == 4:
+        for indices in aligned:
+            for offsets in itertools.product((0, 240), repeat=3):
+                if min(offsets) != 0:
+                    continue
+                values = np.zeros(max(delay + len(sources[i]) for i, delay in zip(indices, offsets)))
+                for i, delay in zip(indices, offsets):
+                    values[delay:delay + len(sources[i])] += sources[i]
+                values -= values.mean()
+                bank.append(("+".join(f"{i}@{delay}" for i, delay in zip(indices, offsets)), values))
+        return bank
     for delay, pairs in ((0, aligned), (240, ordered)):
         for left, right in pairs:
             values = np.zeros(max(len(sources[left]), delay + len(sources[right])))
@@ -112,6 +130,8 @@ def analyse(path, recipe, expected_clusters):
     if type(expected_clusters) is not int or expected_clusters < 0:
         raise ValueError("expected cluster count must be a nonnegative integer")
     bank = templates(recipe)
+    if recipe["schema_version"] == 4:
+        return analyse_three_banks(path, recipe, expected_clusters, bank)
     if recipe["schema_version"] == 3:
         return analyse_landmarks(path, recipe, expected_clusters, bank)
     values, rate, channels = pcm(path, mono=False)
@@ -144,6 +164,74 @@ def analyse(path, recipe, expected_clusters):
                 pcm_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
                 duration_seconds=len(values) / 12000,
                 scope="Fixed equal-gain two-asset bank, channels measured separately; temporal clusters cannot identify coincident voice count.")
+
+
+def analyse_three_banks(path, recipe, expected_clusters, bank):
+    values, rate, channels = pcm(path, mono=False)
+    if (rate, channels) != (48000, 2):
+        raise ValueError("capture requires stereo PCM16 at48kHz")
+    values = values[::4]
+    if len(values) < max(len(t) for _, t in bank):
+        raise ValueError("capture shorter than the declared templates")
+    sources = []
+    for asset, attenuation in zip(recipe["assets"], recipe["asset_static_attenuation"]):
+        data, source_rate, _ = pcm(asset["path"])
+        data = np.interp(np.arange(int(len(data) * 12000 / source_rate)) * source_rate / 12000,
+                         np.arange(len(data)), data) * 10 ** (-attenuation / 2000)
+        sources.append(data)
+    matches, rows = [], []
+    for channel in range(channels):
+        signal = values[:, channel]
+        total, squared = np.r_[0., np.cumsum(signal)], np.r_[0., np.cumsum(signal * signal)]
+        for name, template in bank:
+            row, hits = correlate(signal, template, total, squared, .75)
+            rows.append(dict(template=name, channel=channel, **row))
+            hits = list(hits)
+            if not hits:
+                continue
+            parts = []
+            for index, delay in (part.split("@") for part in name.split("+")):
+                data, delay = sources[int(index)], int(delay)
+                part = np.zeros(len(template))
+                part[delay:delay + len(data)] = data
+                parts.append(part - part.mean())
+            for offset, strength in hits:
+                segment = signal[offset:offset + len(template)].copy()
+                segment -= segment.mean()
+                energy = np.dot(segment, segment)
+                checks = []
+                for own in range(3):
+                    nuisance = np.array([parts[i] for i in range(3) if i != own])
+                    inverse = np.linalg.pinv(nuisance @ nuisance.T)
+                    actual = segment - (inverse @ (nuisance @ segment)) @ nuisance
+                    target = parts[own] - (inverse @ (nuisance @ parts[own])) @ nuisance
+                    remaining, target_energy = np.dot(actual, actual), np.dot(target, target)
+                    norm = np.sqrt(max(0, remaining * target_energy))
+                    partial = np.dot(actual, target) / norm if norm > 0 else 0
+                    checks.append(dict(partial_correlation=float(partial), residual_energy_fraction=float(remaining / energy) if energy else 0))
+                if (checks[recipe["required_asset_bank"]]["partial_correlation"] >= .75
+                        and checks[recipe["required_asset_bank"]]["residual_energy_fraction"] > .01):
+                    matches.append((int(offset), name, channel, float(strength), checks))
+    clusters = []
+    for offset, name, channel, strength, checks in sorted(matches):
+        seconds = offset / 12000
+        item = dict(first=seconds,last=seconds,best=seconds,template=name,channel=channel,maximum_correlation=strength,bank_checks=checks)
+        if not clusters or seconds - clusters[-1]["last"] > 1:
+            clusters.append(item)
+        else:
+            if strength > clusters[-1]["maximum_correlation"]:
+                item["first"] = clusters[-1]["first"]
+                clusters[-1] = item
+            clusters[-1]["last"] = seconds
+    return dict(passed=len(clusters) == expected_clusters, expected_clusters=expected_clusters,
+                clusters=clusters, templates=rows, recipe=recipe,
+                pcm_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
+                duration_seconds=len(values) / 12000,
+                scope="V4 fixed three-bank stock mixture at audited static gains and0/20ms starts. "
+                      "Fullclip and declared target bank partial correlation>=.75; target residual "
+                      "energy>1% after linear nuisance projection of concurrent stock banks. "
+                      "Other bank identities are not independently accepted. "
+                      "No fitted gains/offsets or coincident-voice count claim.")
 
 
 def analyse_landmarks(path, recipe, expected_clusters, bank):

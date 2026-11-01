@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-SHIELD-APPRENTICE-BREAK-001",
+  "requirement": "D2/I4/V6 stock NPC shield survives one block, breaks on subsequent real contact, withdraws its carried mesh/posture and recovers for an unblocked return; exact held-source continuation and Heavy Shield PCM identity.",
+  "full_M15S4_acceptance": false,
+  "fixture": {
+    "generator": "Existing combined-mastery stage.py and stationary NPC plugin; reuse fixture geometry and source ownership.",
+    "actor": "content:oblivion.esm:01fc43",
+    "base": "content:oblivion.esm:025200",
+    "shield": "content:oblivion.esm:0352c1",
+    "initial_shield_condition": 3,
+    "shield_equipped_slots": 8192,
+    "base_block": 25,
+    "base_heavy_armor": 5,
+    "player_weapon": "content:oblivion.esm:090615",
+    "initial_player_weapon_condition": 50,
+    "npc_weapon_condition": 50,
+    "policy": "One initial inventory shield addition only. Public NPC intent disables AI, draws and holds block only while actual carried-left item exists. Normal Player inputs cause all contacts; no damage/contact/action/reaction/drop outcomes authored.",
+    "public_control_source": "local self=require('openmw.self')\nlocal Actor=require('openmw.types').Actor\nlocal announced,released=false,false\nreturn {engineHandlers={onUpdate=function()\n if self.contentFile~='oblivion.esm' or self.recordId:sub(-5)~='25200' then return end\n self:enableAI(false)\n self.type.setStance(self,self.type.STANCE.Weapon)\n local carried=Actor.getEquipment(self)[Actor.EQUIPMENT_SLOT.CarriedLeft]\n self.controls.block=carried~=nil\n if carried and not announced then print('M15 shield defender intent: held=true');announced=true end\n if not carried and not released then print('M15 shield defender intent: held=false');released=true end\nend}}\n"
+  },
+  "course": [
+    "F5 actual held source",
+    "Player ordinary2: shield survives, BlockHit/Player Recoil and stock Heavy Shield sound",
+    "Natural recovery while NPC still holds shield",
+    "Player ordinary3: shield condition reaches0, one owned drop, posture withdrawal",
+    "Natural recovery with no stale carried shield mesh",
+    "Player ordinary4: no block, one Health/condition/Fatigue delta",
+    "Fresh process from actual held source; same block/break/return sequence and owned endpoint"
+  ],
+  "preflight": "Shared profile/plugin/source/control hashes, source ledger/effect/ownership state and geometry distance; Lua syntax; actual approach/reach/render-ray guard before attack.",
+  "implementation": "Native NPC animation registers InventoryStoreListener and refreshes worn parts on deferred equipment notification. Existing inventory/drop transaction and cleanup ownership retained; existing deferred notification test now uses a rendering observer.",
+  "audio": {
+    "recipe": "m15_shield_block_mixture_assay.json",
+    "winning_sound_edids": [
+      "WPNBlockShieldHeavy",
+      "PHYDamageFlesh",
+      "WPNHitBlade"
+    ],
+    "scope": "Fixed stock three-layer context with declared Heavy Shield target bank. Fullclip and shield partial correlation>=.75, target residual energy>1%; audited SOUN gains and finite0/20ms starts. Other layer identities are not independently accepted by this check.",
+    "controls": "Independent time-domain capture generation; every required target tested, missing-target/noise cases rejected. V1/V2/V3 tests unchanged."
+  },
+  "verification": {
+    "development": "7 focused engine and41 focused Python tests (including17 audio cases).",
+    "integration": "Full normal/SAN engine+currentgames required because rendering changed. Full Python required because checker changed. Reuse unchanged component rules/parser receipts with original provenance.",
+    "runtime": "Normal/SAN references and exact held fresh continuations; inspect exact saved/live pairs, all unrelated AV channels, full items/ownership/dropper state, contact deltas, recovery/input and audio/captures.",
+    "endpoint": "Reuse shared owned projection. Exact state restoration and saved/live bodies; strict semantic/reference/body identity. Record differently elapsed moving transforms/velocities without a settled or matched trajectory claim; retain T7/F8 physical timing/step gates. Return force magnitude matches within1e-4 and horizontal heading follows each actual pre-return frame within1e-4 unit direction. Vertically settling earlier saves are not exact3D contact witnesses; full vectors/timers retained, not an exact3D direction claim.",
+    "checkpoint": "build/oblivion-compat/m15/S4/shield-defense-work-01/checkpoint-verification.json",
+    "integration_results": "Full normal/SAN engine2078each; final full Python490. Versioned preflight guard added after original487Python gate; only Python repeated, C++ hashes/game binaries unchanged.",
+    "runtime_results": "Normal/SAN references and exact held fresh:18 exact saved/live pairs,4epochs,2exact freshsources,2x30-field semantic comparisons,18 reviewedcaptures,one HeavyShield PCM event in eachrun."
+  },
+  "retained_failures": [
+    "normal01 course incorrectly waited for ordinary completion afterblockedhit3; corrected to actual Recoil recovery. Missing finalsave/return requirednormal02; no gameplay change.",
+    "normal02 resources pass, visualreview reveals stale carried NPC shield; listener fix requires current rendered reruns.",
+    "Shield-only two-asset assay omits concurrent layers; experimental all-layer fingerprint/partial checks do not prove every layer. Targeted Heavy Shield proof uses declared concurrent nuisance banks and unchanged thresholds; original failures retained."
+  ],
+  "limits": [
+    "Later selected-shield wear requires attacker action6; prior original-game negative observations reused, no forced attack-while-blocking route. This course covers ordinary early blocking wear.",
+    "NPC public defensive input with AI disabled is not autonomous S7 defense. Other courses retain the required production opponent policy.",
+    "This case is a bounded keyboard/first-person shield context, not every view/device/material/mastery branch or fullS4.",
+    "Complete remaining gameplay/feedback and required T7/F8 campaigns; caps are not achieved FPS."
+  ],
+  "input_protocol": {
+    "base": "Existing combined melee observer/input bindings; shared external-course launcher.",
+    "draw": "F once before source capture; actual NPC publicblock intent begins stockblockidle.",
+    "save": "F5 after held guard, first BlockHit, first recovered hold, broken/recovered state and unblockedreturn. Fresh source omits the first source capture.",
+    "attack": "U ordinary2, natural Player Recoil recovery, U ordinary3 for break, wait actual Recoil cause3/action-1 and full Fatigue, U ordinary4 unblockedreturn, wait ordinary4 completion/fullFatigue.",
+    "geometry": "Actual approach/render-ray visibility guard before first strike; no contact or outcome setters."
+  }
+}

@@ -8,6 +8,28 @@ import math
 import re
 
 
+def validate_recoil_contact_waits(manifest):
+    """Reject the canonical ordinary-finish wait for a declared Recoil contact.
+
+    This is a cheap fixture prerequisite, not a gameplay outcome assertion.
+    The actor/cause pair matters: another actor's ordinary strike may finish.
+    """
+    declarations = manifest.get('recoil_contact_waits', [])
+    if not isinstance(declarations, list):
+        raise ValueError('Recoil wait declarations require a list')
+    for expected in declarations:
+        if (not isinstance(expected, dict) or set(expected) != {'actor', 'cause'}
+                or not isinstance(expected['actor'], str) or not expected['actor']
+                or type(expected['cause']) is not int or not 0 < expected['cause'] < 2**64):
+            raise ValueError('Invalid Recoil wait actor/cause declaration')
+        actor, cause = expected['actor'], expected['cause']
+        wrong = f'M15 melee finished: actor={actor} id={cause} action=-1'
+        if any(a.get('type') == 'wait_log' and a.get('pattern') == wrong
+               for a in manifest['actions']):
+            raise ValueError('Recoil contact cannot await ordinary completion: ' + str(cause))
+    return len(declarations)
+
+
 def applied_side_power_source(state, actor, cause=11):
     """Admit an applied side contact, without inventing an idle/pending source."""
     player = state['player']['reference']

@@ -11138,11 +11138,13 @@ TEST(OblivionWorldTest, DeferredEquipmentNotificationsPublishWithoutObserversAnd
     auto& world = fixture.mWorld;
     const auto actor = installPreparedDebitAmmunition(fixture, 2);
     auto& inventory = actor.getClass().getInventoryStore(actor);
-    struct Observer : MWWorld::InventoryStoreListener
+    struct Observer : MWRender::ESM4EquipmentAnimation
     {
+        explicit Observer(const MWWorld::Ptr& actor)
+            : ESM4EquipmentAnimation(actor, new osg::Group, nullptr) {}
         int mChanged = 0;
-        void equipmentChanged() override { ++mChanged; }
-    } observer;
+        void refreshEquipment() override { ++mChanged; }
+    } observer(actor);
     inventory.setInvListener(&observer);
     std::shared_ptr<MWWorld::InventoryStore::PreparedUnequip> change =
         inventory.prepareUnequip(MWWorld::InventoryStore::Slot_Ammunition);

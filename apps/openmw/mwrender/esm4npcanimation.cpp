@@ -63,6 +63,13 @@ namespace MWRender
     {
     }
 
+    void ESM4EquipmentAnimation::equipmentChanged()
+    {
+        // Native prepared unequip/drop notifications own inventory changes.
+        // Refresh worn parts as well as the independently tracked weapon.
+        refreshEquipment();
+    }
+
     void ESM4EquipmentAnimation::refreshEquipment()
     {
         updateWeapon();
