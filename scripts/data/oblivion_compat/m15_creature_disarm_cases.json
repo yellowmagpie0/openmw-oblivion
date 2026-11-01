@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-CREATURE-DISARM-001",
+  "full_M15S4_acceptance": false,
+  "requirements": [
+    "C1/D2 selected armed Creature target disarm preserves valid contact and publishes one intact owned drop",
+    "I4 actual weapon withdrawal, natural recovery/return and exact active-drop restart"
+  ],
+  "problem": "Counter, immediate defensive and side-power target guards discarded selected Creature disarm contacts; World/service also restricted drop owners to Player/NPC.",
+  "implementation": "Admit native Creature targets/owners through the existing query/contact transaction and equipped drop factory. Reuse common default placement, carried model/body and Creature no-NPC-replacement policy; no new numerical rule or schema.",
+  "world_tests": {
+    "ArmedCreatureTargetPreparesCounterAndImmediateDisarmWithoutMutation": 4,
+    "SidePowerAutomaticDisarmOwnsDamageDropAndReplayBoundary": "12 NPC/Creature left/right success/discard/stale contexts; exact default placement, condition/charge, one consumption and rollback",
+    "CreatureWeaponFactoryUsesSharedAttachmentAndAtomicallyPublishesOrRejectsBreak": "Existing Creature asset/scale/scene/ownership regressions retained"
+  },
+  "native_reference": "build/oblivion-compat/m15/S4/creature-disarm-work-01/reused-evidence.json",
+  "authoring": {
+    "recipe": "build/oblivion-compat/m15/S4/creature-disarm-work-01/prepare.py",
+    "editable_course": "build/oblivion-compat/m15/S4/creature-disarm-work-01/reference-course.json",
+    "source": "Existing armed-creature Goblin fixture and Creature Counter course, same production opponent policy.",
+    "initial": "Player sword50/shield100 equipped, Block100/Hand10 synchronized; Goblin sword50, combat seed1, existing Counter/disarm chance100 overrides. No contacts/reactions/drops/poses authored."
+  },
+  "course": [
+    "Actual held shield block and production Goblin attack2; Player Counter3 selects one disarm draw, zero Counter costs/damage and native Creature Stagger.",
+    "One intact physical Iron Longsword with actual wear49.4, correct dropper/Creature list, visible withdrawal; natural recovery, release and ordinary Player weapon return4.",
+    "Exact active Counter/Stagger/drop fresh processes: actual typed F5 proves held recovery before block release, then restored ordinary return without replay.",
+    "Complete gameplay/save endpoints precede camera tail; actual normal-input sheath/framing shows loose sword. Retained normal reference vanity image excluded from clear-drop image claim."
+  ],
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/creature-disarm-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/creature-disarm-work-01/checkpoint-verification.json",
+    "full_engine_per_build": 2087,
+    "exact_saved_live_pairs": 18,
+    "gameplay_process_epochs": 4,
+    "endpoint_comparisons": "2x31 fields",
+    "reviewed_images": 15,
+    "shared_fixture": "combined-mastery-work-01 run/inspect/compare plus existing monitor callback; backend/schema and checker hash/compile validated before launch."
+  },
+  "limits": [
+    "Runtime vertical slice is Master Player shield Counter against armed Goblin. Immediate and side-power branches have World coverage; no blanket actor/equipment/view/device Cartesian claim.",
+    "Logical reference and scene-root poses follow existing native change-mask latching and may differ slightly. Both complete samples retained; source and each save/live pose exact, intrinsic identity/asset/scale/motion/condition/charge/relations strict; no matched trajectory/timestep claim.",
+    "Horizontal return force heading/magnitude retain existing1e-4 checks; Player/target vertical settling is recorded. No new exact arithmetic/RNG-sequence requirement.",
+    "Final normal reference loose capture entered idle vanity and is excluded; clear normal fresh/SAN images prove item visibility. Thin-item body-volume ray sampling is diagnostic, actual direct image review required.",
+    "Routed PCM retained without new sound-family identity coverage. Remaining S4 gameplay/query/interruption/feedback and T7/F8 campaigns remain open."
+  ]
+}

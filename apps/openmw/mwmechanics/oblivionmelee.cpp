@@ -445,8 +445,6 @@ namespace MWMechanics
         if (disarm.mConsumesDraw) deltas.mRandomTransition = service->prepareCombatRandom(1);
         if (disarm.mTriggered)
         {
-            // Creature target drop policy remains a separate admission boundary.
-            if (victim.getType() == ESM::REC_CREA4) return std::nullopt;
             deltas.mDisarms.push_back({victim, *targetRight});
         }
         if (!nativeWorld->prepareOblivionStaggerReaction(actionId, victim, deltas)) return std::nullopt;
@@ -555,8 +553,6 @@ namespace MWMechanics
             }
             if (disarm.mTriggered)
             {
-                // Creature target drop policy remains separate; natural attacks have no item to drop.
-                if (attacker.getType() == ESM::REC_CREA4) return std::nullopt;
                 candidate.mDisarms.push_back({attacker, *targetRight});
             }
         }
@@ -623,8 +619,6 @@ namespace MWMechanics
                 (deltas.mRandomTransition ? deltas.mRandomTransition->mDraws : 0) + 1);
         if (proc.mTriggered)
         {
-            // Same explicit drop-policy boundary as Counter and defensive disarm.
-            if (victim != player && victim.getType() != ESM::REC_NPC_4) return std::nullopt;
             candidate.mDisarms.push_back({victim, *right});
             candidate.mKnockback.reset();
         }

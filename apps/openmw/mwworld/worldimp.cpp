@@ -5424,9 +5424,10 @@ namespace MWWorld
         for (const auto& request : deltas.mDisarms)
         {
             if (request.mOwner.isEmpty() || request.mItem.isEmpty()
-                || (request.mOwner != getPlayerConstPtr() && request.mOwner.getType() != ESM::REC_NPC_4)
+                || (request.mOwner != getPlayerConstPtr() && request.mOwner.getType() != ESM::REC_NPC_4
+                    && request.mOwner.getType() != ESM::REC_CREA4)
                 || request.mItem.getType() != ESM::REC_WEAP || !owners.insert(request.mOwner).second)
-                throw std::invalid_argument("native disarm requires distinct Player or NPC weapon owners");
+                throw std::invalid_argument("native disarm requires distinct native actor weapon owners");
             const auto id = OblivionProfileServices::nativeItemId(mStore, request.mItem.getCellRef().getRefId());
             const auto* form = id.getIf<ESM::FormId>();
             const auto* weapon = form ? mStore.get<ESM4::Weapon>().search(*form) : nullptr;
