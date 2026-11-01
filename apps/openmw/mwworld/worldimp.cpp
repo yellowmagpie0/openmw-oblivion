@@ -519,9 +519,9 @@ namespace MWWorld
         mLocalScripts.swapRuntime(data.mLocals);
         mGlobalVariables.swapRuntime(data.mGlobals);
         mTimeManager->swapRuntime(data.mClock);
-        static_assert(std::is_nothrow_swappable_v<ESM4::PathgridService>);
-        std::swap(mStore.getOblivionPathgridService(), data.mPathgrids);
         using std::swap;
+        static_assert(std::is_nothrow_swappable_v<ESM4::PathgridService>);
+        swap(mStore.getOblivionPathgridService(), data.mPathgrids);
         static_assert(std::is_nothrow_swappable_v<decltype(mPrng)>);
         swap(mPrng, data.mPrng);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionRuntimeState)>);

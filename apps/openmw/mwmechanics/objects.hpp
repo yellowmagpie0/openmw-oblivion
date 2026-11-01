@@ -27,6 +27,13 @@ namespace MWMechanics
         std::map<const MWWorld::LiveCellRefBase*, std::list<CharacterController>::iterator> mIndex;
 
     public:
+#ifdef _MSC_VER
+        friend void swap(Objects& left, Objects& right) noexcept
+        {
+            left.mObjects.swap(right.mObjects);
+            left.mIndex.swap(right.mIndex);
+        }
+#endif
         void addObject(const MWWorld::Ptr& ptr);
         ///< Register an animated object
 

@@ -3654,7 +3654,7 @@ namespace
             "assert(Actor.stats.ai.flee(target).modified == -23); "
             "assert(Actor.stats.ai.alarm(target).modified == -19); "
             "assert(Actor.stats.ai.hello(target).modified == 1)", sol::script_pass_on_error);
-        EXPECT_TRUE(result.valid()) << sol::error(result).what();
+        EXPECT_TRUE(result.valid()) << result.get<sol::error>().what();
         auto projected = stats.getAiSetting(MWMechanics::AiSetting::Fight);
         EXPECT_THROW(projected.setBase(50), std::logic_error);
         EXPECT_THROW(projected.setModifier(50), std::logic_error);
@@ -3667,7 +3667,7 @@ namespace
             "assert(Actor.stats.ai.fight(target).base == 1); "
             "assert(Actor.stats.ai.fight(target).modifier == 0.5); "
             "assert(Actor.stats.ai.fight(target).modified == -18)", sol::script_pass_on_error);
-        ASSERT_TRUE(result.valid()) << sol::error(result).what();
+        ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
         EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -7);
         ASSERT_NO_THROW(scripts.applyStatsCache());
         const auto& values = *service.findActorValues(ptr.getCellRef().getFormKey());
@@ -3681,7 +3681,7 @@ namespace
             .getModified(), 1);
         result = lua.safe_script("assert(Actor.stats.ai.fight(target).modified == -18); "
             "assert(Actor.stats.ai.fight(target).modifier == 0.5)", sol::script_pass_on_error);
-        EXPECT_TRUE(result.valid()) << sol::error(result).what();
+        EXPECT_TRUE(result.valid()) << result.get<sol::error>().what();
         EXPECT_THROW(world.requestOblivionStatModifier(ptr, 33, false,
             std::numeric_limits<float>::infinity()), std::invalid_argument);
         EXPECT_EQ(service.getNonPlayerIntegerValue(ptr, 33), -18);
@@ -4961,7 +4961,7 @@ namespace
         lua["target"] = &scripts.self();
         auto result = lua.safe_script("Actor.stats.attributes.strength(target).base = -1.75; "
             "NPC.stats.skills.longblade(target).base = 257.75", sol::script_pass_on_error);
-        ASSERT_TRUE(result.valid()) << sol::error(result).what();
+        ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
         EXPECT_EQ(service.findActorValues(ptrs[0].getCellRef().getFormKey())->mValues[0].mBase, 1);
         ASSERT_NO_THROW(scripts.applyStatsCache());
         ASSERT_NE(service.findActorLife(key), nullptr);
@@ -16620,7 +16620,7 @@ TEST(OblivionWorldTest, BountyPlayerClassLuaAndGenericAVCommandsShareDistinctNat
     lua["Player"] = bindings; lua["target"] = MWLua::GObject(player);
     auto result = lua.safe_script("assert(Player.getCrimeLevel(target) == 1); Player.setCrimeLevel(target, 25); "
         "assert(Player.getCrimeLevel(target) == 25)", sol::script_pass_on_error);
-    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
     EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mNormal, 25.f);
     EXPECT_EQ(service.getPlayerValue(37), 31.75f);
     values = (*service.findActorValues(ESM::FormKey::dynamic("player", 1))); values.mPlayerInShiveringIsles = true;
@@ -16629,7 +16629,7 @@ TEST(OblivionWorldTest, BountyPlayerClassLuaAndGenericAVCommandsShareDistinctNat
     EXPECT_EQ(stats.getBounty(), -3);
     result = lua.safe_script("Player.setCrimeLevel(target, -4); assert(Player.getCrimeLevel(target) == -4)",
         sol::script_pass_on_error);
-    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
     EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mNormal, 25.f);
     EXPECT_EQ((*service.findActorValues(ESM::FormKey::dynamic("player", 1))).mBounty->mShiveringIsles, -4.f);
     EXPECT_EQ(service.getPlayerValue(37), 31.75f);
@@ -16734,7 +16734,7 @@ TEST(OblivionWorldTest, PlayerReputationOwnsRawCountersSharedFameAndExistingInfa
     lua.new_usertype<MWLua::SelfObject>("SelfObject", sol::no_constructor);
     lua["target"] = &scripts.self();
     auto result = lua.safe_script("NPC.stats.reputation(target).current = 16777219", sol::script_pass_on_error);
-    ASSERT_TRUE(result.valid()) << sol::error(result).what();
+    ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
     EXPECT_EQ(stats.getReputation(), -20); // Deferred request does not publish early.
     ASSERT_NO_THROW(scripts.applyStatsCache());
     EXPECT_EQ(stats.getReputation(), 16777219);

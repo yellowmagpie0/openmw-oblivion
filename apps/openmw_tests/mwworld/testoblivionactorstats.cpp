@@ -4140,7 +4140,7 @@ namespace
                 "attribute.base = -1.75; skill.base = 257.75; "
                 "return attribute.base, skill.base, attribute.modified, skill.modified",
                 sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_EQ(result.get<float>(0), 255.f);
             EXPECT_EQ(result.get<float>(1), 1.f);
             EXPECT_EQ(result.get<float>(2), process == ESM4::ActorValueProcess::Active ? 272.f : 265.f);
@@ -4153,11 +4153,11 @@ namespace
             EXPECT_FALSE(result.valid());
             result = lua.safe_script("return Actor.stats.attributes.strength(target).base",
                 sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_EQ(result.get<float>(), 255.f); // Rejected input did not replace the queued write.
             result = lua.safe_script("Actor.stats.attributes.strength(target).base = 4294967296; "
                 "return Actor.stats.attributes.strength(target).base", sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_EQ(result.get<float>(), 0.f); // SSE overflow sentinel wraps at the native byte field.
             EXPECT_EQ(*service.findActorValues(values.mActor), values);
         }
@@ -4214,7 +4214,7 @@ namespace
             service.publishNonPlayerValues(ptr, values);
             auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
                 "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_FLOAT_EQ(result.get<float>(0), process == ESM4::ActorValueProcess::Active ? 57.f : 50.f);
             EXPECT_FLOAT_EQ(result.get<float>(1), process == ESM4::ActorValueProcess::Active ? 50.f : 45.f);
             auto damaged = values;
@@ -4223,7 +4223,7 @@ namespace
             service.publishNonPlayerValues(ptr, damaged);
             result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
                 "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_FLOAT_EQ(result.get<float>(0), process == ESM4::ActorValueProcess::Active ? -10.f : -17.f);
             EXPECT_FLOAT_EQ(result.get<float>(1), process == ESM4::ActorValueProcess::Active ? -18.f : -23.f);
         }
@@ -4277,7 +4277,7 @@ namespace
             stats.setSkill(ESM::Skill::LongBlade, skill);
             auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
                 "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
-            ASSERT_TRUE(result.valid()) << sol::error(result).what();
+            ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
             EXPECT_FLOAT_EQ(result.get<float>(0), damage == 3 ? 44.f : 0.f);
             EXPECT_FLOAT_EQ(result.get<float>(1), damage == 3 ? 32.f : 0.f);
         }
@@ -4292,7 +4292,7 @@ namespace
         service.publishPlayerValues(player, values, {});
         auto result = lua.safe_script("return Actor.stats.attributes.strength(target).modified, "
             "NPC.stats.skills.longblade(target).modified", sol::script_pass_on_error);
-        ASSERT_TRUE(result.valid()) << sol::error(result).what();
+        ASSERT_TRUE(result.valid()) << result.get<sol::error>().what();
         EXPECT_FLOAT_EQ(result.get<float>(0), 57.f);
         EXPECT_FLOAT_EQ(result.get<float>(1), 50.f);
     }

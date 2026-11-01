@@ -484,8 +484,25 @@ namespace MWWorld
         }
         if (mImpl->mExistingPlayer)
         {
+#ifdef _MSC_VER
+            // Keep the published NPC address stable without invoking MSVC's
+            // potentially allocating map moves in the aggregate NPC swap.
+            const auto fields = [](ESM::NPC& npc) {
+                return std::tie(npc.mNpdtType, npc.mNpdt.mAttributes, npc.mNpdt.mSkills,
+                    npc.mNpdt.mLevel, npc.mNpdt.mHealth, npc.mNpdt.mMana, npc.mNpdt.mFatigue,
+                    npc.mNpdt.mDisposition, npc.mNpdt.mReputation, npc.mNpdt.mRank, npc.mNpdt.mGold,
+                    npc.mBloodType, npc.mFlags, npc.mInventory, npc.mSpells, npc.mAiData,
+                    npc.mTransport, npc.mAiPackage, npc.mRecordFlags, npc.mId, npc.mRace,
+                    npc.mClass, npc.mFaction, npc.mScript, npc.mName, npc.mModel, npc.mHair, npc.mHead);
+            };
+            auto current = fields(*mImpl->mExistingPlayer);
+            auto incoming = fields(mImpl->mPlayer.mapped());
+            static_assert(std::is_nothrow_swappable_v<decltype(current)>);
+            current.swap(incoming);
+#else
             static_assert(std::is_nothrow_swappable_v<ESM::NPC>);
             std::swap(*mImpl->mExistingPlayer, mImpl->mPlayer.mapped());
+#endif
             mImpl->mCommittedPlayer = mImpl->mExistingPlayer;
         }
         else

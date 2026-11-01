@@ -4064,6 +4064,7 @@ namespace MWMechanics
 
     bool OblivionCombatService::commitPhysicalContact(PreparedPhysicalContact& contact) noexcept
     {
+        using std::swap;
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorValues>);
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeActorLife>);
         static_assert(std::is_nothrow_swappable_v<ESM4::TimedKnockbackState>);
@@ -4074,7 +4075,7 @@ namespace MWMechanics
         if (data.mCounterAllocation)
         {
             static_assert(std::is_nothrow_swappable_v<ESM4::ActionLedger>);
-            std::swap(mActions, data.mCounterAllocation->mNext);
+            swap(mActions, data.mCounterAllocation->mNext);
             mActionOwners.swap(data.mCounterAllocation->mNextOwners);
         }
         for (auto& condition : data.mConditions)
@@ -4101,7 +4102,7 @@ namespace MWMechanics
             else
             {
                 static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpPlayback>);
-                std::swap(found->second, next->second);
+                swap(found->second, next->second);
             }
         }
         std::swap(mActorValues.find(attackerKey)->second, data.mAttacking);
@@ -5119,8 +5120,9 @@ namespace MWMechanics
         OblivionCombatService& prepared, ESM4::RuntimeActorValues values,
         const ESM4::PlayerDynamicBaseSettings& settings)
     {
+        using std::swap;
         prepared.publishPlayerValues(player, std::move(values), settings);
-        std::swap(mActions, prepared.mActions);
+        swap(mActions, prepared.mActions);
         std::swap(mCombatRngState, prepared.mCombatRngState);
         mActionOwners.swap(prepared.mActionOwners);
         mActorValues.swap(prepared.mActorValues);
@@ -6747,6 +6749,7 @@ namespace MWMechanics
 
     bool OblivionCombatService::PreparedGetUpPlayback::commit() noexcept
     {
+        using std::swap;
         if (!isValid()) return false;
         auto& data = *mData;
         auto& owner = *data.mOwner;
@@ -6754,7 +6757,7 @@ namespace MWMechanics
             const auto found = target.find(data.mActor);
             if (staged.empty()) { if (found != target.end()) target.erase(found); }
             else if (found == target.end()) target.insert(staged.extract(staged.begin()));
-            else std::swap(found->second, staged.begin()->second);
+            else swap(found->second, staged.begin()->second);
         };
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpPlayback>);
         static_assert(std::is_nothrow_swappable_v<ESM4::RuntimeGetUpIdle>);
@@ -6769,7 +6772,7 @@ namespace MWMechanics
         {
             owner.mMeleeStates.erase(data.mActor);
             owner.mBowStates.erase(data.mActor);
-            std::swap(owner.mActions, *data.mNextActions);
+            swap(owner.mActions, *data.mNextActions);
             owner.mActionOwners.swap(data.mNextActionOwners);
             owner.mPreparedReleaseIdentity.mValue.reset();
         }

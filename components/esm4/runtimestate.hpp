@@ -631,6 +631,22 @@ namespace ESM4
 
     struct RuntimeGetUpPlayback
     {
+#ifdef _MSC_VER
+        friend void swap(RuntimeGetUpPlayback& left, RuntimeGetUpPlayback& right) noexcept
+        {
+            using std::swap;
+            swap(left.mNextIdentity, right.mNextIdentity);
+            swap(left.mRequests, right.mRequests);
+            left.mResources.swap(right.mResources);
+            left.mSequences.swap(right.mSequences);
+            swap(left.mCachedSequence, right.mCachedSequence);
+            swap(left.mResidentSequence, right.mResidentSequence);
+            swap(left.mActionSequence, right.mActionSequence);
+            left.mRequestSelections.swap(right.mRequestSelections);
+            left.mPendingRequests.swap(right.mPendingRequests);
+            left.mPhysicalHit.swap(right.mPhysicalHit);
+        }
+#endif
         std::uint64_t mNextIdentity = 1;
         NativeIdleRequestSlots mRequests;
         std::map<std::uint64_t, RuntimeGetUpIdle> mResources;

@@ -175,6 +175,18 @@ namespace ESM4
     class PathgridService
     {
     public:
+#ifdef _MSC_VER
+        friend void swap(PathgridService& left, PathgridService& right) noexcept
+        {
+            left.mGraphs.swap(right.mGraphs);
+            left.mCells.swap(right.mCells);
+            left.mNavigatorPathgrids.swap(right.mNavigatorPathgrids);
+            left.mForeignLinkTolerance.swap(right.mForeignLinkTolerance);
+            left.mLoadedCells.swap(right.mLoadedCells);
+            left.mCoarseGraphAdjacency.swap(right.mCoarseGraphAdjacency);
+            left.mGraphComponents.swap(right.mGraphComponents);
+        }
+#endif
         using ObjectResolver = std::function<PathgridObjectKind(const ESM::FormKey&)>;
 
         PathgridService() = default;

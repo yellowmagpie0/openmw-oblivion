@@ -68,8 +68,8 @@ dependencies. Qt tools/editor are disabled for this initial engine/test setup.
 ```
 
 `Build` defaults to `components-tests` and `esmtool`; `Test` defaults to the
-component binary. Engine and engine-test targets are configured for an explicit
-next checkpoint, rather than compiled by every routine component build:
+component binary. Build and test the engine explicitly rather than compiling it
+for every routine component change:
 
 ```powershell
 ./scripts/windows-dev.ps1 Build -Targets openmw,openmw-tests
@@ -77,7 +77,8 @@ next checkpoint, rather than compiled by every routine component build:
 ./scripts/windows-dev.ps1 Play
 ```
 
-The engine commands are not established as working by component-only checks.
+The engine build/test commands passed the engine checkpoint below. `Play` still
+needs a rendered, normal-input runtime check.
 Two compilation jobs are the conservative default for the 16 GB laptop.
 The helper adds runtime dependency directories to the current process's PATH;
 executables launched directly from Explorer may need DLL deployment instead.
@@ -135,7 +136,47 @@ this checkpoint text was added. Earlier failed attempts remain in
 `build/windows-audit/`. The Python log is
 `build/windows-audit/python-standalone-02.log`.
 
-Next checkpoint: build `openmw`/`openmw-tests` and address any additional MSVC
-portability gaps before attempting an isolated Windows runtime course. No game
-binary, engine-test, sanitizer, full Python, Linux regression or gameplay
-acceptance is claimed by this checkpoint. Linux remains the primary environment.
+At this initial checkpoint the game and engine tests were not built. The engine
+checkpoint below supersedes that build gap; the earlier evidence retains its
+original source and selection provenance.
+
+## Engine checkpoint — 2026-11-01
+
+`openmw.exe` and `openmw-tests.exe` now build natively. `openmw --version`
+starts, reports version 0.52.0 and exits successfully. The final combined run
+passed **2,091 engine tests and 3,216 component tests**, with zero failures/skips,
+exact inventory agreement and identical source fingerprints before/after.
+
+The port retains the nonthrowing publication/retention checks. MSVC-specific
+direct container swaps cover dialogue tries, Lua resources and input registries,
+pathgrids, actor/object/inventory lists, the action ledger and get-up graphs.
+Windows NPC and clock publication exchange fields in place. Newly cached pickup
+references prepare destination storage before publication and transfer the latest
+cache fields, including dropper-list updates, without allocating during commit.
+That uncommon Windows pickup path uses storage proportional to the cached
+reference count; Linux retains its reserved vector move. Explicit member
+exchanges must be kept in sync if the owning records gain fields.
+
+Other fixes make an OSG raw-pointer comparison and Lua test error extraction
+explicit, compare hash-table preparation against the actual initial bucket count,
+and keep the Windows test capture/Python verifier in UTF-8. No formulas,
+serialization schemas or numeric tolerances changed. Linux's production paths
+and build defaults remain intact; Linux regression/sanitizer runs were not
+available on this laptop and are not claimed here.
+
+Evidence uses a dirty tree based on `d587d4cfb3`, fingerprint
+`64a06fc827665134d24e4238b1eb624d29a200dbb4cb42c49dd8b0bb59c8fc94`,
+before these checkpoint notes were added. Full inventories, XML, cache, binary
+hashes and source receipts are in
+`build-windows/checks-8a6cb97ce13a4292b4cf02a3402505c6/`. The combined log and
+structured verification summary are
+`build/windows-engine-audit/combined-full-01.log` and
+`build/windows-engine-audit/verification.json`. The game executable's separate
+hash/startup receipt is `build/windows-engine-audit/openmw-version.json`.
+Earlier failed build/test attempts remain in that audit directory.
+
+Next action: use the existing `Play` command for an isolated prison inspection,
+then check real rendering, input, inventory and save/reload. The game has not
+been launched into a rendered cell in this checkpoint. Normal-interaction
+gameplay, full Python, sanitizer and Linux/Morrowind runtime acceptance remain
+separate gates; Linux remains the primary development environment.

@@ -3,6 +3,7 @@
 #include <components/translation/translation.hpp>
 
 #include <gtest/gtest.h>
+#include <utility>
 
 struct KeywordSearchTest : public ::testing::Test
 {
@@ -11,6 +12,26 @@ protected:
 
     void TearDown() override {}
 };
+
+TEST_F(KeywordSearchTest, SwappingPopulatedTriesPreservesTopicsAndLongestMatches)
+{
+    MWDialogue::KeywordSearch first, second;
+    first.seed("foo", "short-topic");
+    first.seed("foo bar", "long-topic");
+    second.seed("other", "other-topic");
+    using std::swap;
+    swap(first, second);
+    const std::string text = "foo bar other";
+    std::vector<MWDialogue::KeywordSearch::Match> matches;
+    first.highlightKeywords(text.begin(), text.end(), matches);
+    ASSERT_EQ(matches.size(), 1u);
+    EXPECT_EQ(matches[0].mTopicId, "other-topic");
+    matches.clear();
+    second.highlightKeywords(text.begin(), text.end(), matches);
+    ASSERT_EQ(matches.size(), 1u);
+    EXPECT_EQ(matches[0].mTopicId, "long-topic");
+    EXPECT_EQ(std::string(matches[0].mBeg, matches[0].mEnd), "foo bar");
+}
 
 TEST_F(KeywordSearchTest, keyword_test_conflict_resolution)
 {

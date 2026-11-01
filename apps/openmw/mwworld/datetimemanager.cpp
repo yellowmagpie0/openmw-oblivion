@@ -1,4 +1,5 @@
 #include "datetimemanager.hpp"
+#include <tuple>
 
 #include <type_traits>
 #include <utility>
@@ -266,10 +267,23 @@ namespace MWWorld
 
 void MWWorld::DateTimeManager::swapRuntime(DateTimeManager& parked) noexcept
 {
+#ifdef _MSC_VER
+    const auto fields = [](DateTimeManager& clock) {
+        return std::tie(clock.mDaysPassed, clock.mDay, clock.mMonth, clock.mYear,
+            clock.mGameHour, clock.mGameTimeScale, clock.mSimulationTimeScale,
+            clock.mSimulationTime, clock.mPaused, clock.mPausedTags);
+    };
+    // Rendering time belongs to the process and must not follow the runtime.
+    auto current = fields(*this);
+    auto incoming = fields(parked);
+    static_assert(std::is_nothrow_swappable_v<decltype(current)>);
+    current.swap(incoming);
+#else
     static_assert(std::is_nothrow_swappable_v<DateTimeManager>);
     const double renderingTime = mRenderingSimulationTime;
     const double parkedRenderingTime = parked.mRenderingSimulationTime;
     std::swap(*this, parked);
     mRenderingSimulationTime = renderingTime;
     parked.mRenderingSimulationTime = parkedRenderingTime;
+#endif
 }

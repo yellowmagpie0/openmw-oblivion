@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <set>
+#include <utility>
 #include <vector>
 
 namespace ESM4
@@ -25,6 +26,13 @@ namespace ESM4
         std::set<std::uint64_t> mPending;
 
     public:
+#ifdef _MSC_VER
+        friend void swap(ActionLedger& left, ActionLedger& right) noexcept
+        {
+            std::swap(left.mNext, right.mNext);
+            left.mPending.swap(right.mPending);
+        }
+#endif
         std::uint64_t allocate();
         bool isPending(std::uint64_t id) const;
         bool isConsumed(std::uint64_t id) const;

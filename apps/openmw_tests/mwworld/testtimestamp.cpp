@@ -3,11 +3,32 @@
 #include <cmath>
 
 #include "apps/openmw/mwworld/timestamp.hpp"
+#include "apps/openmw/mwworld/datetimemanager.hpp"
 
 namespace MWWorld
 {
     namespace
     {
+        TEST(MWWorldTimeStampTest, RuntimeSwapPreservesRenderingClocksAndExchangesPauseTags)
+        {
+            DateTimeManager original, incoming;
+            original.setSimulationTime(3.5);
+            incoming.setSimulationTime(9.5);
+            original.setRenderingSimulationTime(10);
+            incoming.setRenderingSimulationTime(20);
+            original.pause("outgoing");
+            incoming.pause("incoming");
+            original.swapRuntime(incoming);
+            EXPECT_EQ(original.getSimulationTime(), 9.5);
+            EXPECT_EQ(incoming.getSimulationTime(), 3.5);
+            EXPECT_EQ(original.getRenderingSimulationTime(), 10);
+            EXPECT_EQ(incoming.getRenderingSimulationTime(), 20);
+            EXPECT_EQ(original.getPausedTags().size(), 1u);
+            EXPECT_TRUE(original.getPausedTags().contains("incoming"));
+            EXPECT_EQ(incoming.getPausedTags().size(), 1u);
+            EXPECT_TRUE(incoming.getPausedTags().contains("outgoing"));
+        }
+
         TEST(MWWorldTimeStampTest, operatorPlusShouldNotChangeTimeStampForZero)
         {
             TimeStamp timeStamp;

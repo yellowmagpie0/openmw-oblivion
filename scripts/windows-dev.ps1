@@ -10,6 +10,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Engine inventories contain UTF-8 test names; avoid Windows ANSI/OEM codecs
+# in both native-output capture and Python's text readers.
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::OutputEncoding = $OutputEncoding
+$env:PYTHONUTF8 = '1'
 $repo = Split-Path $PSScriptRoot -Parent
 $build = Join-Path $repo 'build-windows'
 $deps = Join-Path $repo 'deps/vcpkg-x64-windows-2022-2026-02-24'

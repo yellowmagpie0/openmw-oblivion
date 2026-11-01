@@ -650,8 +650,9 @@ TEST(MWWorldPtrTest, singletonPreparedRegistrationMaterializesTheFirstHashTableB
     base.mId = ESM::RefId::stringRefId("reserved-singleton"); store.insertStatic(base);
     MWWorld::ManualRef ref(store, base.mId);
     MWWorld::PtrRegistry registry;
+    const auto initialBuckets = registry.bucketCount();
     auto pool = registry.prepareInsertions(1);
-    EXPECT_EQ(registry.bucketCount(), 1u); // The live table is untouched by preparation.
+    EXPECT_EQ(registry.bucketCount(), initialBuckets); // Preparation leaves the live table untouched.
     const auto reservedBuckets = registry.preparedBucketCount();
     EXPECT_GT(reservedBuckets, 1u);
     registry.insertPrepared(ref.getPtr(), pool);

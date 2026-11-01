@@ -218,6 +218,23 @@ namespace MWWorld
     {
         struct Lists
         {
+#ifdef _MSC_VER
+            friend void swap(Lists& left, Lists& right) noexcept
+            {
+                left.mPotions.mList.swap(right.mPotions.mList);
+                left.mAppas.mList.swap(right.mAppas.mList);
+                left.mArmors.mList.swap(right.mArmors.mList);
+                left.mBooks.mList.swap(right.mBooks.mList);
+                left.mClothes.mList.swap(right.mClothes.mList);
+                left.mIngreds.mList.swap(right.mIngreds.mList);
+                left.mLights.mList.swap(right.mLights.mList);
+                left.mLockpicks.mList.swap(right.mLockpicks.mList);
+                left.mMiscItems.mList.swap(right.mMiscItems.mList);
+                left.mProbes.mList.swap(right.mProbes.mList);
+                left.mRepairs.mList.swap(right.mRepairs.mList);
+                left.mWeapons.mList.swap(right.mWeapons.mList);
+            }
+#endif
             MWWorld::CellRefList<ESM::Potion> mPotions;
             MWWorld::CellRefList<ESM::Apparatus> mAppas;
             MWWorld::CellRefList<ESM::Armor> mArmors;
