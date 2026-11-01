@@ -471,7 +471,7 @@ namespace
     int armorType(std::uint32_t slots)
     {
         if (slots & ESM4::Armor::TES4_Shield) return ESM::Armor::Shield;
-        if (slots & ESM4::Armor::TES4_Head) return ESM::Armor::Helmet;
+        if (slots & (ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair)) return ESM::Armor::Helmet;
         if (slots & ESM4::Armor::TES4_UpperBody) return ESM::Armor::Cuirass;
         if (slots & ESM4::Armor::TES4_LowerBody) return ESM::Armor::Greaves;
         if (slots & ESM4::Armor::TES4_Feet) return ESM::Armor::Boots;

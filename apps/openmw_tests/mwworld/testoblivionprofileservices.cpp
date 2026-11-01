@@ -6,6 +6,7 @@
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/clothing.hpp"
+#include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwworld/inventorystore.hpp"
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
@@ -14,6 +15,57 @@
 
 namespace
 {
+    TEST(OblivionProfileServicesTest, RestoresHairSlotArmorAlongsideCuirass)
+    {
+        MWWorld::ESMStore store;
+        MWClass::Armor::registerSelf();
+        ESM4::Npc player{};
+        player.mId = {7, 0};
+        player.mEditorId = "Player";
+        player.mIsTES4 = true;
+        store.getWritable<ESM4::Npc>().insertStatic(player);
+        const std::array<std::uint32_t, 4> masks{ESM4::Armor::TES4_Head, ESM4::Armor::TES4_Hair,
+            ESM4::Armor::TES4_Head | ESM4::Armor::TES4_Hair, ESM4::Armor::TES4_UpperBody};
+        for (std::uint32_t i = 0; i < masks.size(); ++i)
+        {
+            ESM4::Armor armor{};
+            armor.mId = {0x900 + i, 0};
+            armor.mArmorFlags = masks[i];
+            armor.mData.health = 50;
+            store.getWritable<ESM4::Armor>().insertStatic(
+                armor, ESM::FormKey::content("items.esm", 0x900 + i));
+        }
+        MWWorld::OblivionProfileServices::install(store);
+        MWBase::Environment environment;
+        environment.setESMStore(store);
+        const ESM::FormKeyResolver resolver({"items.esm"});
+        ESM4::RuntimeInventoryItem body;
+        body.mBase = ESM::FormKey::content("items.esm", 0x903);
+        body.mCount = 1;
+        body.mCondition = 50;
+        body.mEquippedSlots = ESM4::Armor::TES4_UpperBody;
+        for (std::uint32_t i = 0; i < 3; ++i)
+        {
+            SCOPED_TRACE(masks[i]);
+            auto helmet = body;
+            helmet.mBase = ESM::FormKey::content("items.esm", 0x900 + i);
+            helmet.mEquippedSlots = masks[i];
+            auto prepared = MWWorld::OblivionProfileServices::prepareActorInventory(
+                store, resolver, {helmet, body});
+            ASSERT_EQ(prepared.size(), 2);
+            EXPECT_EQ(prepared[0].mEquipmentSlot, MWWorld::InventoryStore::Slot_Helmet);
+            EXPECT_EQ(prepared[1].mEquipmentSlot, MWWorld::InventoryStore::Slot_Cuirass);
+            auto inventory = MWWorld::OblivionProfileServices::stageActorInventory(prepared);
+            const auto head = inventory->getSlot(MWWorld::InventoryStore::Slot_Helmet);
+            const auto torso = inventory->getSlot(MWWorld::InventoryStore::Slot_Cuirass);
+            ASSERT_NE(head, inventory->end());
+            ASSERT_NE(torso, inventory->end());
+            EXPECT_EQ(head->getCellRef().getRefId(), ESM::RefId(ESM::FormId{0x900 + i, 0}));
+            EXPECT_EQ(torso->getCellRef().getRefId(), ESM::RefId(ESM::FormId{0x903, 0}));
+            EXPECT_EQ(head->getCellRef().getNativeItemCondition(), 50.f);
+        }
+    }
+
     TEST(OblivionProfileServicesTest, preparesDetachedInventoryBeforeAnyLiveReplacement)
     {
         MWWorld::ESMStore store;

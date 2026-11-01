@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "case_id": "M15-S4-LIGHT-ARMOR-MASTERY-001",
+  "requirements": [
+    "M15-F02 block/armor: stock body armor, native slot/condition ownership and mixed control",
+    "M15-MASTERY-LIGHTARMOR-04: Master protection through normal contacts, valid all-light and invalid heavy coverage, actual before/after consequence restart"
+  ],
+  "full_M15S4_acceptance": false,
+  "fixture": {
+    "base": "Existing combined-mastery fixture, before-shield actual source; retain source geometry and original records.",
+    "actor": "content:oblivion.esm:01fc43",
+    "base_actor_values": {
+      "LightArmor": 100,
+      "HeavyArmor": 5,
+      "Luck": 50
+    },
+    "initial_health": 120,
+    "policy": "Retain old clothing unequipped. Append one healthy instance of each stock Fur piece; mixed control substitutes IronBoots for FurBoots. Player RustyIronShortsword condition50 and full Fatigue140 unchanged. No contacts/damage/reactions/outcomes authored. NPC remains idle because no StartCombat activation is sent.",
+    "records": [
+      {
+        "base": "content:oblivion.esm:024768",
+        "edid": "FurHelmet",
+        "native_slots": 2,
+        "heavy": false,
+        "armor_hundredths": 200,
+        "max_health": 50,
+        "weight": 1.0
+      },
+      {
+        "base": "content:oblivion.esm:024767",
+        "edid": "FurBoots",
+        "native_slots": 32,
+        "heavy": false,
+        "armor_hundredths": 200,
+        "max_health": 50,
+        "weight": 1.5
+      },
+      {
+        "base": "content:oblivion.esm:024766",
+        "edid": "FurCuirass",
+        "native_slots": 4,
+        "heavy": false,
+        "armor_hundredths": 500,
+        "max_health": 100,
+        "weight": 5.0
+      },
+      {
+        "base": "content:oblivion.esm:024765",
+        "edid": "FurGauntlets",
+        "native_slots": 16,
+        "heavy": false,
+        "armor_hundredths": 200,
+        "max_health": 50,
+        "weight": 1.0
+      },
+      {
+        "base": "content:oblivion.esm:024764",
+        "edid": "FurGreaves",
+        "native_slots": 8,
+        "heavy": false,
+        "armor_hundredths": 300,
+        "max_health": 75,
+        "weight": 3.0
+      },
+      {
+        "base": "content:oblivion.esm:01c6cf",
+        "edid": "IronBoots",
+        "native_slots": 32,
+        "heavy": true,
+        "armor_hundredths": 400,
+        "max_health": 150,
+        "weight": 9.0
+      }
+    ],
+    "base_source": {
+      "path": "build/oblivion-compat/m15/S4/shield-defense-work-01/fixture/before-shield.omwsave",
+      "sha256": "ea873c1ea1f4c22c43cff5f4893e1a97d5784105fffcf9deb4608ec4ae90e3c2"
+    }
+  },
+  "profiles": {
+    "light": {
+      "name": "Master Light Armor protection light",
+      "weapon_family": "blade",
+      "animation_family": "onehand",
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "stock_weapon": "content:oblivion.esm:090615",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "stock_weapon_health": 56,
+      "stock_weapon_weight": 8,
+      "initial_player_weapon_condition": 50,
+      "initial_player_weapon_charge": -1,
+      "base_block": 50,
+      "course_window": "ordinary",
+      "expected_ordinary_fatigue_cost": 7.8,
+      "expected_incoming_block_fatigue_cost": 0,
+      "expected_reference_debits": 1,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "expected_attacker_recoil": true,
+      "opponent_actor": "content:oblivion.esm:01fc43",
+      "opponent_base": "content:oblivion.esm:025200",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse accepted combined fixture geometry."
+      },
+      "armor_mastery": true,
+      "armor_variant": "light",
+      "expected_armor_rating": 21,
+      "target_health": 120
+    },
+    "mixed": {
+      "name": "Master Light Armor protection mixed",
+      "weapon_family": "blade",
+      "animation_family": "onehand",
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "stock_weapon": "content:oblivion.esm:090615",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "stock_weapon_health": 56,
+      "stock_weapon_weight": 8,
+      "initial_player_weapon_condition": 50,
+      "initial_player_weapon_charge": -1,
+      "base_block": 50,
+      "course_window": "ordinary",
+      "expected_ordinary_fatigue_cost": 7.8,
+      "expected_incoming_block_fatigue_cost": 0,
+      "expected_reference_debits": 1,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "expected_attacker_recoil": true,
+      "opponent_actor": "content:oblivion.esm:01fc43",
+      "opponent_base": "content:oblivion.esm:025200",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse accepted combined fixture geometry."
+      },
+      "armor_mastery": true,
+      "armor_variant": "mixed",
+      "expected_armor_rating": 13,
+      "target_health": 120
+    }
+  },
+  "reference_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key_held",
+      "value": "f",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 overlap activation: reachable=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 armor fixture: worn=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-initial.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-contact.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2 action=-1",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "source_transform": "Set NPC base LightArmor27 to100; clear worn bits on existing shirt/pants, retain items; append stock armor definitions at declared max_health and native_slots using existing inventory item metadata. Source readback must exactly equal staged state; no pending actions/effects/owners.",
+  "expected": {
+    "all_light_item_rating": 14,
+    "all_light_master_rating": 21,
+    "mixed_item_and_total_rating": 13,
+    "basis": "Existing native rule/World coverage supplies weighted eligibility, effective skill, floor/condition/entry aggregation and base-rank contracts. Healthy Fur pieces contribute2+2+5+2+3; Heavy5 IronBoots contributes1 instead of FurBoots2. Heavy coverage disables Master1.5. Installed cap85 is inactive.",
+    "unarmored_runtime_control": "player-shield-gamepad-normal-01: actual released-before-return3 and return3 exact snapshots; full-Fatigue/condition50 sword and relevant Player/target AV inputs match. Original control remains valid because projection change affects worn Hair armor absent in that control; physical damage sources unchanged.",
+    "damage_tolerance_absolute": 0.0002,
+    "all_light_damage_approx": 3.01875,
+    "mixed_damage_approx": 3.32445
+  },
+  "implementation": {
+    "file": "apps/openmw/mwworld/oblivionprofileservices.cpp",
+    "change": "Native Head or Hair armor projects to Helmet; stock Hair-only FurHelmet no longer collides with Cuirass during saved-inventory restoration.",
+    "test": "OblivionProfileServicesTest.RestoresHairSlotArmorAlongsideCuirass",
+    "test_scope": "Real projection/staging for Head/Hair/Head+Hair each with an independent cuirass; native runtime verifies original Hair2 masks across actual saves/restarts."
+  },
+  "preflight": "Stock record/health/mask audit, exact initial readback, alive/empty pending/effects, distinct worn masks, shared approach/render-ray guard. Read-only shared observer requires every intended worn stock identity before first contact.",
+  "restart": "Exact actual baseline save -> legitimate contact2/recovery, and exact actual contact save -> recovery without replay; both normal/SAN. Do not count authored initial source loading alone as the actual-before restart gate.",
+  "verification": {
+    "plan": "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/verification-plan.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/checkpoint-verification.json",
+    "focused_engine": 9,
+    "full_engine_per_build": 2079,
+    "source_policy": "One coherent normal/SAN engine+runtime gate after shared projection fix. Component math and490Python sources unchanged, original receipts/hashes revalidated. No broad rebuild after checker/expected-only metadata changes.",
+    "shared_checkers": "combined-mastery run.py/inspect.py/compare-pair.py; --armor-mastery with before/postcontact flags. Existing exact-pair and owned-state helpers reused.",
+    "results": "Focused9 and full2079engine per normal/SAN;18 exact save/live pairs over8epochs,4 exact actual before/after fresh sources,4x29field endpoint comparisons,18 directly reviewed captures. Normal/SAN all-light damage3.018752098 versus mixed3.324448586; relevant outgoing/target input values match retained unarmored control."
+  },
+  "retained_failures": [
+    "normal01: actual FurHelmet Hair2 source loads unequipped because former armor projection fell back to Cuirass. Real gameplay defect, not fixture repair; fixed current runtimes required.",
+    "Old checker required empty force at ordinary/Fatigue recovery; valid short force remains. Reinspect retained evidence under existing positive-force/timer policy, no gameplay rerun.",
+    "Mixed expected rating14 corrected to13 because skill-scaled heavy boots floor to1. Expected-only metadata; source save unchanged, no gameplay rerun."
+  ],
+  "limits": [
+    "NPC first-person keyboard contact contexts; thresholds/modifiers and other actor/view combinations retain their separate L1/World/runtime provenance. Not a blanket mastery closure.",
+    "Postcontact restart compares force actor/vector strictly, recording elapsed remaining timers. Before-contact restart validates new force magnitude/horizontal heading under the existing saved-pose policy; no matched physical timestep/trajectory claim. T7/F8 remain open.",
+    "Routed PCM/logs retained; no independent armor-material audio identity claim. Captures show helmet/torso/contact/recovery; no blanket full appearance acceptance."
+  ],
+  "before_fresh_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 armor fixture: worn=true",
+      "after_start": true,
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "u",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=2 ",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-contact.png",
+      "minimum_entropy": 0.03
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=2 action=-1",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "(?s)\"event\":\"save-complete\".*\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ],
+  "postcontact_fresh_actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 armor fixture: worn=true",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 course fatigue ready: current=",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "key_held",
+      "value": "F5",
+      "hold_seconds": 0.08,
+      "pause_seconds": 0.08
+    },
+    {
+      "type": "wait_log",
+      "pattern": "\"event\":\"save-complete\"",
+      "timeout_seconds": 180,
+      "abort_on_failure": true,
+      "path": "events.jsonl"
+    },
+    {
+      "type": "screenshot",
+      "name": "armor-recovered.png",
+      "minimum_entropy": 0.03
+    }
+  ]
+}
