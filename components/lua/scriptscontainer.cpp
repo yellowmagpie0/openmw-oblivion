@@ -51,7 +51,7 @@ namespace LuaUtil
         explicit Data(ScriptsContainer& owner) : mOwner(&owner)
         {
             mArchive = std::make_unique<ScriptsContainer>(&owner.mLua, owner.mNamePrefix, nullptr,
-                std::holds_alternative<LoadedData>(owner.mData));
+                std::holds_alternative<LoadedData>(owner.runtimeData()));
             auto interfaces = mArchive->mAPI.find("openmw.interfaces");
             std::optional<sol::main_object> freshInterfaces;
             if (interfaces != mArchive->mAPI.end()) freshInterfaces = interfaces->second;
@@ -87,7 +87,7 @@ namespace LuaUtil
             *mOwner->mThis = mOwner;
             *mArchive->mThis = mArchive.get();
             for (auto* container : {mOwner, mArchive.get()})
-                if (auto* loaded = std::get_if<LoadedData>(&container->mData))
+                if (auto* loaded = std::get_if<LoadedData>(&container->runtimeData()))
                     for (auto& [id, script] : loaded->mScripts)
                         if (script.mContext) script.mContext->mContainer = container;
             mArchive->mParkedRuntime = true;
@@ -183,7 +183,7 @@ namespace LuaUtil
         registerEngineHandlers({ &mUpdateHandlers });
         if (load)
         {
-            LoadedData& data = mData.emplace<LoadedData>();
+            LoadedData& data = runtimeData().emplace<LoadedData>();
             mLua.protectedCall([&](LuaView& view) {
                 data.mPublicInterfaces = sol::table(view.sol(), sol::create);
                 addPackage("openmw.interfaces", makeReadOnly(data.mPublicInterfaces));
@@ -364,7 +364,7 @@ namespace LuaUtil
                     return variant.mScripts.count(scriptId) != 0;
                 }
             },
-            mData);
+            runtimeData());
     }
 
     void ScriptsContainer::removeScript(int scriptId)
@@ -550,7 +550,7 @@ namespace LuaUtil
 
     void ScriptsContainer::save(ESM::LuaScripts& data)
     {
-        if (const UnloadedData* unloadedData = std::get_if<UnloadedData>(&mData))
+        if (const UnloadedData* unloadedData = std::get_if<UnloadedData>(&runtimeData()))
         {
             data.mScripts = unloadedData->mScripts;
             return;
@@ -560,12 +560,12 @@ namespace LuaUtil
 
     void ScriptsContainer::save(LuaView&, ESM::LuaScripts& data)
     {
-        if (const UnloadedData* unloadedData = std::get_if<UnloadedData>(&mData))
+        if (const UnloadedData* unloadedData = std::get_if<UnloadedData>(&runtimeData()))
         {
             data.mScripts = unloadedData->mScripts;
             return;
         }
-        const auto& loadedData = std::get<LoadedData>(mData);
+        const auto& loadedData = std::get<LoadedData>(runtimeData());
         std::map<int, std::vector<ESM::LuaTimer>> timers;
         auto saveTimerFn = [&](const Timer& timer, TimerType timerType) {
             if (!timer.mSerializable)
@@ -678,11 +678,11 @@ namespace LuaUtil
     {
         requireMutableRuntime();
         mRequiredLoading = true;
-        if (LoadedData* data = std::get_if<LoadedData>(&mData))
+        if (LoadedData* data = std::get_if<LoadedData>(&runtimeData()))
             return *data;
-        UnloadedData& unloadedData = std::get<UnloadedData>(mData);
+        UnloadedData& unloadedData = std::get<UnloadedData>(runtimeData());
         std::vector<ESM::LuaScript> savedScripts = std::move(unloadedData.mScripts);
-        LoadedData& data = mData.emplace<LoadedData>();
+        LoadedData& data = runtimeData().emplace<LoadedData>();
 
         const ScriptsConfiguration& cfg = mLua.getConfiguration();
 
@@ -767,12 +767,12 @@ namespace LuaUtil
 
     ScriptsContainer::UnloadedData& ScriptsContainer::ensureUnloaded(LuaView& view)
     {
-        if (UnloadedData* data = std::get_if<UnloadedData>(&mData))
+        if (UnloadedData* data = std::get_if<UnloadedData>(&runtimeData()))
             return *data;
         UnloadedData data;
         save(view, data);
         mAPI.erase("openmw.interfaces");
-        UnloadedData& out = mData.emplace<UnloadedData>(std::move(data));
+        UnloadedData& out = runtimeData().emplace<UnloadedData>(std::move(data));
         for (auto& [_, handlers] : mEngineHandlers)
             handlers->mList.clear();
         mRequiredLoading = false;
@@ -813,7 +813,7 @@ namespace LuaUtil
                     variant.mPublicInterfaces.clear();
                 }
             },
-            mData);
+            runtimeData());
     }
 
     ScriptsContainer::Script& ScriptsContainer::getScript(int scriptId)
@@ -916,7 +916,7 @@ namespace LuaUtil
     void ScriptsContainer::statsNextFrame()
     {
         requireMutableRuntime();
-        if (LoadedData* data = std::get_if<LoadedData>(&mData))
+        if (LoadedData* data = std::get_if<LoadedData>(&runtimeData()))
         {
             for (auto& [scriptId, script] : data->mScripts)
             {
@@ -930,7 +930,7 @@ namespace LuaUtil
 
     void ScriptsContainer::addInstructionCount(int scriptId, int64_t instructionCount)
     {
-        if (LoadedData* data = std::get_if<LoadedData>(&mData))
+        if (LoadedData* data = std::get_if<LoadedData>(&runtimeData()))
         {
             auto it = data->mScripts.find(scriptId);
             if (it != data->mScripts.end())
@@ -952,7 +952,7 @@ namespace LuaUtil
                 auto [rIt, _] = mRemovedScriptsMemoryUsage.emplace(scriptId, 0);
                 return &rIt->second;
             },
-            mData);
+            runtimeData());
         *usage += memoryDelta;
 
         if (mLua.getSettings().mLogMemoryUsage)
@@ -970,7 +970,7 @@ namespace LuaUtil
     void ScriptsContainer::collectStats(std::vector<ScriptStats>& stats) const
     {
         stats.resize(mLua.getConfiguration().size());
-        if (const LoadedData* data = std::get_if<LoadedData>(&mData))
+        if (const LoadedData* data = std::get_if<LoadedData>(&runtimeData()))
         {
             for (auto& [id, script] : data->mScripts)
             {

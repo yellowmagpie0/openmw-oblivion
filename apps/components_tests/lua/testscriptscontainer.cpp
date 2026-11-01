@@ -737,6 +737,32 @@ CUSTOM: test1.lua
         EXPECT_FALSE(retained.restore()); EXPECT_FALSE(retained.exchange());
     }
 
+    TEST_F(LuaScriptsContainerTest, RetentionExchangesUnloadedAndLoadedContainers)
+    {
+        LuaUtil::ScriptsContainer scripts(&mLua, "Test", nullptr, false);
+        const int id = getId(loadSave2Path);
+        auto originalWeak = scripts.getWeakPointer();
+        auto retained = scripts.retainRuntime();
+        ASSERT_TRUE(retained.detach());
+        ASSERT_TRUE(scripts.addCustomScript(id));
+        auto incomingWeak = scripts.getWeakPointer();
+
+        ASSERT_TRUE(retained.exchange());
+        EXPECT_EQ(*originalWeak, &scripts);
+        EXPECT_FALSE(scripts.hasScript(id));
+        ESM::LuaScripts saved;
+        scripts.save(saved);
+        EXPECT_TRUE(saved.mScripts.empty());
+
+        ASSERT_TRUE(retained.exchange());
+        EXPECT_EQ(*incomingWeak, &scripts);
+        EXPECT_TRUE(scripts.hasScript(id));
+        ASSERT_TRUE(retained.restore());
+        EXPECT_EQ(*originalWeak, &scripts);
+        EXPECT_EQ(*incomingWeak, nullptr);
+        EXPECT_FALSE(scripts.hasScript(id));
+    }
+
     TEST_F(LuaScriptsContainerTest, RetentionRestoresInterfaceTablesAndScopeCommitDomains)
     {
         LuaUtil::ScriptsContainer scripts(&mLua, "Test");

@@ -5931,7 +5931,8 @@ namespace
         body.mRotation = osg::Quat(std::bit_cast<float>(0x3f3504f3u), 0, 0,
             std::bit_cast<float>(0x3f3504f3u));
         body.mBlend = NifBullet::RagdollBlendDefinition{30, 1, 0, 0};
-        btVector3 position;
+        // Bullet equality includes the fourth storage lane as well as xyz.
+        btVector3 position(0, 0, 0);
         for (unsigned axis = 0; axis < 3; ++axis)
         {
             body.mTranslation[axis] = std::bit_cast<float>(offset[axis]);
