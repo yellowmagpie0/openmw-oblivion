@@ -6,6 +6,9 @@ param(
     [ValidateRange(1, 64)][int]$Jobs = 2,
     [string[]]$TestBinaries = @('components-tests'),
     [string]$Filter = '*',
+    [ValidateSet('prison', 'tutorial', 'inventory', 'city', 'swimming', 'horse', 'creatures', 'oblivion')]
+    [string]$Scenario = 'prison',
+    [switch]$PrepareOnly,
     [string]$OblivionData = 'C:/Program Files (x86)/Steam/steamapps/common/Oblivion/Data'
 )
 
@@ -119,7 +122,18 @@ switch ($Action) {
         if ($OblivionData.Contains('"') -or $OblivionData.Contains("`n") -or $OblivionData.Contains("`r")) {
             throw 'Game-data paths must not contain quotes or newlines.'
         }
-        $profile = Join-Path $build ('tryout-' + [guid]::NewGuid().ToString('N'))
+        $start = 'ImperialDungeon01'
+        $newGame = 0
+        switch ($Scenario) {
+            tutorial { $newGame = 1 }
+            inventory { $start = 'ICMarketDistrictAFightingChance::ref=0x1d15a::side=south' }
+            city { $start = 'ICMarketDistrict01::ref=0x038490::side=east' }
+            swimming { $start = 'OldBridgeExterior::ref=0x60423::side=south' }
+            horse { $start = '4,16::ref=0x68451::side=east' }
+            creatures { $start = 'GoblinJimsCave::ref=0x67067::side=south' }
+            oblivion { $start = 'OblivionMqKvatchSmallTower03' }
+        }
+        $profile = Join-Path $build ('tryout-' + $Scenario + '-' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory "$profile/user", "$profile/local-data" -Force | Out-Null
         foreach ($key in @([Environment]::GetEnvironmentVariables().Keys)) {
             if ($key -like 'OPENMW_*' -or $key -like 'SDL_*') {
@@ -132,15 +146,23 @@ resources="$build/resources"
 data="$OblivionData"
 data-local="$profile/local-data"
 content=Oblivion.esm
-start=ImperialDungeon01
+start=$start
 skip-menu=1
-new-game=0
+new-game=$newGame
 no-grab=1
 user-data="$profile/user"
 "@ | Write-Utf8 "$profile/openmw.cfg"
         "[Video]`nfullscreen = false`nresolution x = 1280`nresolution y = 720`n[Models]`nload unsupported nif files = true" |
             Write-Utf8 "$profile/settings.cfg"
         Write-Host "Private tryout profile: $profile"
+        if ($Scenario -eq 'tutorial') {
+            Write-Host 'Tutorial opening: approach the cell door, listen, then follow the Emperor and Blades. Full combat/progression is unfinished.'
+        } elseif ($Scenario -eq 'creatures') {
+            Write-Host 'Creature cave inspection: combat, death and dungeon progression are experimental.'
+        }
+        Write-Host 'Mouse: look | WASD: move | Space: activate | Tab: inventory | E: jump'
+        Write-Host 'F: ready weapon | Left mouse: attack | Right mouse: block | F5/F9: save/load | Esc: menu'
+        if ($PrepareOnly) { return }
         Invoke-Checked "$build/openmw.exe" @('--replace=config', '--config', $profile, '--game-profile=oblivion')
     }
 }

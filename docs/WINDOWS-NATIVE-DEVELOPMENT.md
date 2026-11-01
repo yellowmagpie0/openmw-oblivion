@@ -90,6 +90,29 @@ and a copy of the CMake cache. Do not edit source or commit during a test run.
 It is not the full Python gate.
 
 `Play` starts a fresh prison inspection profile, loading only `Oblivion.esm`.
+Choose the authored tutorial opening or another existing inspection location:
+
+```powershell
+./scripts/windows-dev.ps1 Play -Scenario tutorial
+./scripts/windows-dev.ps1 Play -Scenario creatures
+./scripts/windows-dev.ps1 Play -Scenario inventory
+./scripts/windows-dev.ps1 Play -Scenario city
+```
+
+Other selectors are `prison` (the default), `swimming`, `horse`, and `oblivion`.
+The tutorial uses `new-game=1`; other starts are direct inspections with
+`new-game=0`. The tutorial start and inspection locations follow the existing
+Linux tryout presets, but do not run their automation. Full tutorial progression,
+autonomous combat/death and dungeon completion remain unfinished. The creature
+cave is an experimental inspection, not a prepared combat acceptance course.
+Controlled M15 courses require their recipe-specific plugins and staged saves;
+their Linux input/replay runners have not been ported by these selectors.
+
+`-PrepareOnly` creates the profile without launching the game. Scenario configs
+were checked on Windows without rendering; no new gameplay acceptance is claimed.
+This fork's fresh Oblivion bindings use WASD/mouse to move/look, Space to
+activate, Tab for inventory, E to jump, F to ready a weapon, left mouse to attack,
+right mouse to block, and F5/F9 to quicksave/quickload. Esc opens the menu.
 Pass `-OblivionData 'D:/Games/Oblivion/Data'` for another installation. Its config
 and user-data directory are unique per launch and retained under `build-windows`.
 It uses the current build in place: finish building before playing. This is a
