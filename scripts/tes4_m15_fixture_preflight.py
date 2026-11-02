@@ -575,7 +575,12 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
     if recipe['captures'] != [['combined-forward-power.png', 9], ['combined-left-power.png', 11],
                                ['combined-right-power.png', 13]]:
         raise ValueError('Invalid joined-course capture identities')
+    active_capture = recipe.get('active_forward_capture', False)
+    if type(active_capture) is not bool:
+        raise ValueError('Invalid active Forward capture prerequisite')
     settling = recipe.get('settled_capture')
+    if active_capture and settling is not None:
+        raise ValueError('Choose active or settled Forward capture prerequisites')
     if settling is not None:
         keys = ('window_seconds', 'minimum_seconds', 'quiet_seconds', 'maximum_bounds_speed',
                 'retreat_distance', 'body_clearance')
@@ -631,6 +636,10 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
         f"    local mx,my=joinedCameraProbe.motion(target,mode,{step})\n"
         "    print(string.format('M15 joined motion %s: x=%d y=%d',mode,mx,my))\n"
         "   end\n")
+    if active_capture:
+        witness += (
+            "   print('M15 joined forward frame: applied=' .. tostring(Actor.isParalyzed(target))"
+            " .. ' visible=' .. tostring(joinedCameraProbe.framedVisible(target,screen)))\n")
     if settling:
         witness += (
             "   local jr,jw,jv,jclear=false,false,false,false\n"
@@ -671,12 +680,16 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
                 + str(cause) + ' action=-1', 60, False))
         if cause == 9:
             before.append(wait('M15 joined forward: applied=true', 60))
+            if active_capture:
+                before += [key('key_down', 's'), wait('M15 joined camera spacing: ready=true'),
+                    key('key_up', 's')]
             if settling:
                 before += [key('key_down', 's'), wait('M15 joined settled retreat: ready=true'),
                     key('key_up', 's'), wait('M15 joined settled: ready=true window=true')]
         before += measured('upper' if cause == 11 else 'frame') + [wait('M15 joined camera: first=true visible=true')]
-        if cause == 9 and settling:
-            before.append(wait('M15 joined settled: ready=true window=true visible=true'))
+        if cause == 9 and (settling or active_capture):
+            before.append(wait('M15 joined forward frame: applied=true visible=true' if active_capture
+                               else 'M15 joined settled: ready=true window=true visible=true'))
             # Photograph the acknowledged phase before save I/O; inspect the
             # saved bodies/effect as well. Do not extend the gameplay timer.
             save, saved, photograph = actions[i-2:i+1]
@@ -689,6 +702,8 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
     result['expected_log'].append('M15 joined camera: first=true visible=true')
     if settling:
         result['expected_log'].append('M15 joined settled: ready=true window=true visible=true')
+    if active_capture:
+        result['expected_log'].append('M15 joined forward frame: applied=true visible=true')
     return result
 
 

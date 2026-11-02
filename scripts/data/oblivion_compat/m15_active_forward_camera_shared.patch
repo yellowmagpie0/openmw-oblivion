@@ -1,0 +1,11 @@
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -1183,6 +1183,8 @@
+  camera_recipe=json.loads((root/'scripts/data/oblivion_compat/m15_forward_capture.json').read_text())['joined_course']
+  if '--skip-settled-diagnostic' in sys.argv:
+   camera_recipe.pop('settled_capture',None)
++ if '--active-forward-framing' in sys.argv:
++  camera_recipe.pop('settled_capture',None);camera_recipe['active_forward_capture']=True
+  spec=joined_power_capture_setup(spec,camera_recipe,(root/'scripts/data/oblivion_compat/m15_forward_capture_guard.lua').read_text())
+  if '--joined-forward-tail-source' in sys.argv:
+   from tes4_runtime_state import load_save

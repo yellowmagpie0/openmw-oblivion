@@ -314,6 +314,37 @@ end
         with self.assertRaises((ValueError, StopIteration)):
             joined_power_capture_setup(broken, recipe, '')
 
+    def test_active_forward_capture_preserves_gameplay_and_requires_applied_whole_body(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        original = copy.deepcopy(manifest)
+        spaced = right_power_spacing_setup(manifest,
+            json.loads((data / 'm15_right_power_setup.json').read_text()))
+        recipe = json.loads((data / 'm15_forward_capture.json').read_text())['joined_course']
+        recipe.pop('settled_capture')
+        recipe['active_forward_capture'] = True
+        framed = joined_power_capture_setup(spaced, recipe, '')
+        self.assertEqual(manifest, original)
+        saves = lambda value: [a for a in value['actions'] if a.get('value') == 'F5']
+        self.assertEqual(saves(framed), saves(original))
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(framed['expected_log']))
+        i = next(i for i, a in enumerate(framed['actions'])
+                 if a.get('name') == 'combined-forward-power.png')
+        self.assertEqual(framed['actions'][i-1]['pattern'],
+                         'M15 joined forward frame: applied=true visible=true')
+        self.assertTrue(framed['actions'][i-1]['after_start'])
+        self.assertEqual(framed['actions'][i+1]['value'], 'F5')
+        observer = next(f['content'] for f in framed['files']
+                        if f['path'].endswith('m15_course_observer.lua'))
+        self.assertIn('joinedCameraProbe.framedVisible(target,screen)', observer)
+        self.assertNotIn('newSettled', observer)
+        for invalid in [1, None, 'true']:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                joined_power_capture_setup(spaced, dict(recipe, active_forward_capture=invalid), '')
+        with self.assertRaises(ValueError):
+            joined_power_capture_setup(spaced, dict(recipe, settled_capture={}), '')
+
     def test_joined_settled_capture_keeps_gameplay_gates_and_photographs_before_save_io(self):
         data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
         manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
@@ -470,6 +501,7 @@ assert(module.framedVisible(target,screen))
 package.loaded['openmw.camera'].worldToViewportVector=function(anchor)
  return {x=20,y=anchor.z<0 and -1 or 20}
 end
+assert(module.visible(target,screen))
 assert(not module.framedVisible(target,screen))
 package.loaded['openmw.camera'].worldToViewportVector=function() return {x=20,y=20} end
 blocked=true;assert(not module.framedVisible(target,screen))
