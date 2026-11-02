@@ -6893,6 +6893,50 @@ namespace
         store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
         EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false,
             ESM4::MeleeStrikeKind::Left));
+        // Merely knowing a castable spell or power does not apply it on a
+        // physical contact. Passive/disease/unknown sources remain rejected.
+        for (const unsigned type : {0, 1, 2, 3, 4, 5, 99})
+        {
+            SCOPED_TRACE(type);
+            ESM4::Spell spell{}; spell.mId = {0x999, 0};
+            spell.mData = ESM4::SpellData{type, 0, 0, 0, {}};
+            store.getWritable<ESM4::Spell>().insertStatic(spell,
+                ESM::FormKey::content("headless.esm", 0x999));
+            const bool admitted = type == 0 || type == 2 || type == 3;
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            const auto random = service.combatRandomState();
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                const auto outgoing = MWMechanics::resolveOblivionUnarmedMeleeContact(
+                    world, actor, player, 0, false, kind);
+                const auto incoming = MWMechanics::resolveOblivionUnarmedMeleeContact(
+                    world, player, actor, 0, false, kind);
+                EXPECT_EQ(bool(outgoing), admitted);
+                EXPECT_EQ(bool(incoming), admitted);
+                if (outgoing) EXPECT_EQ(outgoing->mHealth, 7);
+            }
+            EXPECT_EQ(service.combatRandomState(), random);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        }
+        ESM4::Spell ordinary{}; ordinary.mId = {0x999, 0};
+        ordinary.mData = ESM4::SpellData{0, 0, 0, 0, {}};
+        store.getWritable<ESM4::Spell>().insertStatic(ordinary,
+            ESM::FormKey::content("headless.esm", 0x999));
+        ESM4::Spell ability{}; ability.mId = {0x998, 0};
+        ability.mData = ESM4::SpellData{4, 0, 0, 0, {}};
+        store.getWritable<ESM4::Spell>().insertStatic(ability,
+            ESM::FormKey::content("headless.esm", 0x998));
+        creature.mSpell.push_back(ability.mId);
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(
+            world, actor, player, 0, false, ESM4::MeleeStrikeKind::Left));
+        creature.mSpell.pop_back();
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+        ESM4::Spell malformed{}; malformed.mId = {0x999, 0};
+        store.getWritable<ESM4::Spell>().insertStatic(malformed,
+            ESM::FormKey::content("headless.esm", 0x999));
+        EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(
+            world, actor, player, 0, false, ESM4::MeleeStrikeKind::Left));
         creature.mSpell.clear(); creature.mBaseConfig.tes4.flags = 0x100;
         creature.mSounds.push_back({ESM4::Creature::SoundType::Weapon, {0x999, 0},
             ESM::FormKey::content("headless.esm", 0x999), 100});
@@ -7450,6 +7494,35 @@ namespace
             EXPECT_EQ(snapshot(), before);
             ASSERT_TRUE(world.executeOblivionActorValueCommand(victim, 65, ESM4::ActorValueCommand::Set,
                 ESM4::ActorValueCommandSource::Script, 0));
+        }
+        const auto victimWeapon = addEquipmentWeapon(fixture, 0x9a0);
+        ESM4::RuntimeInventoryItem entry; entry.mBase = victimWeapon; entry.mCount = 1;
+        entry.mCondition = 100; entry.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, victim, {entry});
+        const auto right = [&](const MWWorld::Ptr& who) {
+            auto& inventory = who.getClass().getInventoryStore(who);
+            return *inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        };
+        base.mSpell = {{0x9a1, 0}};
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        for (const unsigned type : {0, 1, 2, 3, 4, 5, 99})
+        {
+            SCOPED_TRACE(type);
+            ESM4::Spell spell{}; spell.mId = {0x9a1, 0};
+            spell.mData = ESM4::SpellData{type, 0, 0, 0, {}};
+            store.getWritable<ESM4::Spell>().insertStatic(spell,
+                ESM::FormKey::content("headless.esm", 0x9a1));
+            const bool admitted = type == 0 || type == 2 || type == 3;
+            const auto before = snapshot(); const auto random = service.combatRandomState();
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                EXPECT_EQ(bool(MWMechanics::resolveOblivionWeaponMeleeContact(
+                    world, actor, victim, right(actor), 0, false, kind)), admitted);
+                EXPECT_EQ(bool(MWMechanics::resolveOblivionWeaponMeleeContact(
+                    world, victim, actor, right(victim), 0, false, kind)), admitted);
+            }
+            EXPECT_EQ(service.combatRandomState(), random);
+            EXPECT_EQ(snapshot(), before);
         }
     }
 

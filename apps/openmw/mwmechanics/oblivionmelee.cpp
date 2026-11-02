@@ -25,6 +25,7 @@
 #include <components/esm4/loadweap.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/loadmgef.hpp>
+#include <components/esm4/loadspel.hpp>
 #include <components/esm4/weaponenchantment.hpp>
 #include "../mwworld/worldimp.hpp"
 #include "../mwrender/animation.hpp"
@@ -1119,13 +1120,25 @@ namespace MWMechanics
 
     namespace
     {
-        bool creatureHasSpells(const MWWorld::Ptr& actor)
+        bool creatureHasUnresolvedContactSpells(const MWWorld::ESMStore& store, const MWWorld::Ptr& actor)
         {
             if (actor.isEmpty() || actor.getType() != ESM::REC_CREA4)
                 return false;
-            const auto& spells = actor.get<ESM4::Creature>()->mBase->mSpell;
-            return std::any_of(spells.begin(), spells.end(), [](ESM::FormId spell) {
-                return spell != ESM::FormId{};
+            const auto& declared = actor.get<ESM4::Creature>()->mBase->mSpell;
+            const auto& spells = store.get<ESM4::Spell>();
+            return std::any_of(declared.begin(), declared.end(), [&](ESM::FormId id) {
+                if (id == ESM::FormId{}) return false;
+                const auto* spell = spells.search(id);
+                if (!spell || !spell->mData) return true;
+                if (const auto key = spells.findFormKey(ESM::RefId(id)))
+                    if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                        winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                        return true;
+                // A spellbook does not cast on physical contact. Only ordinary
+                // spells and powers are inert here; Ability/Disease, leveled
+                // sources and unknown records still need their effect owner.
+                const auto type = spell->mData->mType;
+                return type != 0 && type != 2 && type != 3;
             });
         }
 
@@ -1412,8 +1425,9 @@ namespace MWMechanics
             return std::nullopt;
         auto incoming = creature ? oblivionCreatureNaturalContactDamage(world, attacker)
             : oblivionHandToHandContactDamage(world, attacker, victim);
-        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
-            return std::nullopt; // Creature spell/contact-effect resolution must join this transaction.
+        if (creatureHasUnresolvedContactSpells(world.getStore(), attacker)
+            || creatureHasUnresolvedContactSpells(world.getStore(), victim))
+            return std::nullopt; // Creature passive/contact effects must join this transaction.
         if (creature && !creatureUsesDefaultWeaponHitSound(world.getStore(), attacker))
             return std::nullopt;
         if (creature && incoming.mHealth < 0)
@@ -1719,7 +1733,8 @@ namespace MWMechanics
             && kind != ESM4::MeleeStrikeKind::ForwardPower && kind != ESM4::MeleeStrikeKind::BackwardPower)
             return std::nullopt;
         const float rawIncoming = weaponContactDamage(world, attacker, item, kind);
-        if (creatureHasSpells(attacker) || creatureHasSpells(victim))
+        if (creatureHasUnresolvedContactSpells(world.getStore(), attacker)
+            || creatureHasUnresolvedContactSpells(world.getStore(), victim))
             return std::nullopt; // Do not omit Creature passive/contact-effect consequences.
         if (rawIncoming < 0)
             return std::nullopt; // Signed bonus/nonpositive sink policy needs its own branch.

@@ -1,0 +1,34 @@
+{
+  "requirement": "S4 Creature physical contact with a castable-only spellbook, both attacker and victim, natural and carried-weapon routes",
+  "admitted_spell_types": [
+    0,
+    2,
+    3
+  ],
+  "blocked_sources": [
+    "Disease1",
+    "Ability4",
+    "other types",
+    "unresolved or malformed SPEL",
+    "LVSP",
+    "deleted or wrong-type winner"
+  ],
+  "native_evidence": "build/oblivion-compat/m15/S3/authority-draft/passive-grant-dispatch-01/report.json",
+  "content_evidence": "build/oblivion-compat/m15/S4/creature-spell-contact-work-01/castable-master-audit.json",
+  "fixture_recipe": "scripts/data/oblivion_compat/m15_creature_castable_melee_fixture.json",
+  "fixture_builder": "scripts/tes4_m15_creature_melee_fixture.py",
+  "runtime_scope": "Existing stock-derived Dog plus complete stock Minotaur castable spellbook LpMinotaurDisArmor3. Physical-only stationary policy; no cast invoked, no injected outcome, no Minotaur-body acceptance.",
+  "expectations": [
+    "Real positive incoming physical contact2 owns7Fatigue and legalBlockHit/Recoil; naturalrecovery",
+    "Player ordinaryreturn3 remainspositive; rangemiss4/wallmiss5 preserve resources/RNG",
+    "Exactactive-recoveryfreshsource,no oldcontact/soundreplay,strictendpointcomparison"
+  ],
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/creature-spell-contact-work-01/checkpoint-verification.json",
+  "limits": "Passive/Disease/leveled sources remain explicit boundaries. No spellcasting,fullCreature,S4,V6,T7/F8 claim.",
+  "endpoint_numeric_policy": {
+    "actor": "content:m15stationaryopponent.esp:000802",
+    "helper": "scripts/tes4_m15_fixture_preflight.py::regenerated_fatigue_endpoint",
+    "acceptance": "Only idle fully regenerated NPC Fatigue Damage residue within half the float32 step below the full pool; both native low/active queries must equal full exactly. Preserve all raw evidence, Base/Maximum/Script and other values/owners. Source restoration and every save/live pair remain exact.",
+    "provenance": "build/oblivion-compat/m15/S4/creature-spell-contact-work-01/fatigue-endpoint-correction.json"
+  }
+}

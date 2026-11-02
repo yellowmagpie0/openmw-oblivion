@@ -1,4 +1,4 @@
-"""Cheap fixture checks for the existing M15 joined melee course.
+"""Cheap fixture and endpoint checks for the existing M15 joined melee course.
 
 These validate fixture prerequisites, not runtime gameplay acceptance. Geometry
 witnesses must come from the same fixture geometry and retain their provenance.
@@ -6,6 +6,52 @@ witnesses must come from the same fixture geometry and retain their provenance.
 import copy
 import math
 import re
+import struct
+
+
+def regenerated_fatigue_endpoint(state, actor):
+    """Compare fully regenerated NPC Fatigue without changing retained state.
+
+    Only an idle endpoint's explicit Damage residue may be cleared in the
+    returned comparison copy. Both native low/active float32 queries must equal
+    the full pool, and the residue must fit half the float32 step below it.
+    This is never a source-restore or per-save equality policy.
+    """
+    values = copy.deepcopy(state['native_actor_values'])
+    matches = [row for row in values if row['actor'] == actor]
+    if (len(matches) != 1 or matches[0]['owner'] != 1 or matches[0]['process'] != 1
+            or matches[0]['process_action'] != -1 or matches[0]['process_knocked_state'] != 0
+            or state['physical_actions']['pending'] or state['physical_action_owners']):
+        raise ValueError('Regenerated Fatigue requires an idle nonplayer endpoint')
+    fatigue = matches[0]['values'][10]
+    if (len(fatigue) != 4 or any(type(v) not in (int, float) or not math.isfinite(v) for v in fatigue)):
+        raise ValueError('Regenerated Fatigue requires explicit finite channels')
+    def f32(value):
+        try:
+            result = struct.unpack('<f', struct.pack('<f', value))[0]
+        except (OverflowError, struct.error) as error:
+            raise ValueError('Regenerated Fatigue query overflow') from error
+        if not math.isfinite(result):
+            raise ValueError('Regenerated Fatigue query is nonfinite')
+        return result
+    base, maximum, script, damage = fatigue
+    if base != math.trunc(base):
+        raise ValueError('Regenerated NPC Fatigue requires an integral native base')
+    full_low = f32(base + script)
+    full_active = f32(full_low + maximum)
+    if full_low <= 0 or full_active <= 0:
+        raise ValueError('Regenerated Fatigue requires a positive full pool')
+    bits = struct.unpack('<I', struct.pack('<f', full_low))[0]
+    previous = struct.unpack('<f', struct.pack('<I', bits - 1))[0]
+    half_step = (full_low - previous) / 2
+    low = f32(base + script + damage)
+    active = f32(low + maximum)
+    if damage > 0 or abs(damage) > half_step or low != full_low or active != full_active:
+        raise ValueError('Fatigue residue changes a native query or exceeds half a float32 step')
+    fatigue[3] = 0
+    return values, dict(actor=actor,damage=damage,maximum_absolute_residue=half_step,
+                        low_query=low,active_query=active,full_pool=full_active,
+                        comparison_only=True)
 
 
 def validate_gamepad_stick_inputs(manifest, dead_zone):

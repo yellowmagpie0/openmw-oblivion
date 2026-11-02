@@ -9,10 +9,53 @@ from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
-from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs
+from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_regenerated_npc_fatigue_comparison_preserves_raw_state_and_other_fields(self):
+        actor = 'content:test.esm:000001'
+        row = dict(actor=actor, owner=1, process=1, process_action=-1, process_knocked_state=0,
+                   values=[[0, 0, 0, 0] for _ in range(72)])
+        row['values'][8] = [73, 0, 0, -7]
+        row['values'][10] = [160, 0, 0, -4.76837158203125e-6]
+        state = dict(native_actor_values=[row], physical_actions=dict(next=6, pending=[]), physical_action_owners=[])
+        original = copy.deepcopy(state)
+        compared, witness = regenerated_fatigue_endpoint(state, actor)
+        self.assertEqual(state, original)
+        self.assertEqual(witness['active_query'], 160)
+        self.assertEqual(witness['low_query'], 160)
+        self.assertLess(abs(witness['damage']), witness['maximum_absolute_residue'])
+        expected = copy.deepcopy(state['native_actor_values']); expected[0]['values'][10][3] = 0
+        self.assertEqual(compared, expected)
+        self.assertEqual(compared[0]['values'][8], row['values'][8])
+        row['values'][10][3] = 0
+        self.assertEqual(regenerated_fatigue_endpoint(state, actor)[0], state['native_actor_values'])
+
+    def test_regenerated_fatigue_rejects_observable_or_active_debt(self):
+        actor = 'content:test.esm:000001'
+        row = dict(actor=actor, owner=1, process=1, process_action=-1, process_knocked_state=0,
+                   values=[[0, 0, 0, 0] for _ in range(72)])
+        row['values'][10] = [160, 0, 0, 0]
+        state = dict(native_actor_values=[row], physical_actions=dict(next=6, pending=[]), physical_action_owners=[])
+        for debt in [-.001, -1e-5, 1e-7, None, True, float('nan'), float('inf')]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0]['values'][10][3] = debt
+            with self.subTest(debt=debt), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for base in [0, 160.5]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0]['values'][10][0] = base
+            with self.subTest(base=base), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for key, value in [('owner', 0), ('process', 0), ('process_action', 6), ('process_knocked_state', 1)]:
+            changed = copy.deepcopy(state); changed['native_actor_values'][0][key] = value
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+        for field, value in [('native_actor_values', []), ('physical_action_owners', [dict(id=5, actor=actor)]),
+                             ('physical_actions', dict(next=6, pending=[5]))]:
+            changed = copy.deepcopy(state); changed[field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                regenerated_fatigue_endpoint(changed, actor)
+
     def test_stick_guard_preserves_valid_commands_releases_and_trigger_policy(self):
         manifest = dict(actions=[dict(type='gamepad_axis', axis=axis, value=value)
             for axis, value in [('left_x', -.35), ('right_x', .22), ('right_y', .35),

@@ -55,6 +55,24 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
             with self.subTest(size=len(payload)), self.assertRaises(ValueError):
                 build(source, recipe)
 
+    def test_castable_spellbook_requires_pinned_spell_and_power_types(self):
+        for kind in [0, 2, 3]:
+            source = self.source + record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", kind, 0, 0, 0)))
+            recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), castable_spells=[0x3456])
+            output, report = build(source, recipe)
+            fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+            self.assertEqual([s["payload"] for s in fields if s["name"] == "SPLO"], [struct.pack("<I", 0x3456)])
+            self.assertEqual(report["castable_spell_inputs"][0]["type"], kind)
+            self.assertEqual(next(s["payload"] for s in fields if s["name"] == "DATA"), bytes(range(20)))
+        for kind in [1, 4, 5, 99]:
+            source = self.source + record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", kind, 0, 0, 0)))
+            recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), castable_spells=[0x3456])
+            with self.subTest(kind=kind), self.assertRaises(ValueError):
+                build(source, recipe)
+        for values in [None, True, "0x3456", [0x3456], [0], [True], [1.0], [0x1000000], [1, 1]]:
+            with self.subTest(values=values), self.assertRaises(ValueError):
+                build(self.source, dict(self.recipe, castable_spells=values))
+
     def test_rejects_unpinned_missing_invalid_or_colliding_identities(self):
         for change in ({"source_sha256": "0" * 64}, {"template": 0x9999}, {"creature": 0x800},
                        {"style": 0x01000800}, {"reference": True}, {"version": True},
