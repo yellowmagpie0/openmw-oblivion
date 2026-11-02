@@ -22,7 +22,7 @@ namespace ESM4
         std::uint32_t mData;
     };
 
-    // Verified compiled inputs for the fourteen racial/birthsign VMOD codes.
+    // Verified compiled inputs for racial/birthsign VMOD codes and Witbane DRAT.
     // Other codes remain unadmitted; this is not a complete magic registry.
     std::optional<LoadedEffectSetting> compiledPassiveValueModifierDefinition(std::uint32_t code);
 
@@ -104,12 +104,13 @@ namespace ESM4
         ValueModifierEffectInputs mValues;
     };
 
-    // Resolved self Ability4 constructor inputs. These are not saved applied
+    // Resolved self Ability4/Disease1 constructor inputs. These are not saved applied
     // magnitudes. The winning-record adapter owns class/range admission.
     struct PassiveAbilityInput
     {
         ESM::FormKey mSpell;
         std::vector<PassiveValueModifierInput> mEffects;
+        std::uint32_t mSpellType = 4;
     };
 
     // Constructor inputs only. Caller verifies native effect class/admission;

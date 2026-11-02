@@ -873,6 +873,48 @@ namespace
         EXPECT_NE(migrated.canonicalJson().find("\"player_form_values\":null"), std::string::npos);
     }
 
+    TEST(ESM4RuntimeState, diseaseOwnershipVersion78RetainsWriterIdentityAndRejectsLossyDowngrade)
+    {
+        auto state = makeState(); state.mVersion = 77;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey; actor.mBase = state.mReferences[0].mBase;
+        const auto spell = ESM::FormKey::content("oblivion.esm", 0x98416);
+        actor.mPassiveAbilities = {{ESM4::RuntimePassiveAbility{spell,
+            {{0, ESM::fourCC("DRAT"), 1, -3.f, 5.f}}}}};
+        state.mNativeActorValues = {actor};
+        const auto legacy = state.serializeBinary();
+        auto restored = ESM4::RuntimeState::deserializeBinary(legacy);
+        EXPECT_EQ(restored.mNativeActorValues[0].mPassiveAbilities->front().mSpellType, 4u);
+        EXPECT_EQ(restored.serializeBinary(), legacy);
+        state.mVersion = 78;
+        auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 78;
+        const auto key = spell.serialize();
+        const auto pos = std::search(expected.begin(), expected.end(), key.begin(), key.end());
+        ASSERT_NE(pos, expected.end());
+        const auto offset = pos - expected.begin() + key.size();
+        const std::array<std::uint8_t, 4> kind{4, 0, 0, 0};
+        expected.insert(expected.begin() + offset, kind.begin(), kind.end());
+        EXPECT_EQ(state.serializeBinary(), expected);
+        auto& ability = state.mNativeActorValues[0].mPassiveAbilities->front();
+        ability.mSpellType = 1;
+        expected[offset] = 1;
+        EXPECT_EQ(state.serializeBinary(), expected);
+        restored = ESM4::RuntimeState::deserializeBinary(expected);
+        EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+        EXPECT_EQ(restored.serializeBinary(), expected);
+        EXPECT_NE(restored.canonicalJson().find("\"spell_type\":1"), std::string::npos);
+        state.mVersion = 77;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        state.mVersion = 78;
+        for (auto kind : {0u, 2u, 3u, 5u, 0xffffffffu})
+        {
+            ability.mSpellType = kind;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+            auto invalid = expected; invalid[offset] = static_cast<std::uint8_t>(kind);
+            EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        }
+    }
+
     TEST(ESM4RuntimeState, passiveInitialMagnitudePreservesVersionNineteenWireAndLegacyUnknown)
     {
         auto state = makeState(); state.mVersion = 18;

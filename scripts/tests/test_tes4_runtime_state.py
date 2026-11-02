@@ -1322,6 +1322,42 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         del state["native_player_bow_timer"]
         state_io.encode_payload(state)
 
+    def test_disease78_preserves_writer_identity_and_rejects_lossy_downgrade(self):
+        state = make_state()
+        state["schema_version"] = 77
+        state["ai_rng_state"] = 1
+        spell = "content:oblivion.esm:098416"
+        ability = {"spell": spell, "effects": [[0, int.from_bytes(b"DRAT", "little"), 1, -3., 5.]]}
+        actor = {"actor": state["player"]["reference"], "base": "content:oblivion.esm:000007",
+                 "owner": 0, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": None, "passive_abilities": [ability]}
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(legacy)), legacy)
+        self.assertNotIn("spell_type", state_io.decode_payload(legacy)["native_actor_values"][0]["passive_abilities"][0])
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 78)
+        offset = legacy.index(spell.encode("ascii")) + len(spell)
+        expected[offset:offset] = struct.pack("<I", 4)
+        state["schema_version"] = 78
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        ability["spell_type"] = 1
+        struct.pack_into("<I", expected, offset, 1)
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        restored = state_io.decode_payload(payload)
+        self.assertEqual(restored["native_actor_values"][0]["passive_abilities"], [ability])
+        self.assertEqual(state_io.encode_payload(restored), payload)
+        state["schema_version"] = 77
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["schema_version"] = 78
+        for kind in (0, 2, 3, 5, 0xffffffff, True, 1.0):
+            ability["spell_type"] = kind
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        for kind in (0, 2, 3, 5, 0xffffffff):
+            struct.pack_into("<I", expected, offset, kind)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(expected))
+
     def test_passive_initial_magnitude_v19_wire_and_v18_unknown(self):
         state = make_state()
         state["schema_version"] = 18

@@ -455,6 +455,8 @@ namespace MWWorld
             ability.validate();
             if (!seen.insert(ability.mSpell).second)
                 throw std::invalid_argument("duplicate native passive removal spell identity");
+            if (ability.mSpellType != 4)
+                continue; // Character changes retain diseases and their applied modifiers.
             for (const auto& effect : ability.mEffects)
             {
                 const ESM4::EffectSetting* definition = nullptr;
@@ -500,9 +502,11 @@ namespace MWWorld
             if (!seen.insert(key).second)
                 continue; // Same spell granted by multiple selection sources.
             const auto* spell = store.get<ESM4::Spell>().searchStatic(key);
-            if (!spell || !spell->mData || spell->mData->mType != 4 || spell->mEffects.empty())
-                throw std::invalid_argument("native passive input requires a winning nonempty Ability4");
+            if (!spell || !spell->mData || (spell->mData->mType != 4 && spell->mData->mType != 1)
+                || spell->mEffects.empty())
+                throw std::invalid_argument("native passive input requires a winning nonempty Ability4 or Disease1");
             ESM4::PassiveAbilityInput ability{key, {}};
+            ability.mSpellType = spell->mData->mType;
             for (std::size_t index = 0; index < spell->mEffects.size(); ++index)
             {
                 const auto& effect = spell->mEffects[index];

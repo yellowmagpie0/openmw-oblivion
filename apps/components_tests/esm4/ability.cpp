@@ -65,12 +65,12 @@ TEST(ESM4AbilityInputs, ConstructorFlagsOverrideMagnitudeAndDurationWithoutApply
 TEST(ESM4AbilityInputs, CompiledPassiveDefinitionsRetainOriginalFlagsAndStaticActorValues)
 {
     struct Expected {const char code[5]; std::uint32_t flags, av;};
-    const std::array<Expected, 14> original{{
+    const std::array<Expected, 15> original{{
         {"WABR",0x1000172,55}, {"WKFI",0x100007f,61}, {"WKFR",0x100007f,62},
         {"WKSH",0x100007f,68}, {"WKMA",0x100007f,64}, {"FOSP",0x1000072,9},
         {"SABS",0x1000072,52}, {"STMA",0x1000112,57}, {"FOAT",0x100072,0},
         {"RSFI",0x100007a,61}, {"RSPO",0x100007a,67}, {"RSDI",0x100007a,63},
-        {"RSMA",0x100007a,64}, {"RSFR",0x100007a,62}
+        {"RSMA",0x100007a,64}, {"RSFR",0x100007a,62}, {"DRAT",0x100077,0}
     }};
     for (const auto& row : original)
     {
@@ -369,4 +369,28 @@ TEST(ESM4AbilityInputs, DefaultParalysisKeepsZeroCasterPowerDistinctFromFullResi
     }
     EXPECT_FALSE(ESM4::resolveDefaultCombatParalysisAdmission({}, 100, 0, 1));
     EXPECT_FALSE(ESM4::resolveDefaultCombatParalysisAdmission({}, 0, 100, 1));
+}
+
+TEST(ESM4AbilityInputs, WitbaneDrainsIntelligenceAndRetainsTheAppliedClampedMagnitude)
+{
+    // Pinned master Witbane EFIT: DRAT, magnitude5, self, duration0, AV1.
+    // Original6A86F0/6A88D0 cases are retained in creature-disease-work-01.
+    const auto code = ESM::fourCC("DRAT");
+    const auto definition = ESM4::compiledPassiveValueModifierDefinition(code);
+    ASSERT_TRUE(definition);
+    ESM4::SpellEffect effect;
+    effect.mId = code; effect.mMagnitude = 5; effect.mActorValue = 1;
+    const auto inputs = ESM4::resolveValueModifierEffectInputs(effect, *definition);
+    EXPECT_EQ(inputs.mActorValue, 1);
+    EXPECT_EQ(inputs.mMagnitude, 5);
+    EXPECT_EQ(inputs.mDuration, 0);
+    ASSERT_NE(definition->mFlags & 4, 0u);
+    struct Case { float current, stored; };
+    for (const auto row : {Case{40, -5}, Case{3, -3}, Case{0, 0}, Case{-5, 5}})
+    {
+        const auto stored = ESM4::clampValueModifierDelta(1, code, -inputs.mMagnitude, row.current);
+        EXPECT_EQ(stored, row.stored);
+        if (stored <= 0)
+            EXPECT_FALSE(ESM4::initialValueModifierRemovalDamage(1, code, stored, {}));
+    }
 }

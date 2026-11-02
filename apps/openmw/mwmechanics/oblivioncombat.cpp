@@ -4969,6 +4969,7 @@ namespace MWMechanics
         for (const auto& ability : abilities)
         {
             ESM4::RuntimePassiveAbility shape{ability.mSpell, {}};
+            shape.mSpellType = ability.mSpellType;
             if (!requested.insert(ability.mSpell).second)
                 throw std::invalid_argument("duplicate native passive grant request");
             for (const auto& effect : ability.mEffects)
@@ -4984,13 +4985,19 @@ namespace MWMechanics
         bool changed = false;
         for (const auto& ability : abilities)
         {
-            if (std::any_of(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
-                    [&](const auto& owned) { return owned.mSpell == ability.mSpell; }))
+            const auto existing = std::find_if(candidate.mPassiveAbilities->begin(), candidate.mPassiveAbilities->end(),
+                [&](const auto& owned) { return owned.mSpell == ability.mSpell; });
+            if (existing != candidate.mPassiveAbilities->end())
+            {
+                if (existing->mSpellType != ability.mSpellType)
+                    throw std::invalid_argument("native passive grant conflicts with saved spell type");
                 continue;
+            }
             if (life.mPhase != ESM4::ActorLifePhase::Alive)
                 throw std::invalid_argument("new native passive grants require an alive actor");
             changed = true;
             ESM4::RuntimePassiveAbility owned{ability.mSpell, {}};
+            owned.mSpellType = ability.mSpellType;
             for (const auto& effect : ability.mEffects)
             {
                 const auto av = static_cast<std::uint8_t>(effect.mValues.mActorValue);
@@ -4999,19 +5006,25 @@ namespace MWMechanics
                 if (ESM4::valueModifierRequiresCurrent(av, effect.mCode, magnitude))
                     current = ESM4::composeActorValue(candidate.mValues[av], candidate.mOwner, candidate.mProcess);
                 magnitude = ESM4::clampValueModifierDelta(av, effect.mCode, magnitude, current);
-                const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
-                    : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
-                        ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
-                const auto entry = ESM4::prepareActorBaseValueFloatMod(
-                    ESM4::ActorBaseKind::Npc, av, formCurrent, magnitude, ESM4::ActorValueConversionMode::Sse);
-                if (entry)
+                if (ability.mSpellType == 1)
+                    candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
+                        av, ESM4::ActorValueModifier::Maximum, magnitude);
+                else
                 {
-                    auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
-                        ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
-                    if (it->second.mKind != ESM4::ActorBaseKind::Npc)
-                        throw std::invalid_argument("native passive Player base kind mismatch");
-                    setActorBaseEntry(it->second, *entry);
-                    applyActorBase(candidate, &it->second);
+                    const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+                        : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
+                            ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+                    const auto entry = ESM4::prepareActorBaseValueFloatMod(
+                        ESM4::ActorBaseKind::Npc, av, formCurrent, magnitude, ESM4::ActorValueConversionMode::Sse);
+                    if (entry)
+                    {
+                        auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
+                            ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+                        if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                            throw std::invalid_argument("native passive Player base kind mismatch");
+                        setActorBaseEntry(it->second, *entry);
+                        applyActorBase(candidate, &it->second);
+                    }
                 }
                 preparePlayerValues(candidate, settings);
                 owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude, effect.mValues.mMagnitude});
@@ -5094,19 +5107,25 @@ namespace MWMechanics
         if (damage && (!godMode || *damage >= 0))
             candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
                 av, ESM4::ActorValueModifier::Damage, *damage);
-        const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
-            : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
-                ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
-        const auto entry = ESM4::prepareActorBaseValueFloatMod(
-            ESM4::ActorBaseKind::Npc, av, formCurrent, -magnitude, ESM4::ActorValueConversionMode::Sse);
-        if (entry)
+        if (ability->mSpellType == 1)
+            candidate.mValues[av] = ESM4::changeActorValueModifier(candidate.mValues[av], candidate.mOwner,
+                av, ESM4::ActorValueModifier::Maximum, -magnitude);
+        else
         {
-            auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
-                ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
-            if (it->second.mKind != ESM4::ActorBaseKind::Npc)
-                throw std::invalid_argument("native passive Player base kind mismatch");
-            setActorBaseEntry(it->second, *entry);
-            applyActorBase(candidate, &it->second);
+            const auto formCurrent = av >= 8 && av <= 11 ? (*candidate.mPlayerFormValues)[av - 8]
+                : integerBaseOverride(findActorBase(candidate.mBase), av).value_or(
+                    ESM4::actorBaseValueInteger({av, candidate.mValues[av].mBase}));
+            const auto entry = ESM4::prepareActorBaseValueFloatMod(
+                ESM4::ActorBaseKind::Npc, av, formCurrent, -magnitude, ESM4::ActorValueConversionMode::Sse);
+            if (entry)
+            {
+                auto [it, inserted] = mActorBases.try_emplace(candidate.mBase,
+                    ESM4::RuntimeActorBaseOverride{candidate.mBase, ESM4::ActorBaseKind::Npc, {}});
+                if (it->second.mKind != ESM4::ActorBaseKind::Npc)
+                    throw std::invalid_argument("native passive Player base kind mismatch");
+                setActorBaseEntry(it->second, *entry);
+                applyActorBase(candidate, &it->second);
+            }
         }
         preparePlayerValues(candidate, settings);
         // Original6A88D0 queries5E33B0(false): states1/2/6. This is a
@@ -5170,8 +5189,12 @@ namespace MWMechanics
             throw std::invalid_argument("native character replacement requires initialized lifecycle");
         std::set<std::pair<ESM::FormKey, std::uint32_t>> remaining;
         for (const auto& ability : *candidate.mPassiveAbilities)
-            for (const auto& effect : ability.mEffects)
-                remaining.emplace(ability.mSpell, effect.mEffectIndex);
+            if (ability.mSpellType == 4)
+                for (const auto& effect : ability.mEffects)
+                    remaining.emplace(ability.mSpell, effect.mEffectIndex);
+        for (const auto& ability : abilities)
+            if (ability.mSpellType != 4)
+                throw std::invalid_argument("character selection grants require Ability4");
         for (const auto& effect : removalOrder)
             if (remaining.erase({effect.mSpell, effect.mEffectIndex}) != 1)
                 throw std::invalid_argument("invalid or duplicate native character removal identity");
@@ -7208,6 +7231,10 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
             if (state.mVersion < 18 && actor.mPassiveAbilities)
                 throw std::invalid_argument("native passive ownership requires an Oblivion v18+ save");
+            if (state.mVersion < 78 && actor.mPassiveAbilities)
+                for (const auto& ability : *actor.mPassiveAbilities)
+                    if (ability.mSpellType != 4)
+                        throw std::invalid_argument("native disease ownership requires an Oblivion v78+ save");
             if (state.mVersion < 19 && actor.mPassiveAbilities)
                 for (const auto& ability : *actor.mPassiveAbilities)
                     for (const auto& effect : ability.mEffects)

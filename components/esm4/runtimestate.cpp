@@ -1034,7 +1034,7 @@ namespace ESM4
 
     void RuntimePassiveAbility::validate() const
     {
-        if (mSpell.isNull() || mEffects.empty())
+        if (mSpell.isNull() || mEffects.empty() || (mSpellType != 1 && mSpellType != 4))
             throw std::runtime_error("Invalid TES4 passive ability identity or empty effects");
         if (mEffects.size() > sMaximumCollectionSize)
             throw std::runtime_error("TES4 passive ability effect list exceeds the size limit");
@@ -2031,6 +2031,10 @@ namespace ESM4
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
             if (mVersion < 18 && actor.mPassiveAbilities)
                 throw std::runtime_error("TES4 passive ability ownership requires runtime-state version 18");
+            if (mVersion < 78 && actor.mPassiveAbilities)
+                for (const auto& ability : *actor.mPassiveAbilities)
+                    if (ability.mSpellType != 4)
+                        throw std::runtime_error("TES4 disease ownership requires runtime-state version 78");
             if (mVersion < 19 && actor.mPassiveAbilities)
                 for (const auto& ability : *actor.mPassiveAbilities)
                     for (const auto& effect : ability.mEffects)
@@ -3170,6 +3174,8 @@ namespace ESM4
                         for (const auto& ability : *actor.mPassiveAbilities)
                         {
                             writeKey(writer, ability.mSpell);
+                            if (mVersion >= 78)
+                                writer.integer(ability.mSpellType);
                             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(ability.mEffects.size()));
                             for (const auto& effect : ability.mEffects)
                             {
@@ -4211,6 +4217,8 @@ namespace ESM4
                         {
                             RuntimePassiveAbility ability;
                             ability.mSpell = nativeKey();
+                            if (result.mVersion >= 78)
+                                ability.mSpellType = reader.integer<std::uint32_t>();
                             const auto effectCount = reader.count();
                             for (std::uint32_t k = 0; k < effectCount; ++k)
                             {
@@ -5560,6 +5568,8 @@ namespace ESM4
                             const auto& ability = (*actor.mPassiveAbilities)[j];
                             stream << "{\"spell\":";
                             stream << '"' << escapeJson(ability.mSpell.serialize()) << '"';
+                            if (mVersion >= 78)
+                                stream << ",\"spell_type\":" << ability.mSpellType;
                             stream << ",\"effects\":[";
                             for (std::size_t k = 0; k < ability.mEffects.size(); ++k)
                             {

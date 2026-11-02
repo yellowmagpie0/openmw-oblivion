@@ -60,7 +60,8 @@ namespace ESM4
     // v74 retains pending GetUp request sources and outstanding load ownership.
     // v76 retains the Use release required after Player equipment cancellation.
     // v77 retains blocking-dodge action ownership and both playback samples.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 77;
+    // v78 distinguishes Disease1 temporary modifiers from Ability4 base writes.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 78;
 
     struct RuntimeContentIdentity
     {
@@ -311,6 +312,9 @@ namespace ESM4
         ESM::FormKey mSpell;
         // Preserve application order; do not sort effects for serialization.
         std::vector<RuntimePassiveValueModifier> mEffects;
+        // Older owners were exclusively Ability4. Never infer this from an
+        // effect code or changed content when restoring an applied effect.
+        std::uint32_t mSpellType = 4;
         void validate() const;
         friend bool operator==(const RuntimePassiveAbility&, const RuntimePassiveAbility&) = default;
     };

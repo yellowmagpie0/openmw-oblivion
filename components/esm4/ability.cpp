@@ -86,6 +86,7 @@ namespace ESM4
             std::pair{ESM::fourCC("STMA"), LoadedEffectSetting{0x1000112, 57}},
             std::pair{ESM::fourCC("SABS"), LoadedEffectSetting{0x1000072, 52}},
             std::pair{ESM::fourCC("FOAT"), LoadedEffectSetting{0x100072, 0}},
+            std::pair{ESM::fourCC("DRAT"), LoadedEffectSetting{0x100077, 0}},
             std::pair{ESM::fourCC("FOSP"), LoadedEffectSetting{0x1000072, 9}},
             std::pair{ESM::fourCC("RSFI"), LoadedEffectSetting{0x100007a, 61}},
             std::pair{ESM::fourCC("RSFR"), LoadedEffectSetting{0x100007a, 62}},

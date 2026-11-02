@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 77
+CURRENT_VERSION = 78
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -980,12 +980,15 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             seen_spells = set()
             codes = {int.from_bytes(code.encode("ascii"), "little") for code in
                 ("WABR", "WKFI", "WKFR", "WKSH", "WKMA", "FOSP", "SABS", "STMA",
-                 "FOAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR")}
+                 "FOAT", "DRAT", "RSFI", "RSPO", "RSDI", "RSMA", "RSFR")}
             for ability in check_collection(abilities, "passive ability ownership list"):
                 if not isinstance(ability, dict):
                     raise RuntimeStateError("Invalid TES4 passive ability")
                 spell = ability.get("spell")
                 native_key(spell)
+                spell_type = ability.get("spell_type", 4)
+                if type(spell_type) is not int or spell_type not in (1, 4) or (version < 78 and spell_type != 4):
+                    raise RuntimeStateError("TES4 passive spell type requires Ability4 or version78 Disease1")
                 if spell in seen_spells:
                     raise RuntimeStateError("Duplicate TES4 passive ability ownership")
                 seen_spells.add(spell)
@@ -2657,6 +2660,8 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     actor["passive_abilities"] = []
                     for _ in range(reader.count()):
                         ability = {"spell": reader.string(), "effects": []}
+                        if version >= 78:
+                            ability["spell_type"] = reader.unpack("<I")
                         for _ in range(reader.count()):
                             effect = [reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<I"), reader.unpack("<f")]
                             if version >= 19:
@@ -3400,6 +3405,8 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<I", len(abilities))
                     for ability in abilities:
                         writer.string(ability["spell"])
+                        if version >= 78:
+                            writer.pack("<I", ability.get("spell_type", 4))
                         writer.pack("<I", len(ability["effects"]))
                         for effect in ability["effects"]:
                             index, code, av, magnitude = effect[:4]
