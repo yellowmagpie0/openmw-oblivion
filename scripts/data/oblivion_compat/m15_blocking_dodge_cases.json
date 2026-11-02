@@ -252,6 +252,84 @@
     "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/joined-checkpoint-verification.json",
     "python_receipt": "build/oblivion-compat/m15/S4/joined-dodge-stick-python-01/verification.json",
     "reused_mastery_index": "scripts/data/oblivion_compat/m15_combined_melee_course.json",
-    "limits": "Current joined runs retain their configured cap/seed; not required T7/F8 campaign completion. Normal tucked roll and other scoped feedback reviewed; late SAN captures and cropped core images retain explicit limits."
+    "limits": "Current joined runs retain their configured cap/seed; not required T7/F8 campaign completion. Normal tucked roll and other scoped feedback reviewed; late SAN captures and cropped core images retain explicit limits.",
+    "audio": {
+      "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/joined-audio-checkpoint-verification.json",
+      "native_block_rule": "Existing original selector484cases: attacker blade0, defender blade0, unenchanted -> two WPNBlockBlade requests. Do not deduplicate legitimate layers.",
+      "block_PCM": "One event in each joined reference; none in either actual Dodge continuation. Fixed stock mixture assay, minimum correlation.75.",
+      "flesh_PCM": "Normal joined reference and isolated SAN actual-windup continuation pass both-bank fingerprints; neither actual Dodge continuation replays flesh impact.",
+      "retained_failed_default_SAN_report": "build/oblivion-compat/m15/S4/combined-dodge-gamepad-sanitize-01/hit-fingerprint-joined-core.json",
+      "measurement_overrides_to_expanded_joined_recipe": {
+        "pending_hit_measurement": true,
+        "joined_core": false,
+        "scope": "Short actual pending Player3 windup fresh continuation, measurement controls Music0/Doppler0 only. No new gameplay outcome or full-course/default-audio claim.",
+        "source_camera": "third_person",
+        "reference_source": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/combined-dodge-gamepad-sanitize-01/snapshots/save-7.omwsave",
+        "reference_source_sha256": "bfe936f9f12e98bcf3de1c1554e7569c924be0f0babc075cc08339ab34a51662",
+        "observer_additions": "",
+        "reference_actions": [
+          {
+            "type": "wait_log",
+            "pattern": "Applied TES4 runtime state:",
+            "timeout_seconds": 600,
+            "abort_on_failure": true
+          },
+          {
+            "type": "focus_window",
+            "name": "OpenMW"
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 ",
+            "timeout_seconds": 600,
+            "abort_on_failure": true
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 melee finished: actor=dynamic:player:0000000000000001 id=3 action=(?:-1|ffff)",
+            "timeout_seconds": 600,
+            "abort_on_failure": true
+          },
+          {
+            "type": "wait_log",
+            "pattern": "M15 course fatigue ready:",
+            "timeout_seconds": 600,
+            "abort_on_failure": true,
+            "after_start": true
+          },
+          {
+            "type": "key_held",
+            "value": "F5",
+            "hold_seconds": 0.02,
+            "pause_seconds": 0.02
+          },
+          {
+            "type": "wait_log",
+            "pattern": "\"event\":\"save-complete\"",
+            "timeout_seconds": 600,
+            "abort_on_failure": true,
+            "path": "events.jsonl"
+          },
+          {
+            "type": "screenshot",
+            "name": "joined-hit-measured.png",
+            "minimum_entropy": 0.03
+          }
+        ],
+        "expected_log": [
+          "Applied TES4 runtime state:",
+          "M15 course view: thirdPerson=true",
+          "M15 melee hit committed: actor=dynamic:player:0000000000000001 id=3 "
+        ]
+      },
+      "measurement_preconditions": "Require actual pendingPlayer3/body+FP/contactfalse, ledgernext4pending[3]owned byPlayer; exact whole load. No new attack input, one continued contact3 and finalledgernext4empty.",
+      "measurement_recipe_sha256": "4e91fff8b1d44b5a7310ee4067cc1571c4187730d5ef9d67c47a9b499164e7dd",
+      "limitations": [
+        "Normalized correlation cannot distinguish two coincident copies from one louder copy. Original selector, two requests and one contact are separate evidence; PCM alone is not a voice-count claim.",
+        "SAN full default-mix flesh report remains rejected; the isolated measurement proves that narrow setting/continuation scope, not default music balance.",
+        "Direct listening unavailable in this tool channel; routed PCM and asset fingerprints were inspected. No subjective listening review or full E6 closure claimed.",
+        "Other feedback, remaining requirements and T7/F8 remain open."
+      ]
+    }
   }
 }
