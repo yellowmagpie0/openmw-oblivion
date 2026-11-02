@@ -1416,8 +1416,10 @@ namespace MWMechanics
             return std::nullopt; // Creature spell/contact-effect resolution must join this transaction.
         if (creature && !creatureUsesDefaultWeaponHitSound(world.getStore(), attacker))
             return std::nullopt;
-        if (creature && incoming.mHealth <= 0)
-            return std::nullopt; // The native nonpositive contact consequences remain unreviewed.
+        if (creature && incoming.mHealth < 0)
+            return std::nullopt; // Signed negative source damage remains outside the admitted sink domain.
+        // Zero natural damage still owns a real contact, attack expenditure,
+        // block/reaction and sound. The sink skips its zero Health/Fatigue writes.
         std::vector<const ESM4::GameSetting*> settings;
         std::set<ESM::FormId> seen;
         for (const auto& record : world.getStore().get<ESM4::GameSetting>())

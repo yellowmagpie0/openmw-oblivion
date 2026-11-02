@@ -6742,7 +6742,7 @@ namespace
         auto& projection = actor.getRefData().getCustomData()->asESM4CreatureCustomData();
         projection.mNativeDamage = 0; // A stale shared projection cannot supply native damage.
         struct Case { float current; float health; };
-        const Case cases[] = {{-320, -2}, {-160, 2}, {0, 6}, {40, 7}, {160, 10}, {320, 14}};
+        const Case cases[] = {{-320, -2}, {-240, 0}, {-160, 2}, {0, 6}, {40, 7}, {160, 10}, {320, 14}};
         for (const bool eligible : {false, true})
         for (const auto& [current, health] : cases)
         {
@@ -6762,7 +6762,7 @@ namespace
             for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
             {
                 const auto contact = MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false, kind);
-                if (health <= 0)
+                if (health < 0)
                 {
                     EXPECT_FALSE(contact);
                 }
@@ -6771,11 +6771,42 @@ namespace
                     ASSERT_TRUE(contact); EXPECT_EQ(contact->mHealth, health); EXPECT_EQ(contact->mFatigue, 0);
                     EXPECT_EQ(contact->mHitArguments.mUsedSkill, 255); // Native natural branch bypasses the HTH store.
                     EXPECT_FALSE(contact->mHitArguments.mAttackerHasWeapon);
-                    EXPECT_TRUE(contact->mHitArguments.mDamagePath);
+                    EXPECT_EQ(contact->mHitArguments.mDamagePath, health > 0);
+                    EXPECT_TRUE(contact->mVictimConditionChanges.empty());
+                    EXPECT_FALSE(contact->mRandomTransition);
                 }
             }
             EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
         }
+        // A valid zero damage word is distinct from a missing native damage
+        // authority. Ordinary and power contacts must still be admitted at
+        // zero/low/full Fatigue without creating receiving resource writes.
+        auto harmless = creature;
+        harmless.mData.damage = 0;
+        store.getWritable<ESM4::Creature>().insertStatic(harmless, harmless.mFormKey);
+        for (const float current : {0.f, 40.f, 160.f})
+        {
+            auto values = *service.findActorValues(reference.mFormKey);
+            values.mValues[10] = {160, {0.f, 0.f, current - 160}};
+            service.publishNonPlayerValues(actor, values);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            const auto random = service.combatRandomState();
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                const auto contact = MWMechanics::resolveOblivionUnarmedMeleeContact(
+                    world, actor, player, 0, false, kind);
+                ASSERT_TRUE(contact);
+                EXPECT_FALSE(contact->mImmune);
+                EXPECT_EQ(contact->mHealth, 0); EXPECT_EQ(contact->mFatigue, 0);
+                EXPECT_EQ(contact->mPreArmorDamage, 0);
+                EXPECT_FALSE(contact->mHitArguments.mDamagePath);
+                EXPECT_TRUE(contact->mVictimConditionChanges.empty());
+                EXPECT_FALSE(contact->mRandomTransition);
+            }
+            EXPECT_EQ(service.combatRandomState(), random);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+        }
+        store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
         // Natural contacts share the original empty-weapon resistance path.
         // Partial/negative resistance does not reduce damage; full immunity
         // consults base HTH (the Creature Combat group), not fortified skill.

@@ -1,6 +1,7 @@
 """Place a stock Creature clone with only an explicit stationary CSTY policy.
 
-Stats, natural damage, reach, meshes, sounds and inventory remain source data.
+Stats, reach, meshes, sounds and inventory remain source data. An explicit
+natural_damage override can exercise harmless contact without injecting outcomes.
 Packages, scripts and spells are removed from the clone so production combat
 intent owns this bounded physical observation. The plugin contains no outcomes.
 """
@@ -20,13 +21,16 @@ from tes4_m15_fixture import group, record, records, string, sub
 
 def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     fields = {"version", "purpose", "source_sha256", "master", "cell", "template", "creature", "reference", "style", "position"}
-    if not isinstance(recipe, dict) or set(recipe) != fields:
+    if not isinstance(recipe, dict) or set(recipe) - {"natural_damage"} != fields:
         raise ValueError("invalid stationary Creature recipe fields")
+    damage = recipe.get("natural_damage")
+    if "natural_damage" in recipe and (type(damage) is not int or not 0 <= damage <= 65535):
+        raise ValueError("invalid stationary Creature natural damage word")
     own = [recipe[k] for k in ("creature", "reference", "style")]
     if (any(type(x) is not int or not 0x01000800 <= x <= 0x01ffffff for x in own)
             or len(set(own)) != 3):
         raise ValueError("invalid or colliding Creature fixture identities")
-    base_recipe = {k: v for k, v in recipe.items() if k not in {"template", "style"}}
+    base_recipe = {k: v for k, v in recipe.items() if k not in {"template", "style", "natural_damage"}}
     base_recipe["creature"] = recipe["template"]
     placed, _ = placement(source, base_recipe)
     templates = [p for t, i, p in records(source) if t == "CREA" and i == recipe["template"]]
@@ -35,6 +39,13 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     original = _subrecords(templates[0], "stationary Creature", "CREA")
     changed = {"EDID", "FULL", "SCRI", "PKID", "SPLO", "ZNAM"}
     retained = [(s["name"], s["payload"]) for s in original if s["name"] not in changed]
+    if damage is not None:
+        data = [value for name, value in retained if name == "DATA"]
+        if len(data) != 1 or len(data[0]) != 20:
+            raise ValueError("natural damage override requires one native Creature DATA")
+        overridden = bytearray(data[0])
+        struct.pack_into("<H", overridden, 10, damage)
+        retained = [(name, bytes(overridden) if name == "DATA" else value) for name, value in retained]
     creature = string("EDID", "M15StationaryCreature") + string("FULL", "M15 stationary Dog")
     creature += b"".join(sub(k, v) for k, v in retained)
     creature += sub("ZNAM", struct.pack("<I", recipe["style"]))
@@ -66,8 +77,8 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
             or any(s["name"] in {"SCRI", "PKID", "SPLO"} for s in actual)):
         raise ValueError("stationary Creature readback differs")
     return output, {"source_sha256": recipe["source_sha256"], "sha256": hashlib.sha256(output).hexdigest(),
-                    "record_count": 4, "script_count": 0, "creature_fields_changed": sorted(changed),
-                    "stats_and_assets_preserved": True, "style": combat_style(bytes(style)), "runtime_accepted": False}
+                    "record_count": 4, "script_count": 0, "creature_fields_changed": sorted(changed | ({"DATA.damage"} if damage is not None else set())),
+                    "stats_and_assets_preserved": damage is None, "natural_damage_override": damage, "style": combat_style(bytes(style)), "runtime_accepted": False}
 
 
 def main():

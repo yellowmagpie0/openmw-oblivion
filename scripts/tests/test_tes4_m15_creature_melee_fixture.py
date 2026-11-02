@@ -36,6 +36,25 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
         self.assertEqual(report["script_count"], 0)
         self.assertEqual(build(self.source, self.recipe)[0], output)
 
+    def test_explicit_zero_damage_preserves_other_native_fields(self):
+        output, report = build(self.source, dict(self.recipe, natural_damage=0))
+        fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+        data = next(s["payload"] for s in fields if s["name"] == "DATA")
+        self.assertEqual(data[:10] + data[12:], bytes(range(20))[:10] + bytes(range(20))[12:])
+        self.assertEqual(struct.unpack_from("<H", data, 10)[0], 0)
+        self.assertEqual(next(s["payload"] for s in fields if s["name"] == "ACBS"), bytes(range(16)))
+        self.assertEqual(report["natural_damage_override"], 0)
+        self.assertFalse(report["stats_and_assets_preserved"])
+        self.assertIn("DATA.damage", report["creature_fields_changed"])
+        for invalid in [None, True, -1, 65536, 0.0, "0"]:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                build(self.source, dict(self.recipe, natural_damage=invalid))
+        for payload in [b"", bytes(19), bytes(21)]:
+            source = self.source.replace(sub("DATA", bytes(range(20))), sub("DATA", payload))
+            recipe = dict(self.recipe, natural_damage=0, source_sha256=hashlib.sha256(source).hexdigest())
+            with self.subTest(size=len(payload)), self.assertRaises(ValueError):
+                build(source, recipe)
+
     def test_rejects_unpinned_missing_invalid_or_colliding_identities(self):
         for change in ({"source_sha256": "0" * 64}, {"template": 0x9999}, {"creature": 0x800},
                        {"style": 0x01000800}, {"reference": True}, {"version": True},
