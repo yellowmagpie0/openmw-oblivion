@@ -335,6 +335,14 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
     if recipe['captures'] != [['combined-forward-power.png', 9], ['combined-left-power.png', 11],
                                ['combined-right-power.png', 13]]:
         raise ValueError('Invalid joined-course capture identities')
+    settling = recipe.get('settled_capture')
+    if settling is not None:
+        keys = ('window_seconds', 'minimum_seconds', 'quiet_seconds', 'maximum_bounds_speed',
+                'retreat_distance', 'body_clearance')
+        if (not isinstance(settling, dict) or any(type(settling.get(k)) not in (int, float)
+                or not math.isfinite(settling[k]) or settling[k] <= 0 for k in keys)
+                or settling['minimum_seconds'] + settling['quiet_seconds'] >= settling['window_seconds']):
+            raise ValueError('Invalid settled-body capture prerequisites')
     result = copy.deepcopy(manifest)
     actions = result['actions']
     settings = next(f['content'] for f in result['files'] if f['path'] == 'config/settings.cfg')
@@ -368,7 +376,8 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
     if observer['content'].count(anchor) != 1:
         raise ValueError('Missing unique shared observer import anchor')
     observer['content'] = observer['content'].replace(anchor,
-        anchor + "local joinedCameraProbe=require('scripts.m15_forward_capture_guard')\n")
+        anchor + "local joinedCameraProbe=require('scripts.m15_forward_capture_guard')\n"
+        + ('local joinedSettledProbe\n' if settling else ''))
     anchor = "   print('M15 course return: lane='"
     if observer['content'].count(anchor) != 1:
         raise ValueError('Missing unique shared camera observer anchor')
@@ -382,6 +391,27 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
         f"    local mx,my=joinedCameraProbe.motion(target,mode,{step})\n"
         "    print(string.format('M15 joined motion %s: x=%d y=%d',mode,mx,my))\n"
         "   end\n")
+    if settling:
+        witness += (
+            "   local jr,jw,jv,jclear=false,false,false,false\n"
+            "   if Actor.isParalyzed(target) then\n"
+            "    joinedSettledProbe=joinedSettledProbe or joinedCameraProbe.newSettled("
+            + ','.join(str(settling[k]) for k in ('window_seconds', 'minimum_seconds',
+                       'quiet_seconds', 'maximum_bounds_speed')) + ")\n"
+            "    jr,jw=joinedSettledProbe(target)\n"
+            "    local jb=target:getBoundingBox()\n"
+            "    local jx=math.max(0,math.abs(p.x-jb.center.x)-jb.halfSize.x)\n"
+            "    local jy=math.max(0,math.abs(p.y-jb.center.y)-jb.halfSize.y)\n"
+            "    local jf=nearby.castRay(p+util.vector3(0,0,40),p-util.vector3(0,0,120),{{collisionType=mask}}).hit\n"
+            "    jclear=distance>"
+            + str(settling['retreat_distance']) + " and math.sqrt(jx*jx+jy*jy)>"
+            + str(settling['body_clearance'])
+            + " and not low.hit and not high.hit and jf and Actor.isOnGround(self)\n"
+            "    jv=joinedCameraProbe.framedVisible(target,screen)\n"
+            "   else joinedSettledProbe=nil end\n"
+            "   print('M15 joined settled retreat: ready=' .. tostring(jclear))\n"
+            "   print('M15 joined settled: ready=' .. tostring(jr) .. ' window=' .. tostring(jw)"
+            " .. ' visible=' .. tostring(jv))\n")
     observer['content'] = observer['content'].replace(anchor, witness + anchor)
     for capture, cause in recipe['captures']:
         matches = [i for i, a in enumerate(actions) if a.get('name') == capture]
@@ -401,12 +431,24 @@ def joined_power_capture_setup(manifest, recipe, probe_source):
                 + str(cause) + ' action=-1', 60, False))
         if cause == 9:
             before.append(wait('M15 joined forward: applied=true', 60))
+            if settling:
+                before += [key('key_down', 's'), wait('M15 joined settled retreat: ready=true'),
+                    key('key_up', 's'), wait('M15 joined settled: ready=true window=true')]
         before += measured('upper' if cause == 11 else 'frame') + [wait('M15 joined camera: first=true visible=true')]
+        if cause == 9 and settling:
+            before.append(wait('M15 joined settled: ready=true window=true visible=true'))
+            # Photograph the acknowledged phase before save I/O; inspect the
+            # saved bodies/effect as well. Do not extend the gameplay timer.
+            save, saved, photograph = actions[i-2:i+1]
+            actions[i-2:i+1] = before + [photograph, save, saved] + measured('level')
+            continue
         # Observe a rendered frame after saving, before taking the photograph.
         actions[i:i] = [wait('M15 joined camera: first=true visible=true')]
         actions[i+2:i+2] = measured('level')
         actions[i-2:i-2] = before
     result['expected_log'].append('M15 joined camera: first=true visible=true')
+    if settling:
+        result['expected_log'].append('M15 joined settled: ready=true window=true visible=true')
     return result
 
 

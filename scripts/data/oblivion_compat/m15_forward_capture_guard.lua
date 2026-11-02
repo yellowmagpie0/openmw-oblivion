@@ -65,15 +65,25 @@ local function upperVisible(target, screen)
         return false
     end
     for _, height in ipairs({0.85, 0.35}) do
-        local anchor = bounds.center + util.vector3(0, 0, height * bounds.halfSize.z)
-        local pixel = camera.worldToViewportVector(anchor)
-        if camera.getViewTransform():apply(anchor).z >= 0
-            or pixel.x < 0 or pixel.x >= screen.x or pixel.y < 0 or pixel.y >= screen.y
-            or nearby.castRay(camera.getPosition(), anchor, {collisionType = worldMask}).hit then
-            return false
+        -- An extended arm/weapon shifts the box centre beside the head or
+        -- chest. Require a real target-mesh hit in each band, without assuming
+        -- that the centre line passes through the actor's skin.
+        local found = false
+        for _, x in ipairs({0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75}) do
+            for _, y in ipairs({0, -0.25, 0.25, -0.5, 0.5, -0.75, 0.75}) do
+                local anchor = bounds.center + util.vector3(
+                    x * bounds.halfSize.x, y * bounds.halfSize.y, height * bounds.halfSize.z)
+                local pixel = camera.worldToViewportVector(anchor)
+                if camera.getViewTransform():apply(anchor).z < 0
+                    and pixel.x >= 0 and pixel.x < screen.x and pixel.y >= 0 and pixel.y < screen.y
+                    and not nearby.castRay(camera.getPosition(), anchor, {collisionType = worldMask}).hit then
+                    local hit = nearby.castRenderingRay(camera.getPosition(), anchor, {ignore = self}).hitObject
+                    if hit and hit.id == target.id then found = true; break end
+                end
+            end
+            if found then break end
         end
-        local hit = nearby.castRenderingRay(camera.getPosition(), anchor, {ignore = self}).hitObject
-        if not hit or hit.id ~= target.id then return false end
+        if not found then return false end
     end
     return true
 end
@@ -91,4 +101,57 @@ local function new(window)
     end
 end
 
-return {new = new, visible = visible, motion = motion, upperVisible = upperVisible}
+-- A quiet rendered bounding box is a cheap capture prerequisite. The saved
+-- physical bodies and the photograph remain the evidence for the actual pose.
+local function newSettled(window, minimum, hold, maximumSpeed)
+    for _, value in ipairs({window, minimum, hold, maximumSpeed}) do
+        assert(type(value) == 'number' and value == value and value >= 0 and value < math.huge)
+    end
+    assert(hold > 0 and maximumSpeed > 0 and minimum + hold < window)
+    local started, previousTime, previousBounds, quietSince
+    local function distance(a, b)
+        return math.sqrt((a.x-b.x)^2 + (a.y-b.y)^2 + (a.z-b.z)^2)
+    end
+    return function(target)
+        local now = core.getSimulationTime()
+        started = started or now
+        local elapsed = now - started
+        if elapsed < 0 or elapsed >= window then return false, false, elapsed, math.huge end
+        local bounds = target:getBoundingBox()
+        local speed = math.huge
+        if previousTime and now > previousTime then
+            speed = math.max(distance(bounds.center, previousBounds.center),
+                distance(bounds.halfSize, previousBounds.halfSize)) / (now - previousTime)
+            if elapsed >= minimum and speed <= maximumSpeed then
+                quietSince = quietSince or now
+            else
+                quietSince = nil
+            end
+        elseif previousTime and now < previousTime then
+            quietSince = nil
+        end
+        previousTime, previousBounds = now, bounds
+        return quietSince ~= nil and now - quietSince >= hold, true, elapsed, speed
+    end
+end
+
+local function framedVisible(target, screen)
+    local bounds = target:getBoundingBox()
+    for _, x in ipairs({-1, 1}) do
+        for _, y in ipairs({-1, 1}) do
+            for _, z in ipairs({-1, 1}) do
+                local anchor = bounds.center + util.vector3(
+                    x * bounds.halfSize.x, y * bounds.halfSize.y, z * bounds.halfSize.z)
+                local pixel = camera.worldToViewportVector(anchor)
+                if camera.getViewTransform():apply(anchor).z >= 0 or pixel.x < 16
+                    or pixel.x >= screen.x - 16 or pixel.y < 16 or pixel.y >= screen.y - 16 then
+                    return false
+                end
+            end
+        end
+    end
+    return visible(target, screen)
+end
+
+return {new = new, visible = visible, motion = motion, upperVisible = upperVisible,
+    newSettled = newSettled, framedVisible = framedVisible}

@@ -96,6 +96,33 @@ class FixturePreflightTests(unittest.TestCase):
         with self.assertRaises((ValueError, StopIteration)):
             joined_power_capture_setup(broken, recipe, '')
 
+    def test_joined_settled_capture_keeps_gameplay_gates_and_photographs_before_save_io(self):
+        data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
+        manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
+        original = copy.deepcopy(manifest)
+        recipe = json.loads((data / 'm15_forward_capture.json').read_text())['joined_course']
+        limits = dict(window_seconds=9.75, minimum_seconds=1.5, quiet_seconds=.5,
+                      maximum_bounds_speed=5, retreat_distance=150, body_clearance=60)
+        recipe = dict(recipe, settled_capture=limits)
+        spaced = right_power_spacing_setup(manifest, json.loads((data / 'm15_right_power_setup.json').read_text()))
+        framed = joined_power_capture_setup(spaced, recipe, '')
+        self.assertEqual(manifest, original)
+        saves = lambda value: [a for a in value['actions'] if a.get('value') == 'F5']
+        self.assertEqual(saves(framed), saves(original))
+        self.assertEqual(framed['forbidden_log'], original['forbidden_log'])
+        self.assertTrue(set(original['expected_log']).issubset(framed['expected_log']))
+        i = next(i for i,a in enumerate(framed['actions']) if a.get('name') == 'combined-forward-power.png')
+        self.assertEqual(framed['actions'][i-1]['pattern'],
+                         'M15 joined settled: ready=true window=true visible=true')
+        self.assertEqual(framed['actions'][i+1]['value'], 'F5')
+        self.assertIn('M15 joined settled retreat: ready=true',
+                      [a.get('pattern') for a in framed['actions'][:i]])
+        for key,value in [('quiet_seconds', 0), ('window_seconds', 2),
+                          ('body_clearance', float('nan')), ('maximum_bounds_speed', True)]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                joined_power_capture_setup(manifest,
+                    dict(recipe, settled_capture=dict(limits, **{key:value})), '')
+
     def recovery_manifest(self):
         data = Path(__file__).resolve().parents[1] / 'data/oblivion_compat'
         manifest = json.loads((data / 'oblivion_m15_combined_melee.json').read_text())
@@ -143,10 +170,11 @@ local vectorMeta = {}
 local function vector(x,y,z) return setmetatable({x=x,y=y,z=z},vectorMeta) end
 vectorMeta.__add=function(a,b) return vector(a.x+b.x,a.y+b.y,a.z+b.z) end
 local self = {}
+local boundsCenter, boundsHalf = vector(4,5,6), vector(20,30,70)
 local target = setmetatable({}, {
  __index=function(_,k)
   if k=='id' then return 42
-  elseif k=='getBoundingBox' then return function() return {center=vector(4,5,6),halfSize=vector(20,30,70)} end
+  elseif k=='getBoundingBox' then return function() return {center=boundsCenter,halfSize=boundsHalf} end
   elseif k=='position' then error('Visibility must follow rendered bounds, not the actor foot anchor') end
  end,
  __newindex=function() error('Camera probe must not mutate the actor') end})
@@ -192,6 +220,43 @@ assert(module.visible(target,screen)) -- Recovery visibility is independent of e
 now=-1;visible,active=guard(target,screen);assert(not visible and not active)
 ''')
 
+    def test_settled_camera_waits_for_continuous_quiet_rendered_bounds(self):
+        self.camera_guard(r'''
+local guard=module.newSettled(5,1,.5,5)
+assert(not guard(target))
+now=1;boundsCenter=vector(40,5,6);assert(not guard(target))
+now=1.25;assert(not guard(target))
+now=1.5;assert(not guard(target))
+now=1.75;assert(guard(target))
+now=2;boundsHalf=vector(20,30,90);assert(not guard(target))
+now=2.25;assert(not guard(target))
+now=2.75;assert(guard(target))
+now=5;local ready,active=guard(target);assert(not ready and not active)
+''')
+
+    def test_settled_camera_rejects_bad_windows_and_a_reversed_clock(self):
+        self.camera_guard(r'''
+for _,args in ipairs({{0,0,.5,5},{2,1,1,5},{5,-1,.5,5},{5,1,0,5},
+ {5,1,.5,0},{5,1,.5,math.huge},{5,1,.5,0/0},{'5',1,.5,5}}) do
+ assert(not pcall(module.newSettled,unpack(args)))
+end
+local guard=module.newSettled(5,1,.5,5)
+guard(target);now=1;guard(target);now=1.5;assert(guard(target))
+now=1.25;assert(not guard(target))
+now=-1;local ready,active=guard(target);assert(not ready and not active)
+''')
+
+    def test_full_body_camera_rejects_a_cropped_corner_and_occlusion(self):
+        self.camera_guard(r'''
+assert(module.framedVisible(target,screen))
+package.loaded['openmw.camera'].worldToViewportVector=function(anchor)
+ return {x=20,y=anchor.z<0 and -1 or 20}
+end
+assert(not module.framedVisible(target,screen))
+package.loaded['openmw.camera'].worldToViewportVector=function() return {x=20,y=20} end
+blocked=true;assert(not module.framedVisible(target,screen))
+''')
+
     def test_standing_guard_rejects_cropped_head_even_with_visible_torso(self):
         self.camera_guard(r'''
 assert(module.upperVisible(target,screen))
@@ -203,6 +268,20 @@ assert(not module.upperVisible(target,screen))
 api.worldToViewportVector=function() return {x=20,y=20} end
 blocked=true;assert(not module.upperVisible(target,screen))
 blocked=false;hitId=43;assert(not module.upperVisible(target,screen))
+''')
+
+    def test_standing_guard_handles_an_arm_shifted_box_without_accepting_missing_head(self):
+        self.camera_guard(r'''
+local api=package.loaded['openmw.nearby']
+api.castRenderingRay=function(_,anchor,options)
+ assert(options.ignore==self)
+ return {hitObject=anchor.x>12 and anchor.x<16 and {id=42} or nil}
+end
+assert(module.upperVisible(target,screen)) -- Centre rays miss the head and torso.
+api.castRenderingRay=function(_,anchor)
+ return {hitObject=anchor.x>12 and anchor.x<16 and anchor.z<40 and {id=42} or nil}
+end
+assert(not module.upperVisible(target,screen)) -- A visible chest cannot replace the head band.
 ''')
 
     def test_standing_capture_preserves_contacts_saves_and_restores_pitch(self):
