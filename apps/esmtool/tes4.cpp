@@ -254,6 +254,15 @@ namespace EsmTool
                     if (data.mAssociatedForm) std::cout << " associatedForm=" << data.mAssociatedForm->serialize();
                 }
             }
+            if constexpr (std::is_same_v<T, ESM4::LevelledSpell>)
+            {
+                std::cout << "\n  LevelledSpellForm: " << value.mFormKey.serialize();
+                if (value.mChanceNone) std::cout << "\n  LevelledSpell: chanceNone=" << unsigned(*value.mChanceNone)
+                    << " flags=" << unsigned(*value.mListFlags);
+                for (const auto& entry : value.mEntries)
+                    std::cout << "\n  LevelledSpellEntry: level=" << entry.mLevel
+                        << " spell=" << entry.mSpellKey.serialize() << " count=" << entry.mCount;
+            }
             if constexpr (std::is_same_v<T, ESM4::Spell> || std::is_same_v<T, ESM4::Enchantment>)
             {
                 if (value.mData)
@@ -729,7 +738,10 @@ namespace EsmTool
                     readTypedRecord<ESM4::LevelledNpc>(params, reader);
                     return true;
                 case ESM4::REC_LVSP:
-                    readTypedRecord<ESM4::RawRecord>(params, reader);
+                    if (!reader.hasFormVersion() && (reader.esmVersionF() == .8f || reader.esmVersionF() == 1.f))
+                        readTypedRecord<ESM4::LevelledSpell>(params, reader);
+                    else
+                        readTypedRecord<ESM4::RawRecord>(params, reader);
                     return true;
                 case ESM4::REC_MATO:
                     readTypedRecord<ESM4::Material>(params, reader);

@@ -24,7 +24,7 @@
     "Exactactive-recoveryfreshsource,no oldcontact/soundreplay,strictendpointcomparison"
   ],
   "acceptance_evidence": "build/oblivion-compat/m15/S4/creature-spell-contact-work-01/checkpoint-verification.json",
-  "limits": "Passive/Disease/leveled sources remain explicit boundaries. No spellcasting,fullCreature,S4,V6,T7/F8 claim.",
+  "limits": "This castable-only checkpoint retains its original scope. The stock Dog singleton LVSP Disease route is tracked separately in m15_creature_disease_contact_cases.json. No spellcasting, full Creature, S4, V6, T7/F8 claim.",
   "endpoint_numeric_policy": {
     "actor": "content:m15stationaryopponent.esp:000802",
     "helper": "scripts/tes4_m15_fixture_preflight.py::regenerated_fatigue_endpoint",

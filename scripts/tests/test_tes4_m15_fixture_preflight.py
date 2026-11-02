@@ -9,10 +9,37 @@ from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
-from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint, is_current_fixture_schema
+from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint, is_current_fixture_schema, creature_disease_course_state
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_disease_course_distinguishes_cold_selected_none_and_applied_owners(self):
+        player, actor, spell = 'dynamic:player:0000000000000001', 'content:test.esp:000802', 'content:oblivion.esm:098416'
+        row = dict(actor=player, owner=0, passive_abilities=[], values=[[40, 0, 0, 0] for _ in range(72)])
+        state = dict(player=dict(reference=player), native_actor_values=[row])
+        self.assertEqual(creature_disease_course_state(state, actor, spell, cold=True)['source'], 'cold-pending')
+        carrier = dict(actor=actor, owner=1, process=1, leveled_contact_spells=[])
+        state['native_actor_values'].append(carrier)
+        self.assertEqual(creature_disease_course_state(state, actor, spell, selected=False)['source'], 'none')
+        carrier['leveled_contact_spells'] = [spell]
+        self.assertEqual(creature_disease_course_state(state, actor, spell, selected=True)['source'], 'selected')
+        row['passive_abilities'] = [dict(spell=spell, spell_type=1,
+            effects=[[0, int.from_bytes(b'DRAT', 'little'), 1, -5, 5]])]
+        row['values'][1][1] = -5
+        original = copy.deepcopy(state)
+        self.assertTrue(creature_disease_course_state(state, actor, spell, selected=True, applied=True)['applied'])
+        self.assertEqual(state, original)
+        for mutation in (lambda x: x['native_actor_values'][0].update(passive_abilities=None),
+                         lambda x: x['native_actor_values'][0]['passive_abilities'][0].update(spell_type=4),
+                         lambda x: x['native_actor_values'][0]['values'][1].__setitem__(1, 0),
+                         lambda x: x['native_actor_values'][1].update(leveled_contact_spells=[]),
+                         lambda x: x['native_actor_values'][1].update(leveled_contact_spells=None)):
+            bad = copy.deepcopy(state); mutation(bad)
+            with self.assertRaises(ValueError): creature_disease_course_state(bad, actor, spell, applied=True)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, applied=False)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, cold=True)
+        with self.assertRaises(ValueError): creature_disease_course_state(state, actor, spell, selected=False, applied=True)
+
     def test_regenerated_npc_fatigue_comparison_preserves_raw_state_and_other_fields(self):
         actor = 'content:test.esm:000001'
         row = dict(actor=actor, owner=1, process=1, process_action=-1, process_knocked_state=0,
@@ -678,6 +705,6 @@ class CurrentFixtureSchemaTests(unittest.TestCase):
         for minimum in (59, 74):
             self.assertTrue(is_current_fixture_schema(78, 78, minimum))
             self.assertTrue(is_current_fixture_schema(77, 77, minimum))
-            for target, current in ((77, 78), (78, 77), (79, 79), (minimum - 1, minimum - 1),
+            for target, current in ((77, 78), (78, 77), (80, 80), (minimum - 1, minimum - 1),
                                     (True, 1), (78., 78), (78, 78.)):
                 self.assertFalse(is_current_fixture_schema(target, current, minimum))

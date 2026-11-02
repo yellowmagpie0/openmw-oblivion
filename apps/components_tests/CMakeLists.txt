@@ -130,6 +130,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/testloadcsty.cpp
     esm4/testloadskil.cpp
     esm4/testloadspel.cpp
+    esm4/testloadlvsp.cpp
     esm4/testloadmgef.cpp
     esm4/testloadfact.cpp
     esm4/testloadcell.cpp

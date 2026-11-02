@@ -38,6 +38,18 @@ namespace ESM4
     // rounding, including cancellation to zero below100. No RNG is consumed.
     float nativeEffectResistanceMultiplier(float generalResistance, float effectResistance);
 
+    // Original6171F0/5490C0 physical-contact Disease1 transfer. Its percentile
+    // comparison is inclusive: draw0 can pass a zero threshold, even at100
+    // resistance. Caller owns Player/unarmed/carrier admission, the RNG draw,
+    // duplicate ownership, grant transaction and presentation.
+    bool diseaseTransferSucceeds(std::int32_t resistance, float base, float multiplier,
+        std::uint8_t percentile);
+    struct DiseaseTransferSettings
+    {
+        float mBase;
+        float mMultiplier;
+    };
+
     // Narrow owned lifecycle for the verified recoverable, NoMagnitude PARA
     // effect. Actor preparation, modifier writes and collection ownership stay
     // with the caller; restoring this state must not replay application.

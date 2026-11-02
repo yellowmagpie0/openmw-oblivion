@@ -61,7 +61,8 @@ namespace ESM4
     // v76 retains the Use release required after Player equipment cancellation.
     // v77 retains blocking-dodge action ownership and both playback samples.
     // v78 distinguishes Disease1 temporary modifiers from Ability4 base writes.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 78;
+    // v79 retains resolved leveled Creature contact spell sources, including none.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 79;
 
     struct RuntimeContentIdentity
     {
@@ -356,6 +357,11 @@ namespace ESM4
         // Null means unknown legacy ownership. An empty vector means known
         // no applied abilities; neither state permits guessing from AV bases.
         std::optional<std::vector<RuntimePassiveAbility>> mPassiveAbilities;
+
+        // v79: selected leveled contact sources. Absence means unconstructed or
+        // unknown legacy history; an empty vector is an owned chance-none result.
+        // These are carrier inputs, not effects applied to this Creature.
+        std::optional<std::vector<ESM::FormKey>> mLeveledContactSpells;
 
         // v70: application order and lifecycle of owned melee paralysis.
         // Earlier fork schemas never produced these effects: empty ownership

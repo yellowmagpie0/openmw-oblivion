@@ -138,6 +138,21 @@ class M15NativeAuditTests(unittest.TestCase):
             result=audit.inventory([base,patch]);self.assertFalse(result['data_passed'])
             self.assertIn('ambiguous winning MGEF effect codes',result['failures'])
 
+    def test_levelled_spell_wire_preserves_padding_remaps_and_rejects_bad_fields(self):
+        def source(chance=90, flags=3, entry=None):
+            return dict(plugin='patch.esp', masters=['other.esm', 'base.esm'], subrecords=[
+                dict(name='LVLD', payload=bytes([chance])), dict(name='LVLF', payload=bytes([flags])),
+                dict(name='LVLO', payload=entry if entry is not None else struct.pack('<HHIHH', 1, 0xcdcd, 0x01000901, 1, 0xabab))])
+        decoded = audit.levelled_spell_definition(source())
+        self.assertEqual(decoded, dict(chance_none=90, flags=3, entries=[dict(
+            level=1, spell='content:base.esm:000901', count=1, padding=[0xcdcd, 0xabab])]))
+        for record in (source(chance=101), source(flags=8), source(entry=bytes(8))):
+            with self.assertRaises(audit.M15AuditError): audit.levelled_spell_definition(record)
+        record = source(); record['subrecords'].append(record['subrecords'][0])
+        with self.assertRaises(audit.M15AuditError): audit.levelled_spell_definition(record)
+        record = source(); record['subrecords'].pop(1)
+        with self.assertRaises(audit.M15AuditError): audit.levelled_spell_definition(record)
+
     def test_spell_layout_order_padding_partial_script_fields_and_name(self):
         def decode(parts):
             return audit.spell_definition(dict(plugin='base.esm', masters=['other.esm'],
@@ -333,7 +348,7 @@ class M15NativeAuditTests(unittest.TestCase):
             root = Path(directory)
             base, other, patch = (root / name for name in ('base.esm', 'other.esm', 'patch.esp'))
             base.write_bytes(plugin([record('MISC', 0x800, b''), record('SPEL', 0x801, sub('SPIT', struct.pack('<IIIB3s', 0, 0, 0, 0, bytes(3)))),
-                                    record('RACE', 0x802, b''), record('CLAS', 0x803, b''), record('LVSP', 0x805, b'')]))
+                                    record('RACE', 0x802, b''), record('CLAS', 0x803, b''), record('LVSP', 0x805, sub('LVLD', bytes([90])) + sub('LVLF', bytes([3])))]))
             other.write_bytes(plugin([record('SGST', 0x800, b'')]))
             actor = sub('AIDT', bytes(12)) + sub('ACBS', bytes(16))
             actor += sub('CNTO', struct.pack('<Ii', 0x01000800, 3))

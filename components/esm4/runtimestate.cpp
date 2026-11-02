@@ -1049,6 +1049,15 @@ namespace ESM4
 
     void RuntimeActorValues::validate() const
     {
+        if (mLeveledContactSpells)
+        {
+            if (mOwner != ActorValueOwner::NonPlayer || mLeveledContactSpells->size() > sMaximumCollectionSize)
+                throw std::runtime_error("Invalid TES4 leveled contact spell ownership");
+            std::set<ESM::FormKey> spells;
+            for (const auto& spell : *mLeveledContactSpells)
+                if (spell.isNull() || !spells.insert(spell).second)
+                    throw std::runtime_error("Invalid or duplicate TES4 leveled contact spell");
+        }
         if (mReputation && (mOwner != ActorValueOwner::Player
                 || mValues[38].mBase != 0 || mValues[39].mBase != 0))
             throw std::runtime_error("Player reputation has foreign ownership or duplicate AV38/39 base authority");
@@ -2031,6 +2040,8 @@ namespace ESM4
                 throw std::runtime_error("TES4 player form values require runtime-state version 10");
             if (mVersion < 18 && actor.mPassiveAbilities)
                 throw std::runtime_error("TES4 passive ability ownership requires runtime-state version 18");
+            if (mVersion < 79 && actor.mLeveledContactSpells)
+                throw std::runtime_error("TES4 leveled contact spell ownership requires runtime-state version 79");
             if (mVersion < 78 && actor.mPassiveAbilities)
                 for (const auto& ability : *actor.mPassiveAbilities)
                     if (ability.mSpellType != 4)
@@ -3193,6 +3204,16 @@ namespace ESM4
                         }
                     }
                 }
+                if (mVersion >= 79)
+                {
+                    writer.integer<std::uint8_t>(actor.mLeveledContactSpells.has_value());
+                    if (actor.mLeveledContactSpells)
+                    {
+                        writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mLeveledContactSpells->size()));
+                        for (const auto& spell : *actor.mLeveledContactSpells)
+                            writeKey(writer, spell);
+                    }
+                }
                 if (mVersion >= 70)
                 {
                     writer.integer<std::uint32_t>(static_cast<std::uint32_t>(actor.mMeleeParalysis.size()));
@@ -4236,6 +4257,19 @@ namespace ESM4
                             }
                             actor.mPassiveAbilities->push_back(std::move(ability));
                         }
+                    }
+                }
+                if (result.mVersion >= 79)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1)
+                        throw std::runtime_error("Invalid TES4 leveled contact spell presence");
+                    if (present)
+                    {
+                        actor.mLeveledContactSpells.emplace();
+                        const auto count = reader.count();
+                        for (std::uint32_t j = 0; j < count; ++j)
+                            actor.mLeveledContactSpells->push_back(nativeKey());
                     }
                 }
                 if (result.mVersion >= 70)
@@ -5592,6 +5626,16 @@ namespace ESM4
                         }
                         stream << ']';
                     }
+                }
+                if (mVersion >= 79 && actor.mLeveledContactSpells)
+                {
+                    stream << ",\"leveled_contact_spells\":[";
+                    for (std::size_t j = 0; j < actor.mLeveledContactSpells->size(); ++j)
+                    {
+                        if (j) stream << ',';
+                        stream << '"' << escapeJson((*actor.mLeveledContactSpells)[j].serialize()) << '"';
+                    }
+                    stream << ']';
                 }
                 stream << '}';
             }

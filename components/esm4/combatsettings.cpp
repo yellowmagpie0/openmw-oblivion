@@ -278,6 +278,12 @@ namespace ESM4
         return result;
     }
 
+    DiseaseTransferSettings buildDiseaseTransferSettings(std::span<const GameSetting* const> settings)
+    {
+        const Inputs inputs(settings);
+        return {inputs.number("fMagicDiseaseTransferBase", 0.f), inputs.number("fMagicDiseaseTransferMult", .25f)};
+    }
+
     CombatSpellPowerSettings buildCombatSpellPowerSettings(std::span<const GameSetting* const> settings)
     {
         const Inputs inputs(settings);

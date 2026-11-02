@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "purpose": "Stock Dog physical contact with its original leveled disease source preserved",
+  "source_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "master": "Oblivion.esm",
+  "cell": 129977,
+  "template": 124405,
+  "creature": 16779264,
+  "style": 16779265,
+  "reference": 16779266,
+  "position": [
+    672,
+    0,
+    -109.68916,
+    0,
+    0,
+    3.1415927
+  ],
+  "preserve_source_spells": true
+}

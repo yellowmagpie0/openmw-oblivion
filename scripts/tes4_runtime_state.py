@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 78
+CURRENT_VERSION = 79
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -973,6 +973,16 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             expected_base = struct.unpack("<f", struct.pack("<f", form_health))[0]
             if not isinstance(values[8], list) or len(values[8]) != 4 or native_float(values[8][0]) != expected_base:
                 raise RuntimeStateError("TES4 nonplayer form Health conflicts with resolved float base")
+        contact_spells = actor.get("leveled_contact_spells")
+        if contact_spells is not None:
+            if version < 79 or owner != 1:
+                raise RuntimeStateError("TES4 leveled contact spells require v79 nonplayer ownership")
+            seen = set()
+            for spell in check_collection(contact_spells, "leveled contact spells"):
+                native_key(spell)
+                if spell in seen:
+                    raise RuntimeStateError("Duplicate TES4 leveled contact spell")
+                seen.add(spell)
         abilities = actor.get("passive_abilities")
         if abilities is not None:
             if version < 18:
@@ -2671,6 +2681,12 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                                 effect.append(reader.unpack("<f") if initial_present else None)
                             ability["effects"].append(effect)
                         actor["passive_abilities"].append(ability)
+            if version >= 79:
+                present = reader.unpack("<B")
+                if present > 1:
+                    raise RuntimeStateError("Invalid TES4 leveled contact spell presence")
+                if present:
+                    actor["leveled_contact_spells"] = [reader.string() for _ in range(reader.count())]
             if version >= 70:
                 paralysis = []
                 for _ in range(reader.count()):
@@ -3416,6 +3432,13 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                                 writer.pack("<B", initial_magnitude is not None)
                                 if initial_magnitude is not None:
                                     writer.pack("<f", initial_magnitude)
+            if version >= 79:
+                contact_spells = actor.get("leveled_contact_spells")
+                writer.pack("<B", contact_spells is not None)
+                if contact_spells is not None:
+                    writer.pack("<I", len(contact_spells))
+                    for spell in contact_spells:
+                        writer.string(spell)
             if version >= 70:
                 paralysis = actor.get("melee_paralysis", [])
                 writer.pack("<I", len(paralysis))

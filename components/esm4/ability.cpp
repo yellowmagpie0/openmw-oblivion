@@ -13,6 +13,17 @@
 
 namespace ESM4
 {
+    bool diseaseTransferSucceeds(std::int32_t resistance, float base, float multiplier,
+        std::uint8_t percentile)
+    {
+        if (!std::isfinite(base) || !std::isfinite(multiplier) || percentile >= 100)
+            throw std::invalid_argument("invalid native disease transfer inputs");
+        const float chance = static_cast<float>(double(base) + (100. - std::min(resistance, 100)) * multiplier);
+        if (!std::isfinite(chance))
+            throw std::invalid_argument("native disease transfer chance overflow");
+        return percentile <= chance;
+    }
+
     void CombatParalysisState::validate() const
     {
         if (!std::isfinite(mDuration) || mDuration < 0 || !std::isfinite(mElapsed)

@@ -4,6 +4,8 @@
 #include <components/esm4/combatsettings.hpp>
 #include <components/esm4/loadfact.hpp>
 #include <components/esm4/loadgmst.hpp>
+#include <components/esm4/loadlvsp.hpp>
+#include <components/misc/strings/format.hpp>
 #include "worldimp.hpp"
 #include "oblivionnativeidle.hpp"
 #include <components/esm4/loadidle.hpp>
@@ -5259,6 +5261,7 @@ namespace MWWorld
         bool mSidePowerDisarmed = false;
         std::shared_ptr<MWMechanics::OblivionCombatService::PreparedPhysicalContact> mContact;
         std::vector<std::unique_ptr<PreparedOblivionEquipmentNotification>> mNotifications;
+        std::optional<std::string> mContractedDisease;
         std::unique_ptr<PreparedEquippedWeaponDrops> mDrops;
         std::optional<WorldModel::RegistryGuard> mRegistry;
         std::vector<ReactionBinding> mReactionBindings;
@@ -5383,11 +5386,15 @@ namespace MWWorld
             data.mCommitted = true;
         };
         if (mData->mDrops)
-            return !mData->mDrops->commit({this,
+        {
+            if (mData->mDrops->commit({this,
                 [](void* context) noexcept {
                     return static_cast<PreparedOblivionPhysicalContact*>(context)->isValid();
-                }, publish}).isEmpty();
-        publish(this);
+                }, publish}).isEmpty()) return false;
+        }
+        else publish(this);
+        if (mData->mContractedDisease)
+            MWBase::Environment::get().getWindowManager()->messageBox(*mData->mContractedDisease);
         return true;
     }
 
@@ -5555,6 +5562,65 @@ namespace MWWorld
                 && victim.getType() != ESM::REC_NPC_4 && victim.getType() != ESM::REC_CREA4)))
             return nullptr;
         auto preparedDeltas = deltas;
+        std::optional<std::string> contractedDisease;
+        const auto* strike = mOblivionCombat->findMeleeState(key);
+        if (!previous && victim == getPlayerPtr() && attacker.getType() == ESM::REC_CREA4
+            && hasOblivionBaseCombatPackage(key).value_or(false) && strike && strike->mStrike
+            && strike->mStrike->mActionId == id && strike->mStrike->mWeaponBase.isNull())
+        {
+            const auto* carrier = mOblivionCombat->findActorValues(key);
+            if (carrier && carrier->mLeveledContactSpells && !carrier->mLeveledContactSpells->empty())
+            {
+                const auto sources = resolveOblivionCreatureContactSpellSources(mStore, carrier->mBase);
+                if (!sources) return nullptr;
+                for (const auto& selected : *carrier->mLeveledContactSpells)
+                    if (std::none_of(sources->begin(), sources->end(), [&](const auto& source) {
+                            return source.mList->mEntries[0].mSpellKey == selected;
+                        }))
+                        throw std::invalid_argument("native contact carrier lost its selected spell source");
+                const auto& spell = carrier->mLeveledContactSpells->back();
+                const std::array requested{spell};
+                const auto disease = resolveOblivionPassiveAbilityInputs(mStore, requested).front();
+                std::vector<const ESM4::GameSetting*> settings;
+                std::set<ESM::FormId> seen;
+                std::string message = "You have contracted %s.";
+                for (const auto& setting : mStore.get<ESM4::GameSetting>())
+                    if (seen.insert(setting.mId).second)
+                    {
+                        const auto* winning = mStore.get<ESM4::GameSetting>().search(setting.mId);
+                        settings.push_back(winning);
+                        if (Misc::StringUtils::ciEqual(winning->mEditorId, "sContractedDisease"))
+                        {
+                            const auto* text = std::get_if<std::string>(&winning->mData);
+                            if (!text) throw std::invalid_argument("incorrect native disease notification setting type");
+                            message = *text;
+                        }
+                    }
+                const auto policy = ESM4::buildDiseaseTransferSettings(settings);
+                // Draw placement is deliberately after prepared armor wear in
+                // this fork. Native6171F0 runs before mitigation. Probability,
+                // ownership and once-only RNG publication are preserved; an
+                // identical original random sequence is not claimed.
+                const auto state = preparedDeltas.mRandomTransition
+                    ? preparedDeltas.mRandomTransition->mNextState : mOblivionCombat->combatRandomState();
+                const auto draw = ESM4::combatRandomDraw(state);
+                const auto draws = preparedDeltas.mRandomTransition ? preparedDeltas.mRandomTransition->mDraws + 1 : 1;
+                preparedDeltas.mRandomTransition = MWMechanics::OblivionCombatRandomTransition{
+                    mOblivionCombat->combatRandomState(), draw.mNextState, draws};
+                const auto* receiving = mOblivionCombat->findActorValues(ESM::FormKey::dynamic("player", 1));
+                if (!receiving || !receiving->mPassiveAbilities) return nullptr;
+                if (ESM4::diseaseTransferSucceeds(mOblivionCombat->getPlayerIntegerValue(63),
+                        policy.mBase, policy.mMultiplier, draw.mValue % 100)
+                    && std::none_of(receiving->mPassiveAbilities->begin(), receiving->mPassiveAbilities->end(),
+                        [&](const auto& owned) { return owned.mSpell == spell; }))
+                {
+                    if (!MWBase::Environment::get().getWindowManagerOrNull()) return nullptr;
+                    preparedDeltas.mVictimDisease = std::make_shared<const ESM4::PassiveAbilityInput>(disease);
+                    const auto* definition = mStore.search<ESM4::Spell>(spell);
+                    contractedDisease = Misc::StringUtils::format(message, definition->mFullName);
+                }
+            }
+        }
         const auto prepareHeldCancellation = [&](const Ptr& actor, const auto& request, auto& sources) {
             if (!request || (request->mKind != ESM4::MeleeReactionKind::Recoil
                     && request->mKind != ESM4::MeleeReactionKind::Stagger) || !sources.empty()) return true;
@@ -5787,6 +5853,7 @@ namespace MWWorld
                 data->mNotifications.push_back(prepareOblivionEquipmentNotification(
                     [contact = data->mContact, item = condition.mItem] { contact->notifyEquipmentChange(item); }));
         data->mRegistry.emplace(mWorldModel.prepareRegistryGuard());
+        data->mContractedDisease = std::move(contractedDisease);
         return std::unique_ptr<PreparedOblivionPhysicalContact>(new PreparedOblivionPhysicalContact(std::move(data)));
     }
 

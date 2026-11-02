@@ -21,6 +21,20 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
                        "cell": 0x1234, "template": 0x2345, "creature": 0x01000800,
                        "style": 0x01000801, "reference": 0x01000802, "position": [0, 40, 0, 0, 0, 0]}
 
+    def test_preserves_declared_source_spellbook_without_replacing_inputs(self):
+        recipe = dict(self.recipe, preserve_source_spells=True)
+        output, report = build(self.source, recipe)
+        creature = _subrecords(next(data for tag, _, data in records(output) if tag == "CREA"), "test", "CREA")
+        self.assertEqual([s["payload"] for s in creature if s["name"] == "SPLO"], [struct.pack("<I", 14)])
+        self.assertTrue(report["source_spellbook_preserved"])
+        self.assertEqual(report["preserved_source_spells"], [14])
+        self.assertNotIn("SPLO", report["creature_fields_changed"])
+        self.assertTrue(report["stats_and_assets_preserved"])
+        self.assertFalse(any(s["name"] in {"SCRI", "PKID"} for s in creature))
+        for value in (1, None, "true"):
+            with self.assertRaises(ValueError): build(self.source, dict(self.recipe, preserve_source_spells=value))
+        with self.assertRaises(ValueError): build(self.source, dict(recipe, castable_spells=[]))
+
     def test_preserves_stats_and_assets_with_only_owned_style_and_placement(self):
         output, report = build(self.source, self.recipe)
         rows = list(records(output))

@@ -642,3 +642,17 @@ TEST(ESM4CombatSettings, WinningNameViewsRetainAsciiOnlyFoldingAndFirstInvalidIn
         EXPECT_EQ(std::string(error.what()), "ambiguous winning native setting: " + second.mEditorId);
     }
 }
+
+TEST(ESM4CombatSettings, DiseaseTransferUsesNativeDefaultsAndTypedWinningOverrides)
+{
+    const auto defaults = ESM4::buildDiseaseTransferSettings({});
+    EXPECT_EQ(defaults.mBase, 0); EXPECT_EQ(defaults.mMultiplier, .25f);
+    ESM4::GameSetting base{}, multiplier{};
+    base.mEditorId = "fMagicDiseaseTransferBase"; base.mData = 10.f;
+    multiplier.mEditorId = "fMagicDiseaseTransferMult"; multiplier.mData = .5f;
+    const std::array<const ESM4::GameSetting*, 2> settings{&base, &multiplier};
+    const auto overridden = ESM4::buildDiseaseTransferSettings(settings);
+    EXPECT_EQ(overridden.mBase, 10); EXPECT_EQ(overridden.mMultiplier, .5f);
+    base.mData = std::int32_t{10};
+    EXPECT_THROW(ESM4::buildDiseaseTransferSettings(settings), std::invalid_argument);
+}

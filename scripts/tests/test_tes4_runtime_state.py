@@ -241,11 +241,14 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         self.assertEqual(state_io.encode_payload(loaded), wire)
         legacy = self.getup_graph_state(); legacy_wire = state_io.encode_payload(legacy)
         self.assertNotIn("request_selections", state_io.decode_payload(legacy_wire)["native_getup_playback"][0])
-        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = state_io.CURRENT_VERSION
+        state_io._upgrade_actor_knockback(legacy); legacy["schema_version"] = 78
         self.assertEqual(legacy["native_getup_playback"][0]["request_selections"], [])
         self.assertEqual(legacy["native_getup_playback"][0]["pending_requests"], [])
         self.assertIsNone(legacy["native_getup_playback"][0]["physical_hit"])
         self.assertEqual(len(state_io.encode_payload(legacy)), len(legacy_wire) + 9)
+        legacy["schema_version"] = 79
+        self.assertEqual(len(state_io.encode_payload(legacy)),
+                         len(legacy_wire) + 9 + len(legacy["native_actor_values"]))
 
     def test_getup_graph73_rejects_invalid_selection_and_legacy_reinterpretation(self):
         changes = [lambda g: g["request_selections"][0].update(request=99),
@@ -1321,6 +1324,43 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
         del state["native_player_bow_timer"]
         state_io.encode_payload(state)
+
+    def test_leveled_contact_spells79_keep_known_none_and_reject_rerolling_legacy_history(self):
+        state = self.ownership_state(); state["schema_version"] = 78; state["ai_rng_state"] = 1
+        actor = {"actor": state["references"][0]["key"], "base": state["references"][0]["base"],
+                 "owner": 1, "process": 0, "values": [[0., None, None, None] for _ in range(72)],
+                 "player_form_values": None, "nonplayer_form_health": 1234567, "passive_abilities": None}
+        actor["values"][8][0] = 1234567.
+        state["native_actor_values"] = [actor]
+        legacy = state_io.encode_payload(state)
+        self.assertNotIn("leveled_contact_spells", state_io.decode_payload(legacy)["native_actor_values"][0])
+        expected = bytearray(legacy)
+        struct.pack_into("<I", expected, len(state_io.MAGIC), 79)
+        marker = struct.pack("<BiB", 1, 1234567, 0)
+        offset = legacy.index(marker) + len(marker)
+        expected[offset:offset] = b"\0"
+        state["schema_version"] = 79
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        self.assertNotIn("leveled_contact_spells", state_io.decode_payload(bytes(expected))["native_actor_values"][0])
+        actor["leveled_contact_spells"] = []
+        expected[offset:offset + 1] = b"\1" + struct.pack("<I", 0)
+        self.assertEqual(state_io.encode_payload(state), bytes(expected))
+        self.assertEqual(state_io.decode_payload(bytes(expected))["native_actor_values"][0]["leveled_contact_spells"], [])
+        spell = "content:oblivion.esm:098416"
+        actor["leveled_contact_spells"] = [spell]
+        expected[offset + 1:offset + 5] = struct.pack("<I", 1)
+        expected[offset + 5:offset + 5] = struct.pack("<I", len(spell)) + spell.encode("ascii")
+        payload = state_io.encode_payload(state)
+        self.assertEqual(payload, bytes(expected))
+        self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        state["schema_version"] = 78
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["schema_version"] = 79
+        for bad in ([spell, spell], ["null"]):
+            actor["leveled_contact_spells"] = bad
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        expected[offset] = 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(expected))
 
     def test_disease78_preserves_writer_identity_and_rejects_lossy_downgrade(self):
         state = make_state()

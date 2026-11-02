@@ -30,6 +30,7 @@ namespace ESM4
 {
     struct RuntimeActorValues;
     struct RuntimePassiveAbility;
+    struct LevelledSpell;
 }
 
 namespace MWWorld
@@ -90,6 +91,17 @@ namespace MWWorld
     // prepared override history; reject unsupported or ambiguous inputs.
     std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
         const ESMStore& store, std::span<const ESM::FormKey> spells);
+
+    struct OblivionCreatureContactSpellSource
+    {
+        const ESM4::LevelledSpell* mList;
+        std::uint32_t mSchool;
+    };
+    // Inert direct spells/powers and the reviewed singleton Witbane-like
+    // Disease1 source. Null rejects unsupported sources before any RNG use;
+    // an empty plan has no leveled source and needs no construction snapshot.
+    std::optional<std::vector<OblivionCreatureContactSpellSource>> resolveOblivionCreatureContactSpellSources(
+        const ESMStore& store, const ESM::FormKey& base);
 
     // Replay this authority's grant sequence using incoming comparison quantities
     // against each previously applied magnitude. Ties insert before older nodes.

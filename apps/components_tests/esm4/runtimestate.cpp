@@ -873,6 +873,54 @@ namespace
         EXPECT_NE(migrated.canonicalJson().find("\"player_form_values\":null"), std::string::npos);
     }
 
+    TEST(ESM4RuntimeState, leveledContactSpells79PreserveKnownNoneSelectionAndLegacyUnknown)
+    {
+        auto state = makeState(); state.mVersion = 78;
+        ESM4::RuntimeActorValues actor;
+        actor.mActor = state.mReferences[0].mKey; actor.mBase = state.mReferences[0].mBase;
+        actor.mNonPlayerFormHealth = 1234567; actor.mValues[8].mBase = 1234567;
+        state.mNativeActorValues = {actor};
+        const auto legacy = state.serializeBinary();
+        EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(legacy).mNativeActorValues[0].mLeveledContactSpells);
+        auto expected = legacy; expected[std::string_view("OMW4STATE").size()] = 79;
+        // Independently encoded boundary: present int32 form Health, then absent passive list.
+        const std::array<std::uint8_t, 6> marker{1, 0x87, 0xd6, 0x12, 0, 0};
+        const auto found = std::search(expected.begin(), expected.end(), marker.begin(), marker.end());
+        ASSERT_NE(found, expected.end()); const auto offset = found - expected.begin() + marker.size();
+        expected.insert(expected.begin() + offset, 0);
+        state.mVersion = 79;
+        EXPECT_EQ(state.serializeBinary(), expected);
+        EXPECT_EQ(state.canonicalJson().find("leveled_contact_spells"), std::string::npos);
+        state.mNativeActorValues[0].mLeveledContactSpells.emplace();
+        expected[offset] = 1; expected.insert(expected.begin() + offset + 1, 4, 0);
+        EXPECT_EQ(state.serializeBinary(), expected);
+        auto restored = ESM4::RuntimeState::deserializeBinary(expected);
+        ASSERT_TRUE(restored.mNativeActorValues[0].mLeveledContactSpells);
+        EXPECT_TRUE(restored.mNativeActorValues[0].mLeveledContactSpells->empty());
+        EXPECT_NE(restored.canonicalJson().find("\"leveled_contact_spells\":[]"), std::string::npos);
+        const auto spell = ESM::FormKey::content("oblivion.esm", 0x98416);
+        state.mNativeActorValues[0].mLeveledContactSpells = {{spell}};
+        const auto key = spell.serialize();
+        expected[offset + 1] = 1;
+        std::vector<std::uint8_t> wire{static_cast<std::uint8_t>(key.size()), 0, 0, 0};
+        wire.insert(wire.end(), key.begin(), key.end());
+        expected.insert(expected.begin() + offset + 5, wire.begin(), wire.end());
+        EXPECT_EQ(state.serializeBinary(), expected);
+        restored = ESM4::RuntimeState::deserializeBinary(expected);
+        EXPECT_EQ(restored.mNativeActorValues, state.mNativeActorValues);
+        EXPECT_EQ(restored.serializeBinary(), expected);
+        state.mVersion = 78;
+        EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+        auto invalid = expected; invalid[offset] = 2;
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid), std::runtime_error);
+        auto badActor = state.mNativeActorValues[0]; badActor.mLeveledContactSpells = {{spell, spell}};
+        EXPECT_THROW(badActor.validate(), std::runtime_error);
+        badActor.mLeveledContactSpells = {{ESM::FormKey{}}};
+        EXPECT_THROW(badActor.validate(), std::runtime_error);
+        badActor.mLeveledContactSpells = {{spell}}; badActor.mOwner = ESM4::ActorValueOwner::Player;
+        EXPECT_THROW(badActor.validate(), std::runtime_error);
+    }
+
     TEST(ESM4RuntimeState, diseaseOwnershipVersion78RetainsWriterIdentityAndRejectsLossyDowngrade)
     {
         auto state = makeState(); state.mVersion = 77;

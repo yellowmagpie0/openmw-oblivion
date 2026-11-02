@@ -2155,3 +2155,59 @@ TEST(MWWorldStoreTest, tes4DialogueTopicIndexReplaysMasterRemappingOverridesAndD
     EXPECT_NE(store.search<ESM4::DialogInfo>(b),nullptr);
     EXPECT_EQ(groups[0].mInfos,(std::vector<ESM::FormKey>{b,a}));
 }
+
+TEST(MWWorldStoreTest, tes4LevelledSpellsRemapEntryKeysAndRetainWinningDeletion)
+{
+    const auto bytes = [](const auto& value) {
+        return std::string(reinterpret_cast<const char*>(&value), sizeof(value));
+    };
+    const auto sub = [&](std::uint32_t tag, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint16_t>(data.size())) + data;
+    };
+    const auto record = [&](std::uint32_t tag, std::uint32_t id, std::uint32_t flags, const std::string& data) {
+        return bytes(tag) + bytes(static_cast<std::uint32_t>(data.size())) + bytes(flags)
+            + bytes(id) + bytes(std::uint32_t{}) + data;
+    };
+    MWWorld::ESMStore store;
+    const std::map<std::string, int> indices{{"base.esm", 0}, {"other.esm", 1}, {"patch.esp", 2}};
+    const auto load = [&](const std::string& name, const std::vector<std::string>& masters,
+                          std::uint32_t form, std::uint32_t child, bool deleted) {
+        auto header = sub(ESM::fourCC("HEDR"), bytes(1.f) + bytes(std::uint32_t{1}) + bytes(std::uint32_t{0x900}));
+        for (const auto& master : masters)
+            header += sub(ESM::fourCC("MAST"), master + '\0') + sub(ESM::fourCC("DATA"), std::string(8, '\0'));
+        const auto entry = bytes(std::uint16_t{1}) + bytes(std::uint16_t{0xcdcd}) + bytes(child)
+            + bytes(std::uint16_t{1}) + bytes(std::uint16_t{0xabab});
+        const auto payload = deleted ? std::string{} : sub(ESM::fourCC("LVLD"), bytes(std::uint8_t{90}))
+            + sub(ESM::fourCC("LVLF"), bytes(std::uint8_t{3})) + sub(ESM::fourCC("LVLO"), entry);
+        auto stream = std::make_unique<std::stringstream>(record(ESM4::REC_TES4, 0, 1, header)
+            + record(ESM4::REC_LVSP, form, deleted ? static_cast<std::uint32_t>(ESM4::Rec_Deleted) : 0u, payload),
+            std::ios::in | std::ios::binary);
+        ESM4::Reader reader(std::move(stream), name, nullptr, nullptr, true);
+        reader.setModIndex(indices.at(name)); reader.updateModIndices(indices);
+        store.loadESM4(reader, &dummyListener);
+    };
+    load("base.esm", {}, 0x800, 0x900, false);
+    load("other.esm", {}, 0x800, 0x900, false);
+    const auto base = ESM::FormKey::content("base.esm", 0x800);
+    const auto other = ESM::FormKey::content("other.esm", 0x800);
+    ASSERT_NE(store.search<ESM4::LevelledSpell>(base), nullptr);
+    ASSERT_NE(store.search<ESM4::LevelledSpell>(other), nullptr);
+    EXPECT_EQ(store.search<ESM4::LevelledSpell>(base)->mEntries[0].mSpellKey,
+        ESM::FormKey::content("base.esm", 0x900));
+    EXPECT_EQ(store.search<ESM4::LevelledSpell>(other)->mEntries[0].mSpellKey,
+        ESM::FormKey::content("other.esm", 0x900));
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 0x00000901, false);
+    const auto* winning = store.search<ESM4::LevelledSpell>(base);
+    ASSERT_NE(winning, nullptr); ASSERT_EQ(winning->mEntries.size(), 1);
+    EXPECT_EQ(winning->mEntries[0].mSpellKey, ESM::FormKey::content("other.esm", 0x901));
+    EXPECT_EQ(winning->mEntries[0].mSpell, (ESM::FormId{0x901, 1}));
+    EXPECT_EQ(winning->mSubRecords[2].mData[2], 0xcd);
+    EXPECT_EQ(winning->mSubRecords[2].mData[10], 0xab);
+    EXPECT_EQ(store.search<ESM4::LevelledSpell>(other)->mEntries[0].mSpellKey,
+        ESM::FormKey::content("other.esm", 0x900));
+    load("patch.esp", {"other.esm", "base.esm"}, 0x01000800, 0, true);
+    EXPECT_EQ(store.search<ESM4::LevelledSpell>(base), nullptr);
+    EXPECT_NE(store.search<ESM4::LevelledSpell>(other), nullptr);
+    const auto* winner = store.getFormKeyIndex().winner(base);
+    ASSERT_NE(winner, nullptr); EXPECT_TRUE(winner->mDeleted); EXPECT_EQ(winner->mRecordType, ESM4::REC_LVSP);
+}

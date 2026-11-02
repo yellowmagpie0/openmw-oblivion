@@ -402,6 +402,9 @@ namespace MWMechanics
         // Only the committed Backward prefix may originate this saved request.
         std::optional<ESM4::RuntimePhysicalHit> mVictimPhysicalHit{};
         std::vector<OblivionPhysicalEnchantmentChargeChange> mEnchantmentChargeChanges{};
+        // A selected carrier's Disease1 grant joins the same once-only contact.
+        // This is constructor input; the receiving actor saves applied ownership.
+        std::shared_ptr<const ESM4::PassiveAbilityInput> mVictimDisease{};
     };
 
     struct OblivionPassiveEffectIdentity

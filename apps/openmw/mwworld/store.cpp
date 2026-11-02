@@ -1425,6 +1425,7 @@ template class MWWorld::TypedDynamicStore<ESM4::AIPackage>;
 template class MWWorld::TypedDynamicStore<ESM4::CombatStyle>;
 template class MWWorld::TypedDynamicStore<ESM4::Skill>;
 template class MWWorld::TypedDynamicStore<ESM4::Spell>;
+template class MWWorld::TypedDynamicStore<ESM4::LevelledSpell>;
 template class MWWorld::TypedDynamicStore<ESM4::Enchantment>;
 template class MWWorld::TypedDynamicStore<ESM4::EffectSetting>;
 template class MWWorld::TypedDynamicStore<ESM4::Pathgrid>;

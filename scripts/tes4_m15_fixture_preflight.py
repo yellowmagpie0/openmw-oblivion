@@ -12,12 +12,51 @@ import struct
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
-    Version78 adds an explicit passive spell type; absent legacy types remain
-    Ability4. Future layouts require review here before fixtures can emit them.
+    Version79 adds optional selected leveled contact sources; absent legacy
+    selections remain unknown, without a new roll. Future layouts require review here before fixtures can emit them.
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 78)
+            and target == current and minimum <= target <= 79)
+
+
+def creature_disease_course_state(state, actor, spell, *, cold=False, applied=False, selected=None):
+    """Check the isolated Dog course's pending/applied ownership before replay.
+
+    Geometry/visibility use the existing joined-course guards. This course has
+    no other temporary Intelligence modifier: its saved Maximum channel must
+    equal the one applied DRAT amount. No source data or outcome is modified.
+    """
+    player = state['player']['reference']
+    players = [row for row in state['native_actor_values'] if row['actor'] == player]
+    actors = [row for row in state['native_actor_values'] if row['actor'] == actor]
+    if (len(players) != 1 or players[0]['owner'] != 0
+            or players[0].get('passive_abilities') is None
+            or type(cold) is not bool or type(applied) is not bool
+            or (selected is not None and type(selected) is not bool)):
+        raise ValueError('Disease course requires known Player effect ownership and explicit state flags')
+    owned = [entry for entry in players[0]['passive_abilities'] if entry['spell'] == spell]
+    if cold:
+        if actors or owned or applied or selected is not None:
+            raise ValueError('Cold disease fixture must not inject carrier selection or applied effects')
+        return dict(passed=True, source='cold-pending', applied=False)
+    if (len(actors) != 1 or actors[0]['owner'] != 1 or actors[0]['process'] != 1
+            or actors[0].get('leveled_contact_spells') not in ([], [spell])):
+        raise ValueError('Disease course requires a known active carrier selection')
+    actual_selected = actors[0]['leveled_contact_spells'] == [spell]
+    if selected is not None and selected != actual_selected:
+        raise ValueError('Disease course selection differs from declared input seed')
+    if bool(owned) != applied or len(owned) > 1 or (applied and not actual_selected):
+        raise ValueError('Disease course pending/applied effect ownership differs')
+    if applied:
+        effects = owned[0]['effects']
+        if (owned[0].get('spell_type') != 1 or len(effects) != 1 or len(effects[0]) != 5
+                or effects[0][:3] != [0, int.from_bytes(b'DRAT', 'little'), 1]
+                or effects[0][4] != 5 or type(effects[0][3]) not in (int, float)
+                or not math.isfinite(effects[0][3])
+                or players[0]['values'][1][1] != effects[0][3]):
+            raise ValueError('Disease course requires an applied, owned Intelligence drain')
+    return dict(passed=True, source='selected' if actual_selected else 'none', applied=applied)
 
 
 def regenerated_fatigue_endpoint(state, actor):

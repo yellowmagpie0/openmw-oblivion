@@ -394,3 +394,25 @@ TEST(ESM4AbilityInputs, WitbaneDrainsIntelligenceAndRetainsTheAppliedClampedMagn
             EXPECT_FALSE(ESM4::initialValueModifierRemovalDamage(1, code, stored, {}));
     }
 }
+
+TEST(ESM4AbilityInputs, DiseaseTransferRetainsInclusiveNativeResistanceThreshold)
+{
+    struct Case { int resistance; unsigned successfulPercentiles; };
+    // Original6171F0/5490C0 admits equality. At100 resistance, draw0 still passes.
+    for (const auto row : {Case{-50, 38}, Case{0, 26}, Case{50, 13}, Case{100, 1}, Case{150, 1}})
+    {
+        unsigned admitted = 0;
+        for (unsigned percentile = 0; percentile < 100; ++percentile)
+            admitted += ESM4::diseaseTransferSucceeds(row.resistance, 0, .25f, percentile);
+        EXPECT_EQ(admitted, row.successfulPercentiles);
+    }
+    EXPECT_TRUE(ESM4::diseaseTransferSucceeds(0, 0, .25f, 25));
+    EXPECT_FALSE(ESM4::diseaseTransferSucceeds(0, 0, .25f, 26));
+    EXPECT_FALSE(ESM4::diseaseTransferSucceeds(100, -.1f, .25f, 0));
+    EXPECT_TRUE(ESM4::diseaseTransferSucceeds(100, 10, .25f, 10));
+    EXPECT_THROW(ESM4::diseaseTransferSucceeds(0, 0, .25f, 100), std::invalid_argument);
+    EXPECT_THROW(ESM4::diseaseTransferSucceeds(0, std::numeric_limits<float>::quiet_NaN(), .25f, 0),
+        std::invalid_argument);
+    EXPECT_THROW(ESM4::diseaseTransferSucceeds(0, 0, std::numeric_limits<float>::infinity(), 0),
+        std::invalid_argument);
+}

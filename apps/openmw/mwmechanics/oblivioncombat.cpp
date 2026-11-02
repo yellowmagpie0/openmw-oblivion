@@ -1,6 +1,8 @@
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
 
+#include <components/esm4/loadlvsp.hpp>
+
 #include <components/esm4/masteryrules.hpp>
 #include "oblivionranged.hpp"
 #include "../mwbase/world.hpp"
@@ -2918,6 +2920,7 @@ namespace MWMechanics
         // permission to publish more effects for an arbitrary consumed ID.
         if (deltas.mAttackerFatigue != 0 || deltas.mVictimHealth != 0 || deltas.mVictimFatigue != 0
             || deltas.mVictimBlockFatigue != 0 || !deltas.mConditionChanges.empty()
+            || deltas.mVictimDisease
             || !deltas.mEnchantmentChargeChanges.empty()
             || (deltas.mKnockback && mImpl->mKnockback) || deltas.mOrdinaryHitArguments
             || deltas.mVictimPhysicalHit)
@@ -3080,6 +3083,15 @@ namespace MWMechanics
                 throw std::invalid_argument("invalid or stale native physical contact random transition");
         }
         ESM4::validateEssentialRecoverySettings(recovery);
+        if (deltas.mVictimDisease)
+        {
+            const auto& disease = *deltas.mVictimDisease;
+            if (continuation || victim.isEmpty() || !player || victim != player->getPlayer()
+                || disease.mSpellType != 1 || disease.mEffects.size() != 1
+                || disease.mEffects[0].mCode != ESM::fourCC("DRAT")
+                || disease.mEffects[0].mValues.mActorValue != 1)
+                throw std::invalid_argument("unsupported native contact disease grant");
+        }
         const auto change = [&](ESM4::RuntimeActorValues& values, const MWWorld::Ptr& ptr,
                                 std::uint8_t av, float delta) {
             if (delta != 0 && ESM4::actorValueModifierRequestAllowed(values.mOwner, av, delta,
@@ -3122,6 +3134,16 @@ namespace MWMechanics
             receivingLife = *findActorLife(victimKey);
             if (receivingLife->mPhase == ESM4::ActorLifePhase::Dead && !continuation)
                 return nullptr;
+            if (deltas.mVictimDisease)
+            {
+                // Reuse the established owner on a detached service. The narrow
+                // DRAT Intelligence grant changes no shared base or lifecycle;
+                // only the receiving candidate publishes with the contact.
+                auto diseaseOwner = *this;
+                const std::span disease(deltas.mVictimDisease.get(), std::size_t{1});
+                diseaseOwner.preparePlayerPassiveGrants(*receiving, disease, playerBase,
+                    false, {}, playerGodMode);
+            }
             spendFatigue(*receiving, victim, deltas.mVictimBlockFatigue);
             change(*receiving, victim, 8, deltas.mVictimHealth);
             change(*receiving, victim, 10, deltas.mVictimFatigue);
@@ -4253,6 +4275,36 @@ namespace MWMechanics
         values.validate();
         if (oldValues && values != *oldValues)
             throw std::logic_error("native construction snapshot disagrees with shared base authority");
+        const auto expectedSpellRandom = mCombatRngState;
+        std::optional<std::uint32_t> selectedSpellRandom;
+        if (!oldValues && actor.getType() == ESM::REC_CREA4)
+        {
+            const auto sources = MWWorld::resolveOblivionCreatureContactSpellSources(store, baseKey);
+            if (sources && !sources->empty())
+            {
+                values.mLeveledContactSpells.emplace();
+                std::array<std::int32_t, 6> skills;
+                skills.fill(nonPlayerInteger(values, 19, base)); // Creature magic-group alias.
+                auto cursor = expectedSpellRandom;
+                for (const auto& source : *sources)
+                {
+                    std::array<std::uint16_t, 7> words;
+                    auto preview = cursor;
+                    for (auto& word : words)
+                    {
+                        const auto draw = ESM4::combatRandomDraw(preview);
+                        preview = draw.mNextState; word = draw.mValue;
+                    }
+                    const auto selected = ESM4::selectSingleLevelledSpell(*source.mList, source.mSchool, skills, words);
+                    for (unsigned draw = 0; draw < selected.mDraws; ++draw)
+                        cursor = ESM4::combatRandomDraw(cursor).mNextState;
+                    if (selected.mSpell && std::find(values.mLeveledContactSpells->begin(),
+                            values.mLeveledContactSpells->end(), *selected.mSpell) == values.mLeveledContactSpells->end())
+                        values.mLeveledContactSpells->push_back(*selected.mSpell);
+                }
+                selectedSpellRandom = cursor;
+            }
+        }
         if (activate)
         {
             if (values.mProcess != process)
@@ -4291,6 +4343,8 @@ namespace MWMechanics
         if (!oldLife)
             preparedLife.emplace(key, life);
         PreparedNonPlayerView view(actor, values, base, &life);
+        if (selectedSpellRandom && mCombatRngState != expectedSpellRandom)
+            throw std::invalid_argument("native spellbook construction lost its random source");
         // All allocations and projection checks precede insertion of prepared
         // map nodes. No callbacks or fallible stat setters occur during commit.
         if (!oldValues)
@@ -4302,6 +4356,7 @@ namespace MWMechanics
         }
         if (!oldLife)
             mActorLife.insert(preparedLife.extract(preparedLife.begin()));
+        if (selectedSpellRandom) mCombatRngState = *selectedSpellRandom;
         if (resetPhysicalHit)
             if (const auto graph = mGetUpPlayback.find(key); graph != mGetUpPlayback.end())
                 graph->second.mPhysicalHit.reset();
@@ -7231,6 +7286,8 @@ namespace MWMechanics
                 throw std::invalid_argument("native nonplayer form Health requires an Oblivion v17+ save");
             if (state.mVersion < 18 && actor.mPassiveAbilities)
                 throw std::invalid_argument("native passive ownership requires an Oblivion v18+ save");
+            if (state.mVersion < 79 && actor.mLeveledContactSpells)
+                throw std::invalid_argument("native leveled contact spells require an Oblivion v79+ save");
             if (state.mVersion < 78 && actor.mPassiveAbilities)
                 for (const auto& ability : *actor.mPassiveAbilities)
                     if (ability.mSpellType != 4)

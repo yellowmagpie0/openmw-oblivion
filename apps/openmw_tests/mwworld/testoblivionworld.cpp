@@ -158,6 +158,7 @@
 #include "apps/openmw/mwstate/saveadmission.hpp"
 
 #include "oblivionworldfixture.hpp"
+#include <components/esm4/loadlvsp.hpp>
 
 namespace
 {
@@ -6709,6 +6710,123 @@ namespace
                 EXPECT_EQ(*service.findActorValues(target.mActor), target);
                 EXPECT_EQ(service.combatRandomState(), random);
             }
+        }
+    }
+
+    TEST(OblivionWorldTest, CreatureLeveledDiseaseSelectionAndContactAreOwnedAcrossRestore)
+    {
+        struct Case { unsigned selectionSeed, contactSeed; int resistance; bool selected, infected; };
+        const std::array cases{Case{1, 19, 0, false, false}, Case{2, 1, 0, true, false},
+            Case{2, 19, 0, true, true}, Case{2, 19, 100, true, true}, Case{2, 1, 100, true, false}};
+        for (const auto row : cases)
+        {
+            SCOPED_TRACE(row.selectionSeed);
+            SCOPED_TRACE(row.contactSeed);
+            SCOPED_TRACE(row.resistance);
+            TestingOpenMW::InventoryWindowManager windows;
+            std::vector<std::string> messages;
+            windows.mMessageCallback = [&](std::string_view text, auto) { messages.emplace_back(text); };
+            NativeWorldFixture fixture; fixture.mEnvironment.setWindowManager(windows);
+            auto& world = fixture.mWorld; auto& store = world.getStore();
+            MWClass::Npc::registerSelf(); MWClass::ESM4Creature::registerSelf(); world.setupPlayer();
+            ESM4::Npc native{}; native.mId = {7, 1}; native.mIsTES4 = true;
+            native.mFormKey = ESM::FormKey::content("Oblivion.esm", 7); native.mData.health = 100;
+            native.mData.attribs = {40, 40, 40, 40, 40, 40, 40, 40};
+            store.getWritable<ESM4::Npc>().insertStatic(native, native.mFormKey);
+            ASSERT_TRUE(world.initializeOblivionPlayerActor());
+            prepareNativeCombatCommandPlayer(fixture);
+            auto& service = *world.getOblivionCombatService(); const auto player = world.getPlayerPtr();
+            const auto playerKey = ESM::FormKey::dynamic("player", 1);
+            const auto spellKey = ESM::FormKey::content("headless.esm", 0x999);
+            ESM4::Spell disease{}; disease.mId = {0x999, 0}; disease.mFormKey = spellKey;
+            disease.mFullName = "Witbane"; disease.mData = ESM4::SpellData{1, 0, 0, 0, {}};
+            disease.mEffects = {{ESM::fourCC("DRAT"), 5, 0, 0, 0, 1, {}}};
+            store.getWritable<ESM4::Spell>().insertStatic(disease, spellKey);
+            ESM4::EffectSetting effect{}; effect.mId = {0x997, 0}; effect.mEffectCode = ESM::fourCC("DRAT");
+            effect.mData = ESM4::EffectSettingData{}; effect.mData->mSchool = 2;
+            effect.preparePassiveValueModifierDefinition();
+            store.getWritable<ESM4::EffectSetting>().insertStatic(effect, ESM::FormKey::content("headless.esm", 0x997));
+            ESM4::LevelledSpell list{}; list.mId = {0x998, 0}; list.mFormKey = ESM::FormKey::content("headless.esm", 0x998);
+            list.mChanceNone = 90; list.mListFlags = 3; list.mEntries = {{1, disease.mId, spellKey, 1}};
+            store.getWritable<ESM4::LevelledSpell>().insertStatic(list, list.mFormKey);
+            ESM4::Creature creature{}; creature.mId = {0x830, 0};
+            creature.mFormKey = ESM::FormKey::content("headless.esm", 0x830);
+            creature.mAttackReach = 50; creature.mBaseConfig.tes4.levelOrOffset = 1;
+            creature.mBaseConfig.tes4.fatigue = 160; creature.mData.health = 20;
+            creature.mData.damage = 8; creature.mData.magic = 50; creature.mData.attribs.intelligence = 25;
+            creature.mData.attribs.speed = 50;
+            creature.mSpell = {list.mId};
+            store.getWritable<ESM4::Creature>().insertStatic(creature, creature.mFormKey);
+            ESM4::ActorCreature reference{}; reference.mId = {0x930, 0};
+            reference.mFormKey = ESM::FormKey::content("headless.esm", 0x930); reference.mBaseKey = creature.mFormKey;
+            reference.mBaseObj = creature.mId;
+            store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+            MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(creature.mFormKey));
+            auto& cell = world.getWorldModel().getDraftCell(); MWWorld::Ptr actor(cell.insert(&live), &cell);
+            actor = actor.getCell()->moveTo(actor, player.getCell());
+            world.getWorldModel().registerPtr(actor);
+            ASSERT_TRUE(actor.getCellRef().getRefId().getIf<ESM::FormId>());
+            ASSERT_TRUE(actor.getCell()->getCell()->getId().getIf<ESM::FormId>());
+            ESM4::RuntimeState initial;
+            initial.mPlayer.mReference = playerKey; initial.mPlayer.mCell = ESM::FormKey::content("headless.esm", 1);
+            initial.mPlayer.mRace = ESM::FormKey::content("headless.esm", 0x810);
+            initial.mPlayer.mClass = ESM::FormKey::dynamic("fixture-class", 1);
+            service.capture(initial); initial.mCombatRngState = row.selectionSeed; service.restore(initial, store);
+            ASSERT_TRUE(world.activateOblivionActor(actor));
+            const auto advance = [](unsigned seed, unsigned count) { while (count--) seed = seed * 214013u + 2531011u; return seed; };
+            EXPECT_EQ(service.combatRandomState(), advance(row.selectionSeed, row.selected ? 7 : 6));
+            const auto* values = service.findActorValues(reference.mFormKey);
+            ASSERT_TRUE(values); ASSERT_TRUE(values->mLeveledContactSpells);
+            EXPECT_EQ(*values->mLeveledContactSpells, row.selected ? std::vector<ESM::FormKey>{spellKey} : std::vector<ESM::FormKey>{});
+            EXPECT_EQ(service.getNonPlayerIntegerValue(actor, 1), 25); // Carrier source is not a self grant.
+            const auto known = *values;
+            auto saved = captureNativeActorState(fixture, actor);
+            service.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()), store);
+            const auto random = service.combatRandomState();
+            ASSERT_TRUE(world.initializeOblivionNonPlayerActor(actor, ESM4::ActorValueProcess::Active));
+            EXPECT_EQ(service.combatRandomState(), random);
+            EXPECT_EQ(*service.findActorValues(reference.mFormKey), known);
+            EXPECT_TRUE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false, ESM4::MeleeStrikeKind::Left));
+            auto unknown = known; unknown.mLeveledContactSpells.reset(); service.publishNonPlayerValues(actor, unknown);
+            EXPECT_FALSE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, player, 0, false, ESM4::MeleeStrikeKind::Left));
+            EXPECT_EQ(service.combatRandomState(), random); service.publishNonPlayerValues(actor, known);
+            ASSERT_TRUE(world.executeOblivionActorValueCommand(player, 63, ESM4::ActorValueCommand::Set,
+                ESM4::ActorValueCommandSource::Script, row.resistance));
+            ASSERT_TRUE(world.executeOblivionStartCombat(actor, player));
+            ASSERT_TRUE(world.hasOblivionBaseCombatPackage(reference.mFormKey).value());
+            const auto action = service.beginMeleeStrike(reference.mFormKey, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+            saved = captureNativeActorState(fixture, actor); saved.mCombatRngState = row.contactSeed;
+            service.restore(saved, store);
+            const auto before = captureNativeActorState(fixture, actor).serializeBinary();
+            const float intelligence = service.getPlayerValue(1), health = service.getPlayerValue(8);
+            MWMechanics::OblivionPhysicalContactDeltas deltas{-7, -2, 0};
+            auto contact = world.prepareOblivionPhysicalContact(action, actor, player, deltas);
+            ASSERT_TRUE(contact);
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), before);
+            EXPECT_EQ(contact->randomDraws(), unsigned(row.selected));
+            // A stale transaction cannot publish part of a disease/resource/RNG change.
+            const auto originalPosition = actor.getRefData().getPosition();
+            auto stalePosition = originalPosition;
+            stalePosition.pos[0] += 1;
+            actor.getRefData().setPosition(stalePosition);
+            EXPECT_FALSE(contact->commit()); EXPECT_TRUE(messages.empty());
+            actor.getRefData().setPosition(originalPosition);
+            EXPECT_EQ(service.getPlayerValue(1), intelligence); EXPECT_EQ(service.getPlayerValue(8), health);
+            service.restore(ESM4::RuntimeState::deserializeBinary(before), store); contact.reset();
+            contact = world.prepareOblivionPhysicalContact(action, actor, player, deltas); ASSERT_TRUE(contact);
+            ASSERT_TRUE(contact->commit()); EXPECT_FALSE(contact->commit());
+            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected ? 5 : 0));
+            EXPECT_EQ(service.getPlayerBaseValue(1), intelligence);
+            EXPECT_EQ(service.getPlayerValue(8), health - 2);
+            EXPECT_EQ(service.combatRandomState(), advance(row.contactSeed, row.selected ? 1 : 0));
+            EXPECT_EQ(messages.size(), unsigned(row.infected));
+            if (row.infected) EXPECT_NE(messages[0].find("Witbane"), std::string::npos);
+            const auto after = captureNativeActorState(fixture, actor).serializeBinary();
+            EXPECT_FALSE(world.prepareOblivionPhysicalContact(action, actor, player, deltas));
+            EXPECT_EQ(captureNativeActorState(fixture, actor).serializeBinary(), after);
+            service.restore(ESM4::RuntimeState::deserializeBinary(after), store);
+            EXPECT_EQ(service.getPlayerValue(1), intelligence - (row.infected ? 5 : 0));
+            EXPECT_EQ(service.findActorValues(reference.mFormKey)->mLeveledContactSpells, known.mLeveledContactSpells);
         }
     }
 
