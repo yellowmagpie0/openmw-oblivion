@@ -1,0 +1,25 @@
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -1145,7 +1145,7 @@
+ import re
+ # Focus the existing joined course on its retained applied Left-power source.
+ if '--right-space' in sys.argv:
+- assert phase=='reference' and profile and profile['weapon_family']=='blunt'
++ assert phase in ['reference','wall'] and profile and profile['weapon_family']=='blunt'
+  from tes4_m15_fixture_preflight import applied_side_power_source,right_power_spacing_setup
+  recipe=json.loads((root/'scripts/data/oblivion_compat/m15_right_power_setup.json').read_text())
+  assert recipe['weapon_family']==profile['weapon_family']
+@@ -1493,6 +1493,13 @@
+  if recipe['captures']:
+   spec=standing_capture_setup(spec,recipe,(root/recipe['module']).read_text())
+
++if '--queued-power-prefix' in sys.argv:
++ assert phase=='wall' and profile and profile['weapon_family']=='blunt'
++ stop=next(i for i,a in enumerate(spec['actions']) if a.get('name')=='combined-backward-power.png')+1
++ spec['actions']=spec['actions'][:stop]
++ spec['expected_log']=['M15 melee hit committed: actor=dynamic:player:0000000000000001 id=7 ', 'M15 power input owner:']
++ spec['name']+='; singleordinary/power selection diagnostic only, notfullcourse acceptance'
++
+ check=Path(option('--integration-receipt',str(base/('longitudinal-backward-integration-normal-02' if kind=='normal' else 'longitudinal-backward-integration-sanitize-03')/'verification.json')))
+ gate=json.loads(check.read_text());assert gate['passed']
+ if profile and not preflight:

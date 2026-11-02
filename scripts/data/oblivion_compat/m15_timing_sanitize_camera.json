@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_corrected_SAN_execution",
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "requirement": "Complete the original18-cell timing reference matrix with useful activeForwardbody photographs; all gameplay, ownership, save/load and feedback gates retained.",
+  "parent_recipe": {
+    "path": "scripts/data/oblivion_compat/m15_timing_campaign.json",
+    "sha256": "2d4bd07ff4424d6976d480b2a197a02b019e660b2ac83b6db4f0dc0051cbd4ff"
+  },
+  "scope": "Replace only the nine SAN case protocols with the verified opt-in whole-body camera correction. Normal nine cells retain original evidence. Original SAN cap30/seed1 failure remains unverified and preserved; no retrospective pass.",
+  "camera_correction": {
+    "path": "scripts/data/oblivion_compat/m15_active_forward_camera.json",
+    "sha256": "baafd276d4fd4d94a9181274ea51b65b967620d64572759138352d4a3a06d354"
+  },
+  "retained_failure": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-sanitize-cap30-seed1-01-visual-review-failure.json",
+    "sha256": "2fce0141b926b882e25b9e12cba5551e4792ceb8d29d3de0bacb908b9f07b556"
+  },
+  "reusable_normal_checkpoint": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/seed47-row-verification.json",
+    "sha256": "2272a2417b55fb3bc1bf47ed83d0fbc5219cf69a07cc235dbfb63360bde052fe"
+  },
+  "frozen": {
+    "profile": {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-club-profile-01.json",
+      "sha256": "114893c5e913a85478f7264dfc497705729e1071d030ccaf535e7c25c35b8a00"
+    }
+  },
+  "unchanged_controls": "All parent source bytes, seeds1/24/47, caps30/60/120, resolution1280x720, first-person bindings, mouse sensitivity, graphics, sound, clock, weather, actor/items, native physics/defaults, binary/dependencies and original gameplay actions/assertions/deadlines remain pinned. Achieved cadence is measured, not inferred from caps.",
+  "declared_changes": [
+    "Add --active-forward-framing to existing constructor. Each case has230actions,14originalF5saves,13originalnamedcaptures.",
+    "Forward only: normal backstep until existing160-unit clear-spacing witness, measured camera framing, fresh applied-paralysis plus full renderedbounds/mesh visibility prerequisite.",
+    "Photograph before originalF5/save acknowledgement. No gameplay timer extension, quiet/settledS6 prerequisite, threshold reduction or outcome injection.",
+    "Observer adds read-only full-bounds/applied diagnostic; all other authored files are identical. Environment run ID and case paths change only for separate outputs."
+  ],
+  "case_preflight": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/matrix-sanitize-framed-preflight.json",
+    "sha256": "d606a9e3ff8e1dc4b7b569dbfdb46fdf5cfd01ac35865070056bd371c1033dba"
+  },
+  "cells": [
+    {
+      "id": "sanitize-seed1-cap30",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-framed-cap30-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed1-cap60",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-framed-cap60-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed1-cap120",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-framed-cap120-seed1-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap30",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-framed-cap30-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap60",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-framed-cap60-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed24-cap120",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-framed-cap120-seed24-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap30",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 30,
+      "run": "timing-matrix-sanitize-framed-cap30-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap60",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 60,
+      "run": "timing-matrix-sanitize-framed-cap60-seed47-01",
+      "reuse_run": null
+    },
+    {
+      "id": "sanitize-seed47-cap120",
+      "kind": "sanitize",
+      "seed": 47,
+      "cap": 120,
+      "run": "timing-matrix-sanitize-framed-cap120-seed47-01",
+      "reuse_run": null
+    }
+  ],
+  "verification_helpers": {
+    "verifier": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/verify-cell.py",
+      "sha256": "1ecfbc74f678f4e8af3376132d3d7d1e35ebe79483f509d25d3c53b95fd7007e"
+    },
+    "collector": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/collect-matrix.py",
+      "sha256": "db9a8f45b273adbc79a8b82951fdb00dd38803cf8b143d7ae63498b36d8b0e63"
+    },
+    "adapter": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py",
+      "sha256": "34b1c5493ba6083a2f2feea36a395e5f76596ea6e81a0c5a62dabfa9c921bb42"
+    }
+  },
+  "verification": "Use existing complete14pair semantic inspector, activeForward18body/Leftowner checker, blockPCM1 assay, cadence classifier and13directcapture observations. Compare contacts and semantic endpoint against all verified cells with existing tolerances. No listening/fullV6/fullS4/F8claim.",
+  "required_remaining_gates": [
+    "Applicable exactfreshwindup/block/recovery highrisk timing cases; reuse originalscopes onlywhen inputs/dependenciesunchanged.",
+    "F8 independentclean2same-seed/1other-seed final campaigns plus allapplicableSection10build/sanitizer/regression gates.",
+    "FiniteotherC1/D2/R3/I4/Q5/V6reconciliation. E6listening remainsseparatetoolblocked; thismatrix neverclaims fullS4."
+  ],
+  "reason_for_new_runs": "The first SAN photograph is invalid and corrected camera inputs differ. A new fullSANcourse is necessary; do not replay normal cells or broadbuilds/tests for this declarative appendix alone."
+}

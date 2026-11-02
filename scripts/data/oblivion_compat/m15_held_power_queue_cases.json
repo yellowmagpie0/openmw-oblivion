@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "status": "diagnosed_zero_time_takeover_candidate_withdrawn",
+  "requirement": "Timing cases must preserve native held-input branching, required power/mastery consequences, causal resource accounting and released ownership. Preliminary ordinary contacts are permitted by original per-cell protocol, not unconditional acceptance requirements.",
+  "observed": {
+    "normal_contacts": [
+      2,
+      3,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "sanitizer_contacts": [
+      2,
+      3,
+      7,
+      9,
+      11,
+      13
+    ],
+    "normal_target_health_damage": 83.59599304199219,
+    "sanitizer_target_health_damage": 61.700531005859375,
+    "normal_weapon_condition": 66.10060119628906,
+    "sanitizer_weapon_condition": 67.78059387207031,
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/first-SAN-endpoint-comparison-failure.json",
+      "sha256": "d973e8f7ceedd322e48229875b679a2627ce8eef9e84eff12e29790fb30ea1a2"
+    }
+  },
+  "independent_rule": {
+    "evidence": {
+      "path": "build/oblivion-compat/m15/S4/native-attack-input-oracle-02/report.json",
+      "sha256": "81173c83815cb13684a7c9b48aef821c5f771d0ea60a485ec32941902eb212c2"
+    },
+    "observations": 18432,
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "scope": "Existing hash-identified original ordinary/held branch with supplied sequence+48 offset and animation-data+94 clock sum. Positive sum queues power; zero does not. Animation getters/advancement are supplied boundaries; no new oracle execution or arithmetic precision campaign."
+  },
+  "implementation": "No production change retained. Candidate raw-clock predicate and tests were archived as an unapplied experiment after paired live evidence failed to change the discrepancy. Diagnostic observes native-permitted immediate takeover at zero sequence time.",
+  "focused": {
+    "red": {
+      "path": "build/oblivion-compat/m15/S4/queued-power-clock-red-01/verification.json",
+      "sha256": "90f5ed8963ec0c5b40cab899ec84ba5b0198150b0e22eac7c3d6c1b6afca1df3"
+    },
+    "green": {
+      "path": "build/oblivion-compat/m15/S4/queued-power-clock-green-01/verification.json",
+      "sha256": "649a50274a0f2fca4d9ff3eadb0a0948b673531e6fc25d2b2c90c0cd95a998c7"
+    },
+    "physical_suite": {
+      "path": "build/oblivion-compat/m15/S4/queued-power-clock-focused-01/verification.json",
+      "sha256": "6a03fe5bd97f043360ab6a406eefe912a18264b097d3f0b3004a23babaf57638"
+    },
+    "scope": "Two focused input tests: reproduced four wrong decisions with extracted old predicate, then both pass with native clock.245completephysicalcombat cases pass with matching inventory; no engine/runtime claim."
+  },
+  "next": "Correct overstrict cross-run comparator with explicit native branch provenance, all required per-cell causal/ownership assertions retained, negative controls, and reinspection of sufficient existing raw evidence. No full runtime rerun solely for checker correction.",
+  "runtime_failure": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/queued-power-candidate-runtime-failure.json",
+    "sha256": "39340ca7cae373526c2ecf3f2f0716d1ede380c0c8cc137995724e662c61e003"
+  },
+  "classification": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/queued-power-selection-classification.json",
+    "sha256": "f8bc00ee5c77b320e4baafff6c3968f7d6f10be69e9292dbf877eaefbce7eb73"
+  }
+}
