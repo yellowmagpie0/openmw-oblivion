@@ -188,7 +188,7 @@
     "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-checker-residency-correction.json"
   ],
   "gamepad": {
-    "scope": "Configured first-person stock four-direction Dodge and exact active restart/ordinary return in normal and sanitizer builds; third-person gamepad in combined acceptance course remains open.",
+    "scope": "Configured first-person stock four-direction Dodge and exact active restart/ordinary return in normal and sanitizer builds; the third-person joined route is separately linked in joined_course.",
     "shared_input_profile": "scripts/data/oblivion_compat/m15_combined_melee_course.json::input_profiles.gamepad_first_person",
     "fixture_xml_overlay": {
       "remove_joystick_button_binders": [
@@ -224,5 +224,34 @@
     "evidence_reuse": "Same52fe98bee0implementation and dependency hashes; prior full normal/SAN gates retained. No broad gates for fixture/input metadata.",
     "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-checkpoint-verification.json",
     "residency_checker_correction": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-sanitize-checker-residency-correction.json"
+  },
+  "joined_course": {
+    "case_id": "M15-S4-JOINED-DODGE-GAMEPAD-001",
+    "scope": "Continuous third-person configured gamepad production NPC/block/Stagger/nonlethal Player contact/range miss/wall miss/four stock Dodge directions/ordinary return, plus actual active Dodge fresh continuation in both builds.",
+    "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+    "core_end_capture": "combined-wall-settled.png",
+    "preserved_core": "NPC2 hit/block/Player Stagger and recovery, Player3 nonlethal hit, clear range4 and actual stock partition5 misses; core9pairs. Existing mastery-power proofs keep their original scope/provenance.",
+    "appended_ids": {
+      "reference_dodges": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "reference_ordinary_return": 10,
+      "fresh_continues": 6,
+      "fresh_ordinary_return": 7
+    },
+    "reference_source_camera": "FIRS1 pristine; established core normal controller view switch entersThird",
+    "active_source_camera": "FIRS0; fresh continuation omits toggle",
+    "expanded_course": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/joined-gamepad-course.json",
+    "expanded_course_sha256": "5b6764990348c7b7178c08e2671d3adc00572403c887db6b96ab0e00003c023e",
+    "shared_stick_preflight": "scripts/tes4_m15_fixture_preflight.py::validate_gamepad_stick_inputs; effective dead zone from default+scenario settings",
+    "camera_pitch_input": 0.35,
+    "camera_gate": "Live orientation/floor/unobstructed body-anchor checks before Dodge; actual achieved pitch remains in saved source, not an exact cross-build camera claim.",
+    "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/joined-checkpoint-verification.json",
+    "python_receipt": "build/oblivion-compat/m15/S4/joined-dodge-stick-python-01/verification.json",
+    "reused_mastery_index": "scripts/data/oblivion_compat/m15_combined_melee_course.json",
+    "limits": "Current joined runs retain their configured cap/seed; not required T7/F8 campaign completion. Normal tucked roll and other scoped feedback reviewed; late SAN captures and cropped core images retain explicit limits."
   }
 }

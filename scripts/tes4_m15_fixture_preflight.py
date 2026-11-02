@@ -8,6 +8,31 @@ import math
 import re
 
 
+def validate_gamepad_stick_inputs(manifest, dead_zone):
+    """Reject movement/look commands that cannot clear the declared dead zone.
+
+    Zero releases remain valid. Trigger inputs have a separate binding policy;
+    this check concerns sticks used for approach and camera acknowledgements.
+    """
+    if (type(dead_zone) not in (int, float) or not math.isfinite(dead_zone)
+            or not 0 <= dead_zone < 1):
+        raise ValueError('Invalid gamepad stick dead zone')
+    count = 0
+    for action in manifest['actions']:
+        if (action.get('type') != 'gamepad_axis'
+                or action.get('axis') not in ('left_x', 'left_y', 'right_x', 'right_y')):
+            continue
+        value = action.get('value')
+        if (type(value) not in (int, float) or not math.isfinite(value)
+                or not -1 <= value <= 1):
+            raise ValueError('Invalid gamepad stick value')
+        if value != 0:
+            if abs(value) <= dead_zone:
+                raise ValueError('Gamepad stick command lies inside its dead zone: ' + action['axis'])
+            count += 1
+    return count
+
+
 def validate_recoil_contact_waits(manifest):
     """Reject the canonical ordinary-finish wait for a declared Recoil contact.
 

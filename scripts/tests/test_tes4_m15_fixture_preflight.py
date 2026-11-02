@@ -9,9 +9,33 @@ from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
+from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_stick_guard_preserves_valid_commands_releases_and_trigger_policy(self):
+        manifest = dict(actions=[dict(type='gamepad_axis', axis=axis, value=value)
+            for axis, value in [('left_x', -.35), ('right_x', .22), ('right_y', .35),
+                                ('right_y', 0), ('left_trigger', .05)]])
+        original = copy.deepcopy(manifest)
+        self.assertEqual(validate_gamepad_stick_inputs(manifest, .1), 3)
+        self.assertEqual(manifest, original)
+
+    def test_stick_guard_rejects_retained_pitch_failure_before_runtime(self):
+        for value in [.1, -.1, .05, -.05]:
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'dead zone'):
+                validate_gamepad_stick_inputs(dict(actions=[
+                    dict(type='gamepad_axis', axis='right_y', value=value)]), .1)
+
+    def test_stick_guard_rejects_malformed_values_and_dead_zones(self):
+        for value in [None, True, float('nan'), float('inf'), -1.1, 1.1]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                validate_gamepad_stick_inputs(dict(actions=[
+                    dict(type='gamepad_axis', axis='left_y', value=value)]), .1)
+        for dead_zone in [None, True, float('nan'), float('inf'), -.1, 1]:
+            with self.subTest(dead_zone=dead_zone), self.assertRaises(ValueError):
+                validate_gamepad_stick_inputs(dict(actions=[]), dead_zone)
+
     def test_dodge_source_requires_actual_consumed_in_flight_action(self):
         from scripts.tests.test_tes4_runtime_state import Tes4RuntimeStateTests
         state = Tes4RuntimeStateTests().dodge_state()
