@@ -186,5 +186,43 @@
     "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-normal01-return-fixture-failure.json",
     "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-fresh01-resume-failure.json",
     "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-checker-residency-correction.json"
-  ]
+  ],
+  "gamepad": {
+    "scope": "Configured first-person stock four-direction Dodge and exact active restart/ordinary return in normal and sanitizer builds; third-person gamepad in combined acceptance course remains open.",
+    "shared_input_profile": "scripts/data/oblivion_compat/m15_combined_melee_course.json::input_profiles.gamepad_first_person",
+    "fixture_xml_overlay": {
+      "remove_joystick_button_binders": [
+        {
+          "control": 29,
+          "button": 3,
+          "deviceId": 1
+        }
+      ],
+      "add_joystick_button_binders": [
+        {
+          "control": 11,
+          "button": 3,
+          "direction": "INCREASE",
+          "deviceId": 1
+        }
+      ]
+    },
+    "bindings": {
+      "block": "left_trigger",
+      "jump": "Y",
+      "direction": "left_stick",
+      "ordinary_attack": "right_trigger",
+      "draw": "X",
+      "capture": "F5; harness screenshots use F12"
+    },
+    "reason": "Existing melee LT block overlay removes old LT jump; add an independent jump binding and remove the competing Y spell toggle in this fixture. No production code change.",
+    "expanded_course": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-course.json",
+    "expanded_course_sha256": "01e6dcaa96d61e7284aaf3e5de2e424a16c5a07dda541026d4cc34697d048e1d",
+    "normal": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-normal-resume-verification.json",
+    "sanitizer": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-sanitize-resume-verification.json",
+    "checker_correction": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-normal-checker-finish-format-correction.json",
+    "evidence_reuse": "Same52fe98bee0implementation and dependency hashes; prior full normal/SAN gates retained. No broad gates for fixture/input metadata.",
+    "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-checkpoint-verification.json",
+    "residency_checker_correction": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/gamepad-sanitize-checker-residency-correction.json"
+  }
 }

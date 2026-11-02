@@ -1655,7 +1655,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "Stock keyboard first/third-person consequence and exact active restart have scoped evidence; combined-course/gamepad and required FPS/seed campaigns remain open"
+        "Stock keyboard first/third-person and configured first-person gamepad consequence/active restart have scoped evidence; third-person gamepad combined course and required FPS/seed campaigns remain open"
       ],
       "evidence": "scripts/data/oblivion_compat/m15_blocking_dodge_cases.json (includes S2 oracle provenance)",
       "pure_rule_status": "reviewed"
