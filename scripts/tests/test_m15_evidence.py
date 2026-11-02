@@ -706,5 +706,69 @@ class M15RestartTests(unittest.TestCase):
         self.assertFalse(m15.verify_restart(self.root, "after", "before", "after")["passed"])
 
 
+class TimingPowerResourceTests(unittest.TestCase):
+    def course(self, ordinary):
+        weapon = 'content:fixture.esm:000012'
+        wall = dict(physical_actions=dict(next=6, pending=[]), physical_action_owners=[],
+                    player=dict(inventory=[dict(base=weapon, condition=70)]),
+                    native_actor_values=[dict(actor=VICTIM, values={8: [120, 0, 0, -5]})])
+        projection = dict(player_inventory=copy.deepcopy(wall['player']['inventory']),
+                          values=copy.deepcopy(wall['native_actor_values']), untouched='strict')
+        condition, damage, lines = 70, 0, []
+        for ident in ([6, 7, 8, 9, 10, 11, 12, 13] if ordinary else [7, 9, 11, 13]):
+            power = ident % 2 == 1
+            hit = (14 if power else 5.6) * (.5 + .5 * condition / 70)
+            condition -= .42
+            damage += hit
+            lines.append(f'M15 melee hit committed: actor={PLAYER} id={ident} '
+                         f'victim={VICTIM} health_damage={hit:.6g} '
+                         f'weapon_condition_write={condition:.6g} fatigue_cost={39 if power else 7.8} '
+                         'fatigue_damage=0 block_fraction=0 block_fatigue=0 armor_condition_writes=0')
+        projection['values'][0]['values'][8][3] -= damage
+        projection['player_inventory'][0]['condition'] = condition
+        return projection, wall, '\n'.join(lines), dict(player=PLAYER, victim=VICTIM, weapon=weapon,
+            maximum_condition=70, condition_base=.5, condition_multiplier=.5, wear_per_contact=.42)
+
+    def test_optional_contacts_are_accounted_without_mutating_input(self):
+        results = []
+        for ordinary in (False, True):
+            args = self.course(ordinary)
+            before = copy.deepcopy(args[0])
+            normalized, proof = m15.timing_power_resources(*args[:3], **args[3])
+            self.assertEqual(args[0], before)
+            self.assertEqual(normalized['values'][0]['values'][8], [120, 0, 0, -5])
+            self.assertEqual(normalized['player_inventory'][0]['condition'], 70)
+            self.assertEqual(proof['optional_contacts'], [6, 8, 10, 12] if ordinary else [])
+            results.append(proof['required_damage'])
+        for ident in results[0]:
+            self.assertAlmostEqual(results[0][ident], results[1][ident], delta=2e-4)
+
+    def test_unexplained_health_and_wear_are_rejected(self):
+        for fault in ('health', 'wear', 'health_channel', 'nonfinite'):
+            with self.subTest(fault=fault):
+                projection, wall, log, settings = self.course(True)
+                if fault == 'health': projection['values'][0]['values'][8][3] -= 1
+                if fault == 'wear': projection['player_inventory'][0]['condition'] -= 1
+                if fault == 'health_channel':
+                    projection['values'][0]['values'][8][0] -= 1
+                    projection['values'][0]['values'][8][3] += 1
+                if fault == 'nonfinite': settings['wear_per_contact'] = float('nan')
+                with self.assertRaises(ValueError):
+                    m15.timing_power_resources(projection, wall, log, **settings)
+
+    def test_missing_duplicate_wrong_target_and_wrong_wear_are_rejected(self):
+        for fault in ('missing', 'duplicate', 'target', 'wear', 'damage'):
+            with self.subTest(fault=fault):
+                projection, wall, log, settings = self.course(False)
+                lines = log.splitlines()
+                if fault == 'missing': lines.pop()
+                if fault == 'duplicate': lines.append(lines[-1])
+                if fault == 'target': lines[0] = lines[0].replace(f'victim={VICTIM}', f'victim={OTHER}')
+                if fault == 'wear': lines[0] = lines[0].replace('weapon_condition_write=69.58', 'weapon_condition_write=68.58')
+                if fault == 'damage': lines[0] = lines[0].replace('health_damage=14 ', 'health_damage=0 ')
+                with self.assertRaises(ValueError):
+                    m15.timing_power_resources(projection, wall, '\n'.join(lines), **settings)
+
+
 if __name__ == "__main__":
     unittest.main()

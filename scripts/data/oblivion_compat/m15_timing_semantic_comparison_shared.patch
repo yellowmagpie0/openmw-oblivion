@@ -1,0 +1,58 @@
+--- a/build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py
++++ b/build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py
+@@ -20,8 +20,54 @@
+  before='frozen_recipe=link(recipe),cases=rows'
+  after='frozen_recipe=link(recipe),camera_correction=link(correction_path),retained_failure=correction["retained_failure"],cases=rows'
+  assert code.count(before)==1;code=code.replace(before,after)
++if mode=='collect':
++ sys.path.insert(0,'scripts')
++ from tes4_m15_evidence import timing_power_resources
++ def power_resources(out,state,projection):
++  index=json.loads((out/'snapshot-index.json').read_text());event=index['12']['event']
++  live=out/event['live'];assert sha(live)==event['live_sha256']
++  wall=json.loads(live.read_text());log=(out/'process.log').read_text()
++  normalized,proof=timing_power_resources(projection,wall,log,player='dynamic:player:0000000000000001',victim='content:oblivion.esm:01fc43',weapon='content:oblivion.esm:03b375',maximum_condition=70,condition_base=.5,condition_multiplier=.5,wear_per_contact=7*0.05999999865889549)
++  import copy,re
++  controls=[]
++  for fault in ['target_health','club_wear','missing_power','duplicate_power']:
++   bad=copy.deepcopy(projection);badlog=log
++   if fault=='target_health':next(x for x in bad['values'] if x['actor']=='content:oblivion.esm:01fc43')['values'][8][3]-=1
++   if fault=='club_wear':next(x for x in bad['player_inventory'] if x['base']=='content:oblivion.esm:03b375')['condition']-=1
++   pattern=r'^.*M15 melee hit committed: actor=dynamic:player:0000000000000001 id=13 .*\n'
++   if fault=='missing_power':badlog=re.sub(pattern,'',log,flags=re.M)
++   if fault=='duplicate_power':badlog=log+re.search(pattern,log,re.M).group(0)
++   try:timing_power_resources(bad,wall,badlog,player='dynamic:player:0000000000000001',victim='content:oblivion.esm:01fc43',weapon='content:oblivion.esm:03b375',maximum_condition=70,condition_base=.5,condition_multiplier=.5,wear_per_contact=7*0.05999999865889549)
++   except ValueError:controls.append(fault)
++   else:raise AssertionError('Resource checker admitted '+fault)
++  bad=copy.deepcopy(projection)
++  next(x for x in bad['values'] if x['actor']=='content:oblivion.esm:01fc43')['values'][8][3]-=1
++  power_line=re.search(r'M15 melee hit committed: actor=dynamic:player:0000000000000001 id=7 .*',log).group(0)
++  damaged_line=re.sub(r'health_damage=([^ ]+)',lambda m:'health_damage='+str(float(m.group(1))+1),power_line,count=1)
++  badlog=log.replace(power_line,damaged_line)
++  _,badproof=timing_power_resources(bad,wall,badlog,player='dynamic:player:0000000000000001',victim='content:oblivion.esm:01fc43',weapon='content:oblivion.esm:03b375',maximum_condition=70,condition_base=.5,condition_multiplier=.5,wear_per_contact=7*0.05999999865889549)
++  assert any(abs(proof['required_damage'][k]-badproof['required_damage'][k])>2e-4 for k in proof['required_damage'])
++  controls.append('coherently_changed_required_damage')
++  proof['negative_controls_rejected']=controls
++  proof['wall_live']=dict(path=str(live),sha256=sha(live))
++  proof['process_log']=dict(path=str(out/'process.log'),sha256=sha(out/'process.log'))
++  return normalized,proof
++ before=' if first_state is None:first_state=state;reference=projection'
++ after=""" raw_projection=copy.deepcopy(projection);projection,power_proof=power_resources(out,state,projection)
++ if first_state is None:first_state=state;reference=projection;raw_reference=raw_projection;required_damage=power_proof['required_damage']
++ assert equivalent(required_damage,power_proof['required_damage']), 'Condition-normalized required power damage differs: '+row['id']"""
++ assert code.count(before)==1;code=code.replace(before,after)
++ before=" assert semantic['unique_contacts']==contacts"
++ after=""" assert [x['id'] for x in semantic['unique_contacts'] if x['id']>=6]==[x['id'] for x in power_proof['contacts']]
++ assert {2,3,7,9,11,13}<={x['id'] for x in semantic['unique_contacts']}"""
++ assert code.count(before)==1;code=code.replace(before,after)
++ code=code.replace('raw_endpoint_equal=reference==projection','raw_endpoint_equal=raw_reference==raw_projection,contact_resources=power_proof')
++ code=code.replace('equivalent(reference,endpoint_projection(changed))','equivalent(raw_reference,endpoint_projection(changed))')
++ code=code.replace("scope='Verified cells compare contacts and endpoint values/life/inventory/drop identities/released ownership.","scope='Verified cells compare required contacts and condition-normalized required power damage. Optional preliminary ordinary6/8/10/12 are native-permitted; only causally accounted suffix target Health and Club condition are rebased. Other endpoint values/life/inventory/drop identities/released ownership stay comparable.")
++ code=code.replace('camera_correction=link(correction_path),retained_failure=',"camera_correction=link(correction_path),semantic_correction=link('scripts/data/oblivion_compat/m15_timing_semantic_comparison.json'),retained_failure=")
++
+ argv=sys.argv;sys.argv=[str(legacy)]+argv[2:]
+-scope=dict(__file__=__file__,correction=correction,correction_path=correction_path,corrected_pref=corrected_pref)
++scope=dict(__file__=__file__,correction=correction,correction_path=correction_path,corrected_pref=corrected_pref,power_resources=power_resources if mode=='collect' else None)
+ try:exec(compile(code,str(legacy)+'#pinned-SAN-camera-appendix','exec'),scope)
+ finally:sys.argv=argv
+ if mode=='verify':

@@ -9,6 +9,7 @@ constrain normal input, filesystem paths, identities, and evidence provenance.
 from __future__ import annotations
 
 import hashlib
+import copy
 import json
 import math
 import os
@@ -51,6 +52,83 @@ class ContractSchemaError(ValueError):
 
 def _number(value: Any) -> bool:
     return type(value) is int or (type(value) is float and math.isfinite(value))
+
+
+def timing_power_resources(projection: dict, wall: dict, log: str, *, player: str,
+                           victim: str, weapon: str, maximum_condition: float,
+                           condition_base: float, condition_multiplier: float,
+                           wear_per_contact: float) -> tuple[dict, dict]:
+    """Account for optional ordinary hits in the joined course's four powers.
+
+    Call after the full per-cell course and strict endpoint checks. Only the
+    victim's Health damage channel and the attacking weapon's condition are
+    rebased, after checking their actual deltas. Every other projected field
+    remains comparable. Settings must come from the pinned winning content.
+    This is evidence interpretation, not a replacement for native damage tests.
+    """
+    required, optional = {7, 9, 11, 13}, {6, 8, 10, 12}
+    if wall['physical_actions'] != dict(next=6, pending=[]) or wall['physical_action_owners']:
+        raise _error('timing power source is not the released wall checkpoint')
+    if not all(_number(x) for x in (maximum_condition, condition_base,
+                                   condition_multiplier, wear_per_contact)):
+        raise _error('nonfinite timing resource settings')
+    if maximum_condition <= 0 or wear_per_contact <= 0 or min(condition_base, condition_multiplier) < 0:
+        raise _error('invalid timing resource settings')
+    result = copy.deepcopy(projection)
+    before = next(x for x in wall['player']['inventory'] if x['base'] == weapon)
+    after = next(x for x in result['player_inventory'] if x['base'] == weapon)
+    condition = before['condition']
+    if not _number(condition) or not 0 < condition <= maximum_condition:
+        raise _error('invalid timing source condition')
+    contacts = []
+    for actor, ident, fields in re.findall(r'M15 melee hit committed: actor=(\S+) id=(\d+) (.*)', log):
+        ident = int(ident)
+        if ident < 6:
+            continue
+        if actor != player or ident not in required | optional:
+            raise _error('unexpected timing power contact')
+        values = dict(re.findall(r'(\w+)=([^ ]+)', fields))
+        def number(key: str) -> float:
+            value = float(values[key])
+            if not math.isfinite(value):
+                raise _error('nonfinite timing contact field')
+            return value
+        damage = number('health_damage')
+        expected_cost = 39 if ident in required else 7.8
+        if (values['victim'] != victim or damage <= 0
+                or abs(number('fatigue_cost') - expected_cost) > 1e-5
+                or any(number(k) != 0 for k in ('fatigue_damage', 'block_fraction',
+                                               'block_fatigue', 'armor_condition_writes'))):
+            raise _error('timing contact left the admitted Club course')
+        factor = condition_base + condition_multiplier * condition / maximum_condition
+        if factor <= 0:
+            raise _error('nonpositive timing condition factor')
+        expected_condition = condition - wear_per_contact
+        if expected_condition <= 0 or abs(number('weapon_condition_write') - expected_condition) > 2e-4:
+            raise _error('unexplained timing contact wear')
+        contacts.append(dict(id=ident, damage=damage, condition_before=condition,
+                             condition_after=expected_condition,
+                             condition_normalized_damage=damage / factor))
+        condition = expected_condition
+    ids = [x['id'] for x in contacts]
+    if ids != sorted(set(ids)) or not required <= set(ids) <= required | optional:
+        raise _error('missing, duplicate or unexpected timing power contact')
+    if not _number(after['condition']) or abs(after['condition'] - condition) > 2e-4:
+        raise _error('unexplained timing endpoint wear')
+    old_values = next(x for x in wall['native_actor_values'] if x['actor'] == victim)['values'][8]
+    new_values = next(x for x in result['values'] if x['actor'] == victim)['values'][8]
+    damage = sum(x['damage'] for x in contacts)
+    if (not all(x is None or _number(x) for x in old_values + new_values)
+            or abs(sum(x or 0 for x in old_values) - sum(x or 0 for x in new_values) - damage) > 2e-4
+            or old_values[:3] != new_values[:3]):
+        raise _error('unexplained timing target Health change')
+    new_values[3] = old_values[3]
+    after['condition'] = before['condition']
+    return result, dict(contacts=contacts, optional_contacts=sorted(set(ids) & optional),
+                       required_damage={str(x['id']): x['condition_normalized_damage']
+                                        for x in contacts if x['id'] in required},
+                       target_health_damage=damage, weapon_wear=len(contacts) * wear_per_contact,
+                       scope='Only independently accounted suffix Health and wear rebased; all other fields retained.')
 
 
 def _equal(left: Any, right: Any) -> bool:
