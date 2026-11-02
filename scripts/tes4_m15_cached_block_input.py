@@ -13,6 +13,7 @@ import json
 from pathlib import Path
 
 import tes4_runtime_state as runtime
+from tes4_m15_fixture_preflight import is_current_fixture_schema
 from tes4_m15_stationary_fixture import fields
 
 
@@ -21,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     if (type(recipe['version']) is not int or recipe['version'] != 1
             or type(recipe['source_schema']) is not int or recipe['source_schema'] != 46
             or type(recipe['target_schema']) is not int or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or runtime.CURRENT_VERSION not in (59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77)):
+            or not is_current_fixture_schema(recipe['target_schema'], runtime.CURRENT_VERSION, 59)):
         raise ValueError('unsupported cached-block input recipe/schema')
     digest = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
     source_hash = digest(source)

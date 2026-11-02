@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 
 import tes4_runtime_state as runtime
+from tes4_m15_fixture_preflight import is_current_fixture_schema
 
 
 def stage(source: Path, output: Path, recipe: dict) -> dict:
@@ -21,7 +22,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
             or type(recipe['schema_version']) is not int or recipe['schema_version'] != 1
             or type(recipe['target_schema']) is not int
             or recipe['target_schema'] != runtime.CURRENT_VERSION
-            or recipe['target_schema'] not in (74, 75, 76, 77)
+            or not is_current_fixture_schema(recipe['target_schema'], runtime.CURRENT_VERSION, 74)
             or type(recipe['process_knocked_state']) is not int or recipe['process_knocked_state'] != 5
             or type(recipe['process_action']) is not int or recipe['process_action'] != -1
             or not isinstance(recipe['playback'], dict)

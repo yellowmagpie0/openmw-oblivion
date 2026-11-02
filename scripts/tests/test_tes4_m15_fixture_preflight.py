@@ -9,7 +9,7 @@ from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
-from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint
+from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint, is_current_fixture_schema
 
 
 class FixturePreflightTests(unittest.TestCase):
@@ -671,3 +671,13 @@ assert(not pcall(module.motion,target,'unknown',1/5120))
         trace += self.geometry(680, 92, distance=70, blocked='false')
         with self.assertRaises(ValueError):
             approach_witness(trace, wall_x=785, wall_y=92, close_range=110)
+
+
+class CurrentFixtureSchemaTests(unittest.TestCase):
+    def test_reviewed_current_schema_preserves_minimum_and_rejects_future_or_stale_targets(self):
+        for minimum in (59, 74):
+            self.assertTrue(is_current_fixture_schema(78, 78, minimum))
+            self.assertTrue(is_current_fixture_schema(77, 77, minimum))
+            for target, current in ((77, 78), (78, 77), (79, 79), (minimum - 1, minimum - 1),
+                                    (True, 1), (78., 78), (78, 78.)):
+                self.assertFalse(is_current_fixture_schema(target, current, minimum))

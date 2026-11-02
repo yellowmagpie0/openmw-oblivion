@@ -9,6 +9,17 @@ import re
 import struct
 
 
+def is_current_fixture_schema(target, current, minimum):
+    """Admit reviewed current schemas without duplicating version lists.
+
+    Version78 adds an explicit passive spell type; absent legacy types remain
+    Ability4. Future layouts require review here before fixtures can emit them.
+    Each fixture retains its own minimum schema and complete state assertions.
+    """
+    return (type(target) is int and type(current) is int and type(minimum) is int
+            and target == current and minimum <= target <= 78)
+
+
 def regenerated_fatigue_endpoint(state, actor):
     """Compare fully regenerated NPC Fatigue without changing retained state.
 
