@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "requirement": "M15-MASTERY-ACROBATICS-02",
+  "full_M15S4_acceptance": false,
+  "scope": "Player stock blocking dodge: normal directional input, collision movement, owned body/first-person playback, release/interruption, exact active save continuation and actual opponent avoidance.",
+  "base_manifest": "scripts/data/oblivion_compat/oblivion_m15_combined_melee.json",
+  "base_manifest_sha256": "a55be1fe29013b2ba9c4b384f659dd657371696779734e8f7107be9ff2f4b935",
+  "existing_launcher": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py",
+  "existing_monitor": "build/oblivion-compat/m15/S4/native-start-empty-tail-melee-runtime-01/monitor.py",
+  "source": {
+    "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/fixture/input.omwsave",
+    "sha256": "77e48e1af05b57fec2cedc6ac40bfbed3c706bd20822078be72077db536a0019",
+    "schema": 75,
+    "staging": [
+      "Player base Acrobatics5->50 in native AV26, shared base and acrobatics.base projection",
+      "Existing write_save promotion to current schema77",
+      "Set the existing CAM_/FIRS byte1->0 for declared initial third person; native gameplay payload otherwise exact"
+    ],
+    "staged_path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/input-acrobatics50-third.omwsave",
+    "staged_sha256": "521a582163aa7a9ff9650e80a6535e8cbc1946c901fd7b4197fc9cf4191ca1bf",
+    "receipt": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/dodge-staging-camera-preflight-03.json"
+  },
+  "normal_input": {
+    "startup": "Reuse base actions0..4: load, settle, focus, normal F draw and actual onehandidle. The sheathed source cannot block.",
+    "block": "b",
+    "jump": "e",
+    "directions": [
+      {
+        "group": 11,
+        "name": "dodgeforward",
+        "key": "w"
+      },
+      {
+        "group": 12,
+        "name": "dodgeback",
+        "key": "s"
+      },
+      {
+        "group": 13,
+        "name": "dodgeleft",
+        "key": "a"
+      },
+      {
+        "group": 14,
+        "name": "dodgeright",
+        "key": "d"
+      }
+    ],
+    "ordinary_return": "u",
+    "capture": "F5",
+    "one_time_waits": "Use unique action IDs without after_start; inspect chronological block/dodge/finish ownership in retained logs."
+  },
+  "quiet_course_setup": {
+    "approach": "Normal S until y<=-125 before normal D until x>=708. Right-first is blocked atx685.231.",
+    "camera": "Measured normal mouse faces East into the ray-checked clear West lane, pitch0.2, step1/5120; retain body/floor/camera checks and image review.",
+    "expanded_course": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/course.json",
+    "expanded_course_sha256": "36be705742b2bd64920ae9a5e4c527acb5be931b39a4a7b32fab4a07f8edddec",
+    "shared_source_preflight": "scripts/tes4_m15_fixture_preflight.py::blocking_dodge_source"
+  },
+  "avoidance": {
+    "source": "same pristine initial stage",
+    "lane": "Require actual floor and clear West ray before activating. Initial back path is obstructed.",
+    "normal_input_batch": {
+      "type": "keys_down",
+      "values": [
+        "space",
+        "a",
+        "e"
+      ]
+    },
+    "expected": "One production NPC windup and actual miss while Player dodges left; strict Player Health/inventories, one jump debit, no contact RNG/wear, final quiet ledger next4. Actor-bound IDs2/3 may follow update order.",
+    "negative_controls": [
+      "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance01-late-timing.json",
+      "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance02-obstructed-timing.json"
+    ],
+    "expanded_course": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-course.json",
+    "expanded_course_sha256": "cdea5f2a58ff993e6fdb270f39d93343fbd7357c18ed6401c7decfe7c3d2a743"
+  },
+  "native_oracle": {
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "entry": "0x5F5050",
+    "scope": "Full original5F5050 requested/resolved group path through admitted action9 and AnimData+BC speed publication. External animation resolver/activation/slot, established5EFFD0 action writer, actor virtual3A4, actor speed and nominal group speed are explicit supplied boundaries. No Havok displacement/termination or visual/native gameplay acceptance.",
+    "cases": [
+      {
+        "requested": 11,
+        "resolved": 11,
+        "nominal_walk_speed": 64,
+        "actor_speed": 128,
+        "playback_rate": 2.0,
+        "action": 9
+      },
+      {
+        "requested": 11,
+        "resolved": 11,
+        "nominal_walk_speed": 0,
+        "actor_speed": 96,
+        "playback_rate": 1.0,
+        "action": 9
+      },
+      {
+        "requested": 12,
+        "resolved": 12,
+        "nominal_walk_speed": 64,
+        "actor_speed": 128,
+        "playback_rate": 2.0,
+        "action": 9
+      },
+      {
+        "requested": 12,
+        "resolved": 12,
+        "nominal_walk_speed": 0,
+        "actor_speed": 96,
+        "playback_rate": 1.0,
+        "action": 9
+      },
+      {
+        "requested": 13,
+        "resolved": 13,
+        "nominal_walk_speed": 64,
+        "actor_speed": 128,
+        "playback_rate": 2.0,
+        "action": 9
+      },
+      {
+        "requested": 13,
+        "resolved": 13,
+        "nominal_walk_speed": 0,
+        "actor_speed": 96,
+        "playback_rate": 1.0,
+        "action": 9
+      },
+      {
+        "requested": 14,
+        "resolved": 14,
+        "nominal_walk_speed": 64,
+        "actor_speed": 128,
+        "playback_rate": 2.0,
+        "action": 9
+      },
+      {
+        "requested": 14,
+        "resolved": 14,
+        "nominal_walk_speed": 0,
+        "actor_speed": 96,
+        "playback_rate": 1.0,
+        "action": 9
+      },
+      {
+        "requested": 13,
+        "resolved": 14,
+        "nominal_walk_speed": 64,
+        "actor_speed": 96,
+        "playback_rate": 1.5,
+        "action": 9
+      }
+    ],
+    "nominal_group": 3,
+    "prior_admission": "build/oblivion-compat/m15/S2/closure-dodge-oracle-01/report.json (312 original cases)"
+  },
+  "fidelity": {
+    "ownership": "Native action9, consumed non-contact identity; body controls expiry, both saved samples resume without a new jump or contact.",
+    "speed": "Uses the engine forward-walk root-velocity estimate and current actor movement speed, with nominal-zero fallback1 and KF frequency. Reasonable floating playback estimate; original integer arithmetic is not a bit-parity claim.",
+    "content_boundary": "The production controller requires matching available stock Dodge clips in both views. Original alternate resolved-group fallback is recorded by the oracle; missing/modded clip fallback is not implemented as part of this stock course."
+  },
+  "evidence": {
+    "normal_directions_fresh_return": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/normal-verification.json",
+    "normal_avoidance": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-normal-verification.json",
+    "normal_engine": "build/oblivion-compat/m15/S4/blocking-dodge-resume-engine-normal-01/verification.json",
+    "sanitizer_and_components": "PASS: normal3214components/499Python and SAN1039ESM4components; final affected fullengine2096each; SANreference/fresh/avoidance9pairs. See checkpoint for source applicability and runtime pins.",
+    "sanitizer_engine": "build/oblivion-compat/m15/S4/blocking-dodge-resume-engine-sanitize-01/verification.json",
+    "normal_components_python": "build/oblivion-compat/m15/S4/blocking-dodge-final-normal-01/verification.json",
+    "sanitizer_components": "build/oblivion-compat/m15/S4/blocking-dodge-final-sanitize-01/verification.json",
+    "checkpoint": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/checkpoint-verification.json",
+    "sanitizer_directions_fresh_return": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/sanitize-resume-verification.json",
+    "sanitizer_avoidance": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-sanitize-verification.json"
+  },
+  "first_person": {
+    "expanded_course": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-person-course.json",
+    "expanded_course_sha256": "2a2e69781be7373203c547663d6369175366883143e45c9225e2d980facdedbd",
+    "reference": "blocking-dodge-first-normal-01 retains all four directions; copied must-miss return watcher failed on actual hit. Retained source is reused.",
+    "continuation": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-normal-resume-verification.json",
+    "review": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-fresh-image-review.json"
+  },
+  "retained_failures": [
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/normal01-wait-fixture-failure.json",
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-normal01-return-fixture-failure.json",
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/first-fresh01-resume-failure.json",
+    "build/oblivion-compat/m15/S4/blocking-dodge-work-01/avoidance-checker-residency-correction.json"
+  ]
+}

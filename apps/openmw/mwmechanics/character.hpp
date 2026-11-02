@@ -220,12 +220,16 @@ namespace MWMechanics
         bool updateOblivionWeaponState(float duration);
         void persistOblivionMeleeProgress() const;
         void dispatchOblivionMeleeContact();
+        bool tryOblivionBlockingDodge(unsigned movementFlags);
+        void bindOblivionBlockingDodge();
         void advanceOblivionMeleePlayback(float duration);
         bool bindOblivionMeleeReaction();
         bool advanceOblivionMeleeReactionFrame(float duration);
         void bindOblivionHeldBlock();
         void finishOblivionMeleePlayback();
         std::string mOblivionBlockGroup; // Render binding; held input is not saved.
+        std::uint64_t mOblivionRenderedDodge = 0;
+        std::string mOblivionDodgeGroup;
         std::uint64_t mOblivionRenderedStrike = 0; // Render binding only; service owns the strike.
         std::uint64_t mOblivionRenderedReaction = 0;
         std::string mOblivionReactionGroup;

@@ -1677,8 +1677,39 @@ namespace ESM4
         }
     }
 
+    void RuntimeDodgeView::validate(std::uint16_t group) const
+    {
+        static constexpr std::array<std::string_view, 4> groups
+            = {"dodgeforward", "dodgeback", "dodgeleft", "dodgeright"};
+        if (group < 11 || group > 14 || mGroup != groups[group - 11]
+            || !std::isfinite(mTime) || !std::isfinite(mBegin) || !std::isfinite(mEnd)
+            || !std::isfinite(mRate) || mRate <= 0 || mBegin < 0 || mEnd <= mBegin
+            || mTime < mBegin || mTime > mEnd)
+            throw std::runtime_error("Invalid TES4 blocking dodge view");
+    }
+
+    void RuntimeBlockingDodge::validate() const
+    {
+        if (!mActionId) throw std::runtime_error("Missing TES4 dodge action owner");
+        mBody.validate(mNativeGroup);
+        if (mFirstPerson) mFirstPerson->validate(mNativeGroup);
+    }
+
     void RuntimeMeleeState::validate() const
     {
+        if (mDodge)
+        {
+            mDodge->validate();
+            if (mDodge->mFirstPerson && !mFirstPerson)
+                throw std::runtime_error("Missing TES4 dodge first-person clock owner");
+            const auto occupied = [](const auto& view) {
+                return view.mStrike || view.mReaction || view.mPassiveSequence
+                    || std::any_of(view.mHeldBlocks.begin(), view.mHeldBlocks.end(),
+                        [](const auto& held) { return held.resident(); });
+            };
+            if (occupied(*this) || (mFirstPerson && occupied(*mFirstPerson)))
+                throw std::runtime_error("Conflicting TES4 dodge/action ownership");
+        }
         validateHeldBlocks(mHeldBlocks, mRetiringSequences);
         mInput.validate();
         if (mInput.mRequireRelease
@@ -2291,7 +2322,7 @@ namespace ESM4
                 throw std::runtime_error("Invalid or dangling TES4 native animation clock");
         std::map<ESM::FormKey, const RuntimeActorValues*> reactionValues;
         if (std::any_of(mNativeMeleeStates.begin(), mNativeMeleeStates.end(),
-                [](const auto& entry) { return entry.second.mReaction || entry.second.mFirstPerson
+                [](const auto& entry) { return entry.second.mDodge || entry.second.mReaction || entry.second.mFirstPerson
                     || entry.second.mPassiveSequence || !entry.second.mRetiringSequences.empty()
                     || !entry.second.mHeldBlocks.empty()
                     || (entry.second.mStrike && entry.second.mStrike->mKind == MeleeStrikeKind::Counter); }))
@@ -2300,6 +2331,18 @@ namespace ESM4
         for (const auto& [actor, melee] : mNativeMeleeStates)
         {
             melee.validate();
+            if (melee.mDodge)
+            {
+                const auto values = reactionValues.find(actor);
+                const auto& dodge = *melee.mDodge;
+                if (mVersion < 77 || !meleeIds.insert(dodge.mActionId).second
+                    || !mNativeAnimationClocks.contains(actor) || dodge.mActionId >= mPhysicalActions.mNext
+                    || pendingActions.contains(dodge.mActionId) || values == reactionValues.end()
+                    || values->second->mOwner != ActorValueOwner::Player
+                    || values->second->mProcess != ActorValueProcess::Active
+                    || values->second->mProcessKnockedState != 0 || values->second->mProcessAction != 9)
+                    throw std::runtime_error("Lost TES4 blocking dodge process/action ownership");
+            }
             if (mVersion < 76 && melee.mInput.mRequireRelease)
                 throw std::runtime_error("Release-required TES4 melee input requires schema76");
             const auto life = lives.find(actor);
@@ -3384,6 +3427,23 @@ namespace ESM4
                     writeHeldBlocks(writer, melee.mHeldBlocks);
                     if (melee.mFirstPerson) writeHeldBlocks(writer, melee.mFirstPerson->mHeldBlocks);
                 }
+                if (mVersion >= 77)
+                {
+                    writer.integer<std::uint8_t>(melee.mDodge.has_value());
+                    if (melee.mDodge)
+                    {
+                        const auto& dodge = *melee.mDodge;
+                        writer.integer(dodge.mActionId);
+                        writer.integer(dodge.mNativeGroup);
+                        const auto view = [&](const RuntimeDodgeView& value) {
+                            writer.string(value.mGroup);
+                            for (float f : {value.mTime, value.mBegin, value.mEnd, value.mRate}) writer.floating(f);
+                        };
+                        view(dodge.mBody);
+                        writer.integer<std::uint8_t>(dodge.mFirstPerson.has_value());
+                        if (dodge.mFirstPerson) view(*dodge.mFirstPerson);
+                    }
+                }
             }
         }
         if (mVersion >= 23)
@@ -4465,6 +4525,22 @@ namespace ESM4
                 {
                     melee.mHeldBlocks = readHeldBlocks(reader);
                     if (melee.mFirstPerson) melee.mFirstPerson->mHeldBlocks = readHeldBlocks(reader);
+                }
+                if (result.mVersion >= 77 && boolean())
+                {
+                    RuntimeBlockingDodge dodge;
+                    dodge.mActionId = reader.integer<std::uint64_t>();
+                    dodge.mNativeGroup = reader.integer<std::uint16_t>();
+                    const auto view = [&]() {
+                        RuntimeDodgeView value;
+                        value.mGroup = reader.string();
+                        value.mTime = reader.float32(); value.mBegin = reader.float32();
+                        value.mEnd = reader.float32(); value.mRate = reader.float32();
+                        return value;
+                    };
+                    dodge.mBody = view();
+                    if (boolean()) dodge.mFirstPerson = view();
+                    melee.mDodge = std::move(dodge);
                 }
                 if (!result.mNativeMeleeStates.emplace(std::move(actor), std::move(melee)).second)
                     throw std::runtime_error("Duplicate TES4 melee state owner");
@@ -5825,6 +5901,24 @@ namespace ESM4
                 {
                     stream << ",\"held_blocks\":";
                     writeHeldBlocksJson(stream, melee.mHeldBlocks);
+                }
+                if (mVersion >= 77 && melee.mDodge)
+                {
+                    stream << ",\"dodge\":";
+                    {
+                        const auto& dodge = *melee.mDodge;
+                        stream << "{\"action\":" << dodge.mActionId << ",\"group\":" << dodge.mNativeGroup
+                               << ",\"body\":";
+                        const auto view = [&](const RuntimeDodgeView& value) {
+                            stream << "{\"group\":\"" << escapeJson(value.mGroup) << '"';
+                            stream << ",\"time\":" << value.mTime << ",\"begin\":" << value.mBegin
+                                   << ",\"end\":" << value.mEnd << ",\"rate\":" << value.mRate << '}';
+                        };
+                        view(dodge.mBody);
+                        stream << ",\"first_person\":";
+                        if (dodge.mFirstPerson) view(*dodge.mFirstPerson); else stream << "null";
+                        stream << '}';
+                    }
                 }
                 stream << '}';
             }

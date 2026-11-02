@@ -1645,8 +1645,8 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2/S4/M14 movement integration prerequisite",
-      "rule_implementation": "requestedDodgeGroup; blockingDodgeAllowed; native group selection and admission verified; playback/movement/persistence pending",
-      "verification_status": "pending",
+      "rule_implementation": "requestedDodgeGroup; blockingDodgeAllowed; owned action9/body+first-person playback, collision root movement, single jump expenditure, interruption and schema77 persistence integrated",
+      "verification_status": "bounded-world-runtime",
       "required_cases": [
         "base skill threshold -1 / at / +1",
         "modified skill crosses threshold without changing base",
@@ -1655,9 +1655,9 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "native normal-input consequence and restart acceptance remain in the owning integration stage"
+        "Stock keyboard first/third-person consequence and exact active restart have scoped evidence; combined-course/gamepad and required FPS/seed campaigns remain open"
       ],
-      "evidence": "build/oblivion-compat/m15/S2/closure-dodge-oracle-01/",
+      "evidence": "scripts/data/oblivion_compat/m15_blocking_dodge_cases.json (includes S2 oracle provenance)",
       "pure_rule_status": "reviewed"
     },
     {

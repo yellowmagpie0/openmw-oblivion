@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 76
+CURRENT_VERSION = 77
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -2077,6 +2077,8 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
             fields.add("passive_sequence")
         if version >= 61:
             fields.add("held_blocks")
+        if version >= 77 and "dodge" in entry:
+            fields.add("dodge")
         if not isinstance(entry, dict) or set(entry) != fields:
             raise RuntimeStateError("Invalid TES4 melee state")
         actor = entry["actor"]
@@ -2084,6 +2086,30 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if actor in melee_actors or actor not in native_keys or phases.get(actor) != 0:
             raise RuntimeStateError("Duplicate, dangling or incapacitated TES4 melee owner")
         melee_actors.add(actor)
+        if "dodge" in entry:
+            dodge = entry['dodge']
+            values = native_value_states[actor]
+            if (not isinstance(dodge, dict) or set(dodge) != {'action','group','body','first_person'}
+                    or type(dodge['action']) is not int or not 0 < dodge['action'] < state['physical_actions']['next']
+                    or dodge['action'] in melee_ids or dodge['action'] in actions['pending']
+                    or actor not in clock_values or (dodge['first_person'] is not None and not entry.get('first_person'))
+                    or type(dodge['group']) is not int or not 11 <= dodge['group'] <= 14
+                    or values['owner'] != 0 or values['process'] != 1
+                    or values['process_action'] != 9 or values['process_knocked_state'] != 0):
+                raise RuntimeStateError('Invalid TES4 blocking dodge owner')
+            melee_ids.add(dodge['action'])
+            names = ['dodgeforward','dodgeback','dodgeleft','dodgeright']
+            for view in [dodge['body']] + ([dodge['first_person']] if dodge['first_person'] is not None else []):
+                if not isinstance(view, dict) or set(view) != {'group','time','begin','end','rate'}:
+                    raise RuntimeStateError('Invalid TES4 blocking dodge view')
+                time,begin,end,rate = [native_float(view[k]) for k in ['time','begin','end','rate']]
+                if (view['group'] != names[dodge['group']-11] or not 0 <= begin <= time <= end
+                        or end <= begin or rate <= 0):
+                    raise RuntimeStateError('Invalid TES4 blocking dodge time or group')
+            for view in [entry] + ([entry['first_person']] if entry.get('first_person') else []):
+                if (view.get('strike') or view.get('reaction') or view.get('passive_sequence')
+                        or any(not v['inactive'] and v['retirement'] is None for v in view.get('held_blocks',[]))):
+                    raise RuntimeStateError('Conflicting TES4 dodge/action ownership')
         intent = entry.get("ai_intent")
         if intent is not None:
             if not isinstance(intent, dict) or set(intent) != {"target", "style"}:
@@ -2820,6 +2846,14 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
             if version >= 61:
                 entry["held_blocks"] = read_held_blocks()
                 if first_person is not None: first_person["held_blocks"] = read_held_blocks()
+            if version >= 77 and melee_boolean():
+                dodge = {'action': reader.unpack('<Q'), 'group': reader.unpack('<H')}
+                def read_dodge_view():
+                    return dict(zip(('group','time','begin','end','rate'),
+                                    (reader.string(), *[reader.unpack('<f') for _ in range(4)])))
+                dodge['body'] = read_dodge_view()
+                dodge['first_person'] = read_dodge_view() if melee_boolean() else None
+                entry['dodge'] = dodge
             result["native_melee_states"].append(entry)
     if version >= 23:
         result["native_animation_clocks"] = [{"actor": reader.string(), "clock": reader.unpack("<f")}
@@ -3607,6 +3641,19 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             if version >= 61:
                 write_held_blocks(entry["held_blocks"])
                 if first_person is not None: write_held_blocks(first_person["held_blocks"])
+            if version >= 77:
+                dodge = entry.get('dodge')
+                writer.pack('<B', int(dodge is not None))
+                if dodge is not None:
+                    writer.pack('<Q', dodge['action'])
+                    writer.pack('<H', dodge['group'])
+                    def write_dodge_view(view):
+                        writer.string(view['group'])
+                        for key in ('time', 'begin', 'end', 'rate'):
+                            writer.pack('<f', view[key])
+                    write_dodge_view(dodge['body'])
+                    writer.pack('<B', int(dodge['first_person'] is not None))
+                    if dodge['first_person'] is not None: write_dodge_view(dodge['first_person'])
     if version >= 23:
         clocks = sorted(state.get("native_animation_clocks", []), key=lambda item: item["actor"])
         writer.pack("<I", len(clocks))

@@ -1723,6 +1723,119 @@ namespace MWMechanics
         if (resident != active.end()) mOblivionBlockGroup = resident->mAnimationGroup;
     }
 
+    bool CharacterController::tryOblivionBlockingDodge(unsigned movementFlags)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || mPtr != world->getPlayerPtr() || !mAnimation || isScriptedAnimPlaying() || mSkipAnim)
+            return false;
+        const auto input = MWBase::Environment::get().getInputManager();
+        const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        const auto group = ESM4::requestedDodgeGroup(movementFlags);
+        const auto mastery = MWWorld::resolveOblivionMeleeInputSettings(world->getStore()).mMastery;
+        if (!ESM4::blockingDodgeAllowed({service->getPlayerBaseValue(26), group,
+                controls && controls->mBlock, MWBase::Environment::get().getWindowManager()->isGuiMode()
+                    || !input->getControlSwitch("playercontrols") || !input->getControlSwitch("playerfighting")
+                    || !input->getControlSwitch("playerjumping"),
+                service->getProcessAction(actor) != 6, true, true}, mastery)) return false;
+        if (world->getOblivionAiService() && world->getOblivionAiService()->isRidingHorse(mPtr)) return false;
+        static constexpr std::array<std::string_view, 4> groups
+            = {"dodgeforward", "dodgeback", "dodgeleft", "dodgeright"};
+        const std::string name(groups[group - 11]);
+        const float nominal = mAnimation->getVelocity("walkforward");
+        const float actorSpeed = mPtr.getClass().getCurrentSpeed(mPtr);
+        const float rate = nominal > 0 ? actorSpeed / nominal : 1.f;
+        if (!std::isfinite(rate) || rate <= 0) return false;
+        const auto prepare = [&](MWRender::Animation& view) -> std::optional<ESM4::RuntimeDodgeView> {
+            const auto* source = view.getControllerSequenceMetadata(name);
+            const float begin = view.getTextKeyTimeInGroup(name, name + ": start");
+            const float end = view.getTextKeyTimeInGroup(name, name + ": stop");
+            if (!source || source->mCycleType != 2 || begin < 0 || end <= begin
+                || source->mFrequency <= 0) return {};
+            return ESM4::RuntimeDodgeView{name, begin, begin, end, rate * source->mFrequency};
+        };
+        const auto body = prepare(*mAnimation);
+        auto* peer = mAnimation->getPlaybackPeer();
+        const auto first = peer ? prepare(*peer) : std::nullopt;
+        if (!body || !first) return false; // Player owns both real stock views.
+        std::vector<OblivionMeleeSequenceMetadata> heldSources;
+        const auto* previous = service->findMeleeState(actor);
+        const auto collect = [&](const auto& held, MWRender::Animation& view, bool firstView) {
+            for (const auto& entry : held) if (entry.resident())
+            {
+                auto source = captureOblivionMeleeSequenceMetadata(view, entry.mAnimationGroup, false);
+                source.mFirstPerson = firstView;
+                heldSources.push_back(std::move(source));
+            }
+        };
+        if (previous)
+        {
+            collect(previous->mHeldBlocks, *mAnimation, false);
+            if (previous->mFirstPerson) collect(previous->mFirstPerson->mHeldBlocks, *peer, true);
+        }
+        if (!service->beginBlockingDodge(actor, {0, group, *body, first}, mastery, heldSources)) return false;
+        // The ordinary jump impulse is suppressed, so debit its existing native
+        // expenditure here exactly once. Rejected requests use the normal path.
+        try { world->spendOblivionJumpFatigue(mPtr); }
+        catch (...) { service->endBlockingDodge(actor); throw; }
+        const auto oldBlock = std::exchange(mOblivionBlockGroup, {});
+        if (!oldBlock.empty()) mAnimation->disable(oldBlock);
+        bindOblivionBlockingDodge();
+        Log(Debug::Verbose) << "M15 blocking dodge begin: group=" << name
+            << " id=" << service->findMeleeState(actor)->mDodge->mActionId << " rate=" << rate;
+        return true;
+    }
+
+    void CharacterController::bindOblivionBlockingDodge()
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world && world->getGameProfile() == ESM::GameProfile::Oblivion
+            ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation) return;
+        const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
+            : mPtr.getCellRef().getFormKey();
+        const auto* state = service->findMeleeState(actor);
+        const auto dodge = state ? state->mDodge : std::nullopt;
+        if (mOblivionRenderedDodge && (!dodge || dodge->mActionId != mOblivionRenderedDodge))
+        {
+            mOblivionRenderedDodge = 0;
+            const auto old = std::exchange(mOblivionDodgeGroup, {});
+            mAnimation->disable(old); // Authority cleared before observers run.
+        }
+        if (!dodge) return;
+        auto* peer = mAnimation->getPlaybackPeer();
+        if (dodge->mFirstPerson && !peer) throw std::invalid_argument("blocking dodge lost first-person view");
+        const auto bind = [&](MWRender::Animation& view, const ESM4::RuntimeDodgeView& sample) {
+            const auto* source = view.getControllerSequenceMetadata(sample.mGroup);
+            const float begin = view.getTextKeyTimeInGroup(sample.mGroup, sample.mGroup + ": start");
+            const float end = view.getTextKeyTimeInGroup(sample.mGroup, sample.mGroup + ": stop");
+            if (!source || begin != sample.mBegin || end != sample.mEnd)
+                throw std::invalid_argument("blocking dodge changed its saved resource bounds");
+            if (mOblivionRenderedDodge != dodge->mActionId || !view.getInfo(sample.mGroup))
+            {
+                // A normalized start can round back above the saved time.
+                // Keep the initial track at or below it so even a zero-duration
+                // first frame can publish the exact saved sample monotonically.
+                float start = (sample.mTime - begin) / (end - begin);
+                while (begin + (end - begin) * start > sample.mTime)
+                    start = std::nextafter(start, 0.f);
+                view.play(sample.mGroup, Priority_Knockdown, MWRender::BlendMask_All, false, 0.f,
+                    "start", "stop", start, 0, false, MWRender::Animation::PlaybackScope::ThisView);
+                view.setAnimationFrameTime(sample.mGroup, sample.mTime,
+                    MWRender::Animation::PlaybackScope::ThisView);
+                // Establish the saved accumulation origin without replaying
+                // earlier events or displacement on the first continuation.
+                view.runAnimation(0.f);
+            }
+        };
+        bind(*mAnimation, dodge->mBody);
+        if (dodge->mFirstPerson) bind(*peer, *dodge->mFirstPerson);
+        mOblivionRenderedDodge = dodge->mActionId;
+        mOblivionDodgeGroup = dodge->mBody.mGroup;
+    }
+
     bool CharacterController::advanceOblivionMeleeReactionFrame(float duration)
     {
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
@@ -1732,7 +1845,7 @@ namespace MWMechanics
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
         const auto active = [](const auto* state) {
-            return state && (state->mReaction || state->mPassiveSequence
+            return state && (state->mDodge || state->mReaction || state->mPassiveSequence
                 || (state->mStrike && (state->mStrike->mPoseSnapshot
                     || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) || !state->mRetiringSequences.empty()
                 || std::any_of(state->mHeldBlocks.begin(), state->mHeldBlocks.end(), [](const auto& h) { return !h.mInactive; })
@@ -1754,11 +1867,17 @@ namespace MWMechanics
             mOblivionFirstPersonHeldPoseBindings.clear();
             return false;
         }
+        bindOblivionBlockingDodge();
         bindOblivionMeleeReaction();
         bindOblivionHeldBlock();
         state = service->findMeleeState(actor);
         if (!active(state)) return false;
         std::array<std::set<std::string_view>, 2> groups;
+        if (state->mDodge)
+        {
+            groups[0].insert(state->mDodge->mBody.mGroup);
+            if (state->mDodge->mFirstPerson) groups[1].insert(state->mDodge->mFirstPerson->mGroup);
+        }
         if (state->mReaction) groups[0].insert(state->mReaction->mAnimationGroup);
         if (state->mStrike) groups[0].insert(state->mStrike->mAnimationGroup);
         for (const auto& sequence : state->mRetiringSequences) groups[0].insert(sequence.mAnimationGroup);
@@ -1905,7 +2024,18 @@ namespace MWMechanics
             mOblivionFirstPersonPassivePoseSnapshot.reset();
             mOblivionFirstPersonHeldPoseBindings.clear();
         }
-        const bool paired = peer && (firstReaction || firstStrike || firstRetiring || firstPassive
+        if (next.mDodge)
+        {
+            const auto layer = [](const ESM4::RuntimeDodgeView& view) {
+                MWRender::Animation::NativeSequenceLayer value{view.mGroup, MWRender::BlendMask_All, view.mTime, 1, 1};
+                value.mAccumulateRootMotion = true;
+                return value;
+            };
+            // Dodge owns locomotion; ordinary idle/walk must not dilute root curves.
+            bodyLayers = {layer(next.mDodge->mBody)};
+            if (next.mDodge->mFirstPerson) firstLayers = {layer(*next.mDodge->mFirstPerson)};
+        }
+        const bool paired = peer && (next.mDodge || firstReaction || firstStrike || firstRetiring || firstPassive
             || firstHeld || mOblivionFirstPersonMeleeProjection);
         if (!(paired ? mAnimation->setNativeSequenceLayersForViews(bodyLayers, firstLayers)
                      : mAnimation->setNativeSequenceLayers(bodyLayers)))
@@ -1928,6 +2058,15 @@ namespace MWMechanics
             if (firstStrike && !peer->setAnimationFrameTime(firstStrike->mAnimationGroup,
                     firstStrike->mAnimationTime, MWRender::Animation::PlaybackScope::ThisView))
                 throw std::invalid_argument("native first-person strike event track is missing");
+        }
+        if (next.mDodge)
+        {
+            if (!mAnimation->setAnimationFrameTime(next.mDodge->mBody.mGroup, next.mDodge->mBody.mTime,
+                    MWRender::Animation::PlaybackScope::ThisView))
+                throw std::invalid_argument("blocking dodge body event track missing");
+            if (next.mDodge->mFirstPerson && !peer->setAnimationFrameTime(next.mDodge->mFirstPerson->mGroup,
+                    next.mDodge->mFirstPerson->mTime, MWRender::Animation::PlaybackScope::ThisView))
+                throw std::invalid_argument("blocking dodge first-person event track missing");
         }
         const bool bodyInactive = next.mReaction && next.mReaction->mInactive;
         const bool firstInactive = firstReaction && firstReaction->mInactive;
@@ -2015,8 +2154,14 @@ namespace MWMechanics
         // prefix already ran. Bind the newly published reaction on this pass.
         try
         {
+            bindOblivionBlockingDodge();
             bindOblivionMeleeReaction();
             state = service->findMeleeState(actor);
+            if (state && state->mDodge)
+            {
+                if (!advanceOblivionMeleeReactionFrame(duration)) service->advanceAnimationClock(actor, duration);
+                return;
+            }
             if (state && ((state->mFirstPerson && state->mFirstPerson->mStrike)
                     || (state->mStrike && state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)))
             {
@@ -2205,6 +2350,8 @@ namespace MWMechanics
         const auto actor = mPtr == world->getPlayerPtr() ? ESM::FormKey::dynamic("player", 1)
             : mPtr.getCellRef().getFormKey();
         if (!world->cancelOblivionHeldBlock(mPtr)) return;
+        service->endBlockingDodge(actor);
+        bindOblivionBlockingDodge();
         std::string strikeGroup;
         if (const auto* state = service->findMeleeState(actor); state && state->mStrike)
         {
@@ -2597,6 +2744,24 @@ namespace MWMechanics
         // combat must retain that intent, and an unchanged weapon needs no rebuild.
         if (equipmentChanged)
             mAnimation->showWeapons(true);
+        if (const auto* state = service->findMeleeState(actor); state && state->mDodge)
+        {
+            if ((mOblivionRenderedDodge && equipmentChanged && !initialEquipmentBinding)
+                || state->mDodge->mBody.mTime >= state->mDodge->mBody.mEnd)
+            {
+                const auto id = state->mDodge->mActionId;
+                const bool finished = state->mDodge->mBody.mTime >= state->mDodge->mBody.mEnd;
+                service->endBlockingDodge(actor);
+                bindOblivionBlockingDodge();
+                Log(Debug::Verbose) << "M15 blocking dodge " << (finished ? "finished" : "cancelled")
+                    << ": id=" << id << " action=" << service->getProcessAction(actor);
+            }
+            else
+            {
+                bindOblivionBlockingDodge();
+                return false;
+            }
+        }
         const auto* controls = MWBase::Environment::get().getLuaManager()->getActorControls(mPtr);
         // Original5E5690 forces prefix0 for worn-shield groups27/28.
         const std::string blockGroup = shield ? "blockidle" : family + "blockidle";
@@ -3973,6 +4138,28 @@ namespace MWMechanics
                 movementSettings.mPosition[2] = 0;
             }
 
+            if (isPlayer && onground && mJumpState != JumpState_InAir && vec.z() > 0.f
+                && jumpHeight > 0.f && !sneak && !inwater && !flying && solid)
+            {
+                const unsigned flags = (movementSettings.mPosition[1] > 0 ? 1u : 0u)
+                    | (movementSettings.mPosition[1] < 0 ? 2u : 0u)
+                    | (movementSettings.mPosition[0] < 0 ? 4u : 0u)
+                    | (movementSettings.mPosition[0] > 0 ? 8u : 0u);
+                if (tryOblivionBlockingDodge(flags))
+                {
+                    vec.z() = 0;
+                    movementSettings.mPosition[2] = 0;
+                }
+            }
+            if (mOblivionRenderedDodge)
+            {
+                vec = osg::Vec3f();
+                speed = 0.f;
+                mAnimation->setLegsYawRadians(0);
+                mAnimation->setUpperBodyYawRadians(0);
+                movementSettings.mPosition[2] = 0;
+            }
+
             if (!inwater && !flying && solid)
             {
                 // In the air (either getting up —ascending part of jump— or falling).
@@ -4531,7 +4718,7 @@ namespace MWMechanics
 
     bool CharacterController::isMovementAnimationControlled() const
     {
-        if (mHitState != CharState_None || mDeathState != CharState_None)
+        if (mOblivionRenderedDodge || mHitState != CharState_None || mDeathState != CharState_None)
             return true;
 
         if (Settings::game().mPlayerMovementIgnoresAnimation && mPtr == getPlayer())

@@ -1278,3 +1278,178 @@ TEST(OblivionCombatService, BountyAndPlayerAV37FollowIndependentOriginalDispatch
     service.clear();
     EXPECT_FALSE(service.crimeBounty(values.mActor));
 }
+
+namespace
+{
+    ESM4::RuntimeState dodgeServiceState(int acrobatics = 50)
+    {
+        auto state = bowServiceState();
+        auto& values = state.mNativeActorValues.front();
+        values.mValues[26].mBase = acrobatics;
+        values.mProcessAction = 6;
+        return state;
+    }
+    ESM4::RuntimeBlockingDodge preparedDodge(unsigned direction = 0)
+    {
+        static constexpr std::array<std::string_view, 4> groups
+            = {"dodgeforward", "dodgeback", "dodgeleft", "dodgeright"};
+        return {0, static_cast<std::uint16_t>(11 + direction),
+            {std::string(groups[direction]), 0, 0, 1, 2},
+            ESM4::RuntimeDodgeView{std::string(groups[direction]), 0, 0, .75f, 1}};
+    }
+    std::array<MWMechanics::OblivionMeleeSequenceMetadata, 2> dodgeSources(unsigned direction = 0)
+    {
+        static constexpr std::array<std::string_view, 4> groups
+            = {"dodgeforward", "dodgeback", "dodgeleft", "dodgeright"};
+        MWMechanics::OblivionMeleeSequenceMetadata body;
+        body.mGroup = groups[direction]; body.mEnd = body.mTimelineEnd = 1;
+        auto first = body; first.mFirstPerson = true; first.mEnd = first.mTimelineEnd = .75f;
+        return {body, first};
+    }
+}
+
+TEST(OblivionCombatService, BlockingDodgeMasteryDirectionsAndNoPendingContact)
+{
+    for (const int acrobatics : {49, 50, 51})
+        for (unsigned direction = 0; direction < 4; ++direction)
+        {
+            auto state = dodgeServiceState(acrobatics);
+            // A temporary buff does not grant a base-skill mastery perk.
+            state.mNativeActorValues.front().mValues[26].mModifiers[0] = 100;
+            const auto actor = state.mPlayer.mReference;
+            MWMechanics::OblivionCombatService service; service.restore(state);
+            EXPECT_EQ(service.beginBlockingDodge(actor, preparedDodge(direction), {{25, 50, 75, 100}}, {}), acrobatics >= 50);
+            auto saved = savedState(); service.capture(saved);
+            if (acrobatics < 50) { EXPECT_EQ(saved, state); continue; }
+            const auto& dodge = *saved.mNativeMeleeStates.at(actor).mDodge;
+            EXPECT_EQ(dodge.mNativeGroup, direction + 11);
+            EXPECT_EQ(service.getProcessAction(actor), 9);
+            EXPECT_TRUE(service.isActionConsumed(dodge.mActionId));
+            EXPECT_TRUE(saved.mPhysicalActions.mPending.empty());
+            EXPECT_TRUE(saved.mPhysicalActionOwners.empty());
+            EXPECT_EQ(saved.mCombatRngState, state.mCombatRngState);
+            EXPECT_FALSE(service.beginBlockingDodge(actor, preparedDodge(direction), {{25, 50, 75, 100}}, {}));
+            EXPECT_THROW(service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Left,
+                "handtohandattackleft", 1, {}), std::invalid_argument);
+        }
+}
+
+TEST(OblivionCombatService, BlockingDodgeActiveSaveContinuationAndFinalSample)
+{
+    auto state = dodgeServiceState(); const auto actor = state.mPlayer.mReference;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, {}));
+    const auto sources = dodgeSources();
+    auto frame = service.prepareMeleeReactionFrame(actor, .125f, sources);
+    ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+    service.capture(state);
+    const auto wire = state.serializeBinary();
+    auto decoded = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(decoded, state);
+    EXPECT_EQ(decoded.serializeBinary(), wire);
+    EXPECT_NE(decoded.canonicalJson().find("\"dodge\""), std::string::npos);
+    MWMechanics::OblivionCombatService restored; restored.restore(decoded);
+    for (auto* owner : {&service, &restored})
+    {
+        auto next = owner->prepareMeleeReactionFrame(actor, .5f, sources);
+        ASSERT_TRUE(next); ASSERT_TRUE(owner->commitMeleeReactionFrame(*next));
+        const auto& dodge = *owner->findMeleeState(actor)->mDodge;
+        EXPECT_FLOAT_EQ(dodge.mBody.mTime, 1); // Retained until final root motion is consumed.
+        EXPECT_FLOAT_EQ(dodge.mFirstPerson->mTime, .625f);
+        EXPECT_EQ(owner->getProcessAction(actor), 9);
+    }
+    auto resumed = savedState(); service.capture(state); restored.capture(resumed);
+    EXPECT_EQ(state, resumed);
+    EXPECT_TRUE(restored.endBlockingDodge(actor));
+    EXPECT_FALSE(restored.endBlockingDodge(actor));
+    EXPECT_EQ(restored.getProcessAction(actor), -1);
+    EXPECT_TRUE(restored.beginBlocking(actor)); // Physical RMB intent can resume posture.
+    EXPECT_TRUE(restored.endBlocking(actor));
+}
+
+TEST(OblivionCombatService, BlockingDodgeCancellationInvalidatesPreparedFramesAndLegacyCapture)
+{
+    auto state = dodgeServiceState(); const auto actor = state.mPlayer.mReference;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, {}));
+    auto frame = service.prepareMeleeReactionFrame(actor, .1f, dodgeSources()); ASSERT_TRUE(frame);
+    auto old = savedState(76); const auto before = old;
+    EXPECT_THROW(service.capture(old), std::invalid_argument); EXPECT_EQ(old, before);
+    service.setProcessAction(actor, 8);
+    EXPECT_FALSE(service.findMeleeState(actor)->mDodge);
+    EXPECT_FALSE(service.commitMeleeReactionFrame(*frame));
+    EXPECT_EQ(service.getProcessAction(actor), 8);
+    service.setProcessAction(actor, 6);
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, {}));
+    service.cancelActorActions(actor);
+    EXPECT_EQ(service.findMeleeState(actor), nullptr);
+    EXPECT_EQ(service.getProcessAction(actor), -1);
+    service.setProcessAction(actor, 6);
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, {}));
+    service.setProcessKnockedState(actor, 3);
+    EXPECT_FALSE(service.findMeleeState(actor)->mDodge);
+    EXPECT_EQ(service.getProcessAction(actor), -1);
+}
+
+TEST(OblivionCombatService, BlockingDodgeRejectsMalformedOrForeignSavedOwnership)
+{
+    auto state = dodgeServiceState(); const auto actor = state.mPlayer.mReference;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    auto invalid = preparedDodge(); invalid.mBody.mRate = 0;
+    EXPECT_THROW(service.beginBlockingDodge(actor, invalid, {{25, 50, 75, 100}}, {}), std::runtime_error);
+    auto same = savedState(); service.capture(same); EXPECT_EQ(same, state);
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, {})); service.capture(state);
+    for (int fault = 0; fault < 8; ++fault)
+    {
+        auto bad = state; auto& dodge = *bad.mNativeMeleeStates.at(actor).mDodge;
+        if (fault == 0) bad.mNativeActorValues.front().mProcessAction = 6;
+        if (fault == 1) bad.mNativeActorValues.front().mProcessKnockedState = 1;
+        if (fault == 2) bad.mPhysicalActions.mPending.push_back(dodge.mActionId);
+        if (fault == 3) dodge.mActionId = bad.mPhysicalActions.mNext;
+        if (fault == 4) dodge.mBody.mGroup = "dodgeright";
+        if (fault == 5) dodge.mFirstPerson->mTime = 10;
+        if (fault == 6) bad.mNativeAnimationClocks.clear();
+        if (fault == 7) bad.mVersion = 76;
+        EXPECT_THROW(service.restore(bad), std::runtime_error) << fault;
+        auto retained = savedState(); service.capture(retained); EXPECT_EQ(retained, state);
+    }
+}
+
+TEST(OblivionCombatService, BlockingDodgePreservesAndAdvancesRetiringHeldHistory)
+{
+    auto state = dodgeServiceState(); const auto actor = state.mPlayer.mReference;
+    auto& melee = state.mNativeMeleeStates[actor];
+    melee.mFirstPerson.emplace(); state.mNativeAnimationClocks[actor] = 0;
+    ESM4::RuntimeHeldBlockSequence fading;
+    fading.mAnimationGroup = "handtohandblockidle";
+    fading.mRetirement = ESM4::RuntimeReactionRetirement{.5f, {}};
+    auto resident = fading; resident.mAnimationGroup = "onehandblockidle"; resident.mRetirement.reset();
+    melee.mHeldBlocks = melee.mFirstPerson->mHeldBlocks = {fading, resident};
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    MWMechanics::OblivionMeleeSequenceMetadata held;
+    held.mGroup = "onehandblockidle"; held.mEnd = held.mTimelineEnd = 1;
+    held.mCycle = ESM4::MeleeSequenceCycle::Loop;
+    auto firstHeld = held; firstHeld.mFirstPerson = true;
+    const std::array cancellation{held, firstHeld};
+    ASSERT_TRUE(service.beginBlockingDodge(actor, preparedDodge(), {{25, 50, 75, 100}}, cancellation));
+    const auto* started = service.findMeleeState(actor); ASSERT_NE(started, nullptr);
+    EXPECT_EQ(started->mHeldBlocks[0], fading);
+    EXPECT_EQ(started->mFirstPerson->mHeldBlocks[0], fading);
+    EXPECT_TRUE(started->mHeldBlocks[1].mInactive);
+    EXPECT_TRUE(started->mFirstPerson->mHeldBlocks[1].mInactive);
+    EXPECT_EQ(service.getProcessAction(actor), 9);
+    auto metadata = dodgeSources();
+    std::vector<MWMechanics::OblivionMeleeSequenceMetadata> sources(metadata.begin(), metadata.end());
+    held.mGroup = firstHeld.mGroup = "handtohandblockidle";
+    sources.push_back(held); sources.push_back(firstHeld);
+    auto frame = service.prepareMeleeReactionFrame(actor, .1f, sources);
+    ASSERT_TRUE(frame); ASSERT_TRUE(service.commitMeleeReactionFrame(*frame));
+    service.capture(state);
+    ASSERT_TRUE(state.mNativeMeleeStates.at(actor).mHeldBlocks[0].mRetirement->mStartClock);
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), state);
+    auto expired = service.prepareMeleeReactionFrame(actor, .6f, sources);
+    ASSERT_TRUE(expired); ASSERT_TRUE(service.commitMeleeReactionFrame(*expired));
+    EXPECT_TRUE(service.findMeleeState(actor)->mHeldBlocks[0].mInactive);
+    EXPECT_TRUE(service.findMeleeState(actor)->mFirstPerson->mHeldBlocks[0].mInactive);
+    EXPECT_TRUE(service.isActionConsumed(service.findMeleeState(actor)->mDodge->mActionId));
+}

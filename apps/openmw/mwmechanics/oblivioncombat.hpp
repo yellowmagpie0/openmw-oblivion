@@ -1141,6 +1141,12 @@ namespace MWMechanics
         void setProcessAction(const ESM::FormKey& actor, std::int16_t action);
         // Renderer validates the concrete block group before admission. Held
         // intent is transient; only the accepted native posture is persisted.
+        // Jump/ground/interface and resource admission belongs to the controller.
+        // This transaction owns the Player action and withdraws held mitigation.
+        bool beginBlockingDodge(const ESM::FormKey& actor, ESM4::RuntimeBlockingDodge dodge,
+            const ESM4::CombatMasterySettings& mastery,
+            std::span<const OblivionMeleeSequenceMetadata> heldSources);
+        bool endBlockingDodge(const ESM::FormKey& actor) noexcept;
         bool beginBlocking(const ESM::FormKey& actor);
         bool endBlocking(const ESM::FormKey& actor);
         // Resource-prepared native slot1 activation. No contact is allocated.

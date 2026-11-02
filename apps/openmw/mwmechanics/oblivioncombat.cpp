@@ -1,5 +1,7 @@
 #include <components/esm4/projectilerules.hpp>
 #include "oblivioncombat.hpp"
+
+#include <components/esm4/masteryrules.hpp>
 #include "oblivionranged.hpp"
 #include "../mwbase/world.hpp"
 #include "../mwworld/worldimp.hpp"
@@ -1476,6 +1478,8 @@ namespace MWMechanics
             throw std::invalid_argument("native counter requires a live active owner");
         const auto found = mMeleeStates.find(actor);
         const auto* previous = found == mMeleeStates.end() ? nullptr : &found->second;
+        if (previous && previous->mDodge)
+            throw std::invalid_argument("native melee strike cannot replace an owned blocking dodge");
         if (previous && ((previous->mReaction && (!counter || !views
                     || previous->mReaction->mKind != ESM4::MeleeReactionKind::BlockHit))
                 || (previous->mFirstPerson && previous->mFirstPerson->mReaction && (!counter || !views
@@ -2014,6 +2018,7 @@ namespace MWMechanics
             && std::bit_cast<std::uint32_t>(state->mFirstPerson->mClock)
                 != std::bit_cast<std::uint32_t>(data.mExpected.mFirstPerson->mClock))
             return false;
+        if (state->mDodge && !owner.isActionConsumed(state->mDodge->mActionId)) return false;
         if (state->mReaction && !owner.isActionConsumed(state->mReaction->mContactId)) return false;
         if (state->mFirstPerson && state->mFirstPerson->mReaction
             && !owner.isActionConsumed(state->mFirstPerson->mReaction->mContactId)) return false;
@@ -2056,7 +2061,7 @@ namespace MWMechanics
         const auto* state = findMeleeState(actor);
         const auto* values = findActorValues(actor);
         const auto* life = findActorLife(actor);
-        if (!state || (!state->mReaction && !state->mPassiveSequence
+        if (!state || (!state->mDodge && !state->mReaction && !state->mPassiveSequence
                 && !(state->mStrike && (state->mStrike->mPoseSnapshot
                     || state->mStrike->mKind == ESM4::MeleeStrikeKind::Counter)) && state->mRetiringSequences.empty() && !hasAdvancingHeldBlock(*state)
                 && (!state->mFirstPerson || (!state->mFirstPerson->mReaction
@@ -2334,6 +2339,18 @@ namespace MWMechanics
         };
         updateHeld(next, nextClock, false);
         if (next.mFirstPerson) updateHeld(*next.mFirstPerson, next.mFirstPerson->mClock, true);
+        if (next.mDodge)
+        {
+            const auto advance = [&](ESM4::RuntimeDodgeView& view, bool first) {
+                const auto& source = sourceFor(view.mGroup, first);
+                const double time = double(view.mTime) + (freezeClock ? 0.0 : double(duration) * view.mRate);
+                if (!std::isfinite(time) || source.mFrequency <= 0)
+                    throw std::invalid_argument("invalid blocking dodge frame");
+                view.mTime = static_cast<float>(std::min(time, double(view.mEnd)));
+            };
+            advance(next.mDodge->mBody, false);
+            if (next.mDodge->mFirstPerson) advance(*next.mDodge->mFirstPerson, true);
+        }
         next.validate();
         auto data = std::make_unique<PreparedMeleeReactionFrame::Data>();
         if (!mPreparedReleaseIdentity.mValue) mPreparedReleaseIdentity.mValue = std::make_shared<const char>();
@@ -2379,6 +2396,7 @@ namespace MWMechanics
 
     void OblivionCombatService::clearMeleeVisualHistory(const ESM::FormKey& actor) noexcept
     {
+        endBlockingDodge(actor);
         const auto found = mMeleeStates.find(actor);
         if (found != mMeleeStates.end())
         {
@@ -2576,6 +2594,7 @@ namespace MWMechanics
             clearMeleePlaybackAction(actor);
         if (melee != mMeleeStates.end() && melee->second.mReaction)
             cancelMeleeReaction(melee->second.mReaction->mContactId, actor);
+        endBlockingDodge(actor);
         mMeleeStates.erase(actor);
         clearBowPlaybackAction(actor);
         mBowStates.erase(actor);
@@ -3600,6 +3619,7 @@ namespace MWMechanics
                 appendSlot0(candidate.mRetiringSequences, slot0, *request);
                 retainSlot3(candidate, true);
                 candidate.mInput = {};
+                candidate.mDodge.reset();
                 candidate.mReaction = *request;
                 if (firstPerson)
                 {
@@ -3702,6 +3722,7 @@ namespace MWMechanics
                 candidate.mStrike.reset();
                 candidate.mPassiveSequence.reset();
                 candidate.mInput = {};
+                candidate.mDodge.reset();
                 candidate.mReaction = *request;
                 mirror.mStrike.reset();
                 mirror.mPassiveSequence.reset();
@@ -3792,6 +3813,7 @@ namespace MWMechanics
             if (candidate.mAiIntent && receivingLife && receivingLife->mPhase != ESM4::ActorLifePhase::Alive
                 && candidate.mAiIntent->mTarget == victimKey)
                 candidate.mAiIntent.reset();
+            candidate.mDodge.reset();
             candidate.mReaction = *request;
             if (!firstPerson && candidate.mFirstPerson && candidate.mFirstPerson->mReaction)
                 throw std::invalid_argument("native body replacement requires its first-person mirror contract");
@@ -5608,7 +5630,69 @@ namespace MWMechanics
             melee->second.mReaction.reset();
             melee->second.mInput = {};
         }
+        if (action != 9) endBlockingDodge(actor);
         found->second.mProcessAction = action;
+    }
+
+    bool OblivionCombatService::beginBlockingDodge(const ESM::FormKey& actor,
+        ESM4::RuntimeBlockingDodge dodge, const ESM4::CombatMasterySettings& mastery,
+        std::span<const OblivionMeleeSequenceMetadata> heldSources)
+    {
+        const auto values = mActorValues.find(actor);
+        const auto* life = findActorLife(actor);
+        const auto found = mMeleeStates.find(actor);
+        if (values == mActorValues.end() || values->second.mOwner != ESM4::ActorValueOwner::Player
+            || values->second.mProcess != ESM4::ActorValueProcess::Active
+            || values->second.mProcessAction != 6 || values->second.mProcessKnockedState != 0
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || mBowStates.contains(actor) || getProcessParalysis(actor) != 0
+            || (found != mMeleeStates.end() && (found->second.mDodge || found->second.mStrike
+                || found->second.mReaction || (found->second.mFirstPerson
+                    && (found->second.mFirstPerson->mStrike || found->second.mFirstPerson->mReaction)))))
+            return false;
+        if (!ESM4::blockingDodgeAllowed({getPlayerBaseValue(26), dodge.mNativeGroup,
+                true, false, false, true, true}, mastery)) return false;
+        dodge.mActionId = 1; // Validate resources before allocating an identity.
+        dodge.validate();
+        if (dodge.mBody.mTime != dodge.mBody.mBegin
+            || (dodge.mFirstPerson && dodge.mFirstPerson->mTime != dodge.mFirstPerson->mBegin))
+            throw std::invalid_argument("new blocking dodge must start at its first sample");
+        auto candidate = found == mMeleeStates.end() ? ESM4::RuntimeMeleeState{} : found->second;
+        cancelHeldBlockResidents(candidate, heldSources);
+        candidate.mInput = {};
+        candidate.mPassiveSequence.reset();
+        if (candidate.mFirstPerson) candidate.mFirstPerson->mPassiveSequence.reset();
+        if (dodge.mFirstPerson && !candidate.mFirstPerson)
+        {
+            candidate.mFirstPerson.emplace();
+            candidate.mFirstPerson->mClock = animationClock(actor);
+        }
+        candidate.mDodge = std::move(dodge);
+        candidate.validate();
+        decltype(mMeleeStates) staged;
+        staged.emplace(actor, std::move(candidate));
+        auto node = staged.extract(staged.begin());
+        decltype(mAnimationClocks) clocks;
+        if (!mAnimationClocks.contains(actor)) clocks.emplace(actor, 0.f);
+        const auto id = allocateAction(actor);
+        consumeAction(id, actor); // No contact, pending effect or RNG draw.
+        node.mapped().mDodge->mActionId = id;
+        if (found == mMeleeStates.end()) mMeleeStates.insert(std::move(node));
+        else std::swap(found->second, node.mapped());
+        if (!clocks.empty()) mAnimationClocks.insert(clocks.extract(clocks.begin()));
+        values->second.mProcessAction = 9;
+        return true;
+    }
+
+    bool OblivionCombatService::endBlockingDodge(const ESM::FormKey& actor) noexcept
+    {
+        const auto found = mMeleeStates.find(actor);
+        if (found == mMeleeStates.end() || !found->second.mDodge) return false;
+        found->second.mDodge.reset();
+        const auto values = mActorValues.find(actor);
+        if (values != mActorValues.end() && values->second.mProcessAction == 9)
+            values->second.mProcessAction = -1;
+        return true;
     }
 
     bool OblivionCombatService::beginBlocking(const ESM::FormKey& actor)
@@ -5930,6 +6014,7 @@ namespace MWMechanics
         if (found->second.mProcess == ESM4::ActorValueProcess::Low)
             return; // Original Low/MiddleLow virtual68F970 is a no-op.
         mPreparedGetUpIdentity.mValue.reset();
+        if (state != 0) endBlockingDodge(actor);
         found->second.mProcessKnockedState = state;
         if (state == 0)
             if (const auto graph = mGetUpPlayback.find(actor); graph != mGetUpPlayback.end())
@@ -7132,6 +7217,9 @@ namespace MWMechanics
         }
         auto actions = mActions.capture();
         auto actionOwners = mActionOwners;
+        if (state.mVersion < 77 && std::any_of(mMeleeStates.begin(), mMeleeStates.end(),
+                [](const auto& entry) { return entry.second.mDodge.has_value(); }))
+            throw std::invalid_argument("blocking dodge requires an Oblivion v77+ save");
         auto meleeStates = mMeleeStates;
         auto bowStates = mBowStates;
         auto animationClocks = mAnimationClocks;

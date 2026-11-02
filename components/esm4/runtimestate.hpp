@@ -59,7 +59,8 @@ namespace ESM4
     // v71 retains selected GetUp IDLE resource ownership before sequence start.
     // v74 retains pending GetUp request sources and outstanding load ownership.
     // v76 retains the Use release required after Player equipment cancellation.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 76;
+    // v77 retains blocking-dodge action ownership and both playback samples.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 77;
 
     struct RuntimeContentIdentity
     {
@@ -760,6 +761,26 @@ namespace ESM4
         void validate() const;
         friend bool operator==(const RuntimeFirstPersonMeleeState&, const RuntimeFirstPersonMeleeState&) = default;
     };
+    // Native action9 owns locomotion without a damage/contact window. Times
+    // are renderer-track seconds; both views resume from their saved sample.
+    struct RuntimeDodgeView
+    {
+        std::string mGroup;
+        float mTime = 0, mBegin = 0, mEnd = 0, mRate = 1;
+        void validate(std::uint16_t group) const;
+        friend bool operator==(const RuntimeDodgeView&, const RuntimeDodgeView&) = default;
+    };
+
+    struct RuntimeBlockingDodge
+    {
+        std::uint64_t mActionId = 0;
+        std::uint16_t mNativeGroup = 11;
+        RuntimeDodgeView mBody;
+        std::optional<RuntimeDodgeView> mFirstPerson;
+        void validate() const;
+        friend bool operator==(const RuntimeBlockingDodge&, const RuntimeBlockingDodge&) = default;
+    };
+
     struct RuntimeMeleeState
     {
         RuntimeMeleeInput mInput;
@@ -775,6 +796,8 @@ namespace ESM4
         std::optional<RuntimeFirstPersonMeleeState> mFirstPerson = std::nullopt;
         std::optional<RuntimePassiveMeleeSequence> mPassiveSequence = std::nullopt;
         std::vector<RuntimeHeldBlockSequence> mHeldBlocks = {};
+        // v77: input-selected blocking dodge, separate from a damage strike.
+        std::optional<RuntimeBlockingDodge> mDodge;
         void validate() const;
         friend bool operator==(const RuntimeMeleeState&, const RuntimeMeleeState&) = default;
     };

@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import unittest
 
-from scripts.tes4_m15_fixture_preflight import approach_witness, forward_source_stage, pending_npc_power_source
+from scripts.tes4_m15_fixture_preflight import blocking_dodge_source, approach_witness, forward_source_stage, pending_npc_power_source
 from scripts.tes4_m15_fixture_preflight import applied_side_power_source, right_power_spacing_setup
 from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, applied_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
@@ -12,6 +12,25 @@ from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, valid
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_dodge_source_requires_actual_consumed_in_flight_action(self):
+        from scripts.tests.test_tes4_runtime_state import Tes4RuntimeStateTests
+        state = Tes4RuntimeStateTests().dodge_state()
+        # The codec fixture also carries unrelated old pending actions; a
+        # normal-input continuation course must start with a quiet ledger.
+        state['physical_actions']['pending'] = []
+        state['physical_action_owners'] = []
+        self.assertEqual(blocking_dodge_source(state)['group'], 11)
+        for fault in range(6):
+            broken = copy.deepcopy(state); row = broken['native_melee_states'][0]
+            if fault == 0: row.pop('dodge')
+            if fault == 1: row['dodge']['body']['time'] = row['dodge']['body']['begin']
+            if fault == 2: row['dodge']['body']['time'] = row['dodge']['body']['end']
+            if fault == 3: row['dodge']['first_person'] = None
+            if fault == 4: broken['physical_actions']['pending'] = [row['dodge']['action']]
+            if fault == 5: next(v for v in broken['native_actor_values']
+                if v['actor'] == broken['player']['reference'])['process_action'] = 6
+            with self.subTest(fault=fault), self.assertRaises(ValueError): blocking_dodge_source(broken)
+
     def test_recoil_wait_guard_accepts_recovery_and_preserves_manifest(self):
         manifest = dict(recoil_contact_waits=[dict(actor='player', cause=3)], actions=[
             dict(type='wait_log', pattern='M15 reaction recovered: actor=player cause=3 action=-1'),

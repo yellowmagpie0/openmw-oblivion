@@ -487,3 +487,21 @@ def recovery_query_setup(manifest, recipe):
         timeout_seconds=600, abort_on_failure=True))
     result['expected_log'].append(pattern)
     return result
+
+
+def blocking_dodge_source(state):
+    """Require a consumed Player dodge in flight, never an injected pending hit."""
+    player = state['player']['reference']
+    rows = [row for row in state['native_melee_states'] if row['actor'] == player]
+    values = next(row for row in state['native_actor_values'] if row['actor'] == player)
+    if len(rows) != 1 or not rows[0].get('dodge'):
+        raise ValueError('Dodge continuation requires an actual active Player source')
+    dodge = rows[0]['dodge']
+    if (values['process_action'] != 9 or values['process_knocked_state'] != 0
+            or state['physical_actions']['pending'] or state['physical_action_owners']
+            or not 0 < dodge['action'] < state['physical_actions']['next']
+            or not dodge['body']['begin'] < dodge['body']['time'] < dodge['body']['end']
+            or not dodge['first_person'] or rows[0]['strike'] or rows[0]['reaction']):
+        raise ValueError('Dodge source lacks consumed action9 and in-flight paired playback')
+    return dict(action=dodge['action'], group=dodge['group'],
+                body_time=dodge['body']['time'], first_person_time=dodge['first_person']['time'])

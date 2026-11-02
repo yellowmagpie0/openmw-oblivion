@@ -2549,6 +2549,81 @@ class Tes4RuntimeStateTests(unittest.TestCase):
                 "animation_time": .5, "contact_committed": False}}]
         return state
 
+    def dodge_state(self):
+        old = self.first_person_strike_state()
+        payload = state_io.encode_payload(old)
+        body = struct.pack("<4sII", b"VERS", 4, old["schema_version"]) + struct.pack("<4sI", b"DATA", len(payload)) + payload
+        with tempfile.TemporaryDirectory() as directory:
+            source, target = Path(directory) / "old.omwsave", Path(directory) / "new.omwsave"
+            source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
+            state_io.write_save(source, target, old)
+            state = state_io.load_save(target)
+        melee = state["native_melee_states"][0]
+        for view in (melee, melee["first_person"]):
+            view["strike"] = None
+        identity = state["physical_actions"]["next"]
+        state["physical_actions"]["next"] += 1
+        melee["dodge"] = {"action": identity, "group": 11,
+            "body": {"group": "dodgeforward", "time": .25, "begin": 0., "end": 1., "rate": 1.5},
+            "first_person": {"group": "dodgeforward", "time": .125, "begin": 0., "end": .75, "rate": .75}}
+        next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"]).update(process_action=9, process_knocked_state=0)
+        return state
+
+    def test_dodge77_preserves_both_samples_and_directions_without_legacy_invention(self):
+        for group, name in enumerate(("dodgeforward", "dodgeback", "dodgeleft", "dodgeright"), 11):
+            state = self.dodge_state()
+            dodge = state["native_melee_states"][0]["dodge"]
+            dodge["group"] = group
+            for view in (dodge["body"], dodge["first_person"]): view["group"] = name
+            payload = state_io.encode_payload(state)
+            self.assertEqual(state_io.decode_payload(payload), state)
+            self.assertEqual(state_io.encode_payload(state_io.decode_payload(payload)), payload)
+        state = self.dodge_state()
+        melee = state["native_melee_states"][0]
+        melee.pop("dodge")
+        next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])["process_action"] = -1
+        state["schema_version"] = 76
+        self.assertNotIn("dodge", state_io.decode_payload(state_io.encode_payload(state))["native_melee_states"][0])
+
+    def test_dodge77_rejects_lost_owner_replay_bad_views_and_legacy_payload(self):
+        for fault in range(13):
+            with self.subTest(fault=fault):
+                state = self.dodge_state(); melee = state["native_melee_states"][0]; dodge = melee["dodge"]
+                values = next(x for x in state["native_actor_values"] if x["actor"] == melee["actor"])
+                if fault == 0: values["process_action"] = 6
+                if fault == 1: values["process_knocked_state"] = 1
+                if fault == 2: state["physical_actions"]["pending"].append(dodge["action"])
+                if fault == 3: dodge["action"] = state["physical_actions"]["next"]
+                if fault == 4: dodge["group"] = 10
+                if fault == 5: dodge["body"]["group"] = "dodgeright"
+                if fault == 6: dodge["body"]["rate"] = 0
+                if fault == 7: dodge["first_person"]["time"] = 1
+                if fault == 8: dodge["body"]["end"] = 0
+                if fault == 9: dodge["first_person"]["rate"] = float("nan")
+                if fault == 10: state["native_animation_clocks"] = []
+                if fault == 11: state["schema_version"] = 76
+                if fault == 12: melee["dodge"] = None
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_dodge77_retains_fading_block_history_but_rejects_resident_block(self):
+        state = self.dodge_state()
+        melee = state["native_melee_states"][0]
+        fading = dict(animation_group="handtohandblockidle", animation_time=0.,
+            sequence_timing=dict(easing=False, offset=None, ease_start=None, last_input=None,
+                ease_end=0., weighted_time=0., output_time=0.),
+            retirement=dict(duration=.5, start_clock=None), inactive=False, pose_snapshot=None)
+        for view in (melee, melee["first_person"]):
+            view["held_blocks"] = [copy.deepcopy(fading)]
+        wire = state_io.encode_payload(state)
+        self.assertEqual(state_io.decode_payload(wire), state)
+        for first in (False, True):
+            broken = copy.deepcopy(state)
+            view = broken["native_melee_states"][0]
+            if first: view = view["first_person"]
+            view["held_blocks"][0]["retirement"] = None
+            with self.subTest(first=first), self.assertRaisesRegex(state_io.RuntimeStateError, "Conflicting"):
+                state_io.encode_payload(broken)
+
     def test_melee_v76_release_requirement_roundtrip_and_legacy_promotion(self):
         old = self.melee_state()
         entry = old["native_melee_states"][0]
@@ -2561,7 +2636,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             source.write_bytes(struct.pack("<4sIII", b"T4ST", len(body), 0, 0) + body)
             state_io.write_save(source, target, old)
             promoted = state_io.load_save(target)
-        self.assertEqual(promoted["schema_version"], 76)
+        self.assertEqual(promoted["schema_version"], state_io.CURRENT_VERSION)
         control = promoted["native_melee_states"][0]["input"]
         self.assertFalse(control["require_release"])
         control["require_release"] = True
