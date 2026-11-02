@@ -44,5 +44,79 @@
     "base_default": 0,
     "evidence": "build/oblivion-compat/m15/S4/creature-disease-lvsp-audit-01/m15-audit.json"
   },
-  "acceptance_evidence": "build/oblivion-compat/m15/S4/creature-disease-work-01/checkpoint-verification.json"
+  "acceptance_evidence": "build/oblivion-compat/m15/S4/creature-disease-work-01/checkpoint-verification.json",
+  "third_person_gamepad": {
+    "status": "Scoped normal/SAN gameplay and exact active-reaction continuation verified; SAN fresh raw scenario retains one separately reviewed fixture deadline failure. Not a clean F8 campaign or fullS4.",
+    "requirement": "Section8 C1/I4 pairwise Creature xthird-person/gamepad block/contact/release/recovery and exact active BlockHit/Recoil restart.",
+    "implementation": "Shared fixture waits for SDL open before pressure and rendered visibility before the initial short POV press; observes actual focus-ray reach minus camera boom; copies executed gamepad reference geometry suffix for fresh. Strict existing inactive-body endpoint policy reused; no engine/plugin/stat/physics approximation or camera setter.",
+    "evidence": {
+      "checkpoint": "build/oblivion-compat/m15/S4/creature-disease-work-01/third-gamepad-checkpoint-verification.json",
+      "checkpoint_sha256": "50ecbfcfb291d287ccbc6a1d117dbd951ed854a740f8cbcc7ae917e7f46621ab",
+      "pairs": 28,
+      "process_epochs": 4,
+      "reviewed_captures": 28,
+      "strict_endpoint_groups_per_pair": 26,
+      "python_cases": 528,
+      "python_receipt": "build/oblivion-compat/m15/S4/creature-third-gamepad-python-04/verification.json",
+      "block_pcm_clusters_per_build": {
+        "reference": 1,
+        "fresh": 0
+      }
+    },
+    "runs": {
+      "normal": {
+        "reference": "creature-disease-third-gamepad-normal-01",
+        "fresh": "creature-disease-third-gamepad-normal-01-resume03"
+      },
+      "sanitize": {
+        "reference": "creature-disease-third-gamepad-sanitize-02",
+        "fresh": "creature-disease-third-gamepad-sanitize-02-resume"
+      }
+    },
+    "fixture_correction": {
+      "review": "build/oblivion-compat/m15/S4/creature-disease-work-01/third-gamepad-sanitize-fresh-fixture-review.json",
+      "raw_scenario_passed": false,
+      "reason": "Only60s table-clearance wait failed; actual clearance precedes range miss and every other action/required log passes. Retained original exact semantic/state/visual/PCM evidence reinspected. Future SAN deadline240s and fail-fast preflight changes only that wait; normal deadline60s retained.",
+      "future_preflight": "build/oblivion-compat/m15/S4/combined-mastery-work-01/creature-disease-third-gamepad-sanitize-fresh-preflight-04.json"
+    },
+    "reuse": "C++/game/profile/fixture/native/typed dependencies unchanged from7aa60301d5, so original normal/SAN integration gates reused with their provenance; no C++ rebuild.528 Python covers public helpers. Later packaging/receipt/checker deadline admission changes are exercised by focused static/preflight and retained-raw reinspection.",
+    "shared_patch": {
+      "path": "scripts/data/oblivion_compat/m15_creature_gamepad_shared_course.patch",
+      "sha256": "1c0294003f3634e2d628952feaa9d08ac2f3b84623610e01abac274cd01af61c",
+      "application": "Zero-context unified diff avoids whitespace-only context lines in the tracked patch. Hash-guard original files, then patch -p1; git apply requires --unidiff-zero.",
+      "sources": [
+        {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py",
+          "original_archive": "build/oblivion-compat/m15/S4/creature-disease-work-01/shared-run-before-third-gamepad.py",
+          "before_sha256": "82e031410bd3e2afe993d180831165c4aa2aa338d5238edcc254bb866d8d7e19",
+          "after_sha256": "a19c8328d9213eb3c9caec8946171e31ed07e3b59d1401e89deea8adf8b33d97"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py",
+          "original_archive": "build/oblivion-compat/m15/S4/creature-disease-work-01/shared-wrapper-before-third-gamepad.py",
+          "before_sha256": "470a6282b99411642d95a3cd2aedfc272d3e10813ead3e009e92e17039c0e97a",
+          "after_sha256": "25197a8d0d2abddbef4d55b15417ec2f4b732ca2eb07b09d63dd3b34f9e1f8b7"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py",
+          "original_archive": "build/oblivion-compat/m15/S4/creature-disease-work-01/shared-inspector-before-third-gamepad.py",
+          "before_sha256": "77149322a244a028f764152c300d0c92e231d3cf80e3a99342542eafc47e8695",
+          "after_sha256": "b53dc7f81b60a9e510af39ef43d7fb0b3f748f14f5f5132f2c6a10ce0d490bd6"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py",
+          "original_archive": "build/oblivion-compat/m15/S4/creature-disease-work-01/shared-pair-before-third-gamepad.py",
+          "before_sha256": "25766c0ae9f59fc878dc89ca286714f55b4f18cb823aefe4a395d9cf4c836707",
+          "after_sha256": "45d1e0014d4ca5a9bd807d242b3aafebb902fe3b18c545a989c986888b1e884e"
+        },
+        {
+          "path": "build/oblivion-compat/m15/S4/creature-disease-work-01/inspect-disease.py",
+          "original_archive": "build/oblivion-compat/m15/S4/creature-disease-work-01/shared-disease-inspector-before-third-gamepad.py",
+          "before_sha256": "f3ae4cc44142b4f23572bf8efbdb9368e87a6c15b3ae1198a2ed10c1f0a445ee",
+          "after_sha256": "12c7f9f6dff0356c0b7b6bb9a83d4fe7634da03ffde6d968f2808168c67deeb0"
+        }
+      ]
+    },
+    "remaining": "Finite S4 domain/query/feedback evidence reconciliation, E6 listening tool limitation, required frozen FPS/seed and independent clean/final campaigns. No fullV6/T7/F8 closure."
+  }
 }

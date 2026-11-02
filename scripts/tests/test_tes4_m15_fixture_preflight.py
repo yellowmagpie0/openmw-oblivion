@@ -10,9 +10,157 @@ from scripts.tes4_m15_fixture_preflight import pending_backward_overlap_source, 
 from scripts.tes4_m15_fixture_preflight import pending_physical_backward_interruption_source
 from scripts.tes4_m15_fixture_preflight import joined_power_capture_setup, validate_recoil_contact_waits, standing_capture_setup, recovery_query_setup
 from scripts.tes4_m15_fixture_preflight import validate_gamepad_stick_inputs, regenerated_fatigue_endpoint, is_current_fixture_schema, creature_disease_course_state
+from scripts.tes4_m15_fixture_preflight import creature_gamepad_recovery_setup, creature_gamepad_setup_only
+from scripts.tes4_m15_fixture_preflight import gamepad_controller_ready_actions
+from scripts.tes4_m15_fixture_preflight import creature_gamepad_reference_tail
+from scripts.tes4_m15_fixture_preflight import gamepad_view_ready_actions
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_gamepad_view_waits_for_rendered_world_and_aborts_failed_prerequisite(self):
+        source = [dict(type='gamepad_button', value='rightstick', hold_seconds=.08),
+                  dict(type='wait_log', pattern='M15 course view: thirdPerson=true')]
+        before = copy.deepcopy(source)
+        result = gamepad_view_ready_actions(source)
+        self.assertEqual(source, before)
+        self.assertEqual(result[1], source[0])
+        self.assertTrue(result[0]['after_start'])
+        self.assertIn('visible=true', result[0]['pattern'])
+        self.assertTrue(result[2]['abort_on_failure'])
+        self.assertEqual(gamepad_view_ready_actions(result), result)
+        # An actual saved third-person continuation must never toggle again.
+        fresh = gamepad_view_ready_actions(source[1:])
+        self.assertEqual(len(fresh), 1)
+        self.assertTrue(fresh[0]['abort_on_failure'])
+        self.assertEqual(gamepad_view_ready_actions([]), [])
+
+    def gamepad_tail_manifests(self):
+        fresh = dict(virtual_gamepad=True, files=[dict(path='observer.lua', content='same actor/geometry')],
+            actions=[dict(type='gamepad_axis', axis='left_trigger', value=0),
+                     dict(type='screenshot', name='combined-target-hit.png')]
+                    + [dict(type='key_held', value='F5') for _ in range(5)])
+        reference = copy.deepcopy(fresh)
+        reference['actions'][2:2] = [dict(type='gamepad_axis', axis='right_x', value=-.24),
+            dict(type='wait_log', pattern='M15 course geometry:.*farFacing=true', after_start=True),
+            dict(type='gamepad_axis', axis='right_x', value=0),
+            dict(type='wait_log', pattern='M15 course geometry:.*nearWall=true', after_start=True)]
+        return fresh, reference
+
+    def test_gamepad_continuation_reuses_reference_heading_without_replaying_recovery(self):
+        fresh, reference = self.gamepad_tail_manifests(); before = copy.deepcopy((fresh, reference))
+        result = creature_gamepad_reference_tail(fresh, reference)
+        self.assertEqual((fresh, reference), before)
+        self.assertEqual(result['actions'][:2], fresh['actions'][:2])
+        self.assertEqual(result['actions'][2:], reference['actions'][2:])
+        self.assertEqual(sum(a.get('value') == 'F5' for a in result['actions']), 5)
+        self.assertEqual(creature_gamepad_reference_tail(result, reference), result)
+
+    def test_gamepad_reference_tail_rejects_mismatched_or_unguarded_sources(self):
+        for fault in range(5):
+            fresh, reference = self.gamepad_tail_manifests()
+            if fault == 0: reference['virtual_gamepad'] = False
+            if fault == 1: reference['files'][0]['content'] = 'different actor/geometry'
+            if fault == 2: reference['actions'].pop()
+            if fault == 3: reference['actions'].insert(2, dict(type='mouse_move', x=1600, y=0))
+            if fault == 4:
+                reference['actions'] = [a for a in reference['actions'] if 'nearWall' not in a.get('pattern', '')]
+            with self.subTest(fault=fault), self.assertRaises(ValueError):
+                creature_gamepad_reference_tail(fresh, reference)
+
+    def test_held_gamepad_waits_for_open_before_pressure_and_world_load(self):
+        source = [dict(type='gamepad_axis', axis='left_trigger', value=1),
+                  dict(type='wait_log', pattern='Applied TES4 runtime state:')]
+        original = copy.deepcopy(source)
+        result = gamepad_controller_ready_actions(source)
+        self.assertEqual(source, original)
+        self.assertEqual(result[1:], source)
+        self.assertEqual(result[0]['pattern'], 'Detected game controller: Xbox 360 Controller')
+        self.assertTrue(result[0]['abort_on_failure'])
+        self.assertEqual(gamepad_controller_ready_actions(result), result)
+
+    def test_ready_gamepad_and_keyboard_courses_keep_their_controls(self):
+        ready = [dict(type='wait_log', pattern='Detected game controller: Xbox 360 Controller'),
+                 dict(type='gamepad_button', value='rightstick')]
+        keyboard = [dict(type='key_held', value='F5')]
+        self.assertEqual(gamepad_controller_ready_actions(ready), ready)
+        self.assertEqual(gamepad_controller_ready_actions(keyboard), keyboard)
+
+    def creature_recovery_manifest(self):
+        return dict(name='Creature course', virtual_gamepad=True, expected_log=['contact'], forbidden_log=[],
+            files=[dict(path='scripts/m15_course_observer.lua', content='''
+local activationDistance=(t+util.vector3(0,0,40)-camera.getPosition()):length()
+local viewEnd=camera.getViewTransform():inverse():apply(util.vector3(0,0,-150))
+local faced=nearby.castRenderingRay(camera.getPosition(),viewEnd,{{ignore=self}})
+return activationDistance
+''')], actions=[dict(type='mouse_move', x=0, y=-1760),
+                dict(type='wait_log', pattern='M15 course activation preflight: reachable=true'),
+                dict(type='gamepad_button', value='a'), dict(type='mouse_move', x=0, y=1760)])
+
+    def test_creature_gamepad_aim_is_observed_and_sticks_release_without_mutation(self):
+        manifest = self.creature_recovery_manifest(); original = copy.deepcopy(manifest)
+        result = creature_gamepad_recovery_setup(manifest, baseline_pitch=.9, recovery_look=-1760)
+        self.assertEqual(manifest, original)
+        self.assertEqual(validate_gamepad_stick_inputs(result, .1), 2)
+        sticks = [a['value'] for a in result['actions'] if a['type'] == 'gamepad_axis']
+        self.assertEqual(sticks, [-.22, 0, .22, 0])
+        waits = [a for a in result['actions'] if a['type'] == 'wait_log' and a.get('after_start')]
+        self.assertEqual(len(waits), 2)
+        self.assertIn('M15 Creature gamepad aim: target=true', [a['pattern'] for a in waits])
+        prefix = creature_gamepad_setup_only(result)
+        self.assertFalse(any(a['type'] == 'gamepad_button' for a in prefix['actions']))
+        self.assertIn('M15 melee hit committed:', prefix['forbidden_log'])
+        self.assertNotIn('contact', prefix['expected_log'])
+
+    def test_creature_gamepad_focus_uses_production_camera_boom_distance(self):
+        result = creature_gamepad_recovery_setup(self.creature_recovery_manifest(),
+            baseline_pitch=.9, recovery_look=-1760)
+        observer = result['files'][0]['content'].replace('{{', '{').replace('}}', '}')
+        setup = '''
+local boom,hitDistance=0,0
+local function vector(z) return setmetatable({z=z},{__sub=function(a,b) return vector(a.z-b.z) end,
+ __index={length=function(a) return math.abs(a.z) end}}) end
+target={};self={}
+camera={MODE={ThirdPerson=2},getMode=function() return boom>0 and 2 or 1 end,
+ getThirdPersonDistance=function() return boom end,getPitch=function() return .9 end,
+ getPosition=function() return vector(0) end,
+ getViewTransform=function() return {inverse=function() return {apply=function(_,v) return v end} end} end}
+util={vector3=function(_,_,z) return vector(z) end}
+nearby={castRenderingRay=function(_,to,options)
+ assert(options.ignore==self and -to.z==150+boom)
+ return {hitObject=hitDistance<=150+boom and target or nil,hitPos=vector(-hitDistance)} end}
+local function inspect()
+'''
+        # Lua local function recursion needs its name in scope before the initializer.
+        setup = setup.replace('local function vector(z)', 'function vector(z)')
+        checks = '''
+end
+for _,offset in ipairs({0,240}) do
+ boom=offset
+ hitDistance=offset+149;assert(inspect()==149)
+ hitDistance=offset+150;assert(inspect()==150)
+ hitDistance=offset+151;assert(inspect()==math.huge)
+end
+'''
+        run = subprocess.run(['luajit', '-'], input=setup + observer + checks,
+                             text=True, capture_output=True)
+        self.assertEqual(run.returncode, 0, run.stderr)
+        self.assertEqual(run.stdout.count('aim: target=true'), 2)
+        self.assertEqual(run.stdout.count('aim: target=false'), 4)
+
+    def test_creature_gamepad_preflight_rejects_unknown_controls_or_partial_aim(self):
+        for pitch in [float('nan'), 2, True]:
+            with self.assertRaises(ValueError):
+                creature_gamepad_recovery_setup(self.creature_recovery_manifest(),
+                    baseline_pitch=pitch, recovery_look=-1760)
+        for fault in range(3):
+            manifest = self.creature_recovery_manifest()
+            if fault == 0: manifest['virtual_gamepad'] = False
+            if fault == 1: manifest['actions'].pop()
+            if fault == 2: manifest['files'][0]['content'] = ''
+            with self.assertRaises(ValueError):
+                creature_gamepad_recovery_setup(manifest, baseline_pitch=.9, recovery_look=-1760)
+        with self.assertRaises(ValueError): creature_gamepad_setup_only(dict(actions=[]))
+
     def test_disease_course_distinguishes_cold_selected_none_and_applied_owners(self):
         player, actor, spell = 'dynamic:player:0000000000000001', 'content:test.esp:000802', 'content:oblivion.esm:098416'
         row = dict(actor=player, owner=0, passive_abilities=[], values=[[40, 0, 0, 0] for _ in range(72)])

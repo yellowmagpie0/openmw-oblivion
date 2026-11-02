@@ -9,6 +9,150 @@ import re
 import struct
 
 
+def gamepad_controller_ready_actions(actions):
+    """Do not press a virtual axis/button before SDL opens the controller.
+
+    The existing detection acknowledgement follows controllerAdded/Open. This
+    still permits a held input throughout world loading, without priming an
+    axis before SDL has sampled its initial state. Existing ready courses keep
+    their action sequence; applying the adapter twice is harmless.
+    """
+    result = copy.deepcopy(actions)
+    ready = 'Detected game controller: Xbox 360 Controller'
+    for index, action in enumerate(result):
+        if action['type'] == 'wait_log' and action.get('pattern') == ready:
+            break
+        if action['type'] in ('gamepad_axis', 'gamepad_button'):
+            result.insert(index, dict(type='wait_log', pattern=ready, timeout_seconds=600,
+                                      abort_on_failure=True))
+            break
+    return result
+
+
+def gamepad_view_ready_actions(actions):
+    """Wait for a rendered world before the initial short POV press.
+
+    A fixed post-load sleep can expire during the first long camera frame.
+    Keep the normal input unchanged and abort if the required view is absent.
+    Fresh continuations already restore their view and need no toggle.
+    """
+    result = copy.deepcopy(actions)
+    for index, action in enumerate(result):
+        if (action['type'] == 'wait_log'
+                and action.get('pattern') == 'M15 course view: thirdPerson=true'):
+            action['abort_on_failure'] = True
+            if index and result[index - 1].get('type') == 'gamepad_button' \
+                    and result[index - 1].get('value') == 'rightstick':
+                ready = dict(type='wait_log', pattern='M15 course camera preflight: visible=true',
+                             after_start=True, timeout_seconds=120, abort_on_failure=True)
+                if index < 2 or result[index - 2] != ready:
+                    result.insert(index - 1, ready)
+            break
+    return result
+
+
+def creature_gamepad_reference_tail(manifest, reference):
+    """Reuse the executed game's heading/geometry policy after the return hit.
+
+    The older recovery template's fixed mouse yaw is unsuitable for a gamepad.
+    Require the same complete authored files, keep the recovery prefix and save
+    count, and copy the already translated/guarded reference suffix verbatim.
+    """
+    if not manifest.get('virtual_gamepad') or not reference.get('virtual_gamepad'):
+        raise ValueError('Creature reference geometry requires gamepad provenance')
+    files = lambda spec: {f['path']: f for f in spec['files']}
+    if files(manifest) != files(reference):
+        raise ValueError('Reference geometry requires identical observer/configuration files')
+    def boundary(spec):
+        matches = [i + 1 for i, a in enumerate(spec['actions'])
+                   if a['type'] == 'screenshot' and a.get('name') == 'combined-target-hit.png']
+        if len(matches) != 1:
+            raise ValueError('Reference geometry requires one return-hit boundary')
+        return matches[0]
+    result = copy.deepcopy(manifest)
+    tail = reference['actions'][boundary(reference):]
+    patterns = [a.get('pattern', '') for a in tail if a['type'] == 'wait_log']
+    if not all(any(value in p for p in patterns) for value in ('farFacing=true', 'nearWall=true')):
+        raise ValueError('Reference geometry lacks required range/wall acknowledgements')
+    if any(a['type'] == 'mouse_move' or (a['type'] in ('key', 'key_down', 'key_up', 'key_held')
+            and a.get('value') != 'F5') for a in tail):
+        raise ValueError('Reference geometry must already use gamepad gameplay controls')
+    result['actions'] = result['actions'][:boundary(result)] + copy.deepcopy(tail)
+    saves = lambda spec: sum(a.get('value') == 'F5' for a in spec['actions'])
+    if saves(result) != saves(manifest):
+        raise ValueError('Reference geometry changed the continuation save protocol')
+    return result
+
+
+def creature_gamepad_recovery_setup(manifest, *, baseline_pitch, recovery_look):
+    """Adapt the existing authored Creature recovery before gamepad conversion.
+
+    Only normal stick input moves the camera. Read-only rendering rays gate
+    aiming; focus distance follows World::getFocusObject's camera-boom offset.
+    Existing keyboard/mouse profiles and gameplay assertions stay untouched.
+    """
+    if (type(baseline_pitch) not in (int, float) or not math.isfinite(baseline_pitch)
+            or not -1.5 < baseline_pitch < 1.5
+            or type(recovery_look) is not int or recovery_look >= 0
+            or not manifest.get('virtual_gamepad')):
+        raise ValueError('Creature gamepad recovery requires explicit camera/input provenance')
+    result = copy.deepcopy(manifest)
+    observer = next(f for f in result['files'] if f['path'].endswith('m15_course_observer.lua'))
+    replacements = {
+        'local activationDistance=(t+util.vector3(0,0,40)-camera.getPosition()):length()':
+            'local activationDistance=math.huge',
+        'local viewEnd=camera.getViewTransform():inverse():apply(util.vector3(0,0,-150))':
+            'local focusBoom=camera.getMode()==camera.MODE.ThirdPerson and camera.getThirdPersonDistance() or 0\n'
+            '   local viewEnd=camera.getViewTransform():inverse():apply(util.vector3(0,0,-(150+focusBoom)))',
+        'local faced=nearby.castRenderingRay(camera.getPosition(),viewEnd,{{ignore=self}})':
+            'local faced=nearby.castRenderingRay(camera.getPosition(),viewEnd,{{ignore=self}})\n'
+            '   if faced.hitObject==target then activationDistance=(faced.hitPos-camera.getPosition()):length()-focusBoom end\n'
+            "   print('M15 Creature gamepad aim: target=' .. tostring(faced.hitObject==target and activationDistance>=0 and activationDistance<150))\n"
+            "   print('M15 Creature gamepad pitch: baseline=' .. tostring(camera.getPitch()>=" + repr(baseline_pitch) + '))',
+    }
+    for before, after in replacements.items():
+        if observer['content'].count(before) != 1:
+            raise ValueError('Creature gamepad observer lacks a unique focus prerequisite')
+        observer['content'] = observer['content'].replace(before, after)
+    counts = {recovery_look: 0, -recovery_look: 0}
+    actions = []
+    for action in result['actions']:
+        if action['type'] == 'mouse_move' and action.get('y') in counts:
+            look = action['y']
+            counts[look] += 1
+            actions.extend([
+                dict(type='gamepad_axis', axis='right_y', value=-.22 if look == recovery_look else .22),
+                dict(type='wait_log', pattern=('M15 Creature gamepad aim: target=true' if look == recovery_look
+                     else 'M15 Creature gamepad pitch: baseline=true'), after_start=True, timeout_seconds=60),
+                dict(type='gamepad_axis', axis='right_y', value=0),
+            ])
+        else:
+            actions.append(action)
+    if list(counts.values()) != [1, 1]:
+        raise ValueError('Creature gamepad recovery requires one aim/restore pair')
+    result['actions'] = actions
+    return result
+
+
+def creature_gamepad_setup_only(manifest):
+    """Run the same course's approach/held-block prefix, before activation."""
+    result = copy.deepcopy(manifest)
+    starts = [i for i, a in enumerate(result['actions'])
+              if a['type'] == 'gamepad_button' and a.get('value') == 'a']
+    if not starts or not any(a['type'] == 'wait_log'
+            and a.get('pattern') == 'M15 course activation preflight: reachable=true'
+            for a in result['actions'][:starts[0]]):
+        raise ValueError('Creature setup prefix needs a guarded activation boundary')
+    result['actions'] = result['actions'][:starts[0]] + [
+        dict(type='screenshot', name='creature-third-gamepad-setup.png', minimum_entropy=.03)]
+    result['expected_log'] = ['Applied TES4 runtime state:', 'M15 course view: thirdPerson=true',
+        'Detected game controller: Xbox 360 Controller', 'M15 course camera preflight: visible=true',
+        'M15 course activation preflight: reachable=true', 'M15 block begin:']
+    result['forbidden_log'] += ['M15 melee hit committed:', 'M7 ObScript: startcombat actor=']
+    result['name'] += '; setup prefix only, no contact acceptance'
+    return result
+
+
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
