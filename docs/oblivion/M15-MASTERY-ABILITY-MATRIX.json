@@ -1603,8 +1603,8 @@
         "active controller action and interruption state"
       ],
       "implementation_owner": "S2/S4 narrow attack posture prerequisite",
-      "rule_implementation": "airborneMeleeStartAllowed; heldPowerAttackAllowed; nativeAttackAirborne; original entry guards verified; action/restart pending",
-      "verification_status": "pending",
+      "rule_implementation": "airborneMeleeStartAllowed; heldPowerAttackAllowed; nativeAttackAirborne; stock normal-input admission/held-power and owned active save continuation verified in scoped normal/SAN courses",
+      "verification_status": "bounded-world-runtime",
       "required_cases": [
         "base skill threshold -1 / at / +1",
         "modified skill crosses threshold without changing base",
@@ -1613,9 +1613,9 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "native normal-input consequence and restart acceptance remain in the owning integration stage"
+        "First-person keyboard normal25/reject24+modifier100/held49 vs50 and actual pending ordinary/power fresh continuations pass. Required view/device, feedback and FPS/seed/final campaign gates remain open."
       ],
-      "evidence": "build/oblivion-compat/m15/S4/native-airborne-predicate-oracle-01/",
+      "evidence": "scripts/data/oblivion_compat/m15_airborne_mastery_cases.json (links original predicate and setting provenance)",
       "pure_rule_status": "reviewed"
     },
     {

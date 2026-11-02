@@ -414,7 +414,8 @@ TEST(ESM4CombatSettings, NativeAirborneStartAndHeldPowerHaveDifferentMasteryGate
     // Original5F48D0/56A300 prefix and65EB57 held-input observations. Grounded
     // eligibility here is only these arithmetic gates, not all attack eligibility.
     constexpr Expected cases[] = {{-1, false, false}, {0, false, false}, {24, false, false},
-        {25, true, false}, {49, true, false}, {50, true, true}, {100, true, true}};
+        {25, true, false}, {26, true, false}, {49, true, false}, {50, true, true}, {51, true, true},
+        {100, true, true}};
     for (const auto& value : cases)
     {
         EXPECT_EQ(ESM4::airborneMeleeStartAllowed(value.mSkill, true, settings), value.mAirborneStart);
