@@ -1,0 +1,5 @@
+--- a/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ b/build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -1183,0 +1184,2 @@
++ if '--skip-settled-diagnostic' in sys.argv:
++  camera_recipe.pop('settled_capture',None)
