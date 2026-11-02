@@ -128,14 +128,18 @@ def mouse_hold(value):
 
 
 def validate(manifest):
-    if type(manifest.get("sdl_offscreen_input", False)) is not bool:
-        raise ValueError("sdl_offscreen_input must be a boolean")
-    if not manifest.get("sdl_offscreen_input", False):
+    for flag in ('sdl_offscreen_input', 'sdl_xvfb_input'):
+        if type(manifest.get(flag, False)) is not bool:
+            raise ValueError(f"{flag} must be a boolean")
+    offscreen, xvfb = (manifest.get(flag, False) for flag in ('sdl_offscreen_input', 'sdl_xvfb_input'))
+    if (offscreen and xvfb) or (xvfb and manifest.get('xvfb') is not True):
+        raise ValueError('SDL Xvfb input requires its own Xvfb server and no offscreen input')
+    if not offscreen and not xvfb:
         if any(a.get("type") in ("keys_down", "keys_transition")
                for a in manifest.get("actions", []) if isinstance(a, dict)):
             raise ValueError("Batched keys require SDL offscreen input")
         return
-    if manifest.get("xvfb") or "m14" in manifest or "m15" in manifest:
+    if (offscreen and manifest.get("xvfb")) or "m14" in manifest or "m15" in manifest:
         raise ValueError("SDL offscreen controls currently support isolated diagnostic scenarios only")
     receipt_timeout(manifest.get("sdl_input_timeout_seconds", 10))
     for action in manifest.get("actions", []):
@@ -164,7 +168,10 @@ def validate(manifest):
 
 
 class Replay:
-    def __init__(self, output, environment, receipt_timeout_seconds=10):
+    def __init__(self, output, environment, receipt_timeout_seconds=10, *, video_driver="offscreen"):
+        if video_driver not in ('offscreen', 'x11'):
+            raise ValueError('SDL replay requires offscreen or private Xvfb')
+        self.video_driver = video_driver
         self.receipt_timeout_seconds = receipt_timeout(receipt_timeout_seconds)
         self.output = Path(output).resolve()
         self.path = self.output / "sdl-input.txt"
@@ -181,19 +188,35 @@ class Replay:
         (self.output / "sdl-input-build.log").write_text(result.stdout + result.stderr)
         if result.returncode:
             raise RuntimeError("SDL replay compilation failed; inspect sdl-input-build.log")
-        environment.update(SDL_VIDEODRIVER="offscreen", LIBGL_ALWAYS_SOFTWARE="1", EGL_PLATFORM="surfaceless",
+        environment.update(SDL_VIDEODRIVER=video_driver, LIBGL_ALWAYS_SOFTWARE="1",
+                           OPENMW_SDL_REPLAY_VIDEO_DRIVER=video_driver,
                            MESA_SHADER_CACHE_DISABLE="true", OPENMW_SDL_INPUT=str(self.path))
+        environment.pop('OPENMW_SDL_REPLAY_XVFB_DISPLAY', None)
+        if video_driver == 'offscreen':
+            environment['EGL_PLATFORM'] = 'surfaceless'
+        else:
+            environment.pop('EGL_PLATFORM', None)
         previous = environment.get("LD_PRELOAD", "")
         environment["LD_PRELOAD"] = (previous + ":" if previous else "") + str(library)
         self.provenance = {"receipt_timeout_seconds": self.receipt_timeout_seconds,
                            "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                            "library_sha256": hashlib.sha256(library.read_bytes()).hexdigest(),
                            "compile_command": command,
+                           "video_driver": video_driver,
                            "environment": {key: environment[key] for key in
                                            ("SDL_VIDEODRIVER", "LIBGL_ALWAYS_SOFTWARE", "EGL_PLATFORM",
-                                            "MESA_SHADER_CACHE_DISABLE", "OPENMW_SDL_INPUT", "LD_PRELOAD")},
+                                            "MESA_SHADER_CACHE_DISABLE", "OPENMW_SDL_INPUT", "LD_PRELOAD",
+                                            "OPENMW_SDL_REPLAY_VIDEO_DRIVER") if key in environment},
                            "scope": "SDL input delivery; gameplay results require separate observations"}
         (self.output / "sdl-input-provenance.json").write_text(json.dumps(self.provenance, indent=2) + "\n")
+
+    def bind_xvfb_display(self, environment, display):
+        """Bind only after the scenario's Xvfb child reports its ready display."""
+        if self.video_driver != 'x11' or not re.fullmatch(r':[0-9]+', display):
+            raise ValueError('SDL Xvfb input needs the private server display')
+        environment['DISPLAY'] = environment['OPENMW_SDL_REPLAY_XVFB_DISPLAY'] = display
+        self.provenance['environment'].update(DISPLAY=display, OPENMW_SDL_REPLAY_XVFB_DISPLAY=display)
+        (self.output / 'sdl-input-provenance.json').write_text(json.dumps(self.provenance, indent=2) + '\n')
 
     def send(self, operation, argument=None, timeout=None):
         return self.send_many([(operation, argument)], timeout)
@@ -302,5 +325,6 @@ class Replay:
                 raise TimeoutError("Native screenshot was not completed")
         else:
             raise ValueError(f"Unsupported SDL input action: {kind}")
-        return {"type": kind, "passed": True, "backend": "sdl-offscreen",
+        return {"type": kind, "passed": True,
+                "backend": "sdl-xvfb" if getattr(self, 'video_driver', 'offscreen') == 'x11' else "sdl-offscreen",
                 "first_input_sequence": first, "last_input_sequence": self.sequence}

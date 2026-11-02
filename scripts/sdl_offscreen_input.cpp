@@ -1,4 +1,4 @@
-// Test-only SDL input replay for displays that cannot expose an X11 socket.
+// Test-only SDL input replay for offscreen or an explicitly bound private Xvfb display.
 // Compile: c++ -std=c++17 -shared -fPIC scripts/sdl_offscreen_input.cpp
 //          $(pkg-config --cflags --libs sdl2) -ldl -o replay.so
 // Opt in with LD_PRELOAD and OPENMW_SDL_INPUT pointing to an append-only file.
@@ -45,8 +45,16 @@ namespace
             if (!std::getline(input, line) || input.eof())
                 return false; // An append may not have completed the final newline yet.
             const char* driver = SDL_GetCurrentVideoDriver();
-            if (!driver || std::string(driver) != "offscreen")
-                return fail(event, "replay requires the SDL offscreen driver");
+            const char* declared = std::getenv("OPENMW_SDL_REPLAY_VIDEO_DRIVER");
+            const char* display = std::getenv("DISPLAY");
+            const char* privateDisplay = std::getenv("OPENMW_SDL_REPLAY_XVFB_DISPLAY");
+            const bool offscreen = driver && std::string(driver) == "offscreen"
+                && (!declared || std::string(declared) == "offscreen");
+            const bool xvfb = driver && std::string(driver) == "x11" && declared
+                && std::string(declared) == "x11" && display && privateDisplay
+                && std::string(display) == privateDisplay;
+            if (!offscreen && !xvfb)
+                return fail(event, "replay requires offscreen or its declared private Xvfb display");
             const auto end = input.tellg();
             std::istringstream fields(line);
             unsigned long long ordinal = 0;
