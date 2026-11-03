@@ -251,17 +251,25 @@ void MWWorld::InventoryStore::equip(int slot, const ContainerStoreIterator& iter
         }
     }
 
+    ContainerStoreIterator selected = iterator;
     if (mSlots[slot] != end())
-        unequipSlot(slot);
-
-    // unstack item pointed to by iterator if required
-    if (iterator != end() && !slots.second
-        && iterator->getCellRef().getCount() > 1) // if slots.second is true, item can stay stacked when equipped
     {
-        unstack(*iterator);
+        const bool reequipping = mSlots[slot] == selected;
+        const auto restacked = unequipSlot(slot);
+        // Unequipping can merge this physical stack into another instance.
+        // Keep the surviving iterator when the requested item was in this slot.
+        if (reequipping)
+            selected = restacked;
     }
 
-    mSlots[slot] = iterator;
+    // unstack item pointed to by iterator if required
+    if (selected != end() && !slots.second
+        && selected->getCellRef().getCount() > 1) // if slots.second is true, item can stay stacked when equipped
+    {
+        unstack(*selected);
+    }
+
+    mSlots[slot] = selected;
 
     flagAsModified();
 

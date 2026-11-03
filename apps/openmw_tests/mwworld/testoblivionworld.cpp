@@ -10940,6 +10940,44 @@ namespace
     }
 }
 
+TEST(OblivionWorldTest, NativePlayerReequipAmmunitionRetainsRestackedPhysicalSlot)
+{
+    NativeWorldFixture fixture;
+    auto& world = fixture.mWorld;
+    MWClass::Npc::registerSelf();
+    MWClass::Weapon::registerSelf();
+    world.setupPlayer();
+    auto& store = world.getStore();
+    const auto key = ESM::FormKey::content("headless.esm", 0x941);
+    ESM4::Ammunition ammo{}; ammo.mId = {0x941, 0};
+    store.getWritable<ESM4::Ammunition>().insertStatic(ammo, key);
+    ESM::Weapon shared; shared.blank(); shared.mId = ESM::RefId(ammo.mId);
+    shared.mData.mType = ESM::Weapon::Arrow;
+    store.insertStatic(shared);
+    ESM4::RuntimeInventoryItem held; held.mBase = key; held.mCount = 23;
+    held.mEquippedSlots = ESM4::InventorySlotAmmunition;
+    auto spare = held; spare.mCount = 1; spare.mEquippedSlots = 0;
+    const auto actor = addNativeNpc(fixture, 0x900);
+    auto saved = captureNativeActorState(fixture, actor);
+    saved.mPlayer.mInventory = {held, spare};
+    acceptNativeSnapshot(fixture, saved);
+    const auto player = world.getPlayerPtr();
+    installEquipmentInventory(fixture, player, {held, spare});
+
+    // M13 removes/replaces one arrow, then requests the same equipped stack.
+    // Unequipping may merge that physical stack into the spare's instance.
+    ASSERT_TRUE(world.oblivionEquipPlayerItem(key, true));
+    auto& inventory = player.getClass().getInventoryStore(player);
+    const auto equipped = inventory.getSlot(MWWorld::InventoryStore::Slot_Ammunition);
+    ASSERT_NE(equipped, inventory.end());
+    EXPECT_EQ(equipped->getCellRef().getCount(), 24);
+    const auto captured = world.captureOblivionActorInventory(player);
+    ASSERT_EQ(captured.size(), 1u);
+    EXPECT_EQ(captured.front().mBase, key);
+    EXPECT_EQ(captured.front().mCount, 24);
+    EXPECT_EQ(captured.front().mEquippedSlots, ESM4::InventorySlotAmmunition);
+}
+
 TEST(OblivionWorldTest, PreparedAmmoCountAndLastSlotPublishOnceBeforeObservers)
 {
     NativeWorldFixture fixture;
