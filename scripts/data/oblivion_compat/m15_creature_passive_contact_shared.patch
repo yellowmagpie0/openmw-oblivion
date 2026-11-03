@@ -1,0 +1,56 @@
+--- build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py
++++ build/oblivion-compat/m15/S4/blocking-dodge-work-01/run-existing-course.py
+@@ -174,4 +174,13 @@
+  # Preserve the original XTest attempt; SDL replay has its own quit receipt.
+  else:spec['actions'] += [dict(type='command',command=['xdotool','search','--onlyvisible','--name','OpenMW','windowclose','%@']),dict(type='wait_log',path='events.jsonl',pattern='"event":"run-end"',timeout_seconds=60,abort_on_failure=True)]
+ """
++addition += r"""
++if '--passive-course' in sys.argv:
++ from tes4_runtime_state import load_save
++ from tes4_m15_fixture_preflight import creature_passive_course_state
++ passive_path=Path(option('--passive-course'));passive_case=json.loads(passive_path.read_text())
++ assert profile and profile.get('opponent_creature') and phase in ['reference','stagger']
++ passive_guard=creature_passive_course_state(load_save(source),profile['opponent_actor'],passive_case['expected_passive_abilities'],stage='cold' if phase=='reference' else 'applied')
++ (work/(name+'-passive-source-preflight.json')).write_text(json.dumps(dict(passed=True,source=str(source),source_sha256=sha(source),case=str(passive_path),case_sha256=sha(passive_path),guard=passive_guard),indent=2)+'\n')
++"""
+ exec(compile(code[:at] + addition + code[at:], str(shared) + '#blocking-dodge-course', 'exec'), globals())
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
+@@ -1489,7 +1489,20 @@
+   assert f'M15 melee hit sound requested: actor={n} id=2 sound=WPNBlockHand played=1' in log
+   assert f'M15 melee hit sound requested: actor={p} id=3 sound=PHYDamageFur played=1' in log
+   assert not any(e.get('event')=='ordinary-hit-phases' and e.get('actor')==n for e in map(json.loads,(a['out']/'events.jsonl').read_text().splitlines()))
++ passive_ownership=None
++ if '--passive-course' in sys.argv:
++  from tes4_m15_fixture_preflight import creature_passive_course_state
++  passive_path=Path(sys.argv[sys.argv.index('--passive-course')+1]);passive_case=json.loads(passive_path.read_text());passive_checks=[]
++  for index,saved in enumerate([source]+a['states']):
++   rows=[row for row in saved['native_actor_values'] if row['actor']==n]
++   stage='cold' if not rows else 'pending' if rows[0]['process']==0 else 'applied'
++   if index==0:assert stage==('cold' if phase=='reference' else 'applied')
++   elif stage!='applied':assert phase=='reference' and saved['physical_actions']['next']<=2
++   proof=creature_passive_course_state(saved,n,passive_case['expected_passive_abilities'],stage=stage)
++   passive_checks.append(dict(snapshot=index,**proof))
++  passive_ownership=dict(passed=True,checks=passive_checks,case=dict(path=str(passive_path),sha256=hashlib.sha256(passive_path.read_bytes()).hexdigest()))
+  report=dict(passed=True,full_M15S4_acceptance=False,name=name,phase=phase,scope='Actual Creature natural contact, legal Player BlockHit/Creature Recoil, recovery, Hand return, range/wall; exact fresh continuation without contact replay.',exact_saved_live_pairs=a['checks'],epoch=a['epoch'],mapped_libraries=a['libs'],source_whole_restored_exactly=phase=='stagger',rendered_and_PCM_review='Required separately')
++ if passive_ownership:report['creature_passive_ownership']=passive_ownership
+  receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=True,pairs=len(a['checks']))));sys.exit(0)
+ if ordinary and profile.get('expected_immune_return'):
+  assert not profile.get('opponent_creature')
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
+@@ -669,9 +669,12 @@
+   assert code.count(marker)==1
+   extra="\nfrom tes4_m15_fixture_preflight import regenerated_fatigue_endpoint\nfatigue_values=[];fatigue_witnesses=[]\nfor endpoint in [x,y]:\n rows,witness=regenerated_fatigue_endpoint(endpoint,"+repr(selected['opponent_actor'])+")\n fatigue_values.append(rows);fatigue_witnesses.append(witness)\nraw_actor_values_equal=x['native_actor_values']==y['native_actor_values']"
+   code=code.replace(marker,marker+extra)
+-  marker="assert x[key]==y[key],'endpoint differs: '+key"
++  comparison="x[key]==y[key]"
++  if '--calendar-projection' in sys.argv:
++   comparison="(calendar_globals(x)==calendar_globals(y) if key=='globals' else x[key]==y[key])"
++  marker="assert "+comparison+",'endpoint differs: '+key"
+   assert code.count(marker)==1
+-  code=code.replace(marker,"assert (fatigue_values[0]==fatigue_values[1] if key=='native_actor_values' else x[key]==y[key]),'endpoint differs: '+key")
++  code=code.replace(marker,"assert (fatigue_values[0]==fatigue_values[1] if key=='native_actor_values' else "+comparison+"),'endpoint differs: '+key")
+   marker="work=root/'combined-restart-work-01';";assert code.count(marker)==1
+   extra="report['endpoint_fields_compared']=list(report['strict_endpoint_fields']);report['all_native_actor_values_including_fatigue_equal']=raw_actor_values_equal;report['native_actor_values_query_equivalent']=True;report['regenerated_fatigue_endpoint']={'scope':'Comparison copies of idle NPC endpoint Fatigue Damage only; low/active float32 queries exactly full, residue at most half the step below full low pool. Base/Maximum/Script and all other values/owners strict. Source restore and saved/live comparisons never normalize.','witnesses':fatigue_witnesses,'raw_actor_values_equal':raw_actor_values_equal};report['strict_endpoint_fields']=[k for k in report['strict_endpoint_fields'] if k!='native_actor_values' or raw_actor_values_equal];report['excluded_endpoint_state']+=' Endpoint exception: the named idle NPC Fatigue Damage may differ only within the declared half-step bound with exactly full native low/active queries; raw data retained, all other actor-value fields strict.';report['regenerated_fatigue_endpoint']['helper']={'path':'scripts/tes4_m15_fixture_preflight.py','sha256':sha('scripts/tes4_m15_fixture_preflight.py')};"
+   code=code.replace(marker,extra+marker)

@@ -92,12 +92,17 @@ namespace MWWorld
     std::vector<ESM4::PassiveAbilityInput> resolveOblivionPassiveAbilityInputs(
         const ESMStore& store, std::span<const ESM::FormKey> spells);
 
+    // Direct Creature Ability4 inputs supported by the passive-value owner.
+    // Null means unresolved content; an empty vector means no direct ability.
+    std::optional<std::vector<ESM4::PassiveAbilityInput>> resolveOblivionCreaturePassiveAbilityInputs(
+        const ESMStore& store, const ESM::FormKey& base);
+
     struct OblivionCreatureContactSpellSource
     {
         const ESM4::LevelledSpell* mList;
         std::uint32_t mSchool;
     };
-    // Inert direct spells/powers and the reviewed singleton Witbane-like
+    // Inert direct spells/powers, supported direct abilities, and singleton Witbane-like
     // Disease1 source. Null rejects unsupported sources before any RNG use;
     // an empty plan has no leveled source and needs no construction snapshot.
     std::optional<std::vector<OblivionCreatureContactSpellSource>> resolveOblivionCreatureContactSpellSources(

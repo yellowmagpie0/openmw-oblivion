@@ -3,7 +3,9 @@
 Stats, reach, meshes, sounds and inventory remain source data. An explicit
 natural_damage override can exercise harmless contact without injecting outcomes.
 A declared castable_spells list can supply inert spellbook inputs. The optional
-preserve_source_spells policy retains the actual master spellbook. Other spells,
+preserve_source_spells policy retains the actual master spellbook. An explicit
+spellbook_template borrows a complete direct spellbook from another stock CREA,
+preserving the physical template's stats and assets. Other spells,
 packages and scripts are removed from the clone so production combat
 intent owns this bounded physical observation. The plugin contains no outcomes.
 """
@@ -23,7 +25,7 @@ from tes4_m15_fixture import group, record, records, string, sub
 
 def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     fields = {"version", "purpose", "source_sha256", "master", "cell", "template", "creature", "reference", "style", "position"}
-    if not isinstance(recipe, dict) or set(recipe) - {"natural_damage", "castable_spells", "preserve_source_spells"} != fields:
+    if not isinstance(recipe, dict) or set(recipe) - {"natural_damage", "castable_spells", "preserve_source_spells", "spellbook_template"} != fields:
         raise ValueError("invalid stationary Creature recipe fields")
     damage = recipe.get("natural_damage")
     if "natural_damage" in recipe and (type(damage) is not int or not 0 <= damage <= 65535):
@@ -31,6 +33,10 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     preserve = recipe.get("preserve_source_spells", False)
     if type(preserve) is not bool or (preserve and "castable_spells" in recipe):
         raise ValueError("source spellbook preservation requires a boolean and no spell replacement")
+    donor = recipe.get("spellbook_template")
+    if "spellbook_template" in recipe and (type(donor) is not int or not 0 < donor <= 0xffffff
+            or preserve or "castable_spells" in recipe):
+        raise ValueError("direct spellbook template requires one exclusive master-local CREA identity")
     spells = recipe.get("castable_spells", [])
     if (not isinstance(spells, list) or len(spells) > 255
             or any(type(value) is not int or not 0 < value <= 0xffffff for value in spells)
@@ -40,7 +46,7 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     if (any(type(x) is not int or not 0x01000800 <= x <= 0x01ffffff for x in own)
             or len(set(own)) != 3):
         raise ValueError("invalid or colliding Creature fixture identities")
-    base_recipe = {k: v for k, v in recipe.items() if k not in {"template", "style", "natural_damage", "castable_spells", "preserve_source_spells"}}
+    base_recipe = {k: v for k, v in recipe.items() if k not in {"template", "style", "natural_damage", "castable_spells", "preserve_source_spells", "spellbook_template"}}
     base_recipe["creature"] = recipe["template"]
     placed, _ = placement(source, base_recipe)
     templates = [p for t, i, p in records(source) if t == "CREA" and i == recipe["template"]]
@@ -48,6 +54,14 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
         raise ValueError("missing or duplicate Creature template")
     original = _subrecords(templates[0], "stationary Creature", "CREA")
     source_spells = [s["payload"] for s in original if s["name"] == "SPLO"]
+    if donor is not None:
+        donors = [payload for tag, ident, payload in records(source) if tag == "CREA" and ident == donor]
+        if len(donors) != 1:
+            raise ValueError("missing or duplicate direct spellbook template")
+        links = [s["payload"] for s in _subrecords(donors[0], "spellbook template", "CREA") if s["name"] == "SPLO"]
+        if not links or len(links) > 255 or any(len(v) != 4 or not 0 < struct.unpack("<I", v)[0] <= 0xffffff for v in links):
+            raise ValueError("direct spellbook template requires complete valid spell identities")
+        spells = [struct.unpack("<I", value)[0] for value in links]
     if preserve and any(len(value) != 4 or not 0 < struct.unpack("<I", value)[0] <= 0xffffff for value in source_spells):
         raise ValueError("source spellbook requires valid master-local spell identities")
     changed = {"EDID", "FULL", "SCRI", "PKID", "ZNAM"} | (set() if preserve else {"SPLO"})
@@ -62,12 +76,13 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
     spell_inputs = []
     if spells:
         selected = {ident: payload for tag, ident, payload in records(source) if tag == "SPEL" and ident in spells}
-        if len(selected) != len(spells):
+        if len(selected) != len(set(spells)):
             raise ValueError("missing stationary Creature castable spell")
         for ident in spells:
             fields = _subrecords(selected[ident], "castable spell", "SPEL")
             data = [field["payload"] for field in fields if field["name"] == "SPIT"]
-            if len(data) != 1 or len(data[0]) != 16 or struct.unpack_from("<I", data[0])[0] not in (0, 2, 3):
+            allowed = (0, 1, 2, 3, 4) if donor is not None else (0, 2, 3)
+            if len(data) != 1 or len(data[0]) != 16 or struct.unpack_from("<I", data[0])[0] not in allowed:
                 raise ValueError("stationary Creature spell must be an ordinary spell or power")
             spell_inputs.append({"id": ident, "type": struct.unpack_from("<I", data[0])[0],
                                  "payload_sha256": hashlib.sha256(selected[ident]).hexdigest()})
@@ -109,7 +124,9 @@ def build(source: bytes, recipe: dict) -> tuple[bytes, dict]:
                     "stats_and_assets_preserved": damage is None, "natural_damage_override": damage,
                     "source_spellbook_preserved": preserve,
                     "preserved_source_spells": [struct.unpack("<I", value)[0] for value in source_spells] if preserve else [],
-                    "castable_spell_inputs": spell_inputs, "style": combat_style(bytes(style)), "runtime_accepted": False}
+                    "castable_spell_inputs": spell_inputs if donor is None else [],
+                    "spellbook_template": donor, "spellbook_inputs": spell_inputs if donor is not None else [],
+                    "style": combat_style(bytes(style)), "runtime_accepted": False}
 
 
 def main():

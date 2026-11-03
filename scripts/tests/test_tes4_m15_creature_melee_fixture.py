@@ -35,6 +35,30 @@ class CreatureMeleeFixtureTests(unittest.TestCase):
             with self.assertRaises(ValueError): build(self.source, dict(self.recipe, preserve_source_spells=value))
         with self.assertRaises(ValueError): build(self.source, dict(recipe, castable_spells=[]))
 
+    def test_complete_direct_spellbook_donor_preserves_physical_template(self):
+        source = self.source + record("CREA", 0x4567, string("EDID", "Daedroth")
+            + sub("SPLO", struct.pack("<I", 0x3456)) + sub("SPLO", struct.pack("<I", 0x3457)))
+        source += record("SPEL", 0x3456, sub("SPIT", struct.pack("<4I", 4, 0, 0, 0)))
+        source += record("SPEL", 0x3457, sub("SPIT", struct.pack("<4I", 3, 0, 0, 0)))
+        recipe = dict(self.recipe, source_sha256=hashlib.sha256(source).hexdigest(), spellbook_template=0x4567)
+        output, report = build(source, recipe)
+        fields = _subrecords(next(p for t, _, p in records(output) if t == "CREA"), "test", "CREA")
+        self.assertEqual([s["payload"] for s in fields if s["name"] == "SPLO"],
+                         [struct.pack("<I", i) for i in [0x3456, 0x3457]])
+        self.assertEqual(next(s["payload"] for s in fields if s["name"] == "DATA"), bytes(range(20)))
+        self.assertTrue(report["stats_and_assets_preserved"])
+        self.assertEqual(report["spellbook_template"], 0x4567)
+        self.assertEqual([s["type"] for s in report["spellbook_inputs"]], [4, 3])
+        self.assertFalse(report["castable_spell_inputs"])
+        for bad in [dict(recipe, spellbook_template=v) for v in [None, True, 0, -1, 0x1000000, 0x4568]] + [
+                dict(recipe, castable_spells=[]), dict(recipe, preserve_source_spells=True)]:
+            with self.subTest(bad=bad), self.assertRaises(ValueError): build(source, bad)
+        # A leveled or missing link cannot be silently omitted from the book.
+        broken = source.replace(record("SPEL", 0x3457, sub("SPIT", struct.pack("<4I", 3, 0, 0, 0))),
+                                record("LVSP", 0x3457, b""))
+        with self.assertRaises(ValueError):
+            build(broken, dict(recipe, source_sha256=hashlib.sha256(broken).hexdigest()))
+
     def test_preserves_stats_and_assets_with_only_owned_style_and_placement(self):
         output, report = build(self.source, self.recipe)
         rows = list(records(output))

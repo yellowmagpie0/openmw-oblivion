@@ -164,6 +164,44 @@ def is_current_fixture_schema(target, current, minimum):
             and target == current and minimum <= target <= 79)
 
 
+def creature_passive_course_state(state, actor, abilities, *, stage):
+    """Validate a declared cold/pending/applied passive fixture without repair.
+
+    This isolated course has no other modifiers on the declared effect values.
+    Application belongs to the reference Maximum channel, never the shared base.
+    Expected spell/effect identities and signed quantities come from the recipe.
+    """
+    if stage not in ('cold', 'pending', 'applied') or not isinstance(abilities, list) or not abilities:
+        raise ValueError('Passive course needs explicit source stage and ability inputs')
+    totals = {}
+    for ability in abilities:
+        if not isinstance(ability, dict) or ability.get('spell_type') != 4 or not ability.get('effects'):
+            raise ValueError('Passive course requires complete Ability4 effect inputs')
+        for effect in ability['effects']:
+            if (not isinstance(effect, list) or len(effect) != 5 or effect[4] is None
+                    or type(effect[2]) is not int or not 0 <= effect[2] < 72
+                    or not all(type(effect[i]) in (int, float) and math.isfinite(effect[i]) for i in (3, 4))):
+                raise ValueError('Passive course lacks initial effect quantity provenance')
+            totals[effect[2]] = totals.get(effect[2], 0) + effect[3]
+    rows = [row for row in state['native_actor_values'] if row['actor'] == actor]
+    if stage == 'cold':
+        if rows:
+            raise ValueError('Cold passive fixture must not author actor/effect outcomes')
+        return dict(passed=True, stage=stage)
+    if (len(rows) != 1 or rows[0]['owner'] != 1
+            or rows[0]['process'] != (0 if stage == 'pending' else 1)):
+        raise ValueError('Passive course lacks its declared reference/process owner')
+    row = rows[0]
+    if row.get('passive_abilities') != ([] if stage == 'pending' else abilities):
+        raise ValueError('Passive course has unknown or mismatched effect ownership')
+    for av, total in totals.items():
+        base, maximum, script, damage = row['values'][av]
+        expected = total if stage == 'applied' else 0
+        if base != 0 or (maximum or 0) != expected or (script or 0) != 0 or (damage or 0) != 0:
+            raise ValueError('Passive course effect is absent, duplicated or in the wrong channel')
+    return dict(passed=True, stage=stage, maximum_modifiers=totals if stage == 'applied' else {})
+
+
 def creature_disease_course_state(state, actor, spell, *, cold=False, applied=False, selected=None):
     """Check the isolated Dog course's pending/applied ownership before replay.
 

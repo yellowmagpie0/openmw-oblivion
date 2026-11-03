@@ -6830,6 +6830,132 @@ namespace
         }
     }
 
+    TEST(OblivionWorldTest, CreaturePassiveAbilitiesOwnReferenceModifiersAcrossActivationAndRestore)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld; auto& store = world.getStore();
+        const auto actor = addEquipmentCreature(fixture), victim = addNativeNpc(fixture, 0x901);
+        auto& service = *world.getOblivionCombatService();
+        const auto actorKey = actor.getCellRef().getFormKey();
+        const auto spellKey = ESM::FormKey::content("headless.esm", 0x999);
+        ESM4::Spell ability{}; ability.mId = {0x999, 0}; ability.mFormKey = spellKey;
+        ability.mData = ESM4::SpellData{4, 0, 0, 0, {}};
+        // Stock Goblin SABS30, plus the supported Daedric weakness channel.
+        ability.mEffects = {{ESM::fourCC("SABS"), 30, 0, 0, 0, 52, {}},
+            {ESM::fourCC("WKSH"), 20, 0, 0, 0, 68, {}}};
+        store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
+        for (const auto [id, code] : {std::pair{0x997u, ESM::fourCC("SABS")},
+                 std::pair{0x998u, ESM::fourCC("WKSH")}, std::pair{0x996u, ESM::fourCC("DRAT")}})
+        {
+            ESM4::EffectSetting effect{}; effect.mId = {id, 0}; effect.mEffectCode = code;
+            effect.mData = ESM4::EffectSettingData{}; effect.mData->mSchool = 2;
+            effect.preparePassiveValueModifierDefinition();
+            store.getWritable<ESM4::EffectSetting>().insertStatic(effect, ESM::FormKey::content("headless.esm", id));
+        }
+        auto base = *actor.get<ESM4::Creature>()->mBase;
+        base.mSpell = {ability.mId, ability.mId}; // Repeated source is not a second application.
+        base.mData.damage = 8;
+        base.mBaseConfig.tes4.flags |= ESM4::Creature::TES4_WeapAndShield;
+        store.getWritable<ESM4::Creature>().insertStatic(base, base.mFormKey);
+        ESM4::ActorCreature reference{}; reference.mId = {0x921, 0};
+        reference.mFormKey = ESM::FormKey::content("headless.esm", 0x921);
+        reference.mBaseObj = base.mId; reference.mBaseKey = base.mFormKey;
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, store.search<ESM4::Creature>(base.mFormKey));
+        auto& cell = world.getWorldModel().getDraftCell();
+        const MWWorld::Ptr other(cell.insert(&live), &cell);
+        service.initializeNonPlayerActor(actor, store, 1, ESM4::ActorValueProcess::Low, std::nullopt);
+        service.initializeNonPlayerActor(other, store, 1, ESM4::ActorValueProcess::Low, std::nullopt);
+        ASSERT_TRUE(service.findActorValues(actorKey)->mPassiveAbilities);
+        EXPECT_TRUE(service.findActorValues(actorKey)->mPassiveAbilities->empty());
+        EXPECT_EQ(service.getNonPlayerValue(actor, 52), 0);
+        EXPECT_FALSE(service.findActorValues(actorKey)->mValues[52].mModifiers[0]);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        EXPECT_EQ(service.getNonPlayerValue(actor, 52), 30);
+        EXPECT_EQ(service.getNonPlayerValue(actor, 68), -20);
+        EXPECT_EQ(service.getNonPlayerBaseValue(actorKey, 52, store), 0);
+        EXPECT_EQ(service.getNonPlayerValue(other, 52), 0);
+        ASSERT_TRUE(world.activateOblivionActor(other));
+        EXPECT_EQ(service.getNonPlayerValue(other, 52), 30);
+        ASSERT_EQ(service.findActorValues(actorKey)->mPassiveAbilities->size(), 1u);
+        service.changeNonPlayerValue(actor, 52, ESM4::ActorValueModifier::Script, 5);
+        service.initializeNonPlayerActor(actor, store, 1, ESM4::ActorValueProcess::Low, std::nullopt, true);
+        EXPECT_EQ(service.getNonPlayerValue(actor, 52), 5);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        ASSERT_TRUE(world.activateOblivionActor(victim));
+        EXPECT_EQ(service.getNonPlayerValue(actor, 52), 35);
+        EXPECT_EQ(service.getNonPlayerValue(other, 52), 30);
+        auto saved = captureNativeActorState(fixture, actor);
+        saved.mReferences.push_back(captureNativeActorState(fixture, other).mReferences.front());
+        saved.mReferences.push_back(captureNativeActorState(fixture, victim).mReferences.front());
+        const auto savedActor = *service.findActorValues(actorKey);
+        const auto binary = saved.serializeBinary();
+        ASSERT_NO_THROW(service.restore(ESM4::RuntimeState::deserializeBinary(binary), store));
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        EXPECT_EQ(*service.findActorValues(actorKey), savedActor);
+        for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            EXPECT_TRUE(MWMechanics::resolveOblivionUnarmedMeleeContact(world, actor, victim, 0, false, kind));
+
+        const auto weaponKey = addEquipmentWeapon(fixture, 0x940);
+        ESM4::RuntimeInventoryItem item; item.mBase = weaponKey; item.mCount = 1;
+        item.mCondition = 100; item.mEquippedSlots = ESM4::InventorySlotWeapon;
+        installEquipmentInventory(fixture, actor, {item});
+        installEquipmentInventory(fixture, victim, {item});
+        actor.getClass().getCreatureStats(actor).setDrawState(MWMechanics::DrawState::Weapon);
+        victim.getClass().getCreatureStats(victim).setDrawState(MWMechanics::DrawState::Weapon);
+        const auto ownWeapon = *actor.getClass().getInventoryStore(actor).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto incomingWeapon = *victim.getClass().getInventoryStore(victim).getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+        const auto owned = *service.findActorValues(actorKey);
+        const auto random = service.combatRandomState();
+        for (const bool valid : {true, false})
+        {
+            auto candidate = owned;
+            if (!valid) candidate.mPassiveAbilities.reset();
+            service.publishNonPlayerValues(actor, candidate);
+            ASSERT_TRUE(world.activateOblivionActor(actor)); // Unknown legacy ownership is not reconstructed.
+            for (const auto kind : {ESM4::MeleeStrikeKind::Left, ESM4::MeleeStrikeKind::StandingPower})
+            {
+                EXPECT_EQ(bool(MWMechanics::resolveOblivionWeaponMeleeContact(
+                    world, actor, victim, ownWeapon, 0, false, kind)), valid);
+                EXPECT_EQ(bool(MWMechanics::resolveOblivionWeaponMeleeContact(
+                    world, victim, actor, incomingWeapon, 0, false, kind)), valid);
+            }
+            EXPECT_EQ(*service.findActorValues(actorKey), candidate);
+            EXPECT_EQ(service.combatRandomState(), random);
+        }
+        service.publishNonPlayerValues(actor, owned);
+        auto unknownQuantity = owned;
+        unknownQuantity.mPassiveAbilities->front().mEffects.front().mInitialMagnitude.reset();
+        service.publishNonPlayerValues(actor, unknownQuantity);
+        EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(
+            world, actor, victim, ownWeapon, 0, false, ESM4::MeleeStrikeKind::Left));
+        service.publishNonPlayerValues(actor, owned);
+        auto wrongQuantity = owned;
+        wrongQuantity.mPassiveAbilities->front().mEffects.front().mStoredMagnitude += 1;
+        service.publishNonPlayerValues(actor, wrongQuantity);
+        EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(
+            world, actor, victim, ownWeapon, 0, false, ESM4::MeleeStrikeKind::Left));
+        service.publishNonPlayerValues(actor, owned);
+        // An unsupported second effect cannot partly apply the supported first.
+        ability.mEffects.back().mId = ESM::fourCC("REWE");
+        store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
+        EXPECT_FALSE(MWWorld::resolveOblivionCreatureContactSpellSources(store, base.mFormKey));
+        EXPECT_FALSE(MWMechanics::resolveOblivionWeaponMeleeContact(
+            world, actor, victim, ownWeapon, 0, false, ESM4::MeleeStrikeKind::Left));
+        EXPECT_EQ(*service.findActorValues(actorKey), owned);
+        EXPECT_EQ(service.getNonPlayerValue(other, 52), 30);
+        reference.mId = {0x922, 0}; reference.mFormKey = ESM::FormKey::content("headless.esm", 0x922);
+        store.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> unsupportedLive(reference, store.search<ESM4::Creature>(base.mFormKey));
+        const MWWorld::Ptr unsupported(cell.insert(&unsupportedLive), &cell);
+        ASSERT_TRUE(world.activateOblivionActor(unsupported));
+        EXPECT_EQ(service.getNonPlayerValue(unsupported, 52), 0);
+        EXPECT_FALSE(service.findActorValues(reference.mFormKey)->mPassiveAbilities);
+        ability.mEffects.back() = {ESM::fourCC("DRAT"), 20, 0, 0, 0, 5, {}};
+        store.getWritable<ESM4::Spell>().insertStatic(ability, spellKey);
+        EXPECT_FALSE(MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, base.mFormKey));
+    }
+
     TEST(OblivionWorldTest, CreatureNaturalContactUsesNativeWordAndIndependentFatigueDamage)
     {
         NativeWorldFixture fixture;

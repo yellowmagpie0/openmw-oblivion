@@ -535,11 +535,50 @@ namespace MWWorld
         return result;
     }
 
+    std::optional<std::vector<ESM4::PassiveAbilityInput>> resolveOblivionCreaturePassiveAbilityInputs(
+        const ESMStore& store, const ESM::FormKey& base)
+    {
+        const auto* creature = store.search<ESM4::Creature>(base);
+        if (!creature) return std::nullopt;
+        const auto& spells = store.get<ESM4::Spell>();
+        std::vector<ESM::FormKey> abilities;
+        for (const auto id : creature->mSpell)
+        {
+            if (id == ESM::FormId{}) continue;
+            const auto* spell = spells.search(id);
+            if (!spell)
+            {
+                if (!store.get<ESM4::LevelledSpell>().search(id)) return std::nullopt;
+                continue;
+            }
+            if (!spell->mData || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
+            if (spell->mData->mType != 4) continue;
+            const auto key = spells.findFormKey(ESM::RefId(id));
+            if (!key || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
+            if (const auto* winner = store.getFormKeyIndex().winner(*key);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))
+                return std::nullopt;
+            abilities.push_back(*key);
+        }
+        try
+        {
+            auto inputs = resolveOblivionPassiveAbilityInputs(store, abilities);
+            for (const auto& ability : inputs)
+                for (const auto& effect : ability.mEffects)
+                    // VMOD's negative Endurance path can also kill/unconscious
+                    // its owner. Do not admit that unimplemented lifecycle.
+                    if (effect.mValues.mActorValue == 5 && (effect.mFlags & 4)) return std::nullopt;
+            return inputs;
+        }
+        catch (const std::invalid_argument&) { return std::nullopt; }
+    }
+
     std::optional<std::vector<OblivionCreatureContactSpellSource>> resolveOblivionCreatureContactSpellSources(
         const ESMStore& store, const ESM::FormKey& base)
     {
         const auto* creature = store.search<ESM4::Creature>(base);
         if (!creature) return std::nullopt;
+        if (!resolveOblivionCreaturePassiveAbilityInputs(store, base)) return std::nullopt;
         std::vector<OblivionCreatureContactSpellSource> result;
         const auto& spells = store.get<ESM4::Spell>();
         const auto& lists = store.get<ESM4::LevelledSpell>();
@@ -551,7 +590,7 @@ namespace MWWorld
             {
                 if (!spell->mData || (spell->mFlags & ESM4::Rec_Deleted)) return std::nullopt;
                 const auto type = spell->mData->mType;
-                if (type != 0 && type != 2 && type != 3) return std::nullopt;
+                if (type != 0 && type != 2 && type != 3 && type != 4) return std::nullopt;
                 if (const auto key = spells.findFormKey(ESM::RefId(id)))
                     if (const auto* winner = store.getFormKeyIndex().winner(*key);
                         winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_SPEL))

@@ -17,6 +17,42 @@ from scripts.tes4_m15_fixture_preflight import gamepad_view_ready_actions
 
 
 class FixturePreflightTests(unittest.TestCase):
+    def test_creature_passive_sources_distinguish_cold_pending_and_applied_ownership(self):
+        from tes4_m15_fixture_preflight import creature_passive_course_state
+        actor = 'content:fixture.esp:000802'
+        effects = [dict(spell='content:oblivion.esm:000100', spell_type=4,
+                        effects=[[0, int.from_bytes(b'WKSH', 'little'), 68, -20, 20],
+                                 [1, int.from_bytes(b'RSFI', 'little'), 61, 33, 33]])]
+        state = dict(native_actor_values=[])
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='cold')['passed'])
+        bad_effects = copy.deepcopy(effects); bad_effects[0]['effects'][0][4] = None
+        with self.assertRaises(ValueError):
+            creature_passive_course_state(state, actor, bad_effects, stage='cold')
+        values = [[0, None, None, None] for _ in range(72)]
+        state['native_actor_values'] = [dict(actor=actor, owner=1, process=0, values=values,
+                                           passive_abilities=[])]
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='pending')['passed'])
+        row = state['native_actor_values'][0]
+        row.update(process=1, passive_abilities=copy.deepcopy(effects))
+        values[68][1], values[61][1] = -20, 33
+        before = copy.deepcopy(state)
+        self.assertTrue(creature_passive_course_state(state, actor, effects, stage='applied')['passed'])
+        self.assertEqual(state, before)
+        for fault in ['unknown', 'quantity', 'duplicate', 'wrong_channel', 'missing', 'low', 'extra']:
+            bad = copy.deepcopy(state); target = bad['native_actor_values'][0]
+            if fault == 'unknown': target['passive_abilities'] = None
+            if fault == 'quantity': target['passive_abilities'][0]['effects'][0][4] = None
+            if fault == 'duplicate': target['values'][61][1] = 66
+            if fault == 'wrong_channel': target['values'][61] = [33, None, None, None]
+            if fault == 'missing': target['values'][61][1] = None
+            if fault == 'low': target['process'] = 0
+            if fault == 'extra': target['passive_abilities'] += copy.deepcopy(effects)
+            with self.subTest(fault=fault), self.assertRaises(ValueError):
+                creature_passive_course_state(bad, actor, effects, stage='applied')
+        for stage in ['cold', 'pending', 'invalid']:
+            with self.subTest(stage=stage), self.assertRaises(ValueError):
+                creature_passive_course_state(state, actor, effects, stage=stage)
+
     def test_gamepad_view_waits_for_rendered_world_and_aborts_failed_prerequisite(self):
         source = [dict(type='gamepad_button', value='rightstick', hold_seconds=.08),
                   dict(type='wait_log', pattern='M15 course view: thirdPerson=true')]

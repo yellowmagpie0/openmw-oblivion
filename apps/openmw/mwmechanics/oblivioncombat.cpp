@@ -4336,6 +4336,46 @@ namespace MWMechanics
             life.mPhase = dead ? ESM4::ActorLifePhase::Dead : ESM4::ActorLifePhase::Alive;
         }
         life.validate();
+        if (actor.getType() == ESM::REC_CREA4)
+        {
+            const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, baseKey);
+            if (abilities && !abilities->empty())
+            {
+                // A fresh Low reference owns a known pending grant. Unknown
+                // legacy ownership stays unknown; activation must not invent it.
+                if (!oldValues) values.mPassiveAbilities.emplace();
+                if ((!oldValues || activate) && values.mPassiveAbilities
+                    && values.mProcess == ESM4::ActorValueProcess::Active
+                    && life.mPhase == ESM4::ActorLifePhase::Alive)
+                {
+                    for (const auto& ability : *abilities)
+                    {
+                        if (std::any_of(values.mPassiveAbilities->begin(), values.mPassiveAbilities->end(),
+                                [&](const auto& owned) { return owned.mSpell == ability.mSpell; }))
+                            continue;
+                        ESM4::RuntimePassiveAbility owned{ability.mSpell, {}};
+                        for (const auto& effect : ability.mEffects)
+                        {
+                            const auto av = static_cast<std::uint8_t>(effect.mValues.mActorValue);
+                            float magnitude = effect.mFlags & 4 ? -effect.mValues.mMagnitude : effect.mValues.mMagnitude;
+                            std::optional<float> current;
+                            if (ESM4::valueModifierRequiresCurrent(av, effect.mCode, magnitude))
+                                current = ESM4::composeActorValue(values.mValues[av], values.mOwner, values.mProcess);
+                            magnitude = ESM4::clampValueModifierDelta(av, effect.mCode, magnitude, current);
+                            // Original VMOD6A84D0 routes nonplayer Ability4 to
+                            // virtual294 (Maximum), not the Player base writer.
+                            values.mValues[av] = ESM4::changeActorValueModifier(values.mValues[av], values.mOwner,
+                                av, ESM4::ActorValueModifier::Maximum, magnitude);
+                            owned.mEffects.push_back({effect.mEffectIndex, effect.mCode, av, magnitude,
+                                effect.mValues.mMagnitude});
+                        }
+                        owned.validate();
+                        values.mPassiveAbilities->push_back(std::move(owned));
+                    }
+                }
+                values.validate();
+            }
+        }
         std::map<ESM::FormKey, ESM4::RuntimeActorValues> preparedValues;
         std::map<ESM::FormKey, ESM4::RuntimeActorLife> preparedLife;
         if (!oldValues)

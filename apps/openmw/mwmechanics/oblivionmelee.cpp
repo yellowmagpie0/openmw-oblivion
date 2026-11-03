@@ -1130,7 +1130,30 @@ namespace MWMechanics
             if (!values) return true;
             const auto sources = MWWorld::resolveOblivionCreatureContactSpellSources(store, values->mBase);
             if (!sources) return true;
-            if (sources->empty()) return false; // Only inert direct spells/powers.
+            const auto abilities = MWWorld::resolveOblivionCreaturePassiveAbilityInputs(store, values->mBase);
+            if (!abilities) return true;
+            for (const auto& ability : *abilities)
+            {
+                if (!values->mPassiveAbilities) return true;
+                const auto owned = std::find_if(values->mPassiveAbilities->begin(), values->mPassiveAbilities->end(),
+                    [&](const auto& entry) { return entry.mSpell == ability.mSpell; });
+                if (owned == values->mPassiveAbilities->end() || owned->mSpellType != 4
+                    || owned->mEffects.size() != ability.mEffects.size()) return true;
+                for (std::size_t i = 0; i < ability.mEffects.size(); ++i)
+                {
+                    const auto& expected = ability.mEffects[i];
+                    const auto& applied = owned->mEffects[i];
+                    if (applied.mEffectIndex != expected.mEffectIndex || applied.mCode != expected.mCode
+                        || applied.mActorValue != expected.mValues.mActorValue
+                        || applied.mInitialMagnitude != expected.mValues.mMagnitude) return true;
+                    const float signedMagnitude = expected.mFlags & 4
+                        ? -expected.mValues.mMagnitude : expected.mValues.mMagnitude;
+                    if (!ESM4::valueModifierRequiresCurrent(static_cast<std::uint8_t>(applied.mActorValue),
+                            applied.mCode, signedMagnitude) && applied.mStoredMagnitude != signedMagnitude)
+                        return true;
+                }
+            }
+            if (sources->empty()) return false; // No leveled contact spell requires a selection snapshot.
             if (!values->mLeveledContactSpells) return true; // Unknown legacy selection must not reroll here.
             return std::any_of(values->mLeveledContactSpells->begin(), values->mLeveledContactSpells->end(),
                 [&](const auto& selected) {
