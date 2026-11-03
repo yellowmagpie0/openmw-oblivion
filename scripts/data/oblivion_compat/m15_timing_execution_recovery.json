@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "scope": "One replacement output after external launcherSIGTERM; original incomplete attempt/raw preserved. No source/action/assertion/deadline/game/seed/cap changes.",
+  "failure": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/seed47-cap60-external-termination.json",
+    "sha256": "f275ef2789d0dfb01fd799849c520d0473c8313518faedd13fdbc552cc9d5c33"
+  },
+  "preflight": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/seed47-cap60-recovery-preflight.json",
+    "sha256": "95dc0701fe8e0514417adff5b0c42bc20a907d268271264dd6ea1ea4a25bc3b3"
+  },
+  "preserved_adapter": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix-before-execution-recovery.py",
+    "sha256": "573cb41728e19f583a15d357c1cd74b69e8ad48726d12d02014ccecf8d960afd"
+  },
+  "current_adapter": {
+    "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/current-matrix.py",
+    "sha256": "1db63b78194c2cc59a61119b9d236da81b128ae965e02e688fd9384fb2a16321"
+  },
+  "portable_patch": {
+    "path": "scripts/data/oblivion_compat/m15_timing_execution_recovery_shared.patch",
+    "sha256": "515dc9cae013138cc2cc9b5cf37fdae153e6eeb7ef45f5630e5efa2c6f13a788"
+  },
+  "recovery_policy": "Launch remaining cases individually. SIGTERM sender remains unknown; this is not a diagnosed gameplay failure or a gameplay fix. Never count/stitch the retained nine-pair prefix as a full reference course. New cap60seed47 output02 must pass the original full230actions/14pairs/13captures and cross-cell semantic gates; original matrix/appendices stay unchanged on disk."
+}
