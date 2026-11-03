@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "full_M15S4_acceptance": false,
+  "full_T7_acceptance": false,
+  "scope": "Pairwise current timing continuation windows. Section8 permits pairwise L2/L3; each build covers all three source windows and all three configured caps/seeds. All18 reference cells remain independently required and complete.",
+  "missing_requirement": "Matched exact fresh windup, held block and recovery through contact, reach miss, wall miss and full Fatigue in timing campaign settings.",
+  "implementation": "Extend the existing combined-inflight runner/inspector; reuse current reference files and core suffix. Preserve source states and native gameplay assertions. No gameplay approximation or save mutation.",
+  "cases": [
+    {
+      "id": "normal-block",
+      "kind": "normal",
+      "phase": "block",
+      "cap": 30,
+      "seed": 1,
+      "name": "timing-fresh-normal-block-cap30-seed1-02",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-readiness-current-normal-cap30-seed1-03/snapshots/save-4.omwsave",
+        "sha256": "679b49f9ef6541972cc1b7b65903261920a9c4172294866e6bc5c9f610503e2b"
+      },
+      "source_sequence": 4,
+      "reference": "build/oblivion-compat/m15/S4/timing-readiness-current-normal-cap30-seed1-03",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-readiness-current-normal-cap30-seed1-03.json",
+        "sha256": "2496da6d0b99f86f7c011d21f3dfc816c2cb26e49afa963b44144dbff4dece35"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-readiness-current-normal-cap30-seed1-03/snapshots/save-12.omwsave",
+        "sha256": "f73a6d967f3cf8312ae1f4023d9d77a3ac57b8639f7a189b9a63bd6f715f63cd"
+      },
+      "binary": {
+        "path": "build/openmw",
+        "sha256": "266e42b659b05f04c17934cfaeb32e76a610bcaee4a573b33b5ff42fd86684b7"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/readiness-checkpoint-verification.json",
+        "sha256": "49516f842290e4efac960d18e014e7bba095099436745046007107acaa2e27c0"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "content:oblivion.esm:01fc43",
+          "2"
+        ],
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 1,
+      "expected_captures": 6
+    },
+    {
+      "id": "normal-windup",
+      "kind": "normal",
+      "phase": "windup",
+      "cap": 60,
+      "seed": 24,
+      "name": "timing-fresh-normal-windup-cap60-seed24-01",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-normal-cap60-seed24-01/snapshots/save-7.omwsave",
+        "sha256": "3f30c71f7b99e139d29854cf94423d2f8a2b0e3fc7e50f50ed17c26f81b61cf0"
+      },
+      "source_sequence": 7,
+      "reference": "build/oblivion-compat/m15/S4/timing-matrix-normal-cap60-seed24-01",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-matrix-normal-cap60-seed24-01.json",
+        "sha256": "402d1e9f73c05a6f596fc6ade89b5c2f682da99f2d63d7fe7bcbbe0c6e2be1bc"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-normal-cap60-seed24-01/snapshots/save-12.omwsave",
+        "sha256": "92aa78b3682dd8ae2687a3afc250b7902d8198485ac72077d2029bd7bce16697"
+      },
+      "binary": {
+        "path": "build/openmw",
+        "sha256": "266e42b659b05f04c17934cfaeb32e76a610bcaee4a573b33b5ff42fd86684b7"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-normal-cap60-seed24-01-cell-verification.json",
+        "sha256": "c7d3c86bbe963ddb2a69ada756a0b6dde0b8744fdcb21e5641636421ce50d9d4"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 0,
+      "expected_captures": 5
+    },
+    {
+      "id": "normal-recovery",
+      "kind": "normal",
+      "phase": "recovery",
+      "cap": 120,
+      "seed": 47,
+      "name": "timing-fresh-normal-recovery-cap120-seed47-01",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-normal-cap120-seed47-01/snapshots/save-6.omwsave",
+        "sha256": "b651fec6bdf4b460c1742b57ab945cc62aee7f8fdbbb247630dc91593fcaa1eb"
+      },
+      "source_sequence": 6,
+      "reference": "build/oblivion-compat/m15/S4/timing-matrix-normal-cap120-seed47-01",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-matrix-normal-cap120-seed47-01.json",
+        "sha256": "4e9cf38323942ea772e488bbb8d1f5c0bfdb7bc029b7246aac5dfef97b77003a"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-normal-cap120-seed47-01/snapshots/save-12.omwsave",
+        "sha256": "a66eec650fd65b47b5537e721369882eef2ea2c84594f849dfccbaaeec156d71"
+      },
+      "binary": {
+        "path": "build/openmw",
+        "sha256": "266e42b659b05f04c17934cfaeb32e76a610bcaee4a573b33b5ff42fd86684b7"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-normal-cap120-seed47-01-cell-verification.json",
+        "sha256": "2027990f93f561a2398390f89fdd9c24e8f73bde5c750e107f04cd824b69d5d7"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 0,
+      "expected_captures": 6
+    },
+    {
+      "id": "sanitize-block",
+      "kind": "sanitize",
+      "phase": "block",
+      "cap": 30,
+      "seed": 1,
+      "name": "timing-fresh-sanitize-block-cap30-seed1-01",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap30-seed1-01/snapshots/save-4.omwsave",
+        "sha256": "f3ca0f0484a2d4a363347431e64d824223f24f4ff384cd60e45c7e2071ceb648"
+      },
+      "source_sequence": 4,
+      "reference": "build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap30-seed1-01",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-matrix-sanitize-framed-cap30-seed1-01.json",
+        "sha256": "f57fb5296e38e4602ebadfc8cca1d11cdcc0998efbd27e55652fb38920309b3d"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap30-seed1-01/snapshots/save-12.omwsave",
+        "sha256": "876e9bc6a136352d4ac6717509ce44fd3f2e5078f6d7fce182643366fa8a7789"
+      },
+      "binary": {
+        "path": "build/m15-sanitize/openmw",
+        "sha256": "eac09e9481243a564e847fae02c275a198420e9783c203a7fcb1871514369b03"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-sanitize-framed-cap30-seed1-01-cell-verification.json",
+        "sha256": "e632920879f1b63e3bd89c02f9b5d2f3cbc2c2b827173f72bbbe2a786696b767"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "content:oblivion.esm:01fc43",
+          "2"
+        ],
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 1,
+      "expected_captures": 6
+    },
+    {
+      "id": "sanitize-windup",
+      "kind": "sanitize",
+      "phase": "windup",
+      "cap": 60,
+      "seed": 24,
+      "name": "timing-fresh-sanitize-windup-cap60-seed24-01",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap60-seed24-01/snapshots/save-7.omwsave",
+        "sha256": "e8f2bf421e0ab7000b1093eeed5a3a482218ee0743f62c86cd32b3c85f0f1ae5"
+      },
+      "source_sequence": 7,
+      "reference": "build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap60-seed24-01",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-matrix-sanitize-framed-cap60-seed24-01.json",
+        "sha256": "49989f2ad762a5a83482fce7146737034224c495b7a98ef276fa8fe860180163"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap60-seed24-01/snapshots/save-12.omwsave",
+        "sha256": "b19a5217c058dc6ce927ff8f515666c21546de3cd3ec5b971055d9b93fc5809a"
+      },
+      "binary": {
+        "path": "build/m15-sanitize/openmw",
+        "sha256": "eac09e9481243a564e847fae02c275a198420e9783c203a7fcb1871514369b03"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-sanitize-framed-cap60-seed24-01-cell-verification.json",
+        "sha256": "c088c9e6b584c5ea7f5e471e9a12ecd7466353b3a8b7b29f93f9a4b9e19444e1"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 0,
+      "expected_captures": 5
+    },
+    {
+      "id": "sanitize-recovery",
+      "kind": "sanitize",
+      "phase": "recovery",
+      "cap": 120,
+      "seed": 47,
+      "name": "timing-fresh-sanitize-recovery-cap120-seed47-01",
+      "source": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap120-seed47-01/snapshots/save-6.omwsave",
+        "sha256": "61683595a77a90fcbea3b182e9a95e1e99915b7d46ad68a2a28dad3d385cf359"
+      },
+      "source_sequence": 6,
+      "reference": "build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap120-seed47-01",
+      "reference_manifest": {
+        "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-matrix-sanitize-framed-cap120-seed47-01.json",
+        "sha256": "ddde539a1f3b8971d3a1727fc038e2ef7d2fd35046eca2ddf85a6c7396c74698"
+      },
+      "endpoint": {
+        "path": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/m15/S4/timing-matrix-sanitize-framed-cap120-seed47-01/snapshots/save-12.omwsave",
+        "sha256": "2a66a518744d9b48ed29a5ee3022d68e02d1ac339e5ad98bc13b8dc3ad1e20c4"
+      },
+      "binary": {
+        "path": "build/m15-sanitize/openmw",
+        "sha256": "eac09e9481243a564e847fae02c275a198420e9783c203a7fcb1871514369b03"
+      },
+      "reference_cell": {
+        "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/timing-matrix-sanitize-framed-cap120-seed47-01-cell-verification.json",
+        "sha256": "4e4dfb31b6accc25c717f8e5bf2a04d6f6eaea5eb14deaab3c0187441a0404bd"
+      },
+      "expected_pairs": 5,
+      "expected_hits": [
+        [
+          "dynamic:player:0000000000000001",
+          "3"
+        ]
+      ],
+      "expected_block_pcm_clusters": 0,
+      "expected_captures": 6
+    }
+  ],
+  "derivation": "Current reference manifest actions through wall-settled only. Block/recovery start at recovered wait; windup starts at pending contact wait. Remove only redundant windup F5 before the already-proven actual hit; retain five core saves. Prefix held block/reactivate opponent as original combined-inflight recipe; recovery holds/release native block as original resume. Current source/load exact; no authored outcomes.",
+  "preflight": "Verify all pinned references and same current assets; source block action6/held, windup action2/pending3/contactfalse, recovery action8/applied reaction2. Retained identical-input approach/camera witnesses plus live read-only visibility wait before core captures. Reject wrong source stages with negative controls before any process.",
+  "focused_verification": "All six manifest/source preflights, five actual exact pairs each, whole source restore/new process, pending contact once, original endpoint/native inventories/resources/RNG, range/wall invariants, six reviewed captures for block/recovery and five for windup and block PCM1/0/0. Compare each continuation to its own reference; no cross-seed RNG equality.",
+  "reusable_evidence": {
+    "reference_matrix": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/matrix-checkpoints/861a7104977591c29e577f56702fdaa6080ee6d0213b0c555e7da8bca6a0cc11.json",
+      "sha256": "861a7104977591c29e577f56702fdaa6080ee6d0213b0c555e7da8bca6a0cc11"
+    },
+    "original_recipe": {
+      "path": "scripts/data/oblivion_compat/m15_combined_melee_course.json",
+      "sha256": "a8ae91dbe58f9368d9232a998f517e2b463f84588a3a3815efaa38f33a3b28f7"
+    },
+    "original_runner": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/inflight-before-timing-run.py",
+      "sha256": "11857959b3e188290b5a0767d42e177e5e1393e3c4b9dad17d7395d78ee3cba9"
+    },
+    "original_verifier": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/inflight-before-timing-verify.py",
+      "sha256": "458d3a38f9e9c027da63f081c497b2f633c3bf85001e69118612c3f7fc2e634d"
+    },
+    "normal_binary_restoration": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/restore-production-normal-build.json",
+      "sha256": "a362c3e35429ef400c29c27e34cdc9aaa8831c4bfe78e07e3eee3d85c35c607e"
+    }
+  },
+  "integration": "No production/public Python change: reuse source-linked full gates. Required final F8 and Section10 gates remain; no broad rebuild for private fixture adaptation.",
+  "fixtures": {
+    "mastery": "build/oblivion-compat/m15/S4/blunt-course-work-01/fixture-01",
+    "plugins": [
+      {
+        "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/fixture-01/M15CombinedMasteryChance.esp",
+        "sha256": "99dd6d630b2c04514cf44ec0d7351c710f1341cb68548d56f16c0d5574b74e7c"
+      },
+      {
+        "path": "build/oblivion-compat/m15/S4/combined-wall-work-01/partition-fixture-02/M15StationaryOpponent.esp",
+        "sha256": "e7650dbd7f993ae7680573b72ed6af824c421b8986daee5d2eb183775c45ff68"
+      }
+    ]
+  }
+}
