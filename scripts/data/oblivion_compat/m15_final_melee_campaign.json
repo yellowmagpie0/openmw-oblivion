@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "status": "frozen-before-independent-execution",
+  "full_M15S4_acceptance": false,
+  "requirement": "Section4.5: two independent clean same-seed campaigns and one second declared seed in both builds.",
+  "scope": "S4 synthetic L3 combined NPC melee course; reuse separately proven Player/Creature, equipment, interruption and restart cases. No tutorial/Arena/L4 progression or full milestone claim.",
+  "parent": {
+    "path": "scripts/data/oblivion_compat/m15_timing_campaign.json",
+    "sha256": "2d4bd07ff4424d6976d480b2a197a02b019e660b2ac83b6db4f0dc0051cbd4ff"
+  },
+  "frozen": {
+    "resolution": [
+      1280,
+      720
+    ],
+    "backend": "PrivateXvfb with SDL-X11 normalinput,softwareMesa,ALSOFTwave soundenabled; no concurrent campaigns or competingCPUheavychecks.",
+    "camera": "Firstperson initialsavedcamera; same mousebindings, sensitivity.05 and measured read-only framing policy in everycell.",
+    "profile": {
+      "path": "build/oblivion-compat/m15/S4/blunt-course-work-01/stock-club-profile-01.json",
+      "sha256": "114893c5e913a85478f7264dfc497705729e1071d030ccaf535e7c25c35b8a00"
+    },
+    "initial_clock": {
+      "year": 433,
+      "month": 7,
+      "day": 27,
+      "hour": 1.0199999809265137,
+      "time_scale": 30
+    },
+    "weather": "Initialweather and other opaque save records byte-identical to source; interiorcourse.",
+    "physics": {
+      "fixed_substep": 0.0167,
+      "update_type": 0,
+      "chase_delta_mult": 0.05,
+      "defaults_path": "files/settings-default.cfg",
+      "defaults_sha256": "453a57bde37fa29e0fc34cba46eaa8349627edfa3c8603f8fb2da1dd91c85929",
+      "policy": "Production native host clock; fixedsubsteps/carry, scene-complexity admission unchanged. Do not fabricate achievedFPS or equalelapsed trajectories."
+    },
+    "reference_manifest": {
+      "path": "build/oblivion-compat/m15/S4/combined-mastery-work-01/timing-readiness-current-normal-cap30-seed1-03.json",
+      "sha256": "2496da6d0b99f86f7c011d21f3dfc816c2cb26e49afa963b44144dbff4dece35",
+      "actions": 227,
+      "saves": 14,
+      "captures": 13
+    },
+    "deadline_policy": "Use exact existing bounded waits from pinned baseline. Expected SAN scaling in existing wrapper is declared beforecase preflight. No afterfailure budget/threshold changes; preserve/classify everyfailure.",
+    "artifacts_and_harness": "Shared existing run/inspect, epoch/save monitor, PCM assay, camera-statehelper, monotonicclassifier. OptionalS6settled diagnostic omittedexplicitly; requiredactiveS4body proofs retained.",
+    "file_hashes": {
+      "config/openmw.cfg": "4e3faad86da0d5f71df1839a60c0d2a3559e2545072cec34412443bb8d98ce57",
+      "config/settings.cfg": "7f6b54a63f082724b0ccab66d0fd0a1a139885cabeb014c0a4d6fe2bdf3d2cf5",
+      "test-data/events.txt": "c367fd1f4a711d450b8708ddabb9fa016329632ee64ed6b24e1c68e6c73e31b3",
+      "config/input_v3.xml": "19411e9b88ee5e44e87ed175578d4bf1475e045348e4375d9d34814fb94c61a5",
+      "config/alsoft.conf": "0769d68d4be9129611431fe934f4036d0e9b638c3034f7ee79692c025b7ebdd2",
+      "test-data/m15-course-observer.omwscripts": "164446637fab857d4f5af22c1f261d9e138b3beb16318aabc1a6c4912c84e24b",
+      "test-data/scripts/m15_course_observer.lua": "610bbdaea7ba6049fd6e57329a6d7bcd55b7ddad18465fb7322c38cb5e5e28c2",
+      "test-data/scripts/m15_forward_capture_guard.lua": "c8a571a2d8eb45b953438cd6127b1fa7f77c0497c526996a222c7acf807d37a2"
+    }
+  },
+  "cells": [
+    {
+      "id": "normal-seed1-a",
+      "kind": "normal",
+      "seed": 1,
+      "cap": 30,
+      "run": "final-melee-normal-seed1-a-01"
+    },
+    {
+      "id": "normal-seed1-b",
+      "kind": "normal",
+      "seed": 1,
+      "cap": 30,
+      "run": "final-melee-normal-seed1-b-01"
+    },
+    {
+      "id": "normal-seed24-c",
+      "kind": "normal",
+      "seed": 24,
+      "cap": 30,
+      "run": "final-melee-normal-seed24-c-01"
+    },
+    {
+      "id": "sanitize-seed1-a",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 30,
+      "run": "final-melee-sanitize-seed1-a-01"
+    },
+    {
+      "id": "sanitize-seed1-b",
+      "kind": "sanitize",
+      "seed": 1,
+      "cap": 30,
+      "run": "final-melee-sanitize-seed1-b-01"
+    },
+    {
+      "id": "sanitize-seed24-c",
+      "kind": "sanitize",
+      "seed": 24,
+      "cap": 30,
+      "run": "final-melee-sanitize-seed24-c-01"
+    }
+  ],
+  "case_preflight": {
+    "path": "build/oblivion-compat/m15/S4/final-course-work-01/case-preflight.json",
+    "sha256": "34855381d0fc4671efdcc16e46e23fb10a08a03c5e0e760d09f0a65f48418ca9"
+  },
+  "expected": {
+    "processes": 6,
+    "exact_save_live_pairs": 84,
+    "direct_capture_reviews": 78,
+    "block_pcm_clusters_per_process": 1
+  },
+  "comparison_policy": {
+    "path": "scripts/data/oblivion_compat/m15_timing_semantic_comparison.json",
+    "sha256": "8166f43b345060c8c51a3717daf75813e4b0fa358890323ef952b171bea4897d"
+  },
+  "reuse": {
+    "reference_matrix": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/sanitize-seed47-row-verification.json",
+      "sha256": "3a2546a62906a143ac60413580343ddc3df793193b80afffa48bd416889f648b"
+    },
+    "fresh_windows": {
+      "path": "build/oblivion-compat/m15/S4/timing-campaign-work-01/fresh-timing-checkpoint-verification.json",
+      "sha256": "1c5bf9500763e168bc5159bbdf5434f12d49e87006dcee079dd8e40c73e9c0e4"
+    },
+    "current_source_gates": {
+      "path": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/gates-and-reuse.json",
+      "sha256": "c45f8dc4b97e9b53811c838a32737786fa6a996e29a0c9ad5ed58f25406a80f1"
+    },
+    "source_impact": "Current Actors pause guard adds CREA4 only. This course uses unchanged NPC4 path. Earlier passive initialization is CREA4-only. Full current normal/SAN engine and runtime binaries retained."
+  },
+  "remaining_final_gates": [
+    "Finite audit of eight S4 requirements and section8 melee/block/mastery/reaction coverage; these six courses alone are not universal coverage.",
+    "Applicable Section10 fresh configurations, default/OpenCS explicit tests, full Python, external Lua and regressions.",
+    "Actual audio listening remains unavailable; PCM and request traces do not establish listening."
+  ],
+  "failure_policy": "Preserve and classify every attempt. No retries until green or relaxed actions/deadlines/goldens.",
+  "frozen_at_utc": "2026-11-03T06:05:46.218231+00:00"
+}
