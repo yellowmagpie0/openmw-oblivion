@@ -1185,7 +1185,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "Runtime armor contacts are supporting pairwise evidence, not dedicated Apprentice/Journeyman light/heavy wear-factor measurements. Pure armor-wear threshold branches are separately tested.",
+        "Pairwise non-saturating Light25 normal and selected Heavy50 SAN contacts, each with actual before/after fresh proofs; retained Light100 normal/SAN wear reinspected. Other type/rank thresholds retain L1/World coverage; no dedicated Heavy25 or Light50 runtime claim.",
         "Final combined S4 acceptance and required gates remain open; see M15-S4-DELIVERY-AUDIT.md."
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-01/",
@@ -1223,7 +1223,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "Runtime armor contacts are supporting pairwise evidence, not dedicated Apprentice/Journeyman light/heavy wear-factor measurements. Pure armor-wear threshold branches are separately tested.",
+        "Pairwise non-saturating Light25 normal and selected Heavy50 SAN contacts, each with actual before/after fresh proofs; retained Light100 normal/SAN wear reinspected. Other type/rank thresholds retain L1/World coverage; no dedicated Heavy25 or Light50 runtime claim.",
         "Final combined S4 acceptance and required gates remain open; see M15-S4-DELIVERY-AUDIT.md."
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/lightarmor-02/",
@@ -1339,7 +1339,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "Runtime armor contacts are supporting pairwise evidence, not dedicated Apprentice/Journeyman light/heavy wear-factor measurements. Pure armor-wear threshold branches are separately tested.",
+        "Pairwise non-saturating Light25 normal and selected Heavy50 SAN contacts, each with actual before/after fresh proofs; retained Light100 normal/SAN wear reinspected. Other type/rank thresholds retain L1/World coverage; no dedicated Heavy25 or Light50 runtime claim.",
         "Final combined S4 acceptance and required gates remain open; see M15-S4-DELIVERY-AUDIT.md."
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-01/",
@@ -1377,7 +1377,7 @@
         "save/restart before and after consequence"
       ],
       "open_questions": [
-        "Runtime armor contacts are supporting pairwise evidence, not dedicated Apprentice/Journeyman light/heavy wear-factor measurements. Pure armor-wear threshold branches are separately tested.",
+        "Pairwise non-saturating Light25 normal and selected Heavy50 SAN contacts, each with actual before/after fresh proofs; retained Light100 normal/SAN wear reinspected. Other type/rank thresholds retain L1/World coverage; no dedicated Heavy25 or Light50 runtime claim.",
         "Final combined S4 acceptance and required gates remain open; see M15-S4-DELIVERY-AUDIT.md."
       ],
       "evidence": "build/oblivion-compat/m15/S2/mastery/heavyarmor-02/",
@@ -1850,9 +1850,10 @@
         ],
         "runtime_checkpoints": [
           "build/oblivion-compat/m15/S4/shield-defense-work-01/checkpoint-verification.json",
-          "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/checkpoint-verification.json"
+          "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/checkpoint-verification.json",
+          "build/oblivion-compat/m15/S4/armor-wear-mastery-work-01/checkpoint-verification.json"
         ],
-        "scope_limit": "Runtime armor contacts are supporting pairwise evidence, not dedicated Apprentice/Journeyman light/heavy wear-factor measurements. Pure armor-wear threshold branches are separately tested."
+        "scope_limit": "Pairwise non-saturating Light25 normal and selected Heavy50 SAN contacts, each with actual before/after fresh proofs; retained Light100 normal/SAN wear reinspected. Other type/rank thresholds retain L1/World coverage; no dedicated Heavy25 or Light50 runtime claim."
       },
       "burden": {
         "implementation": "Live Player/NPC inventory burden discounts the worn instance using base mastery and winning settings.",
@@ -1875,6 +1876,7 @@
         "scope_limit": "All-light versus mixed normal/SAN contacts and actual before/after fresh sources; other appearance/material requirements remain separate."
       }
     },
-    "remaining": "Resolve actual C1/R3/I4/Q5/V6 requirement gaps, final independent clean campaigns and Section10 gates. Preserve row-specific runtime scope limits; no new test executions inferred."
+    "remaining": "Resolve actual C1/R3/I4/Q5/V6 requirement gaps, final independent clean campaigns and Section10 gates. Preserve row-specific runtime scope limits; no new test executions inferred.",
+    "armor_wear_followup": "scripts/data/oblivion_compat/m15_armor_wear_mastery_cases.json"
   }
 }

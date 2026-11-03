@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "requirements": [
+    "M15-MASTERY-LIGHTARMOR-01",
+    "M15-MASTERY-LIGHTARMOR-02",
+    "M15-MASTERY-HEAVYARMOR-01",
+    "M15-MASTERY-HEAVYARMOR-02"
+  ],
+  "full_M15S4_acceptance": false,
+  "scope": "Non-saturating armor-wear mastery in the existing normal-input armor course. Pairwise type/rank/build coverage plus complete L1 factor branches; not every Cartesian combination.",
+  "fixture_source": "build/oblivion-compat/m15/S4/light-armor-mastery-work-01/light/fixture/input.omwsave",
+  "editable_initial_profiles": {
+    "light25": {
+      "name": "Non-saturating armor wear light25",
+      "weapon_family": "blade",
+      "animation_family": "onehand",
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "stock_weapon": "content:oblivion.esm:090615",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "stock_weapon_health": 56,
+      "stock_weapon_weight": 8,
+      "initial_player_weapon_condition": 50,
+      "initial_player_weapon_charge": -1,
+      "base_block": 50,
+      "course_window": "ordinary",
+      "expected_ordinary_fatigue_cost": 7.8,
+      "expected_incoming_block_fatigue_cost": 0,
+      "expected_reference_debits": 1,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "expected_attacker_recoil": true,
+      "opponent_actor": "content:oblivion.esm:01fc43",
+      "opponent_base": "content:oblivion.esm:025200",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse accepted combined fixture geometry."
+      },
+      "armor_mastery": true,
+      "armor_variant": "light25",
+      "expected_armor_rating": 6,
+      "target_health": 120,
+      "armor_wear": {
+        "base_light": 25,
+        "base_heavy": 5,
+        "expected_worn": [
+          "content:oblivion.esm:024764",
+          "content:oblivion.esm:024765",
+          "content:oblivion.esm:024766",
+          "content:oblivion.esm:024767",
+          "content:oblivion.esm:024768"
+        ],
+        "selected": "content:oblivion.esm:024764",
+        "factor": 1,
+        "damage_to_armor": 9,
+        "tolerance": 0.0002
+      }
+    },
+    "heavy50": {
+      "name": "Non-saturating armor wear heavy50",
+      "weapon_family": "blade",
+      "animation_family": "onehand",
+      "actor_value_skill": 14,
+      "legacy_skill": "blade.base",
+      "stock_weapon": "content:oblivion.esm:090615",
+      "stock_enchantment": null,
+      "stock_charge_maximum": 0,
+      "stock_weapon_health": 56,
+      "stock_weapon_weight": 8,
+      "initial_player_weapon_condition": 50,
+      "initial_player_weapon_charge": -1,
+      "base_block": 50,
+      "course_window": "ordinary",
+      "expected_ordinary_fatigue_cost": 7.8,
+      "expected_incoming_block_fatigue_cost": 0,
+      "expected_reference_debits": 1,
+      "natural_recoil_opponent": true,
+      "recoil_aware_opponent": true,
+      "expected_attacker_recoil": true,
+      "opponent_actor": "content:oblivion.esm:01fc43",
+      "opponent_base": "content:oblivion.esm:025200",
+      "wall_approach": {
+        "maximum_x": 795,
+        "maximum_y": 92,
+        "reason": "Reuse accepted combined fixture geometry."
+      },
+      "armor_mastery": true,
+      "armor_variant": "heavy50",
+      "expected_armor_rating": 8,
+      "target_health": 120,
+      "armor_wear": {
+        "base_light": 5,
+        "base_heavy": 50,
+        "expected_worn": [
+          "content:oblivion.esm:01c6d0",
+          "content:oblivion.esm:024765",
+          "content:oblivion.esm:024766",
+          "content:oblivion.esm:024767",
+          "content:oblivion.esm:024768"
+        ],
+        "selected": "content:oblivion.esm:01c6d0",
+        "factor": 0.5,
+        "damage_to_armor": 9,
+        "tolerance": 0.0002
+      }
+    }
+  },
+  "authoring": "Initial NPC skills only; healthy stock IronGreaves replaces FurGreaves in heavy50. All five worn slots and untouched physical layout/camera remain declared. No contact/resource/effect outcomes authored. Cold schema76->79 tag is explicit; actual fresh sources must restore wholly.",
+  "expected": "Nonzero unsaturated debit = independently retained unarmored damage * declared native armor rating/100 * installed fDamageToArmorPercentage9 * wear factor. Light25 rating6/factor1; mixed Heavy50 selected IronGreaves rating8/factor0.5. Absolute tolerance0.0002, strict saved/live/source and inventory metadata.",
+  "rating_basis": "Installed stock base whole armor ratings, Luck50 and skill multiplier0.35 +0.65*base_skill/100, floor per item minimum1. Light25 Fur whole2/2/5/2/3 ->1+1+2+1+1=6. Heavy50 IronGreaves6 ->4; other four Fur atLight5 each1 ->8. No Master bonus.",
+  "retained_evidence": "Existing all-light Light100 normal/SAN courses already contain unsaturated FurGreaves75->71.38896179199219 and exact before/after fresh proofs; reinspect rather than replay.",
+  "verification_plan": "Existing shared launcher/inspector/compare; source/worn/approach/camera guards before contacts. New Light25 normal and Heavy50 SAN reference + exact actual-before and actual-after fresh sources, retaining Health/Fatigue/weapon wear/RNG/contact/no-replay assertions. Current engine2100 per build and Python534 gates reused with source-impact provenance; no production code change.",
+  "shared_fixture_patch": "scripts/data/oblivion_compat/m15_armor_wear_mastery_shared.patch",
+  "retained_preflight_failures": [
+    "build/oblivion-compat/m15/S4/armor-wear-mastery-work-01/schema-preflight-correction.json",
+    "build/oblivion-compat/m15/S4/armor-wear-mastery-work-01/preflight-missing-plugin-hash.json"
+  ],
+  "remaining": "Required integration/final campaigns and unrelated C1/R3/I4/Q5/V6 gaps remain; no full S4 closure.",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "verification": {
+    "checkpoint": "build/oblivion-compat/m15/S4/armor-wear-mastery-work-01/checkpoint-verification.json",
+    "new_exact_save_live_pairs": 12,
+    "new_process_epochs": 6,
+    "actual_before_after_fresh_restores": 4,
+    "endpoint_comparisons": "4x29fields",
+    "directly_reviewed_captures": 12,
+    "light25_debit": 2.0634536743164062,
+    "light25_expected": 2.063450775146488,
+    "heavy50_debit": 1.375640869140625,
+    "heavy50_expected": 1.375633850097656,
+    "retained_light100_cases": 4,
+    "gate_reuse": "build/oblivion-compat/m15/S4/armor-wear-mastery-work-01/reused-evidence.json",
+    "new_builds_or_full_test_runs": 0,
+    "gameplay_retries": 0,
+    "scope": "Pairwise class/rank/build runtime coverage plus existing complete L1 factors/thresholds; no dedicated Heavy25 or Light50 runtime claim."
+  }
+}
