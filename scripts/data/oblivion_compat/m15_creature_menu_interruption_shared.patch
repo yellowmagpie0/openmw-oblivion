@@ -1,0 +1,85 @@
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/run.py
+@@ -1506,0 +1507,17 @@
++if '--input-overlap-course' in sys.argv and overlap.get('creature_menu'):
++ import ast
++ if overlap.get('creature_menu_fresh_proof'):
++  from tes4_runtime_state import load_save
++  saved_path=Path(overlap['creature_menu_fresh_proof']);assert sha(saved_path)==overlap['creature_menu_fresh_proof_sha256'];saved=json.loads(saved_path.read_text());assert saved['passed']
++  source=Path(saved['source']);live=Path(saved['loaded_live']);assert sha(source)==saved['source_sha256'] and sha(live)==saved['loaded_live_sha256']
++  restored=load_save(source);assert restored==json.loads(live.read_text()) and restored['physical_actions']==dict(next=3,pending=[2])
++  row=next(v for v in restored['native_melee_states'] if v['actor']==profile['opponent_actor']);strike=row['strike']
++  assert row['ai_intent'] and strike['id']==2 and strike['kind']==2 and not strike['contact_committed'] and strike['playback_speed']==profile['declared_creature_weapon_speed']
++ pause_source=(base/'combined-mastery-work-01/run.py').read_text()
++ pause_text=next(v.value for v in ast.walk(ast.parse(pause_source)) if isinstance(v,ast.Constant) and isinstance(v.value,str) and v.value.startswith(' local paused=core.isWorldPaused()') and 'M15 I4 pause checked:' in v.value)
++ for f in spec['files']:
++  if not f['path'].endswith('m15_course_observer.lua'):continue
++  anchor='local timer = 0';assert f['content'].count(anchor)==1
++  f['content']=f['content'].replace(anchor,anchor+'\nlocal interruptionPaused=nil\nlocal interruptionTransition=0\nlocal interruptionPauseTime=0\nlocal interruptionPauseReal=0\nlocal interruptionPauseChecked=false')
++  anchor=' local now=core.getRealTime()';assert f['content'].count(anchor)==1
++  f['content']=f['content'].replace(anchor,pause_text+anchor)
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/inspect.py
+@@ -112 +112 @@
+-if '--reaction-interruption' in sys.argv or '--death-interruption' in sys.argv or '--weapon-break' in sys.argv or '--held-death' in sys.argv or '--fatigue-ko' in sys.argv or '--windup-fatigue-ko' in sys.argv or '--fatigue-ko-tail' in sys.argv or '--essential-recovery' in sys.argv or '--creature-defense' in sys.argv or '--shield-defense' in sys.argv or '--player-shield-gamepad' in sys.argv or '--armor-mastery' in sys.argv or '--armor-burden' in sys.argv or '--creature-counter' in sys.argv or '--player-disarm' in sys.argv:
++if '--reaction-interruption' in sys.argv or '--death-interruption' in sys.argv or '--weapon-break' in sys.argv or '--held-death' in sys.argv or '--fatigue-ko' in sys.argv or '--windup-fatigue-ko' in sys.argv or '--fatigue-ko-tail' in sys.argv or '--essential-recovery' in sys.argv or '--creature-defense' in sys.argv or '--shield-defense' in sys.argv or '--player-shield-gamepad' in sys.argv or '--armor-mastery' in sys.argv or '--armor-burden' in sys.argv or '--creature-counter' in sys.argv or '--player-disarm' in sys.argv or '--creature-menu' in sys.argv:
+@@ -132,0 +133,38 @@
++if '--creature-menu' in sys.argv:
++ fresh='--creature-menu-fresh' in sys.argv;p,av,melee,ref,load_save=[ns[k] for k in ['p','av','melee','ref','load_save']];n=profile['opponent_actor']
++ a=ns['inspect'](root/name,3 if fresh else 5,[],[],fresh);out=a['out'];states=a['states'];source=load_save(out/'input-pristine.omwsave');initial=source if fresh else states[0];pending=states[-3];contact,end=states[-2:];log=(out/'process.log').read_text()
++ assert re.findall(r'M15 melee hit committed: actor=([^ ]+) id=(\d+)',log)==[(n,'3')] and 'M15 melee miss committed:' not in log
++ assert 'M15 melee interrupt: actor='+n+' id=2' in log and 'M15 I4 pause checked: transition=1 simulationUnchanged=true' in log and 'M15 I4 pause state: transition=2 paused=false' in log
++ assert pending['physical_actions']==dict(next=3,pending=[2]) and pending['physical_action_owners']==[dict(id=2,actor=n)]
++ m=melee(pending,n);assert m['ai_intent'] and m['strike']['id']==2 and m['strike']['kind']==2 and not m['strike']['contact_committed'] and m['strike']['playback_speed']==profile['declared_creature_weapon_speed']
++ values=lambda s,k,i:sum(x or 0 for x in av(s,k)['values'][i]);weapon=lambda s:next(x for x in ref(s,n)['inventory'] if x['base']==profile['opponent_stock_weapon'])
++ initial_inventory=json.loads(json.dumps(ref(initial,n)['inventory']))
++ for s in states[:-2]:
++  assert values(s,p,8)==values(initial,p,8) and av(s,n)['values']==av(initial,n)['values'] and weapon(s)['condition']==140
++  assert s['player']['inventory']==initial['player']['inventory'] and s['combat_rng_state']==(pending['combat_rng_state'] if s is pending else initial['combat_rng_state'])
++ line=next(x for x in log.splitlines() if 'M15 melee hit committed: actor='+n+' id=3 ' in x)
++ field=lambda k:float(re.search(r'(?:^| )'+k+r'=([^ ]+)',line)[1])
++ assert field('fatigue_cost')==9 and field('before')==100 and field('after')==91 and field('block_fraction')>0 and field('block_fatigue')==0 and field('armor_condition_writes')==0
++ damage=values(initial,p,8)-values(contact,p,8);assert 0<damage<50 and math.isclose(damage,field('health_damage'),rel_tol=0,abs_tol=2e-4)
++ assert values(end,p,8)==values(contact,p,8) and logged_condition_matches(weapon(contact)['condition'],line) and math.isclose(weapon(contact)['condition'],139.4,abs_tol=1e-4)
++ assert weapon(end)==weapon(contact) and 91<=values(contact,n,10)<=100 and values(end,n,10)==100
++ next(x for x in initial_inventory if x['base']==profile['opponent_stock_weapon'])['condition']=weapon(contact)['condition']
++ for s in [contact,end]:
++  assert ref(s,n)['inventory']==initial_inventory and s['player']['inventory']==initial['player']['inventory'] and not s['native_loose_weapons']
++  assert s['physical_actions']==dict(next=4,pending=[]) and not s['physical_action_owners']
++  assert s['combat_rng_state']==pending['combat_rng_state'] and values(s,p,10)==values(initial,p,10)
++ for actor,allowed in [(p,{8}),(n,{10})]:
++  for s in states:
++   assert all(v==av(initial,actor)['values'][i] for i,v in enumerate(av(s,actor)['values']) if i not in allowed)
++  assert next(v for v in end['native_actor_life'] if v['actor']==actor)['phase']==0
++  state=melee(end,actor);assert not state['strike'] and not state['reaction'] and not state['retiring_sequences'] and not state['input']['input_held'] and state['input']['queued']==0
++  assert all(h['inactive'] for h in state['held_blocks']) and av(end,actor)['process_action']==-1
++  if state.get('first_person'):
++   view=state['first_person'];assert not view['strike'] and not view['reaction'] and all(h['inactive'] for h in view['held_blocks'])
++ assert not melee(end,n)['ai_intent']
++ sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()
++ if not fresh:
++  rows=json.loads((out/'snapshot-index.json').read_text());r=rows[sorted(rows,key=int)[2]];proof=dict(passed=True,source=r['snapshot'],source_sha256=r['sha256'],loaded_live=str(out/r['event']['live']),loaded_live_sha256=r['event']['live_sha256'],reference=name,game_sha256=a['epoch']['executable_sha256'])
++  (Path(profile_path).parent/(kind+'-pending-source-proof.json')).write_text(json.dumps(proof,indent=2)+'\n')
++ report=dict(passed=True,full_M15S4_acceptance=False,name=name,fresh=fresh,scope='Actual pending Creature2 cancelled by Escape pause, release/reblock, once-only resumed Creature3 contact and natural recovery. Synthetic speed0.1; no stock-speed/FPS or complete S4 claim.',exact_saved_live_pairs=a['checks'],epoch=a['epoch'],mapped_libraries=a['libs'],source_whole_restored_exactly=fresh,source_sha256=sha(out/'input-pristine.omwsave'),pending_source_sha256=a['checks'][-3]['sha256'],health_damage=damage,weapon_after=weapon(end)['condition'],fatigue_cost=9,old_contact_replayed=False,terminal_action_ledger=end['physical_actions'],activation_rng=dict(before=initial['combat_rng_state'],pending=pending['combat_rng_state'],after=end['combat_rng_state']),verifier_sha256=sha(Path(__file__)))
++ receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=True,pairs=len(a['checks']),fresh=fresh,damage=damage)));sys.exit(0)
+--- build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
++++ build/oblivion-compat/m15/S4/combined-mastery-work-01/compare-pair.py
+@@ -197,0 +198,18 @@
++if '--creature-menu' in sys.argv:
++ import ast
++ course_work=Path(sys.argv[sys.argv.index('--course-work')+1]);kind='sanitize' if 'sanitize' in name else 'normal';a=read(course_work/(kind+'-reference-verification.json'));b=read(course_work/(kind+'-fresh-verification.json'))
++ assert a['passed'] and b['passed'] and a['name']==name and b['name']==other and not a['fresh'] and b['fresh'] and b['source_whole_restored_exactly']
++ assert a['epoch']['executable_sha256']==b['epoch']['executable_sha256'] and a['mapped_libraries']==b['mapped_libraries'] and (a['epoch']['pid'],a['epoch']['start_ticks'])!=(b['epoch']['pid'],b['epoch']['start_ticks'])
++ assert a['pending_source_sha256']==b['source_sha256']==sha(r/other/'input-pristine.omwsave')
++ def endpoint(run):
++  rows=read(r/run/'snapshot-index.json');row=rows[sorted(rows,key=int)[-1]];assert sha(row['snapshot'])==row['sha256'] and sha(r/run/row['event']['live'])==row['event']['live_sha256'];return read(r/run/row['event']['live'])
++ old=r/'combined-restart-work-01/verify-recovery-pair.py';fn=next(v for v in ast.parse(old.read_text()).body if isinstance(v,ast.FunctionDef) and v.name=='owned_melee');melee_scope={'json':json};exec(compile(ast.Module(body=[fn],type_ignores=[]),str(old)+'#existing-owned-melee','exec'),melee_scope)
++ accepted=r/'mount-interruption-work-01/final-compare-pair.py';fn=next(v for v in ast.walk(ast.parse(accepted.read_text())) if isinstance(v,ast.FunctionDef) and v.name=='owned');player='dynamic:player:0000000000000001';npc='content:m15stationaryopponent.esp:000802';scope=dict(json=json,scope=melee_scope,actors={player,npc},player=player,horse=npc);exec(compile(ast.Module(body=[fn],type_ignores=[]),str(accepted)+'#existing-owned-projection','exec'),scope)
++ samples=[]
++ def project(state):
++  result=json.loads(json.dumps(scope['owned'](state)));result,sample=inactive_held_endpoint(state,result,player,True);samples.append(sample);result['opponent_semantics']=result.pop('horse_semantics')
++  for key in ['next_dynamic_serial','ignore_friendly_hits','friend_hit_counters','disposition_modifiers','spoken_dialogue_infos']:result[key]=state[key]
++  result['native_physical_blend_cache']=state['native_physical_blend_time_cache'];result['script_instances_owned']=[v for v in state['script_instances'] if v['context'] in {player,npc}];return result
++ x,y=project(endpoint(name)),project(endpoint(other));assert x.keys()==y.keys();differences=[k for k in x if x[k]!=y[k]]
++ report=dict(passed=not differences,full_M15S4_acceptance=False,reference=name,continuation=other,source_whole_restored_exactly=True,matched_source_sha256=b['source_sha256'],same_game_and_mapped_libraries=True,compared_fields=list(x),differences=differences,inactive_held_samples=samples,scope='Exact actual pending Creature source, menu cancellation and one new AI contact/recovery; native endpoint resources/inventories/ownership strict. Existing guarded inactive-held sample clocks and elapsed world clocks excluded; source and save/live comparisons never normalize.',reused_owned_projection=dict(path=str(accepted),sha256=sha(accepted)))
++ receipt_path.write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(dict(passed=not differences,fields=len(x),differences=differences)));assert not differences,differences;sys.exit(0)

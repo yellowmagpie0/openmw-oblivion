@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "requirement": "S4 I4: menu pause cancels owned stationary Creature input like NPC input, without a late old contact; release/reblock and resumed AI contact/recovery survive exact pending-source restart.",
+  "full_M15S4_acceptance": false,
+  "problem": "Actors::update(paused) filtered out CREA4 despite the shared production NPC/Creature stationary melee policy.",
+  "implementation": "Include REC_CREA4 beside REC_NPC_4 in the existing Oblivion-only paused cancellation loop; reuse the existing CharacterController and contact owners.",
+  "initial_profile": {
+    "name": "I4 armed Creature menu cancellation",
+    "weapon_family": "blade",
+    "animation_family": "onehand",
+    "actor_value_skill": 14,
+    "legacy_skill": "blade.base",
+    "stock_weapon": "content:oblivion.esm:090615",
+    "initial_player_weapon_condition": 50,
+    "initial_player_weapon_charge": -1,
+    "base_block": 50,
+    "base_hand_to_hand": 10,
+    "course_window": "ordinary",
+    "expected_ordinary_fatigue_cost": 7.8,
+    "expected_incoming_block_fatigue_cost": 0,
+    "expected_incoming_fatigue_cost": 9.0,
+    "expected_reference_debits": 3,
+    "expected_attacker_recoil": true,
+    "natural_recoil_opponent": true,
+    "recoil_aware_opponent": true,
+    "opponent_creature": true,
+    "opponent_armed_creature": true,
+    "opponent_actor": "content:m15stationaryopponent.esp:000802",
+    "opponent_base": "content:m15stationaryopponent.esp:000800",
+    "opponent_record_id": "FormId:0x2000800",
+    "defender_reaction_kind": 0,
+    "defender_reaction_action": 6,
+    "recovery_activation_mouse_y": 0,
+    "recovery_activation_sensitivity": 0.05,
+    "wall_approach": {
+      "maximum_x": 795,
+      "maximum_y": 92,
+      "reason": "Reuse accepted combined range/wall geometry; Goblin uses same cell and partition."
+    },
+    "acceptance_scope": "Creature menu cancellation, release/reblock and resumed AI contact/recovery with exact actual pending-source restoration; synthetic weapon speed0.1, not stock-speed/FPS/fullS4.",
+    "stock_charge_maximum": 0,
+    "stock_weapon_health": 56,
+    "stock_weapon_weight": 8,
+    "opponent_stock_weapon": "content:oblivion.esm:000c0c",
+    "opponent_weapon_type": 0,
+    "opponent_weapon_health": 140,
+    "opponent_weapon_weight": 20.0,
+    "initial_opponent_weapon_condition": 140,
+    "expected_opponent_condition_after": 139.4,
+    "expected_incoming_health_bounds": [
+      0.001,
+      50
+    ],
+    "table_clearance_before_range": true,
+    "creature_menu": true,
+    "declared_creature_weapon_speed": 0.10000000149011612
+  },
+  "fixture_recipe": {
+    "base_fixture": "build/oblivion-compat/m15/S4/armed-creature-work-01/fixture",
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "stock_creature_template": "content:oblivion.esm:02a81c",
+    "stock_weapon_override": {
+      "base": "content:oblivion.esm:000c0c",
+      "speed": 0.1,
+      "all_other_record_fields": "unchanged from pinned master"
+    },
+    "initial_creature_weapon_condition": 140,
+    "all_other_initial_state": "Same actor/Player physical placements, assets, script and inventory; explicit current schema79 tag. Cold Creature construction remains production-owned. No contact, damage, cancellation or effect outcomes authored.",
+    "staging_helper": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/prepare.py"
+  },
+  "acquisition": "Stock Goblin has no onehandattackleft. Reuse supported onehandattackpower; actual pending kind2/speed0.1/action2 is required before Escape. Explicit synthetic slow input fixture, not stock-speed/FPS acceptance.",
+  "retained_failures": {
+    "fixture": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/normal01-fixture-failure.json",
+    "gameplay": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/normal02-cancellation-defect.json",
+    "checker": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/activation-rng-checker-correction.json"
+  },
+  "reference": "Draw/block, normal activation starts AI; save actual pending Creature2; real Escape freezes simulation and cancels2; release block inside menu, resume/reblock; only new Creature3 may contact, spend9Fatigue and wear140->139.4; natural Recoil/BlockHit recovery and release.",
+  "fresh": "Exact actual pending-source from each accepted reference, no schema/quantity repair. Same menu cancellation and resumed contact/recovery. Loaded source and every saved/live pair exact.",
+  "verification_plan": {
+    "focused": "Three Creature admission/contact/Counter engine regressions and refreshed normal game pass; exact previously failing24-action menu witness passes.",
+    "integration": "One coherent full normal/SAN engine+current games because shared Actors paused loop changes. Component rules/public Python unchanged; source-linked prior3224normal/1049SAN components and534Python retain provenance.",
+    "runtime": "Normal/SAN new reference5pairs and exact pending fresh3pairs per build; only contact3, no old2 expenditure/RNG/wear, exact native inventory/resources and alive ownership, useful current menu/contact/recovery captures. Existing shared inspector/comparator, no new runtime harness.",
+    "endpoint_policy": "Reuse existing owned-state projection and guarded inactive-held sample clock exclusion; active ownership/resources/inventory strict; source/save-live never normalized."
+  },
+  "shared_fixture_patch": "scripts/data/oblivion_compat/m15_creature_menu_interruption_shared.patch",
+  "checkpoint": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/checkpoint-verification.json",
+  "remaining": "Other C1/R3/I4/Q5/V6 scope, frozen independent F8 and applicable Section10 gates remain; no full S4 claim.",
+  "rng_boundary": "Idle RNG1 precedes legitimate StartCombat activation. Actual pending sourceRNG3357800067 remains exact across menu cancellation/newcontact3/recovery; source and saved/live states are never normalized.",
+  "verification_results": {
+    "focused_engine": 3,
+    "full_engine_per_build": 2100,
+    "exact_save_live_pairs": 16,
+    "process_epochs": 4,
+    "whole_actual_pending_source_restores": 2,
+    "endpoint_comparisons": "2x29fields",
+    "directly_reviewed_captures": 18,
+    "cancelled_contact2_deltas": 0,
+    "new_contact3_fatigue": 9,
+    "new_contact3_health_damage": 3.5625,
+    "new_weapon_condition_approx": 139.4,
+    "gameplay_retries_after_fix": 0,
+    "reused_python": 534,
+    "reused_components": "3224normal /1049SAN ESM4",
+    "scope": "Both builds first-person keyboard/mouse; explicit synthetic slow weapon. No stock-speed/FPS/full-I4/full-S4 claim. Routed PCM retained; no new independent listening claim.",
+    "fixture_reproduction": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/fixture-reproduction.json"
+  },
+  "tested_profile_provenance": {
+    "path": "build/oblivion-compat/m15/S4/creature-menu-interruption-work-01/profile.json",
+    "sha256": "85dda5fc9f5701f05f6849d31fe5b1bdc19dda49ab1015ec2f1f11f5b92c46ae",
+    "metadata_only_corrections": "The editable profile below corrects inherited broad acceptance text and the unused ordinary-condition expectation. Accepted runtime inputs/recorded profile remain unchanged; this selected power-windup case measured139.4."
+  }
+}

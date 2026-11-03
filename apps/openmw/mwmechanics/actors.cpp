@@ -1668,7 +1668,8 @@ namespace MWMechanics
                         for (auto& actor : mActors)
                         {
                             const auto ptr = actor.getPtr();
-                            if (actor.isInvalid() || ptr == player || ptr.getType() != ESM::REC_NPC_4)
+                            if (actor.isInvalid() || ptr == player
+                                || (ptr.getType() != ESM::REC_NPC_4 && ptr.getType() != ESM::REC_CREA4))
                                 continue;
                             const auto* melee = combat->findMeleeState(ptr.getCellRef().getFormKey());
                             if (melee && melee->mAiIntent)
