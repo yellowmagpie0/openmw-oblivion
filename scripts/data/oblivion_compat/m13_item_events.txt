@@ -1,6 +1,11 @@
 # Establish an exact inventory matrix independently of the Player NPC's base
 # inventory, then exercise stacking, consumption/removal, all equip pseudo-
 # slots, and a multi-part clothing/armor conflict before save/reload.
+# Remove the native Player's prison starter clothing as well as matrix items.
+at 1 command player removeitem content:oblivion.esm:027318 999
+at 1 command player removeitem content:oblivion.esm:027319 999
+at 1 command player removeitem content:oblivion.esm:02731a 999
+at 1 command player removeitem content:oblivion.esm:0be335 999
 at 1 command player removeitem Arrow1Iron 999
 at 1 command player removeitem MortarPestle 999
 at 1 command player removeitem IronCuirass 999

@@ -190,7 +190,7 @@ class SdlOffscreenReplayTest(unittest.TestCase):
     def test_key_map_and_rejection_of_chords_or_raw_codes(self):
         for name, code in [("a", 4), ("z", 29), ("1", 30), ("9", 38), ("0", 39),
                            ("F5", 62), ("F12", 69), ("Return", 40), ("grave", 53),
-                           ("Shift_L", 225), ("Control_L", 224)]:
+                           ("KP_2", 90), ("Shift_L", 225), ("Control_L", 224)]:
             self.assertEqual(replay.scancode(name), code)
         for name in [None, 62, "", "F13", "ctrl+a", "0x3e", "Return;quit"]:
             with self.subTest(name=name), self.assertRaises(ValueError):

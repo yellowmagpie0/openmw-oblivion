@@ -2627,8 +2627,11 @@ def validate_m13_runtime_state(state: dict[str, Any]) -> dict[str, Any]:
     for item in inventory:
         by_base.setdefault(str(item.get("base")), []).append(item)
 
-    if state.get("schema_version") != 4:
-        failures.append(f"expected schema version 4, got {state.get('schema_version')}")
+    schema_version = state.get("schema_version")
+    if (type(schema_version) is not int
+            or not 4 <= schema_version <= tes4_state.CURRENT_VERSION):
+        failures.append(
+            f"expected inventory schema version 4 through {tes4_state.CURRENT_VERSION}, got {schema_version}")
     if set(by_base) != set(expected_counts):
         failures.append(
             "item identity set differs: "
