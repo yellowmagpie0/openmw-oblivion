@@ -50,6 +50,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
     expected = copy.deepcopy(state)
     expected['schema_version'] = recipe['target_schema']
     expected.setdefault('native_loose_weapons', [])
+    expected.setdefault('native_animated_references', [])
     expected.setdefault('native_movement', None)
     expected.setdefault('spoken_dialogue_infos', [])
     expected.setdefault('ignore_friendly_hits', {})
@@ -93,7 +94,7 @@ def stage(source: Path, output: Path, recipe: dict) -> dict:
                                    'inventory.extra_scale': None, 'native_actor_values.process_alerted': None, 'melee.reaction': None,
                                    'melee.retiring_sequences': [], 'melee.first_person': None,
                                    'melee.passive_sequence': None, 'melee.held_blocks': [],
-                                   'native_loose_weapons': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'faction_reactions': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None})
+                                   'native_loose_weapons': [], 'native_animated_references': [], 'native_movement': None, 'spoken_dialogue_infos': [], 'ignore_friendly_hits': {}, 'disposition_modifiers': [], 'faction_reactions': [], 'friend_hit_counters': {}, 'combat_controllers': {}, 'native_getup_idles': [], 'native_getup_playback': [], 'native_getup_playback.request_selections': [], 'native_getup_playback.pending_requests': [], 'native_getup_playback.physical_hit': None})
     output.with_suffix('.staging.json').write_text(json.dumps(report, indent=2) + '\n')
     return report
 

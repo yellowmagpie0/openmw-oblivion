@@ -51,6 +51,7 @@ class CachedBlockInputTests(unittest.TestCase):
             for key, value in before.items():
                 self.assertEqual(actual[key], value, key)
             self.assertEqual(actual.get('native_loose_weapons'), [])
+            self.assertEqual(actual.get('native_animated_references'), [])
             self.assertEqual(actual.get('disposition_modifiers'), [])
             self.assertEqual(actual.get('faction_reactions'), [])
             self.assertIn('native_movement', actual)

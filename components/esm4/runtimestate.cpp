@@ -2331,6 +2331,18 @@ namespace ESM4
                 if (pending.mBase != nativeActors.at(actor) || pending.mBase != lives.at(actor)->mBase)
                     throw std::runtime_error("Pending GetUp request belongs to another actor base");
         }
+        checkSize(mNativeAnimatedReferences.size(), "animated reference body list");
+        if (mVersion < 85 && !mNativeAnimatedReferences.empty())
+            throw std::runtime_error("Animated reference bodies require runtime-state version85");
+        for (const auto& [reference, pose] : mNativeAnimatedReferences)
+        {
+            pose.validate();
+            const auto owner = actorBases.find(reference);
+            if (reference.isNull() || owner == actorBases.end() || owner->second != pose.mBase
+                || nativeActors.contains(reference) || reference == mPlayer.mReference
+                || mNativeLooseWeapons.contains(reference))
+                throw std::runtime_error("Dangling, conflicting or mismatched animated reference owner");
+        }
         checkSize(mNativeActorRagdolls.size(), "native actor ragdoll list");
         if (mVersion < 31 && !mNativeActorRagdolls.empty())
             throw std::runtime_error("TES4 actor ragdolls require runtime-state version31");
@@ -3624,10 +3636,11 @@ namespace ESM4
             writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeGetUpPlayback.size()));
             for (const auto& [actor, graph] : mNativeGetUpPlayback) { writeKey(writer, actor); writeGetUpPlayback(writer, graph, mVersion); }
         }
-        if (mVersion >= 31)
+        for (int collection = 0; mVersion >= 31 && collection < (mVersion >= 85 ? 2 : 1); ++collection)
         {
-            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeActorRagdolls.size()));
-            for (const auto& [actor, pose] : mNativeActorRagdolls)
+            const auto& graphs = collection == 0 ? mNativeActorRagdolls : mNativeAnimatedReferences;
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(graphs.size()));
+            for (const auto& [actor, pose] : graphs)
             {
                 writeKey(writer, actor);
                 writeKey(writer, pose.mBase);
@@ -4834,8 +4847,9 @@ namespace ESM4
                     throw std::runtime_error("Duplicate GetUp playback owner");
             }
         }
-        if (result.mVersion >= 31)
+        for (int collection = 0; result.mVersion >= 31 && collection < (result.mVersion >= 85 ? 2 : 1); ++collection)
         {
+            auto& graphs = collection == 0 ? result.mNativeActorRagdolls : result.mNativeAnimatedReferences;
             const auto readRagdollKey = [&] {
                 const auto text = reader.string();
                 ESM::FormKey key;
@@ -5000,7 +5014,7 @@ namespace ESM4
                             pose.mInternalFilters->push_back({reader.integer<std::uint32_t>(), reader.integer<std::uint32_t>()});
                     }
                 }
-                if (!result.mNativeActorRagdolls.emplace(std::move(actor), std::move(pose)).second)
+                if (!graphs.emplace(std::move(actor), std::move(pose)).second)
                     throw std::runtime_error("Duplicate TES4 ragdoll owner");
             }
         }
@@ -6384,9 +6398,10 @@ namespace ESM4
             }
             stream << ']';
         }
-        if (mVersion >= 31)
+        for (int collection = 0; mVersion >= 31 && collection < (mVersion >= 85 ? 2 : 1); ++collection)
         {
-            stream << ",\"native_actor_ragdolls\":[";
+            const auto& graphs = collection == 0 ? mNativeActorRagdolls : mNativeAnimatedReferences;
+            stream << (collection == 0 ? ",\"native_actor_ragdolls\":[" : ",\"native_animated_references\":[");
             bool first = true;
             const auto vector = [&](const auto& values) {
                 stream << '[';
@@ -6399,11 +6414,11 @@ namespace ESM4
                 }
                 stream << ']';
             };
-            for (const auto& [actor, pose] : mNativeActorRagdolls)
+            for (const auto& [actor, pose] : graphs)
             {
                 if (!first) stream << ',';
                 first = false;
-                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"base\":\""
+                stream << (collection == 0 ? "{\"actor\":\"" : "{\"reference\":\"") << escapeJson(actor.serialize()) << "\",\"base\":\""
                        << escapeJson(pose.mBase.serialize()) << "\",\"model\":\"" << escapeJson(pose.mModel)
                        << "\",\"asset_hash\":\"" << pose.mAssetHash << "\",\"bodies\":[";
                 for (std::size_t i = 0; i < pose.mBodies.size(); ++i)

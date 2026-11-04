@@ -1862,7 +1862,8 @@ namespace
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
-                + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0);
+                + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
+                + (version >= 85 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6377,4 +6378,41 @@ TEST(ESM4RuntimeState, BoundEquipment83RejectsOrphanDuplicateAndNestedOwnership)
     reject([&](auto& s) { s.mNativeBoundAbilities.emplace(ESM::FormKey::content("oblivion.esm",0xdead),
         std::vector<ESM4::RuntimeBoundAbility>{{spell,{}}}); });
     reject([](auto& s) { s.mReferences.front().mInventory.front().mBoundSource.reset(); });
+}
+
+TEST(ESM4RuntimeState, AnimatedReferenceBodiesRoundTripWithoutActorOwnership)
+{
+    auto state = makeState();
+    state.mVersion = 85;
+    const auto reference = state.mReferences.front().mKey;
+    ESM4::RuntimeActorRagdoll graph;
+    graph.mBase = state.mReferences.front().mBase;
+    graph.mModel = "dungeons/chargen/wall.nif";
+    graph.mAssetHash = "00112233445566778899aabbccddeeff";
+    for (unsigned i = 0; i < 2; ++i)
+    {
+        ESM4::RuntimeRagdollBody body;
+        body.mRecord = 12 + i;
+        body.mNodeRecord = 8 + i;
+        body.mPosition = {float(i), -0.f, -800.f};
+        body.mLinearVelocity = {1, 2, -3};
+        graph.mBodies.push_back(body);
+    }
+    state.mNativeAnimatedReferences.emplace(reference, graph);
+    const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+    EXPECT_EQ(restored.mNativeAnimatedReferences, state.mNativeAnimatedReferences);
+    EXPECT_TRUE(restored.mNativeActorRagdolls.empty());
+    EXPECT_TRUE(std::signbit(restored.mNativeAnimatedReferences.at(reference).mBodies[0].mPosition[1]));
+    EXPECT_NE(restored.canonicalJson().find("\"native_animated_references\":[{\"reference\":"), std::string::npos);
+    auto invalid = state;
+    invalid.mVersion = 84;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid.mNativeAnimatedReferences.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeAnimatedReferences.empty());
+    invalid = state; invalid.mReferences.clear();
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeAnimatedReferences.at(reference).mBase = ESM::FormKey::content("Oblivion.esm", 999);
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeAnimatedReferences.at(reference).mBodies.back().mRecord = 12;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
 }

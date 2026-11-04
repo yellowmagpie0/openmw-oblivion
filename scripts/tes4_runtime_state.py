@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 84
+CURRENT_VERSION = 85
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1509,18 +1509,29 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
     ragdolls = check_collection(state.get("native_actor_ragdolls", []), "native actor ragdoll list")
     if version < 31 and ragdolls:
         raise RuntimeStateError("TES4 actor ragdolls require version31")
+    animated = check_collection(state.get("native_animated_references", []), "animated reference list")
+    if version < 85 and animated:
+        raise RuntimeStateError("Animated reference bodies require version85")
+    animated_keys: set[str] = set()
     ragdoll_actors: set[str] = set()
-    for entry in ragdolls:
-        fields = {"actor", "base", "model", "asset_hash", "bodies"}
+    for entry, is_reference in [(entry, False) for entry in ragdolls] + [(entry, True) for entry in animated]:
+        owner_field = "reference" if is_reference else "actor"
+        fields = {owner_field, "base", "model", "asset_hash", "bodies"}
         if (not isinstance(entry, dict) or not fields <= set(entry)
                 or not set(entry) <= fields | {"native_blends", "native_controllers", "world_registration", "internal_filters"}):
             raise RuntimeStateError("Invalid TES4 ragdoll snapshot")
-        actor, base = entry["actor"], entry["base"]
+        actor, base = entry[owner_field], entry["base"]
         native_key(actor)
         native_key(base)
-        if actor in ragdoll_actors or actor not in native_keys or actor not in phases or value_bases.get(actor) != base:
-            raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
-        ragdoll_actors.add(actor)
+        if is_reference:
+            if (actor in animated_keys or actor not in legacy_refs or legacy_refs[actor]["base"] != base
+                    or actor in native_keys or actor == player["reference"] or actor in loose_keys):
+                raise RuntimeStateError("Duplicate, dangling or conflicting animated reference owner")
+            animated_keys.add(actor)
+        else:
+            if actor in ragdoll_actors or actor not in native_keys or actor not in phases or value_bases.get(actor) != base:
+                raise RuntimeStateError("Duplicate, dangling or mismatched TES4 ragdoll owner")
+            ragdoll_actors.add(actor)
         bodies = validate_physical_bodies(entry)
         nodes = {body["node_record"] for body in bodies}
         if "world_registration" in entry:
@@ -3077,10 +3088,11 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                     hit["force"] = reader.unpack("<f"); hit["started_hour"] = reader.unpack("<f")
                     hit["applied"] = getup_boolean(); graph["physical_hit"] = hit
             result["native_getup_playback"].append(graph)
-    if version >= 31:
-        result["native_actor_ragdolls"] = []
+    for collection, owner_field in (([("native_actor_ragdolls", "actor")]
+            + ([("native_animated_references", "reference")] if version >= 85 else [])) if version >= 31 else []):
+        result[collection] = []
         for _ in range(reader.count()):
-            entry = {"actor": reader.string(), "base": reader.string(), "model": reader.string(),
+            entry = {owner_field: reader.string(), "base": reader.string(), "model": reader.string(),
                      "asset_hash": reader.string(), "bodies": []}
             for _ in range(reader.count()):
                 body = {"record": reader.unpack("<I"), "node_record": reader.unpack("<I")}
@@ -3172,7 +3184,7 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                         raise RuntimeStateError("Incomplete TES4 internal filter count")
                     entry["internal_filters"] = [{"body_record": reader.unpack("<I"), "packed_filter": reader.unpack("<I")}
                         for _ in range(count)]
-            result["native_actor_ragdolls"].append(entry)
+            result[collection].append(entry)
     if version >= 36:
         present = reader.unpack("<B")
         if present not in (0, 1):
@@ -3927,11 +3939,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
                     writer.pack("<Q", hit["cause"])
                     for value in [*hit["source_position"], hit["force"], hit["started_hour"]]: writer.pack("<f", value)
                     writer.pack("<B", hit["applied"])
-    if version >= 31:
-        ragdolls = sorted(state.get("native_actor_ragdolls", []), key=lambda item: item["actor"])
+    for collection, owner_field in (([("native_actor_ragdolls", "actor")]
+            + ([("native_animated_references", "reference")] if version >= 85 else [])) if version >= 31 else []):
+        ragdolls = sorted(state.get(collection, []), key=lambda item: item[owner_field])
         writer.pack("<I", len(ragdolls))
         for entry in ragdolls:
-            for field in ["actor", "base", "model", "asset_hash"]:
+            for field in [owner_field, "base", "model", "asset_hash"]:
                 writer.string(entry[field])
             writer.pack("<I", len(entry["bodies"]))
             for body in entry["bodies"]:
@@ -4263,6 +4276,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 31 and state.get("native_actor_ragdolls"):
         raise RuntimeStateError("Legacy TES4 save cannot carry native actor ragdolls")
     state.setdefault("native_actor_ragdolls", [])
+    if state.get("schema_version", 1) < 85 and state.get("native_animated_references"):
+        raise RuntimeStateError("Cannot infer animated reference bodies from an older schema")
+    state.setdefault("native_animated_references", [])
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

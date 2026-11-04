@@ -4852,3 +4852,43 @@ class EssentialBase84Tests(unittest.TestCase):
         for invalid in (3, 255):
             corrupt = bytearray(wire); corrupt[offset] = invalid
             with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(corrupt))
+
+
+class AnimatedReference85Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state()
+        state.update(schema_version=85, ai_rng_state=1)
+        reference = {"key": "content:oblivion.esm:03e31c", "base": "content:oblivion.esm:026bf4",
+                     "cell": state["player"]["cell"], "enabled": True, "deleted": False,
+                     "position": [0.] * 6, "owner": None, "lock_level": 0, "inventory": [], "custom_state": {}}
+        state["references"].append(reference)
+        state["native_animated_references"] = [{"reference": reference["key"], "base": reference["base"],
+            "model": "dungeons/chargen/wall.nif", "asset_hash": "00112233445566778899aabbccddeeff",
+            "bodies": [{"record": 12+i, "node_record": 8+i,
+                "rotation": [1., 0., 0., 0., 1., 0., 0., 0., 1.], "position": [float(i), -0., -800.],
+                "linear_velocity": [1., 2., -3.], "angular_velocity": [0., 0., 0.]} for i in range(2)]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        encoded = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(encoded)
+        self.assertEqual(decoded["native_animated_references"], state["native_animated_references"])
+        self.assertEqual(decoded["native_actor_ragdolls"], [])
+        self.assertEqual(math.copysign(1., decoded["native_animated_references"][0]["bodies"][0]["position"][1]), -1.)
+        self.assertEqual(state_io.encode_payload(decoded), encoded)
+        state["schema_version"] = 84
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        del state["native_animated_references"]
+        self.assertNotIn("native_animated_references", state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_missing_mismatched_duplicate_and_actor_owners(self):
+        state = self.make_state()
+        edits = [lambda s: s["references"].clear(),
+                 lambda s: s["native_animated_references"][0].update(base="content:oblivion.esm:000999"),
+                 lambda s: s["native_animated_references"].append(copy.deepcopy(s["native_animated_references"][0])),
+                 lambda s: s["native_animated_references"][0].update(reference=s["player"]["reference"]),
+                 lambda s: s["native_animated_references"][0]["bodies"][1].update(record=12)]
+        for edit in edits:
+            invalid = copy.deepcopy(state); edit(invalid)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)

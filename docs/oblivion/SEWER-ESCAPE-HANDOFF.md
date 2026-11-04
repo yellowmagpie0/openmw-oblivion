@@ -1,6 +1,6 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — animated reference body ownership, 2026-11-04
+## Current checkpoint — animated reference persistence format, 2026-11-04
 
 Production commit `323ba551ca` makes the original rats select their wall-push
 package and activate the wall. `find-activator-range-01` passes nine focused
@@ -50,7 +50,8 @@ Invalid motion preparation publishes nothing; corrupt snapshot restoration
 preserves the existing owner. Destruction/removal clears all owned bodies.
 The snapshot value type is shared with the actor body-graph representation;
 the owner collection remains separate and does not pretend the reference is
-an actor. No serialized World collection or gameplay caller is wired yet.
+an actor. Schema85 now adds a dedicated saved collection, described below. World capture,
+restore and gameplay callers are not wired yet.
 
 Validation: `animated-reference-focused-02` passes six cases over zero, one and
 two workers. `animated-reference-scheduler-01` passes all 263 selected scheduler
@@ -61,11 +62,32 @@ while the existing validator correctly raised runtime_error; live state remained
 unchanged. No runtime executable rebuild, broad engine or sanitizer claim for
 this dependency chunk.
 
+The C++ and Python schema85 codecs now persist `native_animated_references`
+with placed-reference ownership, base/model/asset identity and full body graphs.
+Old versions retain their binary layout; no physical history is invented for
+legacy saves. Reviewed fixture upgrades add an explicit empty collection.
+
+Validation under `build/oblivion-compat/sewer-escape/`:
+- `animated-codec-regression-01`: all 3,242 component cases pass with exact
+  inventory, no failures/skips; source fingerprint
+  `d3ab16483faac6e3cda0cdda577fcf54eaa150682bdfb41705cd6597895af90d`.
+  The combined run remains failed because one Python assertion still treated85
+  as future. That assertion now accepts85 and rejects86.
+- `animated-codec-python-02`: all551 Python cases pass, fingerprint
+  `80681fb36612ebe0fd95f5d0c031fab7c443e73170b25663695cf4f97df0b1cf`.
+- `animated-codec-cross-language-01`: Python/C++ byte-identical roundtrips for
+  legacy84, empty85 and a two-body animated85 snapshot. Focused tests also
+  exercise missing/mismatched owners, duplicate bodies and downgrade rejection.
+Earlier failed checks remain retained. No runtime or sanitizer acceptance is
+claimed for this format chunk.
+
 Next: connect completed positive-mass reference animation to the new scheduler
-owner and existing prepared physical-pose rendering binding. Add a dedicated
-World saved-state collection (C++ and Python codecs), preserve bodies through
-cell unload/load and restore, and replace old compound collision only after
-successful preparation. Keep mass-zero doors/switches on their existing path.
+owner and existing prepared physical-pose rendering binding. Wire World capture,
+retention, restore and clear/swap lifecycle to the new collection; preserve bodies
+through cell unload/load and replace old compound collision only after successful
+preparation. PhysicsSystem remove/updatePtr must include the new owner. Its
+prepared item-removal path rejects animated objects, so use a dedicated handoff.
+Keep mass-zero doors/switches on their existing path.
 Then prove actual wall traversal from `wall-open-01` or fresh activation from
 `wall-approach-09`, followed by the rest of the original tutorial. Full sewer
 escape remains incomplete. All diagnostic/check processes are terminal.

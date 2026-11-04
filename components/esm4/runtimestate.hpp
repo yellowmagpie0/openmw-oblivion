@@ -69,7 +69,8 @@ namespace ESM4
     // v81 retains directed faction reaction changes, including zero overrides.
     // v80 retains Player tutorial skill use, tracking and cached recommended CLAS.
     // v84 retains shared NPC/creature essential flag overrides.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 84;
+    // v85 retains physical body graphs for animated placed references.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 85;
 
     struct RuntimeContentIdentity
     {
@@ -916,6 +917,8 @@ namespace ESM4
         std::map<ESM::FormKey, RuntimeGetUpPlayback> mNativeGetUpPlayback;
         // v31: persistent physical snapshots; old saves have no invented pose.
         std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeActorRagdolls;
+        // v85: independent placed-reference body graphs; never actor or item owners.
+        std::map<ESM::FormKey, RuntimeActorRagdoll> mNativeAnimatedReferences;
         // Absent in older saves: never infer solver history or skip flags.
         std::optional<RuntimeMovementState> mNativeMovement = std::nullopt;
         // v53: retained loose weapons, including currently unloaded cells.
