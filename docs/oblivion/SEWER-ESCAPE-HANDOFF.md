@@ -37,12 +37,17 @@ However, the whole run remains FAILED: four Assassin render admissions report
 placement. This is a separate startup dependency, not corpse-loot acceptance.
 Editable fresh-start course: `oblivion_sewer_fresh_prison_corpse.json`.
 
-Next: finish tracing/fixing early Assassin setup (likely bound-equipment grant
-snapshot capture), then replay legitimate prison progression with the corrected
-fresh corpse state. GDB diagnostic `fresh-bound-grant-trace-01` is currently
-running, session98111; poll before restarting. The fresh corpse and engine runs
-are terminal. Keep prior wall crossing evidence; full original route, loot/equip,
-reunion, Emperor, choices, exterior exit and persistence gates remain open.
+Next: fix early Assassin bound-equipment grants, then replay legitimate prison
+progression with the corrected fresh corpse state. GDB `fresh-bound-grant-trace-02`
+confirms `Actors::addActor -> activateOblivionActor -> initializeOblivionNonPlayerActor
+-> updateOblivionBoundEquipment -> captureOblivionRuntimeState -> validate` during
+`Scene::changeToInteriorCell` in `startNewGame`, before Player cell placement.
+Defer grant publication until the Player/world capture is ready, preserving the
+later normal equipment update and validation. Trace01 failed startup because a
+copied, shutdown-written settings file contained duplicate camera sensitivity;
+trace02 used pristine manifest settings. Both debugger runs and all runtime/test
+processes are terminal. Keep prior wall crossing evidence; full original route,
+loot/equip, reunion, Emperor, choices, exterior exit and persistence remain open.
 
 ## Previous checkpoint — wall crossed, 2026-11-04
 
