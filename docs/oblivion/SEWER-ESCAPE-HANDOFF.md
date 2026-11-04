@@ -1,6 +1,58 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — original rat/zombie callback runs, 2026-11-04
+## Current checkpoint — zombie defeated and freshly reloaded, 2026-11-04
+
+Full escape is still incomplete. Remaining acceptance: solo dungeon beyond the
+zombie room, reunion, Emperor/Amulet, character choices, actual MQ01 stage88 exit,
+outdoor fresh reload, and Player death/reload. Current chunk closes the original
+rat/zombie encounter and its saved continuation. No engine changes this chunk.
+
+`substructure-room-entry-04` PASSES from the genuine F5 bend checkpoint in
+`substructure-room-entry-03`. Player reached(928,2175,-67), health73. Save audit
+confirms scripted rat0387d9 killed by zombie0491fc; zombie had health10. Room
+entry capture inspected. Earlier room-entry01/02 missed a narrow waypoint;
+03 reached the bend but its second turn exceeded the course allowance. Those
+courses remain failed. Manual F5 receipts identify the legitimate diagnostic
+continuations; room-entry02's attempted F5 did not create a save.
+
+Combat is composite evidence, not a single passing whole-fight replay:
+- `substructure-zombie-01`: stationary swings missed after zombie moved away.
+- `substructure-zombie-02`: advancing swings landed two hits, then overran target;
+  ordinary manual F5 retained health7.892747 zombie checkpoint.
+- `substructure-zombie-03`: six further hits, then zombie retreated out of reach.
+  Ordinary X11 forward movement and F5 retained health1.067353 checkpoint.
+- `substructure-zombie-04`: PASSES using ordinary aiming, range-checked approach
+  and Club attack. Finishing hit damage1.12535; native save records zombie dead
+  with Player killer. Club condition64.96, cuirass250/greaves175, health73.
+  Extra scripted swings after death are harmless misses; do not count them as
+  hits. Capture inspected; camera ends looking down in third person.
+- `substructure-zombie-reload-01`: PASSES fresh-process load and resave. Read-only
+  Lua verifies both dead actors, equipped Club/armor and Player health. Offline
+  `encounter-restart-audit.json` compares both native life/killer and actor-value
+  records, and whole Player inventory including equipment/condition unchanged.
+  Reload capture inspected. No new broad engine/sanitizer run: existing binary
+  and prior 2166-case evidence are reused with their original provenance.
+
+Editable passing courses: `oblivion_sewer_substructure_room_entry.json`,
+`oblivion_sewer_substructure_zombie_finish.json`, and
+`oblivion_sewer_substructure_zombie_reload.json` in scripts/data/oblivion_compat.
+Their input saves are the specific continuations above; the finish course is
+not claimed to replay the whole encounter from full health. Failed course
+manifests and manual-input receipts remain in the evidence directories.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-zombie-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `2851ea1c02bb7772e3a6acc156244d1e7ea59d30bac81aaaba36e38607874a24`.
+Player(591,2087,-51), yaw2.610, pitch1.571; level the camera before traversal.
+All runtime processes are terminal. Next: continue west through the zombie room,
+then north toward the next rat encounters/chest. Read-only original pathgrid
+route is `substructure-zombie-to-north-chest-path.json`: approximately
+(414,2203)->(253,2221)->(95,2168)->(-36,2173)->(-163,2329)->(-166,2493)
+->(-153,2695)->(-152,2867)->(-153,3033)->(-157,3167)->(-161,3321)
+->(-168,3513)->(-206,3650)->(-149,3836)->(-95,3959).
+This extracted route is planning evidence, not runtime traversal acceptance.
+
+## History — original rat/zombie callback runs, 2026-11-04
 
 Full original sewer escape remains the target. The remaining solo encounters,
 reunion, Emperor/Amulet, choices, actual exit, outdoor reload and death/reload
