@@ -12,6 +12,7 @@
 #include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwworld/containerstore.hpp"
+#include "apps/openmw/mwworld/manualref.hpp"
 #include "apps/openmw/mwdialogue/dialoguemanagerimp.hpp"
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include "apps/openmw/mwmechanics/disease.hpp"
@@ -2296,5 +2297,50 @@ TEST(OblivionTutorialAction, PotionUseRestoresNativeDamageAndConsumesExactlyOne)
         MWMechanics::OblivionCombatService restored;
         restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
         EXPECT_EQ(*restored.findActorValues(actorKey), healed);
+    }
+}
+
+TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrowindSettings)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted);
+        auto& store = f.mFixture.mWorld.getStore();
+        ASSERT_EQ(store.get<ESM::GameSetting>().search("iCuirassWeight"), nullptr);
+        ASSERT_EQ(store.get<ESM::GameSetting>().search("iBaseArmorSkill"), nullptr);
+        ESM4::Armor native{};
+        native.mId = {0xc10, store.search<ESM4::Npc>(key(0x800))->mId.mContentFile};
+        native.mGeneralFlags = ESM4::Armor::TYPE_TES4 | ESM4::Armor::TES4_HeavyArmor;
+        native.mArmorFlags = ESM4::Armor::TES4_UpperBody;
+        native.mData = {1000, 10, 300, .1f};
+        store.getWritable<ESM4::Armor>().insertStatic(native, key(0xc10));
+        ESM::Armor shared{};
+        shared.blank();
+        shared.mId = ESM::RefId(native.mId);
+        shared.mData.mType = ESM::Armor::Cuirass;
+        shared.mData.mWeight = .1f; // Weight does not choose the native armor class.
+        shared.mData.mHealth = 300;
+        shared.mData.mArmor = 1000;
+        store.insertStatic(shared);
+        MWClass::Armor::registerSelf();
+        MWWorld::ManualRef ref(store, shared.mId);
+        auto item = ref.getPtr();
+        const auto& cls = static_cast<const MWClass::Armor&>(item.getClass());
+        EXPECT_EQ(cls.getEquipmentSkill(item, false), ESM::Skill::HeavyArmor);
+        EXPECT_NO_THROW(cls.getUpSoundId(item));
+        EXPECT_NO_THROW(cls.getDownSoundId(item));
+        const float full = cls.getSkillAdjustedArmorRating(item, f.mActor, &store);
+        EXPECT_GT(full, 0.f);
+        EXPECT_LE(full, 10.f); // Authored1000 is hundredths, not 1000 armor units.
+        item.getCellRef().setNativeItemCondition(150.f);
+        EXPECT_NEAR(cls.getSkillAdjustedArmorRating(item, f.mActor, &store), full * .5f, .001f);
+        item.getCellRef().setNativeItemCondition(0.f);
+        EXPECT_FLOAT_EQ(cls.getSkillAdjustedArmorRating(item, f.mActor, &store), 0.f);
+        MWWorld::ESMStore incoming;
+        native.mGeneralFlags = ESM4::Armor::TYPE_TES4;
+        native.mData.weight = 200.f;
+        incoming.getWritable<ESM4::Armor>().insertStatic(native, key(0xc10));
+        EXPECT_EQ(cls.getEquipmentSkill(item, &incoming), ESM::Skill::LightArmor);
+        EXPECT_EQ(cls.getEquipmentSkill(item, &store), ESM::Skill::HeavyArmor);
     }
 }

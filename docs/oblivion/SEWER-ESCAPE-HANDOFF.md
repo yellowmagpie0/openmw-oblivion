@@ -1,6 +1,51 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — healing potion consumed and reloaded, 2026-11-04
+## Current checkpoint — native chest armor equipped, 2026-11-04
+
+The full original prison-to-outdoors target remains open: remaining solo
+encounters, reunion, Emperor/Amulet, choices, actual exit, outdoor reload and
+death/reload acceptance. This chunk fixes ordinary native armor inspection/use.
+
+`substructure-armor-01` was stopped after menu inspection and ineffective manual
+mouse clicks; retain its failed course and input receipt. Controller replay
+`substructure-cuirass-01` then exposed missing Morrowind iCuirassWeight during
+normal Equip. Shared Armor now reads the native heavy/light flag and reuses the
+existing native armor formula for item rating, avoiding iBaseArmorSkill too.
+Both APIs honor explicit restore dependencies. Legacy armor keeps its old path.
+The existing formula provenance is in M15-NATIVE-RULE-PROVENANCE.md's armor
+sections; no new arithmetic or original-executable parity claim is introduced.
+`first-chest-armor-content-audit.json` independently reads original BMDT/DATA:
+cuirass0661c1 is heavy,900 hundredths/max250; greaves0661c3 heavy,550/max175.
+
+`armor-facade-focused-01` fails to compile a test using the wrong setter name;
+`-02` passes9 tutorial action tests and rebuilds openmw. The new case covers
+both content layouts, native classification independent of weight, sounds,
+hundredths/condition rating and alternate restore dependencies.
+`armor-facade-engine-01` passes all2165 engine cases, exact inventory,
+no failures/skips. Tested fingerprint:
+`dc87c6da1e5933985a4fb4ad7dd7535358514b2414bcbb112bdbb928ca645b56`. No new sanitizer claim.
+
+`substructure-cuirass-02` and fresh-load `substructure-greaves-01` PASS normal
+controller Equip and F5, with inspected menus/world captures and armor-audit.json
+in each run. Cuirass occupies shared mask4, greaves mask8; conflicting shirt/pants
+are unequipped, Club remains equipped, health73. Displayed armor rises0->4->6.
+The third-person capture shows equipped armor. The inventory portrait still
+appears to retain the old outfit: adjacent preview refresh gap, not a claim of
+correct portrait presentation. Editable passing manifests are
+oblivion_sewer_substructure_cuirass.json and oblivion_sewer_substructure_greaves.json.
+
+Latest save: build/oblivion-compat/sewer-escape/substructure-greaves-01/userdata/saves/Bendu_Olo/Quicksave.omwsave
+SHA256 `2ab99f76a52f56898e1a16d10e744f7e3420d6fe449d0a7d9222ec920c5ad61d`.
+`substructure-corridor-01` has just started from this save. It follows normal
+controller/mouse/forward controls to original east-corridor waypoints near
+(1062,288),(1046,822),(1052,1486), using read-only observations.
+`substructure-north-path.json` retains the independently decoded original PGRD
+route. Poll its launcher before starting another game; then inspect/save the
+lower passage and continue toward the original zombie/rat room. Full escape
+and post-armor combat remain unaccepted. All armor build helpers are terminal.
+
+
+## History — healing potion consumed and reloaded, 2026-11-04
 
 Target remains the full original prison-to-outdoors course. Later solo dungeon
 encounters, reunion, Emperor/Amulet, character choices, actual exit and outdoor
