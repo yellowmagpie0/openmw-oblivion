@@ -23,6 +23,9 @@
 #include "trace.h"
 
 #include <cmath>
+#include <atomic>
+#include <cstdlib>
+#include <components/debug/debuglog.hpp>
 
 namespace MWPhysics
 {
@@ -197,6 +200,7 @@ namespace MWPhysics
             velocity *= 1.f + fStromWalkMult * angleCos;
         }
 
+        static const bool tracePlayerObstacles = std::getenv("OPENMW_TRACE_PLAYER_OBSTACLES") != nullptr;
         Stepper stepper(collisionWorld, actor.mCollisionObject);
         osg::Vec3f origVelocity = velocity;
         osg::Vec3f newPosition = actor.mPosition;
@@ -263,7 +267,8 @@ namespace MWPhysics
                 {
                     // Try to step up onto it.
                     // NOTE: this modifies newPosition and velocity on its own if successful
-                    usedStepLogic = stepper.step(newPosition, velocity, remainingTime, seenGround, iterations == 0);
+                    usedStepLogic = stepper.step(newPosition, velocity, remainingTime, seenGround, iterations == 0,
+                        tracePlayerObstacles && actor.mIsPlayer);
                 }
                 auto* ptrHolder = static_cast<PtrHolder*>(tracer.mHitObject->getUserPointer());
                 if (Object* hitObject = dynamic_cast<Object*>(ptrHolder))
@@ -271,6 +276,26 @@ namespace MWPhysics
                     hitObject->addCollision(
                         actor.mIsPlayer ? ScriptedCollisionType_Player : ScriptedCollisionType_Actor);
                 }
+            }
+            // Opt-in, bounded diagnostics for real movement obstructions. This
+            // observes the existing solver result without changing its response.
+            static std::atomic<unsigned> tracedObstacles{0};
+            if (tracePlayerObstacles && actor.mIsPlayer && iterations == 0
+                && tracedObstacles.fetch_add(1, std::memory_order_relaxed) < 160)
+            {
+                const auto group = tracer.mHitObject->getBroadphaseHandle()->m_collisionFilterGroup;
+                std::string owner = "terrain";
+                if (!(group & (CollisionType_HeightMap | CollisionType_Water)))
+                    if (const auto* holder = static_cast<const PtrHolder*>(tracer.mHitObject->getUserPointer());
+                        holder && !holder->getPtr().isEmpty())
+                        owner = holder->getPtr().getCellRef().getFormKey().serialize();
+                Log(Debug::Info) << "Player obstacle: owner=" << owner
+                    << " center=" << oldPosition.x() << ',' << oldPosition.y() << ',' << oldPosition.z()
+                    << " hit=" << tracer.mHitPoint.x() << ',' << tracer.mHitPoint.y() << ',' << tracer.mHitPoint.z()
+                    << " normal=" << tracer.mPlaneNormal.x() << ',' << tracer.mPlaneNormal.y() << ',' << tracer.mPlaneNormal.z()
+                    << " height=" << hitHeight << " half_z=" << actor.mHalfExtentsZ
+                    << " fraction=" << tracer.mFraction << " stepped=" << usedStepLogic
+                    << " grounded=" << actor.mIsOnGround;
             }
             if (usedStepLogic)
             {

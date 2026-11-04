@@ -40,15 +40,40 @@ from z-810 through -680, but fallen wall body collision intrudes at y3210..3240,
 z-700..-680, x~339; static passage edges also narrow the available lane. Rays
 alone do not prove full-hull clearance or justify shrinking actor bounds.
 
-Next/current: `cleared-wall-lane-03` is running from the postcombat jump save,
-using measured lane y3175 and east-facing ordinary movement. Process session76389
-must be polled before any restart. Lane01 and02 failed the facing prerequisite:
-mouse events did not rotate Player, including a repeated event in02. Lane03 uses
-the earlier successful controller-axis route for the facing adjustment. If the measured lane remains blocked, diagnose the box
-hull against the actual remaining geometry before changing movement physics.
-Do not return to passive movement against live rats. Remaining wall acceptance:
-fresh activation, actual crossing, fresh-process persistence and cell unload/load.
-Then continue solo-dungeon equipment/loot/combat, reunion and the full escape.
+Current clearance investigation: lane03/04/05 are terminal failures. Backing
+away and aligning with ordinary controls succeeds, but forward movement still
+snags. The genuine lane05 approach save is retained as
+`cleared-wall-lane-05/lane-checkpoint.omwsave` (SHA256
+`dac2d8bfc2a2d16c20f8e50a3f65ecabe13f7cfc6cf86b1efa5c6e318cff1e51`),
+with both rats dead and Player health49.45. Use it for repeatable clearance
+investigation without repeating combat.
+
+Opt-in `OPENMW_TRACE_PLAYER_OBSTACLES=1` now reports bounded Player contact
+and up/forward/down step traces; movement response is unchanged.
+`player-obstacle-01` identifies a static frame contact (026bf6) at the lower
+corner of the default box. `player-cylinder-01` uses the existing cylinder
+setting with unchanged dimensions; it also fails to cross, contacting fallen
+wall03e31c. This is a diagnostic configuration, not a production shape change.
+`player-step-trace-01` builds the diagnostic runtime and passes13 selected
+animated-reference tests, fingerprint
+`c377052c38829b165d00c3084543e98748338d51ce3b5934edb4f0f216ec10a3`.
+These tests do not establish movement acceptance.
+
+`player-step-diagnostic-01` repeats the cylinder approach with phase logging.
+At center(308.732,3172.56,-746.889), the upward sweep fraction0.0366924
+allows only1.25 units of the34-unit step before overhead contact. Forward and
+downward sweeps hit the brick face with normal approximately
+(-0.970,0.042,0.241), which is not a walkable landing. This explains the
+rejected step; increasing step height alone is not supported. The run is terminal failed at its checkpoint wait; its contact traces and
+inspected screenshot establish the snag, not traversal. All diagnostic processes
+are now terminal.
+
+Next: establish appropriate TES4 actor hull clearance against this geometry,
+using the original-game passage evidence and a focused collision fixture. Do
+not shrink dimensions to fit one opening or relax slope acceptance blindly.
+Remaining wall acceptance: fresh activation, actual crossing, fresh-process
+persistence and cell unload/load. Then continue solo-dungeon equipment/loot/
+combat, reunion, Emperor sequence, character choices and the full escape.
 
 Validation under `build/oblivion-compat/sewer-escape/`:
 - `animated-world-focused-01`: all13 selected cases pass, exact inventory,
@@ -66,7 +91,7 @@ Reusable dependency commits: `59ed63d344` collision handoff/lifecycle,
 `59fb84e5af` schema85 C++/Python codecs, `00fe61320f` scheduler ownership,
 `323ba551ca` original rat Find-package activation. Original-game evidence:
 [SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
-Only `cleared-wall-lane-03` remains running; preceding diagnostics/tests are terminal.
+The earlier lane runs and diagnostic builds are terminal; current runtime status is above.
 
 ## Target and acceptance
 

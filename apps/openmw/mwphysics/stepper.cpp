@@ -1,4 +1,6 @@
 #include "stepper.hpp"
+#include <atomic>
+#include <components/debug/debuglog.hpp>
 
 #include <BulletCollision/CollisionDispatch/btCollisionObject.h>
 #include <BulletCollision/CollisionDispatch/btCollisionWorld.h>
@@ -29,8 +31,17 @@ namespace MWPhysics
     }
 
     bool Stepper::step(
-        osg::Vec3f& position, osg::Vec3f& velocity, float& remainingTime, const bool& onGround, bool firstIteration)
+        osg::Vec3f& position, osg::Vec3f& velocity, float& remainingTime, const bool& onGround, bool firstIteration, bool trace)
     {
+        static std::atomic<unsigned> tracedSteps{0};
+        trace = trace && tracedSteps.fetch_add(1, std::memory_order_relaxed) < 80;
+        const auto report = [&](const char* phase, const ActorTracer& result) {
+            if (trace) Log(Debug::Info) << "Player step: phase=" << phase
+                << " center=" << position.x() << ',' << position.y() << ',' << position.z()
+                << " fraction=" << result.mFraction
+                << " hit=" << result.mHitPoint.x() << ',' << result.mHitPoint.y() << ',' << result.mHitPoint.z()
+                << " normal=" << result.mPlaneNormal.x() << ',' << result.mPlaneNormal.y() << ',' << result.mPlaneNormal.z();
+        };
         if (velocity.x() == 0.0 && velocity.y() == 0.0)
             return false;
 
@@ -41,6 +52,7 @@ namespace MWPhysics
         mUpStepper.doTrace(
             mColObj, position, position + osg::Vec3f(0.0f, 0.0f, Constants::sStepSizeUp), mColWorld, onGround);
 
+        report("up", mUpStepper);
         float upDistance = 0;
         if (!mUpStepper.mHitObject)
             upDistance = Constants::sStepSizeUp;
@@ -92,6 +104,7 @@ namespace MWPhysics
             }
 
             mTracer.doTrace(mColObj, tracerPos, tracerDest, mColWorld);
+            report("forward", mTracer);
             if (mTracer.mHitObject)
             {
                 // map against what we hit, minus the safety margin
@@ -125,6 +138,7 @@ namespace MWPhysics
             mDownStepper.doTrace(
                 mColObj, tracerDest, tracerDest + osg::Vec3f(0.0f, 0.0f, -downStepSize), mColWorld, onGround);
 
+            report("down", mDownStepper);
             // can't step down onto air, non-walkable-slopes, or actors
             // NOTE: using a capsule causes isWalkableSlope (used in canStepDown) to fail on certain geometry that were
             // intended to be valid at the bottoms of stairs (like the bottoms of the staircases in aldruhn's guild of
