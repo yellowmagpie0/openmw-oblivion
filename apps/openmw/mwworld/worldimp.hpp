@@ -210,6 +210,12 @@ namespace MWWorld
         bool mUpdatingOblivionBoundEquipment = false;
         bool mSynchronizingOblivionEnableParents = false;
         void normalizeOblivionEnableParents(ESM4::RuntimeState& state) const;
+        using NativeAnimatedReferenceStates = std::map<ESM::FormKey, ESM4::RuntimeActorRagdoll>;
+        std::shared_ptr<const NativeAnimatedReferenceStates> mOblivionAnimatedReferenceStates;
+        void captureOblivionAnimatedReferenceState(ESM4::RuntimeState& state) const;
+        void validateOblivionAnimatedReferenceState(const ESM4::RuntimeState& state) const;
+        void updateOblivionAnimatedReference(const Ptr& ptr);
+        void synchronizeOblivionAnimatedReferencePoses();
         using NativeLooseWeaponStates = std::map<ESM::FormKey, ESM4::RuntimeLooseWeapon>;
         // Immutable retained projection also identifies the cache version to
         // detached scene admissions across reentrant callbacks.
@@ -974,6 +980,7 @@ namespace MWWorld
         bool restoreOblivionLooseWeaponScene(const Ptr& ptr, MWRender::Objects& objects,
             MWPhysics::PhysicsSystem& physics, const VFS::Path::Normalized& model,
             const osg::Quat& rotation) const;
+        bool restoreOblivionAnimatedReferenceScene(const Ptr& ptr) const;
         void renderPlayer() override;
 
         /// open or close a non-teleport door (depending on current state)

@@ -170,7 +170,8 @@ namespace
         // Restore effect particles
         world.applyLoopingParticles(ptr);
 
-        if (!model.empty() && !looseWeapon)
+        const bool animatedReference = !looseWeapon && world.restoreOblivionAnimatedReferenceScene(ptr);
+        if (!model.empty() && !looseWeapon && !animatedReference)
             ptr.getClass().insertObject(ptr, model, rotation, physics);
 
         MWBase::Environment::get().getLuaManager()->objectAddedToScene(ptr);
@@ -1206,7 +1207,7 @@ namespace MWWorld
 
     void Scene::removeObjectFromScene(const Ptr& ptr, bool keepActive)
     {
-        if (mPhysics->hasActorRagdoll(ptr) || mPhysics->hasLooseObject(ptr))
+        if (mPhysics->hasActorRagdoll(ptr) || mPhysics->hasLooseObject(ptr) || mPhysics->hasAnimatedReferenceBodies(ptr))
             mWorld.retainOblivionPhysicalState();
         MWBase::Environment::get().getMechanicsManager()->remove(ptr, keepActive);
         // You'd expect the sounds attached to the object to be stopped here

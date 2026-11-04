@@ -1045,14 +1045,15 @@ namespace MWPhysics
     void PhysicsSystem::addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions,
+        const ESM4::RuntimeActorRagdoll* saved, const ESM::FormKey& base, std::string_view model)
     {
         if (mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
             throw std::invalid_argument("animated reference has actor or trigger collision");
         const auto found = mObjects.find(ptr.mRef);
         auto* previous = found == mObjects.end() ? nullptr : found->second->getCollisionObject();
         mTaskScheduler->addAnimatedReferenceBodies(ptr, definition, lengthScale, poses,
-            collisionGroup, collisionMask, motions, previous);
+            collisionGroup, collisionMask, motions, previous, saved, base, model);
         if (found != mObjects.end())
         {
             clearIgnoredCollisionPairs(previous);

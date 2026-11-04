@@ -1,4 +1,6 @@
 #include <apps/openmw/mwphysics/physicssystem.hpp>
+#include <apps/openmw/mwworld/oblivionanimatedreference.hpp>
+#include <components/nif/physics.hpp>
 #include <components/resource/resourcesystem.hpp>
 #include <components/vfs/manager.hpp>
 #include <osg/Group>
@@ -75,6 +77,28 @@ namespace
             Settings::physics().mAsyncNumThreads.set(mPreviousThreadCount);
         }
     };
+
+    TEST(AnimatedReferenceAsset, RejectsMassZeroDoorsAndNonKeyframedBodies)
+    {
+        Nif::NIFFile file(VFS::Path::Normalized("wall.nif"));
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        auto first = std::make_unique<Nif::bhkRigidBody>();
+        first->mInfo.mMass = 100;
+        first->mInfo.mMotionType = Nif::HkMotionType::Motion_Keyframed;
+        file.mRecords.push_back(std::move(first));
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        auto second = std::make_unique<Nif::bhkRigidBody>();
+        second->mInfo.mMass = 100;
+        second->mInfo.mMotionType = Nif::HkMotionType::Motion_Keyframed;
+        auto* body = second.get();
+        file.mRecords.push_back(std::move(second));
+        EXPECT_TRUE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        body->mInfo.mMass = 0;
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+        body->mInfo.mMass = 100;
+        body->mInfo.mMotionType = Nif::HkMotionType::Motion_Dynamic;
+        EXPECT_FALSE(MWWorld::isOblivionAnimatedReferenceAsset(file));
+    }
 
     TEST_P(RagdollSchedulerTest, AnimatedReferenceBodiesFallPersistAndRemainSeparateFromActors)
     {
@@ -165,6 +189,7 @@ namespace
     {
         NifBullet::NativeDynamicsWorld world(&mDispatcher, &mBroadphase, &mSolver, &mConfiguration);
         MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        mGraph.mSourceHash = std::string(16, 'a');
         btBoxShape shape(btVector3(1, 1, 1));
         btCollisionObject original;
         original.setCollisionShape(&shape);
@@ -182,6 +207,21 @@ namespace
         EXPECT_NE(world.getCollisionObjectArray()[0], &original);
         EXPECT_EQ(original.getBroadphaseHandle(), nullptr);
         EXPECT_TRUE(scheduler.hasAnimatedReferenceBodies(mPtr));
+        const auto base = ESM::FormKey::content("test.esm", 1);
+        const std::string model = "wall.nif";
+        const auto saved = scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model);
+        scheduler.removeAnimatedReferenceBodies(mPtr);
+        scheduler.addCollisionObject(&original, 1, -1);
+        auto corrupt = saved;
+        corrupt.mBodies.front().mRecord = 999;
+        EXPECT_THROW(scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1,
+            {}, &original, &corrupt, base, model), std::runtime_error);
+        ASSERT_EQ(world.getNumCollisionObjects(), 1);
+        EXPECT_EQ(world.getCollisionObjectArray()[0], &original);
+        EXPECT_FALSE(scheduler.hasAnimatedReferenceBodies(mPtr));
+        scheduler.addAnimatedReferenceBodies(mPtr, mGraph, 1, mPoses, 1, -1,
+            {}, &original, &saved, base, model);
+        EXPECT_EQ(scheduler.captureAnimatedReferenceSnapshot(mPtr, base, model), saved);
         scheduler.removeAnimatedReferenceBodies(mPtr);
         EXPECT_EQ(world.getNumCollisionObjects(), 0);
     }

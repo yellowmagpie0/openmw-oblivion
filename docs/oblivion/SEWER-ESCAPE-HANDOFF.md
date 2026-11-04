@@ -1,105 +1,51 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — animated reference persistence format, 2026-11-04
+## Current checkpoint — live wall physics, 2026-11-04
 
-Production commit `323ba551ca` makes the original rats select their wall-push
-package and activate the wall. `find-activator-range-01` passes nine focused
-tests and rebuilds the game; `find-range-engine-01` passes all 2,144 engine tests.
-No fresh sanitizer gate for this production chunk yet.
+The wall now releases thirteen positive-mass bodies after its Unequip animation.
+The implementation replaces compound collision, removes the old navigation
+obstacle, projects body poses into the renderer, captures schema85 snapshots,
+and restores bodies through scene load. World retention/clear/swap and scene
+removal include the new collection. Snapshot restoration is staged before old
+collision is removed. Admission is limited to native ACTI references with
+multi-body positive-mass keyframed assets; mass-zero doors are excluded.
+Timing is an approximation supported by the original-game collapse observation,
+not a claim of exact native handoff timing.
 
-Normal-input `wall-open-01` proves original activation, MQ01 stage24 and wall
-locals reaching pushed=3. Full sewer escape remains open: wall traversal,
-solo-dungeon combat/loot, reunion, Emperor sequence, character choices, final
-exit and save/load acceptance are not complete.
+**Gameplay remains blocked at the opening.** `physical-wall-crossing-01` visibly
+collapses the wall and moves beyond the former x278 limit, but straight walking
+stalls near (309.44,3209.35,-798.94). The terminal course is failed. Its genuine
+F5 save contains all13 bodies under ref03e31c, with Player alive at5.45 health.
+`physical-wall-jump-01` reloads that physical save without restore errors or
+another release log, then the rats kill the Player; its terminal course is also
+failed. Inspected captures: `physical-wall-crossing-01/live-rubble.png` and
+`physical-wall-jump-01/live-jump.png`. Neither proves traversal or full persistence
+acceptance. Do not repeat long passive movement against the rats.
 
-Current blocker: `wall-center-crossing-02` backs west from the legitimate
-`wall-crossing-02` save, successfully strafes south onto the opening centerline,
-then stalls near (278,3196,-831). It is terminal failed, with a screenshot but
-no confirmed new F5 save. Stop repeating blind movement attempts.
-
-`wall-survey-03` passes a denser read-only collision survey including actors.
-At y3200, animated wall03e31c obstructs x~340 at z=-800,-790,-770,-760,-750,
--720,-710,-700; rats are farther behind it. Earlier coarse rays missed these
-bricks. Screenshot shows suspended bricks across the gap. Neither survey alone
-proves full Player-volume clearance or diagnoses the engine cause.
-
-Independent original-game probe now establishes the discrepancy: direct
-`PlayGroup Unequip 1` collapses the bricks onto the floor, with GetDestroyed=0.
-Normal forward input reaches x352.47 inside the opening. Exact native handoff
-timing and full crossing beyond x550 were not measured. Console setup is
-explicitly diagnostic, not normal tutorial progression evidence.
-See [SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
-Original game and the temporary Steam client exited; the isolated configuration
-and saves were restored, including the unchanged pristine-save hash.
-
-The original asset contains thirteen positive-mass keyframed bodies and a
-one-second lateral jostling clip, with no authored collapse-to-floor track.
-Root transforms are identity; no physics-blend controllers are attached.
-The prison secret wall has mass-zero keyframed bodies with the same collision
-flags. A blanket release of every animated keyframed object is not justified.
-Raw extraction, transform inspection and original instruction diagnostics stay
-under ignored `wall-assets/`; parser output is content evidence, not an
-independent instruction oracle. The live original-game result supplies the
-independent behavioral evidence.
-
-The scheduler now has a separate multi-body owner for non-actor placed
-references. It reuses the existing native body simulation and graph snapshot
-adapters, participates in worker stepping and collision queries, preserves
-reference identity on transfer, and rejects conflicting actor/item ownership.
-Invalid motion preparation publishes nothing; corrupt snapshot restoration
-preserves the existing owner. Destruction/removal clears all owned bodies.
-The snapshot value type is shared with the actor body-graph representation;
-the owner collection remains separate and does not pretend the reference is
-an actor. Schema85 now adds a dedicated saved collection, described below. World capture,
-restore and gameplay callers are not wired yet.
-
-Validation: `animated-reference-focused-02` passes six cases over zero, one and
-two workers. `animated-reference-scheduler-01` passes all 263 selected scheduler
-and loose-item cases, exact inventory, no failures/skips. Both use source
-fingerprint `e97988fda6dee20a83a0e597d088d4ac14bbf71c75c88039c8feac139d951a41`.
-Focused01 is retained failed: the corruption test expected invalid_argument,
-while the existing validator correctly raised runtime_error; live state remained
-unchanged. No runtime executable rebuild, broad engine or sanitizer claim for
-this dependency chunk.
-
-The C++ and Python schema85 codecs now persist `native_animated_references`
-with placed-reference ownership, base/model/asset identity and full body graphs.
-Old versions retain their binary layout; no physical history is invented for
-legacy saves. Reviewed fixture upgrades add an explicit empty collection.
+Next: use the healthier ordinary-input `wall-crossing-02` save (61.45 health),
+approach and fight rats037e41/037e42 (base health4 each) with normal melee input,
+then cross and save. If traversal still fails after combat, inspect the remaining
+rubble/capsule obstruction. Prove fresh activation as well as old-save migration,
+intermediate save/reload and cell unload/load before closing the wall chunk.
+Then continue solo-dungeon equipment/loot/combat and escort reunion.
 
 Validation under `build/oblivion-compat/sewer-escape/`:
-- `animated-codec-regression-01`: all 3,242 component cases pass with exact
-  inventory, no failures/skips; source fingerprint
-  `d3ab16483faac6e3cda0cdda577fcf54eaa150682bdfb41705cd6597895af90d`.
-  The combined run remains failed because one Python assertion still treated85
-  as future. That assertion now accepts85 and rejects86.
-- `animated-codec-python-02`: all551 Python cases pass, fingerprint
-  `80681fb36612ebe0fd95f5d0c031fab7c443e73170b25663695cf4f97df0b1cf`.
-- `animated-codec-cross-language-01`: Python/C++ byte-identical roundtrips for
-  legacy84, empty85 and a two-body animated85 snapshot. Focused tests also
-  exercise missing/mismatched owners, duplicate bodies and downgrade rejection.
-Earlier failed checks remain retained. No runtime or sanitizer acceptance is
-claimed for this format chunk.
+- `animated-world-focused-01`: all13 selected cases pass, exact inventory,
+  no failures/skips; rebuilds game/esmtool. Includes mass-zero/nonkeyframed
+  exclusions and corrupt-snapshot rollback preserving original collision.
+- `animated-world-engine-01`: all2,157 engine cases pass, exact inventory,
+  no failures/skips. Both use fingerprint
+  `7ad14484251fd5bac3a9e61129ee1d2632f0466338e49d7ef8a73d2cc7058af6`.
+- Runtime executable SHA256:
+  `5f74817a4f4243cd4e9a7665a2b808370b96e9e98cc7d50a9196517df908ebaa`.
+- Initial manual build01 failed on a scoped-enum spelling, corrected in build02;
+  failed evidence is retained. No new sanitizer acceptance for this chunk.
 
-PhysicsSystem now exposes the independent body owner and replaces existing
-compound collision only after successful scheduler preparation, under one world
-lock. Removal and Ptr transfer include the new owner; conflicting static/actor
-admissions are rejected. `animated-physics-handoff-01` passes all12 selected
-cases over zero/one/two workers; `animated-physics-engine-01` passes all2,156
-engine cases with exact inventory and no failures/skips. Both use fingerprint
-`a25df06cdd9412e10cea33621a1e85ea26d46fa286f52cc527099c00cbee008b`.
-No game-binary rebuild or runtime/sanitizer acceptance is claimed for this chunk.
-
-Next: connect completed positive-mass reference animation to the new scheduler
-owner and existing prepared physical-pose rendering binding. Wire World capture,
-retention, restore and clear/swap lifecycle to the new collection; preserve bodies
-through cell unload/load and replace old compound collision only after successful
-preparation. The dedicated PhysicsSystem handoff is ready. Remove the old navigation
-obstacle when replacing collision and retain physical state on scene removal.
-Keep mass-zero doors/switches on their existing path.
-Then prove actual wall traversal from `wall-open-01` or fresh activation from
-`wall-approach-09`, followed by the rest of the original tutorial. Full sewer
-escape remains incomplete. All diagnostic/check processes are terminal.
+Reusable dependency commits: `59ed63d344` collision handoff/lifecycle,
+`59fb84e5af` schema85 C++/Python codecs, `00fe61320f` scheduler ownership,
+`323ba551ca` original rat Find-package activation. Original-game evidence:
+[SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
+All currently launched diagnostic and test processes are terminal.
 
 ## Target and acceptance
 
@@ -292,3 +238,105 @@ x250 before strafing south, rather than jump against the wall edge.
 The extracted original wall asset (ignored wall-assets/idcrumblewall01.nif)
 has named brick NiTransformController tracks; dynamic-body absence alone does
 not establish why the remaining opening is narrow. No collision fix justified.
+
+## Historical dependency checkpoint — before World integration
+
+
+Production commit `323ba551ca` makes the original rats select their wall-push
+package and activate the wall. `find-activator-range-01` passes nine focused
+tests and rebuilds the game; `find-range-engine-01` passes all 2,144 engine tests.
+No fresh sanitizer gate for this production chunk yet.
+
+Normal-input `wall-open-01` proves original activation, MQ01 stage24 and wall
+locals reaching pushed=3. Full sewer escape remains open: wall traversal,
+solo-dungeon combat/loot, reunion, Emperor sequence, character choices, final
+exit and save/load acceptance are not complete.
+
+Current blocker: `wall-center-crossing-02` backs west from the legitimate
+`wall-crossing-02` save, successfully strafes south onto the opening centerline,
+then stalls near (278,3196,-831). It is terminal failed, with a screenshot but
+no confirmed new F5 save. Stop repeating blind movement attempts.
+
+`wall-survey-03` passes a denser read-only collision survey including actors.
+At y3200, animated wall03e31c obstructs x~340 at z=-800,-790,-770,-760,-750,
+-720,-710,-700; rats are farther behind it. Earlier coarse rays missed these
+bricks. Screenshot shows suspended bricks across the gap. Neither survey alone
+proves full Player-volume clearance or diagnoses the engine cause.
+
+Independent original-game probe now establishes the discrepancy: direct
+`PlayGroup Unequip 1` collapses the bricks onto the floor, with GetDestroyed=0.
+Normal forward input reaches x352.47 inside the opening. Exact native handoff
+timing and full crossing beyond x550 were not measured. Console setup is
+explicitly diagnostic, not normal tutorial progression evidence.
+See [SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
+Original game and the temporary Steam client exited; the isolated configuration
+and saves were restored, including the unchanged pristine-save hash.
+
+The original asset contains thirteen positive-mass keyframed bodies and a
+one-second lateral jostling clip, with no authored collapse-to-floor track.
+Root transforms are identity; no physics-blend controllers are attached.
+The prison secret wall has mass-zero keyframed bodies with the same collision
+flags. A blanket release of every animated keyframed object is not justified.
+Raw extraction, transform inspection and original instruction diagnostics stay
+under ignored `wall-assets/`; parser output is content evidence, not an
+independent instruction oracle. The live original-game result supplies the
+independent behavioral evidence.
+
+The scheduler now has a separate multi-body owner for non-actor placed
+references. It reuses the existing native body simulation and graph snapshot
+adapters, participates in worker stepping and collision queries, preserves
+reference identity on transfer, and rejects conflicting actor/item ownership.
+Invalid motion preparation publishes nothing; corrupt snapshot restoration
+preserves the existing owner. Destruction/removal clears all owned bodies.
+The snapshot value type is shared with the actor body-graph representation;
+the owner collection remains separate and does not pretend the reference is
+an actor. Schema85 now adds a dedicated saved collection, described below. World capture,
+restore and gameplay callers are not wired yet.
+
+Validation: `animated-reference-focused-02` passes six cases over zero, one and
+two workers. `animated-reference-scheduler-01` passes all 263 selected scheduler
+and loose-item cases, exact inventory, no failures/skips. Both use source
+fingerprint `e97988fda6dee20a83a0e597d088d4ac14bbf71c75c88039c8feac139d951a41`.
+Focused01 is retained failed: the corruption test expected invalid_argument,
+while the existing validator correctly raised runtime_error; live state remained
+unchanged. No runtime executable rebuild, broad engine or sanitizer claim for
+this dependency chunk.
+
+The C++ and Python schema85 codecs now persist `native_animated_references`
+with placed-reference ownership, base/model/asset identity and full body graphs.
+Old versions retain their binary layout; no physical history is invented for
+legacy saves. Reviewed fixture upgrades add an explicit empty collection.
+
+Validation under `build/oblivion-compat/sewer-escape/`:
+- `animated-codec-regression-01`: all 3,242 component cases pass with exact
+  inventory, no failures/skips; source fingerprint
+  `d3ab16483faac6e3cda0cdda577fcf54eaa150682bdfb41705cd6597895af90d`.
+  The combined run remains failed because one Python assertion still treated85
+  as future. That assertion now accepts85 and rejects86.
+- `animated-codec-python-02`: all551 Python cases pass, fingerprint
+  `80681fb36612ebe0fd95f5d0c031fab7c443e73170b25663695cf4f97df0b1cf`.
+- `animated-codec-cross-language-01`: Python/C++ byte-identical roundtrips for
+  legacy84, empty85 and a two-body animated85 snapshot. Focused tests also
+  exercise missing/mismatched owners, duplicate bodies and downgrade rejection.
+Earlier failed checks remain retained. No runtime or sanitizer acceptance is
+claimed for this format chunk.
+
+PhysicsSystem now exposes the independent body owner and replaces existing
+compound collision only after successful scheduler preparation, under one world
+lock. Removal and Ptr transfer include the new owner; conflicting static/actor
+admissions are rejected. `animated-physics-handoff-01` passes all12 selected
+cases over zero/one/two workers; `animated-physics-engine-01` passes all2,156
+engine cases with exact inventory and no failures/skips. Both use fingerprint
+`a25df06cdd9412e10cea33621a1e85ea26d46fa286f52cc527099c00cbee008b`.
+No game-binary rebuild or runtime/sanitizer acceptance is claimed for this chunk.
+
+Next: connect completed positive-mass reference animation to the new scheduler
+owner and existing prepared physical-pose rendering binding. Wire World capture,
+retention, restore and clear/swap lifecycle to the new collection; preserve bodies
+through cell unload/load and replace old compound collision only after successful
+preparation. The dedicated PhysicsSystem handoff is ready. Remove the old navigation
+obstacle when replacing collision and retain physical state on scene removal.
+Keep mass-zero doors/switches on their existing path.
+Then prove actual wall traversal from `wall-open-01` or fresh activation from
+`wall-approach-09`, followed by the rest of the original tutorial. Full sewer
+escape remains incomplete. All diagnostic/check processes are terminal.

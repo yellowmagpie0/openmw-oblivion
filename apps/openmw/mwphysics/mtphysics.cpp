@@ -502,7 +502,8 @@ namespace MWPhysics
     void PhysicsTaskScheduler::addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-        std::span<const NifBullet::RagdollNativeMotionRequest> motions, btCollisionObject* replacedCollision)
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions, btCollisionObject* replacedCollision,
+        const ESM4::RuntimeActorRagdoll* saved, const ESM::FormKey& base, std::string_view model)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
@@ -520,6 +521,7 @@ namespace MWPhysics
         auto node = staged.extract(staged.begin());
         auto& physical = node.mapped()->mPhysics;
         physical.setNativeMotionModes(motions);
+        if (saved) restoreNativeActorRagdollSnapshot(physical, *saved, base, model, definition);
         const auto objects = physical.collisionObjects();
         std::vector<const btCollisionObject*> inserted;
         inserted.reserve(objects.size());

@@ -261,6 +261,7 @@ namespace MWWorld
     {
         std::optional<MWMechanics::OblivionCombatService> mCombat;
         decltype(World::mOblivionLooseWeaponStates) mLooseWeapons;
+        decltype(World::mOblivionAnimatedReferenceStates) mAnimatedReferences;
         decltype(World::mOblivionGetUpResources) mGetUpResources;
         std::optional<OblivionScriptManager::PreparedRestore> mScripts;
         std::optional<MWMechanics::OblivionAiService::PreparedRestore> mAi;
@@ -462,6 +463,7 @@ namespace MWWorld
         decltype(World::mPrng) mPrng{};
         decltype(World::mOblivionRuntimeState) mOblivionRuntimeState{};
         decltype(World::mOblivionLooseWeaponStates) mOblivionLooseWeaponStates{};
+        decltype(World::mOblivionAnimatedReferenceStates) mOblivionAnimatedReferenceStates{};
         decltype(World::mOblivionGetUpResources) mOblivionGetUpResources{};
         decltype(World::mOblivionGetUpLoads) mOblivionGetUpLoads{};
         decltype(World::mOblivionIdleResourceCache) mOblivionIdleResourceCache{};
@@ -535,6 +537,7 @@ namespace MWWorld
         swap(mOblivionRuntimeState, data.mOblivionRuntimeState);
         static_assert(std::is_nothrow_swappable_v<decltype(mOblivionLooseWeaponStates)>);
         swap(mOblivionLooseWeaponStates, data.mOblivionLooseWeaponStates);
+        swap(mOblivionAnimatedReferenceStates, data.mOblivionAnimatedReferenceStates);
         swap(mOblivionGetUpResources, data.mOblivionGetUpResources);
         swap(mOblivionGetUpLoads, data.mOblivionGetUpLoads);
         swap(mOblivionIdleResourceCache, data.mOblivionIdleResourceCache);
@@ -638,6 +641,7 @@ namespace MWWorld
         mPendingOblivionRuntimeState.reset();
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionAnimatedReferenceStates.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -1460,6 +1464,7 @@ namespace MWWorld
         mIdsRebuilt = false;
         mOblivionRuntimeState.reset();
         mOblivionLooseWeaponStates.reset();
+        mOblivionAnimatedReferenceStates.reset();
         mOblivionGetUpResources.reset();
         mOblivionGetUpLoads.reset();
         mOblivionIdleResourceCache.reset();
@@ -1904,6 +1909,7 @@ namespace MWWorld
     void World::captureOblivionPhysicalState(ESM4::RuntimeState& state, const Ptr& player) const
     {
         captureOblivionLooseWeaponState(state);
+        captureOblivionAnimatedReferenceState(state);
         if (!mPhysics)
         {
             // A retained save may be inspected without starting a scene/physics
@@ -1967,7 +1973,7 @@ namespace MWWorld
         if (mGameProfile != ESM::GameProfile::Oblivion || !mPhysics)
             return;
         const auto owners = mPhysics->actorRagdollOwners();
-        if (owners.empty() && mPhysics->looseObjectOwners().empty())
+        if (owners.empty() && mPhysics->looseObjectOwners().empty() && mPhysics->animatedReferenceOwners().empty())
             return;
         if (!mOblivionCombat)
             throw std::logic_error("native physical retention requires combat authority");
@@ -1980,6 +1986,7 @@ namespace MWWorld
         normalizeOblivionEnableParents(state);
         captureOblivionPhysicalState(state, player);
         auto looseWeapons = std::make_shared<const NativeLooseWeaponStates>(std::move(state.mNativeLooseWeapons));
+        auto animatedReferences = std::make_shared<const NativeAnimatedReferenceStates>(std::move(state.mNativeAnimatedReferences));
         MWMechanics::OblivionCombatService::PhysicalPoseUpdates updates;
         for (const auto& owner : owners)
         {
@@ -1993,6 +2000,7 @@ namespace MWWorld
         if (!mOblivionCombat->syncActorRagdolls(updates))
             throw std::runtime_error("native physical authority changed during scene retention");
         mOblivionLooseWeaponStates = std::move(looseWeapons);
+        mOblivionAnimatedReferenceStates = std::move(animatedReferences);
     }
 
     ESM4::RuntimeState World::captureOblivionRuntimeState() const
@@ -6708,6 +6716,7 @@ namespace MWWorld
                 if (mPhysics->captureLooseObjectSceneBinding(owner))
                     throw std::runtime_error("native loose weapon restore requires scene readmission");
         validateOblivionLooseWeaponState(state);
+        validateOblivionAnimatedReferenceState(state);
         validateNativeDropRelations(state, mStore, ESM::FormKeyResolver(mContentFiles));
         for (const auto& reference : state.mReferences)
             if (const auto marker = reference.mCustomState.find("obscript.dead");
@@ -6730,6 +6739,8 @@ namespace MWWorld
         auto retained = std::move(mPendingOblivionServices);
         auto preparedGetUpResources = retained && retained->mGetUpResources ? retained->mGetUpResources
             : prepareOblivionGetUpResources(state);
+        auto preparedAnimatedReferences = retained && retained->mAnimatedReferences ? retained->mAnimatedReferences
+            : std::make_shared<const NativeAnimatedReferenceStates>(state.mNativeAnimatedReferences);
         auto preparedLooseWeapons = retained && retained->mLooseWeapons ? retained->mLooseWeapons
             : std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
         if (retained)
@@ -7304,6 +7315,7 @@ namespace MWWorld
             throw std::logic_error("native cell movement preparation is stale");
         mOblivionRuntimeState = std::move(mPendingOblivionRuntimeState);
         mOblivionLooseWeaponStates = std::move(preparedLooseWeapons);
+        mOblivionAnimatedReferenceStates = std::move(preparedAnimatedReferences);
         mOblivionIdleResourceCache = preparedGetUpResources ? preparedGetUpResources->mCache : nullptr;
         mOblivionGetUpResources = std::move(preparedGetUpResources);
         mOblivionGetUpLoads.reset();
@@ -7682,7 +7694,10 @@ namespace MWWorld
         validateNativeDropRelations(state, mStore, resolver, incoming);
         validateOblivionLooseWeaponState(state);
         if (prepared)
+        {
             prepared->mLooseWeapons = std::make_shared<const NativeLooseWeaponStates>(state.mNativeLooseWeapons);
+            prepared->mAnimatedReferences = std::make_shared<const NativeAnimatedReferenceStates>(state.mNativeAnimatedReferences);
+        }
 
         const auto validateFloat = [](double value, std::string_view name) {
             if (!std::isfinite(value) || value < -std::numeric_limits<float>::max()
@@ -8975,6 +8990,7 @@ namespace MWWorld
 
     void World::updateAnimatedCollisionShape(const Ptr& ptr)
     {
+        updateOblivionAnimatedReference(ptr);
         mPhysics->updateAnimatedCollisionShape(ptr);
     }
 
@@ -8992,6 +9008,7 @@ namespace MWWorld
         mDiscardMovements = false;
         mPhysics->moveActors();
         synchronizeLooseWeaponPoses(*this,*mPhysics);
+        synchronizeOblivionAnimatedReferencePoses();
     }
 
     void World::updateNavigator()
