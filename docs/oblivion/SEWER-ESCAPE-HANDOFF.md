@@ -55,12 +55,26 @@ Editable passing segment: `oblivion_sewer_fresh_standback.json`.
 these position gates and600-second waits; this full assembled revision has not
 run end-to-end. Retain the failed timing courses as failures, not passes.
 
-Next: fresh-process Emperor greeting from the new stage16 save, then reuse
-accepted passage/ambush routes to reach and actually loot the correctly dead
-key corpse. `fresh-greeting-prepared.json` contains the existing controller
-responses with the same observer list; it is not yet runtime accepted.
-All opening/stand-back processes are terminal. Full original progression remains
-unaccepted.
+`fresh-greeting-01` PASSES the fresh-process original Emperor greeting with
+controller responses, stage18, Renault switch04e90d activation and stage19.
+Dialogue captures were inspected; its early wall capture is not traversal proof.
+`stage19-audit.json` verifies the quest and still-dead key corpse. Quicksave SHA:
+`0556a4c2a654b8859b67fb1beef4700df344f62d5d22ef6b4946c673ca028d0f`.
+
+`fresh-passage-01` PASSES another fresh-process load, Baurus's original control
+release and actual controller traversal through the secret passage. Its observer
+reads Player.getControlSwitch, supporting both already-restored and newly
+released controls without modifying them. The inspected capture shows Player
+and Emperor beyond the wall. `passage-audit.json` records Player
+(658.51,316.01,-128.09), stage19 and original corpse Dead; Quicksave SHA:
+`7ee9c4932d0784a3c4682914de00ef2b7dae8c418bb02ada2b7f33b02fe67577`.
+Both courses have no forbidden/unreviewed errors. Editable sources are
+`oblivion_sewer_fresh_greeting.json` and `oblivion_sewer_fresh_passage.json`.
+
+Next: descend from this fresh passage save to the lower landing and first ambush,
+then replay accepted combat/wall traversal and actually loot the correctly dead
+key corpse. These opening/greeting/passage processes are terminal. Full original
+progression remains unaccepted.
 
 ## Previous checkpoint — authored corpse initialization, 2026-11-04
 
