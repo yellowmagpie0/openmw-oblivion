@@ -1,6 +1,50 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — wall crossed, 2026-11-04
+## Current checkpoint — authored corpse initialization, 2026-11-04
+
+Normal input reached the original Goblin Shaman/key corpse. The accepted
+`solo-key-final-approach-02` save is at(1964.32,3114.64,-813.90), health49.45,
+SHA256 `696f930b726bec0140a4948fc0d136fd0cb09be09082978c66a037965fa6b465`.
+The inspected screenshot identifies Goblin Shaman under the crosshair.
+Earlier south-lane routes hit walls; the mouse-waypoint route failed its heading
+assumption. Genuine F5 room/east checkpoints and stop receipts are retained;
+those courses are not passes. Controller turning completes the final approach.
+
+`solo-corpse-loot-01` fails before activation: the old saved actor is Alive
+with zero Health. Original CREA159859 has authored Health0 and reference15985a
+owns Iron Key159826, Club159829, three lockpicks, two scrolls and a potion.
+See [SEWER-ZERO-HEALTH-CORPSE-AUDIT.json](SEWER-ZERO-HEALTH-CORPSE-AUDIT.json).
+Native base-stat initialization previously copied zero Health without adopting
+initial death. It now marks fresh zero-health actors dead; native construction
+adopts that state without a kill event. Explicit restored life stays authoritative,
+including Alive recovery/resurrection states. Existing bad saves are not rewritten.
+
+`authored-corpse-focused-01` passes2 focused cases, including fresh creature
+construction, binary life restore, no kill credit/death event and preservation
+of an explicit saved Alive state during lazy reconstruction.
+`authored-corpse-engine-01` passes all2,159 engine cases, exact inventory,
+no failures/skips; fingerprint
+`58e0ca140633246b67c43d9dbb65532ab3996c0a2830720271ddca60f434ac48`.
+No new sanitizer claim.
+
+`fresh-corpse-prison-01` starts the original new game, skips its intro with
+Escape and saves normally. The observer and saved snapshot prove the Goblin
+is Dead, killer null, with no death counts or pending death events. Its genuine
+prison Quicksave SHA256 is
+`3c79e8c958d1ab9a43dac5f0da05c1919578ee8a733c78a3525b5b93ac026467`.
+However, the whole run remains FAILED: four Assassin render admissions report
+`TES4 runtime-state player has a null required FormKey` before initial Player
+placement. This is a separate startup dependency, not corpse-loot acceptance.
+Editable fresh-start course: `oblivion_sewer_fresh_prison_corpse.json`.
+
+Next: finish tracing/fixing early Assassin setup (likely bound-equipment grant
+snapshot capture), then replay legitimate prison progression with the corrected
+fresh corpse state. GDB diagnostic `fresh-bound-grant-trace-01` is currently
+running, session98111; poll before restarting. The fresh corpse and engine runs
+are terminal. Keep prior wall crossing evidence; full original route, loot/equip,
+reunion, Emperor, choices, exterior exit and persistence gates remain open.
+
+## Previous checkpoint — wall crossed, 2026-11-04
 
 The Player now crosses the crumbled wall with ordinary forward input. Native
 multipart NPCs use a rounded capsule with the configured total height and

@@ -3660,6 +3660,69 @@ namespace
         EXPECT_EQ(reloaded.getNonPlayerValue(values.mActor, 22, mStore), .75f);
     }
 
+    TEST_F(OblivionActorStatsTest, authoredZeroHealthCreatureStartsDeadWithoutKillEventsAndRestoresLife)
+    {
+        sharedStats();
+        ESM4::Creature creature{};
+        creature.mId = {0x800, 3};
+        creature.mFormKey = mActorKey;
+        creature.mAttackReach = 64;
+        creature.mBaseConfig.tes4.levelOrOffset = 1;
+        creature.mBaseConfig.tes4.baseSpell = 50;
+        creature.mBaseConfig.tes4.fatigue = 90;
+        creature.mData.health = 0;
+        mStore.getWritable<ESM4::Creature>().insertStatic(creature, mActorKey);
+        MWBase::Environment environment;
+        environment.setESMStore(mStore);
+        ESM::ReadersCache readers;
+        MWWorld::WorldModel model(mStore, readers);
+        environment.setWorldModel(model);
+        MWClass::ESM4Creature::registerSelf();
+        ESM4::ActorCreature reference{};
+        reference.mFormKey = ESM::FormKey::content("actors.esm", 0x900);
+        reference.mId = {0x900, 3};
+        reference.mBaseKey = mActorKey;
+        mStore.getWritable<ESM4::ActorCreature>().insertStatic(reference, reference.mFormKey);
+        MWWorld::LiveCellRef<ESM4::Creature> live(reference, mStore.search<ESM4::Creature>(mActorKey));
+        const MWWorld::Ptr ptr(&live);
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        MWMechanics::OblivionCombatService service;
+        service.initializeNonPlayerActor(ptr, mStore, {}, ESM4::ActorValueProcess::Low, {});
+        ASSERT_NE(service.findActorLife(reference.mFormKey), nullptr);
+        EXPECT_EQ(service.findActorLife(reference.mFormKey)->mPhase, ESM4::ActorLifePhase::Dead);
+        EXPECT_EQ(service.getDeadCount(mActorKey), 0);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = ESM::FormKey::content("actors.esm", 1);
+        saved.mPlayer.mRace = ESM::FormKey::content("actors.esm", 2);
+        saved.mPlayer.mClass = ESM::FormKey::content("actors.esm", 3);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = reference.mFormKey;
+        savedActor.mBase = mActorKey;
+        savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        const auto snapshot = ESM4::RuntimeState::deserializeBinary(saved.serializeBinary());
+        service.clear();
+        service.restore(snapshot, mStore);
+        ptr.getRefData().setCustomData(nullptr);
+        service.initializeNonPlayerActor(ptr, mStore, {}, ESM4::ActorValueProcess::Active, {}, true);
+        EXPECT_TRUE(ptr.getClass().getCreatureStats(ptr).isDead());
+        EXPECT_EQ(service.getDeadCount(mActorKey), 0);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+        // Explicit saved life, including resurrection/recovery outcomes, must
+        // not be inferred again from base Health during lazy reconstruction.
+        auto alive = *service.findActorLife(reference.mFormKey);
+        alive.mPhase = ESM4::ActorLifePhase::Alive;
+        service.publishNonPlayerLife(ptr, alive);
+        ptr.getRefData().setCustomData(nullptr);
+        service.initializeNonPlayerActor(ptr, mStore, {}, ESM4::ActorValueProcess::Active, {});
+        EXPECT_FALSE(ptr.getClass().getCreatureStats(ptr).isDead());
+        EXPECT_EQ(*service.findActorLife(reference.mFormKey), alive);
+        EXPECT_FALSE(service.takeNextDeathEvent());
+    }
+
     TEST_F(OblivionActorStatsTest, nativeInitializationValidatesBeforeChangingSharedStats)
     {
         sharedStats();

@@ -56,6 +56,11 @@ namespace MWMechanics
         mAttributes.swap(initialized);
         for (std::size_t i = 0; i < dynamic.size(); ++i)
             mDynamic[i] = DynamicStat<float>(dynamic[i]);
+        // Authored zero-health actors are corpses on first construction.
+        // Establish the initial view without a damage transition or death
+        // event; native lifecycle adoption will preserve it. Restored native
+        // life remains authoritative when its projection is applied later.
+        mDead = dynamic[0] == 0.f;
         mLevel = level;
     }
 

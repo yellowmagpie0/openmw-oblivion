@@ -1,0 +1,18 @@
+{
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "records": [
+    {
+      "type": "CREA",
+      "id": "0x159859",
+      "EDID": "CGGoblinThiefShaman",
+      "FULL": "Goblin Shaman",
+      "actor_base_flags": "0x244",
+      "authored_health": 0
+    },
+    {
+      "type": "ACRE",
+      "id": "0x15985a",
+      "NAME": "0x159859"
+    }
+  ]
+}
