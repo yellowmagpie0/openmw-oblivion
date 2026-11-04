@@ -1,6 +1,62 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — stair rats defeated, western pillar approach, 2026-11-04
+## Current checkpoint — western passage and healing sack complete, 2026-11-04
+
+Full escape remains incomplete: lower solo-dungeon loop, goblins, reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and continuous full playthrough. Death/reload is verified. Current chunk:
+return to the stairs and traverse the lower loop toward Natural Caverns.
+
+`substructure-west-root-detour-01` PASSES18 ordinary-input waypoints around
+hanging roots and through the western passage to the stairs at raw node45.
+`traversal-audit.json` verifies unchanged Player health24.12 and inventory.
+Save SHA256 `825cb7bfbe11a39d6c51d68b04cc91121116e11ec288ae16375c4169f9812366`.
+Its input is the normal backward/left `substructure-pillar-step-01` save.
+The detour goes north to(-3538,4230), east(-3450,4230), south(-3450,3910),
+west(-3700,3910), then rejoins original raw nodes32–45.
+
+`substructure-west-sack-01` PASSES normal focused Space activation of sack15983b.
+`loot-audit.json` verifies exactly Healing009310 x1 and lockpicks x3 transferred,
+with empty saved sack. Save SHA256
+`7992630887760b2e7ecc19e3d06b47218eefc11d4b3f536ab06824e6f551fe25`.
+This uses existing immediate container transfer, not full container-menu acceptance.
+`substructure-west-healing-01` reuses the existing inventory healing manifest:
+normal menu input consumes the potion and restores health24.12->44.12.
+`substructure-west-healed-reload-01` PASSES fresh-process reload and F5.
+`healing-restart-audit.json` verifies exact Player values/inventory, native actor
+life records and empty sack; consumed potion does not reappear. Captures inspected.
+All passing courses have no forbidden/unreviewed errors. No engine changes;
+existing2167-case engine evidence and runtime binary remain applicable. No new
+sanitizer or full-escape acceptance claim.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-west-healed-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `6da178061387e2b744e3c32a83939bf66cfc3823d5c4bddca9ee9310e8dc7273`.
+Player(-4919.25,2896.73,-377.02), health44.12, Club and armor equipped;
+camera pitched down0.889 toward sack. Return toward node45(-5035,2909,-382),
+then nodes46 onward to the lower loop. Two remaining known rats038174/159832
+are near(-3083,2303,-448)/(-3972,1923,-441) in earlier save observations.
+Exit0381b8 at(-1998,891,-421) leads to Natural Caverns0380bd.
+All runtime processes are terminal. No testing/build job active.
+
+Editable sources: `oblivion_sewer_substructure_pillar_step.json`,
+`...west_root_detour.json`, `...west_sack.json`, `...west_healed_reload.json`,
+`...pillar_volume_survey.json`, under scripts/data/oblivion_compat.
+Healing uses existing `oblivion_sewer_substructure_healing.json`.
+
+Retained failures: `substructure-west-pillar-clear-01/02` and `...pillar-jump-01`
+stop at the roots; jump input did spend30 fatigue but did not clear them.
+Point-ray survey01 misses narrow roots; radius24 volume survey01 identifies
+original RootHavok01 base06035d/ref0493f0 and RootHavok05 base06035a/ref051dbf.
+Raw installed-master records independently identify those model names.
+Normal detour succeeds without collision changes. Whether these hanging roots
+should yield physically remains an adjacent unverified fidelity question.
+Manual diagnostic actions and failed commands are retained in clear01's receipt;
+its attempted final backward-step save was not successful. Do not use that as
+route acceptance. The ignored wide-course generator initially failed with a
+NameError before launch; corrected preparation produced clear02's retained failure.
+
+## History — stair rats defeated, western pillar approach, 2026-11-04
 
 Full escape remains incomplete: remaining solo dungeon, goblins, reunion,
 Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
