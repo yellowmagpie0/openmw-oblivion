@@ -151,6 +151,30 @@ def make_m14_state() -> dict:
 
 
 class Tes4RuntimeStateTests(unittest.TestCase):
+    def test_chargen80_owner_roundtrip_and_validation(self):
+        state = make_state()
+        state["ai_rng_state"] = 1
+        state["schema_version"] = 80
+        owner = {"tracking": True, "skill_uses": [0.] * 21,
+                 "recommended_class": "content:oblivion.esm:0237a7"}
+        owner["skill_uses"][5] = .25
+        state["player"]["character_generation"] = owner
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["player"]["character_generation"], owner)
+        old = copy.deepcopy(state)
+        old["schema_version"] = 79
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(old)
+        del old["player"]["character_generation"]
+        self.assertNotIn("character_generation", state_io.decode_payload(state_io.encode_payload(old))["player"])
+        for uses in (None, [0.] * 20, [float("nan")] * 21, [float("inf")] * 21):
+            malformed = copy.deepcopy(state)
+            malformed["player"]["character_generation"]["skill_uses"] = uses
+            with self.assertRaises(state_io.RuntimeStateError):
+                state_io.encode_payload(malformed)
+        owner["tracking"] = False
+        owner["skill_uses"] = None
+        self.assertEqual(state_io.decode_payload(state_io.encode_payload(state))["player"]["character_generation"], owner)
+
 
     @classmethod
     def getup_idle_state(cls):
@@ -3275,7 +3299,7 @@ class Tes4RuntimeStateTests(unittest.TestCase):
         for changes in [
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(target=entry["actor"]),
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(target="content:missing.esm:000001"),
-                lambda x: x["native_melee_states"][0]["ai_intent"].update(style="null"),
+                lambda x: x["native_melee_states"][0]["ai_intent"].update(style="missing"),
                 lambda x: x["native_melee_states"][0]["ai_intent"].update(extra=1),
                 lambda x: x["native_melee_states"][0].update(ai_intent=False),
                 lambda x: x.update(native_combat_engagements=[]),
@@ -3285,6 +3309,10 @@ class Tes4RuntimeStateTests(unittest.TestCase):
             with self.assertRaises(state_io.RuntimeStateError):
                 state_io.encode_payload(invalid)
         downgrade = copy.deepcopy(state); downgrade["schema_version"] = 27
+        default_style = copy.deepcopy(state)
+        default_style["native_melee_states"][0]["ai_intent"]["style"] = "null"
+        default_decoded = state_io.decode_payload(state_io.encode_payload(default_style))
+        self.assertEqual(default_decoded["native_melee_states"], default_style["native_melee_states"])
         with self.assertRaises(state_io.RuntimeStateError):
             state_io._upgrade_melee_ai(downgrade)
         for version in range(21, 28):
@@ -4647,5 +4675,180 @@ class SaveEnvelopeAdmissionTests(unittest.TestCase):
 
 
 
+
+
+
+class FactionReaction81Tests(unittest.TestCase):
+    def state(self):
+        state = make_state()
+        state["schema_version"] = 81
+        state["ai_rng_state"] = 1
+        return state
+
+    def test_directed_zero_and_signed_values_round_trip(self):
+        state = self.state()
+        for value in (0, -100, 30, -(1 << 31), (1 << 31) - 1):
+            state["faction_reactions"] = [
+                {"from": "content:oblivion.esm:000600", "to": "content:oblivion.esm:000601", "value": value},
+                {"from": "content:oblivion.esm:000601", "to": "content:oblivion.esm:000600", "value": 17}]
+            wire = state_io.encode_payload(state)
+            restored = state_io.decode_payload(wire)
+            self.assertEqual(restored["faction_reactions"], state["faction_reactions"])
+            self.assertEqual(state_io.encode_payload(restored), wire)
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(wire[:-1])
+        state["schema_version"] = 80
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state.pop("faction_reactions")
+        self.assertNotIn("faction_reactions",state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_invalid_faction_pair_or_duplicate_rejects(self):
+        state = self.state()
+        good = {"from": "content:oblivion.esm:000600", "to": "content:oblivion.esm:000601", "value": 30}
+        for rows in ([good, good], [dict(good, to="dynamic:faction:0000000000000001")],
+                     [dict(good, value=True)], [dict(good, value=1 << 31)]):
+            state["faction_reactions"] = rows
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+
+
+
+class ProcessAlert82Tests(unittest.TestCase):
+    def state(self):
+        state = make_state(); state["schema_version"] = 82; state["ai_rng_state"] = 1
+        state["native_actor_values"] = [{"actor": state["player"]["reference"],
+            "base": "content:oblivion.esm:000007", "owner": 0, "process": 0,
+            "values": [[0., None, None, None] for _ in range(72)]}]
+        return state
+
+    def test_alert_round_trip_and_legacy_absence(self):
+        for process in (0,1):
+            for alerted in (None,False,True):
+                state = self.state(); owner=state["native_actor_values"][0]
+                owner.update(process=process,process_alerted=alerted)
+                wire=state_io.encode_payload(state); restored=state_io.decode_payload(wire)
+                self.assertEqual(restored["native_actor_values"][0]["process_alerted"],alerted)
+                self.assertEqual(state_io.encode_payload(restored),wire)
+                state["schema_version"]=81
+                if alerted is not None:
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+                else:
+                    self.assertNotIn("process_alerted",state_io.decode_payload(state_io.encode_payload(state))["native_actor_values"][0])
+
+    def test_invalid_alert_value_or_presence_rejects(self):
+        state=self.state();owner=state["native_actor_values"][0]
+        for invalid in (0,1,-1,"true"):
+            owner["process_alerted"]=invalid
+            with self.assertRaises(state_io.RuntimeStateError):state_io.encode_payload(state)
+        owner["process_alerted"]=None; absent=state_io.encode_payload(state)
+        owner["process_alerted"]=False; present=state_io.encode_payload(state)
+        offset=next(i for i,(a,b) in enumerate(zip(absent,present)) if a!=b)
+        for at in (offset,offset+1):
+            bad=bytearray(present);bad[at]=2
+            with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(bad)
+
+
+class BoundEquipment83Tests(unittest.TestCase):
+    def state(self):
+        state = make_state(); state["schema_version"] = 83; state["ai_rng_state"] = 1
+        actor = "content:oblivion.esm:000a00"
+        spell = "content:oblivion.esm:03e91b"
+        item = dict(state["player"]["inventory"][0], base="content:oblivion.esm:026274",
+                    condition=4190.5, hotkey=-1, equipped_slots=1 << 16,
+                    bound_source={"spell": spell, "effect_index": 2})
+        displaced = dict(state["player"]["inventory"][0], hotkey=-1, ownership_rank=None,
+                         ownership_global="null", extra_scale=None)
+        state["references"] = [{"key": actor, "base": "content:oblivion.esm:000800",
+            "cell": state["player"]["cell"], "position": [0.] * 6, "enabled": True,
+            "deleted": False, "lock_level": 0, "owner": None, "inventory": [item], "custom_state": {}}]
+        state["native_bound_abilities"] = [{"actor": actor, "abilities": [
+            {"spell": spell, "displaced_inventory": [displaced]}]}]
+        return state
+
+    def test_owned_bound_instance_and_displaced_metadata_round_trip(self):
+        state = self.state(); wire = state_io.encode_payload(state)
+        restored = state_io.decode_payload(wire)
+        self.assertEqual(restored["references"][0]["inventory"][0]["bound_source"],
+                         state["references"][0]["inventory"][0]["bound_source"])
+        self.assertEqual(restored["references"][0]["inventory"][0]["condition"], 4190.5)
+        self.assertEqual(restored["native_bound_abilities"], state["native_bound_abilities"])
+        self.assertEqual(state_io.encode_payload(restored), wire)
+        state["schema_version"] = 82
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state["references"][0]["inventory"][0].pop("bound_source")
+        state.pop("native_bound_abilities")
+        restored = state_io.decode_payload(state_io.encode_payload(state))
+        self.assertNotIn("native_bound_abilities", restored)
+        self.assertNotIn("bound_source", restored["references"][0]["inventory"][0])
+
+    def test_cpp_bound_owner_fixture_has_independent_wire_tail(self):
+        state=self.state(); actor="content:oblivion.esm:000100"
+        state["references"][0]["key"]=actor
+        state["native_bound_abilities"][0]["actor"]=actor
+        displaced={"base":"content:oblivion.esm:026274","count":1,"condition":4190.5,
+            "charge":-1.,"equipped_slots":1<<16,"hotkey":-1,"owner":"content:oblivion.esm:000600",
+            "remaining_usage_time":-1.,"ownership_rank":None,"ownership_global":"null","extra_scale":None}
+        state["native_bound_abilities"][0]["abilities"][0]["displaced_inventory"]=[displaced]
+        wire=state_io.encode_payload(state)
+        self.assertTrue(wire.endswith(bytes.fromhex("010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303030313030010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303365393162010000001b000000636f6e74656e743a6f626c6976696f6e2e65736d3a3032363237340100000000f48245000080bf00000100ff1b000000636f6e74656e743a6f626c6976696f6e2e65736d3a303030363030000080bf00040000006e756c6c00")))
+        self.assertIn(bytes.fromhex("011b000000636f6e74656e743a6f626c6976696f6e2e65736d3a30336539316202000000"),wire)
+
+    def test_bound_source_corruption_or_orphan_ownership_rejected(self):
+        for case in range(8):
+            with self.subTest(case=case):
+                state = self.state(); item=state["references"][0]["inventory"][0]
+                owners=state["native_bound_abilities"]
+                if case==0: item["count"]=2
+                if case==1: item["bound_source"]["effect_index"]=-1
+                if case==2: item["bound_source"]["spell"]="dynamic:spell:0000000000000001"
+                if case==3: owners.clear()
+                if case==4: state["references"][0]["inventory"].append(dict(item, equipped_slots=0))
+                if case==5: owners[0]["abilities"].append(copy.deepcopy(owners[0]["abilities"][0]))
+                if case==6: owners[0]["abilities"][0]["displaced_inventory"]=[item]
+                if case==7: owners[0]["actor"]="content:oblivion.esm:00dead"
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        wire=state_io.encode_payload(self.state())
+        for n in [1,4,10]:
+            with self.assertRaises(state_io.RuntimeStateError):state_io.decode_payload(wire[:-n])
+
+
 if __name__ == "__main__":
     unittest.main()
+
+
+class EssentialBase84Tests(unittest.TestCase):
+    def test_flag_only_and_combined_base_state_round_trip_and_reject_downgrade(self):
+        for kind in (0, 1):
+            for essential in (False, True):
+                for values in ([], [[8, 0, 100]]):
+                    state = make_state()
+                    state.update(schema_version=84, ai_rng_state=1)
+                    base = dict(base="content:oblivion.esm:000800", kind=kind,
+                                values=values, essential=essential)
+                    state["native_actor_bases"] = [base]
+                    wire = state_io.encode_payload(state)
+                    restored = state_io.decode_payload(wire)
+                    self.assertEqual(restored["native_actor_bases"], [base])
+                    self.assertEqual(state_io.encode_payload(restored), wire)
+                    state["schema_version"] = 83
+                    with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+                    base.pop("essential")
+                    if values:
+                        legacy = state_io.decode_payload(state_io.encode_payload(state))
+                        self.assertNotIn("essential", legacy["native_actor_bases"][0])
+                    else:
+                        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+
+    def test_invalid_flag_and_corrupt_wire_reject_without_accepting_integer_bool(self):
+        state = make_state(); state.update(schema_version=84, ai_rng_state=1)
+        base = dict(base="content:oblivion.esm:000800", kind=0, values=[], essential=False)
+        state["native_actor_bases"] = [base]
+        for invalid in (0, 1, "true", -1):
+            base["essential"] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        base["essential"] = False
+        wire = state_io.encode_payload(state)
+        key = base["base"].encode()
+        offset = wire.index(key) + len(key) + 5
+        for invalid in (3, 255):
+            corrupt = bytearray(wire); corrupt[offset] = invalid
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(bytes(corrupt))

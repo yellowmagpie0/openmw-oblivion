@@ -7346,6 +7346,7 @@ namespace
         ASSERT_TRUE(world.initializeOblivionPlayerActor());
         const auto player = world.getPlayerPtr();
         const auto npc = addNativeNpc(fixture, 0x801);
+        world.getWorldModel().registerPtr(npc);
         ASSERT_TRUE(world.activateOblivionActor(npc));
         const auto armor = [&](std::uint32_t id, bool heavy, int type, float weight) {
             ESM4::Armor value{};
@@ -7386,6 +7387,11 @@ namespace
                     set(27, light); set(18, heavy);
                     const float expected = 40 + (light < 75 ? 20 : 0) + (heavy < 75 ? 30 : heavy < 100 ? 15 : 0);
                     EXPECT_FLOAT_EQ(burden(), expected);
+                    const auto key = actor == player ? ESM::FormKey::dynamic("player", 1)
+                        : actor.getCellRef().getFormKey();
+                    const auto scripted = world.getOblivionScriptActorValue(key, 11, false);
+                    ASSERT_TRUE(scripted);
+                    EXPECT_FLOAT_EQ(*scripted, expected);
                     EXPECT_FLOAT_EQ(inventory.getWeight(), 90); // Spare copies/raw inventory are untouched.
                 }
             set(27, 74); set(18, 74);
@@ -9964,6 +9970,36 @@ namespace
         EXPECT_EQ(snapshot().mCombatRngState, before.mCombatRngState);
     }
 
+    TEST(OblivionWorldTest, DefaultStyleMeleeIntentRestoresOwnedStrikeAndRejectsChangedContent)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        const auto a = addNativeNpc(fixture, 0x801), b = addNativeNpc(fixture, 0x802);
+        for (auto actor : {a, b}) ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& service = *world.getOblivionCombatService();
+        const auto key = a.getCellRef().getFormKey(), target = b.getCellRef().getFormKey();
+        ASSERT_TRUE(service.engage(key, target));
+        ASSERT_NO_THROW(service.setMeleeAiIntent(key, {target, {}}, world.getStore()));
+        const auto id = service.beginMeleeStrike(key, ESM4::MeleeStrikeKind::Left, "handtohandattackleft");
+        ASSERT_TRUE(service.bindMeleePlayback(id, key));
+        auto saved = captureNativeActorState(fixture, a);
+        saved.mReferences.push_back(captureNativeActorState(fixture, b).mReferences[0]);
+        const auto bytes = saved.serializeBinary();
+        service.clearMeleeAiIntent(key);
+        ASSERT_NO_THROW(service.restore(ESM4::RuntimeState::deserializeBinary(bytes), world.getStore()));
+        ASSERT_TRUE(service.findMeleeState(key)->mAiIntent);
+        EXPECT_TRUE(service.findMeleeState(key)->mAiIntent->mStyle.isNull());
+        EXPECT_EQ(service.findMeleeState(key)->mAiIntent->mTarget, target);
+        EXPECT_TRUE(service.isActionPending(id, key));
+        auto wrong = saved;
+        wrong.mNativeMeleeStates.at(key).mAiIntent->mStyle = ESM::FormKey::content("headless.esm", 0x600);
+        EXPECT_THROW(service.restore(wrong, world.getStore()), std::invalid_argument);
+        EXPECT_TRUE(service.isActionPending(id, key));
+        installMeleeAiStyle(fixture);
+        EXPECT_THROW(service.restore(saved, world.getStore()), std::invalid_argument);
+        EXPECT_TRUE(service.isActionPending(id, key));
+    }
+
     TEST(OblivionWorldTest, MeleeAiIntentBindsWinningContentAndCancelsRetargetWithoutSpending)
     {
         NativeWorldFixture fixture;
@@ -10093,7 +10129,7 @@ namespace
         }
     }
 
-    TEST(OblivionWorldTest, StationaryMeleeAiRejectsUnsupportedStyleAndNeverInventsHeadlessContact)
+    TEST(OblivionWorldTest, MeleeAiAdmitsOrdinaryStyleWithoutInventingHeadlessContact)
     {
         NativeWorldFixture fixture;
         prepareNativeCombatCommandPlayer(fixture);
@@ -10112,7 +10148,7 @@ namespace
             return state;
         };
         const auto before = snapshot();
-        EXPECT_TRUE(MWMechanics::updateOblivionStationaryMeleeAi(world, a, true));
+        EXPECT_TRUE(MWMechanics::updateOblivionMeleeAi(world, a, true));
         EXPECT_FALSE(a.getClass().getCreatureStats(a).getAttackingOrSpell());
         EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
         EXPECT_FALSE(MWMechanics::canReachOblivionMeleeTarget(world, a, b, 128));
@@ -10120,9 +10156,9 @@ namespace
         auto record = *world.getStore().search<ESM4::CombatStyle>(style);
         record.mStandard->mAttackChance = 50;
         world.getStore().getWritable<ESM4::CombatStyle>().insertStatic(record, style);
-        EXPECT_THROW(MWMechanics::updateOblivionStationaryMeleeAi(world, a, true), std::runtime_error);
+        EXPECT_TRUE(MWMechanics::updateOblivionMeleeAi(world, a, true));
         EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
-        EXPECT_TRUE(MWMechanics::updateOblivionStationaryMeleeAi(world, a, false));
+        EXPECT_TRUE(MWMechanics::updateOblivionMeleeAi(world, a, false));
         EXPECT_EQ(snapshot().serializeBinary(), before.serializeBinary());
     }
     TEST(OblivionWorldTest, NativeBowLaunchSamplesEquippedInstancesAndActualAvAuthorityWithoutWrites)
@@ -26006,6 +26042,45 @@ namespace
     }
 }
 
+TEST(OblivionWorldTest, DefaultMeleeAiUsesPhysicalReachAndReleasesControlsOnDisabledProcessing)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+    auto& world = fixture.mWorld;
+    const auto attacker = fixture.mActor, target = prepareNativeDropContactActors(fixture);
+    auto position = attacker.getRefData().getPosition();
+    position.rot[2] = 0;
+    attacker.getRefData().setPosition(position);
+    position.pos[1] += 10;
+    target.getRefData().setPosition(position);
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
+    placement->setPosition(position.asVec3());
+    target.getRefData().setBaseNode(placement);
+    fixture.mPhysics->addActor(attacker, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    fixture.mPhysics->addActor(target, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    ASSERT_TRUE(world.executeOblivionStartCombat(attacker, target));
+    const auto key = attacker.getCellRef().getFormKey();
+    auto& service = *world.getOblivionCombatService();
+    const auto health = service.getNonPlayerValue(target, 8);
+    auto& stats = attacker.getClass().getCreatureStats(attacker);
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, attacker, true, 1.f / 60.f));
+    ASSERT_TRUE(service.findMeleeState(key));
+    ASSERT_TRUE(service.findMeleeState(key)->mAiIntent);
+    EXPECT_TRUE(service.findMeleeState(key)->mAiIntent->mStyle.isNull());
+    EXPECT_TRUE(stats.getAttackingOrSpell());
+    EXPECT_EQ(service.getNonPlayerValue(target, 8), health); // Readiness is not a hit.
+    auto& movement = attacker.getClass().getMovementSettings(attacker);
+    movement.mPosition[1] = 1.f;
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, attacker, false, 1.f / 60.f));
+    EXPECT_FALSE(stats.getAttackingOrSpell());
+    EXPECT_EQ(movement.mPosition[1], 0.f);
+    EXPECT_FALSE(service.findMeleeState(key)->mAiIntent);
+    fixture.mPhysics->remove(target);
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, attacker, true, 1.f / 60.f));
+    EXPECT_FALSE(stats.getAttackingOrSpell());
+    EXPECT_EQ(movement.mPosition[1], 0.f);
+    EXPECT_EQ(service.getNonPlayerValue(target, 8), health);
+}
+
 TEST(OblivionWorldTest, NativeContactDisarmPreservesIntactConditionAndConsumesOwnedStrikeAtomically)
 {
     for (const bool receiving : {false, true})
@@ -35715,7 +35790,7 @@ TEST(OblivionWorldTest, AutomaticResponseRunsOneResultAfterMissingAudioWithMulti
 
 TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersSpokenInfoBeforeRandomConditions)
 {
-    for (const bool sayTo : {false, true}) for (unsigned scenario = 0; scenario < 8; ++scenario)
+    for (const bool sayTo : {false, true}) for (unsigned scenario = 0; scenario < 9; ++scenario)
     {
         SCOPED_TRACE(sayTo);
         SCOPED_TRACE(scenario);
@@ -35741,7 +35816,8 @@ TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersS
         std::string script;
         if (scenario != 3)
             script = sub(ESM::fourCC("SCTX"), scenario == 4
-                ? "SetAlert 1\nSetStage VoiceQuest 10\n" : "SetStage VoiceQuest 10\n");
+                ? "SetForceRun 1\nSetStage VoiceQuest 10\n"
+                : scenario == 8 ? "SetAlert 1\nSetStage VoiceQuest 10\n" : "SetStage VoiceQuest 10\n");
         const auto info = record(ESM4::REC_INFO, 0x902,
             sub(ESM::fourCC("DATA"), std::string{'\x02', '\0', static_cast<char>(flags)})
             + sub(ESM::fourCC("QSTI"), bytes(std::uint32_t{0x900}))
@@ -35768,6 +35844,9 @@ TEST(OblivionWorldTest, ScriptedSpeechRunsResponseResultsWithoutAudioAndFiltersS
         EXPECT_EQ(scripts->hasSpokenDialogueInfo(infoKey), marked);
         const bool ran = scenario != 2 && scenario != 3 && scenario != 4 && scenario != 5;
         EXPECT_EQ(scripts->findQuestState(questKey)->mStage, ran ? 10 : 0);
+        // Keep an unsupported-command failure (4), and prove the now-supported
+        // SetAlert result continues to the quest command (8).
+        EXPECT_EQ(world.getOblivionAlerted(context.mSelf), scenario == 8);
         ESM4::RuntimeState snapshot;
         scripts->capture(snapshot);
         const bool attemptedVm = scenario != 2 && scenario != 3 && scenario != 5;
@@ -39091,5 +39170,137 @@ TEST(OblivionWorldTest, BackwardPowerCommonHitPublishesPhysicalOwnershipWithoutP
         const auto before = captureNativeActorState(fixture, npc).serializeBinary();
         EXPECT_FALSE(world.commitOblivionPlayerNpcHit(id, attacker, victim, hit));
         EXPECT_EQ(captureNativeActorState(fixture, npc).serializeBinary(), before);
+    }
+}
+
+
+TEST(OblivionWorldTest, MeleeAiEquipsTheExactUsableOwnedStackWithoutRepairOrRepeatedWrites)
+{
+    NativeWeaponFactoryFixture fixture(false, 1, false, false, true, false);
+    auto& world = fixture.mWorld;
+    const auto actor = fixture.mActor, target = prepareNativeDropContactActors(fixture);
+    const auto weaponKey = ESM::FormKey::content("headless.esm", 0x940);
+    auto weapon = *world.getStore().get<ESM4::Weapon>().search(weaponKey);
+    weapon.mData.type = 0; weapon.mData.health = 100; weapon.mData.damage = 20; weapon.mData.speed = 1;
+    world.getStore().getWritable<ESM4::Weapon>().insertStatic(weapon, weaponKey);
+    ESM4::RuntimeInventoryItem broken;
+    broken.mBase = weaponKey; broken.mCount = 1; broken.mCondition = 0;
+    auto spare = broken;
+    spare.mCount = 3; spare.mCondition = 80.25; spare.mCharge = 7.25; spare.mExtraScale = 2;
+    installEquipmentInventory(fixture, actor, {broken, spare});
+    auto& inventory = actor.getClass().getInventoryStore(actor);
+    // This low-level fixture swap supplies contents without World publication.
+    // Bind the starting instances before testing the AI's later stack split.
+    for (auto it = inventory.begin(); it != inventory.end(); ++it)
+        world.getWorldModel().registerPtr(*it);
+    for (auto it = inventory.begin(); it != inventory.end(); ++it)
+    {
+        const auto registered = world.getWorldModel().getPtr(it->getCellRef().getRefNum());
+        ASSERT_EQ(registered, *it);
+        ASSERT_EQ(registered.getContainerStore(), &inventory);
+    }
+    auto position = actor.getRefData().getPosition();
+    position.rot[2] = 0; actor.getRefData().setPosition(position);
+    position.pos[1] += 10; target.getRefData().setPosition(position);
+    osg::ref_ptr<SceneUtil::PositionAttitudeTransform> placement = new SceneUtil::PositionAttitudeTransform;
+    placement->setPosition(position.asVec3()); target.getRefData().setBaseNode(placement);
+    fixture.mPhysics->addActor(actor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    fixture.mPhysics->addActor(target, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+    ASSERT_TRUE(world.executeOblivionStartCombat(actor, target));
+    const auto before = world.captureOblivionActorInventory(actor);
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, actor, false, 1.f / 60.f));
+    EXPECT_EQ(world.captureOblivionActorInventory(actor), before);
+    ASSERT_EQ(inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight), inventory.end());
+    const auto random = world.getOblivionCombatService()->combatRandomState();
+    const auto health = world.getOblivionCombatService()->getNonPlayerValue(target, 8);
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, actor, true, 1.f / 60.f));
+    const auto right = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+    ASSERT_NE(right, inventory.end());
+    EXPECT_EQ(right->getCellRef().getCount(), 1);
+    EXPECT_EQ(right->getCellRef().getNativeItemCondition(), 80.25f);
+    EXPECT_EQ(right->getCellRef().getEnchantmentCharge(), 7.25f);
+    const auto after = world.captureOblivionActorInventory(actor);
+    EXPECT_EQ(ESM4::inventoryCount(after, weaponKey), 4);
+    EXPECT_EQ(std::count_if(after.begin(), after.end(), [](const auto& item) {
+        return item.mCondition == 0 && item.mCount == 1 && item.mEquippedSlots == 0;
+    }), 1);
+    EXPECT_EQ(std::count_if(after.begin(), after.end(), [](const auto& item) {
+        return item.mCondition == 80.25 && item.mCount == 2 && item.mCharge == 7.25 && item.mExtraScale == 2;
+    }), 1);
+    for (auto it = inventory.begin(); it != inventory.end(); ++it)
+    {
+        const auto registered = world.getWorldModel().getPtr(it->getCellRef().getRefNum());
+        EXPECT_EQ(registered, *it);
+        EXPECT_EQ(registered.getContainerStore(), &inventory);
+    }
+    ASSERT_TRUE(MWMechanics::updateOblivionMeleeAi(world, actor, true, 1.f / 60.f));
+    EXPECT_EQ(world.captureOblivionActorInventory(actor), after);
+    EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), random);
+    EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(target, 8), health);
+}
+
+TEST(OblivionWorldTest, CombatFrameRetiresDeadTargetsAndReleasesTheLastControllerButKeepsEssentialKnockout)
+{
+    for (const bool essential : {false, true})
+    {
+        SCOPED_TRACE(essential);
+        NativeWorldFixture fixture;
+        prepareNativeCombatCommandPlayer(fixture);
+        auto& world = fixture.mWorld;
+        auto actor = addNativeNpc(fixture, 0xa01, 100, 0xa10);
+        auto first = addNativeNpc(fixture, 0xa02, 100, 0xa20);
+        auto last = addNativeNpc(fixture, 0xa03, 100, 0xa30);
+        for (auto* ptr : {&actor, &first, &last})
+        {
+            *ptr = ptr->getCell()->moveTo(*ptr, world.getPlayerPtr().getCell());
+            world.getWorldModel().registerPtr(*ptr);
+            ASSERT_TRUE(world.activateOblivionActor(*ptr));
+        }
+        const auto owner = actor.getCellRef().getFormKey();
+        const auto firstKey = first.getCellRef().getFormKey();
+        const auto lastKey = last.getCellRef().getFormKey();
+        ASSERT_TRUE(world.executeOblivionStartCombat(actor, first));
+        ASSERT_TRUE(world.executeOblivionStartCombat(actor, last));
+        EXPECT_EQ(world.getOblivionCombatTarget(owner), lastKey);
+        world.getOblivionCombatService()->setMeleeAiIntent(owner, {lastKey, {}}, world.getStore());
+        if (essential)
+        {
+            ASSERT_TRUE(world.setOblivionEssential(ESM::FormKey::content("headless.esm", 0xa20), true));
+            ASSERT_TRUE(world.killOblivionActor(first, {}));
+            EXPECT_EQ(world.getOblivionCombatService()->findActorLife(firstKey)->mPhase,
+                ESM4::ActorLifePhase::EssentialUnconscious);
+        }
+        ASSERT_TRUE(world.killOblivionActor(last, {}));
+        auto& movement = actor.getClass().getMovementSettings(actor);
+        movement.mPosition[1] = 1; movement.mRotation[2] = 1;
+        actor.getClass().getCreatureStats(actor).setAttackingOrSpell(true);
+        const auto random = world.getOblivionCombatService()->combatRandomState();
+        world.advanceOblivionActorClock(1.f / 60.f);
+        ASSERT_TRUE(world.updateOblivionFrameResources(actor, 1.f / 60.f, false));
+        EXPECT_EQ(world.getOblivionCombatTarget(owner), firstKey);
+        EXPECT_FALSE(world.isOblivionCombatTarget(owner, lastKey).value());
+        EXPECT_EQ(movement.mPosition[1], 0);
+        EXPECT_EQ(movement.mRotation[2], 0);
+        EXPECT_FALSE(actor.getClass().getCreatureStats(actor).getAttackingOrSpell());
+        auto saved = ESM4::RuntimeState::deserializeBinary(world.captureOblivionRuntimeState().serializeBinary());
+        ASSERT_EQ(saved.mCombatControllers.at(owner).size(), 1u);
+        EXPECT_EQ(saved.mCombatControllers.at(owner).front().mTarget, firstKey);
+        if (essential)
+        {
+            ASSERT_TRUE(world.updateOblivionFrameResources(actor, 1.f / 60.f, false));
+            EXPECT_EQ(world.getOblivionCombatTarget(owner), firstKey);
+            EXPECT_TRUE(world.isOblivionInCombat(actor).value());
+        }
+        else
+        {
+            ASSERT_TRUE(world.killOblivionActor(first, {}));
+            ASSERT_TRUE(world.updateOblivionFrameResources(actor, 1.f / 60.f, false));
+            EXPECT_FALSE(world.getOblivionCombatTarget(owner));
+            EXPECT_FALSE(world.isOblivionInCombat(actor).value());
+            EXPECT_FALSE(MWMechanics::updateOblivionMeleeAi(world, actor, true, 1.f / 60.f));
+            saved = world.captureOblivionRuntimeState();
+            EXPECT_FALSE(saved.mCombatControllers.contains(owner));
+        }
+        EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), random);
     }
 }

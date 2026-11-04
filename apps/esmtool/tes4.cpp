@@ -231,6 +231,12 @@ namespace EsmTool
                           << "\n  DialogueInfoQuest: " << value.mQuestKey.serialize()
                           << "\n  DialogueInfoPrevious: "
                           << (value.mPreviousInfoKey ? value.mPreviousInfoKey->serialize() : "absent");
+                for (const auto& topic : value.mChoiceTopics)
+                    std::cout << "\n  DialogueInfoChoice: " << topic.serialize();
+                for (const auto& topic : value.mLinkFromTopics)
+                    std::cout << "\n  DialogueInfoLinkFrom: " << topic.serialize();
+                for (const auto& topic : value.mAddedTopics)
+                    std::cout << "\n  DialogueInfoAddedTopic: " << topic.serialize();
             }
             if constexpr (std::is_same_v<T, ESM4::Skill>)
             {

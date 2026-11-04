@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry_points": [
+    "0x529ac0",
+    "0x529750"
+  ],
+  "authored_stages": [
+    23,
+    24
+  ],
+  "requests": [
+    23,
+    24,
+    23,
+    24,
+    22
+  ],
+  "allow_repeat_stages": [
+    false,
+    true
+  ],
+  "expected_current_stages": [
+    23,
+    24,
+    24,
+    24,
+    24
+  ],
+  "expected_success": [
+    true,
+    true,
+    true,
+    true,
+    false
+  ],
+  "expected_result_invocations": [
+    2,
+    4
+  ],
+  "boundaries": [
+    "Quest modified virtual and individual result-entry execution52ADF0 supplied. Native lookup, highest-stage byte and repeat gate execute.",
+    "Unknown-stage rejection is observed independently; production typed stage admission remains outside this bounded maximum/repeat fix."
+  ]
+}

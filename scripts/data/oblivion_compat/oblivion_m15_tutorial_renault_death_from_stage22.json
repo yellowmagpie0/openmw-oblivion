@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "name": "tutorial stage22 continuation through original ambush and Renault authored death",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:014a30 GetDisabled\nat 0 command content:oblivion.esm:014a2c GetDisabled\nat 0 command content:oblivion.esm:0178c3 GetDisabled\nat 0 command content:oblivion.esm:0178c4 GetDisabled\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal step=1\nlocal last=''\nlocal tests={{function(p) return p.x<=60 end,function(p) return p.y>=2110 end}}\nreturn {{engineHandlers={{onFrame=function()\n local p=self.position\n local band=tostring(math.floor(p.x/100))..':'..tostring(math.floor(p.y/100))\n if band~=last then last=band; print('Tutorial ambush position: x='..tostring(p.x)..' y='..tostring(p.y)..' z='..tostring(p.z)) end\n if tests[step] and tests[step](p) then print('Tutorial ambush waypoint '..tostring(step)); step=step+1 end\nend}}}}\n"
+    }
+  ],
+  "m14": {
+    "event_file": "ai-events.jsonl",
+    "fixed_seed": 1414,
+    "required_events": []
+  },
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Applied TES4 runtime state:",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:014a30 name=GetDisabled result=0(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:014a2c name=GetDisabled result=0(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0178c3 name=GetDisabled result=0(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0178c4 name=GetDisabled result=0(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial ambush waypoint 1(?:\\s|$)",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_x",
+      "value": 0
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": -1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial ambush waypoint 2(?:\\s|$)",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "left_y",
+      "value": 0
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=23(?:\\s|$)",
+      "timeout_seconds": 180,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: startcombat actor=content:oblivion.esm:014a2c(?:\\s|$)",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: startcombat actor=content:oblivion.esm:0178c3(?:\\s|$)",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M7 ObScript: startcombat actor=content:oblivion.esm:0178c4(?:\\s|$)",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "ambush-enablement.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "m14_checkpoint",
+      "name": "ambush-enablement",
+      "save_name": "Quicksave",
+      "minimum_actor_count": 3000
+    },
+    {
+      "type": "wait_log",
+      "pattern": "event=onhit unit=content:oblivion.esm:032ae1(?:@[^ ]+)? instance=content:oblivion.esm:032a15",
+      "timeout_seconds": 240,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=24(?:\\s|$)",
+      "timeout_seconds": 30,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "renault-death.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "m14_checkpoint",
+      "name": "renault-death",
+      "save_name": "Quicksave",
+      "minimum_actor_count": 3000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "acceptance-command actor=content:oblivion.esm:014a30 name=GetDisabled result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:014a2c name=GetDisabled result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0178c3 name=GetDisabled result=0(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0178c4 name=GetDisabled result=0(?:\\s|$)",
+    "setstage quest=content:oblivion.esm:02466e stage=23(?:\\s|$)",
+    "setalert ref=content:oblivion.esm:032a18 value=1 applied=true",
+    "setalert ref=content:oblivion.esm:032a15 value=1 applied=true",
+    "setalert ref=content:oblivion.esm:032a16 value=1 applied=true",
+    "setalert ref=content:oblivion.esm:032a17 value=1 applied=true",
+    "M7 ObScript: startcombat actor=content:oblivion.esm:014a2c(?:\\s|$)",
+    "M7 ObScript: startcombat actor=content:oblivion.esm:0178c3(?:\\s|$)",
+    "M7 ObScript: startcombat actor=content:oblivion.esm:0178c4(?:\\s|$)",
+    "event=onhit unit=content:oblivion.esm:032ae1(?:@[^ ]+)? instance=content:oblivion.esm:032a15",
+    "setstage quest=content:oblivion.esm:02466e stage=24(?:\\s|$)"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "enableplayercontrols movement="
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json"
+  }
+}

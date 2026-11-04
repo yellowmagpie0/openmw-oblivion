@@ -1,0 +1,61 @@
+{
+  "source_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f5290",
+  "scope": "Original CanPayCrimeGold evaluator comparison and null/nonactor branches; no money transfer or crime producer.",
+  "boundary_stubs": [
+    "virtual190 actor predicate",
+    "5e4420 actual subject gold count",
+    "virtual250 legal bounty float getter"
+  ],
+  "case_count": 8,
+  "cases": [
+    {
+      "subject": "null",
+      "gold": 0,
+      "bounty": 0,
+      "expected": 0
+    },
+    {
+      "subject": "nonactor",
+      "gold": 5,
+      "bounty": 0,
+      "expected": 0
+    },
+    {
+      "subject": "actor",
+      "gold": 0,
+      "bounty": 0,
+      "expected": 1
+    },
+    {
+      "subject": "actor",
+      "gold": 0,
+      "bounty": 1,
+      "expected": 0
+    },
+    {
+      "subject": "actor",
+      "gold": 5,
+      "bounty": 5,
+      "expected": 1
+    },
+    {
+      "subject": "actor",
+      "gold": 5,
+      "bounty": 5.5,
+      "expected": 0
+    },
+    {
+      "subject": "actor",
+      "gold": 5,
+      "bounty": 4.5,
+      "expected": 1
+    },
+    {
+      "subject": "actor",
+      "gold": 100,
+      "bounty": 1000,
+      "expected": 0
+    }
+  ]
+}

@@ -2949,7 +2949,12 @@ namespace MWMechanics
                 {
                     const auto policy = MWWorld::resolveOblivionCombatPolicy(world->getStore(),
                         service->findActorValues(actor)->mBase, MWWorld::buildOblivionCombatDefaults(world->getStore()));
-                    selected = selectOblivionStationaryMeleeStrike(policy.mStandard, input.mPreferLeft);
+                    // Preserve explicit stationary fixture policy. Ordinary
+                    // combat uses real alternating melee sequences; tactical
+                    // power/block/dodge selection is a separate AI decision.
+                    selected = isOblivionStationaryMeleeStyle(policy.mStandard)
+                        ? selectOblivionStationaryMeleeStrike(policy.mStandard, input.mPreferLeft)
+                        : input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;
                 }
                 else
                     selected = input.mPreferLeft ? ESM4::MeleeStrikeKind::Left : ESM4::MeleeStrikeKind::Right;

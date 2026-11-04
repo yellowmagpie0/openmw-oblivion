@@ -1,0 +1,866 @@
+{
+  "source_exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "content_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "entry": "0x662750",
+  "scope": "Full original recommendation routine and actual x87 conversions; supplied skill uses, SKIL specializations, GMST values and class lookup. No event tracking, persistence or UI acceptance.",
+  "boundary_stubs": [
+    "5e3320 current-class getter",
+    "446af0 winning SKIL getter",
+    "4473a0 class FormID lookup"
+  ],
+  "cases": [
+    {
+      "uses": [
+        0,
+        0,
+        0
+      ],
+      "expected_setting": "iClassAcrobat",
+      "expected_form_id": 145320,
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        1,
+        0,
+        0
+      ],
+      "expected_setting": "iClassWarrior",
+      "expected_form_id": 145287,
+      "expected_proposal": "iClassWarrior"
+    },
+    {
+      "uses": [
+        0,
+        1,
+        0
+      ],
+      "expected_setting": "iClassMage",
+      "expected_form_id": 67030,
+      "expected_proposal": "iClassMage"
+    },
+    {
+      "uses": [
+        0,
+        0,
+        1
+      ],
+      "expected_setting": "iClassThief",
+      "expected_form_id": 145295,
+      "expected_proposal": "iClassThief"
+    },
+    {
+      "uses": [
+        1,
+        1,
+        1
+      ],
+      "expected_setting": "iClassAcrobat",
+      "expected_form_id": 145320,
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        0,
+        0,
+        10
+      ],
+      "expected_setting": "iClassThief",
+      "expected_form_id": 145295,
+      "expected_proposal": "iClassThief"
+    },
+    {
+      "uses": [
+        0,
+        1,
+        9
+      ],
+      "expected_setting": "iClassAgent",
+      "expected_form_id": 145298,
+      "expected_proposal": "iClassAgent"
+    },
+    {
+      "uses": [
+        0,
+        2,
+        8
+      ],
+      "expected_setting": "iClassAgent",
+      "expected_form_id": 145298,
+      "expected_proposal": "iClassAgent"
+    },
+    {
+      "uses": [
+        0,
+        3,
+        7
+      ],
+      "expected_setting": "iClassAcrobat",
+      "expected_form_id": 145320,
+      "expected_proposal": "iClassAcrobat"
+    },
+    {
+      "uses": [
+        0,
+        4,
+        6
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        0,
+        5,
+        5
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        0,
+        6,
+        4
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        0,
+        7,
+        3
+      ],
+      "expected_setting": "iClassHealer",
+      "expected_form_id": 2320,
+      "expected_proposal": "iClassHealer"
+    },
+    {
+      "uses": [
+        0,
+        8,
+        2
+      ],
+      "expected_setting": "iClassSorcerer",
+      "expected_form_id": 145324,
+      "expected_proposal": "iClassSorcerer"
+    },
+    {
+      "uses": [
+        0,
+        9,
+        1
+      ],
+      "expected_setting": "iClassSorcerer",
+      "expected_form_id": 145324,
+      "expected_proposal": "iClassSorcerer"
+    },
+    {
+      "uses": [
+        0,
+        10,
+        0
+      ],
+      "expected_setting": "iClassMage",
+      "expected_form_id": 67030,
+      "expected_proposal": "iClassMage"
+    },
+    {
+      "uses": [
+        1,
+        0,
+        9
+      ],
+      "expected_setting": "iClassAgent",
+      "expected_form_id": 145298,
+      "expected_proposal": "iClassAgent"
+    },
+    {
+      "uses": [
+        1,
+        1,
+        8
+      ],
+      "expected_setting": "iClassAgent",
+      "expected_form_id": 145298,
+      "expected_proposal": "iClassAgent"
+    },
+    {
+      "uses": [
+        1,
+        2,
+        7
+      ],
+      "expected_setting": "iClassAssassin",
+      "expected_form_id": 145299,
+      "expected_proposal": "iClassAssassin"
+    },
+    {
+      "uses": [
+        1,
+        3,
+        6
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        1,
+        4,
+        5
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        1,
+        5,
+        4
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        1,
+        6,
+        3
+      ],
+      "expected_setting": "iClassWitchhunter",
+      "expected_form_id": 145816,
+      "expected_proposal": "iClassWitchhunter"
+    },
+    {
+      "uses": [
+        1,
+        7,
+        2
+      ],
+      "expected_setting": "iClassBattlemage",
+      "expected_form_id": 145815,
+      "expected_proposal": "iClassBattlemage"
+    },
+    {
+      "uses": [
+        1,
+        8,
+        1
+      ],
+      "expected_setting": "iClassSorcerer",
+      "expected_form_id": 145324,
+      "expected_proposal": "iClassSorcerer"
+    },
+    {
+      "uses": [
+        1,
+        9,
+        0
+      ],
+      "expected_setting": "iClassSorcerer",
+      "expected_form_id": 145324,
+      "expected_proposal": "iClassSorcerer"
+    },
+    {
+      "uses": [
+        2,
+        0,
+        8
+      ],
+      "expected_setting": "iClassAgent",
+      "expected_form_id": 145298,
+      "expected_proposal": "iClassAgent"
+    },
+    {
+      "uses": [
+        2,
+        1,
+        7
+      ],
+      "expected_setting": "iClassAssassin",
+      "expected_form_id": 145299,
+      "expected_proposal": "iClassAssassin"
+    },
+    {
+      "uses": [
+        2,
+        2,
+        6
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        2,
+        3,
+        5
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        2,
+        4,
+        4
+      ],
+      "expected_setting": "iClassBard",
+      "expected_form_id": 116772,
+      "expected_proposal": "iClassBard"
+    },
+    {
+      "uses": [
+        2,
+        5,
+        3
+      ],
+      "expected_setting": "iClassWitchhunter",
+      "expected_form_id": 145816,
+      "expected_proposal": "iClassWitchhunter"
+    },
+    {
+      "uses": [
+        2,
+        6,
+        2
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        2,
+        7,
+        1
+      ],
+      "expected_setting": "iClassBattlemage",
+      "expected_form_id": 145815,
+      "expected_proposal": "iClassBattlemage"
+    },
+    {
+      "uses": [
+        2,
+        8,
+        0
+      ],
+      "expected_setting": "iClassSorcerer",
+      "expected_form_id": 145324,
+      "expected_proposal": "iClassSorcerer"
+    },
+    {
+      "uses": [
+        3,
+        0,
+        7
+      ],
+      "expected_setting": "iClassAcrobat",
+      "expected_form_id": 145320,
+      "expected_proposal": "iClassAcrobat"
+    },
+    {
+      "uses": [
+        3,
+        1,
+        6
+      ],
+      "expected_setting": "iClassMonk",
+      "expected_form_id": 145321,
+      "expected_proposal": "iClassMonk"
+    },
+    {
+      "uses": [
+        3,
+        2,
+        5
+      ],
+      "expected_setting": "iClassMonk",
+      "expected_form_id": 145321,
+      "expected_proposal": "iClassMonk"
+    },
+    {
+      "uses": [
+        3,
+        3,
+        4
+      ],
+      "expected_setting": "iClassBard",
+      "expected_form_id": 116772,
+      "expected_proposal": "iClassBard"
+    },
+    {
+      "uses": [
+        3,
+        4,
+        3
+      ],
+      "expected_setting": "iClassNightblade",
+      "expected_form_id": 146440,
+      "expected_proposal": "iClassNightblade"
+    },
+    {
+      "uses": [
+        3,
+        5,
+        2
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        3,
+        6,
+        1
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        3,
+        7,
+        0
+      ],
+      "expected_setting": "iClassBattlemage",
+      "expected_form_id": 145815,
+      "expected_proposal": "iClassBattlemage"
+    },
+    {
+      "uses": [
+        4,
+        0,
+        6
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        4,
+        1,
+        5
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        4,
+        2,
+        4
+      ],
+      "expected_setting": "iClassBard",
+      "expected_form_id": 116772,
+      "expected_proposal": "iClassBard"
+    },
+    {
+      "uses": [
+        4,
+        3,
+        3
+      ],
+      "expected_setting": "iClassRogue",
+      "expected_form_id": 145292,
+      "expected_proposal": "iClassRogue"
+    },
+    {
+      "uses": [
+        4,
+        4,
+        2
+      ],
+      "expected_setting": "iClassAcrobat",
+      "expected_form_id": 145320,
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        4,
+        5,
+        1
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        4,
+        6,
+        0
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        5,
+        0,
+        5
+      ],
+      "expected_setting": "iClassPilgrim",
+      "expected_form_id": 2098,
+      "expected_proposal": "iClassPilgrim"
+    },
+    {
+      "uses": [
+        5,
+        1,
+        4
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        5,
+        2,
+        3
+      ],
+      "expected_setting": "iClassScout",
+      "expected_form_id": 145290,
+      "expected_proposal": "iClassScout"
+    },
+    {
+      "uses": [
+        5,
+        3,
+        2
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        5,
+        4,
+        1
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        5,
+        5,
+        0
+      ],
+      "expected_setting": "iClassSpellsword",
+      "expected_form_id": 146439,
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        6,
+        0,
+        4
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        6,
+        1,
+        3
+      ],
+      "expected_setting": "iClassScout",
+      "expected_form_id": 145290,
+      "expected_proposal": "iClassScout"
+    },
+    {
+      "uses": [
+        6,
+        2,
+        2
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        6,
+        3,
+        1
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        6,
+        4,
+        0
+      ],
+      "expected_setting": "iClassArcher",
+      "expected_form_id": 145291,
+      "expected_proposal": "iClassArcher"
+    },
+    {
+      "uses": [
+        7,
+        0,
+        3
+      ],
+      "expected_setting": "iClassKnight",
+      "expected_form_id": 2102,
+      "expected_proposal": "iClassKnight"
+    },
+    {
+      "uses": [
+        7,
+        1,
+        2
+      ],
+      "expected_setting": "iClassKnight",
+      "expected_form_id": 2102,
+      "expected_proposal": "iClassKnight"
+    },
+    {
+      "uses": [
+        7,
+        2,
+        1
+      ],
+      "expected_setting": "iClassKnight",
+      "expected_form_id": 2102,
+      "expected_proposal": "iClassKnight"
+    },
+    {
+      "uses": [
+        7,
+        3,
+        0
+      ],
+      "expected_setting": "iClassCrusader",
+      "expected_form_id": 145289,
+      "expected_proposal": "iClassCrusader"
+    },
+    {
+      "uses": [
+        8,
+        0,
+        2
+      ],
+      "expected_setting": "iClassBarbarian",
+      "expected_form_id": 145288,
+      "expected_proposal": "iClassBarbarian"
+    },
+    {
+      "uses": [
+        8,
+        1,
+        1
+      ],
+      "expected_setting": "iClassBarbarian",
+      "expected_form_id": 145288,
+      "expected_proposal": "iClassBarbarian"
+    },
+    {
+      "uses": [
+        8,
+        2,
+        0
+      ],
+      "expected_setting": "iClassBarbarian",
+      "expected_form_id": 145288,
+      "expected_proposal": "iClassBarbarian"
+    },
+    {
+      "uses": [
+        9,
+        0,
+        1
+      ],
+      "expected_setting": "iClassBarbarian",
+      "expected_form_id": 145288,
+      "expected_proposal": "iClassBarbarian"
+    },
+    {
+      "uses": [
+        9,
+        1,
+        0
+      ],
+      "expected_setting": "iClassBarbarian",
+      "expected_form_id": 145288,
+      "expected_proposal": "iClassBarbarian"
+    },
+    {
+      "uses": [
+        10,
+        0,
+        0
+      ],
+      "expected_setting": "iClassWarrior",
+      "expected_form_id": 145287,
+      "expected_proposal": "iClassWarrior"
+    }
+  ],
+  "cached_cases": [
+    {
+      "uses": [
+        0,
+        0,
+        0
+      ],
+      "cached_form_id": 145287,
+      "current_temporary": true,
+      "expected_setting": "iClassWarrior",
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        1,
+        1,
+        1
+      ],
+      "cached_form_id": 67030,
+      "current_temporary": true,
+      "expected_setting": "iClassMage",
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        5,
+        5,
+        0
+      ],
+      "cached_form_id": 145287,
+      "current_temporary": true,
+      "expected_setting": "iClassSpellsword",
+      "expected_proposal": "iClassSpellsword"
+    },
+    {
+      "uses": [
+        0,
+        0,
+        10
+      ],
+      "cached_form_id": 145287,
+      "current_temporary": true,
+      "expected_setting": "iClassThief",
+      "expected_proposal": "iClassThief"
+    },
+    {
+      "uses": [
+        0,
+        100,
+        0
+      ],
+      "cached_form_id": 145287,
+      "current_temporary": false,
+      "expected_setting": "iClassWarrior",
+      "expected_proposal": ""
+    },
+    {
+      "uses": [
+        1,
+        0,
+        0
+      ],
+      "cached_form_id": null,
+      "current_temporary": false,
+      "expected_setting": null,
+      "expected_proposal": ""
+    }
+  ],
+  "match_scope": "Original4F5880 and actual specialization accessor6ECC80;662750 recommendation and5E3320 current class getter are supplied.",
+  "match_cases": [
+    {
+      "current_specialization": 0,
+      "recommended_specialization": null,
+      "same_class": false,
+      "expected": 0
+    },
+    {
+      "current_specialization": 0,
+      "recommended_specialization": 0,
+      "same_class": true,
+      "expected": 2
+    },
+    {
+      "current_specialization": 0,
+      "recommended_specialization": 0,
+      "same_class": false,
+      "expected": 1
+    },
+    {
+      "current_specialization": 0,
+      "recommended_specialization": 1,
+      "same_class": false,
+      "expected": 0
+    },
+    {
+      "current_specialization": 1,
+      "recommended_specialization": null,
+      "same_class": false,
+      "expected": 0
+    },
+    {
+      "current_specialization": 1,
+      "recommended_specialization": 1,
+      "same_class": true,
+      "expected": 2
+    },
+    {
+      "current_specialization": 1,
+      "recommended_specialization": 1,
+      "same_class": false,
+      "expected": 1
+    },
+    {
+      "current_specialization": 1,
+      "recommended_specialization": 2,
+      "same_class": false,
+      "expected": 0
+    },
+    {
+      "current_specialization": 2,
+      "recommended_specialization": null,
+      "same_class": false,
+      "expected": 0
+    },
+    {
+      "current_specialization": 2,
+      "recommended_specialization": 2,
+      "same_class": true,
+      "expected": 2
+    },
+    {
+      "current_specialization": 2,
+      "recommended_specialization": 2,
+      "same_class": false,
+      "expected": 1
+    },
+    {
+      "current_specialization": 2,
+      "recommended_specialization": 0,
+      "same_class": false,
+      "expected": 0
+    }
+  ]
+}

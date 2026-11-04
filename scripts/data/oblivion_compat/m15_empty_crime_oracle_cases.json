@@ -1,0 +1,43 @@
+{
+  "source_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "entry": "0x4f7af0",
+  "scope": "Original GetCrime and manager675C40 with explicitly empty per-offense lists. Populated-ledger matching is NOT established.",
+  "boundary_stubs": [
+    "virtual190 subject actor predicate"
+  ],
+  "case_count": 8,
+  "cases": [
+    {
+      "offense": -1,
+      "expected": 0
+    },
+    {
+      "offense": 0,
+      "expected": 0
+    },
+    {
+      "offense": 1,
+      "expected": 0
+    },
+    {
+      "offense": 2,
+      "expected": 0
+    },
+    {
+      "offense": 3,
+      "expected": 0
+    },
+    {
+      "offense": 4,
+      "expected": 0
+    },
+    {
+      "offense": 5,
+      "expected": 0
+    },
+    {
+      "offense": 6,
+      "expected": 0
+    }
+  ]
+}

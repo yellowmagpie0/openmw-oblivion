@@ -48,13 +48,15 @@ class PassiveSlot3FixtureTests(unittest.TestCase):
                 source, recipe, opaque = self.source(Path(directory), idle_player=idle_player)
                 before_bytes = source.read_bytes()
                 before = runtime.load_save(source)
-                before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None; before['spoken_dialogue_infos'] = []; before['ignore_friendly_hits'] = {}; before['disposition_modifiers'] = []; before['friend_hit_counters'] = {}; before['combat_controllers'] = {}; before['native_getup_idles'] = []; before['native_getup_playback'] = []
+                before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None; before['spoken_dialogue_infos'] = []; before['ignore_friendly_hits'] = {}; before['disposition_modifiers'] = []; before['faction_reactions'] = []; before['friend_hit_counters'] = {}; before['combat_controllers'] = {}; before['native_getup_idles'] = []; before['native_getup_playback'] = []
                 output = Path(directory) / 'new' / 'staged.omwsave'
                 report = stage(source, output, recipe)
                 after = runtime.load_save(output)
                 self.assertEqual(after['native_melee_states'], [recipe['melee_state']])
                 after['native_melee_states'] = before['native_melee_states']
                 next(v for v in after['native_actor_values'] if v['actor'] == recipe['actor'])['process_action'] = -1
+                for actor in before['native_actor_values']: actor.setdefault('process_alerted', None)
+                runtime._upgrade_bound_ownership(before)
                 self.assertEqual(after, before)
                 self.assertEqual(output.read_bytes()[-len(opaque):], opaque)
                 self.assertEqual(source.read_bytes(), before_bytes)

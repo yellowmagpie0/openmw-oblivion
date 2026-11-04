@@ -1,0 +1,352 @@
+{
+  "exe_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "passed": true,
+  "cases": 48,
+  "entry": "0x4da2d0",
+  "stop": "0x4da315",
+  "boundaries": [
+    "Execute only the original reference-link parent-state prefix, stopping before unrelated link work; no full function-return claim.",
+    "ExtraData lookup for type0x3f and change-flag notification are supplied; original parent getter, inversion-bit getter and disabled-bit writer run.",
+    "This proves initial/link rule only, not save restoration, cycles, live parent updates or rendering."
+  ],
+  "rows": [
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 0,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 1,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 2,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 3,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 13033472,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 13033473,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 0,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 1,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 2,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 3,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 13033472,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 13033473,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 0,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 1,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 2,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 3,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 13033472,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 13033473,
+      "disabled": false
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 0,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 1,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 2,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 3,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 13033472,
+      "disabled": true
+    },
+    {
+      "parent": false,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 13033473,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 0,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 1,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 2,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 3,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 13033472,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": false,
+      "flags": 13033473,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 0,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 1,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 2,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 3,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 13033472,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": false,
+      "own_disabled": true,
+      "flags": 13033473,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 0,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 1,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 2,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 3,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 13033472,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": false,
+      "flags": 13033473,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 0,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 1,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 2,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 3,
+      "disabled": false
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 13033472,
+      "disabled": true
+    },
+    {
+      "parent": true,
+      "parent_disabled": true,
+      "own_disabled": true,
+      "flags": 13033473,
+      "disabled": false
+    }
+  ],
+  "schema_version": 1,
+  "evidence": "build/oblivion-compat/tutorial-melee/enable-parent-link-oracle.json"
+}

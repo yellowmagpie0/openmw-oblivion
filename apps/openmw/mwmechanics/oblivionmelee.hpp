@@ -53,9 +53,10 @@ namespace MWMechanics
     ESM4::MeleeStrikeKind selectOblivionStationaryMeleeStrike(
         const ESM4::CombatStyleStandard& style, bool preferLeft);
 
-    // S4's explicit deterministic stationary CSTY profile. Returns true while
-    // combat owns package execution. Full movement/style policy belongs to S7.
-    bool updateOblivionStationaryMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled);
+    // Directed combat owns controls while engaged. Ordinary styles approach
+    // through native navigation; S4's deterministic profiles remain stationary.
+    // Tactical block/dodge/power choice and autonomous acquisition remain S7.
+    bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration = 0.f);
 
     struct OblivionOrdinaryContactResult
     {

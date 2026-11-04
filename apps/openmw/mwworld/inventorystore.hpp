@@ -203,6 +203,9 @@ namespace MWWorld
         // each store's owner/listeners. Caller must prepare pointer registration
         // for the new containers first. External iterators must be reacquired.
         void swapPreparedContents(InventoryStore& other) noexcept;
+        // After a prepared inventory and its native ownership are published,
+        // refresh equipment observers without inventing item-acquisition events.
+        void notifyPreparedEquipmentChange() { fireEquipmentChangedEvent(); }
 
         std::unique_ptr<ContainerStore> clone() override
         {

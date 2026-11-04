@@ -83,6 +83,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/detection.cpp
     esm4/observation.cpp
     esm4/inventorymechanics.cpp
+    esm4/boundequipment.cpp
     esm4/aiselection.cpp
     esm4/aiphase.cpp
     esm4/formidfields.cpp
@@ -114,6 +115,7 @@ file(GLOB UNITTEST_SRC_FILES
     esm4/referenceflags.cpp
     esm4/stealthrules.cpp
     esm4/crimerules.cpp
+    esm4/charactergen.cpp
     esm4/bipedmodel.cpp
     esm4/crimecontracts.cpp
     esm4/combatairules.cpp

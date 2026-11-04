@@ -156,12 +156,16 @@ def creature_gamepad_setup_only(manifest):
 def is_current_fixture_schema(target, current, minimum):
     """Admit reviewed current schemas without duplicating version lists.
 
-    Version79 adds optional selected leveled contact sources; absent legacy
-    selections remain unknown, without a new roll. Future layouts require review here before fixtures can emit them.
+    Version84 adds optional base essential flags, absent in these fixtures.
+    Version83 adds empty bound ownership; older fixture items retain no source.
+    Version81 adds optional directed faction reaction changes. These older
+    fixtures keep an empty map, as they contain no such commands. Version80
+    Player character-generation history remains absent. Future
+    layouts require review here before fixtures can emit them.
     Each fixture retains its own minimum schema and complete state assertions.
     """
     return (type(target) is int and type(current) is int and type(minimum) is int
-            and target == current and minimum <= target <= 79)
+            and target == current and minimum <= target <= 84)
 
 
 def creature_passive_course_state(state, actor, abilities, *, stage):

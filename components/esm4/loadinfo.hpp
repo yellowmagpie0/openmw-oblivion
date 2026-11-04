@@ -94,6 +94,12 @@ namespace ESM4
         ESM::FormId mPreviousInfo;
         std::optional<ESM::FormKey> mPreviousInfoKey;
 
+        // Native topic links retain authored order and owning-file identity.
+        // These are menu choices, not keywords inferred from response text.
+        std::vector<ESM::FormKey> mChoiceTopics;
+        std::vector<ESM::FormKey> mLinkFromTopics;
+        std::vector<ESM::FormKey> mAddedTopics;
+
         std::vector<ScriptDefinition> mResultScripts;
 
         void load(ESM4::Reader& reader);

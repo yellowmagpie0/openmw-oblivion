@@ -70,6 +70,20 @@ namespace
         EXPECT_FALSE(MWMechanics::oblivionDestinationReached(key(1), destination, key(1), destination, -1.f));
     }
 
+    TEST(OblivionAiTest, PathgridCornerRequiresHorizontalArrivalDespiteAuthoredHeightOffset)
+    {
+        // Original tutorial PGRD entry0; the saved Emperor had already
+        // skipped it and was steering into the right doorway edge toward4.
+        const osg::Vec3f corner(658.1373f, 1274.1932f, -466.f);
+        EXPECT_FALSE(MWMechanics::oblivionPathgridWaypointReached(
+            osg::Vec3f(710.921f, 1238.907f, -441.686f), corner));
+        EXPECT_TRUE(MWMechanics::oblivionPathgridWaypointReached(
+            osg::Vec3f(658.f, 1274.f, -448.f), corner));
+        EXPECT_TRUE(MWMechanics::oblivionPathgridWaypointReached(corner + osg::Vec3f(16.f, 0.f, 64.f), corner));
+        EXPECT_FALSE(MWMechanics::oblivionPathgridWaypointReached(corner + osg::Vec3f(17.f, 0.f, 0.f), corner));
+        EXPECT_FALSE(MWMechanics::oblivionPathgridWaypointReached(corner + osg::Vec3f(0.f, 0.f, 65.f), corner));
+    }
+
     TEST(OblivionAiTest, NativePlayerReferenceAliasesRuntimePlayerButNotNpcBase)
     {
         const auto player = ESM::FormKey::dynamic("player", 1);

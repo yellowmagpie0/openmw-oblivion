@@ -294,6 +294,7 @@ namespace MWWorld
         mJumping = false;
         mOblivionJumpRequested = false;
         mOblivionCharacterGenerationFlags = 0;
+        mOblivionCharacterGeneration.reset();
         mCurrentCrimeId = -1;
         mPaidCrimeId = -1;
         mPreviousItems.clear();

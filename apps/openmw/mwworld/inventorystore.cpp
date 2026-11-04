@@ -903,6 +903,8 @@ MWWorld::InventoryStore::prepareItemRemoval(const ESM::RefId& base, int count)
         const auto raw = static_cast<std::uint32_t>(stack.mBefore);
         const auto size = stack.mBefore < 0 ? 0u - raw : raw;
         stack.mRemoved = static_cast<int>(std::min(size, static_cast<std::uint32_t>(remaining)));
+        if (stack.mRemoved && stack.mItem.getCellRef().getNativeBoundSource())
+            throw std::invalid_argument("bound equipment removal requires its owning effect lifecycle");
         const auto after = size - static_cast<std::uint32_t>(stack.mRemoved);
         stack.mAfter = std::bit_cast<std::int32_t>(stack.mBefore < 0 ? 0u - after : after);
         remaining -= stack.mRemoved;

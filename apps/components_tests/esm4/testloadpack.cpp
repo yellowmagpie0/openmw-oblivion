@@ -387,6 +387,27 @@ TEST(ESM4LoadInfo, RetainsNativeConditionsResponsesFlagsAndPredecessor)
     EXPECT_EQ(info.mPreviousInfo, ESM::FormId::fromUint32(0x1234));
 }
 
+TEST(ESM4LoadInfo, PreservesNativeChoiceOrderAndAllOwningFileTopicLinks)
+{
+    std::vector<char> payload;
+    appendSubRecord(payload, ESM::fourCC("TCLT"), bytes(std::uint32_t{0x1234}));
+    appendSubRecord(payload, ESM::fourCC("NAME"), bytes(std::uint32_t{0x3456}));
+    appendSubRecord(payload, ESM::fourCC("TCLT"), bytes(std::uint32_t{0x2345}));
+    appendSubRecord(payload, ESM::fourCC("TCLF"), bytes(std::uint32_t{0x4567}));
+    const auto info = loadInfo(payload);
+    EXPECT_EQ(info.mChoiceTopics, (std::vector<ESM::FormKey>{ESM::FormKey::content("memory.esm", 0x1234),
+        ESM::FormKey::content("memory.esm", 0x2345)}));
+    EXPECT_EQ(info.mAddedTopics, (std::vector<ESM::FormKey>{ESM::FormKey::content("memory.esm", 0x3456)}));
+    EXPECT_EQ(info.mLinkFromTopics, (std::vector<ESM::FormKey>{ESM::FormKey::content("memory.esm", 0x4567)}));
+    for (const auto tag : {ESM::fourCC("TCLT"), ESM::fourCC("TCLF"), ESM::fourCC("NAME")})
+        for (const int size : {0, 1, 3, 5, 8})
+        {
+            payload.clear();
+            appendSubRecord(payload, tag, std::vector<char>(size));
+            EXPECT_THROW(loadInfo(payload), std::runtime_error) << tag << ':' << size;
+        }
+}
+
 TEST(ESM4LoadInfo, ResolvesAllVoiceResponsesWithoutRaceSexOrNumberFallback)
 {
     ESM4::DialogInfo info;

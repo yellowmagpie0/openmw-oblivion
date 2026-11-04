@@ -253,9 +253,24 @@ void ESM4::DialogInfo::load(ESM4::Reader& reader)
                 break;
             }
             case ESM::fourCC("NAME"): // FormId add topic (not always present)
-            case ESM::fourCC("SCHD"): // 28 bytes
             case ESM::fourCC("TCLT"): // FormId choice
             case ESM::fourCC("TCLF"): // FormId
+            {
+                if (reader.hasFormVersion())
+                {
+                    reader.skipSubRecordData();
+                    break;
+                }
+                ESM::FormId id;
+                ESM::FormKey key;
+                if (subHdr.dataSize != 4 || !reader.getFormId(id, key))
+                    reader.fail("INFO topic link must have four bytes");
+                auto& links = subHdr.typeId == ESM::fourCC("TCLT") ? mChoiceTopics
+                    : subHdr.typeId == ESM::fourCC("TCLF") ? mLinkFromTopics : mAddedTopics;
+                links.push_back(std::move(key));
+                break;
+            }
+            case ESM::fourCC("SCHD"): // 28 bytes
             case ESM::fourCC("TPIC"): // TES4 DLC
             case ESM::fourCC("ANAM"): // FO3 speaker formid
             case ESM::fourCC("DNAM"): // FO3 speech challenge

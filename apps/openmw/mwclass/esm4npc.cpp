@@ -314,6 +314,9 @@ namespace MWClass
 
     bool ESM4Npc::isEssential(const MWWorld::ConstPtr& ptr) const
     {
+        if (const auto* world = dynamic_cast<const MWWorld::World*>(MWBase::Environment::get().getWorldOrNull()))
+            if (const auto essential = world->getOblivionEssentialOverride(ptr.get<ESM4::Npc>()->mBase->mFormKey))
+                return *essential;
         const auto& data = getCustomData(ptr);
         return (actorFlags(data) & ESM4::Npc::TES4_Essential) != 0;
     }
@@ -430,6 +433,11 @@ namespace MWClass
     const std::vector<const ESM4::Armor*>& ESM4Npc::getEquippedArmor(const MWWorld::Ptr& ptr)
     {
         return getCustomData(ptr).mEquippedArmor;
+    }
+
+    void ESM4Npc::refreshNativeEquipment(const MWWorld::Ptr& ptr)
+    {
+        cacheEquipment(getCustomData(ptr), *MWBase::Environment::get().getESMStore());
     }
 
     const std::vector<const ESM4::Clothing*>& ESM4Npc::getEquippedClothing(const MWWorld::Ptr& ptr)

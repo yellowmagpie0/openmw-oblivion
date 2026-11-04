@@ -308,6 +308,7 @@ add_component_dir (esm4
     loadinfo
     loadingr
     inventorymechanics
+    boundequipment
     loadkeym
     loadland
     loadlgtm

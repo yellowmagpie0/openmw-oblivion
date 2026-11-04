@@ -1,0 +1,24 @@
+{
+  "source_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "eval_entry": "0x4f5d60",
+  "command_entry": "0x506570",
+  "signal_address": "0xb3bb18",
+  "console_flag_address": "0xb361ac",
+  "scope": "Direct condition and non-console command consume one-shot flag; no arrest producer or save/load claim",
+  "cases": [
+    {
+      "initial_signal": 0,
+      "expected": [
+        0,
+        0
+      ]
+    },
+    {
+      "initial_signal": 1,
+      "expected": [
+        1,
+        0
+      ]
+    }
+  ]
+}

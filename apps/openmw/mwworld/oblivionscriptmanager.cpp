@@ -1,5 +1,7 @@
 #include "oblivionscriptmanager.hpp"
 #include "oblivioninteraction.hpp"
+#include "oblivioncharactergen.hpp"
+#include "obliviondooranimation.hpp"
 #include <components/esm4/observation.hpp>
 #include <components/esm4/dropplacement.hpp>
 
@@ -13,6 +15,7 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <set>
 #include <type_traits>
 
 #include <components/debug/debuglog.hpp>
@@ -1118,12 +1121,18 @@ namespace MWWorld
     {
         requireMutableRuntime();
         ESM4::RuntimeQuestState& state = questState(quest);
-        state.mStage = stage;
+        // Native Quest+5C retains the highest reached stage, including while
+        // a result script synchronously assures an earlier prerequisite.
+        state.mStage = std::max(state.mStage, stage);
         state.mRunning = true;
         const auto insert = std::lower_bound(state.mCompletedStages.begin(), state.mCompletedStages.end(), stage);
-        if (insert == state.mCompletedStages.end() || *insert != stage)
+        const bool completed = insert != state.mCompletedStages.end() && *insert == stage;
+        if (!completed)
             state.mCompletedStages.insert(insert, stage);
         trace("setstage quest=" + quest.serialize() + " stage=" + std::to_string(stage));
+        const auto* definition = mStore.search<ESM4::Quest>(quest);
+        if (completed && (!definition || !(definition->mData.flags & ESM4::Quest::Flag_AllowRepeatStages)))
+            return;
         if (const auto programs = mQuestResults.find(quest); programs != mQuestResults.end())
             for (const auto& program : programs->second)
                 if (program->mUnit.mStage && *program->mUnit.mStage == stage)
@@ -1526,6 +1535,7 @@ namespace MWWorld
         if (name == "setinchargen")
         {
             const bool enabled = ObScript::asInteger(argument(0)) != 0;
+            setOblivionCharacterGenerationTracking(mWorld, enabled);
             mWorld.mGlobalVariables[Globals::sCharGenState].setInteger(enabled ? 1 : -1);
             trace("setinchargen enabled=" + std::string(enabled ? "true" : "false"));
             return std::int64_t(0);
@@ -1576,18 +1586,13 @@ namespace MWWorld
                 changed = changed || state->mEnabled != enabled;
                 state->mEnabled = enabled;
             }
+            mWorld.synchronizeOblivionEnableParents();
             if (changed)
                 trace(name + " ref=" + key.serialize());
             return std::int64_t(0);
         }
         if (name == "getdisabled")
-        {
-            const Ptr ptr = objectPtr();
-            if (!ptr.isEmpty())
-                return std::int64_t(!ptr.getRefData().isEnabled());
-            const auto* state = referenceState(objectKey());
-            return std::int64_t(state != nullptr && !state->mEnabled);
-        }
+            return std::int64_t(!mWorld.getOblivionReferenceEnabled(objectKey()).value_or(true));
         if (name == "activate")
         {
             const ESM::FormKey key = objectKey();
@@ -1947,6 +1952,7 @@ namespace MWWorld
             const Ptr ptr = objectPtr();
             if (ptr.isEmpty() || ptr.getClass().getType() != ESM::REC_DOOR4)
                 return std::int64_t(0);
+            if (const auto animated = oblivionAnimatedDoorState(mWorld, ptr)) return std::int64_t(*animated);
             return std::int64_t(MWMechanics::oblivionDoorOpenState(ptr.getClass().getDoorState(ptr),
                 ptr.getRefData().getPosition().rot[2], ptr.getCellRef().getPosition().rot[2]));
         }
@@ -1960,8 +1966,9 @@ namespace MWWorld
                 = MWMechanics::oblivionDoorTransition(requested);
             if (!transition)
                 throw ObScript::RuntimeError("OBSV110", "SetOpenState requires 0 or 1", name);
-            const int current = MWMechanics::oblivionDoorOpenState(ptr.getClass().getDoorState(ptr),
-                ptr.getRefData().getPosition().rot[2], ptr.getCellRef().getPosition().rot[2]);
+            const int current = oblivionAnimatedDoorState(mWorld, ptr).value_or(
+                MWMechanics::oblivionDoorOpenState(ptr.getClass().getDoorState(ptr),
+                    ptr.getRefData().getPosition().rot[2], ptr.getCellRef().getPosition().rot[2]));
             if ((requested == 0 && current != 3 && current != 4)
                 || (requested == 1 && current != 1 && current != 2))
                 mWorld.activateDoor(ptr, *transition);
@@ -2006,6 +2013,55 @@ namespace MWWorld
                     mWorld.rotateObject(ptr, rotation, MWBase::RotationFlag_none);
                 }
             }
+            return std::int64_t(0);
+        }
+
+        if (name == "setessential")
+        {
+            if (arguments.size() != 2)
+                throw ObScript::RuntimeError("OBSV117", "SetEssential requires a base and flag", name);
+            const auto base = keyFromValue(argument(0));
+            const auto value = ObScript::asInteger(argument(1));
+            if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "SetEssential requires an int32 flag", name);
+            const bool essential = value > 0;
+            const bool applied = base && mWorld.setOblivionEssential(*base, essential);
+            trace("setessential base=" + (base ? base->serialize() : "null")
+                + " value=" + (essential ? "1" : "0") + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(0);
+        }
+
+        if (name == "setalert" || name == "getisalerted")
+        {
+            const bool write = name == "setalert";
+            if (arguments.size() != (write ? 1u : 0u))
+                throw ObScript::RuntimeError("OBSV117", "Invalid native alert argument count", name);
+            const auto key = objectKey();
+            if (!write) return std::int64_t(mWorld.getOblivionAlerted(key));
+            const auto value = ObScript::asInteger(argument(0));
+            if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "SetAlert requires an int32 value", name);
+            const bool applied = mWorld.setOblivionAlerted(key, static_cast<std::int32_t>(value));
+            trace("setalert ref=" + key.serialize() + " value=" + std::to_string(value)
+                + " applied=" + (applied ? "true" : "false"));
+            return std::int64_t(0);
+        }
+
+        if (name == "setfactionreaction" || name == "getfactionreaction")
+        {
+            const bool write = name == "setfactionreaction";
+            if (arguments.size() != (write ? 3u : 2u))
+                throw ObScript::RuntimeError("OBSV117", "Invalid faction reaction argument count", name);
+            const auto from = keyFromValue(argument(0));
+            const auto to = keyFromValue(argument(1));
+            if (!from || !to) return std::int64_t(0);
+            if (!write) return std::int64_t(mWorld.getOblivionFactionReaction(*from, *to).value_or(0));
+            const auto value = ObScript::asInteger(argument(2));
+            if (value < std::numeric_limits<std::int32_t>::min() || value > std::numeric_limits<std::int32_t>::max())
+                throw ObScript::RuntimeError("OBSV117", "Faction reaction requires an int32 value", name);
+            if (mWorld.setOblivionFactionReaction(*from, *to, static_cast<std::int32_t>(value)))
+                trace("setfactionreaction from=" + from->serialize() + " to=" + to->serialize()
+                    + " value=" + std::to_string(value));
             return std::int64_t(0);
         }
 
@@ -2446,6 +2502,29 @@ namespace MWWorld
                 observation->record("scene-complex-command", {{"value", combat->sceneIsComplex()}});
             return std::int64_t(0);
         }
+        if (name == "getcrimegold" || name == "canpaycrimegold")
+        {
+            const Ptr actor = objectPtr();
+            if (actor.isEmpty() || !actor.getClass().isActor())
+                return std::int64_t(0);
+            ensureDispositionActor(objectKey());
+            const auto* combat = mWorld.getOblivionCombatService();
+            const auto bounty = combat ? combat->crimeBounty(objectKey()) : std::nullopt;
+            if (!bounty)
+                throw ObScript::RuntimeError("OBSV115", "native bounty query requires actor authority", name);
+            if (name == "getcrimegold")
+                return double(*bounty);
+            return std::int64_t(actor.getClass().getContainerStore(actor).count(ContainerStore::sGoldId) >= *bounty);
+        }
+        if (name == "getclassdefaultmatch")
+            return std::int64_t(oblivionClassDefaultMatch(mWorld));
+        if (name == "isturnarrest")
+        {
+            auto* combat = mWorld.getOblivionCombatService();
+            if (!combat)
+                throw ObScript::RuntimeError("OBSV115", "IsTurnArrest requires native runtime authority", name);
+            return std::int64_t(combat->consumeTurnArrest());
+        }
         if (name == "getplayerinseworld")
         {
             const auto* combat = mWorld.getOblivionCombatService();
@@ -2688,6 +2767,60 @@ namespace MWWorld
             return std::int64_t(played != nullptr);
         }
 
+        if (name == "startconversation")
+        {
+            // NPC conversations follow the authored INFO links. Audio pacing
+            // is separate from the mechanical response/result progression.
+            Ptr speaker = objectPtr();
+            const auto targetKey = keyFromValue(argument(0));
+            Ptr listener = targetKey ? ptrFor(*targetKey) : Ptr{};
+            const auto available = [](const Ptr& actor) {
+                return !actor.isEmpty() && actor.getType() == ESM::REC_NPC_4
+                    && actor.getRefData().isEnabled() && actor.getCellRef().getCount() > 0
+                    && !actor.getClass().getCreatureStats(actor).isDead();
+            };
+            if (!available(speaker) || !available(listener) || speaker == listener)
+                return std::int64_t(0);
+            const auto root = arguments.size() > 1 ? keyFromValue(argument(1)) : mStore.findEsm4FormKey("HELLO");
+            if (!root) return std::int64_t(0);
+            auto selected = selectNativeDialogueInfo(*root, speaker, listener);
+            std::set<std::pair<ESM::FormKey, ESM::FormKey>> visited;
+            std::int64_t responses = 0;
+            while (selected && responses < 64 && available(speaker) && available(listener))
+            {
+                const auto* info = mStore.search<ESM4::DialogInfo>(*selected);
+                if (!info || info->mDialType != 1
+                    || !visited.emplace(*selected, keyFor(speaker)).second) break;
+                // Copy across result callbacks: scripts can reevaluate packages,
+                // move actors or change which linked responses are eligible.
+                const auto links = info->mChoiceTopics;
+                const auto nextSpeaker = info->mNextSpeaker;
+                const bool goodbye = (info->mInfoFlags & ESM4::INFO_Goodbye) != 0;
+                trace("conversation-response info=" + selected->serialize()
+                    + " ref=" + keyFor(speaker).serialize() + " target=" + keyFor(listener).serialize());
+                dispatchDialogueResponseResult(*selected, speaker);
+                ++responses;
+                selected.reset();
+                if (goodbye || nextSpeaker > 2 || !available(speaker) || !available(listener)) break;
+                // TES4 Next Speaker: 0 Target, 1 Self, 2 Either. Try links
+                // in record order; Either prefers the other participant.
+                for (const auto& link : links)
+                {
+                    if (nextSpeaker != 1)
+                    {
+                        selected = selectNativeDialogueInfo(link, listener, speaker);
+                        if (selected) { std::swap(speaker, listener); break; }
+                    }
+                    if (nextSpeaker != 0)
+                    {
+                        selected = selectNativeDialogueInfo(link, speaker, listener);
+                        if (selected) break;
+                    }
+                }
+            }
+            return responses;
+        }
+
         if (name == "say" || name == "sayto")
         {
             const Ptr speaker = objectPtr();
@@ -2809,7 +2942,7 @@ namespace MWWorld
         // retain deterministic control-flow compatibility for M7 scripts.
         static const std::set<std::string, std::less<>> deferred{
             "addtopic", "showmap",
-            "cast", "addspell", "removespell", "setessential",
+            "cast", "addspell", "removespell",
             "setquestobject", "setownership", "setfactionrank", "modfactionrank", "setcrimegold",
             "setunconscious" };
         if (deferred.contains(name))

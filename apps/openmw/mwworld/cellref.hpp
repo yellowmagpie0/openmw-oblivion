@@ -6,11 +6,14 @@
 #include <cmath>
 #include <limits>
 #include <optional>
+#include <stdexcept>
+#include <utility>
 
 #include <components/esm/esmbridge.hpp>
 #include <components/esm3/cellref.hpp>
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/droprelations.hpp>
+#include <components/esm4/bounditemsource.hpp>
 #include <components/esm4/loadachr.hpp>
 
 namespace ESM
@@ -127,6 +130,16 @@ namespace MWWorld
             return std::visit([&](auto&& ref) { return ref.mScale; }, mCellRef.mVariant);
         }
         void setScale(float scale);
+
+        const std::optional<ESM4::BoundItemSource>& getNativeBoundSource() const noexcept
+        { return mNativeBoundSource; }
+        void setNativeBoundSource(std::optional<ESM4::BoundItemSource> source)
+        {
+            if (source && (!source->mSpell.isContent()
+                || ESM::FormKey::deserialize(source->mSpell.serialize()) != source->mSpell))
+                throw std::invalid_argument("Invalid native bound item source");
+            mNativeBoundSource = std::move(source);
+        }
 
         // Exact inventory ExtraScale presence/value. This does not change the
         // placed reference's mesh scale or normalize explicit 1 to absence.
@@ -366,6 +379,7 @@ namespace MWWorld
         std::optional<float> mNativePlacedItemCondition;
         float mNativePlacedEnchantmentCharge = -1.f;
         ESM4::DropRelations mNativeDropRelations;
+        std::optional<ESM4::BoundItemSource> mNativeBoundSource;
     };
 
 }

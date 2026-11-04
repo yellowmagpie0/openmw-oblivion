@@ -16,6 +16,8 @@
 #include <components/esm3/loadfact.hpp>
 #include <components/esm3/loadinfo.hpp>
 #include <components/esm3/loadmgef.hpp>
+#include <components/esm4/loadinfo.hpp>
+#include <components/esm4/loaddial.hpp>
 
 #include <components/compiler/errorhandler.hpp>
 #include <components/compiler/exception.hpp>
@@ -43,6 +45,8 @@
 #include "../mwworld/class.hpp"
 #include "../mwworld/containerstore.hpp"
 #include "../mwworld/esmstore.hpp"
+#include "../mwworld/worldimp.hpp"
+#include "../mwworld/oblivionscriptmanager.hpp"
 
 #include "../mwscript/compilercontext.hpp"
 #include "../mwscript/extensions.hpp"
@@ -84,6 +88,9 @@ namespace MWDialogue
         decltype(DialogueManager::mIsInChoice) mIsInChoice{};
         decltype(DialogueManager::mGoodbye) mGoodbye{};
         decltype(DialogueManager::mChoices) mChoices{};
+        decltype(DialogueManager::mNativeDialogue) mNativeDialogue{};
+        decltype(DialogueManager::mNativeChoiceSerial) mNativeChoiceSerial{};
+        decltype(DialogueManager::mNativeChoiceInfos) mNativeChoiceInfos{};
         decltype(DialogueManager::mOriginalDisposition) mOriginalDisposition{};
         decltype(DialogueManager::mCurrentDisposition) mCurrentDisposition{};
         decltype(DialogueManager::mPermanentDispositionChange) mPermanentDispositionChange{};
@@ -121,6 +128,10 @@ namespace MWDialogue
             swap(mOwner->mGoodbye, mGoodbye);
             static_assert(std::is_nothrow_swappable_v<decltype(mChoices)>);
             swap(mOwner->mChoices, mChoices);
+            swap(mOwner->mNativeDialogue, mNativeDialogue);
+            swap(mOwner->mNativeChoiceSerial, mNativeChoiceSerial);
+            static_assert(std::is_nothrow_swappable_v<decltype(mNativeChoiceInfos)>);
+            swap(mOwner->mNativeChoiceInfos, mNativeChoiceInfos);
             static_assert(std::is_nothrow_swappable_v<decltype(mOriginalDisposition)>);
             swap(mOwner->mOriginalDisposition, mOriginalDisposition);
             static_assert(std::is_nothrow_swappable_v<decltype(mCurrentDisposition)>);
@@ -220,6 +231,14 @@ namespace MWDialogue
     {
         requireMutableRuntime();
         ++mRestoreEpoch;
+        if (mNativeDialogue)
+        {
+            mChoices.clear();
+            mIsInChoice = false;
+            mGoodbye = false;
+        }
+        mNativeDialogue = false;
+        mNativeChoiceInfos.clear();
         mKnownTopics.clear();
         mTalkedTo = false;
         mOriginalDisposition = 0;
@@ -294,7 +313,8 @@ namespace MWDialogue
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
-        updateGlobals();
+        const bool native = MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (!native) updateGlobals();
 
         // Dialogue with dead actor (e.g. through script) should not be allowed.
         if (actor.getClass().getCreatureStats(actor).isDead())
@@ -307,6 +327,8 @@ namespace MWDialogue
         mIsInChoice = false;
         mGoodbye = false;
         mChoices.clear();
+        mNativeDialogue = false;
+        mNativeChoiceInfos.clear();
 
         mActor = actor;
 
@@ -314,6 +336,25 @@ namespace MWDialogue
         mTalkedTo = creatureStats.hasTalkedToPlayer();
 
         mActorKnownTopics.clear();
+
+        if (native)
+        {
+            auto* world = dynamic_cast<MWWorld::World*>(
+                static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+            auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+            const auto greeting = world ? world->getStore().findEsm4FormKey("GREETING") : std::nullopt;
+            const auto info = scripts && greeting
+                ? scripts->selectNativeDialogueInfo(*greeting, actor, world->getPlayerPtr()) : std::nullopt;
+            if (!info) return false;
+            mNativeDialogue = true;
+            if (!executeNativeDialogue(*info, callback))
+            {
+                mNativeDialogue = false;
+                return false;
+            }
+            creatureStats.talkedToPlayer();
+            return true;
+        }
 
         // greeting
         const MWWorld::Store<ESM::Dialogue>& dialogs = MWBase::Environment::get().getESMStore()->get<ESM::Dialogue>();
@@ -347,6 +388,70 @@ namespace MWDialogue
             }
         }
         return false;
+    }
+
+    bool DialogueManager::executeNativeDialogue(const ESM::FormKey& key, ResponseCallback* callback)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(
+            static_cast<MWBase::World*>(MWBase::Environment::get().getWorld()));
+        auto* scripts = world ? world->getOblivionScriptManager() : nullptr;
+        const auto* info = world ? world->getStore().search<ESM4::DialogInfo>(key) : nullptr;
+        if (!mNativeDialogue || !callback || !scripts || !info || mActor.isEmpty()) return false;
+        // This route implements explicit native choice graphs. General learned
+        // topics/services remain a separate dialogue milestone.
+        if (info->mChoiceTopics.empty() && !(info->mInfoFlags & ESM4::INFO_Goodbye)) return false;
+        const auto responses = info->mResponses;
+        const auto flags = info->mInfoFlags;
+        const auto links = info->mChoiceTopics;
+        const auto speaker = mActor;
+        const auto epoch = mRestoreEpoch;
+        const auto unchanged = [&] { return mRestoreEpoch == epoch && mNativeDialogue && mActor == speaker; };
+        const bool immediate = flags & ESM4::INFO_RunImmediately;
+        if (immediate)
+        {
+            if (world->getScriptsEnabled()) scripts->dispatchDialogueResult(key, 0, speaker);
+            if (!unchanged()) return false;
+            if (!(flags & ESM4::INFO_InfoRefusal)) scripts->markSpokenDialogueInfo(key);
+        }
+        for (const auto& response : responses)
+        {
+            callback->addResponse({}, response.mText);
+            if (!unchanged()) return false;
+        }
+        if (!immediate)
+        {
+            scripts->dispatchDialogueResponseResult(key, speaker);
+            if (!unchanged()) return false;
+        }
+        // Result scripts can change the conditions of the next offered topics.
+        // Resolve them once, after the result, and retain each selected INFO.
+        std::vector<std::pair<std::string, int>> choices;
+        std::map<int, ESM::FormKey> infos;
+        int serial = mNativeChoiceSerial;
+        if (!(flags & ESM4::INFO_Goodbye))
+            for (const auto& topicKey : links)
+            {
+                const auto* topic = world->getStore().search<ESM4::Dialogue>(topicKey);
+                if (!topic || topic->mTopicName.empty())
+                    throw std::runtime_error("Native dialogue choice has no topic text: " + topicKey.serialize());
+                const auto selected = scripts->selectNativeDialogueInfo(topicKey, speaker, world->getPlayerPtr());
+                if (!selected) continue;
+                if (serial == std::numeric_limits<int>::max())
+                    throw std::length_error("Native dialogue choice ID limit reached");
+                const int id = ++serial;
+                choices.emplace_back(topic->mTopicName, id);
+                infos.emplace(id, *selected);
+            }
+        if (choices.empty() && !(flags & ESM4::INFO_Goodbye))
+            throw std::runtime_error("Native dialogue has no eligible linked choices: " + key.serialize());
+        mChoices.swap(choices);
+        mNativeChoiceInfos.swap(infos);
+        mNativeChoiceSerial = serial;
+        mGoodbye = flags & ESM4::INFO_Goodbye;
+        mIsInChoice = !mChoices.empty();
+        Log(Debug::Info) << "Native dialogue menu: actor=" << speaker.getCellRef().getFormKey().serialize()
+            << " info=" << key.serialize() << " choices=" << mChoices.size() << " goodbye=" << mGoodbye;
+        return true;
     }
 
     std::optional<Interpreter::Program> DialogueManager::compile(const std::string& cmd, const MWWorld::Ptr& actor)
@@ -558,6 +663,7 @@ namespace MWDialogue
     std::list<std::string> DialogueManager::getAvailableTopics()
     {
         requireMutableRuntime();
+        if (mNativeDialogue) return {};
         updateActorKnownTopics();
 
         std::list<std::string> keywordList;
@@ -605,6 +711,14 @@ namespace MWDialogue
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
+        if (mNativeDialogue)
+        {
+            mNativeChoiceInfos.clear();
+            mChoices.clear();
+            mIsInChoice = false;
+            mNativeDialogue = false;
+            return;
+        }
         // Apply disposition change to NPC's base disposition if we **think** we need to change something
         if ((mPermanentDispositionChange || mOriginalDisposition != mCurrentDisposition) && mActor.getClass().isNpc())
         {
@@ -630,6 +744,17 @@ namespace MWDialogue
     {
         requireMutableRuntime();
         const RuntimeCall call(mActiveCalls);
+        if (mNativeDialogue)
+        {
+            const auto found = mNativeChoiceInfos.find(answer);
+            if (found == mNativeChoiceInfos.end()) return;
+            const auto info = found->second;
+            mNativeChoiceInfos.clear();
+            mChoices.clear();
+            mIsInChoice = false;
+            executeNativeDialogue(info, callback);
+            return;
+        }
         mChoice = answer;
 
         const ESM::Dialogue* dialogue = searchDialogue(mLastTopic);

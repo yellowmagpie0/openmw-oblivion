@@ -2,6 +2,7 @@
 #define GAME_MWWORLD_PLAYER_H
 
 #include <map>
+#include <type_traits>
 
 #include "../mwworld/livecellref.hpp"
 
@@ -9,6 +10,7 @@
 
 #include <components/esm/attr.hpp>
 #include <components/esm/refid.hpp>
+#include <components/esm4/charactergenstate.hpp>
 #include <components/esm3/loadnpc.hpp>
 #include <components/esm3/loadskil.hpp>
 
@@ -56,6 +58,7 @@ namespace MWWorld
         bool mJumping;
         bool mOblivionJumpRequested = false;
         std::uint8_t mOblivionCharacterGenerationFlags = 0;
+        std::optional<ESM4::CharacterGenerationState> mOblivionCharacterGeneration;
 
     public:
         Player(const ESM::NPC* player);
@@ -86,6 +89,19 @@ namespace MWWorld
         void markOblivionCharacterGeneration(std::uint8_t flag) { mOblivionCharacterGenerationFlags |= flag; }
         void setOblivionCharacterGenerationFlags(std::uint8_t flags) { mOblivionCharacterGenerationFlags = flags; }
         std::uint8_t getOblivionCharacterGenerationFlags() const { return mOblivionCharacterGenerationFlags; }
+
+        const std::optional<ESM4::CharacterGenerationState>& getOblivionCharacterGenerationState() const
+        { return mOblivionCharacterGeneration; }
+        void setOblivionCharacterGenerationState(std::optional<ESM4::CharacterGenerationState> state)
+        {
+            if (state) state->validate();
+            mOblivionCharacterGeneration.swap(state);
+        }
+        void swapOblivionCharacterGenerationState(std::optional<ESM4::CharacterGenerationState>& state) noexcept
+        {
+            static_assert(std::is_nothrow_swappable_v<std::optional<ESM4::CharacterGenerationState>>);
+            mOblivionCharacterGeneration.swap(state);
+        }
 
         void setDrawState(MWMechanics::DrawState state);
         MWMechanics::DrawState getDrawState(); /// \todo constness

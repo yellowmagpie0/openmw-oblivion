@@ -3,6 +3,7 @@
 
 #include <components/esm4/loadrefr.hpp>
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/inventorymechanics.hpp>
 
 #include <components/esm3/esmreader.hpp>
 #include <components/esm3/esmwriter.hpp>
@@ -135,6 +136,33 @@ namespace
         state.mMounts.push_back({ actor.mMount, actor.mRider, actor.mBase, actor.mLastTransitionDoor, true });
         state.mDetectionVectors.push_back({ actor.mActor, actor.mTarget, 72.5, true, true });
         return state;
+    }
+
+    TEST(ESM4RuntimeState, EssentialBaseOverrideRoundTripAndLegacyRejection)
+    {
+        for (const auto kind : {ESM4::ActorBaseKind::Npc, ESM4::ActorBaseKind::Creature})
+        for (const bool essential : {false, true})
+        {
+            auto state = makeState();
+            state.mNativeActorBases = {{ESM::FormKey::content("oblivion.esm", 0x800), kind, {}, essential}};
+            const auto wire = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+            EXPECT_EQ(restored.mNativeActorBases, state.mNativeActorBases);
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+            EXPECT_NE(restored.canonicalJson().find(essential ? "\"essential\":true" : "\"essential\":false"),
+                std::string::npos);
+            state.mVersion = 83;
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+            state.mNativeActorBases.front().mEssential.reset();
+            EXPECT_THROW(state.serializeBinary(), std::runtime_error); // No empty overrides.
+            state.mNativeActorBases.front().mValues = {*ESM4::prepareActorBaseValueSet(kind, 8, 100)};
+            const auto legacy = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+            EXPECT_FALSE(legacy.mNativeActorBases.front().mEssential);
+            auto promoted = legacy;
+            promoted.mVersion = ESM4::CurrentRuntimeStateVersion;
+            EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(promoted.serializeBinary()).mNativeActorBases,
+                legacy.mNativeActorBases);
+        }
     }
 
     TEST(ESM4RuntimeState, binaryRoundTripPreservesEveryStateFamily)
@@ -497,7 +525,7 @@ namespace
         EXPECT_NE(json.find("\"inventory\":[{\"base\":\"content:oblivion.esm:018baa\",\"count\":1,"
                                  "\"condition\":125,\"charge\":80,\"equipped_slots\":4,\"hotkey\":2,"
                                  "\"owner\":\"content:oblivion.esm:000007\","
-                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\",\"extra_scale\":null}]"),
+                                 "\"remaining_usage_time\":812.5,\"ownership_rank\":null,\"ownership_global\":\"null\",\"extra_scale\":null,\"bound_source\":null}]"),
             std::string::npos);
         EXPECT_NE(json.find("\"script_event_sequence\":91"), std::string::npos);
         EXPECT_NE(json.find("\"stage\":19"), std::string::npos);
@@ -1834,7 +1862,7 @@ namespace
                 + (version >= 42 ? 36 : 0) + (version >= 53 ? 4 : 0) + (version >= 62 ? 1 : 0)
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
-                + (version >= 72 ? 4 : 0);
+                + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -2598,7 +2626,8 @@ TEST(ESM4RuntimeState, MeleeAi28PersistsOwnedTargetAndRejectsDanglingOrLossyStat
     EXPECT_THROW(invalid.validate(), std::runtime_error);
     invalid = state;
     invalid.mNativeMeleeStates.at(actor).mAiIntent->mStyle = {};
-    EXPECT_THROW(invalid.validate(), std::runtime_error);
+    // Default CSTY is a real native policy, including in persisted intent.
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()), invalid);
     invalid = state;
     invalid.mNativeCombatEngagements.clear();
     EXPECT_THROW(invalid.validate(), std::runtime_error);
@@ -3656,8 +3685,10 @@ TEST(ESM4RuntimeState, OwnedBounty44PreservesRawBucketsAndMatchesIndependentWire
     const auto found = std::search(bytes.begin(), bytes.end(), base.begin(), base.end());
     ASSERT_NE(found, bytes.end());
     // Owner/process, 72 zero bases with absent modifiers, then two absent
-    // process-state flags precede the independently specified v44 field.
-    const auto offset = std::distance(bytes.begin(), found) + base.size() + 2 + 72 * 5 + 2;
+    // process-state flags and the v82 absent alert flag precede the
+    // independently specified v44 field.
+    const auto offset = std::distance(bytes.begin(), found) + base.size() + 2 + 72 * 5 + 2
+        + (state.mVersion >= 82 ? 1 : 0);
     const std::array<std::uint8_t, 10> expected{1, 0, 0, 128, 62, 0, 0, 96, 192, 1};
     ASSERT_GE(bytes.size(), offset + expected.size());
     EXPECT_TRUE(std::equal(expected.begin(), expected.end(), bytes.begin() + offset));
@@ -3779,7 +3810,9 @@ TEST(ESM4RuntimeState, Reputation46OwnsExactSignedCountersAndIndependentAccumula
     const auto found = std::search(bytes.begin(), bytes.end(), name.begin(), name.end());
     ASSERT_NE(found, bytes.end());
     // Three present AV38 modifiers add twelve bytes to the zero/absent array.
-    const auto offset = std::distance(bytes.begin(), found) + name.size() + 2 + 72 * 5 + 12 + 3;
+    // Schema82 also carries an absent process-alert flag before bounty.
+    const auto offset = std::distance(bytes.begin(), found) + name.size() + 2 + 72 * 5 + 12 + 3
+        + (state.mVersion >= 82 ? 1 : 0);
     const std::vector<std::uint8_t> expected{1, 1, 0, 0, 1, 253, 255, 255, 255, 1, 9, 3, 0, 0};
     ASSERT_GE(bytes.size(), offset + expected.size());
     EXPECT_TRUE(std::equal(expected.begin(), expected.end(), bytes.begin() + offset));
@@ -6206,4 +6239,142 @@ TEST(ESM4RuntimeState, PhysicalHit75DoesNotInventLegacyForceOrTimestamp)
     EXPECT_EQ(loaded.serializeBinary().size(), wire.size() + 1);
     EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(loaded.serializeBinary())
         .mNativeGetUpPlayback.begin()->second.mPhysicalHit);
+}
+
+TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectLostOrMalformedState)
+{
+    auto state = makeState();
+    const auto a = ESM::FormKey::content("oblivion.esm", 0x600);
+    const auto b = ESM::FormKey::content("oblivion.esm", 0x601);
+    for (const auto value : {0, -100, 30, std::numeric_limits<std::int32_t>::min(),
+             std::numeric_limits<std::int32_t>::max()})
+    {
+        state.mFactionReactions = {{{a,b},value}, {{b,a},17}};
+        const auto wire = state.serializeBinary();
+        const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+        EXPECT_EQ(restored.mFactionReactions, state.mFactionReactions);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        auto truncated = wire; truncated.pop_back();
+        EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(truncated), std::runtime_error);
+    }
+    auto bad = state; bad.mVersion = 80;
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    bad = state; bad.mFactionReactions = {{{a,ESM::FormKey::dynamic("faction",1)},30}};
+    EXPECT_THROW(bad.serializeBinary(), std::runtime_error);
+    state.mFactionReactions.clear();
+    const auto emptySize = state.serializeBinary().size();
+    state.mFactionReactions = {{{a,b},0}};
+    const auto rowSize = state.serializeBinary().size() - emptySize;
+    state.mFactionReactions[{b,a}] = 17;
+    auto unordered = state.serializeBinary();
+    const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0);
+    std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
+    state.mFactionReactions.clear(); state.mVersion = 80;
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mFactionReactions.empty());
+}
+
+TEST(ESM4RuntimeState, ProcessAlert82KeepsExplicitFalseAndTrueAcrossLowAndActiveOwners)
+{
+    auto state = makeState();
+    ESM4::RuntimeActorValues actor;
+    actor.mActor = state.mPlayer.mReference;
+    actor.mBase = ESM::FormKey::content("oblivion.esm",7);
+    actor.mOwner = ESM4::ActorValueOwner::Player;
+    for (const auto process : {ESM4::ActorValueProcess::Low, ESM4::ActorValueProcess::Active})
+        for (const auto alerted : {std::optional<bool>{}, std::optional<bool>{false}, std::optional<bool>{true}})
+        {
+            actor.mProcess = process; actor.mProcessAlerted = alerted;
+            state.mNativeActorValues = {actor};
+            const auto wire = state.serializeBinary();
+            const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+            EXPECT_EQ(restored.mNativeActorValues.front().mProcessAlerted, alerted);
+            EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+            auto old = state; old.mVersion = 81;
+            if (alerted.has_value()) EXPECT_THROW(old.serializeBinary(),std::runtime_error);
+            else EXPECT_FALSE(ESM4::RuntimeState::deserializeBinary(old.serializeBinary())
+                .mNativeActorValues.front().mProcessAlerted.has_value());
+        }
+    state.mNativeActorValues.front().mProcessAlerted.reset();
+    const auto absent = state.serializeBinary();
+    state.mNativeActorValues.front().mProcessAlerted = false;
+    const auto present = state.serializeBinary();
+    const auto offset = std::mismatch(absent.begin(),absent.end(),present.begin()).first - absent.begin();
+    ASSERT_LT(offset+1,present.size());
+    auto invalid = present; invalid[offset] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid),std::runtime_error);
+    invalid = present; invalid[offset+1] = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid),std::runtime_error);
+}
+
+TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipmentIndependentOfCrimeOwner)
+{
+    auto state = makeState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto spell = ESM::FormKey::content("oblivion.esm",0x3e91b);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("oblivion.esm",0x26274);
+    item.mCount = 1; item.mCondition = 4190.5; item.mEquippedSlots = 1u<<16;
+    item.mOwner = ESM::FormKey::content("oblivion.esm",0x600);
+    item.mBoundSource = ESM4::BoundItemSource{spell,2};
+    auto ordinary = item; ordinary.mBoundSource.reset(); ordinary.mEquippedSlots = 0;
+    state.mReferences.front().mInventory = {item,ordinary};
+    auto displaced = ordinary; displaced.mEquippedSlots = 1u<<16;
+    state.mNativeBoundAbilities = {{actor,{{spell,{displaced}}}}};
+    const auto wire = state.serializeBinary();
+    // Independent public wire recipe, also checked by the Python inspector.
+    const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
+    ASSERT_GE(wire.size(),ownerTail.size());
+    EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin()));
+    const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
+    EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
+
+    const auto restored = ESM4::RuntimeState::deserializeBinary(wire);
+    EXPECT_EQ(restored,state); EXPECT_EQ(restored.canonicalJson(),state.canonicalJson());
+    EXPECT_EQ(restored.mReferences.front().mInventory.front().mOwner,item.mOwner);
+    EXPECT_EQ(restored.mNativeBoundAbilities.at(actor).front().mDisplacedEquipment.front(),displaced);
+    auto sameSlots = state.mReferences.front().mInventory;
+    sameSlots.front().mEquippedSlots = 0;
+    ESM4::normalizeInventory(sameSlots);
+    EXPECT_EQ(sameSlots.size(),2u); // A bound instance never merges with ordinary stock.
+    auto legacy = state; legacy.mVersion = 82;
+    EXPECT_THROW(legacy.serializeBinary(),std::runtime_error);
+    auto unbound = state; unbound.mNativeBoundAbilities.clear();
+    unbound.mReferences.front().mInventory.front().mBoundSource.reset();
+    const auto absent = unbound.serializeBinary();
+    const auto offset = std::mismatch(absent.begin(),absent.end(),wire.begin()).first - absent.begin();
+    auto invalid = wire; invalid[offset]=2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid),std::runtime_error);
+    invalid = wire; invalid.pop_back();
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(invalid),std::runtime_error);
+    unbound.mVersion=82;
+    EXPECT_EQ(ESM4::RuntimeState::deserializeBinary(unbound.serializeBinary()),unbound);
+    EXPECT_EQ(unbound.canonicalJson().find("bound_source"),std::string::npos);
+}
+
+TEST(ESM4RuntimeState, BoundEquipment83RejectsOrphanDuplicateAndNestedOwnership)
+{
+    auto state = makeState();
+    const auto actor = state.mReferences.front().mKey;
+    const auto spell = ESM::FormKey::content("oblivion.esm",0x3e91b);
+    ESM4::RuntimeInventoryItem item;
+    item.mBase = ESM::FormKey::content("oblivion.esm",0x26274); item.mCount=1;
+    item.mEquippedSlots=1u<<16; item.mBoundSource=ESM4::BoundItemSource{spell,2};
+    state.mReferences.front().mInventory={item};
+    state.mNativeBoundAbilities={{actor,{{spell,{}}}}};
+    ASSERT_NO_THROW(state.serializeBinary());
+    const auto reject = [&](auto change) {
+        auto invalid = state; change(invalid);
+        EXPECT_THROW(invalid.serializeBinary(),std::runtime_error);
+    };
+    reject([](auto& s) { s.mNativeBoundAbilities.clear(); });
+    reject([](auto& s) { s.mReferences.front().mInventory.front().mCount=2; });
+    reject([](auto& s) { s.mReferences.front().mInventory.front().mBoundSource->mSpell=ESM::FormKey::dynamic("spell",1); });
+    reject([](auto& s) { auto extra=s.mReferences.front().mInventory.front(); extra.mEquippedSlots=0;
+        s.mReferences.front().mInventory.push_back(extra); });
+    reject([&](auto& s) { s.mNativeBoundAbilities.at(actor).push_back({spell,{}}); });
+    reject([&](auto& s) { s.mNativeBoundAbilities.at(actor).front().mDisplacedEquipment={item}; });
+    reject([&](auto& s) { s.mNativeBoundAbilities.emplace(ESM::FormKey::content("oblivion.esm",0xdead),
+        std::vector<ESM4::RuntimeBoundAbility>{{spell,{}}}); });
+    reject([](auto& s) { s.mReferences.front().mInventory.front().mBoundSource.reset(); });
 }

@@ -560,6 +560,9 @@ namespace MWWorld
         if (respawn)
             cell.respawn();
 
+        // Parent flags must reach RefData before insertion decides which
+        // references receive rendering, physics and mechanics owners.
+        mWorld.synchronizeOblivionEnableParents(&cell);
         insertCell(cell, loadingListener, navigatorUpdateGuard);
 
         mRendering.addCell(&cell);

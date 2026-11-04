@@ -732,6 +732,7 @@ namespace MWMechanics
         mActions = {};
         mCombatRngState = 1;
         mSceneIsComplex = false;
+        mTurnArrest = false;
         mScriptDispositionPair.reset();
         mCrimeContracts = {};
         mActionOwners.clear();
@@ -4409,6 +4410,22 @@ namespace MWMechanics
         return found == mActorBases.end() ? nullptr : &found->second;
     }
 
+    std::optional<bool> OblivionCombatService::getBaseEssential(const ESM::FormKey& base) const
+    {
+        const auto* saved = findActorBase(base);
+        return saved ? saved->mEssential : std::nullopt;
+    }
+
+    void OblivionCombatService::setBaseEssential(const ESM::FormKey& base, ESM4::ActorBaseKind kind, bool essential)
+    {
+        auto candidate = findActorBase(base) ? *findActorBase(base) : ESM4::RuntimeActorBaseOverride{base, kind, {}};
+        if (candidate.mKind != kind)
+            throw std::invalid_argument("native essential base kind mismatch");
+        candidate.mEssential = essential;
+        candidate.validate();
+        mActorBases.insert_or_assign(base, std::move(candidate));
+    }
+
     void OblivionCombatService::setNonPlayerBaseValue(const MWWorld::Ptr& actor, std::uint8_t value,
         std::int32_t requested, std::span<const MWWorld::Ptr> residents)
     {
@@ -6112,6 +6129,20 @@ namespace MWMechanics
             found->second.mProcessAction = -1;
     }
 
+    bool OblivionCombatService::setProcessAlerted(const ESM::FormKey& actor, bool alerted)
+    {
+        const auto found = mActorValues.find(actor);
+        if (found == mActorValues.end()) return false;
+        found->second.mProcessAlerted = alerted;
+        return true;
+    }
+
+    bool OblivionCombatService::getProcessAlerted(const ESM::FormKey& actor) const
+    {
+        const auto* values = findActorValues(actor);
+        return values && values->mProcessAlerted.value_or(false);
+    }
+
     std::int8_t OblivionCombatService::getProcessKnockedState(const ESM::FormKey& actor) const
     {
         const auto* values = findActorValues(actor);
@@ -7281,6 +7312,9 @@ namespace MWMechanics
             throw std::invalid_argument("native physical action owners require an Oblivion v20+ save");
         if (state.mVersion < 9 && !mActorValues.empty())
             throw std::invalid_argument("native actor values require an Oblivion v9+ save");
+        if (state.mVersion < 84 && std::ranges::any_of(mActorBases,
+                [](const auto& entry) { return entry.second.mEssential.has_value(); }))
+            throw std::invalid_argument("native essential base overrides require an Oblivion v84+ save");
         if (state.mVersion < 11 && !mActorBases.empty())
             throw std::invalid_argument("native actor base overrides require an Oblivion v11+ save");
         if (state.mVersion < 12 && (!mActorLife.empty() || !mPendingDeathEvents.empty() || mNextDeathEvent != 1))

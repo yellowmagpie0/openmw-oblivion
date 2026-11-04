@@ -826,6 +826,15 @@ namespace ESM4
                         writer.integer<std::uint8_t>(item.mExtraScale.has_value());
                         if (item.mExtraScale) writer.floating(*item.mExtraScale);
                     }
+                    if (version >= 83)
+                    {
+                        writer.integer<std::uint8_t>(item.mBoundSource.has_value());
+                        if (item.mBoundSource)
+                        {
+                            writeKey(writer, item.mBoundSource->mSpell);
+                            writer.integer(item.mBoundSource->mEffectIndex);
+                        }
+                    }
                 }
             }
         }
@@ -855,6 +864,12 @@ namespace ESM4
                         const auto present = reader.integer<std::uint8_t>();
                         if (present > 1) throw std::runtime_error("Invalid inventory scale presence flag");
                         if (present) item.mExtraScale = reader.float32();
+                    }
+                    if (version >= 83)
+                    {
+                        const auto present = reader.integer<std::uint8_t>();
+                        if (present > 1) throw std::runtime_error("Invalid bound item source presence");
+                        if (present) item.mBoundSource = BoundItemSource{readKey(reader), reader.integer<std::uint32_t>()};
                     }
                 }
                 result.push_back(std::move(item));
@@ -892,6 +907,13 @@ namespace ESM4
                         if (!item.mExtraScale) stream << "null";
                         else if (*item.mExtraScale == 0 && std::signbit(*item.mExtraScale)) stream << "-0.0";
                         else stream << std::setprecision(17) << *item.mExtraScale;
+                    }
+                    if (version >= 83)
+                    {
+                        stream << ",\"bound_source\":";
+                        if (!item.mBoundSource) stream << "null";
+                        else stream << "{\"spell\":\"" << escapeJson(item.mBoundSource->mSpell.serialize())
+                            << "\",\"effect_index\":" << item.mBoundSource->mEffectIndex << '}';
                     }
                 }
                 stream << '}';
@@ -1130,7 +1152,8 @@ namespace ESM4
 
     void RuntimeActorBaseOverride::validate() const
     {
-        if (mBase.isNull() || mValues.empty() || mValues.size() > 72)
+        if (mBase.isNull() || (mValues.empty() && !mEssential) || mValues.size() > 72
+            || (mKind != ActorBaseKind::Npc && mKind != ActorBaseKind::Creature))
             throw std::runtime_error("Invalid TES4 native actor base override");
         std::set<std::uint8_t> seen;
         try
@@ -1485,8 +1508,10 @@ namespace ESM4
 
     void RuntimeMeleeAiIntent::validate() const
     {
-        if (mTarget.isNull() || mStyle.isNull())
-            throw std::runtime_error("Null TES4 melee AI target or style");
+        // A null CSTY selects the native default style; it is not a missing
+        // combat policy. The content-aware restore checks the winning binding.
+        if (mTarget.isNull())
+            throw std::runtime_error("Null TES4 melee AI target");
     }
 
     std::int16_t RuntimeMeleeReaction::processAction() const
@@ -1998,6 +2023,8 @@ namespace ESM4
         for (const auto& base : mNativeActorBases)
         {
             base.validate();
+            if (mVersion < 84 && base.mEssential)
+                throw std::runtime_error("Essential base overrides require runtime-state version84");
             if (!overriddenBases.insert(base.mBase).second)
                 throw std::runtime_error("Duplicate TES4 native actor base override");
         }
@@ -2032,6 +2059,8 @@ namespace ESM4
                 throw std::runtime_error("Owned Player reputation requires schema46 and no legacy Infamy authority");
             if (mVersion < 44 && (actor.mBounty || actor.mPlayerInShiveringIsles))
                 throw std::runtime_error("Owned crime gold requires schema44");
+            if (mVersion < 82 && actor.mProcessAlerted)
+                throw std::runtime_error("Native process alert requires runtime schema82");
             if (mVersion < 26 && actor.mProcessAction)
                 throw std::runtime_error("TES4 native action code requires runtime-state version 26");
             if (mVersion < 25 && actor.mProcessKnockedState)
@@ -2065,6 +2094,13 @@ namespace ESM4
                     throw std::runtime_error("Dangling or mismatched TES4 native actor-value reference");
             }
         }
+        checkSize(mFactionReactions.size(), "faction reaction map");
+        if (mVersion < 81 && !mFactionReactions.empty())
+            throw std::runtime_error("Faction reactions require runtime schema81");
+        for (const auto& [pair, value] : mFactionReactions)
+            for (const auto& faction : {pair.first, pair.second})
+                if (!faction.isContent() || ESM::FormKey::deserialize(faction.serialize()) != faction)
+                    throw std::runtime_error("Invalid faction reaction identity");
         checkSize(mDispositionModifiers.size(), "disposition modifier map");
         if (mVersion < 66 && !mDispositionModifiers.empty())
             throw std::runtime_error("Disposition modifiers require runtime schema66");
@@ -2529,6 +2565,12 @@ namespace ESM4
         if (mVersion >= 3
             && (mPlayer.mName.size() > 1024 || mPlayer.mRace.isNull() || mPlayer.mClass.isNull()))
             throw std::runtime_error("Invalid TES4 runtime-state character-generation state");
+        if (mPlayer.mCharacterGeneration)
+        {
+            if (mVersion < 80)
+                throw std::runtime_error("native chargen history requires version80");
+            mPlayer.mCharacterGeneration->validate();
+        }
         if (mVersion >= 3 && mPlayer.mCharacterGenerationFlags > 0x1f)
             throw std::runtime_error("Invalid TES4 runtime-state character-generation flags");
 
@@ -2558,6 +2600,10 @@ namespace ESM4
             for (const RuntimeInventoryItem& item : inventory)
             {
                 validateOwnershipExtras(item.mOwnershipRank, item.mOwnershipGlobal, mVersion);
+                if (item.mBoundSource && (mVersion < 83 || !item.mBoundSource->mSpell.isContent()
+                    || ESM::FormKey::deserialize(item.mBoundSource->mSpell.serialize()) != item.mBoundSource->mSpell
+                    || item.mCount != 1 || item.mHotkey != -1))
+                    throw std::runtime_error("Invalid or unsupported native bound item source");
                 if (item.mExtraScale && (mVersion < 48 || !std::isfinite(*item.mExtraScale)))
                     throw std::runtime_error("Invalid or unsupported native inventory scale");
                 if (item.mBase.isNull() || item.mCount == 0 || (mVersion >= 4 && item.mCount < 0))
@@ -2594,6 +2640,50 @@ namespace ESM4
             }
         };
         validateInventory(mPlayer.mInventory, "player inventory", true);
+        checkSize(mNativeBoundAbilities.size(), "bound ability owner map");
+        if (mVersion < 83 && !mNativeBoundAbilities.empty())
+            throw std::runtime_error("Bound abilities require runtime-state version83");
+        for (const auto& [actor, abilities] : mNativeBoundAbilities)
+        {
+            if (actor.isNull() || abilities.empty()) throw std::runtime_error("Invalid bound ability owner");
+            checkSize(abilities.size(), "bound ability list");
+            std::set<ESM::FormKey> spells;
+            for (const auto& ability : abilities)
+            {
+                if (!ability.mSpell.isContent()
+                    || ESM::FormKey::deserialize(ability.mSpell.serialize()) != ability.mSpell
+                    || !spells.insert(ability.mSpell).second)
+                    throw std::runtime_error("Invalid or duplicate bound ability spell");
+                validateInventory(ability.mDisplacedEquipment, "displaced bound equipment", false);
+                for (const auto& item : ability.mDisplacedEquipment)
+                    if (item.mBoundSource || item.mCount != 1 || !item.mEquippedSlots)
+                        throw std::runtime_error("Invalid displaced bound equipment instance");
+            }
+        }
+        const auto validateBoundInstances = [&](const ESM::FormKey& actor,
+                                                const std::vector<RuntimeInventoryItem>& inventory) {
+            std::set<BoundItemSource> sources;
+            const auto owner = mNativeBoundAbilities.find(actor);
+            for (const auto& item : inventory)
+                if (item.mBoundSource)
+                {
+                    if (owner == mNativeBoundAbilities.end() || !sources.insert(*item.mBoundSource).second
+                        || std::none_of(owner->second.begin(), owner->second.end(), [&](const auto& ability) {
+                            return ability.mSpell == item.mBoundSource->mSpell;
+                        })) throw std::runtime_error("Orphan or duplicate bound item instance");
+                }
+            if (owner != mNativeBoundAbilities.end())
+                for (const auto& ability : owner->second)
+                    if (std::none_of(sources.begin(), sources.end(), [&](const auto& source) {
+                        return source.mSpell == ability.mSpell;
+                    })) throw std::runtime_error("Bound ability has no owned inventory instance");
+        };
+        validateBoundInstances(mPlayer.mReference, mPlayer.mInventory);
+        for (const auto& reference : mReferences) validateBoundInstances(reference.mKey, reference.mInventory);
+        for (const auto& [actor, abilities] : mNativeBoundAbilities)
+            if (actor != mPlayer.mReference && std::none_of(mReferences.begin(), mReferences.end(),
+                [&](const auto& ref) { return ref.mKey == actor; }))
+                throw std::runtime_error("Bound ability has no saved actor reference");
 
         for (const auto& [key, value] : mGlobals)
         {
@@ -2888,6 +2978,20 @@ namespace ESM4
             writer.integer(mPlayer.mCharacterGenerationFlags);
         }
 
+        if (mVersion >= 80)
+        {
+            writer.integer<std::uint8_t>(mPlayer.mCharacterGeneration.has_value());
+            if (mPlayer.mCharacterGeneration)
+            {
+                const auto& generation = *mPlayer.mCharacterGeneration;
+                writer.integer<std::uint8_t>(generation.mTracking);
+                writer.integer<std::uint8_t>(generation.mSkillUses.has_value());
+                if (generation.mSkillUses)
+                    for (const float value : *generation.mSkillUses) writer.floating(value);
+                writeKey(writer, generation.mRecommendedClass);
+            }
+        }
+
         writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mGlobals.size()));
         for (const auto& [key, value] : mGlobals)
         {
@@ -3141,6 +3245,11 @@ namespace ESM4
                     if (actor.mProcessAction)
                         writer.integer<std::int16_t>(*actor.mProcessAction);
                 }
+                if (mVersion >= 82)
+                {
+                    writer.integer<std::uint8_t>(actor.mProcessAlerted.has_value());
+                    if (actor.mProcessAlerted) writer.integer<std::uint8_t>(*actor.mProcessAlerted);
+                }
                 if (mVersion >= 44)
                 {
                     writer.integer<std::uint8_t>(actor.mBounty.has_value());
@@ -3249,6 +3358,8 @@ namespace ESM4
                     else
                         writer.floating(std::get<float>(value.mValue));
                 }
+                if (mVersion >= 84)
+                    writer.integer<std::uint8_t>(base.mEssential ? (*base.mEssential ? 2 : 1) : 0);
             }
         }
         if (mVersion >= 12)
@@ -3791,6 +3902,30 @@ namespace ESM4
                 }
             }
         }
+        if (mVersion >= 81)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mFactionReactions.size()));
+            for (const auto& [pair, value] : mFactionReactions)
+            {
+                writeKey(writer, pair.first);
+                writeKey(writer, pair.second);
+                writer.integer<std::int32_t>(value);
+            }
+        }
+        if (mVersion >= 83)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeBoundAbilities.size()));
+            for (const auto& [actor, abilities] : mNativeBoundAbilities)
+            {
+                writeKey(writer, actor);
+                writer.integer<std::uint32_t>(static_cast<std::uint32_t>(abilities.size()));
+                for (const auto& ability : abilities)
+                {
+                    writeKey(writer, ability.mSpell);
+                    writeInventory(writer, ability.mDisplacedEquipment, 82);
+                }
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -3848,6 +3983,24 @@ namespace ESM4
                 throw std::runtime_error("Invalid TES4 runtime-state player sex");
             result.mPlayer.mFemale = female != 0;
             result.mPlayer.mCharacterGenerationFlags = reader.integer<std::uint8_t>();
+        }
+
+        if (result.mVersion >= 80)
+        {
+            const auto boolean = [&] {
+                const auto value = reader.integer<std::uint8_t>();
+                if (value > 1) throw std::runtime_error("invalid native chargen presence flag");
+                return value != 0;
+            };
+            if (boolean())
+            {
+                auto& generation = result.mPlayer.mCharacterGeneration.emplace();
+                generation.mTracking = boolean();
+                if (boolean())
+                    for (float& value : *generation.mSkillUses) value = reader.float32();
+                else generation.mSkillUses.reset();
+                generation.mRecommendedClass = readKey(reader);
+            }
         }
 
         const std::uint32_t globalCount = reader.count();
@@ -4174,6 +4327,17 @@ namespace ESM4
                     if (present)
                         actor.mProcessAction = reader.integer<std::int16_t>();
                 }
+                if (result.mVersion >= 82)
+                {
+                    const auto present = reader.integer<std::uint8_t>();
+                    if (present > 1) throw std::runtime_error("Invalid native alert presence");
+                    if (present)
+                    {
+                        const auto value = reader.integer<std::uint8_t>();
+                        if (value > 1) throw std::runtime_error("Invalid native alert boolean");
+                        actor.mProcessAlerted = value != 0;
+                    }
+                }
                 if (result.mVersion >= 44)
                 {
                     const auto present = reader.integer<std::uint8_t>();
@@ -4312,7 +4476,7 @@ namespace ESM4
                     throw std::runtime_error("Invalid or noncanonical TES4 native actor base identity");
                 base.mKind = static_cast<ActorBaseKind>(reader.integer<std::uint8_t>());
                 const auto size = reader.count();
-                if (size == 0 || size > 72)
+                if ((size == 0 && result.mVersion < 84) || size > 72)
                     throw std::runtime_error("Invalid TES4 native actor base value count");
                 for (std::uint32_t j = 0; j < size; ++j)
                 {
@@ -4326,6 +4490,13 @@ namespace ESM4
                     else
                         throw std::runtime_error("Invalid TES4 native actor base storage type");
                     base.mValues.push_back(value);
+                }
+                if (result.mVersion >= 84)
+                {
+                    const auto essential = reader.integer<std::uint8_t>();
+                    if (essential > 2)
+                        throw std::runtime_error("Invalid TES4 essential base flag");
+                    if (essential) base.mEssential = essential == 2;
                 }
                 result.mNativeActorBases.push_back(std::move(base));
             }
@@ -5067,6 +5238,41 @@ namespace ESM4
                 previous = owner;
             }
         }
+        if (result.mVersion >= 81)
+        {
+            const auto count = reader.count();
+            std::optional<std::pair<ESM::FormKey, ESM::FormKey>> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto from = reader.string();
+                const auto to = reader.string();
+                const auto pair = std::pair{ESM::FormKey::deserialize(from), ESM::FormKey::deserialize(to)};
+                if (!pair.first.isContent() || !pair.second.isContent() || pair.first.serialize() != from
+                    || pair.second.serialize() != to || (previous && !(*previous < pair)))
+                    throw std::runtime_error("Noncanonical faction reaction map");
+                result.mFactionReactions.emplace(pair, reader.integer<std::int32_t>());
+                previous = pair;
+            }
+        }
+        if (result.mVersion >= 83)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto actor = readKey(reader);
+                if (previous && !( *previous < actor)) throw std::runtime_error("Noncanonical bound ability owners");
+                previous = actor;
+                std::vector<RuntimeBoundAbility> abilities;
+                const auto size = reader.count();
+                for (std::uint32_t j = 0; j < size; ++j)
+                {
+                    const auto spell = readKey(reader);
+                    abilities.push_back({spell, readInventory(reader, 82)});
+                }
+                result.mNativeBoundAbilities.emplace(actor, std::move(abilities));
+            }
+        }
         if (!reader.eof())
             throw std::runtime_error("TES4 runtime-state payload has trailing data");
         result.validate();
@@ -5177,6 +5383,21 @@ namespace ESM4
                    << escapeJson(mPlayer.mBirthSign.serialize()) << "\",\"female\":"
                    << (mPlayer.mFemale ? "true" : "false") << ",\"character_generation_flags\":"
                    << static_cast<unsigned>(mPlayer.mCharacterGenerationFlags);
+        if (mPlayer.mCharacterGeneration)
+        {
+            const auto& generation = *mPlayer.mCharacterGeneration;
+            stream << ",\"character_generation\":{\"tracking\":" << (generation.mTracking ? "true" : "false")
+                   << ",\"skill_uses\":";
+            if (!generation.mSkillUses) stream << "null";
+            else
+            {
+                stream << '[';
+                for (std::size_t i = 0; i < generation.mSkillUses->size(); ++i)
+                    stream << (i ? "," : "") << std::setprecision(17) << (*generation.mSkillUses)[i];
+                stream << ']';
+            }
+            stream << ",\"recommended_class\":\"" << escapeJson(generation.mRecommendedClass.serialize()) << "\"}";
+        }
         stream << "},\"globals\":{";
         index = 0;
         for (const auto& [key, value] : mGlobals)
@@ -5524,6 +5745,12 @@ namespace ESM4
                     }
                     stream << ']';
                 }
+                if (mVersion >= 82)
+                {
+                    stream << ",\"process_alerted\":";
+                    if (actor.mProcessAlerted) stream << (*actor.mProcessAlerted ? "true" : "false");
+                    else stream << "null";
+                }
                 if (mVersion >= 44)
                 {
                     stream << ",\"bounty\":";
@@ -5664,7 +5891,10 @@ namespace ESM4
                     std::visit([&](auto number) { stream << number; }, value.mValue);
                     stream << ']';
                 }
-                stream << "]}";
+                stream << ']';
+                if (mVersion >= 84)
+                    stream << ",\"essential\":" << (base.mEssential ? (*base.mEssential ? "true" : "false") : "null");
+                stream << '}';
             }
             stream << ']';
         }
@@ -6496,6 +6726,40 @@ namespace ESM4
                 first = false;
                 stream << "{\"actor\":\"" << escapeJson(pair.first.serialize()) << "\",\"target\":\""
                     << escapeJson(pair.second.serialize()) << "\",\"value\":" << value << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 81)
+        {
+            stream << ",\"faction_reactions\":[";
+            bool first = true;
+            for (const auto& [pair, value] : mFactionReactions)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"from\":\"" << escapeJson(pair.first.serialize()) << "\",\"to\":\""
+                    << escapeJson(pair.second.serialize()) << "\",\"value\":" << value << '}';
+            }
+            stream << ']';
+        }
+        if (mVersion >= 83)
+        {
+            stream << ",\"native_bound_abilities\":[";
+            bool first = true;
+            for (const auto& [actor, abilities] : mNativeBoundAbilities)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize()) << "\",\"abilities\":[";
+                for (std::size_t i = 0; i < abilities.size(); ++i)
+                {
+                    if (i) stream << ',';
+                    stream << "{\"spell\":\"" << escapeJson(abilities[i].mSpell.serialize())
+                        << "\",\"displaced_inventory\":";
+                    writeJsonInventory(stream, abilities[i].mDisplacedEquipment, 82);
+                    stream << '}';
+                }
+                stream << "]}";
             }
             stream << ']';
         }

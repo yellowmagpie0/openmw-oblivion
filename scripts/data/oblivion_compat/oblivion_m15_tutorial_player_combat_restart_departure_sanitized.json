@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "name": "sanitized combat restart and original escort departure with instrumented startup allowance",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 1280\nresolution y = 720\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command content:oblivion.esm:032a15 GetDead\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command dynamic:player:0000000000000001 IsInCombat\nat 0 command content:oblivion.esm:0178c4 IsInCombat\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal initial\nlocal reported=false\nreturn {{engineHandlers={{onFrame=function()\n if not initial then initial=self.position print('Tutorial resumed Player observer ready') end\n if not reported and (self.position-initial):length()>=80 then\n  reported=true print('Tutorial Player normal movement cleared initial standing position')\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 1280,
+  "height": 720,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:02466e name=GetStage result=24(?:\\s|$)",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:032a15 name=GetDead result=1(?:\\s|$)",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=GetDead result=0(?:\\s|$)",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=dynamic:player:0000000000000001 name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "acceptance-command actor=content:oblivion.esm:0178c4 name=IsInCombat result=1(?:\\s|$)",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial resumed Player observer ready",
+      "timeout_seconds": 600,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_down",
+      "button": 3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback: .*actor=content:oblivion.esm:014a30(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback: .*actor=content:oblivion.esm:014a2c(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback: .*actor=content:oblivion.esm:0178c3(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "M15 native death callback: .*actor=content:oblivion.esm:0178c4(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=26(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "mouse_up",
+      "button": 3
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Tutorial Player normal movement cleared initial standing position",
+      "timeout_seconds": 120,
+      "abort_on_failure": false
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=27(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=28(?:\\s|$)",
+      "timeout_seconds": 1200,
+      "abort_on_failure": false
+    },
+    {
+      "type": "wait_log",
+      "pattern": "setstage quest=content:oblivion.esm:02466e stage=30(?:\\s|$)",
+      "timeout_seconds": 3600,
+      "abort_on_failure": false
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 5
+    },
+    {
+      "type": "screenshot",
+      "name": "player-combat-restart-departure.png",
+      "minimum_entropy": 0.02
+    },
+    {
+      "type": "assert_file",
+      "path_glob": "userdata/saves/*/Quicksave.omwsave",
+      "expected_count": 1,
+      "minimum_size": 100000
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 7200,
+  "expected_exit": 0,
+  "expected_log": [
+    "Applied TES4 runtime state:",
+    "acceptance-command actor=content:oblivion.esm:02466e name=GetStage result=24(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:032a15 name=GetDead result=1(?:\\s|$)",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=GetDead result=0(?:\\s|$)",
+    "acceptance-command actor=dynamic:player:0000000000000001 name=IsInCombat result=1(?:\\s|$)",
+    "acceptance-command actor=content:oblivion.esm:0178c4 name=IsInCombat result=1(?:\\s|$)",
+    "M15 native death callback: .*actor=content:oblivion.esm:014a30(?:\\s|$)",
+    "M15 native death callback: .*actor=content:oblivion.esm:014a2c(?:\\s|$)",
+    "M15 native death callback: .*actor=content:oblivion.esm:0178c3(?:\\s|$)",
+    "M15 native death callback: .*actor=content:oblivion.esm:0178c4(?:\\s|$)",
+    "setstage quest=content:oblivion.esm:02466e stage=26(?:\\s|$)",
+    "setstage quest=content:oblivion.esm:02466e stage=27(?:\\s|$)",
+    "setstage quest=content:oblivion.esm:02466e stage=28(?:\\s|$)",
+    "setstage quest=content:oblivion.esm:02466e stage=30(?:\\s|$)",
+    "Tutorial Player normal movement cleared initial standing position"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "Aborted",
+    "TES4 AI update failed",
+    "M15 native death callback: .*actor=content:oblivion.esm:032a15",
+    "event=onhit unit=content:oblivion.esm:032ae1(?:@[^ ]+)? instance=content:oblivion.esm:032a15",
+    "event=__result unit=content:oblivion.esm:02466e(?:@[^ ]+)?/quest-result/stage=24/entry=",
+    "event=__result unit=content:oblivion.esm:02466e(?:@[^ ]+)?/quest-result/stage=23/entry=",
+    "M15 melee hit committed: actor=dynamic:player:0000000000000001",
+    "ERROR: AddressSanitizer",
+    "runtime error:"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": false,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "5",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414",
+    "ASAN_OPTIONS": "detect_leaks=0:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "LD_PRELOAD": "{asan_runtime}",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa"
+  },
+  "sdl_xvfb_input": true,
+  "sdl_input_timeout_seconds": 30
+}

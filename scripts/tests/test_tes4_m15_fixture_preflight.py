@@ -919,8 +919,14 @@ assert(not pcall(module.motion,target,'unknown',1/5120))
 class CurrentFixtureSchemaTests(unittest.TestCase):
     def test_reviewed_current_schema_preserves_minimum_and_rejects_future_or_stale_targets(self):
         for minimum in (59, 74):
+            self.assertTrue(is_current_fixture_schema(80, 80, minimum))
+            self.assertTrue(is_current_fixture_schema(81, 81, minimum))
+            self.assertTrue(is_current_fixture_schema(82, 82, minimum))
+            self.assertTrue(is_current_fixture_schema(83, 83, minimum))
+            self.assertTrue(is_current_fixture_schema(84, 84, minimum))
+            self.assertTrue(is_current_fixture_schema(79, 79, minimum))
             self.assertTrue(is_current_fixture_schema(78, 78, minimum))
             self.assertTrue(is_current_fixture_schema(77, 77, minimum))
-            for target, current in ((77, 78), (78, 77), (80, 80), (minimum - 1, minimum - 1),
+            for target, current in ((77, 78), (78, 77), (85, 85), (minimum - 1, minimum - 1),
                                     (True, 1), (78., 78), (78, 78.)):
                 self.assertFalse(is_current_fixture_schema(target, current, minimum))
