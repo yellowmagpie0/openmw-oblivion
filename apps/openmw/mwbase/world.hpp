@@ -163,6 +163,7 @@ namespace MWBase
         virtual void prepareSave() {}
         // Complete scene-dependent continuation while load rollback is still available.
         virtual void finishSaveLoad() {}
+        virtual bool consumeOblivionPotion(const MWWorld::Ptr& item, const MWWorld::Ptr& actor) { return false; }
         virtual float getOblivionPlayerInventoryWeight() const { return 0.f; }
         // True means a registered native actor handled the request, including
         // native policy suppression. False permits the legacy stat adapter.

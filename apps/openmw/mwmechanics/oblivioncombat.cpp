@@ -5411,6 +5411,28 @@ namespace MWMechanics
             publishPlayerValues(player, std::move(candidate), baseSettings);
     }
 
+    bool OblivionCombatService::restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
+        const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings)
+    {
+        auto candidate = player ? playerValues() : nonPlayerValues(actor);
+        const auto* life = findActorLife(candidate.mActor);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive)
+            return false;
+        for (std::size_t i = 0; i < amounts.size(); ++i)
+        {
+            if (!std::isfinite(amounts[i]) || amounts[i] < 0.f)
+                throw std::invalid_argument("native potion restoration requires finite nonnegative magnitudes");
+            if (amounts[i] > 0.f)
+                candidate.mValues[8 + i] = ESM4::changeActorValueModifier(candidate.mValues[8 + i],
+                    candidate.mOwner, 8 + i, ESM4::ActorValueModifier::Damage, amounts[i]);
+        }
+        if (player)
+            publishPlayerValues(*player, std::move(candidate), settings);
+        else
+            publishNonPlayerValues(actor, std::move(candidate));
+        return true;
+    }
+
     void OblivionCombatService::restoreNonPlayerResources(const MWWorld::Ptr& actor,
         const OblivionRestorationUpdate& input, const OblivionRestorationSettings& settings)
     {

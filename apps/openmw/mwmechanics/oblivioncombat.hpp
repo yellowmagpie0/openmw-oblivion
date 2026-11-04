@@ -1064,6 +1064,8 @@ namespace MWMechanics
             const ESM4::PlayerDynamicBaseSettings& baseSettings);
         // Prepare Health, Magicka, then Fatigue and publish once. Callers own
         // rest/wait/jail eligibility and active-item/effect lifecycle.
+        bool restorePotionResources(const MWWorld::Ptr& actor, MWWorld::Player* player,
+            const std::array<float, 3>& amounts, const ESM4::PlayerDynamicBaseSettings& settings);
         void restoreNonPlayerResources(const MWWorld::Ptr& actor, const OblivionRestorationUpdate& input,
             const OblivionRestorationSettings& settings);
         void restorePlayerResources(MWWorld::Player& player, const OblivionRestorationUpdate& input,

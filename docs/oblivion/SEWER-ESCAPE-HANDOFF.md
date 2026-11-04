@@ -1,6 +1,61 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — native potion effect data, 2026-11-04
+## Current checkpoint — healing potion consumed and reloaded, 2026-11-04
+
+Target remains the full original prison-to-outdoors course. Later solo dungeon
+encounters, reunion, Emperor/Amulet, character choices, actual exit and outdoor
+reload, plus death/reload acceptance, remain open. Current chunk closes ordinary
+healing-potion use at the first Imperial Substructure chest.
+
+Actor::consume now dispatches a live Oblivion world to native potion handling.
+Complete admission precedes any resource write: ordered effects must all be
+instant self REHE/RESP/REFA with the original winning restoration definitions.
+Scripted, timed, unsupported or altered definitions stay unconsumed. Resources
+publish together through the existing native Damage channels, preserving base
+and maximum modifiers and clamping restoration without reviving dead actors.
+The normal container removal and itemConsumed event consume exactly one item.
+This is not general magic/effect execution or timed potion ownership.
+
+`potion-restoration-audit-01` verifies the three original MGEF definitions and
+all253 ALCH/330 EFIT rows against independent raw decoding of the hash-pinned
+Oblivion.esm. Editable audit: `scripts/tes4_potion_audit.py`. This is content
+provenance, not an original-executable restoration-effect probe.
+
+`potion-use-focused-01` crashes in the test's missing inventory-window callback;
+its gdb trace is retained. The corrected fixture in `-02` passes8 tutorial action
+cases, including consumption, clamping, unsupported-tail rejection and binary
+state restoration in both content layouts. `potion-use-engine-01` then exposes
+a real dispatch regression: an isolated native actor had no World object.
+Actor::consume now checks getWorldOrNull before live-world dispatch and preserves
+the prior rejection path. `potion-use-focused-03` passes11 cases including all
+three affected native Magicka frame tests, and rebuilds the runtime. `potion-use-engine-02` passes all2164 engine cases, exact inventory, no failures/skips.
+Tested source fingerprint:
+`1a23c3b3218341e093498e861e2d1a89f04b0222234594fae82440f2a1448d0f`.
+No new engine sanitizer claim.
+
+Actual menu course `substructure-healing-02` PASSES: health53->73, Healing009310
+consumed once, Sorcery00931a still count1. Inspected screenshot and normal F5
+`healing-audit.json` retain save SHA256
+`341a662d454ca2d7d3bb8599847b18f5c522d9dc3de1b69bc5dad559b298ce9d`.
+Fresh-process `substructure-healed-reload-01` PASSES the same health/inventory
+checks and normal F5, with inspected screenshot and `healing-reload-audit.json`.
+Both have no forbidden/unreviewed errors. These runtime runs precede the
+null-World guard correction; their original binary/source provenance is retained.
+The corrected ordinary dispatch is covered by the focused integration tests.
+Editable manifests: `oblivion_sewer_substructure_healing.json` and
+`oblivion_sewer_substructure_healed_reload.json` under scripts/data/oblivion_compat.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-healed-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `e1ebb8a7cb03e8be36ebd41afdb780097f3d8a7eb55f9c5ca8e5c576f44efa2e`.
+Next action: equip the chest's rusty iron cuirass0661c1 and greaves0661c3 through
+ordinary inventory controls, then navigate north toward the original zombie/rat
+encounters. `substructure-record-audit.json` retains route placements. Keep
+OPENMW_OBSCRIPT_REPORT unset to avoid its per-frame serialization overhead.
+All runtime courses and build helpers for this checkpoint are terminal.
+
+
+## History — native potion effect data, 2026-11-04
 
 Target: the full original prison-to-outdoors course with normal loot/equipment,
 combat, reunion, Emperor/Amulet, character choices, actual exit and fresh outdoor

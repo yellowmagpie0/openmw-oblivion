@@ -6417,6 +6417,35 @@ namespace MWWorld
             ESM4::swimBreathMaximum(endurance, resolveOblivionSwimBreathSettings(mStore))};
     }
 
+    bool World::consumeOblivionPotion(const Ptr& item, const Ptr& actor)
+    {
+        if (!mOblivionCombat || actor.isEmpty() || item.isEmpty() || item.getCellRef().getCount() < 1
+            || item.getCellRef().getNativeBoundSource()
+            || item.getContainerStore() != &actor.getClass().getContainerStore(actor))
+            return false;
+        const auto* potion = mStore.get<ESM4::Potion>().search(item.getCellRef().getRefId());
+        if (!potion) return false;
+        if (const auto identity = mStore.get<ESM4::Potion>().findFormKey(item.getCellRef().getRefId()))
+            if (const auto* winner = mStore.getFormKeyIndex().winner(*identity);
+                winner && (winner->mDeleted || winner->mRecordType != ESM4::REC_ALCH))
+                return false;
+        const auto amounts = resolveOblivionPotionRestoration(mStore, *potion);
+        if (!amounts) return false;
+        const bool player = actor == getPlayerPtr();
+        const auto key = player ? ESM::FormKey::dynamic("player", 1) : actor.getCellRef().getFormKey();
+        if (!mOblivionCombat->findActorValues(key)) return false;
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, player ? mPlayer.get() : nullptr);
+        adoptOblivionActorLife(actor);
+        if (!mOblivionCombat->restorePotionResources(actor, player ? mPlayer.get() : nullptr, *amounts,
+                resolveOblivionPlayerDynamicBaseSettings(mStore)))
+            return false;
+        adoption.commit();
+        mWorldModel.registerPtr(item);
+        MWBase::Environment::get().getLuaManager()->itemConsumed(item, actor);
+        actor.getClass().getContainerStore(actor).remove(item, 1);
+        return true;
+    }
+
     bool World::requestOblivionResourceCurrent(const Ptr& actor, std::uint8_t value, float requested)
     {
         if (!mOblivionCombat || actor.isEmpty())

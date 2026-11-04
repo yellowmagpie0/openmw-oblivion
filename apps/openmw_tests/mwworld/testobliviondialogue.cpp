@@ -1,10 +1,14 @@
 #include "oblivionworldfixture.hpp"
+#include "inventorywindowmanager.hpp"
 
 #include "apps/openmw/mwclass/esm4npc.hpp"
 #include "apps/openmw/mwclass/esm4interactive.hpp"
 #include <components/esm4/loadrefr.hpp>
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwclass/misc.hpp"
+#include "apps/openmw/mwclass/potion.hpp"
+#include <components/esm4/loadalch.hpp>
+#include <components/esm3/loadalch.hpp>
 #include "apps/openmw/mwclass/armor.hpp"
 #include "apps/openmw/mwclass/weapon.hpp"
 #include "apps/openmw/mwworld/containerstore.hpp"
@@ -2228,5 +2232,69 @@ TEST(OblivionTutorialDoor, OwnedLockedTeleportRetainsLockAcrossAbstractTransitio
         EXPECT_FLOAT_EQ(ai.state(actor)->mLastValidPosition.pos[2],0);
         EXPECT_TRUE(door.getCellRef().isLocked());
         EXPECT_TRUE(f.capture().mPendingPackageDone.empty());
+    }
+}
+
+TEST(OblivionTutorialAction, PotionUseRestoresNativeDamageAndConsumesExactlyOne)
+{
+    for (bool shifted : {false, true})
+    {
+        TestingOpenMW::InventoryWindowManager windows;
+        SwitchFixture f(shifted);
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        auto& world = f.mFixture.mWorld;
+        auto& store = world.getStore();
+        auto& service = *world.getOblivionCombatService();
+        const auto actor = f.mActor;
+        const auto actorKey = actor.getCellRef().getFormKey();
+        const auto file = store.search<ESM4::Npc>(key(0x800))->mId.mContentFile;
+        ESM4::Potion potion{};
+        potion.mId = {0xc00, file};
+        potion.mEffects = {{ESM::fourCC("REHE"), 20, 0, 0, 0, 8, {}}};
+        store.getWritable<ESM4::Potion>().insertStatic(potion, key(0xc00));
+        ESM4::EffectSetting effect{};
+        effect.mId = {0xc01, file};
+        effect.mEffectCode = ESM::fourCC("REHE");
+        effect.mData = ESM4::EffectSettingData{0x01000870, 10.f, 8, 5, -1};
+        store.getWritable<ESM4::EffectSetting>().insertStatic(effect, key(0xc01));
+        ESM::Potion shared{};
+        shared.blank();
+        shared.mId = ESM::RefId(potion.mId);
+        store.insertStatic(shared);
+        MWClass::Potion::registerSelf();
+        auto& inventory = actor.getClass().getContainerStore(actor);
+        const auto item = *inventory.add(shared.mId, 3, false);
+        service.changeNonPlayerHealth(actor, -30.f, {}, false, {});
+        const auto before = *service.findActorValues(actorKey);
+        ASSERT_TRUE(actor.getClass().consume(item, actor));
+        EXPECT_EQ(inventory.count(shared.mId), 2);
+        EXPECT_FLOAT_EQ(service.getNonPlayerValue(actor, 8),
+            ESM4::composeActorValue(before.mValues[8], before.mOwner, before.mProcess) + 20.f);
+        EXPECT_EQ(service.findActorValues(actorKey)->mValues[8].mModifiers[0], before.mValues[8].mModifiers[0]);
+        EXPECT_EQ(service.findActorValues(actorKey)->mValues[8].mModifiers[1], before.mValues[8].mModifiers[1]);
+        ASSERT_TRUE(actor.getClass().consume(item, actor));
+        EXPECT_EQ(inventory.count(shared.mId), 1);
+        EXPECT_FLOAT_EQ(service.findActorValues(actorKey)->mValues[8].mModifiers[2].value_or(0.f), 0.f);
+        const auto healed = *service.findActorValues(actorKey);
+        // A supported first effect cannot leak through an unsupported tail.
+        potion.mEffects.push_back({ESM::fourCC("RESP"), 50, 0, 10, 0, 9, {}});
+        store.getWritable<ESM4::Potion>().insertStatic(potion, key(0xc00));
+        EXPECT_FALSE(actor.getClass().consume(item, actor));
+        EXPECT_EQ(inventory.count(shared.mId), 1);
+        EXPECT_EQ(*service.findActorValues(actorKey), healed);
+        ESM4::RuntimeState saved;
+        saved.mPlayer.mReference = ESM::FormKey::dynamic("player", 1);
+        saved.mPlayer.mCell = key(0xb04);
+        saved.mPlayer.mRace = key(0x810);
+        saved.mPlayer.mClass = key(0xb05);
+        ESM4::RuntimeReferenceState savedActor;
+        savedActor.mKey = actorKey;
+        savedActor.mBase = healed.mBase;
+        savedActor.mCell = saved.mPlayer.mCell;
+        saved.mReferences.push_back(savedActor);
+        service.capture(saved);
+        MWMechanics::OblivionCombatService restored;
+        restored.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        EXPECT_EQ(*restored.findActorValues(actorKey), healed);
     }
 }
