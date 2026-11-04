@@ -8,6 +8,15 @@ namespace ObScript
 {
     namespace
     {
+        bool actorValueCommand(std::string_view name)
+        {
+            static constexpr std::array names{std::string_view("getav"), std::string_view("getactorvalue"),
+                std::string_view("getbaseav"), std::string_view("getbaseactorvalue"), std::string_view("setav"),
+                std::string_view("setactorvalue"), std::string_view("modav"), std::string_view("modactorvalue"),
+                std::string_view("forceav"), std::string_view("forceactorvalue")};
+            return std::find(names.begin(), names.end(), name) != names.end();
+        }
+
         ValueType valueType(VariableType value)
         {
             switch (value)
@@ -251,7 +260,15 @@ namespace ObScript
                 for (std::size_t i = 1; i < value.mChildren.size(); ++i)
                 {
                     const auto& argument = value.mChildren[i];
-                    if (i == 1 && lowerCase(name) == "getisid" && argument.mKind == ExpressionKind::Name
+                    if (i == 1 && actorValueCommand(lowerCase(name)) && argument.mKind == ExpressionKind::Name)
+                    {
+                        // ActorValue is an enum parameter, not an object or
+                        // global lookup. Confidence also names an original DIAL.
+                        Instruction literal = instruction(OpCode::PushString, ValueType::String, argument.mLocation);
+                        literal.mText = lowerCase(argument.mValue);
+                        entry.mCode.push_back(std::move(literal));
+                    }
+                    else if (i == 1 && lowerCase(name) == "getisid" && argument.mKind == ExpressionKind::Name
                         && !findLocal(argument.mValue, program))
                     {
                         // ObjectID names resolve records, including the Player

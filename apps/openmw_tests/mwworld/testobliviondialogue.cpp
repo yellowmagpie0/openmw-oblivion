@@ -730,8 +730,9 @@ namespace
         TestingOpenMW::NativeWorldFixture mFixture;
         MWWorld::Ptr mActor, mSwitch;
         explicit SwitchFixture(bool shifted = false, bool enableParents = false,
-            const std::string& extraRecords = {}, unsigned extraCount = 0, bool selectPackage = true)
-            : mFixture(shifted, false, false, {}, {}, switchRecords(enableParents) + extraRecords,
+            const std::string& extraRecords = {}, unsigned extraCount = 0, bool selectPackage = true,
+            const std::string& actorScript = {})
+            : mFixture(shifted, false, !actorScript.empty(), actorScript, {}, switchRecords(enableParents) + extraRecords,
                 (enableParents ? 8 : 6) + extraCount)
         {
             auto& world = mFixture.mWorld;
@@ -2342,5 +2343,24 @@ TEST(OblivionTutorialAction, ArmorFacadeUsesNativeClassAndConditionWithoutMorrow
         incoming.getWritable<ESM4::Armor>().insertStatic(native, key(0xc10));
         EXPECT_EQ(cls.getEquipmentSkill(item, &incoming), ESM::Skill::LightArmor);
         EXPECT_EQ(cls.getEquipmentSkill(item, &store), ESM::Skill::HeavyArmor);
+    }
+}
+
+TEST(OblivionTutorialAction, PackageDoneActorValueNameDoesNotResolveDialogueTopic)
+{
+    for (bool shifted : {false, true})
+    {
+        const auto topic = record(ESM4::REC_DIAL, 0xc20,
+            sub(ESM::fourCC("EDID"), std::string("Confidence\0", 11))
+            + sub(ESM::fourCC("DATA"), std::string(1, '\0')));
+        SwitchFixture f(shifted, false, topic, 1, false,
+            "scn ActivationReceiver\nshort calls\nbegin OnPackageDone\n"
+            "setav confidence 50\nset calls to GetAV confidence\nend\n");
+        auto& world = f.mFixture.mWorld;
+        ASSERT_EQ(world.getStore().findEsm4FormKey("Confidence"), key(0xc20));
+        auto& scripts = *world.getOblivionScriptManager();
+        ASSERT_TRUE(scripts.dispatchObjectEvent(f.mActor, "onpackagedone"));
+        EXPECT_EQ(world.getOblivionCombatService()->getNonPlayerValue(f.mActor, 34), 50.f);
+        EXPECT_EQ(scripts.scriptVariable(f.mActor.getCellRef().getFormKey(), 1), 50.f);
     }
 }

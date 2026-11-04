@@ -1,6 +1,51 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — native chest armor equipped, 2026-11-04
+## Current checkpoint — original rat/zombie callback runs, 2026-11-04
+
+Full original sewer escape remains the target. The remaining solo encounters,
+reunion, Emperor/Amulet, choices, actual exit, outdoor reload and death/reload
+acceptance are still open. Player now wears the first chest's cuirass/greaves
+and has traversed the east corridor to the lower passage with health73.
+
+`substructure-corridor-01` reached all three original pathgrid waypoints and
+saved, but FAILS an original OnPackageDone callback: script0521e2 executes
+SetAV Confidence50 before StartCombat CGZombie01REF. Confidence also names
+DIAL02d70e. Generic name resolution supplied that form instead of the actor-value
+enum, producing OBSV115. No formula/int32 conversion change was needed.
+
+The compiler now emits the first named argument of all ten supported actor-value
+get/set/mod/force aliases as a literal enum name. Other reference arguments keep
+normal form resolution. Tests cover aliases/member calls, an actual colliding
+record, and real OnPackageDone dispatch with native Confidence and GetAV reads
+in both content layouts.
+
+`actor-value-enum-focused-01` passes23 ObScript component and10 tutorial-action
+engine tests and rebuilds the runtime. `actor-value-enum-sanitize-01` passes the
+same23 compiler tests under ASan/UBSan (no leak coverage).
+`actor-value-enum-engine-01` passes all2166 engine cases, exact inventory,
+no failures/skips. Tested fingerprint:
+`3b4a3b384a3c6be1c8faec35b0c969c04eb698d33d9a07a50121862c0f145d54`.
+
+`substructure-corridor-02` PASSES from the untouched armored checkpoint using
+ordinary controller/mouse/forward inputs and read-only waypoint observations.
+It explicitly waits for original StartCombat by rat0387d9 before F5. No
+forbidden/unreviewed errors. `encounter-audit.json` retains native Confidence50,
+rat/zombie life states and combat engagements. Editable source:
+`scripts/data/oblivion_compat/oblivion_sewer_substructure_corridor.json`.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-corridor-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `2380c98dcdf83ce041d6c65c1d1cfff5d568c68dbd0bd2b8ed19d5d4184a9d27`.
+Player approximately(1052,1479,-48), facing north, health73, Club equipped.
+Next: fresh-load this ongoing encounter and continue north toward(1062,2007),
+then west into the zombie/rat room. Observe the original fight and deal with its
+survivors using ordinary combat. Remaining route placements and pathgrid are in
+substructure-record-audit.json and substructure-north-path.json. Runtime and
+build processes for this checkpoint are all terminal. Inventory portrait refresh
+and earlier corpse/wall fragment presentation gaps remain adjacent open issues.
+
+
+## History — native chest armor equipped, 2026-11-04
 
 The full original prison-to-outdoors target remains open: remaining solo
 encounters, reunion, Emperor/Amulet, choices, actual exit, outdoor reload and

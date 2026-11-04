@@ -483,6 +483,40 @@ end
         EXPECT_EQ(host.mArguments[3], (std::vector<ObScript::Value>{std::string("getunusualnpc")}));
     }
 
+    TEST(ObScriptVm, actorValueParametersDoNotResolveCollidingRecords)
+    {
+        const std::vector<std::string> commands{"GetAV", "GetActorValue", "GetBaseAV", "GetBaseActorValue",
+            "SetAV", "SetActorValue", "ModAV", "ModActorValue", "ForceAV", "ForceActorValue"};
+        std::string source = "begin gamemode\n";
+        for (std::size_t i = 0; i < commands.size(); ++i)
+            source += (i % 2 ? "Player." : "") + commands[i] + " Confidence" + (i < 4 ? "\n" : " 50\n");
+        source += "StartCombat Confidence\nend\n";
+        const auto compiled = ObScript::CompilationCache{}.compile(makeUnit(10, source));
+        ASSERT_TRUE(compiled.mProgram);
+        auto locals = ObScript::VirtualMachine::makeLocals(*compiled.mProgram);
+        TestRuntimeHost host;
+        const ObScript::ReferenceValue topic{ESM::FormKey::content("memory.esm", 0x2d70e), "confidence"};
+        host.mExternal["confidence"] = topic;
+        ObScript::RuntimeContext context; context.mUnit = compiled.mProgram->mUnit;
+        context.mEvent = "gamemode";
+        const auto result = ObScript::VirtualMachine{}.execute(*compiled.mProgram,
+            compiled.mProgram->mEntryPoints.front(), locals, host, context);
+        ASSERT_TRUE(result.mCompleted);
+        EXPECT_TRUE(result.mDiagnostics.empty());
+        ASSERT_EQ(host.mArguments.size(), commands.size() + 1);
+        for (std::size_t i = 0; i < commands.size(); ++i)
+        {
+            SCOPED_TRACE(commands[i]);
+            ASSERT_FALSE(host.mArguments[i].empty());
+            EXPECT_EQ(host.mArguments[i][0], ObScript::Value(std::string("confidence")));
+            if (i >= 4)
+            {
+                EXPECT_EQ(host.mArguments[i][1], ObScript::Value(std::int64_t(50)));
+            }
+        }
+        EXPECT_EQ(host.mArguments.back(), (std::vector<ObScript::Value>{topic}));
+    }
+
     TEST(ObScriptVm, nullReferenceLocalsCompareEqualToNumericZero)
     {
         const auto unit = makeUnit(7, "ref target\nbegin gamemode\nif target != 0\nfail\nendif\nend");
