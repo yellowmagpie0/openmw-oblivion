@@ -1,6 +1,47 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — western stairs reached, new rat ambush pending, 2026-11-04
+## Current checkpoint — stair rats defeated, western pillar approach, 2026-11-04
+
+Full escape remains incomplete: remaining solo dungeon, goblins, reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and continuous full playthrough. Player death/reload is verified.
+Current chunk: negotiate the western pillar, reach healing sack15983b, then
+continue through the lower loop to Natural Caverns. No engine edits this checkpoint.
+
+`substructure-stair-rats-01` PASSES ordinary Club defence against original rats
+038175,038818,159838. Saved native life records all three dead with Player killer,
+no residual combat engagements, Player health24.119995. Encounter audit and
+capture inspected; upright creature corpse presentation remains a known gap.
+Save SHA256 `923c274d65621092e8f46cb23381fc6c2b36384c8f6946dc900debc91e795fca`.
+Editable source: `scripts/data/oblivion_compat/oblivion_sewer_substructure_stair_rats.json`.
+
+Fresh-process `substructure-west-healing-approach-04` verifies those deaths,
+native values, entire Player inventory and health survive reload/traversal.
+Its `restart-audit.json` is persistence evidence only: the route FAILS before
+waypoint4 (raw path node32), stopped at a pillar after reaching raw nodes29–31.
+Inspected `passage-diagnostic.png` shows the obstruction. Normal X11 key release
+and F5 retain a diagnostic save, with receipt in `manual-input-receipt.json`.
+Runs01–03 fail initial facing;04 adds additional measured startup mouse
+corrections and gets past that gate. All failures remain retained. Course heading
+checks can match earlier observations; review current facing before walking.
+No runtime/build process remains active. Existing2167 engine-test evidence is
+reused; executable SHA256 remains
+`9b8ba0c0ff592a76925fb475b3cb5f6e08d6ff7b0d6c96dd4805848b28618d8a`.
+No new sanitizer or whole-sewer acceptance claim.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-west-healing-approach-04/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `0aa2a050c838d4ec1d7c94c700210fcee65fa5fdcaf9b5ec234de1b38f56dae3`.
+Player(-3587.25,4102.00,-249.20), health24.12, Club and armor equipped.
+Next: correct heading/clear the pillar toward node32(-3671,4041,-250), then
+raw nodes33–45. Do not repeat the failed unchanged path. Healing sack15983b is
+at(-4842.525,2892.996,-355.115), near node45(-5035,2909,-382), containing
+Healing009310 x1 and lockpicks x3. Loot normally, consume via inventory and
+verify +20 health/persistence. Prepared ignored sack course exists but is unrun:
+`build/oblivion-compat/sewer-escape/substructure-west-sack-prepared.json`.
+Continue lower-loop rats038174/159832 and exit0381b8 to Natural Caverns.
+
+## History — western stairs reached, new rat ambush pending, 2026-11-04
 
 Full escape remains incomplete: western loop/solo dungeon, goblins, reunion,
 Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
