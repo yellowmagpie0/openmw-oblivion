@@ -200,7 +200,9 @@ namespace MWPhysics
         void addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-            std::span<const NifBullet::RagdollNativeMotionRequest> motions);
+            std::span<const NifBullet::RagdollNativeMotionRequest> motions,
+            btCollisionObject* replacedCollision = nullptr);
+        bool hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         void removeAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
         void updateAnimatedReferencePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
         std::vector<MWWorld::Ptr> animatedReferenceOwners();

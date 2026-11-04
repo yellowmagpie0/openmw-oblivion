@@ -375,6 +375,20 @@ namespace MWPhysics
             std::span<const NifBullet::RagdollNativePackedVelocityState> velocities);
         void removeLooseObject(const MWWorld::Ptr& ptr);
 
+        // Replace the reference's animated compound only after body preparation
+        // succeeds. The scheduler publishes the replacement under one world lock.
+        void addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            std::span<const NifBullet::RagdollNativeMotionRequest> motions);
+        bool hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
+        std::vector<MWWorld::Ptr> animatedReferenceOwners();
+        std::vector<NifBullet::RagdollBodyState> captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
+        ESM4::RuntimeActorRagdoll captureAnimatedReferenceSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
+        void restoreAnimatedReferenceSnapshot(const MWWorld::Ptr& ptr,
+            const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
+
         std::unique_ptr<PreparedActorRagdoll> prepareActorRagdoll(const MWWorld::Ptr& ptr,
             const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
             std::span<const btTransform> poses, int collisionGroup, int collisionMask,

@@ -471,8 +471,8 @@ namespace MWPhysics
         const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh, osg::Quat rotation, int collisionType,
         bool respectVisualCollisionType)
     {
-        if (mTaskScheduler->hasLooseObject(ptr))
-            throw std::invalid_argument("reference already has loose physics");
+        if (mTaskScheduler->hasLooseObject(ptr) || mTaskScheduler->hasAnimatedReferenceBodies(ptr))
+            throw std::invalid_argument("reference already has independently owned physics");
         if (ptr.mRef->mData.mPhysicsPostponed)
             return;
 
@@ -590,6 +590,7 @@ namespace MWPhysics
     void PhysicsSystem::remove(const MWWorld::Ptr& ptr)
     {
         mTaskScheduler->removeActorRagdoll(ptr);
+        mTaskScheduler->removeAnimatedReferenceBodies(ptr);
         removeLooseObject(ptr);
         mTriggers.erase(ptr.mRef);
         if (auto foundObject = mObjects.find(ptr.mRef); foundObject != mObjects.end())
@@ -614,7 +615,7 @@ namespace MWPhysics
 
     void PhysicsSystem::updatePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
     {
-        if (mTaskScheduler->hasLooseObject(old) &&
+        if ((mTaskScheduler->hasLooseObject(old) || mTaskScheduler->hasAnimatedReferenceBodies(old)) &&
             (mObjects.contains(updated.mRef) || mActors.contains(updated.mRef) || mTriggers.contains(updated.mRef)))
             throw std::invalid_argument("updated loose physics reference has static or actor collision");
         const bool hasActor = mActors.contains(old.mRef);
@@ -633,6 +634,7 @@ namespace MWPhysics
             // A failed scheduler rebind rolls back the empty destination slot.
             mTaskScheduler->updateActorRagdollPtr(old, updated);
             mTaskScheduler->updateLooseObjectPtr(old, updated);
+            mTaskScheduler->updateAnimatedReferencePtr(old, updated);
         }
         catch (...)
         {
@@ -823,8 +825,8 @@ namespace MWPhysics
 
     void PhysicsSystem::addActor(const MWWorld::Ptr& ptr, VFS::Path::NormalizedView mesh)
     {
-        if (mTaskScheduler->hasLooseObject(ptr))
-            throw std::invalid_argument("reference already has loose physics");
+        if (mTaskScheduler->hasLooseObject(ptr) || mTaskScheduler->hasAnimatedReferenceBodies(ptr))
+            throw std::invalid_argument("reference already has independently owned physics");
         const VFS::Path::Normalized animationMesh
             = Misc::ResourceHelpers::correctActorModelPath(mesh, mResourceSystem->getVFS());
         osg::ref_ptr<const Resource::BulletShape> shape = mShapeManager->getShape(animationMesh);
@@ -1038,6 +1040,53 @@ namespace MWPhysics
             throw;
         }
         return true;
+    }
+
+    void PhysicsSystem::addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
+    {
+        if (mActors.contains(ptr.mRef) || mTriggers.contains(ptr.mRef))
+            throw std::invalid_argument("animated reference has actor or trigger collision");
+        const auto found = mObjects.find(ptr.mRef);
+        auto* previous = found == mObjects.end() ? nullptr : found->second->getCollisionObject();
+        mTaskScheduler->addAnimatedReferenceBodies(ptr, definition, lengthScale, poses,
+            collisionGroup, collisionMask, motions, previous);
+        if (found != mObjects.end())
+        {
+            clearIgnoredCollisionPairs(previous);
+            found->second->mCollisionRegistered = false;
+            mAnimatedObjects.erase(found->second.get());
+            mObjects.erase(found);
+        }
+    }
+
+    bool PhysicsSystem::hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->hasAnimatedReferenceBodies(ptr);
+    }
+
+    std::vector<MWWorld::Ptr> PhysicsSystem::animatedReferenceOwners()
+    {
+        return mTaskScheduler->animatedReferenceOwners();
+    }
+
+    std::vector<NifBullet::RagdollBodyState> PhysicsSystem::captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
+    {
+        return mTaskScheduler->captureAnimatedReferenceBodies(ptr);
+    }
+
+    ESM4::RuntimeActorRagdoll PhysicsSystem::captureAnimatedReferenceSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    {
+        return mTaskScheduler->captureAnimatedReferenceSnapshot(ptr, base, model);
+    }
+
+    void PhysicsSystem::restoreAnimatedReferenceSnapshot(const MWWorld::Ptr& ptr,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
+    {
+        mTaskScheduler->restoreAnimatedReferenceSnapshot(ptr, snapshot, base, model);
     }
 
     void PhysicsSystem::addActorRagdoll(const MWWorld::Ptr& ptr,

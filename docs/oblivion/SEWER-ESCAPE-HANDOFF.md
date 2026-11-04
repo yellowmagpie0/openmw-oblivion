@@ -81,12 +81,21 @@ Validation under `build/oblivion-compat/sewer-escape/`:
 Earlier failed checks remain retained. No runtime or sanitizer acceptance is
 claimed for this format chunk.
 
+PhysicsSystem now exposes the independent body owner and replaces existing
+compound collision only after successful scheduler preparation, under one world
+lock. Removal and Ptr transfer include the new owner; conflicting static/actor
+admissions are rejected. `animated-physics-handoff-01` passes all12 selected
+cases over zero/one/two workers; `animated-physics-engine-01` passes all2,156
+engine cases with exact inventory and no failures/skips. Both use fingerprint
+`a25df06cdd9412e10cea33621a1e85ea26d46fa286f52cc527099c00cbee008b`.
+No game-binary rebuild or runtime/sanitizer acceptance is claimed for this chunk.
+
 Next: connect completed positive-mass reference animation to the new scheduler
 owner and existing prepared physical-pose rendering binding. Wire World capture,
 retention, restore and clear/swap lifecycle to the new collection; preserve bodies
 through cell unload/load and replace old compound collision only after successful
-preparation. PhysicsSystem remove/updatePtr must include the new owner. Its
-prepared item-removal path rejects animated objects, so use a dedicated handoff.
+preparation. The dedicated PhysicsSystem handoff is ready. Remove the old navigation
+obstacle when replacing collision and retain physical state on scene removal.
 Keep mass-zero doors/switches on their existing path.
 Then prove actual wall traversal from `wall-open-01` or fresh activation from
 `wall-approach-09`, followed by the rest of the original tutorial. Full sewer

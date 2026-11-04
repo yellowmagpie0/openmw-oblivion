@@ -502,7 +502,7 @@ namespace MWPhysics
     void PhysicsTaskScheduler::addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
         const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
         std::span<const btTransform> poses, int collisionGroup, int collisionMask,
-        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions, btCollisionObject* replacedCollision)
     {
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
@@ -511,6 +511,9 @@ namespace MWPhysics
             || ptr.getCellRef().getCount() <= 0 || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef)
             || mAnimatedReferenceBodies.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate animated reference body owner");
+        if (replacedCollision && (!mCollisionObjects.contains(replacedCollision)
+                || !replacedCollision->getBroadphaseHandle()))
+            throw std::invalid_argument("animated reference replacement collision is not registered");
         ActorRagdollMap staged;
         staged.emplace(ptr.mRef, std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
             poses, collisionGroup, collisionMask, nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred));
@@ -535,9 +538,22 @@ namespace MWPhysics
             for (auto* object : inserted) mCollisionObjects.erase(object);
             throw;
         }
+        // Both owners change under one world lock, after all fallible staging.
+        if (replacedCollision)
+        {
+            mCollisionWorld->removeCollisionObject(replacedCollision);
+            mCollisionObjects.erase(replacedCollision);
+        }
         mAnimatedReferenceBodies.insert(std::move(node));
         mActorPreparationSlots.erase(ptr.mRef);
         mLoosePreparationIdentity.reset();
+    }
+
+    bool PhysicsTaskScheduler::hasAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        return mAnimatedReferenceBodies.contains(ptr.mRef);
     }
 
     void PhysicsTaskScheduler::removeAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
