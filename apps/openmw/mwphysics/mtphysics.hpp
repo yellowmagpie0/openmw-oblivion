@@ -194,6 +194,23 @@ namespace MWPhysics
         btCollisionObject* looseObjectCollisionObject(const MWWorld::ConstPtr& ptr);
 
 
+        // Independent multi-body placed-reference ownership. These bodies are
+        // not actors or inventory drops. The caller selects the animation
+        // handoff and supplies poses/motions before any World publication.
+        void addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
+            const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+            std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+            std::span<const NifBullet::RagdollNativeMotionRequest> motions);
+        void removeAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
+        void updateAnimatedReferencePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated);
+        std::vector<MWWorld::Ptr> animatedReferenceOwners();
+        std::vector<NifBullet::RagdollBodyState> captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr);
+        // Reuses the body-graph snapshot representation, not the actor owner set.
+        ESM4::RuntimeActorRagdoll captureAnimatedReferenceSnapshot(
+            const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model);
+        void restoreAnimatedReferenceSnapshot(const MWWorld::Ptr& ptr,
+            const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model);
+
         // Main-thread ownership operations wait for the previous worker frame.
         class PreparedActorRagdoll
         {
@@ -396,6 +413,8 @@ namespace MWPhysics
         std::unique_ptr<NativeSceneBinding> mNativeSceneBinding;
         using ActorRagdollMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<ActorRagdoll>>;
         ActorRagdollMap mActorRagdolls;
+        ActorRagdollMap mAnimatedReferenceBodies;
+        void clearAnimatedReferenceBodies();
         std::shared_ptr<const char> mActorPreparationIdentity;
         std::map<const MWWorld::LiveCellRefBase*, std::weak_ptr<const char>> mActorPreparationSlots;
         using LooseObjectMap = std::map<const MWWorld::LiveCellRefBase*, std::unique_ptr<LooseObject>>;

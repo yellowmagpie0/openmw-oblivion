@@ -499,6 +499,128 @@ namespace MWPhysics
         std::vector<osg::Vec3f> mLinearDeltas;
     };
 
+    void PhysicsTaskScheduler::addAnimatedReferenceBodies(const MWWorld::Ptr& ptr,
+        const NifBullet::ActorRagdollDefinition& definition, float lengthScale,
+        std::span<const btTransform> poses, int collisionGroup, int collisionMask,
+        std::span<const NifBullet::RagdollNativeMotionRequest> motions)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
+        if (!world || ptr.isEmpty() || ptr.getClass().isActor() || ptr.getContainerStore()
+            || ptr.getCellRef().getCount() <= 0 || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef)
+            || mAnimatedReferenceBodies.contains(ptr.mRef))
+            throw std::invalid_argument("invalid or duplicate animated reference body owner");
+        ActorRagdollMap staged;
+        staged.emplace(ptr.mRef, std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
+            poses, collisionGroup, collisionMask, nullptr, NifBullet::ActorRagdollPhysics::Publication::Deferred));
+        auto node = staged.extract(staged.begin());
+        auto& physical = node.mapped()->mPhysics;
+        physical.setNativeMotionModes(motions);
+        const auto objects = physical.collisionObjects();
+        std::vector<const btCollisionObject*> inserted;
+        inserted.reserve(objects.size());
+        try
+        {
+            for (auto* object : objects)
+            {
+                mCollisionObjects.insert(object);
+                inserted.push_back(object);
+            }
+            if (!physical.publish(*world))
+                throw std::runtime_error("animated reference physical publication failed");
+        }
+        catch (...)
+        {
+            for (auto* object : inserted) mCollisionObjects.erase(object);
+            throw;
+        }
+        mAnimatedReferenceBodies.insert(std::move(node));
+        mActorPreparationSlots.erase(ptr.mRef);
+        mLoosePreparationIdentity.reset();
+    }
+
+    void PhysicsTaskScheduler::removeAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mAnimatedReferenceBodies.find(ptr.mRef);
+        if (found == mAnimatedReferenceBodies.end()) return;
+        for (auto* object : found->second->mPhysics.collisionObjects()) mCollisionObjects.erase(object);
+        mAnimatedReferenceBodies.erase(found);
+    }
+
+    void PhysicsTaskScheduler::updateAnimatedReferencePtr(const MWWorld::Ptr& old, const MWWorld::Ptr& updated)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        auto found = mAnimatedReferenceBodies.find(old.mRef);
+        if (found == mAnimatedReferenceBodies.end()) return;
+        if (updated.isEmpty() || updated.getClass().isActor() || updated.getContainerStore()
+            || updated.getCellRef().getCount() <= 0 || mActorRagdolls.contains(updated.mRef)
+            || mLooseObjects.contains(updated.mRef))
+            throw std::invalid_argument("invalid updated animated reference owner");
+        if (old.mRef != updated.mRef)
+        {
+            auto [destination, inserted] = mAnimatedReferenceBodies.try_emplace(updated.mRef);
+            if (!inserted) throw std::invalid_argument("duplicate updated animated reference owner");
+            found = mAnimatedReferenceBodies.find(old.mRef);
+            destination->second = std::move(found->second);
+            mAnimatedReferenceBodies.erase(found);
+            found = destination;
+        }
+        found->second->updatePtr(updated);
+        mActorPreparationSlots.erase(updated.mRef);
+        mLoosePreparationIdentity.reset();
+    }
+
+    void PhysicsTaskScheduler::clearAnimatedReferenceBodies()
+    {
+        for (auto& [_, reference] : mAnimatedReferenceBodies)
+            for (auto* object : reference->mPhysics.collisionObjects()) mCollisionObjects.erase(object);
+        mAnimatedReferenceBodies.clear();
+    }
+
+    std::vector<MWWorld::Ptr> PhysicsTaskScheduler::animatedReferenceOwners()
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        std::vector<MWWorld::Ptr> result;
+        for (const auto& [_, reference] : mAnimatedReferenceBodies) result.push_back(reference->getPtr());
+        return result;
+    }
+
+    std::vector<NifBullet::RagdollBodyState> PhysicsTaskScheduler::captureAnimatedReferenceBodies(const MWWorld::Ptr& ptr)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mAnimatedReferenceBodies.find(ptr.mRef);
+        if (found == mAnimatedReferenceBodies.end()) throw std::invalid_argument("reference has no animated bodies");
+        return found->second->mPhysics.capture();
+    }
+
+    ESM4::RuntimeActorRagdoll PhysicsTaskScheduler::captureAnimatedReferenceSnapshot(
+        const MWWorld::Ptr& ptr, const ESM::FormKey& base, std::string_view model)
+    {
+        waitForWorkers();
+        MaybeSharedLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mAnimatedReferenceBodies.find(ptr.mRef);
+        if (found == mAnimatedReferenceBodies.end()) throw std::invalid_argument("reference has no animated bodies");
+        const auto& owned = *found->second;
+        return captureNativeActorRagdollSnapshot(owned.mPhysics, base, model, owned.mDefinition);
+    }
+
+    void PhysicsTaskScheduler::restoreAnimatedReferenceSnapshot(const MWWorld::Ptr& ptr,
+        const ESM4::RuntimeActorRagdoll& snapshot, const ESM::FormKey& base, std::string_view model)
+    {
+        waitForWorkers();
+        MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
+        const auto found = mAnimatedReferenceBodies.find(ptr.mRef);
+        if (found == mAnimatedReferenceBodies.end()) throw std::invalid_argument("reference has no animated bodies");
+        auto& owned = *found->second;
+        restoreNativeActorRagdollSnapshot(owned.mPhysics, snapshot, base, model, owned.mDefinition);
+    }
+
     class PhysicsTaskScheduler::LooseObject : public PtrHolder
     {
     public:
@@ -646,7 +768,7 @@ namespace MWPhysics
             || ptr.getCellRef().getCount() <= 0 || definition.mBodies.size() != 1
             || !definition.mJoints.empty() || definition.mBodies[0].mBlend
             || definition.mBodies[0].mBlendController
-            || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef))
+            || mLooseObjects.contains(ptr.mRef) || mActorRagdolls.contains(ptr.mRef) || mAnimatedReferenceBodies.contains(ptr.mRef))
             throw std::invalid_argument("loose physics requires one live non-actor body in a native World");
         if (sceneInitialization != LooseObjectSceneInitialization::SuppliedPhysicalPose
             && sceneInitialization != LooseObjectSceneInitialization::PendingReference)
@@ -778,6 +900,7 @@ namespace MWPhysics
         const auto identity = impl->mIdentity.lock();
         if (!identity || identity != mLoosePreparationIdentity) return false;
         return !mLooseObjects.contains(impl->mNode.key()) && !mActorRagdolls.contains(impl->mNode.key())
+            && !mAnimatedReferenceBodies.contains(impl->mNode.key())
             && impl->mNode.mapped()->getPtr().getCellRef().getCount() == impl->mExpectedCount
             && impl->mNode.mapped()->getPtr().getCellRef().getScale() == impl->mExpectedScale
             && impl->mNode.mapped()->validSceneBinding(false);
@@ -1049,7 +1172,8 @@ namespace MWPhysics
     bool PhysicsTaskScheduler::PreparedObjectRemoval::isValid() const
     {
         const auto& data = *mData;
-        if (data.mCommitted || data.mOwner.mActorRagdolls.contains(data.mPtr.mRef))
+        if (data.mCommitted || data.mOwner.mActorRagdolls.contains(data.mPtr.mRef)
+            || data.mOwner.mAnimatedReferenceBodies.contains(data.mPtr.mRef))
             return false;
         const auto loose = data.mOwner.mLooseObjects.find(data.mPtr.mRef);
         if (data.mLoose ? loose == data.mOwner.mLooseObjects.end() || loose->second.get() != data.mLoose
@@ -1084,7 +1208,7 @@ namespace MWPhysics
     {
         waitForWorkers();
         auto data = std::make_unique<PreparedObjectRemoval::Data>(*this, ptr);
-        if (mActorRagdolls.contains(ptr.mRef))
+        if (mActorRagdolls.contains(ptr.mRef) || mAnimatedReferenceBodies.contains(ptr.mRef))
             throw std::invalid_argument("item removal has an actor ragdoll binding");
         const auto loose = mLooseObjects.find(ptr.mRef);
         if (staticObject && loose != mLooseObjects.end())
@@ -1121,7 +1245,7 @@ namespace MWPhysics
         const auto found = mLooseObjects.find(old.mRef);
         if (found == mLooseObjects.end()) return;
         if (updated.isEmpty() || updated.getClass().isActor() || updated.getContainerStore()
-            || updated.getCellRef().getCount() <= 0 || mActorRagdolls.contains(updated.mRef)
+            || updated.getCellRef().getCount() <= 0 || mActorRagdolls.contains(updated.mRef) || mAnimatedReferenceBodies.contains(updated.mRef)
             || (old.mRef != updated.mRef && mLooseObjects.contains(updated.mRef)))
             throw std::invalid_argument("invalid or conflicting updated loose physics owner");
         if (old.mRef != updated.mRef)
@@ -1233,6 +1357,7 @@ namespace MWPhysics
             thread.join();
         clearActorRagdolls();
         clearLooseObjects();
+        clearAnimatedReferenceBodies();
     }
 
     std::tuple<unsigned, float> PhysicsTaskScheduler::calculateStepConfig(float timeAccum) const
@@ -1522,7 +1647,8 @@ namespace MWPhysics
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<NifBullet::NativeDynamicsWorld*>(mCollisionWorld);
-        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
+        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef)
+            || mAnimatedReferenceBodies.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate detached actor owner/world");
         if (retainedCapsule && (retainedCapsule->getPtr() != ptr || retainedCapsule->getPtr().mCell != ptr.mCell
                 || retainedCapsule->isCollisionSuspended()
@@ -1568,7 +1694,8 @@ namespace MWPhysics
         }
         const auto slot = mActorPreparationSlots.find(data->mNode.key());
         return slot != mActorPreparationSlots.end() && slot->second.lock() == data->mSlotIdentity
-            && !mActorRagdolls.contains(data->mNode.key()) && !mLooseObjects.contains(data->mNode.key())
+            && !mActorRagdolls.contains(data->mNode.key())
+            && !mAnimatedReferenceBodies.contains(data->mNode.key()) && !mLooseObjects.contains(data->mNode.key())
             && ptr.getCellRef().getCount() == data->mExpectedCount
             && ptr.getCellRef().getScale() == data->mExpectedScale;
     }
@@ -1630,7 +1757,8 @@ namespace MWPhysics
         waitForWorkers();
         MaybeExclusiveLock lock(mCollisionWorldMutex, mLockingPolicy);
         auto* world = dynamic_cast<btDynamicsWorld*>(mCollisionWorld);
-        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
+        if (!world || ptr.isEmpty() || mActorRagdolls.contains(ptr.mRef)
+            || mAnimatedReferenceBodies.contains(ptr.mRef) || mLooseObjects.contains(ptr.mRef))
             throw std::invalid_argument("invalid or duplicate ragdoll owner/world");
         auto ragdoll = std::make_unique<ActorRagdoll>(ptr, definition, *world, lengthScale,
             poses, collisionGroup, collisionMask, internalFilter);
@@ -1859,7 +1987,7 @@ namespace MWPhysics
         auto found = mActorRagdolls.find(old.mRef);
         if (found == mActorRagdolls.end())
             return;
-        if (updated.isEmpty() || mLooseObjects.contains(updated.mRef))
+        if (updated.isEmpty() || mLooseObjects.contains(updated.mRef) || mAnimatedReferenceBodies.contains(updated.mRef))
             throw std::invalid_argument("empty or conflicting updated ragdoll owner");
         if (old.mRef != updated.mRef)
         {
@@ -2454,6 +2582,7 @@ namespace MWPhysics
         MaybeExclusiveLock worldLock(mCollisionWorldMutex, mLockingPolicy);
         clearActorRagdolls();
         clearLooseObjects();
+        clearAnimatedReferenceBodies();
     }
 
     void PhysicsTaskScheduler::afterPreStep()
@@ -2474,7 +2603,7 @@ namespace MWPhysics
         {
             --mRemainingSteps;
             updateActorsPositions();
-            if (!mActorRagdolls.empty() || !mLooseObjects.empty())
+            if (!mActorRagdolls.empty() || !mLooseObjects.empty() || !mAnimatedReferenceBodies.empty())
             {
                 // The barrier completion runs once, after every movement job.
                 // Reuse this step duration without a second Bullet accumulator.
@@ -2490,6 +2619,11 @@ namespace MWPhysics
                 {
                     std::fill(object->mLinearDeltas.begin(), object->mLinearDeltas.end(), delta);
                     object->mPhysics.applyNativeVelocityStep(mPhysicsDt, object->mLinearDeltas);
+                }
+                for (auto& [_, reference] : mAnimatedReferenceBodies)
+                {
+                    std::fill(reference->mLinearDeltas.begin(), reference->mLinearDeltas.end(), delta);
+                    reference->mPhysics.applyNativeVelocityStep(mPhysicsDt, reference->mLinearDeltas);
                 }
                 static_cast<btDynamicsWorld*>(mCollisionWorld)->stepSimulation(mPhysicsDt, 0);
             }

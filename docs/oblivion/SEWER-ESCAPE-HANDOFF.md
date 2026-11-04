@@ -1,6 +1,6 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — wall clearance diagnosis, 2026-11-04
+## Current checkpoint — animated reference body ownership, 2026-11-04
 
 Production commit `323ba551ca` makes the original rats select their wall-push
 package and activate the wall. `find-activator-range-01` passes nine focused
@@ -42,14 +42,33 @@ under ignored `wall-assets/`; parser output is content evidence, not an
 independent instruction oracle. The live original-game result supplies the
 independent behavioral evidence.
 
-Next implementation chunk: physical handoff for the wall's multiple animated
-bodies, render/collision synchronization and persistent body state. Existing
-native physical machinery supports multiple actor bodies, but loose-object
-scene binding/save state explicitly supports one body; neither can be silently
-reused with false actor/item identity. Reuse applicable lower-level machinery
-without weakening those invariants. Then prove actual wall traversal from
-`wall-open-01` or fresh activation from `wall-approach-09`, followed by the rest
-of the original tutorial. All diagnostic processes are terminal.
+The scheduler now has a separate multi-body owner for non-actor placed
+references. It reuses the existing native body simulation and graph snapshot
+adapters, participates in worker stepping and collision queries, preserves
+reference identity on transfer, and rejects conflicting actor/item ownership.
+Invalid motion preparation publishes nothing; corrupt snapshot restoration
+preserves the existing owner. Destruction/removal clears all owned bodies.
+The snapshot value type is shared with the actor body-graph representation;
+the owner collection remains separate and does not pretend the reference is
+an actor. No serialized World collection or gameplay caller is wired yet.
+
+Validation: `animated-reference-focused-02` passes six cases over zero, one and
+two workers. `animated-reference-scheduler-01` passes all 263 selected scheduler
+and loose-item cases, exact inventory, no failures/skips. Both use source
+fingerprint `e97988fda6dee20a83a0e597d088d4ac14bbf71c75c88039c8feac139d951a41`.
+Focused01 is retained failed: the corruption test expected invalid_argument,
+while the existing validator correctly raised runtime_error; live state remained
+unchanged. No runtime executable rebuild, broad engine or sanitizer claim for
+this dependency chunk.
+
+Next: connect completed positive-mass reference animation to the new scheduler
+owner and existing prepared physical-pose rendering binding. Add a dedicated
+World saved-state collection (C++ and Python codecs), preserve bodies through
+cell unload/load and restore, and replace old compound collision only after
+successful preparation. Keep mass-zero doors/switches on their existing path.
+Then prove actual wall traversal from `wall-open-01` or fresh activation from
+`wall-approach-09`, followed by the rest of the original tutorial. Full sewer
+escape remains incomplete. All diagnostic/check processes are terminal.
 
 ## Target and acceptance
 
