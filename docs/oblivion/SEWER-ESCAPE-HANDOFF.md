@@ -79,13 +79,53 @@ corpse. Quicksave SHA:
 Editable source: `oblivion_sewer_fresh_descent.json`. No forbidden/unreviewed
 errors. No new engine build was needed for these input-only replay courses.
 
-Next: `fresh-before-ambush-01` is running from this landing save. It follows the
-original corridor, uses reduced northward stick input at the stair alignment,
-and stops westward movement at x1030 before waiting for Renault's original
-stage20 completion. Resume this process before launching another game. The
-prior opening/greeting/passage/descent processes are terminal. Actual fresh
-ambush, wall traversal and key-corpse loot remain next, followed by the full
-solo dungeon, reunion, Emperor sequence, choices, exit and persistence checks.
+`fresh-before-ambush-01` completes all three movement gates, stopping at
+(1002.27,1664.15,-590.63), but does not reach20 before intentional stop.
+Normal X11 F5 checkpoints and receipts are retained. `approach-checkpoint.omwsave`
+SHA `4398ab82ad4d48130ec6497547e916db6535d96a422dfdf2d18088c77544fc18`
+has stage19/corpseDead. Renault advances from(1377.90,1622.60,-446.86) to
+(1091.56,1669.16,-548.62), close behind the Player; waiting in the stairs may
+obstruct her. The game stopped peacefully; launcher SIGINT130 is recorded.
+Do not count this as a stage20 pass.
+
+`fresh-ambush-entry-01` is RUNNING from the later genuine escort checkpoint.
+Normal controller movement reaches(53.73,2133.85,-639), health80. Renault advances
+to(532.12,1663.63,-639.04); other escorts advance too. `room-entry-audit.json`
+retains this evidence. Player was within47 units of Renault's destination
+(44.16,2180.08), so a documented ordinary X11 W hold moved Player north to
+(53.73,2260.29,-639), then released W and saved. `room-clear.omwsave` SHA:
+`3bc707dfff93f1b6ecdaa170e958ed27bea999f2c438ddcaeaf580296ee37d0a`; `room-clear-audit.json` retains stage19,
+health80 and corpseDead. No state injection. Observer reports actual life of
+Renault/four assassins. Existing manifest: ignored `fresh-ambush-entry-prepared.json`;
+manual inputs are in `fresh-ambush-entry-01/manual-input.json`.
+
+Follow-up: Renault reached about21 units from her zero-radius marker but
+circled outside the16-unit arrival check with Player80 units beyond it. A
+second documented ordinary W hold moved Player north to(53.73,2435.52,-703).
+Renault immediately completed her package; original stage20 SetEssential=false
+and stage22 ran. `ambush-start.omwsave` SHA:
+`c4d1f79b0e2c1e8335b38aecce129925fc60100035dbfe09a5f17bf78f4ca424`.
+No arrival threshold or gameplay code was changed. Treat Player avoidance as
+the supported explanation, not an independently measured native rule.
+
+`fresh-ambush-entry-01` reaches23/24 and actual Renault death but the whole
+runner FAILS: its inherited stage22-only forbidden23 gate rejects intended
+progression. No unreviewed runtime errors. The failure and manual input receipts
+remain unchanged. `fresh-ambush-death-01` corrects that course gate and PASSES a
+fresh-process replay from the genuine22 checkpoint: assassin0178c4 commits its
+real hit, filtered OnHit/scripted death advances24, and saved Renault is Dead.
+Original key corpse remains Dead, Player health80. Quicksave SHA:
+`fa114eac3a0f784add595ae0fec858a2e03b73683800be91242214a2bdf73fce`.
+`death-state-audit.json` records the saved semantics. The prior entry capture
+shows Renault's body and an assassin in the actual room; it is not victory
+proof. Editable passing source: `oblivion_sewer_fresh_ambush_death.json`.
+
+Next: run prepared `fresh-victory-prepared.json` from this fresh24 save. It waits
+for the original26 victory, saves, moves Player80 units with normal W+Shift to
+clear post-fight routing, then waits for original30 escort departure and saves.
+This continuation is not yet accepted. All entry/death processes are terminal.
+Full fresh ambush victory, wall traversal and corpse loot remain open, followed
+by solo dungeon, reunion, Emperor sequence, choices, exit and persistence.
 
 ## Previous checkpoint — authored corpse initialization, 2026-11-04
 
