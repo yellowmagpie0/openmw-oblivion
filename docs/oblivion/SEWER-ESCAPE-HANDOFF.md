@@ -22,13 +22,47 @@ cases and rebuilds the game. `initial-selection-engine-01` passes all2,161
 engine cases with exact inventory, no failures/skips. Tested fingerprint:
 `afb2fb389075cf86eaeae63b72587b55c31ed28f13cf153266a5ae71c7b6678e`. No new sanitizer claim.
 
-`fresh-rats-selection-01` is currently running (launcher session84733) from
-`fresh-victory-02/departure-later.omwsave`, using ignored editable manifest
-`fresh-rats-selection-prepared.json`. Both original rats select PACK07303d and
-advance Select→Resolve→Path in the actual runtime. Combat/wall acceptance is
-still pending; poll this existing process before launching another.
-Next: finish rat combat and wall passage, then loot the correctly dead Goblin
-key corpse and continue the solo dungeon. Earlier evidence follows below.
+`fresh-rats-selection-01` is terminal FAILED on striking distance, with no
+forbidden/unreviewed runtime errors. Both rats select original PACK07303d;
+rat037e42 activates the wall, running original MQ01 stages24/28. Normal F5
+`wall-trigger-checkpoint.omwsave` and `wall-trigger-audit.json` retain this
+state (SHA256 `4fdd23b3e568a555c8334185791f264bd9f66ed445bde8edb873bfca212e4ace`).
+Player remained at(33.43,3153.43,-831), too far from the rats for melee.
+
+`fresh-rats-approach-01` was intentionally stopped (game peaceful, launcher130)
+to repair inherited double-escaped mouse regex. Run02 reaches wall centerline
+through normal W/D, receives real rat hits, and punches rat037e42 to death.
+Whole run FAILS both-rats-dead: the second rat remains beyond the opening.
+Normal manual W/F5 receipts, inspected `combat-position.png`, and
+`combat-audit.json` retain actual progress. `combat-checkpoint.omwsave` SHA256
+`7f113ec7f2d3b3b165fea568e9416815113c66e39a2f99278e88c0f0fcb360d0`
+has Player(227.16,3194.16,-828.45), yaw1.893, rat037e42 Dead with Player killer,
+and rat037e41 Alive at(414.89,3131.52,-810). The angled approach meets the wall
+edge; next traverse the opening along its centerline, then fight the survivor.
+
+`fresh-wall-combat-01` was intentionally stopped (peaceful/130): its heading
+gate incorrectly required unit horizontal X despite Player pitch. The corrected
+observer uses horizontal atan2; it also clears the prior strike release timer
+when a new punch starts. `fresh-wall-combat-02` reaches the correct heading,
+but the surviving rat obstructs forward passage. A recorded ordinary mouse1
+hold/release lands a power punch (damage3.55); both rats are then Dead. Normal
+W+Shift crosses the original opening. Inspected `wall-crossed.png` shows the
+Player in the solo dungeon. F5 `wall-crossed-checkpoint.omwsave` SHA256
+`61e8e5df5f28996f84d4ae7a796b53dc32c03ba42d38c555ee2a80d91259d1e8`
+and `wall-crossed-audit.json` prove Player(594.19,3201.34,-860.83) beyond the
+wall and both rat killers are Player. This is manual-assisted composite runtime
+evidence; the whole fixed-punch/stage30 manifest is not a pass. The game was
+intentionally stopped peacefully after retaining that checkpoint; launcher exit1.
+Manual input and stop receipts remain in the run directory.
+
+Next course `fresh-key-approach-01` is RUNNING (launcher session26374), from that
+crossing save. It reuses the established east-lane and controller-turn route to
+the Goblin key corpse, with360-second movement gates and abort-on-failure.
+Ignored editable source: `fresh-key-approach-prepared.json`. Poll this process
+before starting another game. Then loot the correctly dead corpse and continue
+the solo dungeon. Original CharGen30 fresh escort arrival remains unaccepted
+in this chain. No further engine changes or new engine test claim after
+commit8b339323f2. Earlier evidence follows below.
 
 ## Current checkpoint — fresh startup repaired, 2026-11-04
 
