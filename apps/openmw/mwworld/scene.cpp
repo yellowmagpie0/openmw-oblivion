@@ -416,16 +416,18 @@ namespace MWWorld
             {
                 if (object->getShapeInstance()->mVisualCollisionType == Resource::VisualCollisionType::None)
                     mNavigator.removeObject(DetourNavigator::ObjectId(object), navigatorUpdateGuard);
-                mPhysics->remove(ptr);
             }
             else if (mPhysics->getActor(ptr))
             {
                 mNavigator.removeAgent(mWorld.getPathfindingAgentBounds(ptr));
                 mRendering.removeActorPath(ptr);
-                mPhysics->remove(ptr);
             }
             else
                 ptr.mRef->mData.mPhysicsPostponed = false;
+            // Released animated references and loose bodies can outlive their
+            // static Object. Remove all physical owners before their renderer
+            // disappears, even when neither an Object nor Actor remains.
+            mPhysics->remove(ptr);
             MWBase::Environment::get().getLuaManager()->objectRemovedFromScene(ptr);
         }
 

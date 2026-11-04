@@ -1,5 +1,64 @@
 # Full sewer escape — current handoff
 
+## Current checkpoint — equipped Club and keyed Substructure entry, 2026-11-04
+
+Target remains full original sewer escape through outdoor reload. Loot/equipment
+and the first keyed solo-dungeon transition now have runtime evidence; remaining
+solo encounters, reunion, Emperor/Amulet, choices, exit and death/reload stay open.
+
+`fresh-club-equip-03` PASSES fresh loot reload, normal inventory/D-pad-axis/Equip,
+and F5. Club159829 occupies right-hand slot16 (mask65536), condition70; all other
+inventory entries and equipped clothing are unchanged. `equipment-audit.json`
+and inspected screenshots retain proof. Save SHA256:
+`3af68000a66754a0d575e10f697563f82184c35ee8664e45b3dd379af0ad42ec`.
+Run01 was intentionally stopped after selecting pants instead of Club; its
+changes were discarded. Run02 fails input delivery because the virtual device
+uses a D-pad axis, not BTN_DPAD_RIGHT. Both remain nonpasses. Passing source:
+`oblivion_sewer_fresh_club_equip.json`. A normal sheath/draw cycle in the next
+course visibly presents the Club; immediate equip initially retained fist pose.
+
+`fresh-key-door-01` uses the actual looted IronKey159826 to activate door0248b2
+and enter original CELL022ff6 (Imperial Substructure), but FAILS repeated
+`live animated reference has no renderer` errors. Cell unload only removed
+physics for references still owning static Object/Actor entries. The released
+wall's separate bodies survived after its renderer disappeared. Scene now
+removes physical owners unconditionally after retaining their snapshots.
+
+`animated-unload-focused-01` passes13 animated-reference/loose-object tests and
+rebuilds the game. `animated-unload-engine-01` passes all2,162 engine cases,
+exact inventory, no failures/skips. Tested fingerprint:
+`a61a484b0eb002aeea3128ab605fccea1b420aae86559112bdec914591ce3bad`. No new sanitizer claim.
+`fresh-key-door-02` PASSES the previously failing real cell transition, normal
+F5 and inspected destination screenshot, with no forbidden/unreviewed errors.
+Its save is CELL022ff6 at(14.08,383.27,134.47), Club equipped, key retained and
+collapsed-wall snapshot retained. `destination-audit.json` records save SHA256
+`bd09bcdaaac5419463d2b50b66c64bef5afb1c3ded9fca7404e997b5098d903d`.
+Passing source: `oblivion_sewer_fresh_key_door.json`.
+
+Fresh escort acceptance gap closed: `fresh-rats-approach-02/process.log` records
+original Glenroy032a16 OnPackageDone script032ae2 for PACK015139, followed by
+CharGen30. Later saves retain stage30 and all three escorts in CELL022288;
+the guards reached their authored destinations. This reuses original evidence,
+not a new fabricated progression step.
+
+`fresh-key-revisit-01` fresh-loads the destination and actually returns through
+door025041 into the old prison cell without renderer errors. Normal manual F5
+`old-cell-checkpoint.omwsave` and `old-cell-audit.json` retain the restored wall
+state, Player(2176,2944,-859.21), SHA256
+`634517507fc479012c0b3435d0866ff6cfb5718af6ba052c8bdb201be7306230`.
+Whole course FAILS its second activation: blind mouse turns focused masonry,
+not the exit. Preserve that input failure; old-cell restoration is composite
+proof, not whole-course acceptance. `fresh-key-return-01` is RUNNING (launcher
+session52553), from this genuine checkpoint, with an explicit horizontal
+controller turn before aiming/activating door0248b2. Ignored source:
+`fresh-key-return-prepared.json`. Poll it before starting another game.
+
+Next: finish return to Substructure, then continue the solo dungeon with the
+Club/key inventory. Known adjacent visual gaps: the authored Goblin corpse
+has zero animation groups and upright pose; weapon equip from already drawn
+fists required a normal sheath/draw cycle for presentation. Historical evidence
+and earlier checkpoints follow below.
+
 ## Current checkpoint — key corpse loot accepted, 2026-11-04
 
 Target remains full original sewer escape, including useful equipment, solo
