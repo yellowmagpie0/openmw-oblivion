@@ -1397,6 +1397,16 @@ namespace MWWorld
             }
         }
 
+        // Actor insertion during the first cell load cannot publish bound
+        // inventory snapshots until changePlayerCell has placed the Player.
+        if (mGameProfile == ESM::GameProfile::Oblivion)
+            for (CellStore* cell : mWorldScene->getActiveCells())
+                cell->forEach([&](const Ptr& actor) {
+                    if (!actor.mRef->isDeleted() && actor.getRefData().isEnabled())
+                        updateOblivionBoundEquipment(actor);
+                    return true;
+                });
+
         if (!bypass)
         {
             const std::string_view video = mGameProfile == ESM::GameProfile::Oblivion

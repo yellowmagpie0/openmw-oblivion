@@ -1421,6 +1421,32 @@ TEST(OblivionBoundItems, MalformedOrUnsupportedAssociatedItemDefinitionsReject)
     }
 }
 
+TEST(OblivionBoundItems, InitialGrantWaitsForPlayerPlacementAndPublishesOnceOnRetry)
+{
+    for (const bool shifted : {false, true})
+    {
+        SCOPED_TRACE(shifted);
+        LiveBoundFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        auto* cell = world.getPlayerPtr().getCell();
+        ASSERT_NE(cell, nullptr);
+        world.getPlayer().setCell(nullptr);
+        const auto before = world.captureOblivionActorInventory(f.mActor);
+        EXPECT_NO_THROW(world.activateOblivionActor(f.mActor));
+        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), before);
+        world.getPlayer().setCell(cell);
+        world.updateOblivionBoundEquipment(f.mActor);
+        const auto granted = world.captureOblivionActorInventory(f.mActor);
+        ASSERT_EQ(granted.size(), 3u);
+        const auto saved = world.captureOblivionRuntimeState();
+        ASSERT_EQ(saved.mNativeBoundAbilities.at(f.mActor.getCellRef().getFormKey()).size(), 1u);
+        EXPECT_NO_THROW(saved.serializeBinary());
+        world.updateOblivionBoundEquipment(f.mActor);
+        EXPECT_EQ(world.captureOblivionActorInventory(f.mActor), granted);
+        EXPECT_EQ(world.captureOblivionRuntimeState().mNativeBoundAbilities, saved.mNativeBoundAbilities);
+    }
+}
+
 TEST(OblivionBoundItems, LiveGrantPublishesOwnershipInventoryCacheAndEquipmentObserverTogether)
 {
     for (const bool shifted : {false, true})

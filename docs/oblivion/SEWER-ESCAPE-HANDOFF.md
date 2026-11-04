@@ -1,6 +1,33 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — authored corpse initialization, 2026-11-04
+## Current checkpoint — fresh startup repaired, 2026-11-04
+
+Initial bound-equipment publication now waits until the Player has a cell.
+After initial placement, startNewGame retries enabled, undeleted loaded actors.
+Whole-world snapshot validation remains strict. The regression covers deferred
+activation, retry publication and duplicate prevention in both content layouts.
+
+`startup-bound-focused-01` passes all6 bound-item cases and rebuilds the runtime;
+`startup-bound-engine-01` passes all2,160 engine cases, exact inventory, no
+failures/skips. Tested source fingerprint:
+`387ede33c3ddb68ecc14d9afd3f5cf304fc3b3c82b07a240697dff149044c0aa`.
+No fresh sanitizer claim.
+
+`fresh-corpse-prison-02` passes original new-game startup and normal F5 save,
+with no forbidden/unreviewed errors. The inspected screenshot shows the prison.
+`startup-state-audit.json` in that evidence directory verifies all four original
+assassins each own one bound ability and three equipped bound items (armor,
+helmet, mace). The Goblin15985a is Dead with null killer; death counts and
+pending events are empty. Save SHA256: `0364f6b7acfff1f3529e53bfeeda3a06a58ee5ceedf37314fa97214a6083452a`.
+Runtime SHA256: `01e79951c6a33a731221e9c68ad11719b9bae6e66af74309fc3d7434715340a2`.
+
+Next: continue the original prison opening from this fresh save and replay the
+accepted route to the key corpse. Old saves explicitly retain the incorrect
+Alive state and cannot establish corrected corpse-loot acceptance. Full loot/
+equip, reunion, Emperor, choices, exterior and persistence requirements remain
+open. All startup verification processes are terminal.
+
+## Previous checkpoint — authored corpse initialization, 2026-11-04
 
 Normal input reached the original Goblin Shaman/key corpse. The accepted
 `solo-key-final-approach-02` save is at(1964.32,3114.64,-813.90), health49.45,

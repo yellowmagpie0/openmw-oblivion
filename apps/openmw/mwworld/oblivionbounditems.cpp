@@ -142,6 +142,11 @@ namespace MWWorld
             || actor.getType() != ESM::REC_NPC_4 || mUpdatingOblivionBoundEquipment
             || mPendingOblivionRuntimeState)
             return;
+        // Initial cell insertion precedes Player placement. Grants publish a
+        // validated whole-world snapshot, so defer them until that snapshot
+        // can include the Player cell. startNewGame retries loaded actors.
+        const auto player = getPlayerPtr();
+        if (player.isEmpty() || !player.isInCell()) return;
         const auto key = actor.getCellRef().getFormKey();
         const auto* life = mOblivionCombat->findActorLife(key);
         if (!life) return;
