@@ -1,6 +1,54 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — northern combat and Player death/reload verified, 2026-11-04
+## Current checkpoint — western rats defeated and pillar passed, 2026-11-04
+
+Target remains the complete original prison-to-outdoors course. Remaining:
+western room/solo dungeon, goblins, reunion, Emperor/Amulet, character choices,
+actual MQ01 stage88 exit, outdoor fresh reload, continuous full playthrough.
+Player death/reload and the northern/western rat encounters are verified.
+Current chunk is original-room traversal/combat; no new engine changes.
+
+`substructure-west-approach-01` PASSES raw nodes1..6 from the healthy northern
+reload save; health65.48. `substructure-west-encounter-entry-01` PASSES node7
+and F5 before damage, admitting original rats038171/038172. Both captures and
+native save audits inspected. This avoids the failed long course's waypoint
+overshoot during combat.
+
+`substructure-west-rats-combat-01` was explicitly stopped (exit130): an arbitrary
+170-unit harness wait prevented swings while rats attacked at about192 units.
+Retain stopped-run.json. `-02` PASSES after removing that wait: normal turns and
+Club attacks kill both original rats, with native Player killer for each.
+Health56.08, Club condition61.18; all three northern rats now dead and no residual
+combat engagements. Extra swings after victory are misses, not additional hits.
+Screenshot and encounter-audit.json inspected; upright creature corpse poses
+remain an existing visual limitation.
+
+`substructure-west-pillar-01` PASSES fresh-process restoration and ten raw
+pathgrid corners (nodes8..17), clearing the earlier pillar obstruction and
+entering the western room. `encounter-restart-audit.json` verifies unchanged
+native rat values/deaths/killers, whole Player inventory/equipment/condition and
+health through traversal. Capture inspected; all passing runs have no forbidden
+or unreviewed errors. Existing2167-case engine evidence and binary identity are
+reused from the acquisition/perception implementation below; no new sanitizer
+or whole-sewer acceptance claim.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-west-pillar-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `ec5a53cccfd8b719df22b07a760be00684d4c2d2b2d46d1d81973cb7becb7eb0`.
+Player(-1764,4803,-378), facing west, level camera, health56.08, Club and armor.
+All runtime/build processes are terminal. Next: raw nodes18/19 toward
+(-1967,4669),(-2198,4680), stop for rat038176 near(-2414,4615) and potentially
+038175 near(-2481,3913). Fight before continuing up the next stairs. Original
+Natural Caverns exit remains0381b8, reached later through the western loop.
+
+Editable passing manifests in scripts/data/oblivion_compat:
+`oblivion_sewer_substructure_west_approach.json`,
+`oblivion_sewer_substructure_west_encounter_entry.json`,
+`oblivion_sewer_substructure_west_rats_combat.json`,
+`oblivion_sewer_substructure_west_pillar.json`. Each uses the immediately prior
+passing save listed above. These are genuine original-course continuations.
+
+## History — northern combat and Player death/reload verified, 2026-11-04
 
 Target remains the full original prison-to-outdoors course. Remaining acceptance:
 western solo dungeon/goblins, reunion, Emperor/Amulet, character choices, actual
