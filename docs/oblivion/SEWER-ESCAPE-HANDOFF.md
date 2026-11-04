@@ -1,5 +1,37 @@
 # Full sewer escape — current handoff
 
+## Current checkpoint — original wall activation, 2026-11-04
+
+Find packages can now dispatch placed activators after actor iteration, preserve
+pending activation across low process/restore, and stop within valid activation
+range. Interruptible waiting Wander packages periodically reselect, allowing the
+original rats to leave HoldPosition for their newly eligible wall-push package.
+
+Validation: `find-activator-range-01` passes 9 focused action/conversation tests
+and rebuilds the game; `find-range-engine-01` passes all 2,144 engine tests with
+exact inventory. Reports and source fingerprints are under
+`build/oblivion-compat/sewer-escape/`. No sanitizer gate for this chunk yet.
+Earlier failed diagnostics and fixture failures remain retained below.
+
+Normal-input `wall-approach-09` reaches the sunken room. Fresh continuation
+`wall-open-01` passes original wall activation, MQ01 stage24 and normal controller
+turning. Wall locals progress to pushed=3, linked path points enable, and the
+Player remains alive at health61.45. Inspected capture shows displaced blocks,
+but does not prove a Player-sized opening or traversable collision. Both rats
+activated the wall; its original script guard runs stage24 only once.
+
+Next: continue from `wall-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
+verify restored wall state without replay and walk through the opening with
+normal collision. Inspect/fix animation or collision if the visible narrow gap
+blocks traversal. Then complete solo-dungeon combat/loot and escort reunion.
+Full escape, post-wall combat, character choices, exterior exit and final
+save/load acceptance all remain open. These checkpoints are not full completion.
+
+Input diagnosis: controller yaw is working; use observed heading/position gates
+because simulation progresses slowly under software rendering. Earlier fixed
+real-time input durations did not prove an engine input defect. The editable
+approach and wall-opening manifests retain ordinary input and read-only observers.
+
 ## Target and acceptance
 
 Play the original tutorial continuously from the prison opening through the
@@ -74,3 +106,76 @@ the rat's authored package, not Player activation, opens the wall. No actor in
 the diagnostic saved AI inventory selected that package. Investigate rat
 placement, enablement and package selection after correcting input readiness.
 No implementation blocker has yet been conclusively demonstrated.
+
+### Follow-up diagnostic
+
+`wall-approach-02` also completes without forbidden diagnostics but does not
+reach the wall (Player Y=2325.72, unchanged heading). Readiness alone did not
+resolve the issue. MouseManager routes motion into vanity camera before Player
+yaw; its sensitivity is divided by 256. The course now wakes movement before
+turning and uses the configured 0.05 sensitivity; this revision is unrun.
+
+Both rats (037e41/037e42, base 04e870) are enabled and selected Wander 04f237
+in run01. Original Find package 07303d targets the wall and requires completed
+Charactergen stage29, which is present in the save. Code inspection identifies
+an unresolved implementation gap: Find Act preserves NPC conversation but
+falls through to completion for activators without script dispatch. Establish
+this with a focused regression and original-content evidence before fixing;
+then rerun upstream progression if the old save has consumed that action.
+Relevant fixture helpers are in `apps/openmw_tests/mwworld/testobliviondialogue.cpp`;
+existing UseItemAt activator dispatch is in `oblivionai.cpp`.
+
+### Find activator repair in progress
+
+`find-activator-red-01` confirms zero activation callbacks for a resident Find
+action. The new regression checks actual actor identity, low-process pending
+state and no repeat callback after binary state restoration in both load layouts.
+`find-activator-focused-01` passes all 8 selected tutorial-action/conversation
+cases with the first dispatch fix. It is not full-engine or runtime evidence.
+A subsequent change also preserves activator-targeted Find actions in the
+fully unloaded path. Next check is focused-02 with a rebuilt game binary;
+then exercise the original rats/wall and investigate consumed old-save packages.
+
+`find-activator-focused-02` passes all 8 selected tests and rebuilds openmw/esmtool.
+`wall-approach-03` still does not traverse: wall locals remain zero, rats retain
+HoldPosition, Player heading remains unchanged. InputWrapper::_packageMouseMotion
+explicitly discards its first relative motion. The editable course now sends
+zero motion before the actual turn; run `wall-approach-04` is the next diagnostic.
+Earlier vanity/readiness explanations were insufficient and are not fixes proved
+by those runs. Runtime wall activation remains unaccepted; no source commit yet.
+
+Run04 also fails to move/turn as intended; zero-motion priming alone was
+insufficient. InputWrapper discards mouse/button input during loading, while
+the script acceptance query can precede the first Player frame. The current
+course adds a read-only onFrame readiness signal and waits for it before inputs.
+This revision is unrun. No process remains running from runs03/04.
+
+Run05 proves onFrame readiness, all Player control switches enabled, camera
+mode ThirdPerson, but still unchanged heading. Mouse-course fixes remain
+unproven. Current course instead uses right-stick turning until a read-only
+north-facing signal, then stops the stick; unrun. Run05 is terminal.
+Further likely gameplay blocker: executeUnloadedFixedStep and resident update
+only periodically reselect terminal packages or null waits. Rats are in active
+Wander Wait, so higher-priority newly eligible push package may never preempt.
+Add a focused conditional-selection regression before changing that policy.
+
+Run06 fails harness preflight (missing virtual_gamepad), corrected in run07.
+Run07 reaches first-frame readiness but times out turning north via controller.
+Do not call this a movement pass. Next inspect actual rotation input handling,
+including updateLuaControls and native CharacterController movement ownership.
+`wander-reselect-red-01` fails fixture state validation (Base package retained
+script-package list index), not the intended assertion. Fixture now sets list
+index and procedure consistently; rerun before implementing selection changes.
+
+### Sunken-room checkpoint
+
+Focused03 passes 9 tests; `find-wander-engine-01` passes all 2,144 engine tests.
+`wall-approach-09` passes heading and movement gates through ordinary input.
+Inspected screenshot and save show Player (27,3136,-827) in the sunken room.
+Both original rats select Find 07303d and reach approximately (447,3200,-810),
+but stay in Path: wall collision prevents reaching the generic 64-unit arrival
+radius. Their distance to wall origin is still inside activation range.
+Current change extends Find arrival to valid activator range; regression now
+starts 100 units away to cover it. This latest change is not yet tested.
+Run09 save is the next genuine continuation checkpoint. Earlier short real-time
+input windows were insufficient; controller turning is now proved working.

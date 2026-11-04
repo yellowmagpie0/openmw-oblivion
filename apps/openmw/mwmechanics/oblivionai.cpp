@@ -4372,6 +4372,10 @@ namespace MWMechanics
         if (live.mState.mDoorCooldown > 0.f)
             live.mState.mDoorCooldown = std::max(0.f, live.mState.mDoorCooldown - duration);
 
+        const auto* waitingPackage = package(live.mState.mPackage);
+        const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
+            && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
+            && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         const bool routeChanged = (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                                       || live.mState.mPhase == ESM4::PackagePhase::Stalled)
             && !live.mState.mPathgrid.isNull()
@@ -4385,7 +4389,7 @@ namespace MWMechanics
                 && (live.mState.mPhase == ESM4::PackagePhase::Interrupted
                     || live.mState.mPhase == ESM4::PackagePhase::Complete
                     || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                    || routeChanged)))
+                    || routeChanged || waitingWander)))
         {
             const bool idleWait = live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull();
             const bool restart = live.mNeedsSelection || (!idleWait && (routeChanged || doorRestored));
@@ -4534,12 +4538,16 @@ namespace MWMechanics
         }
         if (live.mState.mPhase == ESM4::PackagePhase::Act)
         {
-            // Unloaded actors must not fabricate a conversation result or
-            // consume Find's action before promotion to a resident process.
+            // Scripted Find actions need a resident actor and target. Preserve
+            // the pending action while unloaded, just as for NPC conversations.
             if (live.mState.mPackageType == ESM4::AIPackageType::Find
-                && current->mTargetData.hasReference()
-                && mWorld.mStore.get<ESM4::ActorCharacter>().search(live.mState.mTarget))
-                return;
+                && current->mTargetData.hasReference())
+            {
+                const auto* reference = mWorld.mStore.get<ESM4::Reference>().search(live.mState.mTarget);
+                if (mWorld.mStore.get<ESM4::ActorCharacter>().search(live.mState.mTarget)
+                    || (reference && mWorld.mStore.search<ESM4::Activator>(reference->mBaseKey)))
+                    return;
+            }
             const bool timed = live.mState.mPackageType == ESM4::AIPackageType::Eat
                 || live.mState.mPackageType == ESM4::AIPackageType::Sleep
                 || live.mState.mPackageType == ESM4::AIPackageType::UseItemAt;
@@ -6007,6 +6015,12 @@ namespace MWMechanics
         const bool doorRestored = live.mSelectionCheckTimer <= 0.f && doorInterruptionResolved(live, &actor);
         if (doorRestored)
             logEvent("door-access-restored", live, "door=" + live.mState.mDoor.serialize());
+        // Waiting wander is interruptible: a newly eligible authored package
+        // (such as the tutorial rats pushing the wall) must not wait a day.
+        const auto* waitingPackage = package(live.mState.mPackage);
+        const bool waitingWander = live.mState.mPhase == ESM4::PackagePhase::Wait
+            && live.mState.mPackageType == ESM4::AIPackageType::Wander && waitingPackage
+            && !waitingPackage->mPackageFlags.has(ESM4::PackageFlag::MustComplete);
         const auto* interruptedPackage = package(live.mState.mPackage);
         const bool actionRestored = live.mSelectionCheckTimer <= 0.f
             && live.mState.mPhase == ESM4::PackagePhase::Interrupted
@@ -6020,7 +6034,7 @@ namespace MWMechanics
         if (live.mSelectionCheckTimer <= 0.f
             && (live.mState.mPhase == ESM4::PackagePhase::Interrupted || live.mState.mPhase == ESM4::PackagePhase::Complete
                 || (live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mPackage.isNull())
-                || stalledRouteChanged))
+                || stalledRouteChanged || waitingWander))
         {
             // A terminal package remains terminal while it is still the
             // selected winner. Retry after an explicit graph change or when
@@ -6095,11 +6109,12 @@ namespace MWMechanics
             {
                 const auto target = loadedPtrFor(live.mState.mTarget);
                 const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
-                if (!target.isEmpty() && target != actor && target.getType() == ESM::REC_NPC_4
+                const bool usableActivator = canActivatePlacedObject(mWorld, actor, target);
+                if (!target.isEmpty() && target != actor
+                    && (usableActivator || (target.getType() == ESM::REC_NPC_4 && getLOS(actor, target)))
                     && cellKey(actor) == cellKey(target)
                     && distanceSquared(actor.getRefData().getPosition().asVec3(),
-                           target.getRefData().getPosition().asVec3()) <= range * range
-                    && getLOS(actor, target))
+                           target.getRefData().getPosition().asVec3()) <= range * range)
                 {
                     stopMovement(actor);
                     transitionPackage(actor, live,
@@ -6175,6 +6190,8 @@ namespace MWMechanics
                 && current->mTargetData.hasReference())
             {
                 const auto target = loadedPtrFor(live.mState.mTarget);
+                if (placedActivator(target))
+                    return false; // Commit the script after actor iteration, including after restore.
                 if (!target.isEmpty() && target.getType() == ESM::REC_NPC_4)
                 {
                     const float range = std::max(1.f, static_cast<float>(current->mTargetData.mDistance));
@@ -6577,20 +6594,29 @@ namespace MWMechanics
         // The persisted timed reservation is sufficient to resume before commit.
         std::vector<ESM4::RuntimeActorAiState> activations;
         for (const auto& [_, live] : mActors)
+        {
             if (live.mState.mPackageType == ESM4::AIPackageType::UseItemAt
                 && live.mState.mPhase == ESM4::PackagePhase::Wait && live.mState.mActionReserved
                 && live.mState.mActionTimer <= 0.f && placedActivator(loadedPtrFor(live.mState.mActionItem)))
                 activations.push_back(live.mState);
+            else if (live.mState.mPackageType == ESM4::AIPackageType::Find
+                && live.mState.mPhase == ESM4::PackagePhase::Act
+                && live.mState.mTier == ESM4::ProcessTier::High
+                && placedActivator(loadedPtrFor(live.mState.mTarget)))
+                activations.push_back(live.mState);
+        }
         for (const auto& expected : activations)
         {
             const auto found = mActors.find(expected.mActor);
             if (found == mActors.end() || found->second.mState != expected) continue;
             auto& live = found->second;
             const auto actor = loadedPtrFor(expected.mActor);
-            const auto target = loadedPtrFor(expected.mActionItem);
+            const auto actionTarget = expected.mPackageType == ESM4::AIPackageType::Find
+                ? expected.mTarget : expected.mActionItem;
+            const auto target = loadedPtrFor(actionTarget);
             const auto* current = package(expected.mPackage);
             if (!current || !current->mTargetData.hasReference()
-                || current->mTargetData.mReferenceKey != expected.mActionItem
+                || current->mTargetData.mReferenceKey != actionTarget
                 || !canActivatePlacedObject(mWorld, actor, target))
             {
                 live.mState.mInterruptionReason = "activation-target-unavailable";
@@ -6603,7 +6629,7 @@ namespace MWMechanics
             live.mState.mActionItem = {};
             transitionPackage(actor, live,
                 {0.f, true, true, true, false, true, false, false, true, false, false, true});
-            logEvent("action-commit", live, "activator=" + expected.mActionItem.serialize());
+            logEvent("action-commit", live, "activator=" + actionTarget.serialize());
             try
             {
                 if (!mWorld.dispatchOblivionActivation(target, actor))
@@ -6612,7 +6638,7 @@ namespace MWMechanics
             catch (const std::exception& error)
             {
                 Log(Debug::Error) << "TES4 AI activator dispatch failed: " << expected.mActor.serialize()
-                    << " target=" << expected.mActionItem.serialize() << ": " << error.what();
+                    << " target=" << actionTarget.serialize() << ": " << error.what();
             }
             // No actor-map iterator/reference is used after dispatch.
         }

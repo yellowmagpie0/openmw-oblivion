@@ -21,7 +21,7 @@
     },
     {
       "path": "test-data/scripts/tutorial_passage_observer.lua",
-      "content": "return {{engineHandlers={{onFrame=function() end}}}}\n"
+      "content": "local self=require('openmw.self')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal timer=0\nlocal ready,turned,approached=false,false,false\nreturn {{engineHandlers={{onFrame=function(dt) timer=timer+dt if timer>0.5 then timer=0 print('Sewer rotation yaw='..tostring(self.controls.yawChange)..' camera='..tostring(camera.getYaw())..' facing='..tostring(self.rotation:apply(util.vector3(0,1,0)))) end if not approached and self.position.y>=3100 then approached=true print('Sewer Player reached sunken room') end local f=self.rotation:apply(util.vector3(0,1,0)) if not ready then ready=true print('Sewer Player frame ready heading '..tostring(f)) end if not turned and f.x>=0 and f.y>0.9 then turned=true print('Sewer Player facing north') end end}}}}\n"
     }
   ],
   "command": [
@@ -44,25 +44,60 @@
       "abort_on_failure": true
     },
     {
+      "type": "wait_log",
+      "pattern": "Sewer Player frame ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
       "type": "focus_window",
       "name": "OpenMW"
     },
     {
-      "type": "mouse_move",
-      "x": 830,
-      "y": -169
+      "type": "key",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "right_x",
+      "value": 1
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Sewer Player facing north",
+      "timeout_seconds": 360,
+      "abort_on_failure": true
+    },
+    {
+      "type": "gamepad_axis",
+      "axis": "right_x",
+      "value": 0
+    },
+    {
+      "type": "key_down",
+      "value": "Shift_L"
     },
     {
       "type": "key_down",
       "value": "w"
     },
     {
-      "type": "sleep",
-      "seconds": 15
+      "type": "wait_log",
+      "pattern": "Sewer Player reached sunken room",
+      "timeout_seconds": 360,
+      "abort_on_failure": true
     },
     {
       "type": "key_up",
       "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
     },
     {
       "type": "screenshot",
@@ -79,7 +114,7 @@
     }
   ],
   "terminate_after_actions": true,
-  "timeout_seconds": 180,
+  "timeout_seconds": 900,
   "expected_exit": 0,
   "expected_log": [
     "acceptance-command actor=content:oblivion.esm:02466e name=GetStage result=30(?:\\s|$)"
@@ -97,7 +132,7 @@
     "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
     "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
   ],
-  "virtual_gamepad": false,
+  "virtual_gamepad": true,
   "environment": {
     "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
     "OPENMW_OBSCRIPT_REPORT": "{output}/script-report.json",

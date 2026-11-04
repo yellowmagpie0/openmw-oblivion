@@ -822,6 +822,94 @@ TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterItera
     EXPECT_EQ(f.calls(), 1);
 }
 
+TEST(OblivionTutorialAction, WaitingWanderReevaluatesHigherPriorityConditionalPackage)
+{
+    for (bool shifted : {false, true})
+    {
+        ESM4::AIPackage::CTDA condition{};
+        condition.fnIndex = 1; // GetDistance the colocated switch == 0
+        condition.param1 = 0xb02;
+        const auto pack = [&](unsigned id, char type, const std::string& conditions) {
+            return record(ESM4::REC_PACK, id,
+                sub(ESM::fourCC("PKDT"), bytes(0u) + std::string{type, char(0xff), char(0), char(20)})
+                + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+                + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0xb02u) + bytes(200u)) + conditions);
+        };
+        SwitchFixture f(shifted, false, pack(0xd60, 0, sub(ESM::fourCC("CTDA"), bytes(condition)))
+            + pack(0xd61, 5, {}), 2);
+        auto& world = f.mFixture.mWorld;
+        world.initializePhysics(new osg::Group);
+        auto npc = *world.getStore().search<ESM4::Npc>(key(0x800));
+        npc.mAIPackageKeys = {key(0xd60), key(0xd61)};
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        auto& ai = *world.getOblivionAiService();
+        auto saved = f.capture();
+        auto actor = std::ranges::find(saved.mActorAi, key(0xa00), &ESM4::RuntimeActorAiState::mActor);
+        ASSERT_NE(actor, saved.mActorAi.end());
+        actor->mScriptPackage = {};
+        actor->mPackage = key(0xd61);
+        actor->mPackageType = ESM4::AIPackageType::Wander;
+        actor->mProcedure = ESM4::PackageProcedure::Wander;
+        actor->mListIndex = 1;
+        actor->mSource = ESM4::PackageSource::Base;
+        actor->mPhase = ESM4::PackagePhase::Wait;
+        actor->mDurationRemaining = 24;
+        ai.restore(saved);
+        // No explicit EvaluatePackage: normal updates must notice eligibility.
+        for (int n = 0; n < 40 && ai.state(f.mActor)->mPackage != key(0xd60); ++n)
+            ai.update(f.mActor, .05f, false);
+        ASSERT_EQ(ai.state(f.mActor)->mPackage, key(0xd60));
+    }
+}
+
+TEST(OblivionTutorialAction, FindActivatorPreservesPendingActionAndDispatchesOnce)
+{
+    for (const bool shifted : {false, true})
+    {
+        const auto find = record(ESM4::REC_PACK, 0xd60,
+            sub(ESM::fourCC("EDID"), std::string("FindSwitch\0", 11))
+            + sub(ESM::fourCC("PKDT"), bytes(0u) + std::string{char(0), char(0xff), char(0), char(20)})
+            + sub(ESM::fourCC("PSDT"), std::string{char(0xff), char(0xff), char(0), char(0xff)} + bytes(0u))
+            + sub(ESM::fourCC("PTDT"), bytes(0u) + bytes(0xb02u) + bytes(200u)));
+        SwitchFixture f(shifted, false, find, 1);
+        auto& ai = *f.mFixture.mWorld.getOblivionAiService();
+        ASSERT_TRUE(ai.addScriptPackage(f.mActor, key(0xd60)));
+        auto saved = f.capture();
+        auto actor = std::ranges::find(saved.mActorAi, key(0xa00), &ESM4::RuntimeActorAiState::mActor);
+        ASSERT_NE(actor, saved.mActorAi.end());
+        actor->mPhase = ESM4::PackagePhase::Path;
+        actor->mTarget = key(0xb02);
+        actor->mTier = ESM4::ProcessTier::High;
+        auto position = f.mActor.getRefData().getPosition();
+        position.pos[0] = 100; // Outside path-arrival tolerance, inside activation range.
+        f.mActor.getRefData().setPosition(position);
+        actor->mLastValidPosition = position;
+        ai.restore(saved);
+        ai.update(f.mActor, .05f, true);
+        ASSERT_EQ(ai.state(f.mActor)->mPhase, ESM4::PackagePhase::Arrive);
+        saved = f.capture();
+        actor = std::ranges::find(saved.mActorAi, key(0xa00), &ESM4::RuntimeActorAiState::mActor);
+        actor->mPhase = ESM4::PackagePhase::Act;
+        actor->mTarget = key(0xb02);
+        actor->mTier = ESM4::ProcessTier::Low;
+        ai.restore(saved);
+        ai.update(f.mActor, .05f, false);
+        ai.commitPendingTransitions();
+        ASSERT_EQ(ai.state(f.mActor)->mPhase, ESM4::PackagePhase::Act);
+        EXPECT_EQ(f.calls(), 0);
+        saved = f.capture();
+        actor = std::ranges::find(saved.mActorAi, key(0xa00), &ESM4::RuntimeActorAiState::mActor);
+        actor->mTier = ESM4::ProcessTier::High;
+        ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+        ai.commitPendingTransitions();
+        EXPECT_EQ(f.calls(), 1);
+        EXPECT_EQ(ai.state(f.mActor)->mPhase, ESM4::PackagePhase::Complete);
+        ai.restore(ESM4::RuntimeState::deserializeBinary(f.capture().serializeBinary()));
+        ai.commitPendingTransitions();
+        EXPECT_EQ(f.calls(), 1);
+    }
+}
+
 TEST(OblivionTutorialAction, SwitchDisabledOrMovedAfterReservationCannotActivate)
 {
     for (const bool disabled : {false, true})
