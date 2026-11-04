@@ -1,36 +1,42 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — original wall activation, 2026-11-04
+## Current checkpoint — wall clearance diagnosis, 2026-11-04
 
-Find packages can now dispatch placed activators after actor iteration, preserve
-pending activation across low process/restore, and stop within valid activation
-range. Interruptible waiting Wander packages periodically reselect, allowing the
-original rats to leave HoldPosition for their newly eligible wall-push package.
+Production commit `323ba551ca` makes the original rats select their wall-push
+package and activate the wall. `find-activator-range-01` passes nine focused
+tests and rebuilds the game; `find-range-engine-01` passes all 2,144 engine tests.
+No fresh sanitizer gate for this production chunk yet.
 
-Validation: `find-activator-range-01` passes 9 focused action/conversation tests
-and rebuilds the game; `find-range-engine-01` passes all 2,144 engine tests with
-exact inventory. Reports and source fingerprints are under
-`build/oblivion-compat/sewer-escape/`. No sanitizer gate for this chunk yet.
-Earlier failed diagnostics and fixture failures remain retained below.
+Normal-input `wall-open-01` proves original activation, MQ01 stage24 and wall
+locals reaching pushed=3. Full sewer escape remains open: wall traversal,
+solo-dungeon combat/loot, reunion, Emperor sequence, character choices, final
+exit and save/load acceptance are not complete.
 
-Normal-input `wall-approach-09` reaches the sunken room. Fresh continuation
-`wall-open-01` passes original wall activation, MQ01 stage24 and normal controller
-turning. Wall locals progress to pushed=3, linked path points enable, and the
-Player remains alive at health61.45. Inspected capture shows displaced blocks,
-but does not prove a Player-sized opening or traversable collision. Both rats
-activated the wall; its original script guard runs stage24 only once.
+Current blocker: `wall-center-crossing-02` backs west from the legitimate
+`wall-crossing-02` save, successfully strafes south onto the opening centerline,
+then stalls near (278,3196,-831). It is terminal failed, with a screenshot but
+no confirmed new F5 save. Stop repeating blind movement attempts.
 
-Next: continue from `wall-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`,
-verify restored wall state without replay and walk through the opening with
-normal collision. Inspect/fix animation or collision if the visible narrow gap
-blocks traversal. Then complete solo-dungeon combat/loot and escort reunion.
-Full escape, post-wall combat, character choices, exterior exit and final
-save/load acceptance all remain open. These checkpoints are not full completion.
+`wall-survey-03` passes a denser read-only collision survey including actors.
+At y3200, animated wall03e31c obstructs x~340 at z=-800,-790,-770,-760,-750,
+-720,-710,-700; rats are farther behind it. Earlier coarse rays missed these
+bricks. Screenshot shows suspended bricks across the gap. Neither survey alone
+proves full Player-volume clearance or diagnoses the engine cause.
 
-Input diagnosis: controller yaw is working; use observed heading/position gates
-because simulation progresses slowly under software rendering. Earlier fixed
-real-time input durations did not prove an engine input defect. The editable
-approach and wall-opening manifests retain ordinary input and read-only observers.
+Original asset inspection under ignored `wall-assets/` finds a one-second
+Unequip sequence, thirteen mass100 keyframed bodies (motion6), transform tracks
+that move bricks sideways, and no bhkBlendController/bhkBlendCollisionObject.
+Do not assume dynamic-body absence is the fix: authored root transforms,
+rotation tracks and native activation/animation completion still need inspection.
+`inspect-physics.cpp`, `physics.txt` and `sequences.txt` retain the extraction;
+the C++ inspector used the current parser with matching NDEBUG layout. This is
+content evidence, not an independent native runtime proof.
+
+Next: establish the intended final wall pose/physics transition using original
+content and applicable native evidence; compare rendering and animated collision
+against it, fix the demonstrated discrepancy, then rerun actual traversal.
+Use `wall-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave` for the opened wall
+or `wall-approach-09` for a fresh activation. All diagnostic processes are terminal.
 
 ## Target and acceptance
 
@@ -179,3 +185,47 @@ Current change extends Find arrival to valid activator range; regression now
 starts 100 units away to cover it. This latest change is not yet tested.
 Run09 save is the next genuine continuation checkpoint. Earlier short real-time
 input windows were insufficient; controller turning is now proved working.
+
+### Passage traversal in progress
+
+`wall-crossing-01` terminates failed at its crossing gate, retaining screenshot
+and genuine F5 save. Player stopped near x42,y3101, before the wall at x384;
+this is not evidence of a crumbling-wall collision defect. Original corner wall
+03e328 lies at (128,3072), with adjacent floor corridor toward y3264. Current
+`oblivion_sewer_wall_crossing.json` strafes north to y3260, aligns east using
+ordinary controller input, then attempts crossing with normal collision.
+`wall-crossing-02` continues from the pristine wall-open-01 save.
+Wall-open state already contains both rat-to-Player combat engagements; the
+terminal Find state is retained while combat owns their movement. Do not infer
+an additional package-selection defect from that retained state.
+
+`wall-crossing-02` is terminal failed at crossing; genuine F5 checkpoint is
+Player (302.13,3349.92,-817.30), health61.45. Inspected image clearly places the
+opening south/right of the Player. The north alignment cleared the initial
+corner but overshot the opening's centerline. `wall-center-crossing-01` is the
+next ordinary-input continuation from that diagnostic save, strafing south to
+y3200 before advancing east. Editable source:
+`oblivion_sewer_wall_center_crossing.json`. No new engine defect established.
+
+`wall-center-crossing-01` fails its south-alignment gate: x305,y3273 stops
+before y3200. `wall-survey-01` passes a read-only 180-ray collision survey;
+its editable manifest is `oblivion_sewer_wall_collision_survey.json`.
+From x280 at y3200, rays at z=-820,-780,-740 reach x700 unobstructed; z=-700
+hits the animated wall03e31c near x339. At y3240 and north, static broken
+wall026bf6 blocks near x339 at torso height. At y3200,z=-820, starting x0
+hits loose static brick03fb0a near x192. This establishes actual geometry,
+not a player-sized clear corridor. Next route must negotiate rubble toward
+y3200 (normal jump is E), then attempt the gap. If body clearance still fails,
+compare animated collision/rendering at the retained end pose before changing
+engine behavior. No running process remains from center-crossing01/survey01.
+
+`wall-rubble-jump-01` observes genuine E jump (fatigue140->110), but southward
+movement still stops near x301,y3273; run remains active until its diagnostic
+capture/save. `wall-survey-02` extends read-only rays southward: at x260/280/300,
+z=-820/-780/-740/-700, the first static hit is around y3121, beyond the desired
+y3200 alignment. Point rays do not include the Player's width; near x302 the
+body can graze the east wall. Next ordinary-input route should back west to
+x250 before strafing south, rather than jump against the wall edge.
+The extracted original wall asset (ignored wall-assets/idcrumblewall01.nif)
+has named brick NiTransformController tracks; dynamic-body absence alone does
+not establish why the remaining opening is narrow. No collision fix justified.
