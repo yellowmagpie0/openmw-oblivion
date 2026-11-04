@@ -1,6 +1,45 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — live wall physics, 2026-11-04
+## Current checkpoint — wall crossed, 2026-11-04
+
+The Player now crosses the crumbled wall with ordinary forward input. Native
+multipart NPCs use a rounded capsule with the configured total height and
+maximum horizontal width; the smaller horizontal extent expands to match the
+radius. Navigation uses its conservative enclosing cylinder. TES3 NPCs and
+creatures retain their previous shapes. This is a gameplay-supported hull
+policy, not a claim of independently measured original capsule dimensions.
+No collision disabling, state injection, dimension reduction or slope-rule
+relaxation was used.
+
+`native-npc-wall-crossing-01` passes with the normal configuration and no shape
+override. Its inspected capture shows the Player inside the solo dungeon.
+The genuine F5 save is `native-npc-wall-crossing-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+under `build/oblivion-compat/sewer-escape/`, SHA256
+`040e99f6498c2c6f6649c1f6b1de6454be0892ec501ba930904037846e7084e0`. Player position is (586.08,3183.96,-853.38), health49.45;
+both wall rats remain dead. Editable course:
+`scripts/data/oblivion_compat/oblivion_sewer_wall_rounded_hull.json`.
+The prior opt-in capsule experiment `player-capsule-01` also passes; the
+experiment switch is removed from production.
+
+Validation: `native-npc-hull-focused-01` passes all7 actor-bounds cases,
+including rounded overhead clearance, unchanged full height/maximum width,
+solid-wall blocking, floor support and legacy NPC/creature shape retention.
+`native-npc-hull-engine-01` passes all2,158 engine cases, exact inventory,
+no failures/skips; fingerprint
+`d649ba8af87abf1d029171e5fb1cb3890c1756bb38d83b31e49dd66a643a1b09`.
+Runtime SHA256:
+`206e68cf9679a7d341bb95e3eea21511edb74e3a224a0aa795b1800cd9ba4f64`.
+No fresh sanitizer acceptance for this chunk. All these processes are terminal.
+
+Next: load the far-side save in a fresh process, approach original key corpse
+15985a, exercise actual loot/equip and continue the solo dungeon to reunion.
+An ignored ordinary-input course is prepared as `solo-key-approach.json`.
+Full escape still requires fresh upstream activation/traversal, intermediate
+and death/reload persistence, equipment and encounters, reunion, Emperor
+sequence, quest-item handoff, character choices, actual exit and outside reload.
+Earlier diagnostic failures and original-game evidence remain below.
+
+## Historical wall-clearance investigation — 2026-11-04
 
 The wall now releases thirteen positive-mass bodies after its Unequip animation.
 The implementation replaces compound collision, removes the old navigation

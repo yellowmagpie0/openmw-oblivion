@@ -1,6 +1,7 @@
 #include "actor.hpp"
 
 #include <BulletCollision/CollisionShapes/btCylinderShape.h>
+#include <BulletCollision/CollisionShapes/btCapsuleShape.h>
 
 #include <components/debug/debuglog.hpp>
 #include <components/misc/convert.hpp>
@@ -14,6 +15,7 @@
 #include "mtphysics.hpp"
 #include "trace.h"
 
+#include <algorithm>
 #include <cmath>
 
 namespace MWPhysics
@@ -107,6 +109,23 @@ namespace MWPhysics
             mShape = std::make_unique<btBoxShape>(halfExtents);
             mRotationallyInvariant = false;
             mCollisionShapeType = DetourNavigator::CollisionShapeType::RotatingBox;
+        }
+
+        // Native multipart NPCs need rounded ends to negotiate rubble under
+        // low openings. Keep the configured height and maximum width; legacy
+        // TES3 NPCs and authored creature hulls retain their existing shapes.
+        if (allowFallback && ptr.getClass().isNpc())
+        {
+            const float radius = std::max(mOriginalHalfExtents.x(), mOriginalHalfExtents.y());
+            if (radius > 0.f && mOriginalHalfExtents.z() >= radius)
+            {
+                mShape = std::make_unique<btCapsuleShapeZ>(radius, 2.f * (mOriginalHalfExtents.z() - radius));
+                mOriginalHalfExtents.x() = radius;
+                mOriginalHalfExtents.y() = radius;
+                mRotationallyInvariant = true;
+                // Navigation uses the conservative enclosing cylinder.
+                mCollisionShapeType = DetourNavigator::CollisionShapeType::Cylinder;
+            }
         }
 
         mConvexShape = static_cast<btConvexShape*>(mShape.get());

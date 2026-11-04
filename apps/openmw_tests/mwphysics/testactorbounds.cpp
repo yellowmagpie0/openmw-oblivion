@@ -1,5 +1,6 @@
 #include <apps/openmw/mwmechanics/oblivionmelee.hpp>
 #include <apps/openmw/mwphysics/actor.hpp>
+#include <apps/openmw/mwphysics/trace.h>
 #include <apps/openmw/mwphysics/mtphysics.hpp>
 #include <apps/openmw/mwbase/environment.hpp>
 #include <apps/openmw/mwmechanics/creaturestats.hpp>
@@ -297,6 +298,72 @@ namespace
         check(npc, fallback, fallback);
         check(creature, fallback, osg::Vec3f(7, 8, 9));
     }
+    TEST(ActorBoundsTest, NativeNpcRoundedHullClearsOverheadCornerButBlocksWallsAndSupportsFloor)
+    {
+        MWClass::Static::registerSelf();
+        MWBase::Environment environment;
+        MWWorld::ESMStore store;
+        environment.setESMStore(store);
+        btDefaultCollisionConfiguration configuration;
+        btCollisionDispatcher dispatcher(&configuration);
+        btDbvtBroadphase broadphase;
+        btCollisionWorld world(&dispatcher, &broadphase, &configuration);
+        MWPhysics::PhysicsTaskScheduler scheduler(1.f / 60.f, &world, nullptr);
+        ESM::Static base;
+        base.blank();
+        ESM::CellRef reference;
+        reference.blank();
+        MWWorld::LiveCellRef<ESM::Static> live(reference, &base);
+        const BoundsActorClass npc(true), creature(false);
+        MWWorld::Ptr ptr(&live);
+        osg::ref_ptr<Resource::BulletShape> source = new Resource::BulletShape;
+        source->mCollisionBox.mExtents = osg::Vec3f(29, 28, 66);
+        source->mCollisionBox.mCenter = osg::Vec3f(0, 0, 66);
+        const osg::Vec3f supplied(29, 28, 66);
+        for (int kind : {0, 1, 2})
+        {
+            SCOPED_TRACE(kind); // native NPC, legacy NPC, native creature
+            live.mClass = kind == 2 ? &creature : &npc;
+            MWPhysics::Actor actor(ptr, source, &scheduler, false,
+                DetourNavigator::CollisionShapeType::Aabb, kind == 1 ? osg::Vec3f{} : supplied);
+            const auto* object = actor.getCollisionObject();
+            EXPECT_EQ(object->getCollisionShape()->getShapeType(),
+                kind == 0 ? CAPSULE_SHAPE_PROXYTYPE : BOX_SHAPE_PROXYTYPE);
+            btVector3 minimum, maximum;
+            object->getCollisionShape()->getAabb(btTransform::getIdentity(), minimum, maximum);
+            EXPECT_NEAR(maximum.x(), 29, .01);
+            EXPECT_NEAR(maximum.y(), kind == 0 ? 29 : 28, .01);
+            EXPECT_NEAR(maximum.z(), 66, .01);
+            EXPECT_NEAR(minimum.z(), -66, .01);
+            EXPECT_EQ(actor.getHalfExtents(), kind == 0 ? osg::Vec3f(29, 29, 66) : supplied);
+
+            auto sweep = [&](const btVector3& extent, const btVector3& origin,
+                             const osg::Vec3f& from, const osg::Vec3f& to) {
+                btBoxShape shape(extent);
+                btCollisionObject obstacle;
+                obstacle.setCollisionShape(&shape);
+                obstacle.setWorldTransform(btTransform(btQuaternion::getIdentity(), origin));
+                world.addCollisionObject(&obstacle, MWPhysics::CollisionType_World, MWPhysics::CollisionType_Actor);
+                MWPhysics::ActorTracer tracer;
+                tracer.doTrace(object, from, to, &world);
+                world.removeCollisionObject(&obstacle);
+                return tracer;
+            };
+            // A corner near the head clips a flat-ended box, but lies outside
+            // the rounded head. A full-height wall must still stop both hulls.
+            auto corner = sweep(btVector3(10, 100, 5), btVector3(60, 0, 67), {}, osg::Vec3f(30, 0, 0));
+            if (kind == 0) EXPECT_EQ(corner.mFraction, 1.f);
+            else EXPECT_LT(corner.mFraction, 1.f);
+            auto wall = sweep(btVector3(10, 100, 100), btVector3(60, 0, 0), {}, osg::Vec3f(40, 0, 0));
+            EXPECT_GT(wall.mFraction, .4f);
+            EXPECT_LT(wall.mFraction, .6f);
+            auto floor = sweep(btVector3(100, 100, 5), btVector3(0, 0, -5),
+                osg::Vec3f(0, 0, 70), osg::Vec3f(0, 0, 60));
+            EXPECT_NEAR(floor.mFraction, .4f, .01f);
+            EXPECT_GT(floor.mPlaneNormal.z(), .99f);
+        }
+    }
+
     TEST(ActorBoundsTest, NativeMeleeAdapterUsesPhysicalVerticalBoundsAndOriginalMaximumY)
     {
         MWClass::Static::registerSelf();
