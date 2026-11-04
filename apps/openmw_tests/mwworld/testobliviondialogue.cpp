@@ -10,6 +10,7 @@
 #include "apps/openmw/mwworld/containerstore.hpp"
 #include "apps/openmw/mwdialogue/dialoguemanagerimp.hpp"
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
+#include "apps/openmw/mwmechanics/disease.hpp"
 #include "apps/openmw/mwmechanics/oblivioncombat.hpp"
 #include "apps/openmw/mwmechanics/oblivionmelee.hpp"
 #include "apps/openmw/mwphysics/physicssystem.hpp"
@@ -821,6 +822,20 @@ TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterItera
     ai.restore(completed);
     ai.commitPendingTransitions();
     EXPECT_EQ(f.calls(), 1);
+}
+
+TEST(OblivionTutorialAction, LootContactDoesNotRequireMorrowindDiseaseCatalog)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        ASSERT_EQ(world.getGameProfile(), ESM::GameProfile::Oblivion);
+        ASSERT_EQ(world.getStore().get<ESM::GameSetting>().search("fDiseaseXferChance"), nullptr);
+        // ActionOpen runs this contact hook before publishing the container UI.
+        // Original TES4 content has no Morrowind disease-transfer GMST.
+        EXPECT_NO_THROW(MWMechanics::diseaseContact(world.getPlayerPtr(), f.mActor));
+    }
 }
 
 TEST(OblivionTutorialAction, RestoreResumesNeverSelectedActors)

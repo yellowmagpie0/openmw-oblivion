@@ -1,5 +1,46 @@
 # Full sewer escape — current handoff
 
+## Current checkpoint — key corpse loot accepted, 2026-11-04
+
+Target remains full original sewer escape, including useful equipment, solo
+combat/exploration, reunion, Emperor/Amulet, choices, actual exit and persistence.
+
+`fresh-key-approach-01` PASSES the east passage and controller turn to the
+correctly dead Goblin Shaman. Saved Player is(1966.94,3115.12,-813.42). `corpse-approach-audit.json` retains original
+corpse Dead/null killer. Source: `oblivion_sewer_fresh_key_approach.json`.
+
+`fresh-corpse-loot-01` fails to activate because the corpse is not focused.
+Run02 uses normal SDL R and read-only camera-guided mouse input; its inspected
+capture and activation-focus log identify Goblin15985a, but actual activation
+throws `fDiseaseXferChance not found` in the shared ActionOpen disease hook.
+Original TES4 content lacks that Morrowind setting. The legacy disease helper
+now returns for the Oblivion profile before querying TES3 spells/settings.
+This isolates legacy mechanics; it does not implement native disease rules.
+
+`corpse-contact-red-01` reproduces the exact exception in both content layouts.
+`corpse-contact-focused-01` passes all7 tutorial action cases and rebuilds the
+game. `corpse-contact-engine-01` passes all2,162 engine cases, exact inventory,
+no failures/skips. Tested fingerprint:
+`9e8cd94d1b8d077ae1b30fcffe410032ea18054f2937d5802da9d9cc435f1065`.
+No new sanitizer claim.
+
+`fresh-corpse-loot-03` PASSES the same aimed normal activation and controller
+Take All. The inspected container screenshot shows the real Goblin inventory.
+Normal F5 save SHA256 `5f6f75a3018bd5fe30d0331959620dadc189271708b82e7543dd0610f1a1ab3d`
+and `loot-audit.json` prove an empty corpse and Player receipt of all six item
+types: IronKey159826, Club159829 at condition70, three lockpicks, Weak Potion
+of Sorcery and two scrolls. No forbidden/unreviewed errors. Editable passing
+source: `oblivion_sewer_fresh_corpse_loot.json`.
+
+Next: fresh-process reload of this loot save, equip the Club through the real
+inventory menu, then continue the original solo dungeon/key route. All loot
+runs and engine helpers are terminal. CharGen30 fresh escort arrival remains
+open; later reunion/story/choices/exterior and death/reload remain unaccepted.
+Adjacent visual issue: the dead Goblin is posed upright with
+`animation_groups=0` in the assembly log. Record it for later presentation/
+goblin-animation work; do not conflate saved death and successful looting with
+verified corpse animation. Historical route/evidence follows below.
+
 ## Current chunk — restore initial AI selection, 2026-11-04
 
 Target remains the complete original prison-to-outdoors course, including loot,
