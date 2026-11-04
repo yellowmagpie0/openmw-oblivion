@@ -23,20 +23,33 @@ At y3200, animated wall03e31c obstructs x~340 at z=-800,-790,-770,-760,-750,
 bricks. Screenshot shows suspended bricks across the gap. Neither survey alone
 proves full Player-volume clearance or diagnoses the engine cause.
 
-Original asset inspection under ignored `wall-assets/` finds a one-second
-Unequip sequence, thirteen mass100 keyframed bodies (motion6), transform tracks
-that move bricks sideways, and no bhkBlendController/bhkBlendCollisionObject.
-Do not assume dynamic-body absence is the fix: authored root transforms,
-rotation tracks and native activation/animation completion still need inspection.
-`inspect-physics.cpp`, `physics.txt` and `sequences.txt` retain the extraction;
-the C++ inspector used the current parser with matching NDEBUG layout. This is
-content evidence, not an independent native runtime proof.
+Independent original-game probe now establishes the discrepancy: direct
+`PlayGroup Unequip 1` collapses the bricks onto the floor, with GetDestroyed=0.
+Normal forward input reaches x352.47 inside the opening. Exact native handoff
+timing and full crossing beyond x550 were not measured. Console setup is
+explicitly diagnostic, not normal tutorial progression evidence.
+See [SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
+Original game and the temporary Steam client exited; the isolated configuration
+and saves were restored, including the unchanged pristine-save hash.
 
-Next: establish the intended final wall pose/physics transition using original
-content and applicable native evidence; compare rendering and animated collision
-against it, fix the demonstrated discrepancy, then rerun actual traversal.
-Use `wall-open-01/userdata/saves/Bendu_Olo/Quicksave.omwsave` for the opened wall
-or `wall-approach-09` for a fresh activation. All diagnostic processes are terminal.
+The original asset contains thirteen positive-mass keyframed bodies and a
+one-second lateral jostling clip, with no authored collapse-to-floor track.
+Root transforms are identity; no physics-blend controllers are attached.
+The prison secret wall has mass-zero keyframed bodies with the same collision
+flags. A blanket release of every animated keyframed object is not justified.
+Raw extraction, transform inspection and original instruction diagnostics stay
+under ignored `wall-assets/`; parser output is content evidence, not an
+independent instruction oracle. The live original-game result supplies the
+independent behavioral evidence.
+
+Next implementation chunk: physical handoff for the wall's multiple animated
+bodies, render/collision synchronization and persistent body state. Existing
+native physical machinery supports multiple actor bodies, but loose-object
+scene binding/save state explicitly supports one body; neither can be silently
+reused with false actor/item identity. Reuse applicable lower-level machinery
+without weakening those invariants. Then prove actual wall traversal from
+`wall-open-01` or fresh activation from `wall-approach-09`, followed by the rest
+of the original tutorial. All diagnostic processes are terminal.
 
 ## Target and acceptance
 
