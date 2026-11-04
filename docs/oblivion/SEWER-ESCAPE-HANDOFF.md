@@ -71,10 +71,21 @@ and Emperor beyond the wall. `passage-audit.json` records Player
 Both courses have no forbidden/unreviewed errors. Editable sources are
 `oblivion_sewer_fresh_greeting.json` and `oblivion_sewer_fresh_passage.json`.
 
-Next: descend from this fresh passage save to the lower landing and first ambush,
-then replay accepted combat/wall traversal and actually loot the correctly dead
-key corpse. These opening/greeting/passage processes are terminal. Full original
-progression remains unaccepted.
+`fresh-descent-01` PASSES fresh-process passage reload and normal controller
+movement through the stairs/lower doorway to(658.51,1443.33,-447.02). The capture
+was inspected; `landing-audit.json` verifies stage19 and the still-dead key
+corpse. Quicksave SHA:
+`fc5e3e4751c5663519ce2bcd472cc133158ca9df56f45cef4fb456ed4b34f311`.
+Editable source: `oblivion_sewer_fresh_descent.json`. No forbidden/unreviewed
+errors. No new engine build was needed for these input-only replay courses.
+
+Next: `fresh-before-ambush-01` is running from this landing save. It follows the
+original corridor, uses reduced northward stick input at the stair alignment,
+and stops westward movement at x1030 before waiting for Renault's original
+stage20 completion. Resume this process before launching another game. The
+prior opening/greeting/passage/descent processes are terminal. Actual fresh
+ambush, wall traversal and key-corpse loot remain next, followed by the full
+solo dungeon, reunion, Emperor sequence, choices, exit and persistence checks.
 
 ## Previous checkpoint — authored corpse initialization, 2026-11-04
 
