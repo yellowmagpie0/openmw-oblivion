@@ -1,6 +1,55 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — western rats defeated and pillar passed, 2026-11-04
+## Current checkpoint — western stairs reached, new rat ambush pending, 2026-11-04
+
+Full escape remains incomplete: western loop/solo dungeon, goblins, reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and continuous full playthrough. Player death/reload is verified.
+Current chunk: clear the active three-rat encounter at the stair exit, then
+continue along the original western loop. No new engine changes this checkpoint.
+
+`substructure-west-room-entry-01` PASSES raw nodes18/19 from the pillar save.
+Rat038176 remains initially passive. `substructure-west-room-rat-01` fails:
+a short approach leaves it out of reach and all six swings miss. `-02` PASSES
+with a normal movement wake-up, heading corrections and one-second running
+approach before Club attacks. Native save records rat038176 dead with Player
+killer, health50.44 and no residual combat. Capture and encounter-audit.json
+inspected. Rat038175 was still alive; this does not clear the entire room.
+
+`substructure-west-stairs-01` PASSES fresh reload and eight raw pathgrid corners
+(nodes20..28, excluding vertical duplicate25). Read-only startup verifies
+rat038176 death and saved health. Further original rats engage near the end.
+Normal F5 retains health46.68 at(-3388,4478,-259), with engaged rats038175,
+038818 and159838. The post-save capture has lower health from later attacks;
+use the actual save as the continuation. `encounter-restart-audit.json` verifies
+unchanged dead rat values/killer and inventory contents/equipment, with only
+legitimate worn-cuirass condition loss. Health is not claimed unchanged through
+this route. Capture inspected; all passing runs have no forbidden/unreviewed
+errors. Existing2167-case engine evidence is reused; no new sanitizer claim.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-west-stairs-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `de6e1dddc1cdb6d183d8d95f1fcf2a86034d84c45ca17e3a834ba7c04a435244`.
+Player health46.68, first person, level camera, Club and armor equipped.
+All runtime/build processes are terminal. Next: ordinary Club defence against
+038175/038818/159838, retaining a selected target until dead to avoid spreading
+hits. Use the successful world-heading observer, not animated bounding-box aim,
+and no arbitrary distance gate. A short movement input can wake mouse look.
+Then resume raw pathgrid nodes29 onward toward the western/southern loop;
+rat038174 remains near(-3859,1934), and Natural Caverns exit is0381b8.
+
+Editable passing manifests under scripts/data/oblivion_compat:
+`oblivion_sewer_substructure_west_room_entry.json`,
+`oblivion_sewer_substructure_west_room_rat.json`,
+`oblivion_sewer_substructure_west_stairs.json`. Inputs are respectively pillar01,
+room-entry01 and room-rat02 saves. Keep the raw route's pillar/stair corners.
+
+Adjacent observation, not an isolated defect yet: missed swings in room-rat01
+did not alert the nearby rat. The awareness adapter reads the transient attack
+request flag; native attack-phase noise may need follow-up if it blocks gameplay.
+Do not tune detection coefficients or force combat to compensate.
+
+## History — western rats defeated and pillar passed, 2026-11-04
 
 Target remains the complete original prison-to-outdoors course. Remaining:
 western room/solo dungeon, goblins, reunion, Emperor/Amulet, character choices,
