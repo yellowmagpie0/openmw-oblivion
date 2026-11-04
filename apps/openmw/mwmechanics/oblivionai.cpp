@@ -36,6 +36,9 @@
 #include <components/esm/refid.hpp>
 #include <components/esm/util.hpp>
 #include <components/esm4/loadarmo.hpp>
+#include <components/esm4/loadligh.hpp>
+#include <components/esm4/combatsettings.hpp>
+#include <components/esm4/loadgmst.hpp>
 #include <components/esm4/loadachr.hpp>
 #include <components/esm4/loadcrea.hpp>
 #include <components/esm4/loadcell.hpp>
@@ -7141,65 +7144,103 @@ namespace MWMechanics
             const_cast<MWWorld::LiveCellRefBase*>(observer.mRef), const_cast<MWWorld::CellStore*>(observer.mCell));
         const MWWorld::Ptr mutableTarget(
             const_cast<MWWorld::LiveCellRefBase*>(target.mRef), const_cast<MWWorld::CellStore*>(target.mCell));
-        ESM4::DetectionInput input;
-        input.mDistance = distance;
-        input.mViewAngleRadians = angle;
-        input.mLineOfSight = getLOS(observer, target);
-        if (observer.isInCell())
-        {
-            const std::uint32_t ambient = observer.getCell()->getCell()->getMood().mAmbiantColor;
-            const double red = static_cast<double>((ambient >> 0) & 0xffu) / 255.0;
-            const double green = static_cast<double>((ambient >> 8) & 0xffu) / 255.0;
-            const double blue = static_cast<double>((ambient >> 16) & 0xffu) / 255.0;
-            input.mAmbientLight = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-        }
-        if (observer.getClass().isActor())
-        {
-            input.mObserverAgility = mutableObserver.getClass().getCreatureStats(mutableObserver)
-                .getAttribute(ESM::Attribute::indexToRefId(3)).getModified();
-            input.mObserverLuck = mutableObserver.getClass().getCreatureStats(mutableObserver)
-                .getAttribute(ESM::Attribute::indexToRefId(7)).getModified();
-            input.mObserverSneak = mutableObserver.getClass().getSkill(mutableObserver, ESM::RefId(ESM::Skill::Sneak));
-        }
-        if (target.getClass().isActor())
-        {
-            const CreatureStats& targetStats = mutableTarget.getClass().getCreatureStats(mutableTarget);
-            const Movement& movement = mutableTarget.getClass().getMovementSettings(mutableTarget);
-            input.mTargetSneak = mutableTarget.getClass().getSkill(mutableTarget, ESM::RefId(ESM::Skill::Sneak));
-            input.mMovementSpeed = std::hypot(movement.mPosition[0], movement.mPosition[1])
-                * mutableTarget.getClass().getCurrentSpeed(mutableTarget);
-            input.mTargetSleeping = [&]() {
-                const ESM4::RuntimeActorAiState* targetState = state(actorKey(target));
-                return targetState != nullptr && targetState->mPackageType == ESM4::AIPackageType::Sleep
-                    && (targetState->mPhase == ESM4::PackagePhase::Act
-                        || targetState->mPhase == ESM4::PackagePhase::Wait);
-            }();
-            const MagicEffects& effects = targetStats.getMagicEffects();
-            input.mInvisibility = std::max(0.f,
-                effects.getOrDefault(ESM::MagicEffect::Invisibility).getMagnitude()) / 100.0;
-            input.mChameleon = std::max(0.f,
-                effects.getOrDefault(ESM::MagicEffect::Chameleon).getMagnitude()) / 100.0;
-
-            const ESM::FormKey targetBase = baseKey(target);
-            if (const ESM4::Npc* npc = mWorld.mStore.search<ESM4::Npc>(targetBase))
-                input.mFootwearNoise = std::clamp(static_cast<double>(npc->mFootWeight), 0.0, 1.0) * 0.1;
-            else if (const ESM4::Creature* creature = mWorld.mStore.search<ESM4::Creature>(targetBase))
-                input.mFootwearNoise = std::clamp(static_cast<double>(creature->mFootWeight), 0.0, 1.0) * 0.1;
-            const float capacity = mutableTarget.getClass().getCapacity(mutableTarget);
-            if (capacity > 0.f)
-                input.mArmorNoise = std::clamp(
-                    static_cast<double>(mutableTarget.getClass().getEncumbrance(mutableTarget) / capacity), 0.0, 1.0)
-                    * 0.1;
-        }
         const ESM::FormKey observerKey = actorKey(observer);
         const ESM::FormKey targetKey = actorKey(target);
+        if (!observer.getClass().isActor() || !target.getClass().isActor())
+            return {0.0, false, false};
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : mWorld.mStore.get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(mWorld.mStore.get<ESM4::GameSetting>().search(setting.mId));
+        const auto physical = ESM4::buildPhysicalCombatSettings(settings);
+        const auto value = [&](const ESM::FormKey& key, std::uint8_t index, bool base = false) {
+            return static_cast<std::int32_t>(std::clamp(
+                mWorld.getOblivionScriptActorValue(key, index, base).value_or(0.0),
+                double(std::numeric_limits<std::int32_t>::min()),
+                double(std::numeric_limits<std::int32_t>::max())));
+        };
+        ESM4::NativeDetectionInput input{};
+        input.mDistance = distance;
+        input.mLineOfSight = getLOS(observer, target);
+        input.mObserverSneak = ESM4::effectiveCombatSkill(value(observerKey, 31), value(observerKey, 7), physical);
+        input.mTargetSneak = ESM4::effectiveCombatSkill(value(targetKey, 31), value(targetKey, 7), physical);
+        const auto& observerStats = mutableObserver.getClass().getCreatureStats(mutableObserver);
+        const auto& targetStats = mutableTarget.getClass().getCreatureStats(mutableTarget);
+        const auto& movement = mutableTarget.getClass().getMovementSettings(mutableTarget);
+        input.mTargetSneaking = targetStats.getStance(CreatureStats::Stance_Sneak) && !(mWorld.mPhysics && mWorld.isSwimming(target));
+        // CharacterController consumes and clears mPosition before this query
+        // in ordinary actor processing. Keep its completed movement observable.
+        input.mTargetMoving = movement.mIsMoving
+            || std::hypot(movement.mPosition[0], movement.mPosition[1]) > 0.f;
+        input.mTargetRunning = input.mTargetMoving && targetStats.getStance(CreatureStats::Stance_Run);
+        input.mTargetAttacking = targetStats.getAttackingOrSpell();
+        input.mTargetInCombat = mWorld.isOblivionInCombat(targetKey).value_or(false);
+        input.mObserverUnderwater = mWorld.mPhysics && observer.isInCell() && mWorld.isUnderwater(observer, .75f);
+        if (const auto* current = state(observerKey))
+            input.mObserverSleeping = current->mPackageType == ESM4::AIPackageType::Sleep
+                && (current->mPhase == ESM4::PackagePhase::Act || current->mPhase == ESM4::PackagePhase::Wait);
+        input.mExterior = target.isInCell() && target.getCell()->isExterior();
+        const auto magnitude = [](const CreatureStats& stats, ESM::RefId effect) {
+            return std::clamp(stats.getMagicEffects().getOrDefault(effect).getMagnitude(), 0.f, 100.f);
+        };
+        input.mObserverBlindness = magnitude(observerStats, ESM::MagicEffect::Blind);
+        input.mTargetChameleon = magnitude(targetStats, ESM::MagicEffect::Chameleon);
+        if (target.getClass().hasInventoryStore(target))
+        {
+            auto& inventory = mutableTarget.getClass().getInventoryStore(mutableTarget);
+            const auto boots = inventory.getSlot(MWWorld::InventoryStore::Slot_Boots);
+            if (boots != inventory.end())
+                input.mBootWeight = std::max(0.f, boots->getClass().getWeight(*boots));
+        }
+        const auto noise = ESM4::sneakDetectionNoise(value(targetKey, 31, true), input.mTargetSneaking,
+            input.mBootWeight, input.mTargetMoving, input.mTargetRunning, ESM4::buildCombatMasterySettings(settings));
+        input.mBootWeight = noise.mBootWeight;
+        input.mTargetMoving = noise.mMoving;
+        input.mTargetRunning = noise.mRunning;
+
+        // Approximate illumination on a 0..100 scale from ambient and nearby
+        // unoccluded point lights. This is not the original renderer's light
+        // probe: flicker, spot cones, sunlight and night-eye remain separate gaps.
+        const auto luminance = [](std::uint32_t colour) {
+            return (0.2126 * (colour & 255u) + 0.7152 * ((colour >> 8) & 255u)
+                + 0.0722 * ((colour >> 16) & 255u)) / 255.0;
+        };
+        double illumination = 0;
+        if (target.isInCell())
+        {
+            illumination = luminance(target.getCell()->getCell()->getMood().mAmbiantColor);
+            const auto sample = targetPosition + osg::Vec3f(0, 0, 32);
+            target.getCell()->forEachConst([&](const MWWorld::ConstPtr& light) {
+                if (light.getType() != ESM::REC_LIGH4 || !light.getRefData().isEnabled()
+                    || light.getCellRef().getCount() <= 0)
+                    return true;
+                const auto& data = light.get<ESM4::Light>()->mBase->mData;
+                if (data.radius == 0 || (data.flags & ESM4::Light::OffDefault))
+                    return true;
+                const auto position = light.getRefData().getPosition().asVec3();
+                const double attenuation = std::max(0.0, 1.0 - (position - sample).length() / double(data.radius));
+                if (attenuation <= 0 || (mWorld.mPhysics && mWorld.mPhysics->castRay(sample, position,
+                        {mutableTarget}, {}, MWPhysics::CollisionType_World | MWPhysics::CollisionType_Door).mHit))
+                    return true;
+                illumination += (data.flags & ESM4::Light::Negative ? -1 : 1)
+                    * luminance(data.colour) * attenuation;
+                return true;
+            });
+        }
+        input.mTargetLight = std::clamp(illumination, 0.0, 1.0) * 100;
+        const bool concealed = magnitude(targetStats, ESM::MagicEffect::Invisibility) > 0
+            || input.mTargetChameleon >= 100;
+        const auto awareness = concealed ? -100
+            : ESM4::nativeDetectionAwareness(input, ESM4::buildNativeDetectionSettings(settings));
+        // Preserve the existing saved/public normalized vector contract. The
+        // native signed history and hearing-only detection need a schema/API
+        // migration; visible combat acquisition uses positive awareness now.
+        const ESM4::DetectionResult result{std::clamp(50.0 + awareness, 0.0, 100.0),
+            awareness > 0 && input.mLineOfSight && std::abs(angle) <= osg::PI_2, true};
         const std::uint64_t evaluationGeneration = mNextEvaluationGeneration++;
         if (mNextEvaluationGeneration == 0)
             mNextEvaluationGeneration = 1;
-        input.mRandomSample = static_cast<double>(
-            stableChoice(observerKey, stableChoice(targetKey, evaluationGeneration)) % 10000)
-            / 10000.0;
-        const ESM4::DetectionResult result = ESM4::calculateDetection(input);
         if (!observerKey.isNull() && !targetKey.isNull() && observerKey != targetKey && result.mValid)
             mDetectionVectors[{ observerKey, targetKey }] = {
                 observerKey, targetKey, result.mLevel, result.mDetected, input.mLineOfSight };
@@ -7210,8 +7251,9 @@ namespace MWMechanics
                          << jsonQuote(targetKey.serialize()) << ",\"score\":"
                          << std::setprecision(9) << result.mLevel << ",\"detected\":"
                          << (result.mDetected ? "true" : "false") << ",\"line_of_sight\":"
-                         << (input.mLineOfSight ? "true" : "false") << ",\"random_sample\":"
-                         << input.mRandomSample << ",\"generation\":" << evaluationGeneration << "}\n";
+                         << (input.mLineOfSight ? "true" : "false") << ",\"awareness\":"
+                         << awareness << ",\"moving\":" << (input.mTargetMoving ? "true" : "false")
+                         << ",\"target_light\":" << input.mTargetLight << ",\"generation\":" << evaluationGeneration << "}\n";
             mEventStream.flush();
         }
         return result;

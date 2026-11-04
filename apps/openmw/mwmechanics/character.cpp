@@ -3868,6 +3868,8 @@ namespace MWMechanics
         MWBase::World* world = MWBase::Environment::get().getWorld();
         MWBase::SoundManager* sndMgr = MWBase::Environment::get().getSoundManager();
         const MWWorld::Class& cls = mPtr.getClass();
+        if (cls.isActor())
+            cls.getMovementSettings(mPtr).mIsMoving = false;
         osg::Vec3f movement(0.f, 0.f, 0.f);
         bool isMoving = false;
         float speed = 0.f;
@@ -4476,6 +4478,7 @@ namespace MWMechanics
 
             movement.x() *= scale;
             movement.y() *= scale;
+            cls.getMovementSettings(mPtr).mIsMoving = movement.x() != 0.f || movement.y() != 0.f;
             world->queueMovement(mPtr, movement);
         }
 

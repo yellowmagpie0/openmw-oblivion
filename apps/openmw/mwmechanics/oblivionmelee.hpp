@@ -55,8 +55,12 @@ namespace MWMechanics
 
     // Directed combat owns controls while engaged. Ordinary styles approach
     // through native navigation; S4's deterministic profiles remain stationary.
-    // Tactical block/dodge/power choice and autonomous acquisition remain S7.
+    // Tactical block/dodge/power choice and general target selection remain S7.
     bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration = 0.f);
+
+    // Ordinary active actors can acquire a detected hostile Player without a
+    // script StartCombat. Existing directed controllers retain their targets.
+    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor);
 
     struct OblivionOrdinaryContactResult
     {

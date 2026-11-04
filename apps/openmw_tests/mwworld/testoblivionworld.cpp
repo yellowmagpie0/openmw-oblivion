@@ -37092,6 +37092,110 @@ TEST(OblivionWorldTest, StartCombatCreatesDirectedPackagesAndRetainsHiddenPlayer
     EXPECT_EQ(combat.combatRandomState(), state.mCombatRngState);
 }
 
+TEST(OblivionWorldTest, AutonomousPlayerCombatRequiresHostilityResidenceAndDetection)
+{
+    for (const bool creature : {false, true})
+    {
+        SCOPED_TRACE(creature);
+        NativeWeaponFactoryFixture fixture(false, 1, false, false, false, true, creature);
+        auto& world = fixture.mWorld;
+        setupCommonHitPlayer(fixture);
+        prepareNativeCombatCommandPlayer(fixture);
+        world.getPlayer().setCell(fixture.mActor.getCell());
+        const auto player = world.getPlayerPtr();
+        const auto actor = fixture.mActor;
+        world.getWorldModel().registerPtr(actor);
+        ASSERT_TRUE(world.activateOblivionActor(actor));
+        auto& combat = *world.getOblivionCombatService();
+        const auto key = actor.getCellRef().getFormKey();
+        const auto playerKey = ESM::FormKey::dynamic("player", 1);
+        // The equipment fixture starts with an older migrated Player ledger.
+        // Ordinary new-game Player construction owns these native counters.
+        auto playerValues = *combat.findActorValues(playerKey);
+        playerValues.mReputation.emplace();
+        playerValues.mBounty.emplace();
+        combat.publishPlayerValues(world.getPlayer(), playerValues,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        ASSERT_TRUE(world.getOblivionDisposition(key, playerKey).has_value());
+        const std::array<MWWorld::Ptr, 1> residents{actor};
+        ESM4::GameSetting fightBase{};
+        fightBase.mId = {0xf001, 0}; fightBase.mEditorId = "fFightAggrBase";
+        fightBase.mData = -55.f; // Installed Oblivion.esm override.
+        world.getStore().getWritable<ESM4::GameSetting>().insertStatic(
+            fightBase, ESM::FormKey::content("headless.esm", 0xf001));
+        combat.setNonPlayerBaseValue(actor, 4, 20, residents);
+        combat.setNonPlayerBaseValue(actor, 33, 0, residents);
+        // Make this an easily perceived target even in the headless cell's
+        // dark default lighting. Detection itself has separate formula tests.
+        for (const std::uint8_t value : {3, 7, 31})
+            combat.setNonPlayerBaseValue(actor, value, 100, residents);
+        auto position = actor.getRefData().getPosition();
+        position.rot[0] = position.rot[1] = position.rot[2] = 0;
+        actor.getRefData().setPosition(position);
+        position.pos[1] += 50;
+        player.getRefData().setPosition(position);
+        osg::ref_ptr<SceneUtil::PositionAttitudeTransform> node = new SceneUtil::PositionAttitudeTransform;
+        node->setPosition(position.asVec3());
+        player.getRefData().setBaseNode(node);
+        fixture.mPhysics->addActor(actor, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+        fixture.mPhysics->addActor(player, VFS::Path::toNormalized("meshes/factory-weapon.nif"));
+        const auto acquire = [&] { return MWMechanics::acquireOblivionPlayerCombat(world, actor); };
+        EXPECT_FALSE(acquire()); // Zero aggression never starts a fight.
+        combat.setNonPlayerBaseValue(actor, 33, 5, residents);
+        EXPECT_FALSE(acquire()); // The scared tutorial rat's nonpositive score.
+        combat.setNonPlayerBaseValue(actor, 33, 70, residents);
+        auto distant = position; distant.pos[1] += 100000;
+        player.getRefData().setPosition(distant);
+        EXPECT_FALSE(acquire());
+        player.getRefData().setPosition(position);
+        player.getRefData().disable();
+        EXPECT_FALSE(acquire());
+        player.getRefData().enable();
+        player.getRefData().setBaseNode(nullptr);
+        EXPECT_FALSE(acquire()); // No active/rendered target, hence no LOS.
+        player.getRefData().setBaseNode(node);
+        auto& ai = *world.getOblivionAiService();
+        ai.setRestrained(actor, true);
+        EXPECT_FALSE(acquire());
+        ai.setRestrained(actor, false);
+        ASSERT_FALSE(world.hasOblivionCombatController(key).value());
+        ASSERT_TRUE(world.getLOS(actor, player));
+        // A high Sneak skill does not conceal a standing target. Crouching
+        // does, even with otherwise identical geometry and actor values.
+        combat.setPlayerBaseValue(world.getPlayer(), 31, 100,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        auto& playerStats = player.getClass().getCreatureStats(player);
+        playerStats.setMovementFlag(MWMechanics::CreatureStats::Flag_Sneak, true);
+        const auto sneaking = ai.detection(actor, player);
+        EXPECT_FALSE(sneaking.mDetected);
+        EXPECT_FALSE(acquire());
+        playerStats.setMovementFlag(MWMechanics::CreatureStats::Flag_Sneak, false);
+        const auto standing = ai.detection(actor, player);
+        EXPECT_TRUE(standing.mDetected);
+        EXPECT_GT(standing.mLevel, sneaking.mLevel);
+        // The controller has already consumed mPosition when other actors
+        // evaluate detection. Its retained movement must still make noise.
+        auto& playerMovement = player.getClass().getMovementSettings(player);
+        combat.setNonPlayerBaseValue(actor, 31, 20, residents);
+        combat.setNonPlayerBaseValue(actor, 7, 50, residents);
+        EXPECT_FALSE(ai.detection(actor, player).mDetected);
+        playerMovement.mIsMoving = true;
+        EXPECT_TRUE(ai.detection(actor, player).mDetected);
+        playerMovement.mIsMoving = false;
+        combat.setNonPlayerBaseValue(actor, 31, 100, residents);
+        combat.setNonPlayerBaseValue(actor, 7, 100, residents);
+        ASSERT_TRUE(acquire());
+        EXPECT_EQ(world.getOblivionCombatTarget(key), std::optional{playerKey});
+        EXPECT_TRUE(combat.isInCombatWith(key, playerKey));
+        const auto before = world.captureOblivionRuntimeState();
+        EXPECT_FALSE(acquire()); // Never re-add/prioritize an existing target.
+        const auto after = world.captureOblivionRuntimeState();
+        EXPECT_EQ(after.mCombatControllers, before.mCombatControllers);
+        EXPECT_EQ(after.mCombatRngState, before.mCombatRngState);
+        EXPECT_EQ(after.mNativeCombatEngagements, before.mNativeCombatEngagements);
+    }
+}
+
 TEST(OblivionWorldTest, CreatureScriptStartConsumesEmptySelectionDrawsWithoutNpcConstructorDraw)
 {
     NativeWorldFixture fixture;

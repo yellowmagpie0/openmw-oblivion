@@ -1,6 +1,81 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — zombie defeated and freshly reloaded, 2026-11-04
+## Current checkpoint — ordinary rat acquisition verified, 2026-11-04
+
+Full escape remains incomplete: remaining solo dungeon/goblins, reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload, and Player death/reload. Current chunk repairs ordinary hostile Player
+acquisition and perception, then verifies the northern rat encounter.
+
+The original northern passage was traversed with ordinary inputs in
+`substructure-north-passage-02` (previous binary; original provenance retained).
+Its save is SHA256
+`4ce25dc6822e2d83fd8dc301e21888702bb523f8db22009b69c2f0da3c2670fc`.
+Original CGRat01 actors038171/038172/038173 have Aggression70, Confidence100
+and no script. `player-acquisition-content-audit.json` records the independent
+master audit. Positive native fight score plus detection now admits resident
+hostile actors through the existing StartCombat/controller authority. Existing
+controllers are preserved; sleeping/restrained/dead/inactive actors are excluded.
+Original 524AD4/5EA187 positive-score branches reuse the reviewed546190 rule;
+this is not full multi-target/friend/ally acquisition policy.
+
+The legacy normalized detector could not perceive the nearby ordinary rat's
+Player target. The existing detector now uses native awareness and Sneak noise
+mastery with winning GMSTs. Native posture, skills, boots, effects and movement
+feed the calculation; approximate ambient/point-light illumination and the
+existing normalized saved score remain explicit limitations. See the signed
+native detection section in M15-NATIVE-RULE-PROVENANCE.md. CharacterController
+clears per-frame movement inputs before detection, so Movement now retains a
+frame-derived moving flag. This is rebuilt on updates, not new saved state.
+
+Validation under `build/oblivion-compat/sewer-escape/`:
+- `player-acquisition-focused-04`: three admission/melee tests pass; earlier
+  fixture failures and intentionally stopped build remain retained.
+- `native-perception-focused-01`: failed missing GMST definition include.
+  `-02`: four tests pass; `native-perception-engine-01`: all2167 pass.
+- `substructure-rats-admission-01`: old detector never admits the visible rat.
+  `-02`: native stationary awareness=-18 in the dark passage, no attack.
+  `-03`: ordinary walking reaches51.66 units but cleared movement inputs still
+  omit noise; no attack. `northern-rat-perception-failures.json` summarizes both.
+- `native-perception-focused-03`: four tests pass, now including retained
+  movement noise and standing versus sneaking. Runtime rebuilt.
+  `native-perception-engine-02`: all2167 cases pass, exact inventory, no skips.
+  Tested source fingerprint:
+  `7919253b417c17ec6dbfa1994c1d134114c0a04b4fd00978d4794d4fb69baa2f`.
+  No new sanitizer claim.
+- `substructure-rats-admission-04`: PASSES unchanged ordinary walking course.
+  Rat038173 awareness changes-18->3 with moving=true, detects Player, initiates
+  combat and lands1.88-damage hits. Normal F5 saves Player health71.12, native
+  target/controller and engagement. Screenshot inspected; no forbidden or
+  unreviewed errors. `encounter-audit.json` verifies native save state.
+  Runtime SHA256:
+  `9b8ba0c0ff592a76925fb475b3cb5f6e08d6ff7b0d6c96dd4805848b28618d8a`.
+
+Current input save:
+`build/oblivion-compat/sewer-escape/substructure-rats-admission-04/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `f2d46e27ccdc464aef2c0e8e599aefa12deb59cea42b8936388a6ee3a764ace5`.
+Player(-153,3412,-259), first person, level camera, Club and armor equipped.
+Fresh-process `substructure-northern-rat-combat-01` and `-02` both resume
+original rat attacks (the second rat joins too), but FAIL before Player swings:
+the fixed85-unit approach gate is never reached. Startup-frame settling alone
+did not fix this course. These are ongoing-combat reload evidence, not rat-kill
+acceptance. No diagnostic continuation save is used from either failed run.
+`substructure-northern-rat-combat-03` is running from the same admission save,
+using stationary ordinary Club attacks to check actual weapon reach without
+the unproved approach gate. Poll before launching another game.
+All build helpers are terminal. The acquisition/perception implementation is
+verified for this ordinary encounter; rat kills and subsequent traversal are
+still open. Next: inspect the fight, verify death/reload, then continue west
+toward the original Natural Caverns exit0381b8. Use the raw pathgrid route; the earlier
+simplified route cut a pillar near(-806,4498). Backtrack through node121
+(-776,4423) before node122(-899,4545) if reproducing that failed continuation.
+
+Editable passing manifests: `oblivion_sewer_substructure_north_passage.json`
+and `oblivion_sewer_substructure_rat_admission.json` under
+scripts/data/oblivion_compat. The admission manifest expects the northern save;
+it does not substitute for a continuous prison-to-exit acceptance run.
+
+## History — zombie defeated and freshly reloaded, 2026-11-04
 
 Full escape is still incomplete. Remaining acceptance: solo dungeon beyond the
 zombie room, reunion, Emperor/Amulet, character choices, actual MQ01 stage88 exit,

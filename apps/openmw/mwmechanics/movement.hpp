@@ -18,6 +18,9 @@ namespace MWMechanics
         // These fields can not be private fields in CharacterController, because Actor::getCurrentSpeed uses it.
         float mSpeedFactor;
         bool mIsStrafing;
+        // Completed controller update, retained after mPosition is consumed.
+        // Derived presentation/movement state, rebuilt each frame (not saved).
+        bool mIsMoving = false;
 
         Movement()
         {

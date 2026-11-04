@@ -1016,10 +1016,23 @@ subroutine. Source files `detection-rule.txt`, `detection-rule-caller.txt` and
 
 `nativeDetectionAwareness` and `sneakDetectionNoise` are scalar subroutines in
 the **existing** detection component, with typed settings from winning GMSTs.
-The legacy normalized public adapter remains active until its caller, state
-history and save schema are migrated together; the new helpers are not a
-second actor-pair detector or gameplay acceptance. Current runtime-state
-validation also enforces [0,100] and requires deliberate version migration.
+The sewer-escape perception integration (2026-11-04) now calls these helpers
+from the existing actor-pair detector. It reads native current/base Sneak and
+Luck, actual target posture/movement/boots, combat/attack state, observer sleep
+and immersion, and projected magic effects. Standing targets no longer receive
+Sneak concealment. Winning GMSTs supply the formula and mastery settings.
+
+This remains an approximate visible-awareness adapter: target-cell ambient
+luminance plus unoccluded placed point lights estimates a 0..100 light amount.
+It does not reproduce the original renderer light probe, sunlight, carried
+lights, flicker, spot cones or night-eye. Detection requires positive awareness,
+LOS and the existing forward half-plane; there is no extra random roll.
+The public/saved score remains clamp(50 + awareness, 0, 100), preserving the
+existing vector contract and restore validation. Signed GetDetectionLevel,
+hearing-only detection and native awareness history/state transitions still
+require deliberate API/schema work. This is one detector with a bounded
+adapter, not full native stealth acceptance. Runtime evidence and retained
+failures are recorded in SEWER-ESCAPE-HANDOFF.md.
 
 Original-15 GMST-110–124 captures were opened and inspected: 15 native factors,
 including installed differences from compiled defaults. A supplementary local

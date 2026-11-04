@@ -1796,6 +1796,8 @@ namespace MWMechanics
                     {
                         try
                         {
+                            if (inProcessingRange && engageCombatTimerStatus == Misc::TimerStatus::Elapsed)
+                                acquireOblivionPlayerCombat(*world, actorPtr);
                             if (!updateOblivionMeleeAi(*world, actorPtr, inProcessingRange, duration))
                                 oblivionAi->update(actorPtr, duration, inProcessingRange);
                         }

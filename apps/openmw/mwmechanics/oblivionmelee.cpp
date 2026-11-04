@@ -328,6 +328,61 @@ namespace MWMechanics
         return result && *result == target;
     }
 
+    bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
+            ? dynamic_cast<MWWorld::World*>(&world) : nullptr;
+        auto* combat = nativeWorld ? nativeWorld->getOblivionCombatService() : nullptr;
+        auto* ai = nativeWorld ? nativeWorld->getOblivionAiService() : nullptr;
+        if (!combat || !ai || actor.isEmpty()
+            || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
+            return false;
+        const auto player = world.getPlayerPtr();
+        if (player.isEmpty() || actor == player || !actor.isInCell() || !player.isInCell()
+            || !actor.getRefData().isEnabled() || !player.getRefData().isEnabled()
+            || (actor.getCell() != player.getCell()
+                && (!actor.getCell()->isExterior() || !player.getCell()->isExterior())))
+            return false;
+        const auto key = actor.getCellRef().getFormKey();
+        if (nativeWorld->hasOblivionCombatController(key).value_or(false))
+            return false;
+        const auto* values = combat->findActorValues(key);
+        const auto* life = combat->findActorLife(key);
+        const auto* playerLife = combat->findActorLife(ESM::FormKey::dynamic("player", 1));
+        if (!values || values->mProcess != ESM4::ActorValueProcess::Active
+            || !life || life->mPhase != ESM4::ActorLifePhase::Alive
+            || !playerLife || playerLife->mPhase != ESM4::ActorLifePhase::Alive
+            || ai->isRestrained(actor) || ai->isRidingHorse(actor)
+            || oblivionParalyzed(world, actor) || oblivionKnockedState(world, actor) != 0)
+            return false;
+        if (const auto* state = ai->state(actor); state && state->mPackageType == ESM4::AIPackageType::Sleep
+            && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
+            return false;
+        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
+        if (aggression <= 0)
+            return false;
+        const auto disposition = nativeWorld->getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
+        if (!disposition)
+            return false;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const auto distance = (actor.getRefData().getPosition().asVec3()
+            - player.getRefData().getPosition().asVec3()).length();
+        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
+        // This ordinary Player encounter has no ally incident/friend term.
+        // Use the existing detector; exact native scan cadence and general
+        // multi-target/ally selection are separate from this admission path.
+        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
+            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
+        if (ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings)) <= 0
+            || !ai->detection(actor, player).mDetected)
+            return false;
+        return nativeWorld->executeOblivionStartCombat(actor, player);
+    }
+
     bool updateOblivionMeleeAi(MWBase::World& world, const MWWorld::Ptr& actor, bool enabled, float duration)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
