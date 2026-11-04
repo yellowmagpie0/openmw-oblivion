@@ -1,5 +1,35 @@
 # Full sewer escape — current handoff
 
+## Current chunk — restore initial AI selection, 2026-11-04
+
+Target remains the complete original prison-to-outdoors course, including loot,
+equipment, reunion, Emperor/Amulet, character choices, exit and fresh reload.
+
+The fresh rat replay exposed lost pending AI selection on restore. Both rats
+in `fresh-rats-01/rat-approach.omwsave` had null package/script package, source
+None, selection generation0 and phaseAct. Never-updated seeded actors had been
+saved before selection; restore discarded their transient pending flag.
+`prepareRestore` now reconstructs that flag for never-selected identities,
+including those already advanced into empty Act, without restarting selected
+packages. Binary-restore regression covers two content layouts, high/low
+processing and initial/legacy-empty phases (eight variants).
+
+`initial-selection-red-01` fails as expected on the original code.
+`initial-selection-focused-01` retains a test timing failure: high-process
+promotion first reconciles the saved abstract position. The corrected test
+allows that step; `initial-selection-focused-02` passes all6 tutorial action
+cases and rebuilds the game. `initial-selection-engine-01` passes all2,161
+engine cases with exact inventory, no failures/skips. Tested fingerprint:
+`afb2fb389075cf86eaeae63b72587b55c31ed28f13cf153266a5ae71c7b6678e`. No new sanitizer claim.
+
+`fresh-rats-selection-01` is currently running (launcher session84733) from
+`fresh-victory-02/departure-later.omwsave`, using ignored editable manifest
+`fresh-rats-selection-prepared.json`. Both original rats select PACK07303d and
+advance Select→Resolve→Path in the actual runtime. Combat/wall acceptance is
+still pending; poll this existing process before launching another.
+Next: finish rat combat and wall passage, then loot the correctly dead Goblin
+key corpse and continue the solo dungeon. Earlier evidence follows below.
+
 ## Current checkpoint — fresh startup repaired, 2026-11-04
 
 Initial bound-equipment publication now waits until the Player has a cell.
@@ -120,12 +150,28 @@ Original key corpse remains Dead, Player health80. Quicksave SHA:
 shows Renault's body and an assassin in the actual room; it is not victory
 proof. Editable passing source: `oblivion_sewer_fresh_ambush_death.json`.
 
-Next: run prepared `fresh-victory-prepared.json` from this fresh24 save. It waits
-for the original26 victory, saves, moves Player80 units with normal W+Shift to
-clear post-fight routing, then waits for original30 escort departure and saves.
-This continuation is not yet accepted. All entry/death processes are terminal.
-Full fresh ambush victory, wall traversal and corpse loot remain open, followed
-by solo dungeon, reunion, Emperor sequence, choices, exit and persistence.
+`fresh-victory-01` fails preflight only: unsupported keys_up action; corrected
+to separate key_up events before the next run. `fresh-victory-02` is RUNNING.
+Actual guard combat kills all four assassins and reaches original26/27/28/29.
+`victory-checkpoint.omwsave` SHA:
+`022f40a8d9d30acf5083236b4e561238212d300eca483ea9399b84db36a9007b`.
+`victory-audit.json` verifies five dead actors (Renault plus assassins), guard
+killer identities, cleared assassin bound owners, Player health80 and the
+original key corpse still Dead. The victory capture was inspected. Normal
+W+Shift then moves Player80 units; controls are released as recorded.
+
+A documented ordinary F5 retains `departure-checkpoint.omwsave` at29 (SHA
+`cb43c40b8e721202b2fcb2326a8907d4eff133cbfebe9a9becc389a67ee281e9`). `departure-audit.json` shows guards
+near y3400 and Emperor near y3096, advancing toward their cell transition;
+Player(48.40,2525.51,-703) is out of their route. The run still waits for30;
+this is not full-course acceptance. Poll existing process before restarting.
+Prepared next: ignored `fresh-rats-prepared.json`, read-only rat-distance gates
+and normal movement/punches from the expected north-facing departure save.
+It is unrun. Its expanded scope permits the original wall's MQ01 stage24;
+the older already-collapsed-wall rat course forbade that stage.
+
+Full fresh escort departure, wall traversal and corpse loot remain open,
+followed by solo dungeon, reunion, Emperor sequence, choices, exit and persistence.
 
 ## Previous checkpoint — authored corpse initialization, 2026-11-04
 

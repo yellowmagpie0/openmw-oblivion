@@ -724,7 +724,7 @@ namespace
         TestingOpenMW::NativeWorldFixture mFixture;
         MWWorld::Ptr mActor, mSwitch;
         explicit SwitchFixture(bool shifted = false, bool enableParents = false,
-            const std::string& extraRecords = {}, unsigned extraCount = 0)
+            const std::string& extraRecords = {}, unsigned extraCount = 0, bool selectPackage = true)
             : mFixture(shifted, false, false, {}, {}, switchRecords(enableParents) + extraRecords,
                 (enableParents ? 8 : 6) + extraCount)
         {
@@ -770,6 +770,7 @@ namespace
             world.getWorldModel().registerPtr(mActor);
             world.getWorldModel().registerPtr(mSwitch);
             if (!world.activateOblivionActor(mActor)) throw std::runtime_error("cannot activate switch user");
+            if (!selectPackage) return;
             auto& ai = *world.getOblivionAiService();
             if (!ai.addScriptPackage(mActor, key(0xb03))) throw std::runtime_error("missing switch package");
             auto state = capture();
@@ -820,6 +821,37 @@ TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterItera
     ai.restore(completed);
     ai.commitPendingTransitions();
     EXPECT_EQ(f.calls(), 1);
+}
+
+TEST(OblivionTutorialAction, RestoreResumesNeverSelectedActors)
+{
+    for (bool shifted : {false, true})
+        for (bool highProcess : {false, true})
+            for (bool legacyEmptyAction : {false, true})
+            {
+                SCOPED_TRACE(::testing::Message() << shifted << ":" << highProcess << ":" << legacyEmptyAction);
+                SwitchFixture f(shifted, false, {}, 0, false);
+                auto& world = f.mFixture.mWorld;
+                auto npc = *world.getStore().search<ESM4::Npc>(key(0x800));
+                npc.mAIPackageKeys = {key(0xb03)};
+                world.getStore().getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+                auto& ai = *world.getOblivionAiService();
+                auto saved = f.capture();
+                auto actor = std::ranges::find(saved.mActorAi, key(0xa00), &ESM4::RuntimeActorAiState::mActor);
+                ASSERT_NE(actor, saved.mActorAi.end());
+                ASSERT_TRUE(actor->mPackage.isNull());
+                ASSERT_EQ(actor->mSelectionGeneration, 0u);
+                ASSERT_EQ(actor->mPhase, ESM4::PackagePhase::Select);
+                // Older restores advanced an empty initial selection into Act.
+                if (legacyEmptyAction) actor->mPhase = ESM4::PackagePhase::Act;
+                ai.restore(ESM4::RuntimeState::deserializeBinary(saved.serializeBinary()));
+                // Promotion may first reconcile the saved low-process position.
+                for (int step = 0; step < 2 && ai.state(f.mActor)->mPackage.isNull(); ++step)
+                    ai.update(f.mActor, 1.f / 30.f, highProcess);
+                ASSERT_EQ(ai.state(f.mActor)->mPackage, key(0xb03));
+                EXPECT_EQ(ai.state(f.mActor)->mSource, ESM4::PackageSource::Base);
+                EXPECT_GT(ai.state(f.mActor)->mSelectionGeneration, 0u);
+            }
 }
 
 TEST(OblivionTutorialAction, WaitingWanderReevaluatesHigherPriorityConditionalPackage)

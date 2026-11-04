@@ -7495,6 +7495,13 @@ namespace MWMechanics
                 throw std::invalid_argument("TES4 restored AI package type disagrees with winning PACK");
             LiveActor live;
             live.mState = saved;
+            // Actors saved before their first update still owe an initial
+            // selection. The transient flag is not serialized; recover it
+            // from the untouched selection identity, including older saves
+            // where an empty package was incorrectly advanced into Act.
+            live.mNeedsSelection = saved.mSelectionGeneration == 0
+                && saved.mSource == ESM4::PackageSource::None
+                && saved.mPackage.isNull() && saved.mScriptPackage.isNull();
             if (!saved.mScriptPackage.isNull())
                 live.mScriptPackage = packageCandidate(saved.mScriptPackage);
             live.mSelectedWindow = saved.mScheduleWindow;
