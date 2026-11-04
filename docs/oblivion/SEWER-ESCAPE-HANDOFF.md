@@ -1,5 +1,59 @@
 # Full sewer escape — current handoff
 
+## Current checkpoint — native potion effect data, 2026-11-04
+
+Target: the full original prison-to-outdoors course with normal loot/equipment,
+combat, reunion, Emperor/Amulet, character choices, actual exit and fresh outdoor
+reload. Later solo encounters, story/reunion, exit and death/reload remain open.
+This checkpoint supersedes the running-process notes in the history below.
+
+The prior `fresh-key-return-01` completed; `return-audit.json` verifies return to
+CELL022ff6 and retention of all13 wall body identities. Two fragments were
+already below the level before the revisit; this does not prove all bodies
+settle correctly. `substructure-rat-direct-01/combat-audit.json` verifies the
+first Substructure rat038819 killed by Player with the equipped Club, whose
+condition is68.74. `substructure-first-chest-01/loot-audit.json` verifies chest
+049352 emptied and all8 authored item types received, including armor, bow,
+arrows, axe and healing potion. Existing chest activation transfers the contents;
+this is not evidence of a full container GUI. Armor has not yet been equipped.
+Rat/Goblin corpse presentation gaps remain recorded alongside earlier evidence.
+
+Next playable input save:
+`build/oblivion-compat/sewer-escape/substructure-first-chest-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `6b0d8a60d2d448b20017f63e05afcd02ecf76c1ca9e2213b07bd32c1d3f62b2b`.
+Player health53/80; both collected potions remain count1.
+`substructure-healing-01` is terminal failed: ordinary inventory use does not
+consume or heal. Actor::consume rejects native magic. The ALCH loader also
+formerly discarded EFID/EFIT. This chunk retains ordered TES4 effects using the
+existing shared decoder, separates script-effect FULL from the potion name,
+and exposes effect fields in esmtool. It does not yet implement consumption.
+
+Independent source hash is
+`a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70`.
+Healing009310 authors REHE20, duration0, self, AV8; Sorcery00931a authors RESP50,
+duration0, self, AV9. `scripts/tes4_potion_audit.py` independently decodes raw
+EFIT and compares typed output. `potion-master-audit-01/verification.json` passes
+all253 original ALCH records/330 effects, with no missing/extra/different entries.
+This is content/loader evidence, not an original-executable magic-rule oracle.
+
+`potion-parser-focused-01` passes7 parser cases. The subsequent
+`potion-parser-integrated-01` passes the same7 normally and under ASan/UBSan
+(no leak check), and links the engine/tools, but its engine selection is empty:
+retain the overall failure. `potion-store-engine-01` passes the new potion
+master-remapping/override/deletion case; its35-test suite fails an existing
+PreparedInventoryReferences test missing WEAP class registration in isolation.
+`potion-engine-full-01` passes all2163 engine cases, exact inventory, no failures/skips,
+and rebuilds openmw/esmtool. Tested source fingerprint:
+`92a31f89bc0a052958997b84652f99e055bce21aed8a0bbddab1ad2b275e0572`. All helpers are terminal.
+
+Next: connect ordinary Actor::consume to native potion admission and resource
+restoration, validating all effects before item removal. Preserve native actor
+value/lifecycle ownership, reject unsupported effects without item loss, test
+single consumption and persistence, then retry the actual menu from the chest
+save. Continue armor and the original dungeon route afterward. Keep
+OPENMW_OBSCRIPT_REPORT unset in new courses: it writes the entire report every
+frame and caused severe slowdown. Read-only observers and normal F5 audits remain.
+
 ## Current checkpoint — equipped Club and keyed Substructure entry, 2026-11-04
 
 Target remains full original sewer escape through outdoor reload. Loot/equipment

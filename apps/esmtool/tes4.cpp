@@ -295,6 +295,13 @@ namespace EsmTool
                     }
                 }
             }
+            if constexpr (std::is_same_v<T, ESM4::Potion>)
+            {
+                for (const auto& effect : value.mEffects)
+                    std::cout << "\n  PotionEffect: code=" << effect.mId << " magnitude=" << effect.mMagnitude
+                              << " area=" << effect.mArea << " duration=" << effect.mDuration
+                              << " range=" << effect.mRange << " actorValue=" << effect.mActorValue;
+            }
             if constexpr (std::is_same_v<T, ESM4::Faction>)
             {
                 if (value.mFactionFlags)

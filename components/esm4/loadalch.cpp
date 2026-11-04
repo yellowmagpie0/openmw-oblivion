@@ -34,12 +34,29 @@
 
 void ESM4::Potion::load(ESM4::Reader& reader)
 {
+    *this = {};
+    const bool tes4 = !reader.hasFormVersion() && (reader.esmVersionF() == .8f || reader.esmVersionF() == 1.f);
+    RawRecord magic;
     mId = reader.getFormIdFromHeader();
     mFlags = reader.hdr().record.flags;
 
     while (reader.getSubRecordHeader())
     {
         const ESM4::SubRecordHeader& subHdr = reader.subRecordHeader();
+        // TES4 magic items share the spell effect wire layout. Keep FULL in
+        // sequence so a script-effect name cannot replace the potion name.
+        if (tes4 && (subHdr.typeId == ESM::fourCC("EFID") || subHdr.typeId == ESM::fourCC("EFIT")
+                || subHdr.typeId == ESM::fourCC("SCIT") || subHdr.typeId == ESM::fourCC("FULL")))
+        {
+            RawSubRecord sub;
+            sub.mType = subHdr.typeId;
+            sub.mData.resize(subHdr.dataSize);
+            if (!sub.mData.empty() && !reader.get(sub.mData.data(), sub.mData.size()))
+                reader.fail("ALCH has a truncated magic effect subrecord");
+            reader.recordCurrentSubRecordFormIds(std::span<const std::uint8_t>(sub.mData));
+            magic.mSubRecords.push_back(std::move(sub));
+            continue;
+        }
         switch (subHdr.typeId)
         {
             case ESM::fourCC("EDID"):
@@ -117,6 +134,11 @@ void ESM4::Potion::load(ESM4::Reader& reader)
             default:
                 throw std::runtime_error("ESM4::ALCH::load - Unknown subrecord " + ESM::printName(subHdr.typeId));
         }
+    }
+    if (tes4)
+    {
+        decodeMagicItemEffects(reader, magic, mEffects);
+        mFullName = std::move(magic.mFullName);
     }
 }
 

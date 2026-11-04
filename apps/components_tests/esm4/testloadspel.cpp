@@ -1,4 +1,5 @@
 #include <components/esm4/loadspel.hpp>
+#include <components/esm4/loadalch.hpp>
 #include <components/esm4/loadench.hpp>
 #include <components/esm4/weaponenchantment.hpp>
 #include <components/esm4/loadgmst.hpp>
@@ -424,4 +425,59 @@ TEST(ESM4WeaponEnchantment, ChargeAvailabilityPreservesInsufficientExtrasAndSpen
     EXPECT_THROW(ESM4::weaponEnchantmentCharge(5, -1, 5), std::invalid_argument);
     EXPECT_THROW(ESM4::weaponEnchantmentCharge(5, 20, -1), std::invalid_argument);
     EXPECT_THROW(ESM4::weaponEnchantmentCharge(std::numeric_limits<float>::quiet_NaN(), 20, 5), std::invalid_argument);
+}
+
+TEST(ESM4Potion, ReadsOrderedRestoreEffectsAndCompression)
+{
+    for (bool compressed : {false, true})
+    {
+        std::vector<std::uint8_t> payload;
+        sub(payload, "FULL", {'H', 'e', 'a', 'l', 0});
+        sub(payload, "EFID", {'R', 'E', 'H', 'E'});
+        auto health = effectInfo("REHE");
+        put(health, 4, 20); put(health, 8, 0); put(health, 12, 0); put(health, 20, 8);
+        sub(payload, "EFIT", health);
+        sub(payload, "EFID", {'R', 'E', 'S', 'P'});
+        auto magicka = effectInfo("RESP"); put(magicka, 4, 50);
+        sub(payload, "EFIT", magicka);
+        const auto potion = load<ESM4::Potion>(payload, compressed, 0, 1.f, "ALCH");
+        ASSERT_EQ(potion.mEffects.size(), 2u);
+        EXPECT_EQ(potion.mFullName, "Heal");
+        EXPECT_EQ(potion.mEffects[0].mId, ESM::fourCC("REHE"));
+        EXPECT_EQ(potion.mEffects[0].mMagnitude, 20u);
+        EXPECT_EQ(potion.mEffects[0].mDuration, 0u);
+        EXPECT_EQ(potion.mEffects[0].mActorValue, 8u);
+        EXPECT_EQ(potion.mEffects[1].mId, ESM::fourCC("RESP"));
+        EXPECT_EQ(potion.mEffects[1].mMagnitude, 50u);
+    }
+}
+
+TEST(ESM4Potion, RejectsUnpairedMismatchedAndTruncatedEffects)
+{
+    std::vector<std::uint8_t> payload;
+    sub(payload, "EFID", {'R', 'E', 'H', 'E'});
+    EXPECT_THROW(load<ESM4::Potion>(payload), std::runtime_error);
+    auto mismatch = payload;
+    sub(mismatch, "EFIT", effectInfo("RESP"));
+    EXPECT_THROW(load<ESM4::Potion>(mismatch), std::runtime_error);
+    auto truncated = payload;
+    sub(truncated, "EFIT", {1, 2, 3});
+    EXPECT_THROW(load<ESM4::Potion>(truncated), std::runtime_error);
+    sub(payload, "EFID", {'R', 'E', 'H', 'E'});
+    EXPECT_THROW(load<ESM4::Potion>(payload), std::runtime_error);
+}
+
+TEST(ESM4Potion, KeepsScriptEffectNameSeparateFromPotionName)
+{
+    std::vector<std::uint8_t> payload;
+    sub(payload, "FULL", {'P', 'o', 't', 'i', 'o', 'n', 0});
+    sub(payload, "EFID", {'S', 'E', 'F', 'F'});
+    sub(payload, "EFIT", effectInfo("SEFF"));
+    sub(payload, "SCIT", std::vector<std::uint8_t>(4));
+    sub(payload, "FULL", {'E', 'f', 'f', 'e', 'c', 't', 0});
+    const auto potion = load<ESM4::Potion>(payload);
+    EXPECT_EQ(potion.mFullName, "Potion");
+    ASSERT_EQ(potion.mEffects.size(), 1u);
+    ASSERT_TRUE(potion.mEffects[0].mScriptEffect);
+    EXPECT_EQ(potion.mEffects[0].mScriptEffect->mName, "Effect");
 }

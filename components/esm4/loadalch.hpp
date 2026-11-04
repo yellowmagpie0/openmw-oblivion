@@ -35,6 +35,7 @@
 #include <components/esm/path.hpp>
 
 #include "effect.hpp" // FormId, ScriptEffect
+#include "loadspel.hpp"
 
 namespace ESM4
 {
@@ -72,7 +73,8 @@ namespace ESM4
         ESM::FormId mDropSound;
 
         ESM::FormId mScriptId;
-        ScriptEffect mEffect;
+        ScriptEffect mEffect; // Legacy later-game layout.
+        std::vector<SpellEffect> mEffects; // Ordered TES4 effects; no execution policy.
 
         float mBoundRadius;
 
