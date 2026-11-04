@@ -1,6 +1,50 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — ordinary rat acquisition verified, 2026-11-04
+## Current checkpoint — northern rat defeated and freshly reloaded, 2026-11-04
+
+Full escape remains incomplete: remaining solo dungeon/goblins, reunion,
+Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
+reload and Player death/reload. Current playable continuation has cleared
+original rat038173 with normal Club attacks. Next is the western passage.
+
+Implementation commit `6698d97448` repairs ordinary hostile acquisition and
+movement-aware perception. Its four focused and all2167 engine checks pass;
+source/binary fingerprints and retained failures are in the history below.
+This checkpoint adds runtime evidence only; no new engine/sanitizer claim.
+
+`substructure-northern-rat-combat-03` PASSES from the untouched admission04
+save in a fresh process. Three ordinary Club hits kill rat038173; native save
+records Player killer. The eight-swing course continues with harmless misses
+after death; do not count them as hits. Player health65.48, Club condition63.70,
+both armor pieces retained. Screenshot and `encounter-audit.json` inspected.
+Earlier combat01/02 fail before swinging at an unnecessary85-unit approach
+gate; settling startup frames did not fix that route. Stationary defence works
+at the rat's actual attack distance. No engine reach change was needed.
+
+`substructure-northern-rat-reload-01` PASSES fresh load and normal F5.
+`encounter-restart-audit.json` verifies unchanged native rat values/death/killer,
+whole Player inventory/equipment/condition and health, with no residual combat
+engagements. Screenshot inspected. Both runs have no forbidden/unreviewed
+errors. The rat still appears upright after death/reload: this known creature
+corpse-presentation gap remains open; native death is not a visual-pose claim.
+
+Editable passing manifests: `oblivion_sewer_substructure_northern_rat_combat.json`
+and `oblivion_sewer_substructure_northern_rat_reload.json` in
+scripts/data/oblivion_compat. Admission04 is the combat input; combat03 is the
+reload input. These are original-course continuations, not a full escape pass.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/substructure-northern-rat-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `8f582ff97f7a8deffee8c1c63150fc3c73c6f8fd72b1af3806d5a27fe4ed2ae8`.
+Player(-153,3412,-259), first person, level camera, health65.48.
+All runtime/build processes are terminal. Next: ordinary western traversal
+using raw pathgrid nodes1..9 in `substructure-north-to-exit-path.json`, prepared
+as `substructure-west-corners-prepared.json`. Avoid the earlier shortcut through
+the pillar. Rats038172 (106,4274) and038171 (-856,4572) remain alive and can now
+attack. Deal with encounters before continuing toward exit0381b8 to Natural
+Caverns; do not bypass them by disabling AI or injecting progression.
+
+## History — ordinary rat acquisition verified, 2026-11-04
 
 Full escape remains incomplete: remaining solo dungeon/goblins, reunion,
 Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh
