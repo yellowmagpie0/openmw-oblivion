@@ -27,6 +27,41 @@ Alive state and cannot establish corrected corpse-loot acceptance. Full loot/
 equip, reunion, Emperor, choices, exterior and persistence requirements remain
 open. All startup verification processes are terminal.
 
+Fresh continuation: `fresh-opening-01` was intentionally stopped because
+movement preceded stage6/autosave. `fresh-opening-02` waits correctly, triggers
+Valen's original taunts and reaches stage10/guard dialogue, but FAILS the
+300-second wait for stage13. It has no unreviewed/forbidden errors. Normal X11
+F5 checkpoints and `manual-input.json` are retained. `guard-progress-audit.json`
+compares actual saved positions: Renault moves from(-459.77,395.34,179.43) to
+(-39.13,152.33,26.11); Emperor and Glenroy move down the stairs too. No navigation
+stall is established. The latter `guards-later.omwsave` SHA256 is
+`2276b4d94e325a60841c7e0d0a6c9b10fa74204e4fc797512a636638a43a054e`; the key corpse remains Dead.
+
+`fresh-guards-01` restores the later checkpoint, reaches original stages12/13,
+then its short movement pulses fail to reach the stand-back trigger. It was
+intentionally stopped; ordinary F5 `stage13-input.omwsave` is retained (SHA256
+`6229278efe9d5b200b74f84e6d5e0c5f0f4086a09b28bbd04254a2e6ec5e269c`).
+The original trigger097a3b/script097a3d sets14 on Player entry at stage13.
+
+`fresh-standback-01` PASSES: ordinary W/D movement with read-only position gates
+enters that trigger, disables it through its source script and reaches14;
+Glenroy opens the cell and completes his route to15; Emperor approaches to16.
+No forbidden/unreviewed errors. The inspected capture and `stage14-audit.json`
+prove actual movement and trigger state. Final `stage16-audit.json` verifies
+stage16 and the original Goblin still Dead. Quicksave SHA256:
+`e66fe9c6251f1f4f669c6abb8567746c1ae07353eb40da4752d7397e5a234438`.
+Editable passing segment: `oblivion_sewer_fresh_standback.json`.
+`oblivion_sewer_fresh_opening.json` assembles the observed fresh opening with
+these position gates and600-second waits; this full assembled revision has not
+run end-to-end. Retain the failed timing courses as failures, not passes.
+
+Next: fresh-process Emperor greeting from the new stage16 save, then reuse
+accepted passage/ambush routes to reach and actually loot the correctly dead
+key corpse. `fresh-greeting-prepared.json` contains the existing controller
+responses with the same observer list; it is not yet runtime accepted.
+All opening/stand-back processes are terminal. Full original progression remains
+unaccepted.
+
 ## Previous checkpoint — authored corpse initialization, 2026-11-04
 
 Normal input reached the original Goblin Shaman/key corpse. The accepted
