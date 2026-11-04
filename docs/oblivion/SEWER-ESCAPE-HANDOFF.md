@@ -58,3 +58,19 @@ segment and fresh-process persistence. Later checkpoints are the Emperor
 sequence and final sewer exit. Broad normal/sanitizer gates belong at integration
 checkpoints; reuse applicable unchanged evidence. All full-escape acceptance
 requirements remain open.
+
+### First approach diagnostic
+
+`wall-approach-01` terminates successfully with no forbidden diagnostics, but
+**does not establish traversal**: Player moves only about 15 units in Y and
+heading remains -1.296875. Inspected capture shows Player still beside the
+initial pillar. The initial course waited for state application, which is too
+early to establish input readiness. The editable `oblivion_sewer_wall_approach.json`
+now waits for the post-load GetStage=30 query; this revision has not run yet.
+Saved state extraction is retained in that run's `saved-state.json`.
+
+Original PACK 07303d (`CGRatAmbushAPushBricks`) targets wall reference 03e31c;
+the rat's authored package, not Player activation, opens the wall. No actor in
+the diagnostic saved AI inventory selected that package. Investigate rat
+placement, enablement and package selection after correcting input readiness.
+No implementation blocker has yet been conclusively demonstrated.
