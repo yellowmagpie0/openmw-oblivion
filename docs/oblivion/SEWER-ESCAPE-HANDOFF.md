@@ -12,22 +12,43 @@ multi-body positive-mass keyframed assets; mass-zero doors are excluded.
 Timing is an approximation supported by the original-game collapse observation,
 not a claim of exact native handoff timing.
 
-**Gameplay remains blocked at the opening.** `physical-wall-crossing-01` visibly
-collapses the wall and moves beyond the former x278 limit, but straight walking
-stalls near (309.44,3209.35,-798.94). The terminal course is failed. Its genuine
-F5 save contains all13 bodies under ref03e31c, with Player alive at5.45 health.
-`physical-wall-jump-01` reloads that physical save without restore errors or
-another release log, then the rats kill the Player; its terminal course is also
-failed. Inspected captures: `physical-wall-crossing-01/live-rubble.png` and
-`physical-wall-jump-01/live-jump.png`. Neither proves traversal or full persistence
-acceptance. Do not repeat long passive movement against the rats.
+**Gameplay remains blocked at the opening, after verified rat combat.**
+`wall-rat-combat-03` passes its normal-input course: Player punches kill both
+rats037e41/037e42 (three damaging hits each), saved life phase Dead and Player
+killer on both, Player health49.45. The inspected `rats-defeated.png` shows the
+collapsed wall, corpses and armed Player. Quicksave SHA256
+`6daea8437f6856768fc2c3b75a635059c89cbc09d798cc4774c19fe71aea96f0`.
+The source is `scripts/data/oblivion_compat/oblivion_sewer_wall_rat_combat.json`.
+A supplementary ordinary F5 input is recorded in `manual-input.json`; it retained
+`approach-checkpoint.omwsave` at57.45 health, SHA256
+`4a8d2de478e0b7e25f20ea8320b51adbd477baf82d659ef9d0c7f9dabb187137`.
+The course's input pulses are not evidence of one simulation attack per pulse;
+actual hit/death logs and saved state establish combat results.
 
-Next: use the healthier ordinary-input `wall-crossing-02` save (61.45 health),
-approach and fight rats037e41/037e42 (base health4 each) with normal melee input,
-then cross and save. If traversal still fails after combat, inspect the remaining
-rubble/capsule obstruction. Prove fresh activation as well as old-save migration,
-intermediate save/reload and cell unload/load before closing the wall chunk.
-Then continue solo-dungeon equipment/loot/combat and escort reunion.
+Retained failures: combat01 changed the .omwscripts list and correctly failed
+content admission; combat02 stalled below a fixed x300 attack trigger. Combat03
+preserves the saved observer list, begins attacking atx275 and keeps approaching
+while aiming. No game state, health or quest completion was injected.
+
+`physical-wall-crossing-01` collapsed all13 bodies but straight walking stalled
+near x309; its save had5.45 health. `physical-wall-jump-01` reloaded that save and
+the rats killed Player. Following the successful combat, `cleared-wall-jump-01`
+still stalls near (309.10,3191.65,-808.47): dead rats do not resolve clearance.
+`cleared-wall-survey-01` passes read-only world collision rays. Movement bounds
+are shape0 (box), half extents(29.28,28.48,66.5). Center rays at y3200 are clear
+from z-810 through -680, but fallen wall body collision intrudes at y3210..3240,
+z-700..-680, x~339; static passage edges also narrow the available lane. Rays
+alone do not prove full-hull clearance or justify shrinking actor bounds.
+
+Next/current: `cleared-wall-lane-03` is running from the postcombat jump save,
+using measured lane y3175 and east-facing ordinary movement. Process session76389
+must be polled before any restart. Lane01 and02 failed the facing prerequisite:
+mouse events did not rotate Player, including a repeated event in02. Lane03 uses
+the earlier successful controller-axis route for the facing adjustment. If the measured lane remains blocked, diagnose the box
+hull against the actual remaining geometry before changing movement physics.
+Do not return to passive movement against live rats. Remaining wall acceptance:
+fresh activation, actual crossing, fresh-process persistence and cell unload/load.
+Then continue solo-dungeon equipment/loot/combat, reunion and the full escape.
 
 Validation under `build/oblivion-compat/sewer-escape/`:
 - `animated-world-focused-01`: all13 selected cases pass, exact inventory,
@@ -45,7 +66,7 @@ Reusable dependency commits: `59ed63d344` collision handoff/lifecycle,
 `59fb84e5af` schema85 C++/Python codecs, `00fe61320f` scheduler ownership,
 `323ba551ca` original rat Find-package activation. Original-game evidence:
 [SEWER-WALL-NATIVE-OBSERVATION.json](SEWER-WALL-NATIVE-OBSERVATION.json).
-All currently launched diagnostic and test processes are terminal.
+Only `cleared-wall-lane-03` remains running; preceding diagnostics/tests are terminal.
 
 ## Target and acceptance
 
