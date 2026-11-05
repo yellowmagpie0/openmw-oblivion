@@ -39408,3 +39408,72 @@ TEST(OblivionWorldTest, CombatFrameRetiresDeadTargetsAndReleasesTheLastControlle
         EXPECT_EQ(world.getOblivionCombatService()->combatRandomState(), random);
     }
 }
+
+namespace
+{
+    TEST(OblivionWorldTest, NativeRestorationCastDebitsOnceAcrossPendingAndReleasedRestore)
+    {
+        NativeWorldFixture fixture;
+        auto& world = fixture.mWorld;
+        MWClass::Npc::registerSelf();
+        world.setupPlayer();
+        const auto player = world.getPlayerPtr();
+        const auto npc = addNativeNpc(fixture, 0x900);
+        ASSERT_TRUE(world.initializeOblivionNonPlayerActor(npc, ESM4::ActorValueProcess::Active));
+        auto& service = *world.getOblivionCombatService();
+        const auto settings = MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore());
+        ESM4::RuntimeActorValues values;
+        values.mActor = ESM::FormKey::dynamic("player", 1);
+        values.mBase = ESM::FormKey::dynamic("player-base", 1);
+        values.mOwner = ESM4::ActorValueOwner::Player;
+        values.mProcess = ESM4::ActorValueProcess::Active;
+        values.mProcessAction = -1; values.mProcessKnockedState = 0;
+        values.mPlayerFormValues = {{10, 0, 0, 0}};
+        for (std::size_t i = 0; i < 8; ++i) values.mValues[i].mBase = 50;
+        service.publishPlayerValues(world.getPlayer(), values, settings);
+        service.publishPlayerLife(world.getPlayer(), {values.mActor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+        service.changePlayerValue(world.getPlayer(), 8, ESM4::ActorValueModifier::Damage, -50, settings);
+        const float health = service.getPlayerValue(8), magicka = service.getPlayerValue(9);
+        const ESM4::SpellCastState cast{ESM::FormKey::content("Oblivion.esm", 0x136),
+            "onehandcastself", 19.f, 0.f, .36666667f, 1.3f, false};
+        const auto restore = [&](const ESM4::RuntimeState& state) {
+            MWMechanics::OblivionCombatService replacement;
+            replacement.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()), world.getStore());
+            service.installRestoredActorState(std::move(replacement), world.getWorldModel().getResidentPtrs(), &world.getPlayer());
+        };
+        ASSERT_TRUE(service.beginSpellCast(values.mActor, cast));
+        auto step = service.advanceRestorationCast(player, &world.getPlayer(), .2f, {8, 0, 0}, settings);
+        ASSERT_TRUE(step); EXPECT_FALSE(step->mReleased);
+        const auto pending = captureNativeActorState(fixture, npc);
+        restore(pending);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), health);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(9), magicka);
+        EXPECT_THROW(service.advanceRestorationCast(player, &world.getPlayer(), .2f,
+            {std::numeric_limits<float>::infinity(), 0, 0}, settings), std::invalid_argument);
+        EXPECT_FLOAT_EQ(service.findSpellCast(values.mActor)->mElapsed, .2f);
+        step = service.advanceRestorationCast(player, &world.getPlayer(), .2f, {8, 0, 0}, settings);
+        ASSERT_TRUE(step); EXPECT_TRUE(step->mReleased); EXPECT_TRUE(step->mApplied);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), health + 8);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(9), magicka - 19);
+        const auto released = captureNativeActorState(fixture, npc);
+        restore(released);
+        step = service.advanceRestorationCast(player, &world.getPlayer(), 2.f, {8, 0, 0}, settings);
+        ASSERT_TRUE(step); EXPECT_FALSE(step->mReleased); EXPECT_TRUE(step->mFinished);
+        EXPECT_FALSE(service.advanceRestorationCast(player, &world.getPlayer(), 2.f, {8, 0, 0}, settings));
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), health + 8);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(9), magicka - 19);
+        EXPECT_FLOAT_EQ(player.getClass().getCreatureStats(player).getHealth().getCurrent(), health + 8);
+        // Resource loss during wind-up fails once without healing, charging or retrying.
+        restore(pending);
+        service.changePlayerValue(world.getPlayer(), 9, ESM4::ActorValueModifier::Damage, -magicka + 5, settings);
+        step = service.advanceRestorationCast(player, &world.getPlayer(), .2f, {8, 0, 0}, settings);
+        ASSERT_TRUE(step); EXPECT_TRUE(step->mReleased); EXPECT_FALSE(step->mApplied);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), health); EXPECT_FLOAT_EQ(service.getPlayerValue(9), 5);
+        service.changePlayerValue(world.getPlayer(), 9, ESM4::ActorValueModifier::Damage, 50, settings);
+        step = service.advanceRestorationCast(player, &world.getPlayer(), .2f, {8, 0, 0}, settings);
+        ASSERT_TRUE(step); EXPECT_FALSE(step->mReleased);
+        EXPECT_FLOAT_EQ(service.getPlayerValue(8), health); EXPECT_FLOAT_EQ(service.getPlayerValue(9), 55);
+        service.cancelSpellCast(values.mActor);
+        EXPECT_EQ(service.findSpellCast(values.mActor), nullptr);
+    }
+}

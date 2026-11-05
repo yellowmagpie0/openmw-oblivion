@@ -64,7 +64,9 @@ namespace MWInput
         // Player jump is a one-frame movement request. The shared Lua trigger path can defer it beyond the frame in
         // which the logical action rises. Queue the native Oblivion request for consumption by CharacterController
         // after Lua has finished updating movement, and do not enqueue a duplicate trigger for the following frame.
-        if (!nativeOblivionJump)
+        const bool nativeCast = action == A_ToggleSpell
+            && MWBase::Environment::get().getWorld()->getGameProfile() == ESM::GameProfile::Oblivion;
+        if (!nativeOblivionJump && !nativeCast)
             MWBase::Environment::get().getLuaManager()->inputEvent({ MWBase::LuaManager::InputEvent::Action, action });
         // trigger action activated
         switch (action)
@@ -81,6 +83,12 @@ namespace MWInput
             case A_Activate:
                 inputManager->resetIdleTime();
                 activate();
+                break;
+            case A_ToggleSpell:
+                if (nativeCast && !windowManager->isGuiMode()
+                    && inputManager->getControlSwitch("playercontrols")
+                    && inputManager->getControlSwitch("playermagic"))
+                    MWBase::Environment::get().getWorld()->getPlayer().requestOblivionCast();
                 break;
             case A_Jump:
                 if (nativeOblivionJump && !windowManager->isGuiMode()

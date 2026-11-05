@@ -6565,10 +6565,10 @@ namespace MWWorld
         };
         if (player)
             mOblivionCombat->updatePlayerFrameResourcesFromClock(
-                *mPlayer, movement, false, settings, prepareParalysis, processEffects);
+                *mPlayer, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
         else
             mOblivionCombat->updateNonPlayerFrameResourcesFromClock(
-                actor, movement, false, settings, prepareParalysis, processEffects);
+                actor, movement, mOblivionCombat->findSpellCast(key) != nullptr, settings, prepareParalysis, processEffects);
         if (friendHits)
             mOblivionRuntimeState->mFriendHitCounters.at(key).swap(*friendHits);
         // Terminal targets cannot keep a living native actor in its interrupted

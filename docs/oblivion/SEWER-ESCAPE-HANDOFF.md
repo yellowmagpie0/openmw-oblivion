@@ -1,155 +1,82 @@
 # Full sewer escape — current handoff
 
-## Target course and remaining gaps
+## Target and remaining acceptance
 
-Play the original opening continuously from prison to the real sewer exit,
+Play the original opening continuously from prison through the real sewer exit,
 using ordinary controls and original quest progression. Include equipment/loot,
 combat/traversal, escort reunion, Emperor death/Amulet, character choices,
-MQ01 stage 88 exit and fresh-process save/load outdoors. No console progression,
-injected completion state or skipped required encounters qualifies.
-**The full escape is incomplete.** Remaining: shaman encounter and rest of
-the caverns, reunion, Emperor/Amulet, character choices, final exit/outdoor reload,
-and the continuous prison-to-outdoors acceptance run. Goblin corpses still
-appear upright; dead-actor physical pushback/presentation needs follow-up.
+MQ01 stage88 exit and fresh-process save/load outdoors. No injected health,
+quest/completion state or skipped required encounters qualifies.
+**Full escape remains incomplete.** Remaining: functional shaman staff encounter,
+rest of caverns, reunion, Emperor/Amulet, character choices, final sewer exit,
+outdoor reload and continuous prison-to-outdoors acceptance. Upright goblin
+corpses remain a visible presentation gap.
 
-## Current checkpoint — mace hazard verified, 2026-11-04
+## Current chunk — native healing and restart
 
-Original swinging maces now cause script-driven contact damage and timed
-pushback. Actual courses verify environmental goblin death, Player damage,
-active-contact saving, and fresh-process restart without repeating damage.
-Schema 86 persists contact ownership alongside animated bodies. Player health,
-inventory, actor life and fixed anchors survive restart; pushback continues.
-Ordinary death and confirmation through the load prompt also restore the saved
-living Player. Continuous trap damage is explicitly unsupported; these maces
-and the upcoming logs use noncontinuous damage.
+Normal C input casts the selected owned instantaneous self-restoration spell,
+plays the native cast sequence while retaining the weapon, and applies its cost
+and restoration once at release. Schema87 persists pending casts. Cancellation,
+resource admission and action exclusion belong to the combat service. The
+successful release records Restoration tutorial history using SKIL usage slot1.
+The genuine axe-equipped Player heals7.04 for19 magicka (armor affects spell power).
 
-Validation: all 3,252 normal component and 2,178 engine tests pass; 554 Python tests
-pass with their earlier recorded provenance. All 284 selected engine tests pass
-under ASan/UBSan with leak detection, closing the previously deferred anchor/
-Activate/hazard sanitizer gate. Exact inventories, no failures/skips. Normal and
-sanitizer source fingerprint:
-`08d2ff8e0abb319e4a747c1d9082968106932abad16af289093a1a292a38b455`.
-Game SHA256:`501452531f4992357140e927914cdbf5898bd53599610674fffe6ee7aa4344ae`.
+Ordinary C/F5 captured wind-up at0.332s, before release0.366667s. A fresh process
+resumes it, heals once and records0.6 Restoration credit. Another fresh process
+loads the released0.664s checkpoint, finishes recovery without another heal,
+debit or history increment. Whole restored state matches except existing animated
+body velocity projections (max error2.98e-8; tolerance1e-5); packed velocities and
+all other ownership/state remain exact. Six further spaced casts heal six times;
+three faster low-magicka attempts admit one, without resource underflow.
 
-Detailed receipts, scope, save hashes and failed attempts are retained under
-`build/oblivion-compat/sewer-escape/`. The concise evidence index is
-[SEWER-TRAP-HAZARD-VERIFICATION.json](SEWER-TRAP-HAZARD-VERIFICATION.json).
-The independent original-handler audit is
-[SEWER-TRAP-DAMAGE-NATIVE-AUDIT.json](SEWER-TRAP-DAMAGE-NATIVE-AUDIT.json).
-Editable courses are `scripts/data/oblivion_compat/oblivion_sewer_cavern_*`.
+Validation: final focused47 engine cases pass normally and under ASan/UBSan
+with engine leak checking. Full2182 engine/3257 component gates passed before
+the final one-line skill-credit correction; unchanged Python556 and four codec
+cases retain their original provenance. Runtime courses cover the correction.
 
-## Current continuation — rolling logs verified, 2026-11-04
+Evidence, build/test provenance, limits and retained attempts:
+[SEWER-HEAL-CAST-VERIFICATION.json](SEWER-HEAL-CAST-VERIFICATION.json).
+The captured courses prove healing with the axe drawn and sheathed, not general
+magic, NPC casting, spell projectiles or all weapon animation variants. Native
+spell hotkeys, learned spellbook ownership and noninstant effects remain outside
+this chunk. General loot currently takes all container contents with a notification;
+selective container browsing remains a limitation.
 
-The original 10.2.0.0 CTrapLogs01 asset now loads for placed references;
-actor-ragdoll version constraints remain unchanged. Ordinary activation releases
-all six logs. Body 43 kills goblin 03b51a with 31.5 environmental damage.
-Fresh-process reload preserves the six-body graph, positions, rotations, native
-packed velocities, script state, Player and death ownership without replay.
-Projected world velocity differs by at most 0.000002 units/sec from unit conversion;
-the reviewed audit uses 0.00001 tolerance only for that projection.
+## Next action — shaman staff, then reunion
 
-All 61 ActorRagdollTest cases pass normally and under ASan/UBSan (component leak
-checking disabled). Two focused asset engine cases pass. Broader hazard gates
-above retain their original provenance. Source fingerprint and runtime receipts:
-[SEWER-ROLLING-LOG-VERIFICATION.json](SEWER-ROLLING-LOG-VERIFICATION.json).
-Failed version/compile attempts and the overstrict initial velocity comparison
-remain retained. Raw trap diagnostic body IDs use ambient hexadecimal formatting:
-log body=2b means 43; earlier mace body=38 means 56, not decimal 38.
+The healed pre-approach save is
+`build/oblivion-compat/sewer-escape/tutorial-heal-low-magicka-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+SHA256:`9db20fa7762acc1ff9da633e28c36ec9208b0aac789d9a2602870d37afd29006`.
+Player health65.990028, magicka20.439541, Restoration history4.8, no pending cast;
+position(5508.464,3257.950,-448.217), axe equipped, seven cavern goblins dead.
 
-`cavern-log-goblin-01` defeats surviving goblin 03b518 through ordinary melee,
-with Player-owned death. `cavern-healing-approach-01` traverses six original pathgrid
-nodes down the log slope. Captures inspected; corpses still appear upright.
-The rolling-log continuation and hashes remain in its verification index.
+`cavern-shaman-approach-01` reaches all six original-pathgrid waypoints under
+ordinary movement, to(5685.125,3945.735,-456.408). Capture inspected. The shaman
+moves near the Player but staff066c45 remains unequipped with charge150. This
+proves approach, **not a functional shaman fight**. Implement actual staff selection,
+cast animation, target projectile/contact damage and charge/save ownership; return
+to the pristine healed checkpoint to verify the encounter. Existing melee AI only
+selects ordinary physical weapons. Do not accept an inert or unarmed substitute.
+Shaman03b52e/base03b52d owns enchantment066c42 (SHDG5, instant target, cost13).
+Player Flare shares the next required target-magic path; avoid unrelated magic scope.
 
-## Current continuation — healing and northern patrol verified, 2026-11-04
+Remaining rats047b65/66/67 and original triggers must be checked as encountered.
+Door03816c at(4384,6144,64) connects to026c36 in Imperial Subterrane022288 near
+(3200,3203,-761). Reunion is record-inspected, not traversal-accepted.
 
-Ordinary Space activation loots chest 051d72: three healing potions and one
-respite potion transfer, leaving the source chest empty in the save. Two inventory
-doses restore health from 12.16 to 52.16. Fresh-process continuation preserves
-Player, chest, life and script state exactly. Seven original pathgrid waypoints
-reach the northern patrol. Goblin 03b543 dies in ordinary melee; goblin 03b541
-joins from the next chamber. The remaining healing dose restores 20 health,
-and a second ordinary melee course defeats that reinforcement. Both deaths
-are Player-owned. Captures and saves inspected; corpses still appear upright.
+## Reusable earlier evidence
 
-Evidence and retained observer failure:
-[SEWER-CAVERN-HEALING-VERIFICATION.json](SEWER-CAVERN-HEALING-VERIFICATION.json).
-No engine changes or additional broad builds were needed. Container activation
-currently takes all contents with a notification; selective browsing and Lua
-Container.content support for TES4 containers remain separate limitations.
+- [Completed melee tutorial slice](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md): prison,
+  first assassin ambush, Player participation, escort departure, fresh combat reload.
+- [Trap hazards](SEWER-TRAP-HAZARD-VERIFICATION.json) and
+  [rolling logs](SEWER-ROLLING-LOG-VERIFICATION.json): original activation,
+  environmental damage, persistent contact/body state and restart without replay.
+- [Cavern healing/patrol](SEWER-CAVERN-HEALING-VERIFICATION.json) and
+  [eastern goblin](SEWER-EASTERN-CAVERN-VERIFICATION.json): ordinary loot,
+  potions, equipment, navigation and melee. Preserve failed/death attempts.
+- [Spell cost](SEWER-SPELL-COST-VERIFICATION.json) and
+  [spell menu](SEWER-SPELL-MENU-VERIFICATION.json): independent cost evidence,
+  normal selection/HUD and fresh selected-spell reload.
 
-The healing/patrol continuation and hashes remain in its verification index.
-
-## Current continuation — eastern goblin verified, 2026-11-04
-
-The initial eastern fight failed with Player death using the worn club. A normal
-inventory switch equips the already-owned Rusty Iron War Axe 090613, then a
-continuous seven-node approach and melee course defeats goblin 03b52f. This is
-ordinary inventory/navigation/attack input, no health or completion injection.
-The axe still deals about 0.82 per hit; the successful course is not evidence of
-a large weapon-damage improvement. Death, failed wait, wrong initial weapon label,
-and input-delivery failures are preserved in
-[SEWER-EASTERN-CAVERN-VERIFICATION.json](SEWER-EASTERN-CAVERN-VERIFICATION.json).
-No implementation changed; prior build/sanitizer results retain their provenance.
-
-Current genuine continuation save:
-`build/oblivion-compat/sewer-escape/cavern-eastern-combined-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-SHA256:`510e8a520909b21756bce107a8a703edeb05fda7850726693d1cede234e7c1db`.
-Player (5508.464,3257.950,-448.217), health 9.670021, axe equipped; no healing
-potions left. Seven encountered cavern goblins are dead. Capture inspected;
-upright corpses remain a known presentation gap.
-
-## Magic prerequisite — spell cost rule implemented, not yet wired
-
-`components/esm4/magiccaster` now has calculated-effect and manual spell-cost
-queries. Eleven original-executable cases run the complete SpellItem cost path,
-including original pow/skill/luck arithmetic; only integer actor AV getters are
-stubbed. Heal Minor Wounds000136 ignores stored cost24 because flag bit0 is clear:
-its calculated cost at Restoration5/Luck50 is19. Manual flag1 keeps fractional
-skill-adjusted cost and permits zero. Winning master overrides cost scale to1.28
-and skill base to0.2; compiled defaults differ and must not be used unconditionally.
-Focused new cost and existing spell-power component suites pass. Evidence:
-[SEWER-SPELL-COST-VERIFICATION.json](SEWER-SPELL-COST-VERIFICATION.json).
-No game binary rebuild, runtime casting or sanitizer acceptance is claimed here;
-these gates belong to the upcoming casting integration. Gameplay checkpoint above
-is unchanged. Stop expanding formula auditing now that the cost branch is resolved.
-
-## Magic menu continuation — native selection verified, 2026-11-04
-
-The normal magic menu now lists Player/race/birthsign granted TES4 spells with
-native names, effect descriptions and winning-setting costs. Normal controller
-input selects Heal Minor Wounds; its tooltip shows Restore Health8 on Self,
-cost19, and the HUD uses its native heart icon. Flare displays cost14.
-Fresh-process reload preserves selection000136, the entire native Player state
-and native actor-life state exactly. All seven focused OblivionCombatMagicStore
-engine tests pass; game rebuilt and captures inspected. Receipts and retained
-failures: [SEWER-SPELL-MENU-VERIFICATION.json](SEWER-SPELL-MENU-VERIFICATION.json).
-Native spell hotkeys are explicitly unavailable; learned spellbook ownership,
-scripted effects and multi-effect manual costs remain outside this menu chunk.
-No casting or new sanitizer acceptance is claimed. The genuine route checkpoint
-above remains authoritative; the selection-only continuation is recorded in the
-new evidence index and still has health9.670021.
-
-## Next bounded chunk — tutorial magic and shaman, then reunion
-
-World::castSpell currently rejects all TES4 spell execution. Original Player
-NPC_000007 owns Heal Minor Wounds 000136 (REHE 8, self, instant) and Flare.
-Shaman 03b52e / base03b52d owns staff066c45 with enchantment066c42 (SHDG 5,
-target, instant). Audit actual cost/casting/effect rules, implement the required
-normal-input healing path and prove resource/save ownership, then verify the
-shaman's actual staff behavior. Do not accept an inert shaman as a complete fight
-or broaden into unrelated magic before these tutorial abilities work.
-Raw original-record audit is ignored: `cavern-next-magic-record-audit.json` under
-`build/oblivion-compat/sewer-escape/`; normalized facts are in the evidence index.
-
-Prepared shaman approach (not yet run): `cavern-shaman-approach-prepared.json` in
-that evidence root, with audited path `cavern-eastern-to-shaman-path.json`.
-Remaining rats 047b65/66/67 and original triggers must be checked as encountered.
-Door03816c at (4384,6144,64) connects to 026c36 in ImperialDungeon02 /
-Imperial Subterrane cell022288, near (3200,3203,-761). Reunion remains original-record
-inspection, not traversal acceptance. Full-course requirements above remain open.
-
-Historical implementation details and retained failures:
-[SEWER-ESCAPE-HISTORY.md](SEWER-ESCAPE-HISTORY.md). The earlier accepted tutorial
-slice is documented in
-[TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md](TUTORIAL-PLAYABLE-CHUNK-HANDOFF.md).
+Earlier checks retain their original provenance; do not relabel them as current
+source runs. Historical detail: [SEWER-ESCAPE-HISTORY.md](SEWER-ESCAPE-HISTORY.md).

@@ -27,6 +27,9 @@ namespace MWWorld
     std::optional<std::array<float, 3>> resolveOblivionPotionRestoration(
         const ESMStore& store, const ESM4::Potion& potion);
 
+    std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
+        const ESMStore& store, const ESM4::Spell& spell);
+
     // Winning TES4 store preflight for the narrow default self-PARA owner.
     // No forms, actor state, selected spells or RNG are changed. The caller
     // owns Oblivion profile dispatch and post-contact actor/caster eligibility.

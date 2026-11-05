@@ -45,7 +45,7 @@ class NpcPassiveFixtureTests(unittest.TestCase):
         for idle in (False, True):
             with tempfile.TemporaryDirectory() as folder:
                 source, recipe, plugin, opaque = self.source(Path(folder), idle)
-                original = source.read_bytes(); before = runtime.load_save(source); before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None; before['spoken_dialogue_infos'] = []; before['ignore_friendly_hits'] = {}; before['disposition_modifiers'] = []; before['faction_reactions'] = []; before['friend_hit_counters'] = {}; before['combat_controllers'] = {}; before['native_getup_idles'] = []; before['native_getup_playback'] = []; before['native_animated_references'] = []; before['native_trap_contacts'] = []
+                original = source.read_bytes(); before = runtime.load_save(source); before['schema_version'] = runtime.CURRENT_VERSION; before['native_movement'] = None; before['spoken_dialogue_infos'] = []; before['ignore_friendly_hits'] = {}; before['disposition_modifiers'] = []; before['faction_reactions'] = []; before['friend_hit_counters'] = {}; before['combat_controllers'] = {}; before['native_getup_idles'] = []; before['native_getup_playback'] = []; before['native_animated_references'] = []; before['native_trap_contacts'] = []; before['native_spell_casts'] = []
                 output = Path(folder) / 'new/staged.omwsave'
                 report = stage(source, output, recipe, plugin); after = runtime.load_save(output)
                 self.assertEqual(after['native_melee_states'], [recipe['melee_state']])

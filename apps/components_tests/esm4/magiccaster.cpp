@@ -149,3 +149,25 @@ TEST(ESM4SpellCost, ValidatesCostInputsAndRetainsCalculatedMinimum)
     settings.mMagnitudeExponent = std::numeric_limits<float>::max();
     EXPECT_THROW(ESM4::spellEffectMagickaCost({10.f, 8, 0, 0, false}, 5, 50, settings), std::invalid_argument);
 }
+
+TEST(ESM4SpellCast, ReleaseOccursOnceAcrossFramePartitioning)
+{
+    ESM4::SpellCastState initial{ESM::FormKey::content("Oblivion.esm", 0x136),
+        "onehandcastself", 19.f, 0.f, .36666667f, 1.3f, false};
+    auto small = initial;
+    int releases = 0;
+    for (int i = 0; i < 200; ++i)
+        releases += ESM4::advanceSpellCast(small, .01f);
+    EXPECT_EQ(releases, 1);
+    EXPECT_EQ(small.mElapsed, small.mDuration);
+    auto large = initial;
+    EXPECT_TRUE(ESM4::advanceSpellCast(large, 10.f));
+    EXPECT_EQ(large, small);
+    EXPECT_FALSE(ESM4::advanceSpellCast(large, 0.f));
+    EXPECT_FALSE(ESM4::advanceSpellCast(large, 10.f));
+    // Failed candidate validation cannot partially advance the caller's state.
+    const auto before = small;
+    EXPECT_THROW(ESM4::advanceSpellCast(small, -1.f), std::invalid_argument);
+    EXPECT_THROW(ESM4::advanceSpellCast(small, std::numeric_limits<float>::infinity()), std::invalid_argument);
+    EXPECT_EQ(small, before);
+}

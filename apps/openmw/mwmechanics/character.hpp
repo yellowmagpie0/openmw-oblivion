@@ -218,6 +218,8 @@ namespace MWMechanics
 
         bool updateWeaponState(float duration);
         bool updateOblivionWeaponState(float duration);
+        bool updateOblivionSpellCast(float duration);
+        std::string mOblivionCastGroup; // Renderer binding only; service owns pending cast.
         void persistOblivionMeleeProgress() const;
         void dispatchOblivionMeleeContact();
         bool tryOblivionBlockingDodge(unsigned movementFlags);

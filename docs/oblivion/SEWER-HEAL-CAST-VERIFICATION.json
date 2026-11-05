@@ -1,0 +1,532 @@
+{
+  "schema_version": 1,
+  "scope": "Player native instantaneous self-restoration through normal C input, native cast timing, atomic resources and once-only pending/released save/load; healed route reaches shaman approach. Full sewer escape incomplete.",
+  "implementation": [
+    "Selected owned Player/race/birthsign ordinary instantaneous restoration spells only; cost and skill admission use native records.",
+    "Native cast sequence and release key; weapon retained; pending action persisted in schema87.",
+    "Health/magicka publication and release ownership commit together. Interruption/death cancels pending action; competing melee/bow/block/dodge admission is excluded.",
+    "Successful release records Restoration tutorial credit once using original SKIL usage slot1."
+  ],
+  "checks": [
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-state-02/verification.json",
+      "passed": false,
+      "source": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "5e0c6a9718ffe2e6193ba5a81af1a00b205c7749e42bcc464e856ed478c0d238"
+      },
+      "results": {
+        "components": {
+          "executed": 191,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.*:ESM4SpellCast.*:ESM4SpellCost.*:ESM4CombatSpellPower.*",
+          "binary_sha256": "68fda8363d17169d990ad16e02a39c51d73098c25f41341d9280e59e8b2b629b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "eaf32eaf2602d47e1b650beafad9c1b2191f702390cef914c02c91152b3b6aef",
+          "inventory_sha256": "644b89c09a3aae21222ce5677118521b9cbfcd4aff6a41cfaded0761f1200c82",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-state-python-04/verification.json",
+      "passed": true,
+      "source": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "f7860449a6f0dc5dd8f04deaea90febf0a03dd482793c2fd479daed217b43153"
+      },
+      "results": {
+        "python": {
+          "executed": 556,
+          "passed": true,
+          "log_sha256": "4dea8d10ed414e242dfdc6753359486c8abf6dd7eaeb6784274b35b663c383e2"
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-cross-codec-02/verification.json",
+      "passed": true,
+      "source": null,
+      "results": [
+        {
+          "case": "case-0",
+          "binary_roundtrip": true,
+          "json_roundtrip": true,
+          "sha256": "7945f517a28cf346b8eafe69c1d280012355032b6ad7cbe850bdcaafb1403393"
+        },
+        {
+          "case": "case-1",
+          "binary_roundtrip": true,
+          "json_roundtrip": true,
+          "sha256": "83ee7b9d2a15980d4cc22a221a0e6a0462fac4f79cac89c65c0c2d358a95009f"
+        },
+        {
+          "case": "case-2",
+          "binary_roundtrip": true,
+          "json_roundtrip": true,
+          "sha256": "bc99d10b918eb1fbd41a52f9e578314f461f6dfac2474a9b94092a5dc58ed7ea"
+        },
+        {
+          "case": "case-3",
+          "binary_roundtrip": true,
+          "json_roundtrip": true,
+          "sha256": "765ac6a9f97de54bae27c3ecbcb9b86ad29ed6f25a5255babc93af9e0430612f"
+        }
+      ]
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-engine-02/verification.json",
+      "passed": true,
+      "source": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "50bcce2563f701d8a09bbc075e5277dd77e33e6348115921693035f6e9b6411f"
+      },
+      "results": {
+        "engine": {
+          "executed": 47,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionCombatMagicStore.*:OblivionCombatService.*:OblivionWorldTest.NativeRestorationCast*",
+          "binary_sha256": "c7ad0c782c1f58f49643daed3e73a19ef820d64108f3ca22c00384c19d16bccf",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "ba6841928234ed74bd36cea9468655ae69c1cf44a720ceaebe1d19a99fa96b16",
+          "inventory_sha256": "3a0f1280439815e1fb851fd4ca278eb379d7b601a9769ba498a55816218ace2d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-integration-01/verification.json",
+      "passed": true,
+      "source": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "50bcce2563f701d8a09bbc075e5277dd77e33e6348115921693035f6e9b6411f"
+      },
+      "results": {
+        "engine": {
+          "executed": 2182,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c7ad0c782c1f58f49643daed3e73a19ef820d64108f3ca22c00384c19d16bccf",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "92df650395c5978077fafb8d13e4cad01006823ddbc2c4fa16997f62a028c1cb",
+          "inventory_sha256": "3a0f1280439815e1fb851fd4ca278eb379d7b601a9769ba498a55816218ace2d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "components": {
+          "executed": 3257,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "68fda8363d17169d990ad16e02a39c51d73098c25f41341d9280e59e8b2b629b",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "a3efcb99c9afcc74e52d4a8d1dd5cd1796ff0d1091d0a6432fd37b9cd4502712",
+          "inventory_sha256": "47cca27a4b5a8f8c65308aa2fa0c5a595387fb9d492dfc7e26a185488ef87443",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-engine-03/verification.json",
+      "passed": true,
+      "source": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "28ac5e4778e348a15117dab72cfdebedda65fdca31f3c51fd4b93022b34d0c30"
+      },
+      "results": {
+        "engine": {
+          "executed": 47,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionCombatMagicStore.*:OblivionCombatService.*:OblivionWorldTest.NativeRestorationCast*",
+          "binary_sha256": "82c6c317004829166acab55706a4b40caa7b09b522ef0d26ba0fa5ca2cedbad5",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "05a1b5496e42dfc139b47eaf9cb73d3f63d7fcbccba5dbd904ecfea9d8ec494a",
+          "inventory_sha256": "3a0f1280439815e1fb851fd4ca278eb379d7b601a9769ba498a55816218ace2d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    {
+      "path": "build/oblivion-compat/sewer-escape/tutorial-cast-sanitize-engine-02/verification.json",
+      "schema_version": 1,
+      "passed": true,
+      "commands": [
+        {
+          "argv": [
+            "cmake",
+            "--build",
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize",
+            "--target",
+            "openmw-tests",
+            "-j",
+            "4"
+          ],
+          "log": "engine-build.log",
+          "returncode": 0,
+          "seconds": 1462.991
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_list_tests"
+          ],
+          "log": "engine-inventory.txt",
+          "returncode": 0,
+          "seconds": 1.018
+        },
+        {
+          "argv": [
+            "/home/maciek/openmw-oblivion/openmw-oblivion/build/m15-sanitize/openmw-tests",
+            "--gtest_filter=OblivionCombatMagicStore.*:OblivionCombatService.*:OblivionWorldTest.NativeRestorationCast*",
+            "--gtest_repeat=1",
+            "--gtest_shuffle=0",
+            "--gtest_output=xml:/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/tutorial-cast-sanitize-engine-02/engine.xml"
+          ],
+          "log": "engine.log",
+          "returncode": 0,
+          "seconds": 0.968
+        }
+      ],
+      "results": {
+        "engine": {
+          "executed": 47,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionCombatMagicStore.*:OblivionCombatService.*:OblivionWorldTest.NativeRestorationCast*",
+          "binary_sha256": "8bd472ced1f5e9ecdb38b9813faee124864b538a89d13f29bf184776812e492c",
+          "cache_sha256": "e66c74113dcb9bcd3553ddaded1eabc53854c3f5e2cde1901cf44bf5de2d1709",
+          "xml_sha256": "a7ba1addeb0cb8907e975facd756fdf4de4dfd33641834ac7b46928d4fce5c80",
+          "inventory_sha256": "3a0f1280439815e1fb851fd4ca278eb379d7b601a9769ba498a55816218ace2d",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+            "CMAKE_CXX_FLAGS_DEBUG": "-O1 -g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      },
+      "source_before": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "28ac5e4778e348a15117dab72cfdebedda65fdca31f3c51fd4b93022b34d0c30"
+      },
+      "source_after": {
+        "head": "5031b87a5a4de912339157c327b0e38b002b98c4",
+        "source_fingerprint": "28ac5e4778e348a15117dab72cfdebedda65fdca31f3c51fd4b93022b34d0c30"
+      }
+    }
+  ],
+  "runtime_restart": {
+    "passed": true,
+    "scope": "ordinary C/F5 wind-up, fresh-process release once, fresh-process released recovery without resource or tutorial-history replay",
+    "game_sha256": "0b17aa77c08df06cacae471e4b901b37ca635380b00de4bccac251fecf9c4936",
+    "projection_tolerance": 1e-05,
+    "projection_max_errors": [
+      2.9802322387695312e-08,
+      2.9802322387695312e-08
+    ],
+    "courses": [
+      {
+        "path": "build/oblivion-compat/sewer-escape/tutorial-heal-windup-runtime-01",
+        "save_sha256": "8afe41dcf126837d11a3fc494b7ec90f42c262b866aba8cbd9eb5721e93949d2",
+        "health": 9.670021057128906,
+        "magicka": 80.0,
+        "restoration_history": 0.0,
+        "casts": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "spell": "content:oblivion.esm:000136",
+            "animation_group": "onehandcastself",
+            "cost": 19.0,
+            "elapsed": 0.3320000171661377,
+            "release_time": 0.36666667461395264,
+            "duration": 1.2999999523162842,
+            "released": false
+          }
+        ]
+      },
+      {
+        "path": "build/oblivion-compat/sewer-escape/tutorial-heal-windup-reload-02",
+        "save_sha256": "2010f0e7c7c29935179f53f65ffa8aeca3fc595b3a2f84ea0a48a1b62afd6610",
+        "health": 16.71002197265625,
+        "magicka": 61.0,
+        "restoration_history": 0.6000000238418579,
+        "casts": [
+          {
+            "actor": "dynamic:player:0000000000000001",
+            "spell": "content:oblivion.esm:000136",
+            "animation_group": "onehandcastself",
+            "cost": 19.0,
+            "elapsed": 0.6640000343322754,
+            "release_time": 0.36666667461395264,
+            "duration": 1.2999999523162842,
+            "released": true
+          }
+        ]
+      },
+      {
+        "path": "build/oblivion-compat/sewer-escape/tutorial-heal-released-reload-02",
+        "save_sha256": "2f80c297a3af236f545d651202ecfc5d7a141a7bd230ecea700624ef95ba945b",
+        "health": 16.71002197265625,
+        "magicka": 71.82635498046875,
+        "restoration_history": 0.6000000238418579,
+        "casts": []
+      }
+    ],
+    "game_sha256_scope": "Final corrected binary used for wind-up-reload-02 and released-reload-02. Initial wind-up-runtime-01 used engine-02 source; it predates the slot-1 skill credit correction and is before release.",
+    "windup_source_verification": "tutorial-cast-engine-02/verification.json"
+  },
+  "runtime_repeated": {
+    "passed": true,
+    "courses": [
+      {
+        "course": "tutorial-heal-repeated-01",
+        "input": "tutorial-heal-released-reload-02",
+        "releases": 6,
+        "health": 58.95002746582031,
+        "magicka": 29.361961364746094,
+        "restoration_history": 4.199999809265137,
+        "save_sha256": "61c735edcdf40b55ff71e4c82af63779d2ad7c5ed8e29f19fc4570ca8f67ccd2"
+      },
+      {
+        "course": "tutorial-heal-low-magicka-01",
+        "input": "tutorial-heal-repeated-01",
+        "releases": 1,
+        "health": 65.99002838134766,
+        "magicka": 20.43954086303711,
+        "restoration_history": 4.799999713897705,
+        "save_sha256": "9db20fa7762acc1ff9da633e28c36ec9208b0aac789d9a2602870d37afd29006"
+      }
+    ],
+    "scope": "six spaced C inputs heal six times; three faster C inputs at low magicka admit one cast, with no resource underflow or excess healing/history. No explicit insufficient-message capture was obtained."
+  },
+  "approach": {
+    "passed_traversal": true,
+    "passed_shaman_encounter": false,
+    "course": "cavern-shaman-approach-01",
+    "save_sha256": "bf5192f9e5c659ed92d465038e6ba140f4aa7eccdf972e23c94a26d4a036d094",
+    "player_position": [
+      5685.12548828125,
+      3945.735107421875,
+      -456.4077453613281,
+      9.322166442871094e-05,
+      0.0,
+      -0.12423624098300934
+    ],
+    "health": 65.99002838134766,
+    "shaman_position": [
+      5694.5673828125,
+      3859.93994140625,
+      -447.00006103515625,
+      0.0,
+      0.0,
+      -0.09932351857423782
+    ],
+    "staff": {
+      "base": "content:oblivion.esm:066c45",
+      "count": 1,
+      "condition": 20.0,
+      "charge": 150.0,
+      "equipped_slots": 0,
+      "hotkey": -1,
+      "owner": "null",
+      "remaining_usage_time": -1.0,
+      "ownership_rank": null,
+      "ownership_global": "null",
+      "extra_scale": null,
+      "bound_source": null
+    },
+    "finding": "All six waypoints reached under normal input. Shaman moved into proximity but staff remains unequipped and charge 150; no functional staff encounter acceptance. Continue from pristine healed checkpoint when integrating staff behavior."
+  },
+  "native_skill_content": {
+    "source": "/home/maciek/.local/share/Steam/steamapps/common/Oblivion/Data/Oblivion.esm",
+    "sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "skill": "Restoration",
+    "actor_value": 25,
+    "data_usage_values": [
+      0.0,
+      0.6000000238418579
+    ],
+    "method": "Read original SKIL group, select INDX=25, decode 20-byte DATA. Casting uses nonzero usage slot 1; slot 0 grants no credit.",
+    "scope": "winning content values, not an original executable casting-dispatch probe"
+  },
+  "animation_content": "build/oblivion-compat/sewer-escape/tutorial-cast-assets-01/textkeys.json",
+  "retained_attempts": [
+    "tutorial-cast-state-01: old malformed-wire test suffix offsets missed appended cast section; corrected tests without changing rejection semantics.",
+    "tutorial-cast-state-02: components passed191; Python failed stale version86 fixture gates/recipes.",
+    "tutorial-cast-state-python-03: remaining stale recipe targets/empty expectations; corrected and full556 pass in04.",
+    "tutorial-heal-windup-reload-01: resource/release behavior passed but Restoration history did not advance (wrong usage slot0). Corrected in engine03 and runtime reload02.",
+    "tutorial-cast-sanitize-engine-01: build intentionally stopped with SIGTERM before skill-credit correction; no sanitizer tests executed."
+  ],
+  "limitations": [
+    "Shaman staff remains unequipped and has not launched a projectile; encounter not accepted.",
+    "General spell casting, learned spellbook ownership, native spell hotkeys, NPC magic, target projectiles and timed effects are not implemented by this chunk.",
+    "No rendered interruption/death-during-cast acceptance; cancellation and failed-release resource ownership are covered by service/world tests.",
+    "Captured low-magicka course admitted one of three inputs; no explicit insufficient-magicka message capture obtained.",
+    "Initial wind-up save precedes slot1 correction; final corrected executable used for its fresh release and released-state continuations.",
+    "Goblin corpses remain upright. Sound/VFX polish and all weapon casting variants are not established by these courses."
+  ],
+  "cross_codec_provenance": {
+    "passed": true,
+    "cases": [
+      {
+        "case": "case-0",
+        "binary_roundtrip": true,
+        "json_roundtrip": true,
+        "sha256": "7945f517a28cf346b8eafe69c1d280012355032b6ad7cbe850bdcaafb1403393"
+      },
+      {
+        "case": "case-1",
+        "binary_roundtrip": true,
+        "json_roundtrip": true,
+        "sha256": "83ee7b9d2a15980d4cc22a221a0e6a0462fac4f79cac89c65c0c2d358a95009f"
+      },
+      {
+        "case": "case-2",
+        "binary_roundtrip": true,
+        "json_roundtrip": true,
+        "sha256": "bc99d10b918eb1fbd41a52f9e578314f461f6dfac2474a9b94092a5dc58ed7ea"
+      },
+      {
+        "case": "case-3",
+        "binary_roundtrip": true,
+        "json_roundtrip": true,
+        "sha256": "765ac6a9f97de54bae27c3ecbcb9b86ad29ed6f25a5255babc93af9e0430612f"
+      }
+    ],
+    "scope": "Production C++ binary/JSON and Python codec round trips for pending, released and completed casts. Codec consistency only, not runtime casting acceptance.",
+    "production_sources": {
+      "components/esm4/runtimestate.cpp": "6a2a9d80c7176af2e8052a913467ce601105e9c610273941264e302e3ef9e817",
+      "components/esm4/runtimestate.hpp": "96bb77e5657fd23df65b338806d6af4c71b444775b99259354c2db37adb78125",
+      "scripts/tes4_runtime_state.py": "16ae570ad8b937676c60d49f4b716996180a4e2d60ad9c12a557e63ed39946e1"
+    },
+    "driver_sha256": "c2766445fc548f6241d2d8a1f01a9f9e1fdd3d7f0415997db52ebb7e020f7f96"
+  },
+  "runtime_verifier": {
+    "path": "build/oblivion-compat/sewer-escape/verify-heal-restarts.py",
+    "sha256": "dbd015b72169515d82c5fdabb7c5c93721d0994519616245455f6f0d4bd83891",
+    "assertions": [
+      "Pending and released cast ownership at actual F5 save points.",
+      "Exactly one release after pending reload, zero after released reload.",
+      "Health gain7.04 within1e-4, exact19 magicka debit.",
+      "Restoration history gain0.6 within1e-6 and no repeat; unrelated skills unchanged.",
+      "Whole live state on each fresh load, except animated projected velocity tolerance1e-5."
+    ]
+  },
+  "shaman_asset_preflight": {
+    "asset": "meshes/creatures/goblin/staffattackright.kf",
+    "sha256": "5870e5247d9366529ed565269437b8cc9748189a5fa270b140508b292c8a029b",
+    "scope": "count-prefixed text-key content inspection, not original executable dispatch or runtime acceptance",
+    "offset": 14658,
+    "keys": [
+      {
+        "time": 0.0,
+        "text": "start"
+      },
+      {
+        "time": 0.6000000238418579,
+        "text": "Enum: Attack"
+      },
+      {
+        "time": 0.7000000476837158,
+        "text": "Hit"
+      },
+      {
+        "time": 0.8999999761581421,
+        "text": "a:R"
+      },
+      {
+        "time": 0.9333333969116211,
+        "text": "end"
+      }
+    ]
+  },
+  "runtime_libraries": {
+    "build/_deps/mygui-build/lib64/libMyGUIEngine.so.3.4.3": "40d101437cf7a7ba68df21f3d5d691bf363e7f269fa8be9658e588599047ed54"
+  },
+  "sheathed_cast": {
+    "course": "tutorial-heal-sheathed-01",
+    "passed": true,
+    "normal_input": [
+      "F",
+      "C",
+      "F5"
+    ],
+    "health": 16.71002197265625,
+    "magicka": 61.0,
+    "casts": [
+      {
+        "actor": "dynamic:player:0000000000000001",
+        "spell": "content:oblivion.esm:000136",
+        "animation_group": "castself",
+        "cost": 19.0,
+        "elapsed": 0.4230000078678131,
+        "release_time": 0.36666667461395264,
+        "duration": 1.4000000953674316,
+        "released": true
+      }
+    ],
+    "save_sha256": "71cf3fa0aa40c3f8ebba46401a8fe1307657eba5308c506c2ea4315e9e5932c6"
+  },
+  "validation_provenance_note": "The full 2182 engine /3257 component run predates only the final Restoration usage-slot correction. Final focused47 engine checks and all reload02/repeated/low-magicka/sheathed/approach courses use that correction. Python556 and cross-codec evidence are reused with unchanged codec source hashes; they are not claimed as new current-source runs.",
+  "sanitizer_environment": {
+    "SDL_VIDEODRIVER": "x11",
+    "SDL_AUDIODRIVER": "dummy",
+    "SDL_SHUTDOWN_DBUS_ON_QUIT": "1",
+    "DBUS_SESSION_BUS_ADDRESS": "disabled:",
+    "DBUS_SYSTEM_BUS_ADDRESS": "disabled:",
+    "LIBGL_ALWAYS_SOFTWARE": "1",
+    "__GLX_VENDOR_LIBRARY_NAME": "mesa",
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "passed_scoped_healing_chunk": true,
+  "editable_courses": {
+    "tutorial-heal-windup-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_windup.json",
+    "tutorial-heal-windup-reload-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_windup_reload.json",
+    "tutorial-heal-released-reload-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_released_reload.json",
+    "tutorial-heal-repeated-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_repeated.json",
+    "tutorial-heal-low-magicka-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_low_magicka.json",
+    "tutorial-heal-sheathed-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_heal_sheathed.json",
+    "cavern-shaman-approach-prepared.json": "scripts/data/oblivion_compat/oblivion_sewer_cavern_shaman_approach.json"
+  }
+}

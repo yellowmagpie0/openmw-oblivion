@@ -4942,3 +4942,42 @@ class AnimatedReference85Tests(unittest.TestCase):
         for edit in edits:
             invalid = copy.deepcopy(state); edit(invalid)
             with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(invalid)
+
+class SpellCast87Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_state(); state['schema_version'] = 87; state['ai_rng_state'] = 1
+        actor = state['player']['reference']; base = 'content:oblivion.esm:000007'
+        state['native_actor_values'] = [{'actor': actor, 'base': base, 'owner': 0, 'process': 0,
+            'values': [[0., None, None, None] for _ in range(72)]}]
+        state['native_actor_life'] = [{'actor': actor, 'base': base, 'phase': 0,
+            'recovery_remaining': 0., 'killer': 'null'}]
+        state['native_spell_casts'] = [{'actor': actor, 'spell': 'content:oblivion.esm:000136',
+            'animation_group': 'onehandcastself', 'cost': 19., 'elapsed': .25,
+            'release_time': .375, 'duration': 1.25, 'released': False}]
+        return state
+
+    def test_pending_and_released_roundtrip_and_legacy_absence(self):
+        for released in (False, True):
+            state = self.make_state(); cast = state['native_spell_casts'][0]
+            cast.update(released=released, elapsed=.5 if released else .25)
+            wire = state_io.encode_payload(state); decoded = state_io.decode_payload(wire)
+            self.assertEqual(decoded['native_spell_casts'], state['native_spell_casts'])
+            self.assertEqual(state_io.encode_payload(decoded), wire)
+            corrupt = wire[:-1] + bytes([2])
+            with self.assertRaises(state_io.RuntimeStateError): state_io.decode_payload(corrupt)
+        state['schema_version'] = 86
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state['native_spell_casts'] = []
+        self.assertNotIn('native_spell_casts', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_rejects_replaying_and_dangling_casts(self):
+        for edit in [dict(released=True), dict(elapsed=.5), dict(release_time=0), dict(duration=.1),
+                     dict(cost=float('inf')), dict(cost=-1), dict(animation_group=''),
+                     dict(spell='null'), dict(actor='content:oblivion.esm:000999')]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['native_spell_casts'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state(); state['native_actor_life'] = []
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)
+        state = self.make_state(); state['native_spell_casts'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError): state_io.encode_payload(state)

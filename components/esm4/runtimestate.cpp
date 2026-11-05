@@ -2561,6 +2561,22 @@ namespace ESM4
                     throw std::runtime_error("Invalid, duplicate or replaying TES4 melee action identity");
             }
         }
+        checkSize(mNativeSpellCasts.size(), "native spell cast list");
+        if (mVersion < 87 && !mNativeSpellCasts.empty())
+            throw std::runtime_error("Native spell casts require runtime-state version87");
+        for (const auto& [actor, cast] : mNativeSpellCasts)
+        {
+            cast.validate();
+            const auto life = lives.find(actor);
+            const auto melee = mNativeMeleeStates.find(actor);
+            if (!nativeActors.contains(actor) || life == lives.end() || life->second->mPhase != ActorLifePhase::Alive
+                || mNativeBowStates.contains(actor)
+                || (melee != mNativeMeleeStates.end() && (melee->second.mStrike || melee->second.mReaction
+                    || melee->second.mDodge || melee->second.mPassiveSequence
+                    || (melee->second.mFirstPerson && (melee->second.mFirstPerson->mStrike
+                        || melee->second.mFirstPerson->mReaction || melee->second.mFirstPerson->mPassiveSequence)))))
+                throw std::runtime_error("Dangling, dead or conflicting native spell caster");
+        }
         if (mVersion < 38 && !mNativeBowStates.empty())
             throw std::runtime_error("TES4 owned bow playback requires runtime-state version38");
         for (const auto& [actor, bow] : mNativeBowStates)
@@ -3970,6 +3986,18 @@ namespace ESM4
                 writeKey(writer, contact.mActor);
             }
         }
+        if (mVersion >= 87)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mNativeSpellCasts.size()));
+            for (const auto& [actor, cast] : mNativeSpellCasts)
+            {
+                writeKey(writer, actor); writeKey(writer, cast.mSpell);
+                writer.string(cast.mAnimationGroup);
+                writer.floating(cast.mCost); writer.floating(cast.mElapsed);
+                writer.floating(cast.mReleaseTime); writer.floating(cast.mDuration);
+                writer.integer<std::uint8_t>(cast.mReleased);
+            }
+        }
         std::vector<std::uint8_t> result = writer.take();
         if (result.size() > sMaximumPayloadSize)
             throw std::runtime_error("TES4 runtime-state payload exceeds the size limit");
@@ -5329,6 +5357,26 @@ namespace ESM4
                     throw std::runtime_error("Noncanonical trap contact list");
                 previous = contact;
                 result.mNativeTrapContacts.insert(std::move(contact));
+            }
+        }
+        if (result.mVersion >= 87)
+        {
+            const auto count = reader.count();
+            std::optional<ESM::FormKey> previous;
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto actor = readKey(reader);
+                if (previous && !(*previous < actor))
+                    throw std::runtime_error("Noncanonical native spell cast owners");
+                previous = actor;
+                SpellCastState cast;
+                cast.mSpell = readKey(reader); cast.mAnimationGroup = reader.string();
+                cast.mCost = reader.float32(); cast.mElapsed = reader.float32();
+                cast.mReleaseTime = reader.float32(); cast.mDuration = reader.float32();
+                const auto released = reader.integer<std::uint8_t>();
+                if (released > 1) throw std::runtime_error("Invalid native spell release flag");
+                cast.mReleased = released;
+                result.mNativeSpellCasts.emplace(std::move(actor), std::move(cast));
             }
         }
         if (!reader.eof())
@@ -6887,6 +6935,29 @@ namespace ESM4
                 stream << ']';
             }
             stream << '}';
+        }
+        if (mVersion >= 87)
+        {
+            stream << ",\"native_spell_casts\":[";
+            bool first = true;
+            for (const auto& [actor, cast] : mNativeSpellCasts)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(actor.serialize())
+                    << "\",\"spell\":\"" << escapeJson(cast.mSpell.serialize())
+                    << "\",\"animation_group\":\"" << escapeJson(cast.mAnimationGroup)
+                    << "\",\"cost\":";
+                const auto number = [&](float value) {
+                    if (value == 0 && std::signbit(value)) stream << "-0.0";
+                    else stream << std::setprecision(17) << value;
+                };
+                number(cast.mCost); stream << ",\"elapsed\":"; number(cast.mElapsed);
+                stream << ",\"release_time\":"; number(cast.mReleaseTime);
+                stream << ",\"duration\":"; number(cast.mDuration);
+                stream << ",\"released\":" << (cast.mReleased ? "true" : "false") << '}';
+            }
+            stream << ']';
         }
         stream << "}";
         return stream.str();

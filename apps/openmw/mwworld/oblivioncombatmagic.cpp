@@ -96,13 +96,12 @@ namespace MWWorld
         return result;
     }
 
-    std::optional<std::array<float, 3>> resolveOblivionPotionRestoration(
-        const ESMStore& store, const ESM4::Potion& potion)
+    static std::optional<std::array<float, 3>> resolveInstantRestoration(
+        const ESMStore& store, const std::vector<ESM4::SpellEffect>& effects)
     {
-        if ((potion.mFlags & ESM4::Rec_Deleted) || potion.mEffects.empty() || !potion.mScriptId.isZeroOrUnset())
-            return std::nullopt;
+        if (effects.empty()) return std::nullopt;
         std::array<float, 3> amounts{};
-        for (const auto& effect : potion.mEffects)
+        for (const auto& effect : effects)
         {
             const int resource = effect.mId == ESM::fourCC("REHE") ? 0
                 : effect.mId == ESM::fourCC("RESP") ? 1 : effect.mId == ESM::fourCC("REFA") ? 2 : -1;
@@ -134,6 +133,20 @@ namespace MWWorld
             amounts[resource] += static_cast<float>(effect.mMagnitude);
         }
         return amounts;
+    }
+
+    std::optional<std::array<float, 3>> resolveOblivionPotionRestoration(
+        const ESMStore& store, const ESM4::Potion& potion)
+    {
+        if ((potion.mFlags & ESM4::Rec_Deleted) || !potion.mScriptId.isZeroOrUnset()) return {};
+        return resolveInstantRestoration(store, potion.mEffects);
+    }
+
+    std::optional<std::array<float, 3>> resolveOblivionSpellRestoration(
+        const ESMStore& store, const ESM4::Spell& spell)
+    {
+        if ((spell.mFlags & ESM4::Rec_Deleted) || !spell.mData || spell.mData->mType != 0) return {};
+        return resolveInstantRestoration(store, spell.mEffects);
     }
 
     bool supportsOblivionDefaultCombatParalysis(const ESMStore& store)

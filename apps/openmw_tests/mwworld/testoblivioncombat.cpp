@@ -1453,3 +1453,28 @@ TEST(OblivionCombatService, BlockingDodgePreservesAndAdvancesRetiringHeldHistory
     EXPECT_TRUE(service.findMeleeState(actor)->mFirstPerson->mHeldBlocks[0].mInactive);
     EXPECT_TRUE(service.isActionConsumed(service.findMeleeState(actor)->mDodge->mActionId));
 }
+
+TEST(OblivionCombatService, NativeSpellCastOwnershipSurvivesRestoreAndCancelsWithActorActions)
+{
+    auto state = bowServiceState();
+    const auto actor = state.mPlayer.mReference;
+    state.mNativeActorValues[0].mValues[9].mBase = 80;
+    MWMechanics::OblivionCombatService service; service.restore(state);
+    const ESM4::SpellCastState cast{ESM::FormKey::content("Oblivion.esm", 0x136),
+        "onehandcastself", 19.f, 0.f, .36666667f, 1.3f, false};
+    ASSERT_TRUE(service.beginSpellCast(actor, cast));
+    EXPECT_FALSE(service.beginSpellCast(actor, cast));
+    EXPECT_THROW(service.beginMeleeStrike(actor, ESM4::MeleeStrikeKind::Left, "attackleft"), std::invalid_argument);
+    service.capture(state);
+    MWMechanics::OblivionCombatService restored;
+    restored.restore(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()));
+    ASSERT_NE(restored.findSpellCast(actor), nullptr);
+    EXPECT_EQ(*restored.findSpellCast(actor), cast);
+    restored.cancelActorActions(actor);
+    EXPECT_EQ(restored.findSpellCast(actor), nullptr);
+    EXPECT_FLOAT_EQ(restored.getPlayerValue(9), 80.f);
+    auto expensive = cast; expensive.mCost = 81;
+    EXPECT_FALSE(restored.beginSpellCast(actor, expensive));
+    restored.capture(state);
+    EXPECT_TRUE(state.mNativeSpellCasts.empty());
+}

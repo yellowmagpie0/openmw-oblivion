@@ -6,6 +6,31 @@
 #include <stdexcept>
 namespace ESM4
 {
+    void SpellCastState::validate() const
+    {
+        if (!mSpell.isContent() || mSpell != ESM::FormKey::deserialize(mSpell.serialize()) || mAnimationGroup.empty()
+            || mAnimationGroup.find('\0') != std::string::npos)
+            throw std::invalid_argument("native cast requires a content spell and animation group");
+        for (float value : {mCost, mElapsed, mReleaseTime, mDuration})
+            if (!std::isfinite(value) || value < 0)
+                throw std::invalid_argument("native cast timing and cost must be finite and nonnegative");
+        if (mReleaseTime <= 0 || mReleaseTime >= mDuration || mElapsed > mDuration
+            || mReleased != (mElapsed >= mReleaseTime))
+            throw std::invalid_argument("inconsistent native cast release ownership");
+    }
+
+    bool advanceSpellCast(SpellCastState& state, float duration)
+    {
+        state.validate();
+        if (!std::isfinite(duration) || duration < 0)
+            throw std::invalid_argument("invalid native cast frame duration");
+        const float elapsed = static_cast<float>(std::min(double(state.mDuration), double(state.mElapsed) + duration));
+        const bool release = !state.mReleased && elapsed >= state.mReleaseTime;
+        state.mElapsed = elapsed;
+        state.mReleased = state.mReleased || release;
+        return release;
+    }
+
     namespace
     {
         void validateSpellCostSettings(const SpellCostSettings& settings)

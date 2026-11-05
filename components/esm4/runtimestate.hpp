@@ -2,6 +2,7 @@
 #define OPENMW_COMPONENTS_ESM4_RUNTIMESTATE_H
 
 #include "bounditemsource.hpp"
+#include "magiccaster.hpp"
 #include <cstdint>
 #include <map>
 #include <optional>
@@ -71,7 +72,8 @@ namespace ESM4
     // v80 retains Player tutorial skill use, tracking and cached recommended CLAS.
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 86;
+    // v87 retains pending native spells and once-only release ownership.
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 87;
 
     struct RuntimeContentIdentity
     {
@@ -948,6 +950,7 @@ namespace ESM4
         std::optional<float> mNativePlayerBowTimer = std::nullopt;
         // v38: owned bow playback, retained independently of loaded renderers.
         std::map<ESM::FormKey, RuntimeBowState> mNativeBowStates;
+        std::map<ESM::FormKey, SpellCastState> mNativeSpellCasts;
         // v9: native actor-value authority, including retained unloaded actors.
         std::vector<RuntimeActorValues> mNativeActorValues;
         // v11: shared base-record overrides, including bases with no loaded actors.

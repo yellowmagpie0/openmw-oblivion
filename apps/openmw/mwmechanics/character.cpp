@@ -63,6 +63,10 @@
 
 #include "actorutil.hpp"
 #include "oblivioncombat.hpp"
+#include "oblivionmagiccaster.hpp"
+#include "../mwworld/oblivioncombatmagic.hpp"
+#include "../mwworld/oblivioncharactergen.hpp"
+#include <components/esm4/loadspel.hpp>
 #include "oblivionmelee.hpp"
 #include <set>
 #include "oblivionai.hpp"
@@ -2411,8 +2415,138 @@ namespace MWMechanics
         }
     }
 
+    bool CharacterController::updateOblivionSpellCast(float duration)
+    {
+        auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
+        auto* service = world ? world->getOblivionCombatService() : nullptr;
+        if (!service || !mAnimation || mPtr != world->getPlayerPtr()) return false;
+        const auto actor = ESM::FormKey::dynamic("player", 1);
+        const bool requested = duration > 0 && world->getPlayer().consumeOblivionCastRequest();
+        const auto stop = [&] {
+            service->cancelSpellCast(actor);
+            if (!mOblivionCastGroup.empty()) mAnimation->disable(std::exchange(mOblivionCastGroup, {}));
+            if (mUpperBodyState == UpperBodyState::Casting) mUpperBodyState = UpperBodyState::WeaponEquipped;
+        };
+        const auto input = MWBase::Environment::get().getInputManager();
+        const auto* life = service->findActorLife(actor);
+        if (!life || life->mPhase != ESM4::ActorLifePhase::Alive || mOblivionRecoveryActive
+            || mSkipAnim || isScriptedAnimPlaying() || isKnockedOut() || isKnockedDown() || isRecovery()
+            || !input->getControlSwitch("playercontrols") || !input->getControlSwitch("playermagic")
+            || oblivionParalyzed(*world, mPtr))
+        {
+            stop();
+            return false;
+        }
+        if (!requested && !service->findSpellCast(actor)) { stop(); return false; }
+        const auto windows = MWBase::Environment::get().getWindowManager();
+        const auto& store = world->getStore();
+        try
+        {
+            const auto granted = MWWorld::resolveOblivionPlayerSpellInputs(store,
+                mPtr.get<ESM::NPC>()->mBase->mRace, world->getPlayer().getBirthSign());
+            if (requested && !service->findSpellCast(actor))
+            {
+                const auto selected = windows->getSelectedSpell();
+                const auto key = store.get<ESM4::Spell>().findFormKey(selected);
+                const auto* spell = key ? store.get<ESM4::Spell>().search(*key) : nullptr;
+                if (!spell || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), *key)
+                        == granted.mDeclaredSpells.end() || !MWWorld::resolveOblivionSpellRestoration(store, *spell))
+                {
+                    windows->messageBox("Select a supported self-restoration spell from the magic menu.");
+                    return false;
+                }
+                if (spell->mData->mLevel > 4 || service->getPlayerIntegerValue(25) < int(spell->mData->mLevel * 25))
+                {
+                    windows->messageBox("Your Restoration skill is too low to cast this spell.");
+                    return false;
+                }
+                const auto description = MWWorld::describeOblivionPlayerSpell(*world, *spell);
+                if (!description.mCost) return false;
+                if (!world->getGodModeState() && service->getPlayerValue(9) < *description.mCost)
+                {
+                    windows->messageBox("#{sMagicInsufficientSP}");
+                    return false;
+                }
+                std::string group = "castself";
+                auto& inventory = mPtr.getClass().getInventoryStore(mPtr);
+                const auto weapon = inventory.getSlot(MWWorld::InventoryStore::Slot_CarriedRight);
+                if (mPtr.getClass().getCreatureStats(mPtr).getDrawState() == DrawState::Weapon
+                    && weapon != inventory.end())
+                {
+                    const auto id = MWWorld::OblivionProfileServices::nativeItemId(store, weapon->getCellRef().getRefId());
+                    if (const auto* definition = store.get<ESM4::Weapon>().search(id);
+                        definition && (definition->mData.type == 0 || definition->mData.type == 2)) group = "onehandcastself";
+                }
+                const auto* metadata = mAnimation->getControllerSequenceMetadata(group);
+                if (!metadata || metadata->mCycleType != 2 || metadata->mFrequency <= 0)
+                    throw std::invalid_argument("missing native self-cast sequence");
+                // The cast asset uses the same start/Hit/end text-key layout.
+                const auto keys = ESM4::powerMeleeKeyTimes(nativeRawKeys(*metadata));
+                if (keys.mMatchedCount != 3) throw std::invalid_argument("native cast lacks release keys");
+                ESM4::SpellCastState cast{*key, group, world->getGodModeState() ? 0.f : *description.mCost,
+                    0.f, (keys.mTimes[1] - keys.mTimes[0]) / metadata->mFrequency,
+                    (keys.mTimes[2] - keys.mTimes[0]) / metadata->mFrequency, false};
+                if (!service->beginSpellCast(actor, std::move(cast))) return false;
+                Log(Debug::Info) << "M16 native cast begin: spell=" << key->serialize() << " group=" << group;
+            }
+            const auto* pending = service->findSpellCast(actor);
+            if (!pending) return false;
+            const auto cast = *pending;
+            const auto* spell = store.get<ESM4::Spell>().search(cast.mSpell);
+            const auto amounts = spell ? MWWorld::resolveOblivionSpellRestoration(store, *spell) : std::nullopt;
+            if (!amounts || std::find(granted.mDeclaredSpells.begin(), granted.mDeclaredSpells.end(), cast.mSpell)
+                    == granted.mDeclaredSpells.end())
+                throw std::invalid_argument("pending native cast no longer has an owned restoration spell");
+            const float nextTime = static_cast<float>(std::min(double(cast.mDuration), double(cast.mElapsed) + duration));
+            const auto bind = [&](MWRender::Animation& view) {
+                const auto* metadata = view.getControllerSequenceMetadata(cast.mAnimationGroup);
+                if (!metadata || metadata->mFrequency <= 0 || metadata->mStopTime <= metadata->mStartTime)
+                    throw std::invalid_argument("pending native cast has no animation metadata");
+                const auto fraction = [&](float elapsed) {
+                    return std::clamp(elapsed * metadata->mFrequency / (metadata->mStopTime - metadata->mStartTime), 0.f, 1.f);
+                };
+                if (!view.getInfo(cast.mAnimationGroup))
+                    view.play(cast.mAnimationGroup, Priority_Weapon, MWRender::BlendMask_UpperBody,
+                        false, 0.f, "start", "stop", fraction(cast.mElapsed), 0, false,
+                        MWRender::Animation::PlaybackScope::ThisView);
+                const float frame = metadata->mTimelineStart
+                    + fraction(nextTime) * (metadata->mTimelineStop - metadata->mTimelineStart);
+                if (!view.setAnimationFrameTime(cast.mAnimationGroup, frame, MWRender::Animation::PlaybackScope::ThisView))
+                    throw std::invalid_argument("native cast renderer refused frame");
+            };
+            bind(*mAnimation);
+            if (auto* peer = mAnimation->getPlaybackPeer()) bind(*peer);
+            mOblivionCastGroup = cast.mAnimationGroup;
+            mUpperBodyState = UpperBodyState::Casting;
+            auto magnitudes = *amounts;
+            const float power = oblivionCombatSpellPower(*world, mPtr);
+            for (float& magnitude : magnitudes) magnitude *= power;
+            auto skillUse = !cast.mReleased && nextTime >= cast.mReleaseTime
+                ? MWWorld::prepareOblivionCharacterGenerationSkillUse(*world, 25, 1, 1.f)
+                : std::optional<ESM4::CharacterGenerationState>{};
+            const auto update = service->advanceRestorationCast(mPtr, &world->getPlayer(), duration, magnitudes,
+                MWWorld::resolveOblivionPlayerDynamicBaseSettings(store));
+            if (update && update->mReleased)
+            {
+                if (update->mApplied && skillUse) world->getPlayer().swapOblivionCharacterGenerationState(skillUse);
+                Log(Debug::Info) << "M16 native cast release: spell=" << cast.mSpell.serialize()
+                    << " applied=" << update->mApplied << " health=" << service->getPlayerValue(8)
+                    << " magicka=" << service->getPlayerValue(9);
+                if (!update->mApplied) windows->messageBox("#{sMagicInsufficientSP}");
+            }
+            return true;
+        }
+        catch (const std::exception& error)
+        {
+            Log(Debug::Warning) << "M16 native cast rejected: " << error.what();
+            stop();
+            return false;
+        }
+    }
+
     bool CharacterController::updateOblivionWeaponState(float duration)
     {
+        if (updateOblivionSpellCast(duration)) return true;
         if (mOblivionRecoveryActive) return true;
         auto* world = dynamic_cast<MWWorld::World*>(MWBase::Environment::get().getWorld().operator MWBase::World*());
         auto* service = world ? world->getOblivionCombatService() : nullptr;

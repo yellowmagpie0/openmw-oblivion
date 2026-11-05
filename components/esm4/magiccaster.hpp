@@ -2,9 +2,30 @@
 #define OPENMW_ESM4_MAGICCASTER_H
 
 #include <cstdint>
+#include <string>
+#include <components/esm/formkey.hpp>
 
 namespace ESM4
 {
+    // Native pending cast ownership. The menu selection can change independently.
+    // Release is an attempted transaction, including an insufficient-magicka result;
+    // it must never be retried by animation callbacks or after loading a save.
+    struct SpellCastState
+    {
+        ESM::FormKey mSpell;
+        std::string mAnimationGroup;
+        float mCost = 0;
+        float mElapsed = 0;
+        float mReleaseTime = 0;
+        float mDuration = 0;
+        bool mReleased = false;
+        void validate() const;
+        friend bool operator==(const SpellCastState&, const SpellCastState&) = default;
+    };
+    // Advance a candidate, then publish it together with the release's resource
+    // changes. Returns true exactly once when the authored release time is crossed.
+    bool advanceSpellCast(SpellCastState& state, float duration);
+
     struct SpellCostSettings
     {
         // Compiled defaults; callers resolve winning GMST overrides.

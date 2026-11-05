@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 86
+CURRENT_VERSION = 87
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -1685,6 +1685,38 @@ def _validate_basic_state(state: dict[str, Any]) -> None:
         if previous_contact is not None and order <= previous_contact:
             raise RuntimeStateError("Noncanonical trap contact list")
         previous_contact = order
+
+    casts = check_collection(state.get("native_spell_casts", []), "native spell cast list")
+    if version < 87 and casts:
+        raise RuntimeStateError("Native spell casts require version87")
+    previous_cast = None
+    for cast in casts:
+        if not isinstance(cast, dict) or set(cast) != {
+                "actor", "spell", "animation_group", "cost", "elapsed", "release_time", "duration", "released"}:
+            raise RuntimeStateError("Invalid native spell cast shape")
+        actor = cast["actor"]
+        native_key(actor); native_key(cast["spell"])
+        order = tuple(actor.split(":"))
+        if previous_cast is not None and order <= previous_cast:
+            raise RuntimeStateError("Noncanonical native spell cast owners")
+        previous_cast = order
+        group = cast["animation_group"]
+        if (not cast["spell"].startswith("content:") or not isinstance(group, str) or not group or "\0" in group
+                or type(cast["released"]) is not bool):
+            raise RuntimeStateError("Invalid native spell identity, group or release flag")
+        cost, elapsed, release, duration = [native_float(cast[k])
+            for k in ("cost", "elapsed", "release_time", "duration")]
+        if (min(cost, elapsed) < 0 or not 0 < release < duration or elapsed > duration
+                or cast["released"] != (elapsed >= release)):
+            raise RuntimeStateError("Inconsistent native spell release ownership")
+        life = next((row for row in lives if row["actor"] == actor), None)
+        melee = next((row for row in state.get("native_melee_states", []) if row["actor"] == actor), {})
+        if (actor not in native_keys or life is None or life["phase"] != 0
+                or any(row["actor"] == actor for row in state.get("native_bow_states", []))
+                or any(melee.get(k) is not None for k in ("strike", "reaction", "dodge", "passive_sequence"))
+                or any((melee.get("first_person") or {}).get(k) is not None
+                       for k in ("strike", "reaction", "passive_sequence"))):
+            raise RuntimeStateError("Dangling, dead or conflicting native spell caster")
 
     melee_states = check_collection(state.get("native_melee_states", []), "native melee state list")
     if version < 21 and melee_states:
@@ -3382,6 +3414,16 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
         result["native_trap_contacts"] = [
             {"reference": reader.string(), "body_record": reader.unpack("<I"), "actor": reader.string()}
             for _ in range(reader.count())]
+    if version >= 87:
+        result["native_spell_casts"] = []
+        for _ in range(reader.count()):
+            cast = {"actor": reader.string(), "spell": reader.string(), "animation_group": reader.string()}
+            for key in ("cost", "elapsed", "release_time", "duration"):
+                cast[key] = reader.unpack("<f")
+            flag = reader.unpack("<B")
+            if flag > 1: raise RuntimeStateError("Invalid native spell release flag")
+            cast["released"] = bool(flag)
+            result["native_spell_casts"].append(cast)
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4183,6 +4225,14 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             writer.string(contact["reference"])
             writer.pack("<I", contact["body_record"])
             writer.string(contact["actor"])
+    if version >= 87:
+        casts = state.get("native_spell_casts", [])
+        writer.pack("<I", len(casts))
+        for cast in casts:
+            writer.string(cast["actor"]); writer.string(cast["spell"]); writer.string(cast["animation_group"])
+            for key in ("cost", "elapsed", "release_time", "duration"):
+                writer.pack("<f", cast[key])
+            writer.pack("<B", cast["released"])
     return writer.finish()
 
 
@@ -4320,6 +4370,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
     if state.get("schema_version", 1) < 86 and state.get("native_trap_contacts"):
         raise RuntimeStateError("Cannot infer trap contacts from an older schema")
     state.setdefault("native_trap_contacts", [])
+    if state.get("schema_version", 1) < 87 and state.get("native_spell_casts"):
+        raise RuntimeStateError("Cannot infer pending casts from an older schema")
+    state.setdefault("native_spell_casts", [])
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

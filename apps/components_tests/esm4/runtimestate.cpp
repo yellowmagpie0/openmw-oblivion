@@ -1863,7 +1863,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6268,7 +6268,8 @@ TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectL
     const auto rowSize = state.serializeBinary().size() - emptySize;
     state.mFactionReactions[{b,a}] = 17;
     auto unordered = state.serializeBinary();
-    const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0);
+    const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0)
+        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0);
     std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
     state.mFactionReactions.clear(); state.mVersion = 80;
@@ -6325,7 +6326,7 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     const auto wire = state.serializeBinary();
     // Independent public wire recipe, also checked by the Python inspector.
     const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
-    const std::size_t contactSuffix = state.mVersion >= 86 ? 4 : 0;
+    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
     EXPECT_TRUE(std::all_of(wire.end() - contactSuffix, wire.end(), [](auto byte) { return byte == 0; }));
@@ -6468,4 +6469,40 @@ TEST(ESM4RuntimeState, TrapContactOwnershipRoundTripAndLegacyAbsence)
     EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
     invalid.mNativeTrapContacts.clear();
     EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeTrapContacts.empty());
+}
+
+TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOwner)
+{
+    auto state = makeState();
+    const auto actor = state.mPlayer.mReference;
+    ESM4::RuntimeActorValues values;
+    values.mActor = actor; values.mBase = ESM::FormKey::content("Oblivion.esm", 7);
+    values.mOwner = ESM4::ActorValueOwner::Player;
+    state.mNativeActorValues.push_back(values);
+    state.mNativeActorLife.push_back({actor, values.mBase, ESM4::ActorLifePhase::Alive, 0, {}});
+    state.mNativeSpellCasts[actor] = {ESM::FormKey::content("Oblivion.esm", 0x136),
+        "onehandcastself", 19.f, .25f, .36666667f, 1.3f, false};
+    for (bool released : {false, true})
+    {
+        auto& cast = state.mNativeSpellCasts.at(actor);
+        cast.mElapsed = released ? .5f : .25f; cast.mReleased = released;
+        const auto restored = ESM4::RuntimeState::deserializeBinary(state.serializeBinary());
+        EXPECT_EQ(restored, state);
+        EXPECT_EQ(restored.canonicalJson(), state.canonicalJson());
+        auto continued = restored.mNativeSpellCasts.at(actor);
+        EXPECT_EQ(ESM4::advanceSpellCast(continued, .5f), !released);
+        EXPECT_FALSE(ESM4::advanceSpellCast(continued, 1.f));
+    }
+    auto invalid = state; invalid.mVersion = 86;
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid.mNativeSpellCasts.clear();
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeSpellCasts.empty());
+    invalid = state; invalid.mNativeActorLife.clear();
+    EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
+    invalid = state; invalid.mNativeSpellCasts.at(actor).mReleased = false;
+    EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
+    invalid = state; invalid.mNativeSpellCasts.at(actor).mSpell = {};
+    EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
+    auto wire = state.serializeBinary(); wire.back() = 2;
+    EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }
