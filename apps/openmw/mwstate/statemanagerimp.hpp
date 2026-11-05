@@ -40,6 +40,7 @@ namespace MWState
         bool mQuitRequest;
         bool mAskLoadRecent;
         bool mNewGameRequest = false;
+        bool mAutosaveRequested = false;
         std::optional<std::pair<const Character*, std::filesystem::path>> mLoadRequest;
         State mState;
         CharacterManager mCharacterManager;
@@ -98,6 +99,7 @@ namespace MWState
         /** This is mostly used for quicksaving and autosaving, for they use the same name over and over again
             \param name Name of save, defaults to "Quicksave"**/
         void quickSave(std::string name = "Quicksave") override;
+        void requestAutosave() override;
 
         /// Loads the last saved file
         /** Used for quickload **/

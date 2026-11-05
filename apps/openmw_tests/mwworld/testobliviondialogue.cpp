@@ -27,6 +27,8 @@
 #include "apps/openmw/mwworld/esmstore.hpp"
 #include "apps/openmw/mwworld/oblivionscriptmanager.hpp"
 #include "apps/openmw/mwworld/globals.hpp"
+#include "apps/openmw/mwstate/statemanagerimp.hpp"
+#include <components/settings/values.hpp>
 #include "apps/openmw/mwworld/worldmodel.hpp"
 
 #include <components/compiler/extensions.hpp>
@@ -862,6 +864,60 @@ TEST(OblivionDialogueMenu, NativeWeekdayUsesElapsedDaysAndPcAchievementHasNoSide
         EXPECT_EQ(f.sequence(), sequence);
         EXPECT_EQ(ObScript::asInteger(scripts.call("GetDayOfWeek", {}, {}, context, {})), 0);
     }
+}
+
+TEST(OblivionDialogueMenu, ScriptAutosaveWaitsForSaveableUiAndRetainsTheOwningGame)
+{
+    struct Windows : TestingOpenMW::InventoryWindowManager
+    {
+        bool mAllowed = false;
+        bool isSavingAllowed() const override { return mAllowed; }
+    } windows;
+    MenuFixture f;
+    f.mFixture.mEnvironment.setWindowManager(windows);
+    struct Saver : MWState::StateManager
+    {
+        using MWState::StateManager::StateManager;
+        std::vector<std::string> mSaves;
+        void quickSave(std::string name) override { mSaves.push_back(std::move(name)); }
+    } saver(f.mFixture.mDirectory / "autosave-test", {"headless.esm"});
+    f.mFixture.mEnvironment.setStateManager(saver);
+    auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+    ObScript::RuntimeContext context;
+    saver.resumeGame();
+    scripts.call("Autosave", {}, {}, context, {});
+    scripts.call("Autosave", {}, {}, context, {});
+    saver.update(0);
+    EXPECT_TRUE(saver.mSaves.empty());
+    auto retained = saver.retainRuntime();
+    ASSERT_TRUE(retained.detach());
+    windows.mAllowed = true;
+    saver.update(0);
+    EXPECT_TRUE(saver.mSaves.empty());
+    ASSERT_TRUE(retained.restore());
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves, (std::vector<std::string>{"Autosave"}));
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
+
+    // A request from an incoming game cannot appear in the retained original.
+    auto incoming = saver.retainRuntime();
+    ASSERT_TRUE(incoming.detach());
+    saver.resumeGame();
+    saver.requestAutosave();
+    ASSERT_TRUE(incoming.restore());
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
+
+    struct RestoreSetting
+    {
+        bool mValue = Settings::saves().mAutosave;
+        ~RestoreSetting() { Settings::saves().mAutosave.set(mValue); }
+    } restoreSetting;
+    Settings::saves().mAutosave.set(false);
+    saver.requestAutosave();
+    saver.update(0);
+    EXPECT_EQ(saver.mSaves.size(), 1u);
 }
 
 TEST(OblivionDialogueMenu, CharacterGenerationHistoryClearsWithPlayer)

@@ -1673,8 +1673,8 @@ namespace MWWorld
             return std::int64_t(mWorld.getOblivionIgnoreFriendlyHits(objectKey()).value_or(false));
         if (name == "autosave")
         {
-            MWBase::Environment::get().getStateManager()->quickSave("Autosave");
-            trace("autosave");
+            MWBase::Environment::get().getStateManager()->requestAutosave();
+            trace("autosave requested");
             return std::int64_t(0);
         }
 
