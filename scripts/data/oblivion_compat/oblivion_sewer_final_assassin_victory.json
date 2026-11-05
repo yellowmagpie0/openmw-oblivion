@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "name": "Normal healing and block during Baurus final assassin victory",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal nearby=require('openmw.nearby')\nlocal Actor=require('openmw.types').Actor\nlocal ready=false\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n local hp=Actor.stats.dynamic.health(self).current\n assert(hp>0,'Player died during final assassin fight')\n local a=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',0x1e703))\n if not a or not a:isValid() then return end\n if not ready then ready=true print('Final combat ready') end\n if Actor.isDead(a) then print('Final assassin dead') end\n local d=a.position-self.position\n local c=camera.getPosition()\n local v=camera.getViewTransform():apply(util.vector3(c.x+d.x,c.y+d.y,c.z))\n local angle=math.atan2(v.x,-v.z)\n print(string.format('Final assassin aim x=%d y=%d',math.max(-8192,math.min(8192,math.floor(angle*5120+.5))),math.floor(-camera.getPitch()*5120+.5)))\n if math.abs(angle)<.06 then print('Final assassin facing') end\n if d:length()<90 then print('Final assassin in reach') end\n timer=timer+dt\n if timer>1 then timer=0 print('Final fight Player health='..hp..' assassin health='..Actor.stats.dynamic.health(a).current..' pos='..tostring(a.position)..' distance='..d:length()) end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Final combat ready",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "key",
+      "value": "c"
+    },
+    {
+      "type": "mouse_down",
+      "button": 3
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final assassin aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final assassin aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final assassin aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final assassin aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final assassin aim x=",
+      "after_start": true,
+      "timeout_seconds": 10,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final assassin aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.2
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final assassin dead",
+      "timeout_seconds": 45,
+      "abort_on_failure": true
+    },
+    {
+      "type": "mouse_up",
+      "button": 3
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Writing saved game 'Quicksave'",
+      "timeout_seconds": 20,
+      "abort_on_failure": true
+    },
+    {
+      "type": "screenshot",
+      "name": "final-assassin-victory.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 300,
+  "expected_exit": 0,
+  "expected_log": [
+    "Final assassin dead",
+    "setstage quest=content:oblivion.esm:02466e stage=84",
+    "Writing saved game 'Quicksave'"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:",
+    "Native AI package done: actor=content:oblivion.esm:032a17 package=content:oblivion.esm:04f201"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}

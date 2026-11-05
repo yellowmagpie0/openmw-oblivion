@@ -1,0 +1,571 @@
+{
+  "scope": "Original normal-input Sanctum68 through final speech/Amulet74, actual assassination76/80, final assassin victory84 and fresh mourning86.",
+  "full_escape_complete": false,
+  "implementation": "Combat approach can prefer a materially shorter complete native PGRD route over a continuous Recast detour. Both endpoints must be within256 of enabled native nodes; foreign-cell routes reject. A32-unit improvement margin avoids equivalent-route churn. Target visibility is not required for route planning. This supplies steering only; collision, reach, contact, damage and original scripts retain authority. Escort routing is unchanged. This is a gameplay routing policy, not instruction-proven exact original pathfinding.",
+  "independent_content_and_runtime_evidence": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "pathgrid_audit": "build/oblivion-compat/sewer-escape/final-wall-pathgrid-audit.json",
+    "native_nodes": [
+      182,
+      181,
+      109,
+      108
+    ],
+    "interpretation": "Winning PGRP positions and PGRR destination stream independently decode a connected route through the opening with a50-unit drop. Three World-collision rays through the opening are clear; endpoint GetLOS remains0 because reaching the Emperor requires a corner.",
+    "collision_probe": "build/oblivion-compat/sewer-escape/final-wall-diagnostic-01/scenario.json",
+    "los_probe": "build/oblivion-compat/sewer-escape/final-wall-los-diagnostic-01/scenario.json",
+    "scope": "Read-only queries/observer; no actor, health, quest or completion changes. These are diagnostics, not substitute course acceptance."
+  },
+  "checks": {
+    "target-route-focused-02": {
+      "path": "build/oblivion-compat/sewer-escape/target-route-focused-02/verification.json",
+      "source": {
+        "head": "475c06ce667e643b824cbc630511c0f5c4d97077",
+        "source_fingerprint": "a2e77df0e9bb1a6e56d2896b681092de4bdb88ec488b768dca516ef96072fb77"
+      },
+      "results": {
+        "engine": {
+          "executed": 37,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionAiTest.*",
+          "binary_sha256": "025f515daed12d5fe5f1c0b1bec93aea17de90d2a12094901bcc04ae4a00d6ac",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "3bd340f80dfed96ca143a0aa92349971ca7216649617e9a96c2da9ac4dab555a",
+          "inventory_sha256": "fd931226f5b4eec17d0b92a990c32eb4dc2e25453a38d69057c79291f59955e2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "target-route-normal-integration-02": {
+      "path": "build/oblivion-compat/sewer-escape/target-route-normal-integration-02/verification.json",
+      "source": {
+        "head": "475c06ce667e643b824cbc630511c0f5c4d97077",
+        "source_fingerprint": "a2e77df0e9bb1a6e56d2896b681092de4bdb88ec488b768dca516ef96072fb77"
+      },
+      "results": {
+        "engine": {
+          "executed": 2196,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "025f515daed12d5fe5f1c0b1bec93aea17de90d2a12094901bcc04ae4a00d6ac",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "1213f940826e881a114e580c13f483a26d2e4ce8b833a0ef087c1f22a996df08",
+          "inventory_sha256": "fd931226f5b4eec17d0b92a990c32eb4dc2e25453a38d69057c79291f59955e2",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "reused_component_evidence": {
+    "path": "build/oblivion-compat/sewer-escape/default-open-normal-integration-01/verification.json",
+    "executed": 3262,
+    "scope": "Original475c dirty-source component gate; component implementation/tests unchanged by the target-route patch. Not relabeled as a fresh current-source run."
+  },
+  "courses": {
+    "sanctum-marker-j-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-marker-j-01/scenario.json",
+      "passed": true,
+      "state": {
+        "save": "build/oblivion-compat/sewer-escape/sanctum-marker-j-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "8f638bc885cec20d5c0c99be5564e26e7d652924da9e2d3eea242c56c0f49b53",
+        "quest_stage": 70,
+        "player_position": [
+          2800.49267578125,
+          10065.1025390625,
+          -1439.0
+        ],
+        "health": 71.19003295898438,
+        "amulet_count": 0,
+        "emperor_amulet_count": 1,
+        "life": {
+          "032a16": 0,
+          "032a18": 0,
+          "01e703": 0
+        },
+        "death_counts": {
+          "023f2b": 0,
+          "023f2e": 0,
+          "01e6ff": 0
+        },
+        "pending_deaths": 0,
+        "final_assassin_bound_inventory": [
+          {
+            "base": "content:oblivion.esm:033525",
+            "count": 1,
+            "condition": 1500.0,
+            "charge": -1.0,
+            "equipped_slots": 60,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 0
+            }
+          },
+          {
+            "base": "content:oblivion.esm:051b47",
+            "count": 1,
+            "condition": 750.0,
+            "charge": -1.0,
+            "equipped_slots": 3,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 1
+            }
+          },
+          {
+            "base": "content:oblivion.esm:02627c",
+            "count": 1,
+            "condition": 2500.0,
+            "charge": -1.0,
+            "equipped_slots": 65536,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 2
+            }
+          }
+        ],
+        "final_assassin_bound_abilities": [
+          {
+            "actor": "content:oblivion.esm:01e703",
+            "abilities": [
+              {
+                "spell": "content:oblivion.esm:06461c",
+                "displaced_inventory": [
+                  {
+                    "base": "content:oblivion.esm:02731a",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 32,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  },
+                  {
+                    "base": "content:oblivion.esm:08d755",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 2,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "entry_restore": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/sanctum-gate-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "a392058d0bf09ff4a9e52dcdede9334211727a8f92f451b8d2d0b73dd8f9f8a6",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        }
+      }
+    },
+    "sanctum-amulet-01": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-amulet-01/scenario.json",
+      "passed": true,
+      "state": {
+        "save": "build/oblivion-compat/sewer-escape/sanctum-amulet-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "06c13ab14752f5cc8aed01229b2463ea6763fac529bf935a3cb520962928e948",
+        "quest_stage": 74,
+        "player_position": [
+          2800.49267578125,
+          10065.1025390625,
+          -1439.0
+        ],
+        "health": 71.19003295898438,
+        "amulet_count": 1,
+        "emperor_amulet_count": 0,
+        "life": {
+          "032a16": 1,
+          "032a18": 0,
+          "01e703": 0
+        },
+        "death_counts": {
+          "023f2b": 1,
+          "023f2e": 0,
+          "01e6ff": 0
+        },
+        "pending_deaths": 0,
+        "final_assassin_bound_inventory": [
+          {
+            "base": "content:oblivion.esm:033525",
+            "count": 1,
+            "condition": 1500.0,
+            "charge": -1.0,
+            "equipped_slots": 60,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 0
+            }
+          },
+          {
+            "base": "content:oblivion.esm:051b47",
+            "count": 1,
+            "condition": 750.0,
+            "charge": -1.0,
+            "equipped_slots": 3,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 1
+            }
+          },
+          {
+            "base": "content:oblivion.esm:02627c",
+            "count": 1,
+            "condition": 2500.0,
+            "charge": -1.0,
+            "equipped_slots": 65536,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 2
+            }
+          }
+        ],
+        "final_assassin_bound_abilities": [
+          {
+            "actor": "content:oblivion.esm:01e703",
+            "abilities": [
+              {
+                "spell": "content:oblivion.esm:06461c",
+                "displaced_inventory": [
+                  {
+                    "base": "content:oblivion.esm:02731a",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 32,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  },
+                  {
+                    "base": "content:oblivion.esm:08d755",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 2,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "entry_restore": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/sanctum-marker-j-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "8f638bc885cec20d5c0c99be5564e26e7d652924da9e2d3eea242c56c0f49b53",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        }
+      }
+    },
+    "sanctum-emperor-death-03": {
+      "path": "build/oblivion-compat/sewer-escape/sanctum-emperor-death-03/scenario.json",
+      "passed": true,
+      "state": {
+        "save": "build/oblivion-compat/sewer-escape/sanctum-emperor-death-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "12dc2dafd8eabeb43e9ee932379dea188f2014943ea4f6b79092fa82c6940f36",
+        "quest_stage": 80,
+        "player_position": [
+          2800.49267578125,
+          10065.1025390625,
+          -1439.0
+        ],
+        "health": 71.19003295898438,
+        "amulet_count": 1,
+        "emperor_amulet_count": 0,
+        "life": {
+          "032a16": 1,
+          "032a18": 1,
+          "01e703": 0
+        },
+        "death_counts": {
+          "023f2b": 1,
+          "023f2e": 1,
+          "01e6ff": 0
+        },
+        "pending_deaths": 0,
+        "final_assassin_bound_inventory": [
+          {
+            "base": "content:oblivion.esm:033525",
+            "count": 1,
+            "condition": 1500.0,
+            "charge": -1.0,
+            "equipped_slots": 60,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 0
+            }
+          },
+          {
+            "base": "content:oblivion.esm:051b47",
+            "count": 1,
+            "condition": 750.0,
+            "charge": -1.0,
+            "equipped_slots": 3,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 1
+            }
+          },
+          {
+            "base": "content:oblivion.esm:02627c",
+            "count": 1,
+            "condition": 2499.219970703125,
+            "charge": -1.0,
+            "equipped_slots": 65536,
+            "hotkey": -1,
+            "owner": "null",
+            "remaining_usage_time": -1.0,
+            "ownership_rank": null,
+            "ownership_global": "null",
+            "extra_scale": null,
+            "bound_source": {
+              "spell": "content:oblivion.esm:06461c",
+              "effect_index": 2
+            }
+          }
+        ],
+        "final_assassin_bound_abilities": [
+          {
+            "actor": "content:oblivion.esm:01e703",
+            "abilities": [
+              {
+                "spell": "content:oblivion.esm:06461c",
+                "displaced_inventory": [
+                  {
+                    "base": "content:oblivion.esm:02731a",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 32,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  },
+                  {
+                    "base": "content:oblivion.esm:08d755",
+                    "count": 1,
+                    "condition": -1.0,
+                    "charge": -1.0,
+                    "equipped_slots": 2,
+                    "hotkey": -1,
+                    "owner": "null",
+                    "remaining_usage_time": -1.0,
+                    "ownership_rank": null,
+                    "ownership_global": "null",
+                    "extra_scale": null
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "entry_restore": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/sanctum-amulet-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "06c13ab14752f5cc8aed01229b2463ea6763fac529bf935a3cb520962928e948",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        }
+      }
+    },
+    "final-assassin-victory-01": {
+      "path": "build/oblivion-compat/sewer-escape/final-assassin-victory-01/scenario.json",
+      "passed": true,
+      "state": {
+        "save": "build/oblivion-compat/sewer-escape/final-assassin-victory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "a0c5715275c37fededbd7396e19a234474865b0e62a70afc157ce179f7f29691",
+        "quest_stage": 84,
+        "player_position": [
+          2800.49267578125,
+          10065.1025390625,
+          -1439.0
+        ],
+        "health": 74.29767608642578,
+        "amulet_count": 1,
+        "emperor_amulet_count": 0,
+        "life": {
+          "032a16": 1,
+          "032a18": 1,
+          "01e703": 1
+        },
+        "death_counts": {
+          "023f2b": 1,
+          "023f2e": 1,
+          "01e6ff": 1
+        },
+        "pending_deaths": 0,
+        "final_assassin_bound_inventory": [],
+        "final_assassin_bound_abilities": [],
+        "entry_restore": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/sanctum-emperor-death-03/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "12dc2dafd8eabeb43e9ee932379dea188f2014943ea4f6b79092fa82c6940f36",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        }
+      }
+    },
+    "final-victory-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/final-victory-reload-01/scenario.json",
+      "passed": true,
+      "state": {
+        "save": "build/oblivion-compat/sewer-escape/final-victory-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "sha256": "da75b253a4c09430dae9aa92b0c34ba61466d8e85b6a1dcb6525e146ce6ddf0e",
+        "quest_stage": 86,
+        "player_position": [
+          2800.49267578125,
+          10065.1025390625,
+          -1439.0
+        ],
+        "health": 74.29767608642578,
+        "amulet_count": 1,
+        "emperor_amulet_count": 0,
+        "life": {
+          "032a16": 1,
+          "032a18": 1,
+          "01e703": 1
+        },
+        "death_counts": {
+          "023f2b": 1,
+          "023f2e": 1,
+          "01e6ff": 1
+        },
+        "pending_deaths": 0,
+        "final_assassin_bound_inventory": [],
+        "final_assassin_bound_abilities": [],
+        "entry_restore": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/final-assassin-victory-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "a0c5715275c37fededbd7396e19a234474865b0e62a70afc157ce179f7f29691",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        }
+      }
+    }
+  },
+  "actual_contact": {
+    "path": "build/oblivion-compat/sewer-escape/sanctum-emperor-death-03/process.log",
+    "actor": "content:oblivion.esm:01e703",
+    "victim": "content:oblivion.esm:032a18",
+    "action_id": "18d",
+    "health_damage": 4.24612,
+    "script": "CGEmperorScript OnHit CGAssassinFinal calls Kill; victim previously had1000 health. Original gamemode then advances76. This was a real dagger hit, not injected damage/death/stage.",
+    "result": "Original76 and80; mortal Emperor death, controls released, one Amulet, Player health71.19003."
+  },
+  "final_victory": {
+    "cause": "Baurus joined normal combat and killed the40-health final assassin with three sword hits. Player cast the selected heal and held normal weapon block; one genuine dagger hit reached Player.",
+    "player_health": 74.29767608642578,
+    "bound_cleanup": "Final assassin has no bound items or ability owner after death/restart. Three named deaths each count1; pending death queue empty.",
+    "fresh_restore": "Whole-state comparisons at every retained boundary have zero differences; no old hit/death/Amulet result replay."
+  },
+  "inspected_images": [
+    "build/oblivion-compat/sewer-escape/sanctum-marker-j-01/sanctum-marker-j.png",
+    "build/oblivion-compat/sewer-escape/sanctum-final-greeting-01/emperor-final-greeting.png",
+    "build/oblivion-compat/sewer-escape/sanctum-amulet-01/emperor-assassination-start.png",
+    "build/oblivion-compat/sewer-escape/sanctum-emperor-death-03/emperor-death.png",
+    "build/oblivion-compat/sewer-escape/final-assassin-victory-01/final-assassin-victory.png",
+    "build/oblivion-compat/sewer-escape/final-victory-reload-01/baurus-mourning.png"
+  ],
+  "retained_failures": {
+    "sanctum-emperor-death-01": "Old navigation moved the assassin toward the side gate; original76 did not occur within120 seconds. Genuine F5 retained; no runtime errors.",
+    "sanctum-emperor-death-02": "First authored-route policy required endpoint visibility. Focused/full engine tests passed for that policy, but real course still failed. Superseded by target-route-focused02 and current normal integration02.",
+    "final-assassin-melee-01": "Baurus killed the assassin before the in-reach wait. Fixed attack tail then struck Baurus once. This course remains failed and its save is excluded from the clean main chain. Clean retry uses heal/block and stops on victory.",
+    "default-open-sanitizer-integration-01": "Intentionally cancelled before tests to batch the observed navigation repair. Driver130 and owned build-group termination recorded in intentional-stop.json. Compiled objects reusable, no sanitizer pass claimed."
+  },
+  "remaining": "Baurus class-choice force greeting at86 is blocked by the zero-aggression-only greeting condition; authored script sets his aggression5. Then class choice, sewer exit88, outdoor restart, shaman victory and continuous prison-to-outdoors acceptance. Fresh accumulated sanitizer integration still required.",
+  "runtime_executable_sha256": "f974830e435f9c4074480b2e503c455824a5854f557a491eb7c6ecd442a355e6",
+  "source_note": "C++ production/tests unchanged after current full2196 normal engine gate; subsequent additions are docs/evidence and JSON courses."
+}

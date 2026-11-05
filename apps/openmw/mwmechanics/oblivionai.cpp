@@ -5753,6 +5753,15 @@ namespace MWMechanics
                 if (status != DetourNavigator::Status::Success && status != DetourNavigator::Status::PartialPath)
                     route.clear();
             }
+            if (!escort)
+                if (auto authored = shorterOblivionPathgridApproach(
+                        mWorld.mStore.getOblivionPathgridService(), cellKey(actor),
+                        position, destination, route))
+                {
+                    route = std::move(*authored);
+                    logEvent("target-route", live,
+                        "combat authored-shorter nodes=" + std::to_string(route.size()));
+                }
             // Recast can project a point inside a doorway link back to the
             // link's entrance. Keep the next shared waypoint when replanning
             // so crossing actors do not repeatedly return to that entrance.

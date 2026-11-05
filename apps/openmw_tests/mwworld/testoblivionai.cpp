@@ -15,6 +15,7 @@
 #include "apps/openmw/mwclass/npc.hpp"
 #include "apps/openmw/mwmechanics/oblivionai.hpp"
 #include <components/esm4/runtimestate.hpp>
+#include <components/esm4/loadpgrd.hpp>
 
 #include <components/esm4/aipackagedata.hpp>
 #include <components/esm4/aiphase.hpp>
@@ -861,4 +862,44 @@ TEST(OblivionAiTest, SavedClosedDoorOverridesDefaultOpenWithoutChangingLock)
     EXPECT_FALSE(resolve().mOpen); // Requires the model's time interval.
     const MWMechanics::OblivionDoorState resident{true, true, {}, {}, false};
     EXPECT_FALSE(MWMechanics::resolveOblivionDoorState(authored, &saved, resident).mOpen);
+}
+
+
+TEST(OblivionAiTest, TargetUsesCompleteAuthoredPassageOverContinuousDetour)
+{
+    ESM4::Pathgrid grid{};
+    grid.mFormKey = key(100);
+    grid.mData = 4;
+    grid.mNodes = {{300,0,50,1,0,0}, {172,0,50,1,0,0},
+        {100,0,0,1,0,0}, {25,-100,0,0,0,0}};
+    grid.mLinks = {{0,1}, {1,2}, {2,3}};
+    ESM4::PathgridService service;
+    service.registerPathgrid(grid, key(1));
+    const osg::Vec3f start(304,0,52), destination(0,-132,1);
+    const std::array<osg::Vec3f,4> detour{
+        osg::Vec3f(550,0,0), osg::Vec3f(550,-900,0), osg::Vec3f(0,-900,0), destination};
+    const auto choose = [&] {
+        return MWMechanics::shorterOblivionPathgridApproach(
+            service,key(1),start,destination,detour);
+    };
+    const auto preferred = choose();
+    ASSERT_TRUE(preferred);
+    ASSERT_EQ(preferred->size(),5u);
+    EXPECT_EQ((*preferred)[0],osg::Vec3f(300,0,50));
+    EXPECT_EQ((*preferred)[1],osg::Vec3f(172,0,50));
+    EXPECT_EQ((*preferred)[2],osg::Vec3f(100,0,0));
+    EXPECT_EQ(preferred->back(),destination);
+    // Route planning does not require seeing the target around the corner.
+    service.setNodeEnabled({grid.mFormKey,1},false);
+    EXPECT_FALSE(choose()); // Disconnected/disabled native nodes are authoritative.
+    service.setNodeEnabled({grid.mFormKey,1},true);
+    const std::array<osg::Vec3f,1> direct{destination};
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),start,destination,direct));
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(2),start,destination,detour));
+    EXPECT_FALSE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),osg::Vec3f(3000,0,0),destination,detour));
+    EXPECT_TRUE(MWMechanics::shorterOblivionPathgridApproach(
+        service,key(1),start,destination,{}));
 }

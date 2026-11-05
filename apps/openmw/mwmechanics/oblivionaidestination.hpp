@@ -3,6 +3,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
+#include <vector>
 #include <set>
 #include <span>
 
@@ -99,6 +101,51 @@ namespace MWMechanics
         state.mHasDestination = true;
         return true;
     }
+    // Recast may route around a short authored drop through a scripted opening.
+    // A nearby complete native path can steer around occluding scenery;
+    // it only supplies steering points. Collision and actual contact still own
+    // movement and hits. Keep the continuous route unless the improvement exceeds
+    // two waypoint arrival tolerances, avoiding churn between equivalent paths.
+    inline std::optional<std::vector<osg::Vec3f>> shorterOblivionPathgridApproach(
+        const ESM4::PathgridService& service, const ESM::FormKey& cell,
+        const osg::Vec3f& position, const osg::Vec3f& destination,
+        std::span<const osg::Vec3f> continuous)
+    {
+        if (cell.isNull()) return std::nullopt;
+        const auto* graph = service.graphForCell(cell);
+        if (!graph) return std::nullopt;
+        const auto start = service.nearestEnabledNode(graph->pathgridKey(),
+            {position.x(), position.y(), position.z()}, 256.f);
+        const auto end = service.nearestEnabledNode(graph->pathgridKey(),
+            {destination.x(), destination.y(), destination.z()}, 256.f);
+        if (!start || !end) return std::nullopt;
+        const auto path = service.route(*start, *end);
+        if (!path) return std::nullopt;
+        std::vector<osg::Vec3f> points;
+        points.reserve(path.mRoute->mNodes.size() + 1);
+        for (const auto& node : path.mRoute->mNodes)
+        {
+            const auto* part = service.graph(node.mPathgrid);
+            if (!part || part->cellKey() != cell) return std::nullopt;
+            const auto point = part->worldPoint(node.mNode);
+            points.emplace_back(point.mX, point.mY, point.mZ);
+        }
+        points.push_back(destination);
+        const auto length = [&](std::span<const osg::Vec3f> route) {
+            float result = 0;
+            auto previous = position;
+            for (const auto& point : route)
+            {
+                result += (point - previous).length();
+                previous = point;
+            }
+            return result + (destination - previous).length();
+        };
+        if (!continuous.empty() && length(points) + 32.f >= length(continuous))
+            return std::nullopt;
+        return points;
+    }
+
 }
 
 #endif
