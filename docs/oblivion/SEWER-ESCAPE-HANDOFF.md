@@ -20,7 +20,27 @@ cancelled before tests to batch this observed navigation repair, with driver and
 owned build group verified terminal. Do not treat its receipt or compiled objects
 as a pass. Earlier1eb42 sanitizer coverage retains its original provenance.
 
-## Current chunk — final sewer entry and fresh landing accepted
+## Current chunk — first final-sewer rat and western bridge approach accepted
+
+Normal stairs/descent reaches the western rat0666a7. The first walking course
+stalled nearby while it bit Player and is failed/excluded. Clean landing replay
+stops at the encounter, then ordinary block/approach/axe input commits two contacts
+(1.79677 normal,5.3402 power) and kills its4HP through actual damage. Rat life is
+Dead with Player killer; base02509b count increments9→10. Genuine F5 and fresh
+continuation retain every field exactly at entry, no old hit/death replay,
+health80.85667 and empty pending death queue. Player clears the corridor to the
+bridge. Fatigue legitimately regenerates120.6461→170 during that travel.
+No new engine code; normal2197 evidence remains at original class-chunk provenance.
+[SEWER-FINAL-WESTERN-RAT-VERIFICATION.json](SEWER-FINAL-WESTERN-RAT-VERIFICATION.json).
+
+Current clean input:
+`build/oblivion-compat/sewer-escape/sewers03-bridge-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Cell0272f2; Player(-1001.876,333.660,6543.079), health80.85667/base110, axe drawn,
+Warrior class/birthsign, one Amulet and no exit key. Rat0666a7 dead once; other
+final sewer creatures remain alive. Recipes: `oblivion_sewer_final_western_rat.json`
+and `oblivion_sewer_final_bridge_approach.json`.
+
+## Prior chunk — final sewer entry and fresh landing accepted
 
 Normal Player movement/jump crosses the opened assassin passage into the chamber
 beyond barred side gate03f1b3. Original gate script permits opening only from the
@@ -33,7 +53,7 @@ Warrior class/birthsign, key absent and unlocked/open key-door pose retained.
 No new engine changes; normal engine2197 evidence from the class chunk applies.
 [SEWER-FINAL-SEWERS-ENTRY-VERIFICATION.json](SEWER-FINAL-SEWERS-ENTRY-VERIFICATION.json).
 
-Current clean input:
+Prior clean landing input:
 `build/oblivion-compat/sewer-escape/sewers03-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Cell0272f2 ImperialSewers03; Player at(-2595.823,1077.309,6878.335), health84.29768/base110,
 Warrior class023787 and birthsign01fd9d, axe/armor and one Amulet0250a0; key removed.
@@ -72,12 +92,13 @@ Glenroy, Emperor and final assassin dead once; Baurus alive. Recipes:
 
 ## Next action
 
-Play ImperialSewers03 from its actual landing to exit door04bed7 at
+Continue ImperialSewers03 from the accepted bridge approach to exit door04bed7 at
 (3872,2048,7008). Winning records/pathgrid and actors are audited in
 `build/oblivion-compat/sewer-escape/sewers03-{original-route,exit-doors,exit-path}.json`.
-Pathgrid129 descends from the landing via128→127→126→125→124→123, then crosses the
-lower sewer and climbs to the final upper passage. There are two rats, Goblin066a02,
-Goblin Berserker066a03 and passive regenerating rat0666da in the cell. Combat and
+The western stairs and rat are accepted. Next cross bridge nodes75→74→73→72→71
+and handle encounters as they approach, then continue the lower passage to stairs
+near(842,470). There are remaining rat066a04, Goblin066a02,
+Goblin Berserker066a03 and passive regenerating rat0666da in the cell. Remaining combat and
 actual traversal remain unproven here; use ordinary controls and original scripts.
 CGSewerExitScript shows the character-review choice; Finished (button3) requests
 MQ01 stage88, whose real result disables chargen tracking, clears skill-use history

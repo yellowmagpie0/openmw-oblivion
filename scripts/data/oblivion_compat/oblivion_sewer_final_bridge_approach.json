@@ -1,0 +1,300 @@
+{
+  "schema_version": 1,
+  "name": "Final sewer western corridor after rat victory to bridge approach",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\nat 0 command content:oblivion.esm:01760f GetOpenState\nat 0 command content:oblivion.esm:01760f GetLocked\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal points={{util.vector3(-1600.6,609.1,6524),util.vector3(-1162.4,599.3,6524),util.vector3(-1009.6,347.3,6542)}}\nlocal step=1\nlocal frames=0\nreturn {{engineHandlers={{onFrame=function(dt)\n frames=frames+1\n assert(Actor.stats.dynamic.health(self).current>0,'Player died in final sewers')\n if frames==5 then print('Final sewer traversal ready') end\n if step<=#points then\n  local d=points[step]-self.position\n  if math.sqrt(d.x*d.x+d.y*d.y)<25 then\n   print('Final sewer waypoint '..step..' reached') step=step+1\n  else\n   local c=camera.getPosition()\n   local v=camera.getViewTransform():apply(util.vector3(c.x+d.x,c.y+d.y,c.z))\n   local angle=math.atan2(v.x,-v.z)\n   print(string.format('Final sewer waypoint %d aim x=%d y=%d',step,math.max(-8192,math.min(8192,math.floor(angle*5120+.5))),math.floor(-camera.getPitch()*5120+.5)))\n  end\n end\n if frames%5==0 then\n  print('Final sewer pos '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current)\n  for _,id in ipairs({{0x666a7,0x66a02,0x66a03,0x66a04,0x666da}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Final sewer creature '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' hp='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Final sewer traversal ready",
+      "timeout_seconds": 120,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "Shift_L",
+        "w"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final sewer waypoint 1 reached",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "Shift_L",
+        "w"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final sewer waypoint 2 reached",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Final sewer waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "Shift_L",
+        "w"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Final sewer waypoint 3 reached",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.3
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "screenshot",
+      "name": "western-bridge-approach.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 1500,
+  "expected_exit": 0,
+  "expected_log": [
+    "Final sewer waypoint 3 reached"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)",
+    "activate-script ref=content:oblivion.esm:051ac[abc]",
+    "playgroup ref=content:oblivion.esm:051ac[abc]",
+    "M16 native staff rejected:",
+    "M16 native cast rejected:",
+    "Native AI package done: actor=content:oblivion.esm:032a17 package=content:oblivion.esm:04f201"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}
