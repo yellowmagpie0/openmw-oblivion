@@ -1,6 +1,59 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — tripwire passage and second goblin, 2026-11-04
+## Current checkpoint — trap script chain repaired, 2026-11-04
+
+Full escape remains incomplete. Next bounded chunk: release the anchored mace
+chains into physics, verify their hazard behavior and persistence, then continue
+through the caverns to the escort reunion. Emperor/Amulet, character choices,
+stage88 exit, outdoor reload and continuous prison-to-outdoors course remain open.
+
+Activate now honors its explicit activator and run-script arguments, preserves
+non-actor trigger identity and stops on explicitly null targets. Default
+activation remains nonrecursive. Independent original handler inspection is in
+[SEWER-ACTIVATE-NATIVE-AUDIT.json](SEWER-ACTIVATE-NATIVE-AUDIT.json); no emulated
+execution claim. Regression covers both content layouts, actor/non-actor
+identity, omitted/zero run-script flag, current callback activator fallback,
+null parent and actual Player default action without script reentry.
+
+`activate-focused-04` PASSES16 focused tests; `activate-engine-01` PASSES2171
+engine tests, exact inventories and no failures/skips. Runtime SHA256
+`1c52ff1c4545d478df832b671a8e3e4f248d6d0c2dd479735933ab014cfe8347`.
+Earlier focused02/03 fail in a new test fixture missing the UI sink and then
+physics needed by default-action reporting; both GDB diagnoses are retained.
+Sanitizer builds01/02 were deliberately stopped for intervening corrections
+and provide no sanitizer coverage. Run sanitizer coverage with the anchored
+physics chunk; reuse earlier unrelated evidence only with its original identity.
+The existing EffectSettingData missing-initializer warning remains unrelated.
+
+`cavern-trap-activate-02` PASSES the ordinary Club course from the unconsumed
+wire checkpoint. Its separate activation audit proves exactly three script
+activations: wire051ac9 -> mace051acb -> mace051acc -> mace051aca, each with
+unequip playback. All three settle at triggered3 and reduced script damage5.
+The first replay01 is not chain acceptance: its null parent spuriously activates
+the final mace itself. The corrected editable course is
+`scripts/data/oblivion_compat/oblivion_sewer_cavern_tripwire_activation.json`.
+
+`cavern-trap-activate-reload-01` PASSES fresh load/resave. `restart-audit.json`
+checks exact four script states, both goblin deaths, Player inventory/position
+and no activation or animation replay. Only Player value change is ordinary
+fatigue recovery138.81987->140; health12.159996 persists. Captures inspected;
+goblin corpses remain upright. No forbidden/unreviewed errors in passing runs.
+Diagnostic save SHA256
+`d6c2bbf9fb01c5016b9b397692d11c5186801dfcef56d038df4f19fd70e78922`, under
+`build/oblivion-compat/sewer-escape/cavern-trap-activate-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+
+Trap movement/damage is NOT proven: these three maces never enter animated
+reference physics. CTrapSwingMaceLong01 has a mass-zero fixed anchor, seven
+mass-one keyframed links and ragdoll constraints. Current asset eligibility
+rejects every mass-zero body, and admission requests Dynamic for every body.
+Next inspect/extend `isOblivionAnimatedReferenceAsset` and admission in
+`oblivionanimatedreference.cpp`, with coverage in mwphysics/testactorragdoll.cpp.
+Keep the anchor fixed; preserve existing door exclusions and save/load ownership.
+Replay from `cavern-second-approach-01` (health31.90, unconsumed wire), whose
+hash is recorded below. Do not patch the consumed post-fight state. All processes
+for this chunk are terminal; no new component/Python implementation changes.
+
+## History — tripwire passage and second goblin, 2026-11-04
 
 Full escape remains incomplete: trap behavior, remaining caverns, escort
 reunion, Emperor/Amulet, character choices, stage88 exit, outdoor reload and

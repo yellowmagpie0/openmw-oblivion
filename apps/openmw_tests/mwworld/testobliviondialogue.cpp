@@ -685,7 +685,7 @@ TEST(OblivionDialogueMenu, CharacterGenerationHistoryClearsWithPlayer)
 
 namespace
 {
-    std::string switchRecords(bool enableParents = false)
+    std::string switchRecords(bool enableParents = false, const std::string& switchScript = {})
     {
         const std::array<std::uint32_t, 6> local{1, 0, 0, 0, 1, 0};
         const std::array<float, 6> position{};
@@ -711,8 +711,8 @@ namespace
                 + sub(ESM::fourCC("SCRI"), bytes(0xb01u)))
             + record(ESM4::REC_SCPT, 0xb01, sub(ESM::fourCC("EDID"), std::string("TestSwitchScript\0", 17))
                 + sub(ESM::fourCC("SLSD"), bytes(local)) + sub(ESM::fourCC("SCVR"), std::string("calls\0", 6))
-                + sub(ESM::fourCC("SCTX"), "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
-                    "if IsActionRef TutorialUserRef == 1\nset calls to calls + 1\nendif\nend\n"))
+                + sub(ESM::fourCC("SCTX"), switchScript.empty() ? "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+                    "if IsActionRef TutorialUserRef == 1\nset calls to calls + 1\nendif\nend\n" : switchScript))
             + children(0, record(ESM4::REC_CELL, 0xb04, sub(ESM::fourCC("EDID"), std::string("SwitchTestRoom\0", 15))
                 + sub(ESM::fourCC("DATA"), bytes(std::uint16_t{ESM4::CELL_Interior})))
             + children(6, children(9, switchRef + extras
@@ -731,8 +731,8 @@ namespace
         MWWorld::Ptr mActor, mSwitch;
         explicit SwitchFixture(bool shifted = false, bool enableParents = false,
             const std::string& extraRecords = {}, unsigned extraCount = 0, bool selectPackage = true,
-            const std::string& actorScript = {})
-            : mFixture(shifted, false, !actorScript.empty(), actorScript, {}, switchRecords(enableParents) + extraRecords,
+            const std::string& actorScript = {}, const std::string& switchScript = {})
+            : mFixture(shifted, false, !actorScript.empty(), actorScript, {}, switchRecords(enableParents, switchScript) + extraRecords,
                 (enableParents ? 8 : 6) + extraCount)
         {
             auto& world = mFixture.mWorld;
@@ -805,6 +805,74 @@ namespace
             for (int i = 0; i < 20; ++i) ai.update(mActor, .1f, true);
         }
     };
+}
+
+TEST(OblivionTutorialAction, ScriptedActivationHonorsActivatorAndRunScriptArguments)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, {}, 0, false);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        context.mActionReference = ESM::FormKey::dynamic("player", 1);
+        const ObScript::ReferenceValue actor{key(0xa00), "user"};
+        // Explicit reference overrides the callback's Player action reference.
+        scripts.call("Activate", {}, {actor, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", {}, {actor, std::int64_t(0)}, context, {});
+        scripts.call("Activate", {}, {actor}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        context.mActionReference = key(0xa00);
+        scripts.call("Activate", {}, {ObScript::ReferenceValue{{}, "null"}, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2);
+        scripts.call("Activate", ObScript::ReferenceValue{{}, "null"}, {actor, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2); // A null parent ends the chain instead of targeting self.
+    }
+}
+
+TEST(OblivionTutorialAction, ScriptedTrapActivatorCanBeANonActorAndDefaultActivationDoesNotRecurse)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted, false, {}, 0, false, {},
+            "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+            "if IsActionRef TestSwitchRef == 1\nset calls to calls + 1\nendif\n"
+            "Activate\nend\n");
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xa00);
+        context.mActionReference = ESM::FormKey::dynamic("player", 1);
+        const ObScript::ReferenceValue wire{key(0xb02), "wire"};
+        scripts.call("Activate", wire, {wire, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", wire, {wire, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 2);
+    }
+}
+
+TEST(OblivionTutorialAction, DefaultPlayerActivationInsideOnActivateDoesNotReenterScript)
+{
+    for (bool shifted : {false, true})
+    {
+        TestingOpenMW::InventoryWindowManager windows;
+        int defaultActions = 0;
+        windows.mMessageCallback = [&](std::string_view, MWGui::ShowInDialogueMode) { ++defaultActions; };
+        SwitchFixture f(shifted, false, {}, 0, false, {},
+            "scn TestSwitchScript\nshort calls\nbegin onActivate\n"
+            "set calls to calls + 1\nActivate\nend\n");
+        f.mFixture.mEnvironment.setWindowManager(windows);
+        f.mFixture.mWorld.initializePhysics(new osg::Group);
+        auto& scripts = *f.mFixture.mWorld.getOblivionScriptManager();
+        ObScript::RuntimeContext context;
+        context.mSelf = key(0xb02);
+        const ObScript::ReferenceValue player{ESM::FormKey::dynamic("player", 1), "player"};
+        scripts.call("Activate", {}, {player, std::int64_t(1)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        scripts.call("Activate", {}, {player, std::int64_t(0)}, context, {});
+        EXPECT_EQ(f.calls(), 1);
+        EXPECT_EQ(defaultActions, 2);
+    }
 }
 
 TEST(OblivionTutorialAction, PlacedSwitchUsesActualActorAndCommitsOnceAfterIteration)

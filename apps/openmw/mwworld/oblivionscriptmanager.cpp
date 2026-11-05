@@ -1595,9 +1595,24 @@ namespace MWWorld
             return std::int64_t(!mWorld.getOblivionReferenceEnabled(objectKey()).value_or(true));
         if (name == "activate")
         {
-            const ESM::FormKey key = objectKey();
+            // An explicitly null parent ends a trap chain; it must not fall
+            // back to the current script's reference.
+            const ESM::FormKey key = target ? keyFromValue(*target).value_or(ESM::FormKey{}) : context.mSelf;
             const Ptr ptr = ptrFor(key);
-            const Ptr actor = ptrFor(context.mActionReference.isNull() ? context.mSelf : context.mActionReference);
+            auto activator = keyFromValue(argument(0)).value_or(ESM::FormKey{});
+            if (activator.isNull())
+                activator = context.mActionReference;
+            const Ptr actor = ptrFor(activator);
+            if (ptr.isEmpty() || actor.isEmpty() || !actor.getRefData().isEnabled())
+                return std::int64_t(0);
+            // The second argument explicitly requests the target's OnActivate.
+            // Trap chains pass another activator (not necessarily an actor) as
+            // the first argument; preserve it for GetActionRef/IsActionRef.
+            if (ObScript::asInteger(argument(1)) != 0 && dispatchObjectEvent(ptr, "onactivate", actor))
+            {
+                trace("activate-script ref=" + key.serialize() + " activator=" + activator.serialize());
+                return std::int64_t(0);
+            }
             if (!ptr.isEmpty())
             {
                 mSuppressedActivations.insert(key);
