@@ -1076,6 +1076,9 @@ namespace MWMechanics
         const std::function<std::optional<double>(const ESM::FormKey&)> resolveGlobal = context.mResolveGlobal;
         context.mResolve = [this, snapshot, resolver, locationFor, resolveGlobal](const ESM4::PackageCondition& condition,
                            ESM4::ConditionSubject subject) -> ESM4::ConditionValue {
+            if (condition.mFunction == 228)
+                return ESM4::ConditionValue::value(
+                    MWWorld::oblivionIsClassDefault(mWorld, condition.mParameter1.mReferenceKey) ? 1.0 : 0.0);
             if (condition.mFunction == 229)
                 return ESM4::ConditionValue::value(MWWorld::oblivionClassDefaultMatch(mWorld));
             if (condition.mFunction == 329)
@@ -2110,6 +2113,9 @@ namespace MWMechanics
         const auto resolveGlobal = context.mResolveGlobal;
         context.mResolve = [this, actor, target, &live, resolveGlobal, dialogue](const ESM4::PackageCondition& condition,
                            ESM4::ConditionSubject subject) -> ESM4::ConditionValue {
+            if (condition.mFunction == 228)
+                return ESM4::ConditionValue::value(
+                    MWWorld::oblivionIsClassDefault(mWorld, condition.mParameter1.mReferenceKey) ? 1.0 : 0.0);
             if (condition.mFunction == 229)
                 return ESM4::ConditionValue::value(MWWorld::oblivionClassDefaultMatch(mWorld));
             if (condition.mFunction == 329)

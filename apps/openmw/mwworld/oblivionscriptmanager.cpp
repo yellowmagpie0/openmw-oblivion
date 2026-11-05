@@ -2550,6 +2550,8 @@ namespace MWWorld
                 return double(*bounty);
             return std::int64_t(actor.getClass().getContainerStore(actor).count(ContainerStore::sGoldId) >= *bounty);
         }
+        if (name == "getisclassdefault")
+            return std::int64_t(oblivionIsClassDefault(mWorld, keyFromValue(argument(0)).value_or(ESM::FormKey{})));
         if (name == "getclassdefaultmatch")
             return std::int64_t(oblivionClassDefaultMatch(mWorld));
         if (name == "isturnarrest")

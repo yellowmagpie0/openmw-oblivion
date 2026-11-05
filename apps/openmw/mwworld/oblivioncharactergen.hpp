@@ -8,6 +8,7 @@ namespace MWWorld
     class World;
     class Ptr;
     void setOblivionCharacterGenerationTracking(World& world, bool enabled);
+    bool oblivionIsClassDefault(World& world, const ESM::FormKey& parameter);
     unsigned oblivionClassDefaultMatch(World& world);
     std::optional<ESM4::CharacterGenerationState> prepareOblivionCharacterGenerationSkillUse(
         World& world, unsigned nativeSkill, int usage, float factor);

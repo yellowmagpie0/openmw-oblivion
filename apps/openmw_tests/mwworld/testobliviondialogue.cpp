@@ -700,16 +700,39 @@ TEST(OblivionDialogueMenu, ClassDefaultQueryTracksUsesAndRetainsRealClassIdentit
         context.mSelf = f.mActor.getCellRef().getFormKey();
         const std::vector<ObScript::Value> enabled{std::int64_t(1)};
         scripts->call("SetInCharGen", {}, enabled, context, {});
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x821)));
         EXPECT_EQ(MWWorld::oblivionClassDefaultMatch(world), 0u);
         ASSERT_TRUE(world.getPlayer().getOblivionCharacterGenerationState());
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState()->mRecommendedClass, key(0x821));
         MWWorld::recordOblivionCharacterGenerationSkillUse(world.getPlayerPtr(), ESM::Skill::HandToHand, 0, 3.f);
         EXPECT_EQ((*world.getPlayer().getOblivionCharacterGenerationState()->mSkillUses)[5], 3);
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x822)));
         EXPECT_EQ(MWWorld::oblivionClassDefaultMatch(world), 1u);
         EXPECT_EQ(world.getPlayer().getOblivionCharacterGenerationState()->mRecommendedClass, key(0x822));
         selectClass(0x822);
         EXPECT_EQ(ObScript::asInteger(scripts->call("GetClassDefaultMatch", {}, {}, context, {})), 2);
         selectClass(0x823);
+        // The current class differs but shares specialization with the recommendation.
+        // Identity condition228 must use the recommendation and ignore its actor subject.
+        EXPECT_TRUE(MWWorld::oblivionIsClassDefault(world, key(0x822)));
+        EXPECT_FALSE(MWWorld::oblivionIsClassDefault(world, key(0x823)));
+        EXPECT_FALSE(MWWorld::oblivionIsClassDefault(world, key(0x800)));
+        const std::vector<ObScript::Value> classArgument{ObScript::ReferenceValue{key(0x822), {}}};
+        EXPECT_EQ(ObScript::asInteger(scripts->call("GetIsClassDefault", {}, classArgument, context, {})), 1);
+        ESM4::PackageCondition identity{};
+        identity.mFunction = 228;
+        identity.mParameter1.mReferenceKey = key(0x822);
+        identity.mOperator = ESM4::ConditionOperator::Equal;
+        identity.mComparisonValue = 1;
+        for (const bool target : {false, true})
+        {
+            identity.mRunOnTarget = target;
+            EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+                f.mActor, world.getPlayerPtr(), std::span(&identity, 1)), ESM4::ConditionResult::True);
+        }
+        identity.mParameter1.mReferenceKey = key(0x823);
+        EXPECT_EQ(world.getOblivionAiService()->evaluateDialogueConditions(
+            f.mActor, world.getPlayerPtr(), std::span(&identity, 1)), ESM4::ConditionResult::False);
         ESM4::PackageCondition condition{};
         condition.mFunction = 229;
         condition.mOperator = ESM4::ConditionOperator::Equal;
