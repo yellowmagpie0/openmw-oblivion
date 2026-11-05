@@ -542,6 +542,7 @@ namespace MWWorld
         bool modifyOblivionPlayerInfamy(std::int32_t delta);
         // False only for actors not yet registered with native value authority.
         bool killOblivionActor(const Ptr& actor, const ESM::FormKey& killer);
+        bool resurrectOblivionActor(const Ptr& actor, bool preserveState);
         std::uint64_t beginOblivionPhysicalAction(const Ptr& actor) override;
         bool cancelOblivionPhysicalAction(std::uint64_t id, const Ptr& actor) override;
         // Player power-input selection precedes animation admission, including

@@ -2107,6 +2107,68 @@ TEST(OblivionMeleeScripts, AcquiredHitPublishesDamageBeforeFilteredCallbackAndCa
     }
 }
 
+TEST(OblivionTutorialAction, NativeResurrectionRestoresBaseInventoryAndPreservesPositionAndDeathHistory)
+{
+    for (const bool shifted : {false, true})
+    {
+        const auto gold = record(ESM4::REC_MISC, 0xf,
+            sub(ESM::fourCC("EDID"), std::string("Gold001\0", 8))
+            + sub(ESM::fourCC("DATA"), bytes(1u) + bytes(0.f)));
+        SwitchFixture f(shifted, false, gold, 1, false);
+        auto& world = f.mFixture.mWorld;
+        auto& combat = *world.getOblivionCombatService();
+        auto& scripts = *world.getOblivionScriptManager();
+        auto& store = world.getStore();
+        MWClass::Miscellaneous::registerSelf();
+        auto npc = *store.search<ESM4::Npc>(key(0x800));
+        const auto goldId = ESM::FormId{0xf, npc.mId.mContentFile}.toUint32();
+        npc.mInventory = {{goldId, 3}};
+        store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+        auto& target = f.mActor.getClass().getInventoryStore(f.mActor);
+        MWWorld::ManualRef goldStack(store, MWWorld::ContainerStore::sGoldId, 17);
+        target.clear();
+        target.add(goldStack.getPtr(), 17, false);
+        ObScript::RuntimeContext context;
+        context.mSelf = f.mActor.getCellRef().getFormKey();
+        scripts.call("SetEssential", {}, {ObScript::ReferenceValue{key(0x800), {}}, std::int64_t(0)}, context, {});
+        const auto health = combat.getNonPlayerValue(f.mActor, 8);
+        auto position = f.mActor.getRefData().getPosition();
+        position.pos[0] = 1100;
+        f.mActor.getRefData().setPosition(position);
+        const auto count = [&] { return target.count(MWWorld::ContainerStore::sGoldId); };
+        ASSERT_EQ(count(), 17);
+        for (const bool preserve : {false, true})
+        {
+            ASSERT_TRUE(combat.setProcessAlerted(context.mSelf, true));
+            ASSERT_TRUE(world.killOblivionActor(f.mActor, ESM::FormKey::dynamic("player", 1)));
+            const auto deaths = combat.getDeadCount(key(0x800));
+            const auto queued = world.captureOblivionRuntimeState().mPendingDeathEvents;
+            ASSERT_TRUE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            // A later unresolved base item must reject before publishing any reset.
+            npc.mInventory.push_back({ESM::FormId{0xdead, npc.mId.mContentFile}.toUint32(), 1});
+            store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            EXPECT_THROW(scripts.call("Resurrect", {}, {}, context, {}), ObScript::RuntimeError);
+            EXPECT_TRUE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            EXPECT_EQ(combat.getDeadCount(key(0x800)), deaths);
+            EXPECT_EQ(count(), preserve ? 3 : 17);
+            npc.mInventory.pop_back();
+            store.getWritable<ESM4::Npc>().insertStatic(npc, key(0x800));
+            // With no attached body, argument1 follows the original full-reset fallback.
+            ASSERT_NO_THROW(scripts.call("Resurrect", {}, {std::int64_t(preserve)}, context, {}));
+            EXPECT_FALSE(f.mActor.getClass().getCreatureStats(f.mActor).isDead());
+            EXPECT_EQ(combat.getNonPlayerValue(f.mActor, 8), health);
+            EXPECT_EQ(count(), 3);
+            EXPECT_EQ(f.mActor.getRefData().getPosition().pos[0], 1100);
+            EXPECT_EQ(combat.getDeadCount(key(0x800)), deaths);
+            EXPECT_EQ(world.captureOblivionRuntimeState().mPendingDeathEvents, queued);
+            EXPECT_EQ(combat.findActorValues(context.mSelf)->mProcess, ESM4::ActorValueProcess::Low);
+            EXPECT_FALSE(combat.getProcessAlerted(context.mSelf));
+            EXPECT_FALSE(combat.findMeleeState(context.mSelf));
+            EXPECT_FALSE(combat.actorRagdoll(context.mSelf));
+        }
+    }
+}
+
 TEST(OblivionEssential, ScriptBaseFlagAppliesToCachedAndNewReferencesAndSurvivesRestore)
 {
     for (const bool shifted : {false, true})

@@ -10,48 +10,61 @@ fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
-Remaining: physical sewer/exterior exit, outdoor reload, shaman victory and
-continuous prison-to-outdoors acceptance. Baurus dialogue88 and class choice now
-pass; CharacterGen88 is distinct from MQ01's final exit stage88. Current2197 normal
-engine tests pass. Component3262 evidence is reused at its original475c source;
-components did not change in the target-route patch. Fresh accumulated sanitizer
-integration remains due: default-open-sanitizer-integration-01 was deliberately
-cancelled before tests to batch this observed navigation repair, with driver and
-owned build group verified terminal. Do not treat its receipt or compiled objects
-as a pass. Earlier1eb42 sanitizer coverage retains its original provenance.
+Remaining: shaman victory, continuous prison-to-outdoors acceptance, review of
+CharacterGen88 topic/autosave effects, and fresh accumulated sanitizer integration.
+The original exit and exact fresh outdoor reload now pass. All2200 normal engine
+cases pass at the source fingerprint in the exterior verification artifact.
+Unchanged component3262 evidence retains its original475c provenance; no fresh
+component/Python/sanitizer result is claimed. The cancelled sanitizer run remains
+incomplete, with its reusable objects and terminal-stop receipt retained.
 
-## Current chunk — native exit review repaired; exterior acceptance still fails
+## Current chunk — original exterior exit and fresh outdoor reload accepted
 
-Native MessageBox now preserves formatted text and literal button labels and opens
-an asynchronous interactive UI. GetButtonPressed consumes a result only for the
-owning reference/script; MQ01's unrelated poll no longer steals the exit choice.
-Temporary runtime detachment preserves ownership; reset/load clears it. GetDayOfWeek
-and PC AddAchievement are now implemented: weekday follows the elapsed-day counter
-modulo7; original PC achievement handler succeeds without side effects. Complete
-original instruction paths cover11 weekday fixtures and the achievement handler;
-two focused engine tests pass (both master layouts).
-[SEWER-EXIT-CALENDAR-VERIFICATION.json](SEWER-EXIT-CALENDAR-VERIFICATION.json).
-Fresh exterior replay is still required; the three failures below describe the
-retained pre-fix course. Original
-handler execution proves72 ownership paths with no function stubs. All2198 normal
-engine cases pass at the recorded dirty-source fingerprint.
+The original four-button character review accepts Finished, executes both MQ01
+stage88 result entries, disables chargen tracking, clears its skill-use history,
+retains the recommendation, applies clear weather and crime-gold reset, and
+physically enters Tamriel. The original script also resurrects dead regenerating
+rat0666da in the unloaded sewer: native Health returns4, life becomes Alive,
+inventory resets, position and historical death count1 remain. Old actions,
+combat, knockback, corpse/recovery pose and process alert cannot survive the full
+nonplayer reset. Inventory definitions are staged before publication.
+
+`sewers03-exterior-exit-04` and `sewers03-outdoor-reload-02` pass with no unreviewed
+errors. Both whole-state entry boundaries restore every field exactly. Genuine
+F5 saves retain health85.971672, Warrior class/birthsign, one Amulet, no exit key,
+all prior death counts and no pending death callbacks. Captures inspected.
+[SEWER-EXTERIOR-EXIT-VERIFICATION.json](SEWER-EXTERIOR-EXIT-VERIFICATION.json).
+This closes exterior exit/reload acceptance, **not the full continuous opening**.
+
+Current clean outdoor input:
+`build/oblivion-compat/sewer-escape/sewers03-outdoor-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Editable recipes: `oblivion_sewer_exterior_exit.json` and
+`oblivion_sewer_outdoor_reload.json` under `scripts/data/oblivion_compat/`.
+
+The final indoor continuation has eight audited exact save boundaries. Three
+failed encounter probes contributed genuine pre-failure F5 checkpoints only;
+their failures remain failed and the report records each prefix. The two final
+hostile rats were defeated; the bridge goblins were avoided alive. No shaman
+victory or continuous proof follows from this composite chain.
+
+Native resurrection remains bounded: Player world reset, attached preserve-state
+reset and owned-paralysis reset reject explicitly; general leveled inventory and
+broad active-actor visual resurrection are unverified. An isolated original-game
+probe proves the required inactive rat reset, including live cell reentry queries,
+with exact profile/pristine-save restoration. It is separate from fork acceptance.
+
+## Prior chunk — exit review, weekday and PC achievement commands
+
+Native MessageBox preserves formatting/buttons and uses an asynchronous UI.
+GetButtonPressed consumes a result only for its owning reference/script; MQ01's
+unrelated poll cannot steal the exit choice. Original instruction execution
+proves72 ownership paths without function stubs.
 [SEWER-EXIT-MESSAGEBOX-VERIFICATION.json](SEWER-EXIT-MESSAGEBOX-VERIFICATION.json).
-
-Runtime `sewers03-exterior-exit-02` selects the original Finished button, reaches
-MQ01 stage88 and physically enters the exterior. **The course fails** on
-AddAchievement, native Resurrect and outdoor GetDayOfWeek. Its outdoor save is
-excluded from the accepted continuation chain. Next implement these actual
-command paths and replay from the clean indoor exit approach, then verify a
-fresh outdoor reload. Shaman victory, continuous opening and accumulated
-sanitizer gates remain required. Existing CharacterGen88 AddTopic/autosave
-limitations below remain open. Do not treat the physical transition as acceptance.
-
-The newer ignored traversal evidence reaches the indoor exit in
-`sewers03-exit-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave`
-under `build/oblivion-compat/sewer-escape/`. Its intermediate courses include
-failed encounter probes with genuine pre-failure F5 checkpoints; promotion of
-that composite chain still requires its whole-state boundary audit. The prior
-fully documented accepted checkpoint remains the bridge approach below.
+GetDayOfWeek follows elapsed days modulo7; original PC AddAchievement succeeds
+without side effects. Original paths cover11 weekday fixtures and the achievement
+handler. [SEWER-EXIT-CALENDAR-VERIFICATION.json](SEWER-EXIT-CALENDAR-VERIFICATION.json).
+Earlier exterior runs01/02 retain their failures; current04 supersedes them for
+exit acceptance, with provenance retained in the exterior artifact.
 
 ## Prior chunk — first final-sewer rat and western bridge approach accepted
 
@@ -66,7 +79,7 @@ bridge. Fatigue legitimately regenerates120.6461→170 during that travel.
 No new engine code; normal2197 evidence remains at original class-chunk provenance.
 [SEWER-FINAL-WESTERN-RAT-VERIFICATION.json](SEWER-FINAL-WESTERN-RAT-VERIFICATION.json).
 
-Current clean input:
+Prior accepted bridge input:
 `build/oblivion-compat/sewer-escape/sewers03-bridge-approach-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Cell0272f2; Player(-1001.876,333.660,6543.079), health80.85667/base110, axe drawn,
 Warrior class/birthsign, one Amulet and no exit key. Rat0666a7 dead once; other
@@ -125,30 +138,22 @@ Glenroy, Emperor and final assassin dead once; Baurus alive. Recipes:
 
 ## Next action
 
-Continue ImperialSewers03 from the accepted bridge approach to exit door04bed7 at
-(3872,2048,7008). Winning records/pathgrid and actors are audited in
-`build/oblivion-compat/sewer-escape/sewers03-{original-route,exit-doors,exit-path}.json`.
-The western stairs and rat are accepted. Next cross bridge nodes75→74→73→72→71
-and handle encounters as they approach, then continue the lower passage to stairs
-near(842,470). There are remaining rat066a04, Goblin066a02,
-Goblin Berserker066a03 and passive regenerating rat0666da in the cell. Remaining combat and
-actual traversal remain unproven here; use ordinary controls and original scripts.
-CGSewerExitScript shows the character-review choice; Finished (button3) requests
-MQ01 stage88, whose real result disables chargen tracking, clears skill-use history
-and retains the cached class. Verify physical exterior transition and fresh outdoor
-reload, not just the stage. Original script audits are `character-exit-scripts.json`
-and `mq01-exit-stage88.json` in the ignored sewer evidence root.
-Shaman victory and continuous prison-to-outdoors acceptance remain required.
-Batch accumulated sanitizer integration after related scene repairs; the prior
-cancelled build is not a pass.
+Return to the earlier healed cavern checkpoint and prove shaman victory through
+ordinary combat. Then review/finish CharacterGen88 AddTopic and dialogue-time
+autosave effects before the continuous prison-to-outdoors course. Batch the
+accumulated sanitizer integration at that checkpoint. Do not inject health,
+quest stages, positions or completion to join the course.
 
-Stage88 AddTopic calls still use the existing deferred handler. Its Autosave request
-is rejected while dialogue is open; later ordinary F5 works. These effects remain
-open, not established by the stage88/progression proof. Original SetOpenState0
-unlocked the isolated diagnostic back gate; that adjacent command behavior remains
-recorded in the gate artifact, not implemented.
+The old exit failures01/02 and prior partial resurrection/normal integration
+failures remain recorded in the exterior artifact. Normal integration01 passed
+2199/2200 cases: its old physical-hit test required a retained recovery graph.
+The full-reset branch now asserts removal of both graph and corpse pose, while
+all other reset paths retain their prior checks. Focused02 and all2200 normal
+integration02 cases pass. The replacement LowProcess alert byte is independently
+verified in four original instruction paths.
 
 Earlier accepted checkpoints:
+
 - [Emperor death/Amulet/final victory/mourning86](SEWER-EMPEROR-DEATH-VERIFICATION.json):
   original scripts, real assassin passage/contact and clean fresh reload. Combat
   may prefer a materially shorter connected nearby authored path over a continuous

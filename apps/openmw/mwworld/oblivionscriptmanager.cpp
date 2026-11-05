@@ -2300,7 +2300,13 @@ namespace MWWorld
                 try
                 {
                     if (name == "resurrect")
-                        throw std::invalid_argument("native resurrection reset is not implemented");
+                    {
+                        const bool preserve = !arguments.empty() && ObScript::asInteger(argument(0)) == 1;
+                        if (!mWorld.resurrectOblivionActor(objectPtr(), preserve))
+                            throw std::invalid_argument("native Resurrect requires an initialized actor");
+                        trace("resurrect actor=" + nativeKey.serialize());
+                        return std::int64_t(0);
+                    }
                     ESM::FormKey killer;
                     if (!arguments.empty())
                     {

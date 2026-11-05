@@ -8244,8 +8244,18 @@ TEST_F(OblivionActorStatsTest, compiledParalysisContinuationOwnsReplacementResis
             else if (operation == 1) service.setProcessKnockedState(values.mActor, 0);
             else service.initializeNonPlayerActor(npc, mStore, std::nullopt, ESM4::ActorValueProcess::Low,
                 std::nullopt, true);
-            ASSERT_TRUE(service.getUpPlayback(values.mActor));
-            EXPECT_FALSE(service.getUpPlayback(values.mActor)->mPhysicalHit);
+            if (!isPlayer && operation == 0)
+            {
+                // Full nonplayer resurrection replaces the process/3D, so
+                // neither its old recovery graph nor corpse pose may survive.
+                EXPECT_FALSE(service.getUpPlayback(values.mActor));
+                EXPECT_FALSE(service.actorRagdoll(values.mActor));
+            }
+            else
+            {
+                ASSERT_TRUE(service.getUpPlayback(values.mActor));
+                EXPECT_FALSE(service.getUpPlayback(values.mActor)->mPhysicalHit);
+            }
             auto saved = source; service.capture(saved);
             EXPECT_NO_THROW(saved.serializeBinary());
             EXPECT_TRUE(service.isActionConsumed(1));

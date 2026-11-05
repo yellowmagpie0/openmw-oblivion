@@ -1,0 +1,322 @@
+{
+  "scope": "Original sewer review Finished choice, native rat resurrection, physical exterior exit and exact fresh-process outdoor continuation. Full opening remains incomplete.",
+  "full_escape_complete": false,
+  "implementation": {
+    "reset": "Required default nonplayer native AV/lifecycle and base inventory reset; clear old actions/combat/knockback/corpse/recovery graph, reset alert, preserve position and historical deaths. All inventory definitions preflight before reset.",
+    "limits": [
+      "Player world resurrection, attached preserve-state resurrection and actors with owned paralysis remain explicitly rejected.",
+      "General leveled inventory expansion and broad active-actor visual resurrection are not established by this course.",
+      "CharacterGen88 AddTopic is deferred and its dialogue-time Autosave is rejected; semantic review/fixes remain open."
+    ]
+  },
+  "original_game_probe": {
+    "question": "Original default resurrection of a dead actor in an inactive interior",
+    "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+    "reference": "000666da",
+    "base": "00066a05",
+    "diagnostic_only": true,
+    "baseline": {
+      "dead": 0,
+      "health": 4,
+      "gold": 0,
+      "x": 1287.46,
+      "y": 2042.89
+    },
+    "modified": {
+      "dead": 1,
+      "gold": 17,
+      "x": 1100
+    },
+    "inactive_after_default_resurrect": {
+      "dead": 0,
+      "health": 4,
+      "gold": 0,
+      "x": 1100,
+      "y": 2042.89,
+      "base_death_count": 1
+    },
+    "after_reentry": {
+      "dead": 0,
+      "health": 4,
+      "gold": 0,
+      "base_death_count": 1
+    },
+    "limits": [
+      "Console diagnostic is independent rule evidence, not goal playthrough acceptance.",
+      "No actor script locals were available; reset policy for scripted actors not established.",
+      "Queries verify live state after cell reentry; reentry-body image faces a wall and does not prove visible rat animation."
+    ],
+    "tolerances": {
+      "position_display": 1,
+      "integer_counts": 0
+    },
+    "game_wrapper_exit": 0,
+    "restoration": "restoration.json"
+  },
+  "original_new_process_alert": {
+    "entry": "0x5f6020",
+    "constructor": "0x6438f0",
+    "base_process_alert_offset": "0x31",
+    "cases": 4,
+    "expected_new_alert_byte": 0,
+    "source_harness_sha256": "003fc303d7ac117ef21ea260ed8599f40a9b35af57d50276851f36ce03b171c1",
+    "boundaries": "Existing independently hash-verified full reset harness. Poisoned allocation, supplied body/cell/base getters and captured world/manager side effects. Real LowProcess constructor executes. No proprietary code bytes copied."
+  },
+  "checks": {
+    "exit-resurrection-focused-02": {
+      "evidence": "build/oblivion-compat/sewer-escape/exit-resurrection-focused-02/verification.json",
+      "source": {
+        "head": "2ee6cd238e7a4b7052ea57c25aba059461413e52",
+        "source_fingerprint": "17ea2603c8523535c23faebc4fee7ea950b9e298411017fdc82109c650fbe241"
+      },
+      "results": {
+        "engine": {
+          "executed": 5,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "OblivionTutorialAction.NativeResurrectionRestoresBaseInventoryAndPreservesPositionAndDeathHistory:OblivionActorStatsTest.*Resurrection*:OblivionActorStatsTest.physicalHitOwnerCannotSurviveProcessResetIntoSavedOrdinaryState",
+          "binary_sha256": "c74ce5823005230db0226faf0fbd0e3571b20399065e0cbaa8a5298dbfcc9314",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "cac40b02f04f7ebcafad03d62994bd88905a2a3d5291a5437ea10646884cc124",
+          "inventory_sha256": "ee7af09f515f975e58be76f6276b2d3ea6b5dbeb13e196d985ed636d59aab285",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "exit-resurrection-normal-integration-02": {
+      "evidence": "build/oblivion-compat/sewer-escape/exit-resurrection-normal-integration-02/verification.json",
+      "source": {
+        "head": "2ee6cd238e7a4b7052ea57c25aba059461413e52",
+        "source_fingerprint": "17ea2603c8523535c23faebc4fee7ea950b9e298411017fdc82109c650fbe241"
+      },
+      "results": {
+        "engine": {
+          "executed": 2200,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c74ce5823005230db0226faf0fbd0e3571b20399065e0cbaa8a5298dbfcc9314",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "508bd87e479c5c7065165e081c24f4a7728a10803cac7186139e70bd21d486e2",
+          "inventory_sha256": "ee7af09f515f975e58be76f6276b2d3ea6b5dbeb13e196d985ed636d59aab285",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime_executable_sha256": "c364342eeef305616bcce00aeb8b651e713e228846462c637c96a43912d9636f",
+  "runtime": {
+    "sewers03-exterior-exit-04": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/sewers03-exterior-exit-04/scenario.json",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-exit-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "2b12265a5387c33cb9c02b4826110c12892926008f5985f58ffcf09ecb80c23d",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saved_state": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-exit-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_sha256": "2b12265a5387c33cb9c02b4826110c12892926008f5985f58ffcf09ecb80c23d",
+        "outdoor_save": "build/oblivion-compat/sewer-escape/sewers03-exterior-exit-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "outdoor_sha256": "9fb870cc4cbcdc55f9d4cada7f9e91e43fd56334917ff0a79b20af1f9ae93570",
+        "rat_life": {
+          "actor": "content:oblivion.esm:0666da",
+          "base": "content:oblivion.esm:066a05",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        "rat_health": [
+          4.0,
+          null,
+          null,
+          null
+        ],
+        "rat_position": [
+          356.20623779296875,
+          1717.145751953125,
+          6895.1201171875,
+          0.0,
+          -0.0,
+          -0.7561905980110168
+        ],
+        "death_counts_preserved": true,
+        "player_health": 85.97167205810547,
+        "player_cell": "content:oblivion.esm:005e3d",
+        "character_generation": {
+          "tracking": false,
+          "skill_uses": null,
+          "recommended_class": "content:oblivion.esm:023788"
+        },
+        "scope": "Actual original exit course and saved reset state; continuous opening and shaman victory remain separate"
+      },
+      "capture_inspected": true
+    },
+    "sewers03-outdoor-reload-02": {
+      "passed": true,
+      "scenario": "build/oblivion-compat/sewer-escape/sewers03-outdoor-reload-02/scenario.json",
+      "entry": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-exterior-exit-04/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "9fb870cc4cbcdc55f9d4cada7f9e91e43fd56334917ff0a79b20af1f9ae93570",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "saved_state": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/sewers03-exit-approach-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_sha256": "2b12265a5387c33cb9c02b4826110c12892926008f5985f58ffcf09ecb80c23d",
+        "outdoor_save": "build/oblivion-compat/sewer-escape/sewers03-outdoor-reload-02/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "outdoor_sha256": "170c7e8945203fa01a394f9d728b3097b0c42beb936bce7b7a6767740af30013",
+        "rat_life": {
+          "actor": "content:oblivion.esm:0666da",
+          "base": "content:oblivion.esm:066a05",
+          "phase": 0,
+          "recovery_remaining": 0.0,
+          "killer": "null"
+        },
+        "rat_health": [
+          4.0,
+          null,
+          null,
+          null
+        ],
+        "rat_position": [
+          356.20623779296875,
+          1717.145751953125,
+          6895.1201171875,
+          0.0,
+          -0.0,
+          -0.7561905980110168
+        ],
+        "death_counts_preserved": true,
+        "player_health": 85.97167205810547,
+        "player_cell": "content:oblivion.esm:005e3d",
+        "character_generation": {
+          "tracking": false,
+          "skill_uses": null,
+          "recommended_class": "content:oblivion.esm:023788"
+        },
+        "scope": "Actual original exit course and saved reset state; continuous opening and shaman victory remain separate"
+      },
+      "capture_inspected": true
+    }
+  },
+  "indoor_composite_boundaries": [
+    {
+      "course": "sewers03-first-goblin-01",
+      "course_passed": false,
+      "source": "sewers03-bridge-approach-01",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-bridge-east-01",
+      "course_passed": true,
+      "source": "sewers03-first-goblin-01",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-eastern-rat-02",
+      "course_passed": false,
+      "source": "sewers03-bridge-east-01",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-eastern-rat-03",
+      "course_passed": false,
+      "source": "sewers03-eastern-rat-02",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-eastern-rat-04",
+      "course_passed": true,
+      "source": "sewers03-eastern-rat-03",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-upper-stairs-01",
+      "course_passed": true,
+      "source": "sewers03-eastern-rat-04",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-exit-approach-02",
+      "course_passed": true,
+      "source": "sewers03-upper-stairs-01",
+      "entry_returncode": 0
+    },
+    {
+      "course": "sewers03-exterior-exit-02",
+      "course_passed": false,
+      "source": "sewers03-exit-approach-02",
+      "entry_returncode": 0
+    }
+  ],
+  "failed_course_prefixes": [
+    {
+      "course": "sewers03-first-goblin-01",
+      "course_passed": false,
+      "used_prefix_only": true,
+      "f5_actions_before_failure": [
+        26
+      ],
+      "first_failed_action": 29,
+      "manifest": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/sewers03-first-goblin.json",
+      "manifest_sha256": "95a76612197844e644a7c4af4d378ded371760308bf3aaea1e203167b2f72d68"
+    },
+    {
+      "course": "sewers03-eastern-rat-02",
+      "course_passed": false,
+      "used_prefix_only": true,
+      "f5_actions_before_failure": [
+        24
+      ],
+      "first_failed_action": 27,
+      "manifest": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/sewers03-eastern-rat-early.json",
+      "manifest_sha256": "8d73c18627a454c531611a92396ce32f4bedea18fcad53b11991bc20d0c91d9d"
+    },
+    {
+      "course": "sewers03-eastern-rat-03",
+      "course_passed": false,
+      "used_prefix_only": true,
+      "f5_actions_before_failure": [
+        15
+      ],
+      "first_failed_action": 18,
+      "manifest": "/home/maciek/openmw-oblivion/openmw-oblivion/build/oblivion-compat/sewer-escape/sewers03-eastern-rat-doorway.json",
+      "manifest_sha256": "396c07cc4756aa61f346183e548f28bdd19472d3b9aa6308b74e825628bf3aa2"
+    }
+  ],
+  "retained_failures": {
+    "exit-resurrection-normal-integration-01": "2199/2200 pass; prior physical-hit reset regression required the old recovery graph to remain. Full nonplayer reset now discards graph and corpse pose; that branch now asserts absence, while all other paths retain their original checks.",
+    "sewers03-exterior-exit-01": "Unowned button polling allowed MQ01 to consume exit selection.",
+    "sewers03-exterior-exit-02": "Physical exterior reached but unsupported achievement, resurrection and weekday commands fail the course.",
+    "verify-exterior-reset-first-attempt": "Expected cleared skill history as an iterable; actual schema stores null. Verifier now requires null exactly; production code unchanged."
+  },
+  "remaining": [
+    "Shaman victory through real combat",
+    "Continuous prison-to-outdoors playthrough",
+    "CharacterGen88 topic/autosave effects review",
+    "Fresh accumulated sanitizer integration"
+  ],
+  "reused_evidence": "Unchanged component3262 coverage retains its original475c provenance in the linked prior chunk reports. No fresh component, Python or sanitizer result is claimed."
+}

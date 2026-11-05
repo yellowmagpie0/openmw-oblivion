@@ -6599,14 +6599,22 @@ namespace MWMechanics
             throw std::invalid_argument("native resurrection requires initialized lifecycle");
         auto life = found->second;
         prepareResurrectionReset(values, life);
+        // Original fresh LowProcess6438F0 clears the containing DWORD30,
+        // including BaseProcess's alert byte31.
+        values.mProcessAlerted = false;
         PreparedNonPlayerView prepared(actor, values, findActorBase(values.mBase), &life);
         std::swap(mActorValues.at(values.mActor), values);
         std::swap(found->second, life);
-        // The new process cannot retain the old contact's pending/applied hit.
-        if (const auto graph = mGetUpPlayback.find(found->first); graph != mGetUpPlayback.end())
-            graph->second.mPhysicalHit.reset();
-        if (found->second.mPhase != ESM4::ActorLifePhase::Alive)
-            cancelActorActions(found->first);
+        // A replacement process must not restore the old corpse's pose or any
+        // owned contact, cast, knockback or recovery on the next cell load.
+        cancelActorActions(found->first);
+        stopCombat(found->first);
+        mActorKnockback.erase(found->first);
+        mActorRagdolls.erase(found->first);
+        mGetUpIdles.erase(found->first);
+        mGetUpPlayback.erase(found->first);
+        mPreparedGetUpIdentity.mValue.reset();
+        mPreparedRagdollIdentity.mValue.reset();
         prepared.commit();
     }
 

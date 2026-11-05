@@ -6347,6 +6347,74 @@ namespace MWWorld
         return true;
     }
 
+    bool World::resurrectOblivionActor(const Ptr& actor, bool preserveState)
+    {
+        if (!mOblivionCombat || actor.isEmpty())
+            return false;
+        const auto key = actor.getCellRef().getFormKey();
+        const auto* values = mOblivionCombat->findActorValues(key);
+        if (!values || !mOblivionCombat->findActorLife(key))
+            return false;
+        if (actor == getPlayerPtr())
+            throw std::invalid_argument("native Player resurrection world reset is not implemented");
+        if (!values->mMeleeParalysis.empty())
+            throw std::invalid_argument("native resurrection with owned paralysis requires effect reset support");
+        const bool attached = actor.getRefData().getBaseNode() != nullptr && actor.isInCell()
+            && mWorldScene && mWorldScene->isCellActive(*actor.getCell());
+        // Original5F6020 only preserves the process when all three predicates
+        // (body, cell, attached cell) hold. Inactive Resurrect1 is a full reset.
+        if (preserveState && attached)
+            throw std::invalid_argument("native attached preserve-state resurrection is not implemented");
+
+        const auto* npc = mStore.search<ESM4::Npc>(values->mBase);
+        const auto* creature = mStore.search<ESM4::Creature>(values->mBase);
+        if ((npc != nullptr) == (creature != nullptr))
+            throw std::invalid_argument("native resurrection requires an unambiguous actor base");
+        const auto& baseInventory = npc ? npc->mInventory : creature->mInventory;
+        const ESM::FormKeyResolver resolver(mContentFiles);
+        std::vector<ESM4::RuntimeInventoryItem> inventory;
+        for (const auto& entry : baseInventory)
+        {
+            if (!entry.count) continue;
+            ESM4::RuntimeInventoryItem item;
+            item.mBase = resolver.toFormKey(ESM::FormId::fromUint32(entry.item));
+            item.mCount = ESM4::inventoryItemCount(entry);
+            inventory.push_back(std::move(item));
+        }
+        // Preflight all definitions before changing inventory or lifecycle.
+        auto contents = OblivionProfileServices::stageActorInventory(
+            OblivionProfileServices::prepareActorInventory(mStore, resolver, inventory));
+        OblivionProfileServices::equipNativeApparel(*contents, mStore);
+        auto& target = actor.getClass().getInventoryStore(actor);
+        std::vector<Ptr> removed, inserted;
+        for (const auto& item : target)
+            if (item.mRef->mWorldModel) removed.push_back(item);
+        for (Ptr item : *contents)
+        {
+            item.setContainerStore(&target);
+            inserted.push_back(item);
+        }
+        auto registry = mWorldModel.preparePtrReplacement(removed, inserted);
+        if (!registry.isValid())
+            throw std::logic_error("native resurrection inventory preparation is stale");
+        // Remove/capture the old scene before discarding its authoritative pose.
+        // Ordinary cell loading will create fresh animation/physics if inactive.
+        if (attached) mWorldScene->removeObjectFromScene(actor);
+        auto adoption = mOblivionCombat->guardLifeAdoption(actor, nullptr);
+        auto* reference = adoptOblivionActorLife(actor);
+        mOblivionCombat->resetNonPlayerForResurrection(actor);
+        registry.commit();
+        target.swapPreparedContents(*contents);
+        target.setPtr(actor);
+        if (reference) reference->mCustomState.erase("obscript.dead");
+        adoption.commit();
+        if (mOblivionAi) mOblivionAi->clearCombatRoute(actor);
+        actor.getClass().getCreatureStats(actor).setAttackingOrSpell(false);
+        if (attached) mWorldScene->addObjectToScene(actor);
+        target.notifyPreparedEquipmentChange();
+        return true;
+    }
+
     bool World::executeOblivionActorValueCommand(const ESM::FormKey& actor, std::uint8_t value,
         ESM4::ActorValueCommand command, ESM4::ActorValueCommandSource source, std::int32_t requested)
     {
