@@ -1,0 +1,57 @@
+{
+  "scope": "Original-game diagnostic for the Natural Caverns tripwire passage; not quest progression acceptance",
+  "executable_sha256": "a8f313845c1545e9a60e1e995961eef4c033115da9443f6d756341df3c2b7dc6",
+  "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+  "reference": "00051ac9",
+  "base": "000cd4cc",
+  "script": "0003f279",
+  "setup": [
+    "coc ImperialDungeon05",
+    "player.setpos x 480",
+    "player.setpos y 1800",
+    "player.setpos z -255",
+    "player.setangle z 90",
+    "player.setangle x 0",
+    "tgm"
+  ],
+  "initial_observed": {
+    "player_x": 480.0,
+    "triggered": 0,
+    "target": "00000000",
+    "mySelf": "00000000"
+  },
+  "measurement": {
+    "input": "Hold W for 2 seconds, release; no collision toggle",
+    "player_x": 674.39,
+    "triggered": 1,
+    "target": "00051acb",
+    "mySelf": "00051ac9"
+  },
+  "limitations": [
+    "Console positioning and god mode isolate collision; this is not a normal prison-to-exit course.",
+    "The result establishes passage and trigger activation, not a universal collision-layer filtering rule.",
+    "First brief console-toggle attempt failed: W went into console, yielding an invalid wplayer command; retained result.png is not passage evidence.",
+    "xset was unavailable; setup resumed without it."
+  ],
+  "fork_comparison": {
+    "course": "build/oblivion-compat/sewer-escape/cavern-second-collision-01",
+    "blocked_player_x": 502.9343,
+    "low_sweep_hit_x": 532.612,
+    "blocking_reference": "00051ac9"
+  },
+  "cleanup": {
+    "game_wrapper_exit": 0,
+    "owned_steam_wrapper_exit": 0,
+    "backup_comparison": "All restored file contents match backups exactly",
+    "pristine_quicksave_sha256": "67d927cad4a370131882da58b04a25a330c5defe288b9b6ca21f7768815c4d66"
+  },
+  "artifacts": {
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/prediction.json": "2595be801b0f5ec640d05de60b489f43f6d335fd7aff9d157f30caaa044b70de",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/input-log.jsonl": "f70a9c721b4313ff2f8555ac80943a04a7d00c5c78bd9e2baf4810d01ecfe1c7",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/setup.png": "7bbe14d3dc591f656942109579c1821310cbb8a0a970a260ad95000de8f61253",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/result.png": "7cbdd8a7b93436db5cd55b7f03b625e7e1a4e366df7d708cb062b3deacae402e",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/crossing-02.png": "3e19f12ac27b9494ae7a2b1712e0081b8c709103d18c428146707d8cd65143bd",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/result-02.png": "ec24c07e2e5eeaab2d2e2042fc04b1c59d9bc63fd89713901c0b5001abaff41e",
+    "build/oblivion-compat/sewer-escape/original-tripwire-01/restoration.json": "71cc634cd62e9d0a598299ed0e2ca700b9f1f5ea7e713a18a5c7590239a7a7aa"
+  }
+}

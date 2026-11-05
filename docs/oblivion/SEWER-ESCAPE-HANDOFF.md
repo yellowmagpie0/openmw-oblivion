@@ -1,5 +1,40 @@
 # Full sewer escape — current handoff
 
+## Current blocker — tripwire passage, 2026-11-04
+
+Full escape remains incomplete. The next deliverable is passage through the
+tripwire and the second goblin encounter, followed by continuation toward the
+escort reunion. `cavern-second-approach-01` passes original nodes0/1 and saves
+Player near(502.9343,1757.5403,-253.7433), health31.90. Its ordinary F5 save is
+the next input; verify its hash before reuse. Second goblin03b513 remains alive.
+`cavern-second-goblin-01` fails: swings remain out of range. The attempted
+closer approach `cavern-second-close-01` fails after sliding along an obstacle
+and overshooting. Neither failed course is progression acceptance.
+
+Read-only `cavern-second-collision-01` identifies tripwire051ac9/base0cd4cc
+as the low obstacle, with an eastern sweep plane near x532.612. The original
+CTrigTripwire01.NIF has real post rigid bodies, a simple-shape phantom, and
+a separate layer18 rigid body named phantomBox. The loader currently includes
+that rigid body in solid world collision. Do not infer a universal layer rule
+from its name: retained original collision-filter evidence includes group-zero
+exceptions.
+
+An isolated original-game diagnostic now proves normal forward passage across
+this location and activation of the original trap: x480 -> 674.39, triggered0
+-> 1, target051acb. See
+[SEWER-TRIPWIRE-NATIVE-OBSERVATION.json](SEWER-TRIPWIRE-NATIVE-OBSERVATION.json).
+Console positioning/god mode were diagnostic setup only. The first missed
+console-toggle attempt is retained as failed evidence. Both owned processes
+exited0; all isolated configuration/save inputs were restored byte-for-byte,
+including the pristine quicksave. No production collision fix yet.
+
+Next: resolve the authored body's collision role without removing the real
+posts or trigger, add focused loader coverage, rebuild, then verify ordinary
+fork passage/trigger state and fresh reload before continuing the fight.
+No runtime or build process from this probe remains live. The previous turn
+only restated the milestone; this checkpoint adds independent runtime evidence
+that establishes the next repair target.
+
 ## Current checkpoint — second-goblin trigger repaired and reloaded, 2026-11-04
 
 Full escape remains incomplete: remaining goblin dungeon, escort reunion,
