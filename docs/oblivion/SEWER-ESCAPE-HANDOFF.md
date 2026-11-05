@@ -73,17 +73,21 @@ live under `scripts/data/oblivion_compat/oblivion_sewer_shaman_staff_*.json`.
 
 ## Current chunk — second ambush and reunion
 
-Latest: Player traversed both ledges, reached Baurus/Emperor, opened north door17753
-and walked through it normally. `subterrane-north-door-02` is the genuine open-door
-input. `subterrane-open-door-crossing-01` proves Player collision passage. Both
-assassins are alive; stage34 persists. Navigation now uses authored pathgrid links,
-partial routes and NPC door areas. Full2187 engine tests pass; focused49 pass.
-The actors move but stop short of melee. Stage36 courses01/02/03 remain failed.
-See [SEWER-COMBAT-NAVIGATION-VERIFICATION.json](SEWER-COMBAT-NAVIGATION-VERIFICATION.json).
-Next: inspect actual route points/cursor and obstruction at assassin05 upper landing
-(1179,5208,-671) and assassin06 north of door (1533,5710,-991). Do not count this as
-ambush resolution. Temporary diagnostic source is removed.
+Latest: the original second ambush now reaches stage36 with both assassins dead,
+Player alive at30.07003 health, and original death callbacks. Normal backstep01
+kills the corridor assassin but fails its stage36 wait; fresh authored-fall-combat01
+restores that whole save exactly, drops the AllowFalls assassin using normal
+movement/gravity and resolves the fight. Full2187 engine tests pass. Evidence:
+[SEWER-SECOND-AMBUSH-VERIFICATION.json](SEWER-SECOND-AMBUSH-VERIFICATION.json).
+The route-continuity fix preserves the next shared waypoint across replanning;
+the authored fall approach is a bounded gameplay approximation, not exact AI parity.
+Fresh sanitizer integration for the accumulated navigation/door chunk remains due.
 
+Next blocker: `subterrane-reunion-dialogue-01` reaches original stage40 but fails
+on unsupported condition131 GetPCIsSex in INFO04f774. Add this query from Player
+sex, then resume the stage36 save in `subterrane-authored-fall-combat-01`.
+That original save SHA256 is e7a64c53c5d95612611448fe6e0dd8e57721e377590d143f150c7305442f2cb1.
+The reunion course remains failed; no birthsign or later progression is accepted.
 
 The cavern exit now works through original OnActivate script04f700 and ordinary
 Space input. StopCombatAlarmOnActor/SCAOnActor performs target-specific active

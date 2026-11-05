@@ -5668,8 +5668,23 @@ namespace MWMechanics
                 if (status != DetourNavigator::Status::Success && status != DetourNavigator::Status::PartialPath)
                     route.clear();
             }
+            // Recast can project a point inside a doorway link back to the
+            // link's entrance. Keep the next shared waypoint when replanning
+            // so crossing actors do not repeatedly return to that entrance.
+            std::size_t cursor = 0;
+            if (live.mCombatRouteTarget == actorKey(target) && live.mCombatRouteCell == cellKey(actor)
+                && live.mCombatRouteCursor < live.mCombatRoute.size())
+            {
+                const auto& next = live.mCombatRoute[live.mCombatRouteCursor];
+                for (std::size_t i = 0; i < route.size(); ++i)
+                    if (distanceSquared(next, route[i]) <= 1.f)
+                    {
+                        cursor = i;
+                        break;
+                    }
+            }
             live.mCombatRoute.swap(route);
-            live.mCombatRouteCursor = 0;
+            live.mCombatRouteCursor = cursor;
             live.mCombatRouteTarget = actorKey(target);
             live.mCombatRouteCell = cellKey(actor);
             live.mCombatRouteDestination = destination;
@@ -5686,6 +5701,17 @@ namespace MWMechanics
         }
         if (live.mCombatRouteCursor < live.mCombatRoute.size())
             faceAndMove(actor, live.mCombatRoute[live.mCombatRouteCursor], true);
+        else if (!live.mCombatRoute.empty() && destination.z() < position.z() - 64.f)
+        {
+            const auto* authored = package(live.mState.mPackage);
+            // An authored AllowFalls package can pursue a visible target
+            // below an exhausted surface route. Movement and gravity still
+            // own the drop; this neither relocates the actor nor bypasses walls.
+            if (authored && authored->mPackageFlags.has(ESM4::PackageFlag::AllowFalls)
+                && mWorld.getLOS(actor, target))
+                faceAndMove(actor, destination, true);
+        }
+
     }
 
     void OblivionAiService::faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak) const

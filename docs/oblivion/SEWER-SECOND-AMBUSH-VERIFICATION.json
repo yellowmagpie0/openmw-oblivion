@@ -1,0 +1,60 @@
+{
+  "scope": "Route continuity and authored AllowFalls approach resolve original second ambush through stage36",
+  "full_escape_complete": false,
+  "normal_engine": {
+    "path": "build/oblivion-compat/sewer-escape/ambush-resolution-engine-regression-01/verification.json",
+    "source": {
+      "head": "0de6f49b6b8e6c187d2f7cd54adb00625e810008",
+      "source_fingerprint": "8334753f35dfc34a9eb96623b77c4a6fb8b99a02a4f26f5a62c8bd5cd8444fdf"
+    },
+    "results": {
+      "engine": {
+        "executed": 2187,
+        "inventory_matches": true,
+        "failed": 0,
+        "skipped": 0,
+        "filter": "*",
+        "binary_sha256": "8e64e8ca603831ed7a5b180bdd665321ce72be67461b4f5187dbe927e5344ecc",
+        "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+        "xml_sha256": "ad48b3d568199a5f4c837cae761ac5f4103ec24d5cb4d1c77e84f8c724e8a00d",
+        "inventory_sha256": "61192dce6c924fb6d92cda1d755ca7b18bfa065744c3eb0eac6e53b9fc6fe0e7",
+        "configuration": {
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+          "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+          "CMAKE_CXX_FLAGS": "",
+          "CMAKE_CXX_FLAGS_DEBUG": "-g",
+          "OPENMW_USE_SYSTEM_BULLET": "OFF"
+        }
+      }
+    }
+  },
+  "runtime": {
+    "passed": true,
+    "path": "build/oblivion-compat/sewer-escape/subterrane-authored-fall-combat-01",
+    "save_sha256": "e7a64c53c5d95612611448fe6e0dd8e57721e377590d143f150c7305442f2cb1",
+    "actor_life": [
+      {
+        "actor": "content:oblivion.esm:0176ff",
+        "base": "content:oblivion.esm:017618",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a17"
+      },
+      {
+        "actor": "content:oblivion.esm:017708",
+        "base": "content:oblivion.esm:017620",
+        "phase": 1,
+        "recovery_remaining": 0.0,
+        "killer": "content:oblivion.esm:032a16"
+      }
+    ],
+    "player_health": 30.070030212402344,
+    "stage": 36,
+    "entry_restore": "build/oblivion-compat/sewer-escape/subterrane-authored-fall-combat-01/entry-state-verification.json"
+  },
+  "composite_provenance": "backstep-01 uses normal S+Shift input and kills017708, but remains failed stage36 wait. authored-fall-combat-01 fresh-loads that genuine save, restores whole state exactly and kills0176ff. No quest/health/position/completion injection.",
+  "authored_package_evidence": "build/oblivion-compat/sewer-escape/assassin05-original-package.json",
+  "approximation": "Visible downward pursuit after exhausted route requires current authored AllowFalls. Uses ordinary movement and gravity, not exact native tactical decision parity.",
+  "sanitizer_status": "Fresh sanitizer integration for accumulated door/navigation changes remains outstanding; earlier staff coverage keeps its original provenance.",
+  "next_blocker": "Original reunion reaches40 but course fails unsupported GetPCIsSex condition131 at INFO04f774. It remains failed; add Player sex query and replay original dialogue."
+}
