@@ -53,5 +53,19 @@
     "build/oblivion-compat/sewer-escape/original-tripwire-01/crossing-02.png": "3e19f12ac27b9494ae7a2b1712e0081b8c709103d18c428146707d8cd65143bd",
     "build/oblivion-compat/sewer-escape/original-tripwire-01/result-02.png": "ec24c07e2e5eeaab2d2e2042fc04b1c59d9bc63fd89713901c0b5001abaff41e",
     "build/oblivion-compat/sewer-escape/original-tripwire-01/restoration.json": "71cc634cd62e9d0a598299ed0e2ca700b9f1f5ea7e713a18a5c7590239a7a7aa"
+  },
+  "asset_audit": {
+    "path": "meshes/dungeons/caves/triggers/ctrigtripwire01.nif",
+    "version": "20.0.0.4",
+    "beth_version": 11,
+    "post_world_layers": [
+      1,
+      1
+    ],
+    "simple_shape_phantom_layer": 12,
+    "auxiliary_rigid_body_layer": 18,
+    "auxiliary_rigid_body_group": 0,
+    "inspection": "build/oblivion-compat/sewer-escape/tripwire-assets/inspection.txt",
+    "interpretation": "Exclude the auxiliary portal body from the static world compound; preserve actual posts and trigger. Runtime passage is the acceptance check, not the layer label alone."
   }
 }

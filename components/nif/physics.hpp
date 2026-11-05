@@ -58,9 +58,9 @@ namespace Nif
 
     struct HavokFilter
     {
-        uint8_t mLayer;
-        uint8_t mFlags;
-        uint16_t mGroup;
+        uint8_t mLayer{ 0 };
+        uint8_t mFlags{ 0 };
+        uint16_t mGroup{ 0 };
 
         void read(NIFStream* nif);
     };

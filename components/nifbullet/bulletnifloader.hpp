@@ -86,6 +86,7 @@ namespace NifBullet
         osg::ref_ptr<Resource::BulletShape> mShape;
         std::set<std::string, std::less<>> mEmbeddedAnimationNodes;
         float mHavokScale{ 1.f };
+        bool mOblivionCollisionLayers{ false };
         BethesdaCollisionStats mBethesdaCollisionStats;
     };
 

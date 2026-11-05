@@ -1333,6 +1333,68 @@ namespace
         EXPECT_TRUE(instance->isAnimated());
     }
 
+    TEST_F(TestBulletNifLoader, oblivion_portal_volume_does_not_block_tripwire_passage)
+    {
+        Nif::NiNode portalNode;
+        Nif::Testing::init(portalNode);
+        portalNode.mRecordType = Nif::RC_NiNode;
+        portalNode.mRecordIndex = 30;
+        Nif::bhkCollisionObject postCollision, triggerCollision, portalCollision;
+        Nif::bhkRigidBody post, portal;
+        Nif::bhkSimpleShapePhantom trigger;
+        Nif::bhkBoxShape box;
+        box.mRecordType = Nif::RC_bhkBoxShape;
+        box.mExtents = osg::Vec3f(1.f, 1.f, 1.f);
+        for (auto* body : { &post, &portal })
+        {
+            body->mRecordType = Nif::RC_bhkRigidBody;
+            body->mShape = Nif::bhkShapePtr(&box);
+        }
+        post.mHavokFilter.mLayer = 1;
+        portal.mHavokFilter.mLayer = 18;
+        trigger.mRecordType = Nif::RC_bhkSimpleShapePhantom;
+        trigger.mShape = Nif::bhkShapePtr(&box);
+        trigger.mHavokFilter.mLayer = 12;
+        trigger.mTransform.makeIdentity();
+        for (auto* collision : { &postCollision, &triggerCollision, &portalCollision })
+            collision->mRecordType = Nif::RC_bhkCollisionObject;
+        postCollision.mBody = Nif::bhkWorldObjectPtr(&post);
+        triggerCollision.mBody = Nif::bhkWorldObjectPtr(&trigger);
+        portalCollision.mBody = Nif::bhkWorldObjectPtr(&portal);
+        mNiIntegerExtraData.mData = 2;
+        mNiIntegerExtraData.mRecordType = Nif::RC_BSXFlags;
+        mNiNode.mExtraList.push_back(Nif::ExtraPtr(&mNiIntegerExtraData));
+        mNiNode.mRecordIndex = 10;
+        mNiNode2.mRecordIndex = 20;
+        mNiNode.mCollision = Nif::NiCollisionObjectPtr(&postCollision);
+        mNiNode2.mCollision = Nif::NiCollisionObjectPtr(&triggerCollision);
+        portalNode.mCollision = Nif::NiCollisionObjectPtr(&portalCollision);
+        mNiNode.mChildren = { Nif::NiAVObjectPtr(&mNiNode2), Nif::NiAVObjectPtr(&portalNode) };
+        mNiNode2.mParents.push_back(&mNiNode);
+        portalNode.mParents.push_back(&mNiNode);
+        Nif::NIFFile file(xtestNif);
+        file.mRoots.push_back(&mNiNode);
+        // Reuse the loader across versions to check that filtering does not leak
+        // into later games, where the layer numbers have different meanings.
+        for (const auto version : { unsigned(Nif::NIFFile::VER_OB), unsigned(Nif::NIFFile::VER_BGS),
+                 unsigned(Nif::NIFFile::VER_OB_OLD), Nif::NIFStream::generateVersion(20, 0, 0, 4) })
+        {
+            SCOPED_TRACE(version);
+            file.mVersion = version;
+            file.mBethVersion = version == Nif::NIFFile::VER_BGS ? 34 : 11;
+            const auto result = mLoader.load(file);
+            ASSERT_NE(result->mCollisionShape, nullptr);
+            ASSERT_NE(result->mTriggerCollisionShape, nullptr);
+            const bool oblivion = version != Nif::NIFFile::VER_BGS;
+            EXPECT_EQ(static_cast<const btCompoundShape&>(*result->mCollisionShape).getNumChildShapes(),
+                oblivion ? 1 : 2);
+            EXPECT_EQ(static_cast<const btCompoundShape&>(*result->mTriggerCollisionShape).getNumChildShapes(), 1);
+            EXPECT_EQ(result->mAnimatedShapes.count(10), 1);
+            EXPECT_EQ(result->mAnimatedShapes.count(30), oblivion ? 0 : 1);
+            EXPECT_EQ(result->mAnimatedTriggerShapes, (std::map<int, int>{ { 20, 0 } }));
+        }
+    }
+
     TEST_F(TestBulletNifLoader, oblivion_loose_havok_triangle_strips_remain_in_model_units)
     {
         Nif::bhkCollisionObject collision;

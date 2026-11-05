@@ -92,6 +92,9 @@ namespace NifBullet
         mEmbeddedAnimationNodes.clear();
         mBethesdaCollisionStats = {};
         mHavokScale = nif.getBethVersion() < Nif::NIFFile::BETHVER_FO3 ? sHavok660Scale : sHavok2010Scale;
+        mOblivionCollisionLayers = nif.getVersion() >= Nif::NIFFile::VER_OB_OLD
+            && nif.getVersion() <= Nif::NIFFile::VER_OB
+            && nif.getBethVersion() < Nif::NIFFile::BETHVER_FO3;
 
         for (std::size_t i = 0; i < nif.numRecords(); ++i)
         {
@@ -425,6 +428,14 @@ namespace NifBullet
             warn("Unsupported Bethesda collision object on node " + node.mName + " in " + mShape->mFileName.value());
             return;
         }
+
+        // Oblivion's portal bodies are auxiliary volumes, not solid world geometry.
+        // CTrigTripwire01 carries one alongside its solid posts and a separate
+        // trigger phantom. Baking it into the world compound blocks the player
+        // before the trigger can fire. Keep the posts and actual phantom intact.
+        if (mOblivionCollisionLayers && collision->mBody->mHavokFilter.mLayer == 18
+            && dynamic_cast<const Nif::bhkRigidBody*>(collision->mBody.getPtr()))
+            return;
 
         std::unique_ptr<btCollisionShape> shape = makeBethesdaShape(collision->mBody->mShape.get());
         if (!shape)

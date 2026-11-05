@@ -1,6 +1,59 @@
 # Full sewer escape — current handoff
 
-## Current blocker — tripwire passage, 2026-11-04
+## Current checkpoint — tripwire passage and second goblin, 2026-11-04
+
+Full escape remains incomplete: trap behavior, remaining caverns, escort
+reunion, Emperor/Amulet, character choices, stage88 exit, outdoor reload and
+continuous prison-to-outdoors course. Current chunk is complete for collision
+passage and second-goblin combat/reload, but NOT for the hanging trap.
+
+The loader excludes Oblivion layer18 auxiliary rigid bodies from solid world
+compounds, preserving real posts and trigger phantoms. HavokFilter defaults are
+initialized for synthetic records. Regression covers mixed animated shapes,
+format switching, and original asset version20.0.0.4. Initial exact-version
+filter missed that version: `tripwire-passage-01` FAILS, retained unchanged.
+Corrected `tripwire-passage-02` PASSES ordinary passage to x782.95, wire locals
+triggered=1/target051acb/mySelf051ac9 and forward animation. Player survives;
+the long heading setup costs health under goblin attack. Capture inspected.
+
+Validation: `tripwire-loader-focused-02` all52 loader tests;
+`tripwire-components-02` all3247 component tests; `tripwire-sanitize-02` all52
+loader tests under ASan/UBSan, leak checking disabled. Exact inventories,
+zero failures/skips, fingerprint
+`6268e670252f5e2539b2975fabc230b9817d9c1703f886057622cf4a07244384`.
+Runtime build02 exits0, SHA256
+`c0652eb036c2651e89a30d35917b053dda36b7d412f6fd879f256039433ab224`.
+`tripwire-integration-01` passed2168 engine tests on the earlier exact-version
+implementation, fingerprintff44ee2025216ca27bc3a2b9bd3334259c48e3005e9b176643ef892283ef691e;
+this is reused evidence, not a current-source engine rerun.
+
+`cavern-second-goblin-02` PASSES from the pristine pre-tripwire checkpoint:
+ordinary Club attacks kill03b513 with Player killer, health12.159996, no combat
+engagements. `cavern-second-goblin-reload-01` PASSES fresh-process load/resave.
+`restart-audit.json` verifies both goblin deaths/killer state, entire Player
+inventory, exact trap script locals and no wire animation replay. Only Player
+value change is ordinary fatigue recovery138.60014->140. Captures inspected;
+dead goblins still render upright, a known presentation gap. Passing courses
+have no forbidden/unreviewed errors. Editable courses are
+`oblivion_sewer_cavern_tripwire_passage.json`, `...second_goblin.json`, and
+`...second_goblin_reload.json` under scripts/data/oblivion_compat.
+
+Latest diagnostic continuation save:
+`build/oblivion-compat/sewer-escape/cavern-second-goblin-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `35281950ee2b50c7de95dc6d2b2d1498708b24f00e73998aaf73b9ce7d9c0fdb`.
+Player(590.84,1764.79,-245.94), yaw1.81328/pitch0, health12.16.
+
+Next required repair: ObScript Activate ignores its explicit activator and
+run-script arguments, always suppressing target OnActivate. Thus wire051ac9
+fires but hanging trap051acb retains triggered=0 and never plays unequip.
+Fix that dispatch, then verify the trap animation/physical hazard and persistence.
+No trap damage acceptance yet; damage-script variables alone are insufficient.
+Replay from `cavern-second-approach-01` (SHA256
+`4057f1e6cc2def1d8c53505ae4ffe68ba8f1c8e9da3f862e701205fbe856944d`),
+where the wire is unconsumed and health31.90, rather than patching an already
+consumed wire save. All runtime/build processes for this chunk are terminal.
+
+## History — tripwire passage blocker, 2026-11-04
 
 Full escape remains incomplete. The next deliverable is passage through the
 tripwire and the second goblin encounter, followed by continuation toward the
