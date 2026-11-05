@@ -5,13 +5,14 @@
 Play the original opening continuously from prison through the real sewer exit,
 using ordinary controls and original quest progression. Include equipment/loot,
 combat/traversal, escort reunion, Emperor death/Amulet, character choices,
-Baurus dialogue88, the physical exterior exit and fresh-process save/load outdoors. No injected health,
+Baurus CharacterGen88, MQ01 stage88 at the physical exterior exit, and
+fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
 Remaining: physical sewer/exterior exit, outdoor reload, shaman victory and
 continuous prison-to-outdoors acceptance. Baurus dialogue88 and class choice now
-pass; stage88 is not the physical exterior exit. Current2197 normal
+pass; CharacterGen88 is distinct from MQ01's final exit stage88. Current2197 normal
 engine tests pass. Component3262 evidence is reused at its original475c source;
 components did not change in the target-route patch. Fresh accumulated sanitizer
 integration remains due: default-open-sanitizer-integration-01 was deliberately
@@ -19,7 +20,27 @@ cancelled before tests to batch this observed navigation repair, with driver and
 owned build group verified terminal. Do not treat its receipt or compiled objects
 as a pass. Earlier1eb42 sanitizer coverage retains its original provenance.
 
-## Current chunk — class choice and Baurus dialogue88 accepted
+## Current chunk — final sewer entry and fresh landing accepted
+
+Normal Player movement/jump crosses the opened assassin passage into the chamber
+beyond barred side gate03f1b3. Original gate script permits opening only from the
+other side; the Player course never unlocks it. Door02282e uses Baurus key01e702,
+opens/unlocks through ordinary activation, and its original script removes the
+key once. Player walks through, activates manhole0270e2, and physically enters
+ImperialSewers03. Genuine F5 saves and a fresh landing reload pass; all three entry
+boundaries restore every field exactly. Health remains84.29768, one Amulet,
+Warrior class/birthsign, key absent and unlocked/open key-door pose retained.
+No new engine changes; normal engine2197 evidence from the class chunk applies.
+[SEWER-FINAL-SEWERS-ENTRY-VERIFICATION.json](SEWER-FINAL-SEWERS-ENTRY-VERIFICATION.json).
+
+Current clean input:
+`build/oblivion-compat/sewer-escape/sewers03-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Cell0272f2 ImperialSewers03; Player at(-2595.823,1077.309,6878.335), health84.29768/base110,
+Warrior class023787 and birthsign01fd9d, axe/armor and one Amulet0250a0; key removed.
+Recipes: `oblivion_sewer_sanctum_secret_passage.json`,
+`oblivion_sewer_final_sewers_entry.json`, `oblivion_sewer_final_sewers_reload.json`.
+
+## Prior chunk — class choice and Baurus dialogue88 accepted
 
 Native GetIsClassDefault228 now compares its CLAS parameter with the Player's
 recomputed/cached recommendation, irrespective of run-on actor. It shares the
@@ -41,7 +62,7 @@ covers both master layouts, recommendation recomputation and current-class misma
 Evidence and retained failures:
 [SEWER-CLASS-CHOICE-VERIFICATION.json](SEWER-CLASS-CHOICE-VERIFICATION.json).
 
-Current clean input:
+Prior clean class-choice input:
 `build/oblivion-compat/sewer-escape/baurus-class-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
 Quest88/MQ02=20; Player at(2800.493,10065.103,-1439), health84.29768/base110,
 Warrior class023787 and birthsign01fd9d, axe/armor, one unequipped Amulet0250a0
@@ -51,14 +72,21 @@ Glenroy, Emperor and final assassin dead once; Baurus alive. Recipes:
 
 ## Next action
 
-Play the physical route from the Sanctum through locked door02282e at
-(4501.35,9344.78,-1330.90) using Baurus's key, then manhole0270e2 at
-(5120,9344,-1416.80) into ImperialSewers03. Independent winning-record audit:
-`build/oblivion-compat/sewer-escape/sanctum-exit-doors.json`.
-Find the actual walkable passage; do not assume locked side gate03f1b3 is the route.
-Continue to the real exterior exit and a fresh outdoor reload. Shaman victory
-and continuous prison-to-outdoors acceptance remain required. Batch accumulated
-sanitizer integration after related scene repairs; prior cancelled build is not a pass.
+Play ImperialSewers03 from its actual landing to exit door04bed7 at
+(3872,2048,7008). Winning records/pathgrid and actors are audited in
+`build/oblivion-compat/sewer-escape/sewers03-{original-route,exit-doors,exit-path}.json`.
+Pathgrid129 descends from the landing via128→127→126→125→124→123, then crosses the
+lower sewer and climbs to the final upper passage. There are two rats, Goblin066a02,
+Goblin Berserker066a03 and passive regenerating rat0666da in the cell. Combat and
+actual traversal remain unproven here; use ordinary controls and original scripts.
+CGSewerExitScript shows the character-review choice; Finished (button3) requests
+MQ01 stage88, whose real result disables chargen tracking, clears skill-use history
+and retains the cached class. Verify physical exterior transition and fresh outdoor
+reload, not just the stage. Original script audits are `character-exit-scripts.json`
+and `mq01-exit-stage88.json` in the ignored sewer evidence root.
+Shaman victory and continuous prison-to-outdoors acceptance remain required.
+Batch accumulated sanitizer integration after related scene repairs; the prior
+cancelled build is not a pass.
 
 Stage88 AddTopic calls still use the existing deferred handler. Its Autosave request
 is rejected while dialogue is open; later ordinary F5 works. These effects remain
