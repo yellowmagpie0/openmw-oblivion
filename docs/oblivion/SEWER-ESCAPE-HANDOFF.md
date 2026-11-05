@@ -9,61 +9,64 @@ MQ01 stage88 exit and fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
-Remaining: Baurus resuming Follow after his completed OncePerDay Find, full
-party/player entry into ImperialDungeon03, Emperor death/Amulet, class choice,
+Remaining: Player entry into ImperialDungeon03 and original58 story gate,
+Emperor death/Amulet, class choice,
 sewer exit88, outdoor reload and continuous
 prison-to-outdoors acceptance. Shaman encounter victory remains unaccepted;
 actual contact/staff behavior is implemented, but earlier fight attempts lost.
-Fresh full2191 ASan/UBSan engine tests now pass with leak checking for1eb42debb1;
-rendered sanitizer continuation remains due. Preserve original check provenance.
+Full2191 ASan/UBSan engine tests and a rendered moving-escort restart pass for
+1eb42debb1. New schema89/daily-package sanitizer integration remains due; preserve
+those earlier checks with their original provenance.
 
-## Current chunk — original54/56 reached; Baurus blocker isolated
+## Current chunk — Baurus resumed Follow and entered ImperialDungeon03
 
-Ordinary mouse/W/Shift input follows the original corridors to the Emperor.
-Three owned C healing casts leave Player alive at71.19003 health. Original
-CharGenScript advances52→54 and unlocks0226a2. A fresh continuation restores
-that whole save exactly, then the original Glenroy Escort01d0ed and Emperor
-Travel00bf1e cross into ImperialDungeon03/022282. Glenroy reaches his own
-marker00bf05 and the original callback advances56. Emperor reaches0c7970.
-This crossing uses the Emperor's authored Travel; it does not establish generic
-cross-cell recipient steering. Captures and actual NPC cell/position state inspected.
+OncePerDay completion history is now native AI state, keyed by actor/package
+and calendar date. Schema89 appends a canonical history map; loaded and unloaded
+selection skip completed daily packages and preserve the next package's original
+priority. History is recorded before package callbacks and retained through the
+existing transactional actor restore. Date/year rollover eligibility is unit-tested.
 
-Baurus remains in Subterrane022288 on completed Find04f201. That package has
-OncePerDay and precedes Follow017d7d; the flag is parsed but not honored in
-selection. Stage54 EVP does not dislodge the completed winner. Original records
-show no higher relevant replacement until66, while stage56's next gate requires
-Baurus and the Emperor in ImperialDungeon03. **Full party/58 remains unaccepted.**
+Legacy schema88 lacks completion dates. Its still-completed daily package is
+retired on its first selection day without replaying its callback. Initial
+migration changes only version89 and empty history; all other state is exact.
+Baurus then selects original Follow017d7d instead of staying on Find04f201.
+He passes both doorways, genuinely saves while moving, reloads exactly, continues
+following and crosses original0226a2→022812 into ImperialDungeon03/022282.
+The completion record remains(032a17,04f201,433/7/28), with no old Find callback.
 
-Evidence and retained failed attempts:
-[SEWER-MARKER-G-PROGRESSION-VERIFICATION.json](SEWER-MARKER-G-PROGRESSION-VERIFICATION.json).
-The slower follow03 course died to real generic assassin01774a melee damage.
-Successful05 passes using ordinary movement/healing without an injected kill;
-do not describe the failed damage as falling. Initial SDL focus needs settling;
-later steering uses camera-view observations and fresh alignment gates.
+Full3261 normal component tests,2191 engine tests and560 Python tests pass.
+The Python pass retains its original fingerprint before final C++ wire-test-only
+offset corrections. Current exact-wire assertions include the new four-byte tail;
+reviewed synthetic fixture migrations carry empty daily history and still reject
+future schemas. Captures inspected. Evidence and retained failures:
+[SEWER-DAILY-PACKAGE-VERIFICATION.json](SEWER-DAILY-PACKAGE-VERIFICATION.json).
 
 Current input:
-`build/oblivion-compat/sewer-escape/subterrane-marker-g-escort-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
-Quest56; Player near(1292.136,7259.708,-1183) in022288, Warrior, axe and armor.
-Glenroy near(2827.590,7857.444,-1238.728), Emperor at(2847.786,7633.505,-1184.023)
-in022282; both alive. Baurus near(1459.880,4922.578,-920.538) in022288.
-Editable follow and Marker G courses live under `scripts/data/oblivion_compat/`.
+`build/oblivion-compat/sewer-escape/baurus-marker-g-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`.
+Quest56; Player near(1292.136,7259.708,-1183) in022288, health71.19003, Warrior,
+axe and armor. All three escorts are now in022282. Baurus is at the real door
+landing(2812.340,7463.908,-1184.023), still following the Emperor. Glenroy is near
+(2827.590,7857.444,-1238.728); Emperor at(2847.786,7633.505,-1184.023).
 
 ## Next action
 
-Implement persistent OncePerDay completion/selection ownership so Baurus can
-resume his original Follow package without replaying the completed greeting or
-its callback. Cover save/reload and day rollover, then verify actual Baurus
-movement and cell transition. Use ordinary Player movement through the original
-unlocked0226a2→022812 door; reach the stage56 proximity/party gate and continue
-toward the Emperor death/Amulet sequence. Do not inject stages or relocate actors.
-Finish this required route dependency before expanding into unrelated AI flags.
+Use ordinary Player movement through the original unlocked0226a2→022812 door.
+An ignored scout recipe is `build/oblivion-compat/sewer-escape/sanctum-door-approach.json`;
+its first run may still be active: inspect its actual process/session before reuse.
+Then reach the stage56 proximity/party gate and continue toward the Emperor
+death/Amulet sequence. Do not inject stages or relocate actors. Batch new daily
+state sanitizer integration at the next story checkpoint. Start/interruption
+parity for all daily package types and an actual24-hour runtime rollover are not
+established by the scoped daily-package proof.
 
-The prior Marker F chunk is committed as1eb42debb1: separate ephemeral escort
-routes, waiting for the recipient, collision-swept smaller step rises under
-an overhang, and fixed-endpoint completion. Normal2191 and fresh sanitized2191
-engine tests pass. Original52 callback and exact fresh restart are covered in
-[SEWER-ESCORT-MARKER-F-VERIFICATION.json](SEWER-ESCORT-MARKER-F-VERIFICATION.json).
-The original full escape acceptance above remains unchanged.
+Earlier route evidence:
+[Marker F](SEWER-ESCORT-MARKER-F-VERIFICATION.json) and
+[original54/56 progression](SEWER-MARKER-G-PROGRESSION-VERIFICATION.json).
+The rendered sanitizer original50→52 run reached its600-second limit while
+progressing; its retained F5 proves both doorway traversals and a fresh restart
+with exact state and25–28 further units of movement. It remains a failed whole
+stage52 scenario, and its compiled1eb42debb1 does not cover the daily-package
+change. Receipt is linked in the current verification artifact.
 
 ## Reusable evidence and known limitations
 

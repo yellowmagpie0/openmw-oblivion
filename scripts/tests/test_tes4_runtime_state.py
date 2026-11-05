@@ -5019,3 +5019,36 @@ class MagicProjectile88Tests(unittest.TestCase):
         state = self.make_state(); state['native_magic_projectiles'] *= 2
         with self.assertRaises(state_io.RuntimeStateError):
             state_io.encode_payload(state)
+
+
+class DailyPackage89Tests(unittest.TestCase):
+    def make_state(self):
+        state = make_m14_state()
+        state['schema_version'] = 89
+        state['daily_package_completions'] = [{'actor': state['actor_ai'][0]['actor'],
+            'package': 'content:oblivion.esm:04f201', 'day': [433, 7, 28, 0]}]
+        return state
+
+    def test_roundtrip_and_legacy_absence(self):
+        state = self.make_state()
+        payload = state_io.encode_payload(state)
+        decoded = state_io.decode_payload(payload)
+        self.assertEqual(decoded['daily_package_completions'], state['daily_package_completions'])
+        self.assertEqual(state_io.encode_payload(decoded), payload)
+        state['schema_version'] = 88
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)
+        state['daily_package_completions'] = []
+        self.assertNotIn('daily_package_completions', state_io.decode_payload(state_io.encode_payload(state)))
+
+    def test_invalid_owner_package_day_and_duplicate_are_rejected(self):
+        for edit in [{'actor': 'content:oblivion.esm:000999'}, {'actor': []},
+                     {'package': 'null'}, {'package': 'dynamic:pack:0000000000000001'},
+                     {'day': [433, 1, 31, 0]}, {'day': [433, 7, 28, 1]}, {'day': None}]:
+            with self.subTest(edit=edit):
+                state = self.make_state(); state['daily_package_completions'][0].update(edit)
+                with self.assertRaises(state_io.RuntimeStateError):
+                    state_io.encode_payload(state)
+        state = self.make_state(); state['daily_package_completions'] *= 2
+        with self.assertRaises(state_io.RuntimeStateError):
+            state_io.encode_payload(state)

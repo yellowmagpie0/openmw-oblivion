@@ -1,0 +1,297 @@
+{
+  "scope": "Persistent per-actor daily package completion, schema89, old completed Find retirement, Baurus Follow resume/restart and original cell crossing",
+  "full_escape_complete": false,
+  "checks": {
+    "daily-package-wire-retry-01": {
+      "path": "build/oblivion-compat/sewer-escape/daily-package-wire-retry-01/verification.json",
+      "source": {
+        "head": "d5e2ceaa15ddda1bd6b8de75957e3707f23da716",
+        "source_fingerprint": "98c1e98cd32223343bcb262dd6f4e311a57448786f2e65b31108ee964bfac3b7"
+      },
+      "results": {
+        "components": {
+          "executed": 2,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "ESM4RuntimeState.actorClockWireRejectsDuplicateNoncanonicalOversizedAndTruncatedData:ESM4RuntimeState.NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOwner",
+          "binary_sha256": "4c5e3bf95d7d76f563e0aea66c5e85e257db0f852a2db5f1a1bda30dc11ef8df",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "d7beaa63f160b8506887c84c17587930cac1689848952a47d1b00847ee1fc313",
+          "inventory_sha256": "589643ee2f10ec8e97ebc64e1e0431b5882415edd354ee4bffd7374c7b7d91f3",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    },
+    "daily-package-python-regression-02": {
+      "path": "build/oblivion-compat/sewer-escape/daily-package-python-regression-02/verification.json",
+      "source": {
+        "head": "d5e2ceaa15ddda1bd6b8de75957e3707f23da716",
+        "source_fingerprint": "15b7fd1c0e5faa622906df9f969df2824f878679aa7ed22a65233ee4f5757c49"
+      },
+      "results": {
+        "python": {
+          "executed": 560,
+          "passed": true,
+          "log_sha256": "9fc7b5d6c9f0434047ab2c4ddafc563a102c39a074f6891972951a7532b64d51"
+        }
+      }
+    },
+    "daily-package-normal-integration-01": {
+      "path": "build/oblivion-compat/sewer-escape/daily-package-normal-integration-01/verification.json",
+      "source": {
+        "head": "d5e2ceaa15ddda1bd6b8de75957e3707f23da716",
+        "source_fingerprint": "98c1e98cd32223343bcb262dd6f4e311a57448786f2e65b31108ee964bfac3b7"
+      },
+      "results": {
+        "components": {
+          "executed": 3261,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "4c5e3bf95d7d76f563e0aea66c5e85e257db0f852a2db5f1a1bda30dc11ef8df",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "fc16fbe0fa3ebc9974293407c247453b9e999106026c6e2f43ec3e076494b65c",
+          "inventory_sha256": "e43cfbd72292e6c6d6de8f6023d9fe6256cacb5fbdcd7cd60aba6e56fe40e15b",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        },
+        "engine": {
+          "executed": 2191,
+          "inventory_matches": true,
+          "failed": 0,
+          "skipped": 0,
+          "filter": "*",
+          "binary_sha256": "c5c073496795179e459c2ba37abeb49b3ee6a403433e4f818c74d969845397eb",
+          "cache_sha256": "d3f80d1aaf5ffd2e3d2df21e651ef37b12f29aba3d4af3ddf4f855b0b714364f",
+          "xml_sha256": "416345d6f1ebed1191a896ca53d3bae26f2ecf24c0f1d9f8c07777d0586f6364",
+          "inventory_sha256": "a1f509b0264185b4f03d0c999b5e1595600ad104bdf3dd85c6b57cc5ce17afca",
+          "configuration": {
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+            "CMAKE_CXX_COMPILER": "/usr/bin/c++",
+            "CMAKE_CXX_FLAGS": "",
+            "CMAKE_CXX_FLAGS_DEBUG": "-g",
+            "OPENMW_USE_SYSTEM_BULLET": "OFF"
+          }
+        }
+      }
+    }
+  },
+  "runtime": {
+    "baurus-daily-resume-01": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-daily-resume-01",
+      "passed": true,
+      "entry_verification": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/subterrane-marker-g-escort-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "06b2c245b2ea858e51890012dc9971257b2e1ef747809148166e684c5f9082d1",
+        "migration": {
+          "schema_version": [
+            88,
+            89
+          ],
+          "daily_package_completions": []
+        },
+        "all_other_state_exact_except_declared_body_velocity_projection": true,
+        "differences": []
+      },
+      "save_sha256": "d0940f332bed39974fa1e357aaf4d1bf11416e9468961bd08228475dad1ddcc5",
+      "baurus": {
+        "cell": "content:oblivion.esm:022288",
+        "package": "content:oblivion.esm:017d7d",
+        "phase": 2,
+        "position": [
+          1905.4578857421875,
+          5688.5205078125,
+          -991
+        ],
+        "target": "content:oblivion.esm:032a18"
+      },
+      "history": [
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "package": "content:oblivion.esm:04f201",
+          "day": [
+            433,
+            7,
+            28,
+            0
+          ]
+        }
+      ],
+      "old_completion_callback_replayed": false
+    },
+    "baurus-daily-reload-01": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-daily-reload-01",
+      "passed": true,
+      "entry_verification": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-daily-resume-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "d0940f332bed39974fa1e357aaf4d1bf11416e9468961bd08228475dad1ddcc5",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_sha256": "8c43d9fb79931f899e4fb8a8c3b71225f8063f2a7f60319f13637533c2c9256f",
+      "baurus": {
+        "cell": "content:oblivion.esm:022288",
+        "package": "content:oblivion.esm:017d7d",
+        "phase": 2,
+        "position": [
+          2309.498779296875,
+          5687.158203125,
+          -1175.128173828125
+        ],
+        "target": "content:oblivion.esm:032a18"
+      },
+      "history": [
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "package": "content:oblivion.esm:04f201",
+          "day": [
+            433,
+            7,
+            28,
+            0
+          ]
+        }
+      ],
+      "old_completion_callback_replayed": false
+    },
+    "baurus-marker-g-01": {
+      "path": "build/oblivion-compat/sewer-escape/baurus-marker-g-01",
+      "passed": true,
+      "entry_verification": {
+        "passed": true,
+        "source_save": "build/oblivion-compat/sewer-escape/baurus-daily-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+        "source_save_sha256": "8c43d9fb79931f899e4fb8a8c3b71225f8063f2a7f60319f13637533c2c9256f",
+        "whole_state_restore": true,
+        "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+        "differences": []
+      },
+      "save_sha256": "8eebf33627b20d27e428928dd167a7613c6128ec7a943decf42c376c6f4eb8c5",
+      "baurus": {
+        "cell": "content:oblivion.esm:022282",
+        "package": "content:oblivion.esm:017d7d",
+        "phase": 2,
+        "position": [
+          2812.340087890625,
+          7463.908203125,
+          -1184.0230712890625
+        ],
+        "target": "content:oblivion.esm:032a18"
+      },
+      "history": [
+        {
+          "actor": "content:oblivion.esm:032a17",
+          "package": "content:oblivion.esm:04f201",
+          "day": [
+            433,
+            7,
+            28,
+            0
+          ]
+        }
+      ],
+      "old_completion_callback_replayed": false
+    }
+  },
+  "game_binary_sha256": "ca26f2792ca4a7d52360b5dd56b1852a2725017b9e936a17bdbcb270b8f25e9c",
+  "policy": [
+    "Only completed OncePerDay packages enter history, keyed by actor and canonical package. Selection suppresses them on that calendar date and preserves lower-priority list indices. Later-day eligibility is unit-tested, including year rollover.",
+    "Completion history is recorded before callback dispatch; retained/transactional actor state owns it. Fresh restart restores exact populated history.",
+    "Legacy saves have no completion date. A still-completed daily package is retired on its first selection day without replaying its callback; initial schema88\u219289 migration changes only version and empty history.",
+    "Winning package flag changes prune no-longer-daily history on selection. Existing selection cadence is unchanged. Package-start/interruption parity and runtime 24-hour rollover are outside this scoped evidence."
+  ],
+  "content": {
+    "master_sha256": "a26e21ea8c3041f8737ffb3a266129dedb7f8a88590625ecfecd5eb7f66b4a70",
+    "audits": [
+      "build/oblivion-compat/sewer-escape/stage50-original-packages.json",
+      "build/oblivion-compat/sewer-escape/baurus-late-tutorial-packages.json"
+    ],
+    "expected": "04f201 Find has OncePerDay and is priority44;017d7d FollowEmperorToF is priority45. No higher relevant replacement before66;56\u219258 requires Baurus in ImperialDungeon03."
+  },
+  "retained_failures": {
+    "daily-package-state-focused-01": "New test used toJson instead of canonicalJson; production compilation had succeeded.",
+    "daily-package-python-regression-01": "Schema89 needed reviewed fixture admission, empty-state defaults and current recipe targets; corrected affected checks20/20, then full560 pass.",
+    "daily-package-state-focused-02": "187/189 selected cases passed; two old exact wire offsets needed the new four-byte tail. Corrected retry passes both and full3261 component integration passes."
+  },
+  "reused_evidence": {
+    "python": "560 checks keep their original source fingerprint; subsequent changes before normal integration were C++ wire-test offsets only.",
+    "earlier_sanitized_runtime": {
+      "receipt": "build/oblivion-compat/sewer-escape/subterrane-escort-sanitized-reload-01/escort-restart-verification.json",
+      "compiled_source": "1eb42debb1",
+      "result": {
+        "scope": "Sanitized actual doorway traversal prefix and fresh moving escort restart, not full stage52 course",
+        "full_stage52_sanitized_course_passed": false,
+        "source_course": "subterrane-marker-f-sanitized-01",
+        "source_scenario_passed": false,
+        "source_failure": "600-second stage52 wait expired with healthy route progress; real F5 retained",
+        "restart_scenario_passed": true,
+        "actors": {
+          "content:oblivion.esm:032a16": {
+            "distance_moved_after_restart": 27.827123282307898,
+            "package": "content:oblivion.esm:017d7e",
+            "phase": 2,
+            "position_before": [
+              2674.762939453125,
+              6353.18310546875,
+              -1183
+            ],
+            "position_after": [
+              2701.373291015625,
+              6361.32177734375,
+              -1183
+            ]
+          },
+          "content:oblivion.esm:032a18": {
+            "distance_moved_after_restart": 25.84197104903283,
+            "package": "content:oblivion.esm:017d7c",
+            "phase": 7,
+            "position_before": [
+              2604.20556640625,
+              6263.734375,
+              -1183.047119140625
+            ],
+            "position_after": [
+              2620.72021484375,
+              6283.61083984375,
+              -1183.047119140625
+            ]
+          }
+        },
+        "leak_detection": false,
+        "separate_engine_leak_gate": "escort-marker-f-sanitizer-integration-01:2191 passed with detect_leaks=1",
+        "compiled_source": "1eb42debb1",
+        "daily_package_change_covered": false,
+        "entry_state": {
+          "passed": true,
+          "source_save": "build/oblivion-compat/sewer-escape/subterrane-marker-f-sanitized-01/userdata/saves/Bendu_Olo/Quicksave.omwsave",
+          "source_save_sha256": "3c6c715de74cc3274e0a484ca8be6f975bf3468cfa1774a2ff7179297d4796c8",
+          "whole_state_restore": true,
+          "allowed_difference_scope": "Animated body world linear velocity projection only, absolute1e-5",
+          "differences": []
+        },
+        "save_sha256": "6cafdf2f659266312946bb1c5eb9cd42b3204f0944f064e12073c21dcc695def"
+      },
+      "covers_daily_package_change": false
+    }
+  },
+  "remaining": [
+    "Player must enter the unlocked transition and reach original58; full party story continuation remains unaccepted.",
+    "Emperor death/Amulet, class, sewer exit88, outdoor fresh reload, shaman victory and continuous prison-to-outdoors course remain open.",
+    "Sanitizer integration for the new schema89/daily-package implementation remains due; earlier sanitizer passes retain their original provenance."
+  ]
+}

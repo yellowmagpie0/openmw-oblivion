@@ -73,7 +73,7 @@ namespace ESM4
     // v84 retains shared NPC/creature essential flag overrides.
     // v85 retains physical body graphs for animated placed references.
     // v87 retains pending native spells and once-only release ownership.
-    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 88;
+    inline constexpr std::uint32_t CurrentRuntimeStateVersion = 89;
 
     struct RuntimeContentIdentity
     {
@@ -905,6 +905,8 @@ namespace ESM4
         // Zero is a valid CRT seed. Older saves initialize this stream at one.
         std::uint32_t mCombatRngState = 1;
         std::vector<RuntimeActorAiState> mActorAi;
+        // v89: last completion day for each actor/OncePerDay package pair.
+        std::map<std::pair<ESM::FormKey, ESM::FormKey>, CalendarInstant> mDailyPackageCompletions;
         std::vector<RuntimePathPointState> mPathPoints;
         std::vector<RuntimeCompanionRelation> mCompanions;
         std::vector<RuntimeMountRelation> mMounts;

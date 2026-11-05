@@ -2006,6 +2006,9 @@ namespace ESM4
             if (info.isNull() || ESM::FormKey::deserialize(info.serialize()) != info)
                 throw std::runtime_error("Invalid spoken dialogue INFO identity");
         checkSize(mActorAi.size(), "actor AI list");
+        checkSize(mDailyPackageCompletions.size(), "daily package completion list");
+        if (mVersion < 89 && !mDailyPackageCompletions.empty())
+            throw std::runtime_error("Daily package completions require runtime schema89");
         checkSize(mPathPoints.size(), "path-point overlay list");
         checkSize(mCompanions.size(), "companion relation list");
         checkSize(mMounts.size(), "mount relation list");
@@ -2892,6 +2895,12 @@ namespace ESM4
                     || static_cast<std::uint8_t>(actor.mBoundary) > static_cast<std::uint8_t>(PhaseBoundary::ReadyForDialogue))
                     throw std::runtime_error("Invalid TES4 actor AI enum value");
             }
+
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+                if (!actorKeys.contains(pair.first) || !pair.second.isContent()
+                    || ESM::FormKey::deserialize(pair.second.serialize()) != pair.second
+                    || !validCalendar(day) || day.mHour != 0.0)
+                    throw std::runtime_error("Invalid daily package completion identity or day");
 
             std::set<std::pair<ESM::FormKey, std::uint32_t>> pathPoints;
             for (const RuntimePathPointState& point : mPathPoints)
@@ -4020,6 +4029,15 @@ namespace ESM4
                 for (float value : projectile.mVelocity) writer.floating(value);
                 writer.floating(projectile.mDistance); writer.floating(projectile.mMaximumDistance);
                 writer.string(projectile.mModel);
+            }
+        }
+        if (mVersion >= 89)
+        {
+            writer.integer<std::uint32_t>(static_cast<std::uint32_t>(mDailyPackageCompletions.size()));
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+            {
+                writeKey(writer, pair.first); writeKey(writer, pair.second);
+                writeCalendar(writer, day);
             }
         }
         std::vector<std::uint8_t> result = writer.take();
@@ -5421,6 +5439,21 @@ namespace ESM4
                 projectile.mDistance = reader.float32(); projectile.mMaximumDistance = reader.float32();
                 projectile.mModel = reader.string();
                 result.mNativeMagicProjectiles.emplace(id, std::move(projectile));
+            }
+        }
+        if (result.mVersion >= 89)
+        {
+            std::pair<ESM::FormKey, ESM::FormKey> previous;
+            const auto count = reader.count();
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                const auto actor = readKey(reader);
+                const auto package = readKey(reader);
+                const auto pair = std::make_pair(actor, package);
+                if (i && !(previous < pair))
+                    throw std::runtime_error("Noncanonical daily package completion identities");
+                previous = pair;
+                result.mDailyPackageCompletions.emplace(pair, readCalendar(reader));
             }
         }
         if (!reader.eof())
@@ -7027,6 +7060,20 @@ namespace ESM4
                 stream << "],\"distance\":"; number(projectile.mDistance);
                 stream << ",\"maximum_distance\":"; number(projectile.mMaximumDistance);
                 stream << ",\"model\":\"" << escapeJson(projectile.mModel) << "\"}";
+            }
+            stream << ']';
+        }
+        if (mVersion >= 89)
+        {
+            stream << ",\"daily_package_completions\":[";
+            bool first = true;
+            for (const auto& [pair, day] : mDailyPackageCompletions)
+            {
+                if (!first) stream << ',';
+                first = false;
+                stream << "{\"actor\":\"" << escapeJson(pair.first.serialize())
+                    << "\",\"package\":\"" << escapeJson(pair.second.serialize())
+                    << "\",\"day\":[" << day.mYear << ',' << day.mMonth << ',' << day.mDay << ",0]}";
             }
             stream << ']';
         }

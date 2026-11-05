@@ -18,6 +18,12 @@ namespace ESM4
         bool eligible(const PackageCandidate& package, const PackageSelectionRequest& request,
             ConditionResult& conditionResult, std::optional<ScheduleWindow>& window)
         {
+            if (const auto completed = request.mDailyPackageCompletions.find(package.mKey);
+                completed != request.mDailyPackageCompletions.end()
+                && completed->second.mYear == request.mNow.mYear
+                && completed->second.mMonth == request.mNow.mMonth
+                && completed->second.mDay == request.mNow.mDay)
+                return false;
             window = package.mSchedule.activeWindow(request.mNow);
             if (!window)
                 return false;

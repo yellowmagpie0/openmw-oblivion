@@ -2650,6 +2650,30 @@ namespace MWMechanics
         return context;
     }
 
+    void OblivionAiService::recordDailyCompletion(LiveActor& live, bool onlyIfMissing)
+    {
+        const auto* completed = package(live.mState.mPackage);
+        if (!completed || !completed->mPackageFlags.has(ESM4::PackageFlag::OncePerDay)
+            || (onlyIfMissing && live.mCompletedDailyPackages.contains(live.mState.mPackage)))
+            return;
+        auto day = now();
+        day.mHour = 0;
+        live.mCompletedDailyPackages[live.mState.mPackage] = day;
+    }
+
+    void OblivionAiService::prepareDailySelection(LiveActor& live, ESM4::PackageSelectionRequest& request)
+    {
+        // Legacy saves kept a completed package but no completion history.
+        // Retire that completion on the loaded day without dispatching it again.
+        if (live.mState.mPhase == ESM4::PackagePhase::Complete)
+            recordDailyCompletion(live, true);
+        std::erase_if(live.mCompletedDailyPackages, [&](const auto& entry) {
+            const auto* current = package(entry.first);
+            return !current || !current->mPackageFlags.has(ESM4::PackageFlag::OncePerDay);
+        });
+        request.mDailyPackageCompletions = live.mCompletedDailyPackages;
+    }
+
     ESM4::PackageSelection OblivionAiService::selectUnloaded(LiveActor& live, bool restart)
     {
         ESM4::PackageSelectionRequest request;
@@ -2662,8 +2686,11 @@ namespace MWMechanics
         if (mNextEvaluationGeneration == 0)
             mNextEvaluationGeneration = 1;
 
+        prepareDailySelection(live, request);
         const ESM4::PackageSelection result = ESM4::selectPackage(request);
         const bool sameSelection = !restart
+            && !(live.mState.mPhase == ESM4::PackagePhase::Complete
+                && live.mCompletedDailyPackages.contains(result.mPackage))
             && oblivionPackageSelectionMatches(live.mState, live.mSelectedWindow, result, request.mNow);
         if (sameSelection)
         {
@@ -3145,8 +3172,11 @@ namespace MWMechanics
         if (mNextEvaluationGeneration == 0)
             mNextEvaluationGeneration = 1;
 
+        prepareDailySelection(live, request);
         const ESM4::PackageSelection result = ESM4::selectPackage(request);
         const bool sameSelection = !restart
+            && !(live.mState.mPhase == ESM4::PackagePhase::Complete
+                && live.mCompletedDailyPackages.contains(result.mPackage))
             && oblivionPackageSelectionMatches(live.mState, live.mSelectedWindow, result, request.mNow);
         if (sameSelection)
         {
@@ -4382,6 +4412,8 @@ namespace MWMechanics
         ESM4::PackagePhaseState phase = toPhaseState(live.mState);
         const ESM4::PackagePhaseTransition transition = ESM4::advancePackagePhase(phase, input);
         fromPhaseState(live.mState, phase);
+        if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
+            recordDailyCompletion(live);
         mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
         if (oldPhase == ESM4::PackagePhase::Door && live.mState.mPhase != oldPhase)
             live.mState.mDoorAnimationStarted = false;
@@ -5785,6 +5817,8 @@ namespace MWMechanics
         ESM4::PackagePhaseState phase = toPhaseState(live.mState);
         const ESM4::PackagePhaseTransition transition = ESM4::advancePackagePhase(phase, input);
         fromPhaseState(live.mState, phase);
+        if (transition.mFrom != ESM4::PackagePhase::Complete && transition.mTo == ESM4::PackagePhase::Complete)
+            recordDailyCompletion(live);
         mPendingPackageDone.record(transition.mFrom, transition.mTo, live.mState.mActor, live.mState.mPackage);
         if (oldPhase == ESM4::PackagePhase::Door && live.mState.mPhase != oldPhase)
             live.mState.mDoorAnimationStarted = false;
@@ -7489,6 +7523,7 @@ namespace MWMechanics
         state.mPendingPackageDone = mPendingPackageDone.capture();
         state.mAiRngState = mNextEvaluationGeneration == 0 ? 1 : mNextEvaluationGeneration;
         state.mActorAi.clear();
+        state.mDailyPackageCompletions.clear();
         state.mActorAi.reserve(mActors.size());
         state.mCompanions.clear();
         state.mMounts.clear();
@@ -7530,6 +7565,8 @@ namespace MWMechanics
                 if (saved.mFormationIndex < 0)
                     saved.mFormationIndex = derivedFormation[actorKeyValue];
             }
+            for (const auto& [package, day] : live.mCompletedDailyPackages)
+                state.mDailyPackageCompletions.emplace(std::make_pair(actorKeyValue, package), day);
             state.mActorAi.push_back(std::move(saved));
         }
         for (const auto& [actorKeyValue, live] : mActors)
@@ -7729,6 +7766,14 @@ namespace MWMechanics
             // Unsigned wrap is deliberate, matching the existing evaluation
             // stream: a saved maximum does not advance a nonzero next value.
             plan->mNextGeneration = std::max(plan->mNextGeneration, saved.mSelectionGeneration + 1);
+        }
+        for (const auto& [pair, day] : state.mDailyPackageCompletions)
+        {
+            validatePackage(pair.second);
+            const auto actor = plan->mActors.find(pair.first);
+            if (actor == plan->mActors.end())
+                throw std::invalid_argument("TES4 daily package completion has no actor binding");
+            actor->second.mCompletedDailyPackages.emplace(pair.second, day);
         }
         for (const ESM4::RuntimeCompanionRelation& relation : state.mCompanions)
         {

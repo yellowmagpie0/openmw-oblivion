@@ -24,7 +24,7 @@ except ImportError:
 
 
 MAGIC = b"OMW4STATE"
-CURRENT_VERSION = 88
+CURRENT_VERSION = 89
 SUPPORTED_VERSIONS = set(range(1, CURRENT_VERSION + 1))
 MAX_COLLECTION = 1_000_000
 MAX_STRING = 16 * 1024 * 1024
@@ -637,7 +637,29 @@ def _validate_ai(state: dict[str, Any]) -> None:
         detection_pairs.add((observer, target))
 
 
+def _validate_daily_packages(state: dict[str, Any]) -> None:
+    entries = state.get("daily_package_completions", [])
+    if not isinstance(entries, list) or len(entries) > MAX_COLLECTION:
+        raise RuntimeStateError("Invalid daily package completion list")
+    if state.get("schema_version", 1) < 89 and entries:
+        raise RuntimeStateError("Daily package completions require runtime schema89")
+    actors = {a["actor"] for a in state.get("actor_ai", [])}
+    previous = None
+    for entry in entries:
+        if not isinstance(entry, dict):
+            raise RuntimeStateError("Invalid daily package completion entry")
+        actor, package, day = entry.get("actor"), entry.get("package"), entry.get("day")
+        if (not isinstance(actor, str) or actor not in actors or not _canonical_content_key(package)
+                or not _valid_calendar(day) or day[3] != 0):
+            raise RuntimeStateError("Invalid daily package completion identity or day")
+        pair = (_global_identity(actor), _global_identity(package))
+        if previous is not None and pair <= previous:
+            raise RuntimeStateError("Noncanonical daily package completion identities")
+        previous = pair
+
+
 def _validate_basic_state(state: dict[str, Any]) -> None:
+    _validate_daily_packages(state)
     """Validate the common envelope and the pre-M14 state shared by C++.
 
     The Python tool is also used to inspect saves produced by the engine, so
@@ -3477,6 +3499,10 @@ def decode_payload(payload: bytes) -> dict[str, Any]:
                 projectile[key] = reader.unpack("<f")
             projectile["model"] = reader.string()
             result["native_magic_projectiles"].append(projectile)
+    if version >= 89:
+        result["daily_package_completions"] = [
+            {"actor": reader.string(), "package": reader.string(), "day": _calendar(reader)}
+            for _ in range(reader.count())]
     _validate_basic_state(result)
     if reader.offset != len(payload):
         raise RuntimeStateError("TES4 runtime-state payload has trailing data")
@@ -4302,6 +4328,12 @@ def encode_payload(state: dict[str, Any]) -> bytes:
             for key in ("distance", "maximum_distance"):
                 writer.pack("<f", projectile[key])
             writer.string(projectile["model"])
+    if version >= 89:
+        entries = state.get("daily_package_completions", [])
+        writer.pack("<I", len(entries))
+        for entry in entries:
+            writer.string(entry["actor"]); writer.string(entry["package"])
+            _write_calendar(writer, entry["day"])
     return writer.finish()
 
 
@@ -4447,6 +4479,9 @@ def _upgrade_actor_knockback(state: dict[str, Any]) -> None:
         raise RuntimeStateError("Cannot infer magic projectiles from an older schema")
     state.setdefault("native_magic_projectiles", [])
     state.setdefault("next_magic_projectile", 1)
+    if state.get("schema_version", 1) < 89 and state.get("daily_package_completions"):
+        raise RuntimeStateError("Cannot infer daily package history from an older schema")
+    state.setdefault("daily_package_completions", [])
 
 
 def _upgrade_loose_weapons(state: dict[str, Any]) -> None:

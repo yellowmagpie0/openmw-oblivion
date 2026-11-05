@@ -1863,7 +1863,7 @@ namespace
                 + (version >= 64 ? 4 : 0) + (version >= 65 ? 4 : 0) + (version >= 66 ? 4 : 0)
                 + (version >= 67 ? 4 : 0) + (version >= 68 ? 4 : 0) + (version >= 71 ? 4 : 0)
                 + (version >= 72 ? 4 : 0) + (version >= 81 ? 4 : 0) + (version >= 83 ? 4 : 0)
-                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0);
+                + (version >= 85 ? 4 : 0) + (version >= 86 ? 4 : 0) + (version >= 87 ? 4 : 0) + (version >= 88 ? 12 : 0) + (version >= 89 ? 4 : 0);
             const auto clockEnd = bytes.size() - suffix;
             const auto entrySize = 8 + actor.serialize().size();
             const auto countOffset = clockEnd - entrySize - 4;
@@ -6271,7 +6271,7 @@ TEST(ESM4RuntimeState, FactionReactions81PreserveDirectedZeroOverridesAndRejectL
     state.mFactionReactions[{b,a}] = 17;
     auto unordered = state.serializeBinary();
     const auto factionEnd = unordered.end() - (state.mVersion >= 83 ? 4 : 0)
-        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0);
+        - (state.mVersion >= 86 ? 4 : 0) - (state.mVersion >= 87 ? 4 : 0) - (state.mVersion >= 88 ? 12 : 0) - (state.mVersion >= 89 ? 4 : 0);
     std::swap_ranges(factionEnd-2*rowSize, factionEnd-rowSize, factionEnd-rowSize);
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(unordered), std::runtime_error);
     state.mFactionReactions.clear(); state.mVersion = 80;
@@ -6328,11 +6328,11 @@ TEST(ESM4RuntimeState, BoundEquipment83KeepsInstanceSourcesAndDisplacedEquipment
     const auto wire = state.serializeBinary();
     // Independent public wire recipe, also checked by the Python inspector.
     const std::vector<std::uint8_t> ownerTail{0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x31, 0x30, 0x30, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x01, 0x00, 0x00, 0x00, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x32, 0x36, 0x32, 0x37, 0x34, 0x01, 0x00, 0x00, 0x00, 0x00, 0xf4, 0x82, 0x45, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x00, 0x01, 0x00, 0xff, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x30, 0x30, 0x36, 0x30, 0x30, 0x00, 0x00, 0x80, 0xbf, 0x00, 0x04, 0x00, 0x00, 0x00, 0x6e, 0x75, 0x6c, 0x6c, 0x00};
-    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0);
+    const std::size_t contactSuffix = (state.mVersion >= 86 ? 4 : 0) + (state.mVersion >= 87 ? 4 : 0) + (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0);
     ASSERT_GE(wire.size(),ownerTail.size() + contactSuffix);
     EXPECT_TRUE(std::equal(ownerTail.rbegin(),ownerTail.rend(),wire.rbegin() + contactSuffix));
     std::vector<std::uint8_t> emptySuffix(contactSuffix, 0);
-    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12] = 1; // First unused projectile serial.
+    if (state.mVersion >= 88) emptySuffix[contactSuffix - 12 - (state.mVersion >= 89 ? 4 : 0)] = 1; // First unused projectile serial.
     EXPECT_TRUE(std::equal(emptySuffix.begin(), emptySuffix.end(), wire.end() - contactSuffix));
     const std::vector<std::uint8_t> sourceWire{0x01, 0x1b, 0x00, 0x00, 0x00, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x3a, 0x6f, 0x62, 0x6c, 0x69, 0x76, 0x69, 0x6f, 0x6e, 0x2e, 0x65, 0x73, 0x6d, 0x3a, 0x30, 0x33, 0x65, 0x39, 0x31, 0x62, 0x02, 0x00, 0x00, 0x00};
     EXPECT_NE(std::search(wire.begin(),wire.end(),sourceWire.begin(),sourceWire.end()),wire.end());
@@ -6507,7 +6507,9 @@ TEST(ESM4RuntimeState, NativeSpellCastRetainsReleaseBoundaryAndRejectsDanglingOw
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
     invalid = state; invalid.mNativeSpellCasts.at(actor).mSpell = {};
     EXPECT_THROW(invalid.serializeBinary(), std::invalid_argument);
-    auto wire = state.serializeBinary(); wire.at(wire.size() - 13) = 2;
+    auto wire = state.serializeBinary();
+    const auto castTail = (state.mVersion >= 88 ? 12 : 0) + (state.mVersion >= 89 ? 4 : 0);
+    wire.at(wire.size() - castTail - 1) = 2; // Invalid released flag, before later schema tails.
     EXPECT_THROW(ESM4::RuntimeState::deserializeBinary(wire), std::runtime_error);
 }
 
@@ -6537,4 +6539,32 @@ TEST(ESM4RuntimeState, NativeMagicProjectilePreservesFlightAndRejectsReusedSeria
     EXPECT_THROW(invalid.serializeBinary(), std::runtime_error);
     invalid.mNativeMagicProjectiles.clear(); invalid.mNextMagicProjectile = 1;
     EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(invalid.serializeBinary()).mNativeMagicProjectiles.empty());
+}
+
+TEST(ESM4RuntimeState, DailyPackageHistoryRoundTripsAndRejectsDanglingOrInvalidDays)
+{
+    auto state = makeM14State();
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    const auto actor = state.mActorAi.front().mActor;
+    const auto package = ESM::FormKey::content("Oblivion.esm", 0x4f201);
+    const auto pair = std::make_pair(actor, package);
+    state.mDailyPackageCompletions[pair] = {433, 7, 28, 0};
+    const auto bytes = state.serializeBinary();
+    const auto restored = ESM4::RuntimeState::deserializeBinary(bytes);
+    EXPECT_EQ(restored.mDailyPackageCompletions, state.mDailyPackageCompletions);
+    EXPECT_EQ(restored.serializeBinary(), bytes);
+    EXPECT_NE(restored.canonicalJson().find("daily_package_completions"), std::string::npos);
+    state.mDailyPackageCompletions[pair].mHour = 1;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mDailyPackageCompletions[pair] = {433, 1, 31, 0};
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mDailyPackageCompletions[pair] = {433, 7, 28, 0};
+    state.mVersion = 88;
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mVersion = ESM4::CurrentRuntimeStateVersion;
+    state.mActorAi.clear();
+    EXPECT_THROW(state.serializeBinary(), std::runtime_error);
+    state.mDailyPackageCompletions.clear();
+    state.mVersion = 88;
+    EXPECT_TRUE(ESM4::RuntimeState::deserializeBinary(state.serializeBinary()).mDailyPackageCompletions.empty());
 }

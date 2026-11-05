@@ -180,6 +180,7 @@ namespace MWMechanics
             TargetRoute mCombatRoute;
             // Combat cleanup must not erase the peaceful recipient's cursor.
             TargetRoute mEscortRoute;
+            std::map<ESM::FormKey, ESM4::CalendarInstant> mCompletedDailyPackages;
             ESM4::RuntimeActorAiState mState;
             std::optional<ESM4::PackageCandidate> mScriptPackage;
             std::optional<ESM4::AIPackage> mTransientPackage;
@@ -351,6 +352,8 @@ namespace MWMechanics
         bool completeAction(const MWWorld::Ptr& actor, LiveActor& live);
         void releasePhysicalDoorCollision(const MWWorld::Ptr& actor, LiveActor& live) const;
         void stopMovement(const MWWorld::Ptr& actor) const;
+        void recordDailyCompletion(LiveActor& live, bool onlyIfMissing = false);
+        void prepareDailySelection(LiveActor& live, ESM4::PackageSelectionRequest& request);
         void approachResidentTarget(const MWWorld::Ptr& actor, const MWWorld::Ptr& target,
             float duration, bool escort);
         void faceAndMove(const MWWorld::Ptr& actor, const osg::Vec3f& destination, bool run, bool sneak = false) const;

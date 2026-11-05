@@ -59,3 +59,22 @@ TEST(ESM4AISelection, ScriptPackageWinsOnlyWhenValid)
     };
     EXPECT_EQ(ESM4::selectPackage(request).mPackage, key(2));
 }
+
+TEST(ESM4AISelection, CompletedDailyPackageYieldsToNextPriorityAndReturnsNextDay)
+{
+    ESM4::PackageSelectionRequest request;
+    request.mNow = {433, 11, 31, 23.9};
+    request.mBasePackages = {package(1, 44), package(2, 45)};
+    request.mDailyPackageCompletions[key(1)] = {433, 11, 31, 0};
+    EXPECT_EQ(ESM4::selectPackage(request).mPackage, key(2));
+    EXPECT_EQ(ESM4::selectPackage(request).mListIndex, 45u);
+    request.mScriptPackage = package(1, 0);
+    EXPECT_EQ(ESM4::selectPackage(request).mSource, ESM4::PackageSource::Base);
+    request.mNow = {434, 0, 1, 0};
+    EXPECT_EQ(ESM4::selectPackage(request).mPackage, key(1));
+    EXPECT_EQ(ESM4::selectPackage(request).mSource, ESM4::PackageSource::Script);
+    request.mScriptPackage.reset();
+    EXPECT_EQ(ESM4::selectPackage(request).mListIndex, 44u);
+    request.mNow = {433, 11, 31, 1};
+    EXPECT_EQ(ESM4::selectPackage(request).mPackage, key(2));
+}
