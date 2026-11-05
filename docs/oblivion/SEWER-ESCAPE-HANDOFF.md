@@ -1,6 +1,59 @@
 # Full sewer escape — current handoff
 
-## Current checkpoint — western passage and healing sack complete, 2026-11-04
+## Current checkpoint — Natural Caverns entered and reloaded, 2026-11-04
+
+Full escape remains incomplete: goblin dungeon, escort reunion, Emperor/Amulet,
+character choices, actual MQ01 stage88 exit, outdoor fresh reload and continuous
+full playthrough. Death/reload is verified. Current chunk: traverse original
+Natural Caverns encounters and reach the escort reunion.
+
+`substructure-lower-loop-01` PASSES original raw nodes45–54 from the healed
+checkpoint. `substructure-lower-rat-01` PASSES ordinary approach/Club attacks:
+rat159832 dead with Player killer, no combat engagements, health44.12.
+`encounter-audit.json` and capture inspected; save SHA256
+`6ad1ae04630a63d3276e833df3afb4425f870ede37e24f0e49038e0f8b1dce37`.
+`substructure-last-rat-approach-01` FAILS after rat038174 engages and knocks
+Player off waypoint6. Retained terminal failure, not a continuation save.
+Corrected approach02 ends at raw node59 before the attack; PASSES and saves
+health44.12. `substructure-last-rat-01` PASSES ordinary stationary defence:
+038174 dead with Player killer, both lower rats dead, no remaining engagements,
+health40.359993. Save SHA256
+`4ebb5bc791edf86e0def46b52724f7cb22c863ade323193b7660abf8954fdb15`.
+
+`substructure-cavern-door-approach-01` PASSES raw nodes60–77 to the original
+Wood Door. `substructure-cavern-door-01` PASSES normal focused Space activation
+of0381b8 and actual cell transition into Natural Caverns0380bd.
+`natural-caverns-reload-01` PASSES fresh-process destination load and resave.
+Its `transition-restart-audit.json` checks unchanged Player health/inventory
+and both lower rats' life/value records through traversal, cell transition and
+reload. All passing courses have no forbidden/unreviewed errors. Relevant
+captures inspected, including actual destination. Existing2167 engine evidence
+and runtime binary are reused; no engine changes or new sanitizer claim.
+Creature corpse poses remain a known visual limitation.
+
+Next input save:
+`build/oblivion-compat/sewer-escape/natural-caverns-reload-01/userdata/saves/Bendu_Olo/Quicksave.omwsave`
+SHA256 `374edfff2d4076736d3a9b74d84893e016fd70796fe9ef6fa97eb21b51e2f174`.
+Player cell0380bd, position(-365.91,-13.12,40.27), yaw1.500001, pitch0,
+health40.36, Club and armor equipped. All runtime processes are terminal.
+Next: inspect original cavern pathgrid from this entrance and approach the first
+goblin encounter using ordinary input; pause traversal to fight when engaged.
+Reusable original actor/reference inventory:
+`build/oblivion-compat/sewer-escape/goblin-section-record-audit.json`.
+Known goblins03b526 near(147,883,-287),03b513 near(788,1813,-251), patrol03b543,
+log-runner03b518, runover03b51a, boss03b52e and others. Original cavern exit03816c
+at(4384,6144,64) points to026c36; destination/reunion route still needs inspection.
+
+Editable sources under scripts/data/oblivion_compat:
+`oblivion_sewer_substructure_lower_loop.json`, `...lower_rat.json`,
+`...last_rat_approach.json`, `...last_rat.json`, `...cavern_door_approach.json`,
+`...cavern_door.json`, and `oblivion_sewer_natural_caverns_reload.json`.
+Input chain is healed-reload01 -> lower-loop01 -> lower-rat01 ->
+last-rat-approach02 -> last-rat01 -> cavern-door-approach01 -> cavern-door01 ->
+natural-caverns-reload01. This is composite evidence, not a continuous full
+prison-to-outdoors acceptance run.
+
+## History — western passage and healing sack complete, 2026-11-04
 
 Full escape remains incomplete: lower solo-dungeon loop, goblins, reunion,
 Emperor/Amulet, character choices, actual MQ01 stage88 exit, outdoor fresh

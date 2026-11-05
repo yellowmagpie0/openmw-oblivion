@@ -1,0 +1,851 @@
+{
+  "schema_version": 1,
+  "name": "Substructure substructure-lower-loop",
+  "cwd": "{source}",
+  "files": [
+    {
+      "path": "config/openmw.cfg",
+      "content": "replace=config\nreplace=data\nresources=\"{resources}\"\ndata=\"{oblivion_data}\"\ncontent=Oblivion.esm\nstart=ImperialDungeon01\nskip-menu=1\nnew-game=0\nno-grab=1\nuser-data=\"{output}/userdata\"\ndata=\"{output}/test-data\"\ncontent=tutorial-passage-observer.omwscripts\n"
+    },
+    {
+      "path": "config/settings.cfg",
+      "content": "[Video]\nresolution x = 640\nresolution y = 360\nfullscreen = false\nframerate limit = 60\n[General]\nscreenshot format = png\n\n[Input]\nenable controller = true\n\n[GUI]\ncontroller menus = true\n\n[Input]\ncamera sensitivity = 0.05\n"
+    },
+    {
+      "path": "test-data/events.txt",
+      "content": "at 0 command content:oblivion.esm:02466e GetStage\nat 0 command dynamic:player:0000000000000001 GetDead\n"
+    },
+    {
+      "path": "test-data/tutorial-passage-observer.omwscripts",
+      "content": "PLAYER: scripts/tutorial_passage_observer.lua\n"
+    },
+    {
+      "path": "test-data/scripts/tutorial_passage_observer.lua",
+      "content": "local self=require('openmw.self')\nlocal core=require('openmw.core')\nlocal util=require('openmw.util')\nlocal camera=require('openmw.camera')\nlocal Actor=require('openmw.types').Actor\nlocal nearby=require('openmw.nearby')\nlocal points={{util.vector3(-5035.45,2909.33,-382.0),util.vector3(-5037.66,2744.7,-440.0),util.vector3(-5042.43,2613.89,-452.0),util.vector3(-5031.77,2466.84,-452.0),util.vector3(-4843.72,2307.76,-450.0),util.vector3(-4747.66,2158.68,-452.0),util.vector3(-4725.47,1976.46,-452.0),util.vector3(-4567.26,1927.54,-446.0),util.vector3(-4398.72,1927.14,-452.0),util.vector3(-4199.58,1927.57,-454.0)}}\nlocal step=1\nlocal ready=false\nlocal timer=0\nreturn {{engineHandlers={{onFrame=function(dt)\n if not ready then\n  local c,g=false,false\n  for _,item in pairs(Actor.getEquipment(self)) do\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c1) then c=true end\n   if item.recordId==core.getFormId('Oblivion.esm',0x661c3) then g=true end\n  end\n  assert(c and g,'Both armor pieces required') ready=true print('Substructure corridor ready')\n end\n if math.abs(camera.getPitch())<.025 then print('Substructure camera level') end\n if step<=#points then\n  local d=points[step]-self.position\n  local distance=math.sqrt(d.x*d.x+d.y*d.y)\n  if distance<25 then print('Substructure waypoint '..step..' reached') step=step+1\n  else\n   local f=self.rotation:apply(util.vector3(0,1,0))\n   local angle=math.atan2(f.y*d.x-f.x*d.y,f.x*d.x+f.y*d.y)\n   if math.abs(angle)<.04 then print('Substructure waypoint '..step..' facing') end\n   local x=math.max(-8192,math.min(8192,math.floor(angle*5120+.5)))\n   local y=math.floor(-camera.getPitch()*5120+.5)\n   print(string.format('Substructure waypoint %d aim x=%d y=%d',step,x,y))\n  end\n end\n timer=timer+dt\n if timer>1 then timer=0\n  print('Substructure corridor Player '..tostring(self.position)..' health='..Actor.stats.dynamic.health(self).current..' pitch='..camera.getPitch())\n  for _,id in ipairs({{0x38174,0x159832}}) do\n   local obj=nearby.getObjectByFormId(core.getFormId('Oblivion.esm',id))\n   if obj and obj:isValid() then print('Substructure encounter '..id..' pos='..tostring(obj.position)..' dead='..tostring(Actor.isDead(obj))..' health='..Actor.stats.dynamic.health(obj).current) end\n  end\n end\nend}}}}\n"
+    }
+  ],
+  "command": [
+    "{openmw}",
+    "--replace=config",
+    "--config",
+    "{output}/config",
+    "--no-sound=1",
+    "--no-grab",
+    "--load-savegame={input_save}"
+  ],
+  "xvfb": true,
+  "width": 640,
+  "height": 360,
+  "actions": [
+    {
+      "type": "wait_log",
+      "pattern": "Substructure corridor ready",
+      "timeout_seconds": 90,
+      "abort_on_failure": true
+    },
+    {
+      "type": "focus_window",
+      "name": "OpenMW"
+    },
+    {
+      "type": "sleep",
+      "seconds": 3
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w"
+      ]
+    },
+    {
+      "type": "sleep",
+      "seconds": 0.12
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 1 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 1 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 1 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 2 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 2 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 2 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 3 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 3 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 3 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 4 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 4 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 4 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 5 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 5 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 5 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 6 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 6 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 6 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 7 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 7 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 7 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 8 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 8 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 8 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 8 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 8 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 9 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 9 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 9 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 9 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 9 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 10 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 10 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "mouse_move",
+      "x": 0,
+      "y": 0,
+      "from_log": {
+        "path": "process.log",
+        "pattern": "Substructure waypoint 10 aim x=(?P<x>-?\\d+) y=(?P<y>-?\\d+)"
+      }
+    },
+    {
+      "type": "sleep",
+      "seconds": 1.5
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 10 facing",
+      "timeout_seconds": 8,
+      "abort_on_failure": true,
+      "after_start": true
+    },
+    {
+      "type": "keys_down",
+      "values": [
+        "w",
+        "Shift_L"
+      ]
+    },
+    {
+      "type": "wait_log",
+      "pattern": "Substructure waypoint 10 reached",
+      "timeout_seconds": 25,
+      "abort_on_failure": true
+    },
+    {
+      "type": "key_up",
+      "value": "w"
+    },
+    {
+      "type": "key_up",
+      "value": "Shift_L"
+    },
+    {
+      "type": "key",
+      "value": "F5"
+    },
+    {
+      "type": "sleep",
+      "seconds": 4
+    },
+    {
+      "type": "screenshot",
+      "name": "substructure-lower-loop.png",
+      "minimum_entropy": 0.02
+    }
+  ],
+  "terminate_after_actions": true,
+  "timeout_seconds": 900,
+  "expected_exit": 0,
+  "expected_log": [
+    "Substructure waypoint 10 reached"
+  ],
+  "forbidden_log": [
+    "Unsupported ObScript command",
+    "Error in frame",
+    "onFrame failed",
+    "Segmentation fault",
+    "Assertion.*failed",
+    "TES4 AI update failed",
+    "setstage quest=content:oblivion.esm:01e723 stage=24(?:\\s|$)"
+  ],
+  "reviewed_error_log": [
+    "Failed to create audio decoder, can not play audio stream",
+    "Failed to open image: Resource '(?:icons|textures)/[a-z0-9_./-]+\\.dds' not found",
+    "Failed to load 'meshes/(?:ashcloud|blightcloud|blizzard|snow|xargonian_swimkna)\\.nif': Resource .* not found, using marker_error instead"
+  ],
+  "virtual_gamepad": true,
+  "environment": {
+    "OPENMW_OBSCRIPT_EVENTS": "{output}/test-data/events.txt",
+    "OPENMW_M15_EVENTS": "{output}/combat-events.jsonl",
+    "OPENMW_M15_RUN_ID": "tutorial-player-intervention",
+    "OPENMW_M15_EPOCH": "3",
+    "OPENMW_OBLIVION_AI_EVENTS": "{output}/ai-events.jsonl",
+    "OPENMW_OBLIVION_AI_SEED": "1414"
+  },
+  "sdl_xvfb_input": true
+}
