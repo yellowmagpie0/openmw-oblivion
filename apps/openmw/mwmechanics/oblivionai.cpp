@@ -12,6 +12,7 @@
 #include "oblivionaidestination.hpp"
 #include "oblivionaigait.hpp"
 #include "oblivionmelee.hpp"
+#include "oblivionplayerhostility.hpp"
 
 #include <components/esm4/loadbsgn.hpp>
 
@@ -6118,21 +6119,21 @@ namespace MWMechanics
         live.mEscortRoute = {};
 
         // Ambush also supplies authored force-greetings (including the
-        // Emperor in the prison). A zero-aggression NPC must not turn that
-        // package into an attack. Only consume an actual eligible native
-        // greeting; hostile acquisition remains the combat controller's job.
+        // Emperor in the prison and Baurus after the final fight). Reuse the
+        // native Player fight score to admit friendly greetings, including
+        // positive aggression. Hostile acquisition remains the controller's job.
         if (highProcess && live.mState.mPackageType == ESM4::AIPackageType::Ambush
             && live.mState.mPhase == ESM4::PackagePhase::ReadyForM15Combat
             && ESM4::runtimeReferenceKey(live.mState.mTarget) == ESM::FormKey::dynamic("player", 1)
             && actor.getType() == ESM::REC_NPC_4 && mWorld.getOblivionCombatService()
-            && mWorld.getOblivionCombatService()->getNonPlayerIntegerValue(actor, 33) == 0
             && !mWorld.hasOblivionCombatController(live.mState.mActor).value_or(false))
         {
+            const auto fight = oblivionPlayerFightScore(mWorld, actor);
             auto* windows = static_cast<MWBase::WindowManager*>(MWBase::Environment::get().getWindowManager());
             const auto player = mWorld.getPlayerPtr();
             const auto* current = package(live.mState.mPackage);
             auto& stats = actor.getClass().getCreatureStats(actor);
-            if (windows && !windows->isGuiMode() && current && !player.isEmpty()
+            if (fight && *fight <= 0 && windows && !windows->isGuiMode() && current && !player.isEmpty()
                 && !stats.isDead() && !stats.getKnockedDown() && !stats.isParalyzed()
                 && !player.getClass().getCreatureStats(player).isDead())
             {

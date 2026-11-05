@@ -9,8 +9,8 @@ MQ01 stage88 exit and fresh-process save/load outdoors. No injected health,
 quest/completion state or skipped required encounters qualifies.
 **Full escape remains incomplete.**
 
-Remaining: Baurus class-choice greeting/selection, sewer exit88, outdoor reload,
-shaman victory and continuous prison-to-outdoors acceptance. Current2196 normal
+Remaining: native class recommendation/choice, sewer exit88, outdoor reload,
+shaman victory and continuous prison-to-outdoors acceptance. Current2197 normal
 engine tests pass. Component3262 evidence is reused at its original475c source;
 components did not change in the target-route patch. Fresh accumulated sanitizer
 integration remains due: default-open-sanitizer-integration-01 was deliberately
@@ -55,17 +55,33 @@ Prior [default-open gate68](SEWER-SANCTUM-GATE-VERIFICATION.json),
 [daily packages](SEWER-DAILY-PACKAGE-VERIFICATION.json) and earlier marker records
 retain their original provenance.
 
+## Current follow-up — friendly class-choice greeting fixed
+
+Baurus's Ambush package01e8e4 at86 formerly stalled because greeting admitted only
+aggression0, while original84 sets aggression5. Shared native Player fight-score
+query now gates greetings and ordinary hostile acquisition consistently. Friendly
+positive aggression can approach/greet; positive fight scores stay hostile.
+Focused world checks cover0/5/100, both load layouts, unchanged RNG/controllers,
+and original autonomous hostile-acquisition readiness. All2197 engine tests pass.
+Actual Baurus approaches and opens greeting01e8dd automatically from the exact
+restored86 checkpoint. Ordinary D-pad/A reaches response01e8e6; further linked
+responses e7/e8 also run in the next retained failed course. No new saved main
+checkpoint because inspection ends inside dialogue. Details:
+[SEWER-FRIENDLY-GREETING-VERIFICATION.json](SEWER-FRIENDLY-GREETING-VERIFICATION.json).
+
 ## Next action
 
-Fix the observed Baurus class-choice force greeting: original package01e8e4 is
-Ambush targeting Player, phase ReadyForM15Combat at86; original84 result sets
-aggression5. The friendly Ambush greeting currently admits only aggression0.
-Reuse native hostility/disposition policy to distinguish greeting from attacking;
-do not simply admit every hostile Ambush or special-case this reference. Complete
-original class choice and exit, then outdoor fresh reload and remaining full-course
-acceptance. Batch fresh sanitizer integration after the related scene repairs.
+Implement the observed GetIsClassDefault native condition(function228), used by
+outgoing class recommendation INFO01e8ea and the other standard class branches.
+It currently makes the linked sewer response fail before87. Resolve its semantics
+independently; do not flatten to a guessed/default response. Raw winning condition
+and link audits are in the new artifact. `baurus-class-menu.json` under ignored
+sewer evidence contains the normal five-response approach to87. Complete class
+choice, exit/outdoor reload, and remaining full-course acceptance; batch fresh
+sanitizer integration after related scene repairs. Main input remains the clean
+86 save above. The previous cancelled build and its owned children are terminal.
 Original SetOpenState0 unlocked the isolated diagnostic back gate; that adjacent
-command behavior remains recorded in the previous artifact, not implemented.
+command behavior remains recorded in the earlier artifact, not implemented.
 
 ## Reusable evidence and known limitations
 

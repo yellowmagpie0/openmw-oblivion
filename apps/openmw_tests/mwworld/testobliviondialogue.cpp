@@ -1,3 +1,5 @@
+#include "apps/openmw/mwworld/oblivionactorstats.hpp"
+#include "apps/openmw/mwmechanics/oblivionplayerhostility.hpp"
 #include <components/esm4/loadbsgn.hpp>
 #include "oblivionworldfixture.hpp"
 #include "inventorywindowmanager.hpp"
@@ -2599,4 +2601,44 @@ TEST(OblivionTutorialDoor, DefaultOpenPoseRetainsLockAndSavedCloseOverridesAutho
     snapshot = world.captureOblivionRuntimeState();
     EXPECT_EQ(std::get<std::string>(findDoor(snapshot).mCustomState.at("obscript.animation_group")), "close");
     EXPECT_TRUE(f.mDoor.getCellRef().isLocked());
+}
+
+TEST(OblivionTutorialGreeting, NativeFightScoreDistinguishesFriendlyPositiveAggressionWithoutStartingCombat)
+{
+    for (bool shifted : {false, true})
+    {
+        SwitchFixture f(shifted);
+        auto& world = f.mFixture.mWorld;
+        auto& combat = *world.getOblivionCombatService();
+        // The headless fixture's Player form is800; supply the canonical
+        // constructor input explicitly, as the native actor-stats fixtures do.
+        ESM4::Npc playerForm{};
+        playerForm.mId = {7, 0};
+        playerForm.mFormKey = ESM::FormKey::content("Oblivion.esm", 7);
+        playerForm.mIsTES4 = true;
+        playerForm.mData.attribs = {40,40,40,40,40,40,40,40};
+        playerForm.mData.health = 100;
+        playerForm.mBaseConfig.tes4.baseSpell = 80;
+        playerForm.mBaseConfig.tes4.fatigue = 160;
+        world.getStore().getWritable<ESM4::Npc>().insertStatic(playerForm, playerForm.mFormKey);
+        combat.initializePlayerActor(world.getPlayer(), world.getStore());
+        auto values = *combat.findActorValues(ESM::FormKey::dynamic("player", 1));
+        values.mBounty.emplace();
+        values.mReputation.emplace();
+        combat.publishPlayerValues(world.getPlayer(), values,
+            MWWorld::resolveOblivionPlayerDynamicBaseSettings(world.getStore()));
+        const std::array<MWWorld::Ptr, 1> residents{f.mActor};
+        const auto random = combat.combatRandomState();
+        for (int aggression : {0, 5, 100})
+        {
+            combat.setNonPlayerBaseValue(f.mActor, 33, aggression, residents);
+            const auto score = MWMechanics::oblivionPlayerFightScore(world, f.mActor);
+            ASSERT_TRUE(score);
+            if (aggression == 100) EXPECT_GT(*score, 0);
+            else EXPECT_LE(*score, 0);
+            EXPECT_FALSE(world.hasOblivionCombatController(f.mActor.getCellRef().getFormKey()).value_or(false));
+            EXPECT_EQ(combat.combatRandomState(), random);
+        }
+        EXPECT_FALSE(MWMechanics::oblivionPlayerFightScore(world, {}));
+    }
 }

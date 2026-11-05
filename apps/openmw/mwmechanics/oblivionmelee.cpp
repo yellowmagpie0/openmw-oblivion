@@ -1,4 +1,5 @@
 #include "oblivionmelee.hpp"
+#include "oblivionplayerhostility.hpp"
 
 #include "oblivioncombat.hpp"
 #include "oblivionai.hpp"
@@ -329,6 +330,39 @@ namespace MWMechanics
         return result && *result == target;
     }
 
+    std::optional<std::int32_t> oblivionPlayerFightScore(
+        MWWorld::World& world, const MWWorld::Ptr& actor)
+    {
+        auto* combat = world.getOblivionCombatService();
+        const auto player = world.getPlayerPtr();
+        if (world.getGameProfile() != ESM::GameProfile::Oblivion || !combat
+            || actor.isEmpty() || player.isEmpty() || actor == player
+            || (actor.getType() != ESM::REC_NPC_4 && actor.getType() != ESM::REC_CREA4))
+            return std::nullopt;
+        const auto key = actor.getCellRef().getFormKey();
+        if (!combat->findActorValues(key)) return std::nullopt;
+        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
+        if (aggression <= 0)
+            return 0;
+        const auto disposition = world.getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
+        if (!disposition)
+            return std::nullopt;
+        std::vector<const ESM4::GameSetting*> settings;
+        std::set<ESM::FormId> seen;
+        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
+            if (seen.insert(setting.mId).second)
+                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
+        const auto distance = (actor.getRefData().getPosition().asVec3()
+            - player.getRefData().getPosition().asVec3()).length();
+        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
+        // This ordinary Player encounter has no ally incident/friend term.
+        // Use the existing detector; exact native scan cadence and general
+        // multi-target/ally selection are separate from this admission path.
+        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
+            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
+        return ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings));
+    }
+
     bool acquireOblivionPlayerCombat(MWBase::World& world, const MWWorld::Ptr& actor)
     {
         auto* nativeWorld = world.getGameProfile() == ESM::GameProfile::Oblivion
@@ -359,27 +393,8 @@ namespace MWMechanics
         if (const auto* state = ai->state(actor); state && state->mPackageType == ESM4::AIPackageType::Sleep
             && (state->mPhase == ESM4::PackagePhase::Act || state->mPhase == ESM4::PackagePhase::Wait))
             return false;
-        const auto aggression = combat->getNonPlayerIntegerValue(actor, 33);
-        if (aggression <= 0)
-            return false;
-        const auto disposition = nativeWorld->getOblivionDisposition(key, ESM::FormKey::dynamic("player", 1));
-        if (!disposition)
-            return false;
-        std::vector<const ESM4::GameSetting*> settings;
-        std::set<ESM::FormId> seen;
-        for (const auto& setting : world.getStore().get<ESM4::GameSetting>())
-            if (seen.insert(setting.mId).second)
-                settings.push_back(world.getStore().get<ESM4::GameSetting>().search(setting.mId));
-        const auto distance = (actor.getRefData().getPosition().asVec3()
-            - player.getRefData().getPosition().asVec3()).length();
-        // Original 524AD4/5EA187 only admit positive 546190 fight scores.
-        // This ordinary Player encounter has no ally incident/friend term.
-        // Use the existing detector; exact native scan cadence and general
-        // multi-target/ally selection are separate from this admission path.
-        const ESM4::FightScoreInput input{*disposition, 0, aggression, distance,
-            false, false, combat->getNonPlayerIntegerValue(actor, 36)};
-        if (ESM4::fightScore(input, ESM4::buildFightScoreSettings(settings)) <= 0
-            || !ai->detection(actor, player).mDetected)
+        const auto score = oblivionPlayerFightScore(*nativeWorld, actor);
+        if (!score || *score <= 0 || !ai->detection(actor, player).mDetected)
             return false;
         return nativeWorld->executeOblivionStartCombat(actor, player);
     }
